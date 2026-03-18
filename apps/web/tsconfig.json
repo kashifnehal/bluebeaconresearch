@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@geosignal/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [

@@ -30,6 +30,24 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+
+  /* shadcn/base-ui tokens mapped to design system */
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--bg-primary);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-primary);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--bg-secondary);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-secondary);
+  --muted-foreground: var(--text-secondary);
+  --accent-foreground: #ffffff;
+  --destructive: var(--danger);
+  --input: var(--bg-secondary);
+  --ring: var(--accent);
 }
 
 [data-theme="light"] {
@@ -53,6 +71,24 @@
   --success-subtle: #ECFDF5;
   --price-up: #059669;
   --price-down: #DC2626;
+
+  /* shadcn/base-ui tokens mapped to design system */
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--bg-primary);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-primary);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--bg-secondary);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-secondary);
+  --muted-foreground: var(--text-secondary);
+  --accent-foreground: #ffffff;
+  --destructive: var(--danger);
+  --input: var(--bg-secondary);
+  --ring: var(--accent);
 }
 
 * {
