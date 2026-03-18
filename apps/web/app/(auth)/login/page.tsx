@@ -79,8 +79,8 @@ export default function LoginPage() {
       if (signInError) throw signInError;
       const profile = await fetchMyProfile();
       router.push(profile?.onboardingCompleted ? "/dashboard" : "/onboarding");
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to sign in.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to sign in.");
     } finally {
       setIsLoading(false);
     }
@@ -97,8 +97,8 @@ export default function LoginPage() {
         options: { redirectTo },
       });
       if (oauthError) throw oauthError;
-    } catch (e: any) {
-      setError(e?.message ?? "Google sign-in failed.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Google sign-in failed.");
       setIsLoading(false);
     }
   }

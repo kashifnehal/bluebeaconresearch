@@ -98,8 +98,8 @@ export default function SignupPage() {
       // Stripe checkout wiring comes in Phase 6; for now follow spec: paid → checkout, free → onboarding.
       if (selectedPlan === "free") router.push("/onboarding");
       else router.push("/verify?email=" + encodeURIComponent(values.email));
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to sign up.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to sign up.");
     } finally {
       setIsLoading(false);
     }
@@ -119,8 +119,8 @@ export default function SignupPage() {
         },
       });
       if (oauthError) throw oauthError;
-    } catch (e: any) {
-      setError(e?.message ?? "Google sign-up failed.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Google sign-up failed.");
       setIsLoading(false);
     }
   }

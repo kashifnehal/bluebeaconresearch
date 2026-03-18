@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       .select("plan_tier")
       .eq("id", user.id)
       .maybeSingle();
-    const tier = (profile as any)?.plan_tier ?? "free";
+    const tier = ((profile as { plan_tier?: string | null } | null)?.plan_tier ?? "free") as string;
     if (!["analyst", "pro", "api"].includes(tier)) {
       return new Response("Plan upgrade required", { status: 403 });
     }

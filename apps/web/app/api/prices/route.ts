@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+type CommodityPriceRow = {
+  symbol: string;
+  price: number | null;
+  change_24h: number | null;
+  change_pct_24h: number | null;
+  high_24h: number | null;
+  low_24h: number | null;
+  fetched_at: string;
+};
+
 export async function GET() {
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -23,8 +33,8 @@ export async function GET() {
     .limit(200);
 
   if (!error && data?.length) {
-    const latestBySymbol = new Map<string, any>();
-    for (const row of data) {
+    const latestBySymbol = new Map<string, CommodityPriceRow>();
+    for (const row of data as CommodityPriceRow[]) {
       if (!latestBySymbol.has(row.symbol)) latestBySymbol.set(row.symbol, row);
     }
     return NextResponse.json({ prices: Array.from(latestBySymbol.values()) });

@@ -83,7 +83,7 @@ export default function OnboardingPage() {
         const res = await fetch("/api/prices");
         const json = await res.json();
         if (cancelled) return;
-        const map: Record<string, any> = {};
+        const map: Record<string, { price: number; changePct24h: number }> = {};
         for (const p of json.prices ?? []) {
           map[p.symbol] = { price: p.price, changePct24h: p.change_pct_24h ?? p.changePct24h ?? 0 };
         }

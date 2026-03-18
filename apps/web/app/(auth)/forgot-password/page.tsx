@@ -29,8 +29,8 @@ export default function ForgotPasswordPage() {
       });
       if (e) throw e;
       setSent(true);
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to send reset email.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to send reset email.");
     } finally {
       setIsLoading(false);
     }

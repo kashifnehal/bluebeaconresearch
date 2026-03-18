@@ -35,8 +35,8 @@ export function VerifyClient() {
       });
       if (resendError) throw resendError;
       setSent(true);
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to resend email.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to resend email.");
     } finally {
       setIsLoading(false);
     }

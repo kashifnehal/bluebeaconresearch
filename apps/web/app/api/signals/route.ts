@@ -50,6 +50,27 @@ function mockSignals(): Signal[] {
   ];
 }
 
+type SignalRow = {
+  id: string;
+  title: string;
+  summary: string;
+  ai_analysis: string | null;
+  severity: number;
+  confidence: number;
+  event_type: string;
+  country: string;
+  region: Signal["region"] | string;
+  lat: number | null;
+  lng: number | null;
+  sources_count: number | null;
+  commodity_impacts: Signal["commodityImpacts"] | null;
+  sanctions_matches: Signal["sanctionsMatches"] | null;
+  shipping_proximity: Signal["shippingProximity"] | null;
+  is_breaking: boolean | null;
+  is_active: boolean | null;
+  created_at: string;
+};
+
 export async function GET(req: NextRequest) {
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -103,26 +124,29 @@ export async function GET(req: NextRequest) {
   }
 
   const signals: Signal[] =
-    (data ?? []).map((row: any) => ({
-      id: row.id,
-      title: row.title,
-      summary: row.summary,
-      aiAnalysis: row.ai_analysis ?? undefined,
-      severity: row.severity,
-      confidence: row.confidence,
-      eventType: row.event_type,
-      country: row.country,
-      region: row.region,
-      lat: row.lat ?? undefined,
-      lng: row.lng ?? undefined,
-      sourcesCount: row.sources_count ?? 1,
-      commodityImpacts: row.commodity_impacts ?? [],
-      sanctionsMatches: row.sanctions_matches ?? undefined,
-      shippingProximity: row.shipping_proximity ?? undefined,
-      isBreaking: row.is_breaking ?? false,
-      isActive: row.is_active ?? true,
-      createdAt: row.created_at,
-    })) ?? [];
+    (data ?? []).map((row) => {
+      const r = row as SignalRow;
+      return {
+        id: r.id,
+        title: r.title,
+        summary: r.summary,
+        aiAnalysis: r.ai_analysis ?? undefined,
+        severity: r.severity,
+        confidence: r.confidence,
+        eventType: r.event_type,
+        country: r.country,
+        region: r.region as Signal["region"],
+        lat: r.lat ?? undefined,
+        lng: r.lng ?? undefined,
+        sourcesCount: r.sources_count ?? 1,
+        commodityImpacts: r.commodity_impacts ?? [],
+        sanctionsMatches: r.sanctions_matches ?? undefined,
+        shippingProximity: r.shipping_proximity ?? undefined,
+        isBreaking: r.is_breaking ?? false,
+        isActive: r.is_active ?? true,
+        createdAt: r.created_at,
+      };
+    }) ?? [];
 
   return NextResponse.json({ signals, nextCursor: null, total: count ?? signals.length });
 }

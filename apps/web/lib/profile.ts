@@ -10,6 +10,13 @@ export type Profile = {
   fullName?: string | null;
 };
 
+type ProfileRow = {
+  id: string;
+  onboarding_completed: boolean | null;
+  plan_tier: PlanTier | null;
+  full_name: string | null;
+};
+
 export async function fetchMyProfile(): Promise<Profile | null> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return null;
@@ -25,11 +32,13 @@ export async function fetchMyProfile(): Promise<Profile | null> {
     .eq("id", user.id)
     .maybeSingle();
 
+  const row = (data ?? null) as ProfileRow | null;
+
   return {
     id: user.id,
-    onboardingCompleted: Boolean((data as any)?.onboarding_completed),
-    planTier: ((data as any)?.plan_tier ?? "free") as PlanTier,
-    fullName: (data as any)?.full_name ?? null,
+    onboardingCompleted: Boolean(row?.onboarding_completed),
+    planTier: (row?.plan_tier ?? "free") as PlanTier,
+    fullName: row?.full_name ?? null,
   };
 }
 

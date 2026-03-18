@@ -79,7 +79,20 @@ export default function BacktestingPage() {
         body: JSON.stringify({ eventType, region, commodity, horizon, from, to }),
       });
       if (!res.ok) throw new Error("Backtest failed");
-      return (await res.json()) as any;
+      return (await res.json()) as {
+        totalEvents: number;
+        accuracyPct: number;
+        avgMovePct: number;
+        maxMovePct: number;
+        minMovePct: number;
+        rows: Array<{
+          date: string;
+          country: string;
+          summary: string;
+          movePct: number;
+          correct: boolean;
+        }>;
+      };
     },
   });
 
