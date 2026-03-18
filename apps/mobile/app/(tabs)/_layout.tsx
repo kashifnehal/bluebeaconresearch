@@ -21,7 +21,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
+          title: 'Feed',
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{
@@ -50,9 +50,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="watchlist"
         options={{
-          title: 'Tab Two',
+          title: 'Watchlist',
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{
@@ -63,6 +63,37 @@ export default function TabLayout() {
               tintColor={color}
               size={28}
             />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="alerts"
+        options={{
+          title: 'Alerts',
+          tabBarIcon: ({ color }) => (
+            <SymbolView name={{ ios: 'chevron.left.forwardslash.chevron.right', android: 'code', web: 'code' }} tintColor={color} size={28} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="backtesting"
+        options={{
+          title: 'Backtesting',
+          tabBarIcon: ({ color }) => (
+            <SymbolView
+              name={{ ios: 'chevron.left.forwardslash.chevron.right', android: 'code', web: 'code' }}
+              tintColor={color}
+              size={28}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => (
+            <SymbolView name={{ ios: 'chevron.left.forwardslash.chevron.right', android: 'code', web: 'code' }} tintColor={color} size={28} />
           ),
         }}
       />

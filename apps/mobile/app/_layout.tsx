@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -23,6 +24,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const router = useRouter();
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -42,12 +44,45 @@ export default function RootLayout() {
         }
         const token = (await Notifications.getExpoPushTokenAsync()).data;
         await SecureStore.setItemAsync("expoPushToken", token);
+
+        // Best-effort: upload token to the backend.
+        // Requires an authenticated user session; if auth isn't available yet, we silently skip.
+        try {
+          const { geoFetch } = await import("@/lib/api");
+          await geoFetch("/v1/users/push-token", {
+            method: "POST",
+            body: JSON.stringify({ expoPushToken: token }),
+          });
+        } catch {
+          // ignore
+        }
       } catch {
         // Non-fatal: app should still work without push notifications.
       }
     }
     registerPush();
   }, []);
+
+  useEffect(() => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowList: true,
+      }),
+    });
+
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const signalId = response?.notification?.request?.content?.data?.signalId;
+      if (signalId) {
+        router.push(`/event/${signalId}` as any);
+      }
+    });
+
+    return () => sub.remove();
+  }, [router]);
 
   useEffect(() => {
     if (loaded) {

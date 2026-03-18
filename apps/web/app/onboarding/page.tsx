@@ -70,6 +70,7 @@ export default function OnboardingPage() {
   const [emailFrequency, setEmailFrequency] = useState("immediate");
   const [slackWebhook, setSlackWebhook] = useState("");
   const [telegramConnected, setTelegramConnected] = useState(false);
+  const [telegramConnectCode, setTelegramConnectCode] = useState<string | null>(null);
 
   const [prices, setPrices] = useState<Record<string, { price: number; changePct24h: number }>>({});
   const [loadingPrices, setLoadingPrices] = useState(false);
@@ -133,6 +134,15 @@ export default function OnboardingPage() {
           min_severity: 7,
           theme: "dark",
         });
+
+        if (slackWebhook.trim().length) {
+          await supabase.from("user_channels").upsert({
+            user_id: user.id,
+            slack_webhook_url: slackWebhook.trim(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+
         await supabase.from("profiles").upsert({
           id: user.id,
           onboarding_completed: true,
@@ -285,8 +295,40 @@ export default function OnboardingPage() {
                       type="button"
                       variant="outline"
                       onClick={() => {
-                        setTelegramConnected(true);
-                        toast("Telegram connect code: 8F4K2");
+                        toast("Generating Telegram connect code...");
+                        (async () => {
+                          try {
+                            const res = await fetch("/api/telegram/connect-code", { method: "POST" });
+                            const json = await res.json().catch(() => null);
+                            if (!res.ok) throw new Error(json?.error ?? "Failed to generate code");
+                            const code = String(json?.code ?? "");
+                            if (!code) throw new Error("Invalid connect code");
+                            setTelegramConnectCode(code);
+                            toast(`Telegram connect code: ${code}`);
+
+                            // Poll connection status after user submits `/connect <code>`
+                            const start = Date.now();
+                            const interval = setInterval(async () => {
+                              try {
+                                const statusRes = await fetch("/api/telegram/status");
+                                const statusJson = await statusRes.json().catch(() => null);
+                                if (statusJson?.telegramConnected) {
+                                  setTelegramConnected(true);
+                                  clearInterval(interval);
+                                  toast("Telegram connected!");
+                                  return;
+                                }
+                                if (Date.now() - start > 60_000) {
+                                  clearInterval(interval);
+                                }
+                              } catch {
+                                // ignore poll errors
+                              }
+                            }, 3000);
+                          } catch (e) {
+                            toast.error(e instanceof Error ? e.message : "Failed to generate connect code");
+                          }
+                        })();
                       }}
                       className="mt-2 h-9 bg-transparent border-border text-text-primary hover:bg-surface-elevated"
                     >
@@ -296,7 +338,7 @@ export default function OnboardingPage() {
                 </div>
                 <div className="mt-3 text-text-muted text-xs">
                   1. Open Telegram and search <span className="text-text-secondary">@GeoSignalBot</span> 2. Press Start 3. Send{" "}
-                  <span className="font-mono text-text-secondary">/connect 8F4K2</span>
+                  <span className="font-mono text-text-secondary">/connect {telegramConnectCode ?? "CODE"}</span>
                 </div>
               </Card>
 

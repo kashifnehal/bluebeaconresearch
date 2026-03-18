@@ -35,5 +35,11 @@
     "experiments": {
       "typedRoutes": true
     }
+    ,
+    "extra": {
+      "API_URL": "http://localhost:3001",
+      "SUPABASE_URL": "",
+      "SUPABASE_ANON_KEY": ""
+    }
   }
 }

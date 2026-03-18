@@ -17,6 +17,7 @@ import { webhooksRoutes } from "./routes/webhooks";
 import { pricesRoutes } from "./routes/prices";
 import { eventsRoutes } from "./routes/events";
 import { telegramRoutes } from "./routes/telegram";
+import { backtestingRoutes } from "./routes/backtesting";
 
 export function buildApp() {
   const env = getEnv();
@@ -33,7 +34,7 @@ export function buildApp() {
   const redis = getRedis();
   app.register(rateLimit, {
     redis,
-    max: 100,
+    max: 60,
     timeWindow: "1 minute",
   });
 
@@ -57,6 +58,7 @@ export function buildApp() {
   app.register(pricesRoutes, { prefix: "/v1/prices" });
   app.register(eventsRoutes, { prefix: "/v1/events" });
   app.register(telegramRoutes, { prefix: "/v1/telegram" });
+  app.register(backtestingRoutes, { prefix: "/v1/backtesting" });
 
   return app;
 }

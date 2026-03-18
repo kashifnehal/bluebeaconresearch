@@ -84,6 +84,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@geosignal/shared':
+        specifier: link:../../packages/shared
+        version: link:../../packages/shared
       '@react-navigation/native':
         specifier: ^7.1.33
         version: 7.1.33(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.2)(react@19.2.0))(react@19.2.0)
