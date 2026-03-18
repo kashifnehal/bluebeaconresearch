@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { loginSchema } from "@/lib/validators";
+import { fetchMyProfile } from "@/lib/profile";
 
 type FormValues = z.infer<typeof loginSchema>;
 
@@ -76,7 +77,8 @@ export default function LoginPage() {
         password: values.password,
       });
       if (signInError) throw signInError;
-      router.push("/onboarding");
+      const profile = await fetchMyProfile();
+      router.push(profile?.onboardingCompleted ? "/dashboard" : "/onboarding");
     } catch (e: any) {
       setError(e?.message ?? "Failed to sign in.");
     } finally {
@@ -150,7 +152,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-between">
               <Label className="text-text-secondary">Password</Label>
               <Link
-                href="#"
+                href="/forgot-password"
                 className="text-accent text-sm hover:underline"
               >
                 Forgot password?
