@@ -46,6 +46,22 @@ export async function GET(request: NextRequest) {
 
   if (!user) return new Response("Unauthorized", { status: 401 });
 
+  // Phase 3 spec: SSE only for analyst/pro/api. Free tier should rely on polling.
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan_tier")
+      .eq("id", user.id)
+      .maybeSingle();
+    const tier = (profile as any)?.plan_tier ?? "free";
+    if (!["analyst", "pro", "api"].includes(tier)) {
+      return new Response("Plan upgrade required", { status: 403 });
+    }
+  } catch {
+    // if profiles not available, default to forbid SSE (safe)
+    return new Response("Plan upgrade required", { status: 403 });
+  }
+
   let lastSeen = new Date(Date.now() - 60_000).toISOString();
 
   const stream = new ReadableStream({

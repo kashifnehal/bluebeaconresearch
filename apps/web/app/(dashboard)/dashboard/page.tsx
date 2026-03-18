@@ -8,8 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import { SignalCard } from "@/components/signals/SignalCard";
 import type { Signal } from "@geosignal/shared";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function DashboardPage() {
+  const planTier = useAuthStore((s) => s.planTier);
+  const sseEnabled = planTier === "analyst" || planTier === "pro" || planTier === "api";
+  const pollingInterval = planTier === "free" ? 6 * 60 * 60 * 1000 : 30_000;
+
   const [dismissed, setDismissed] = useState<string[]>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -25,10 +30,10 @@ export default function DashboardPage() {
       const res = await fetch("/api/signals?sort=severity");
       return (await res.json()) as { signals: Signal[] };
     },
-    refetchInterval: 30_000,
+    refetchInterval: pollingInterval,
   });
 
-  const { liveSignals } = useSignalFeed({ enabled: true });
+  const { liveSignals } = useSignalFeed({ enabled: sseEnabled });
 
   const merged = useMemo(() => {
     const map = new Map<string, Signal>();
