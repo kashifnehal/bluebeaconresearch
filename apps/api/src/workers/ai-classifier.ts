@@ -5,6 +5,7 @@ import { getRedis } from "../clients/redis";
 import { getSupabaseAdmin } from "../clients/supabase";
 import { QUEUE_NAMES, buildQueues } from "../queues";
 import { ClaudeService } from "../services/claude.service";
+import { publishNewSignal } from "../workers/pubsub";
 
 const classificationSchema = z.object({
   severity: z.number().int().min(1).max(10),
@@ -67,6 +68,8 @@ export function startAiClassifierWorker() {
         await queues.signalGeneration.add("generate", { signalId }, { attempts: 3, backoff: { type: "exponential", delay: 1000 } });
       }
       await queues.alertDispatcher.add("dispatch", { signalId }, { attempts: 5, backoff: { type: "exponential", delay: 1000 } });
+
+      await publishNewSignal({ signalId });
 
       return { signalId };
     },

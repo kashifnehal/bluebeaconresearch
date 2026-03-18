@@ -9,6 +9,7 @@ alter table if exists public.saved_signals enable row level security;
 alter table if exists public.api_keys enable row level security;
 alter table if exists public.signals enable row level security;
 alter table if exists public.commodity_prices enable row level security;
+alter table if exists public.user_channels enable row level security;
 
 -- profiles: users can only read/update their own profile
 drop policy if exists "profiles_select_own" on public.profiles;
@@ -100,4 +101,27 @@ on public.commodity_prices
 for select
 to authenticated
 using (true);
+
+-- user_channels: users can only read/update their own
+drop policy if exists "user_channels_select_own" on public.user_channels;
+create policy "user_channels_select_own"
+on public.user_channels
+for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "user_channels_upsert_own" on public.user_channels;
+create policy "user_channels_upsert_own"
+on public.user_channels
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+drop policy if exists "user_channels_update_own" on public.user_channels;
+create policy "user_channels_update_own"
+on public.user_channels
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
 

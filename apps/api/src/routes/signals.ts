@@ -2,6 +2,9 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
 import { getSupabaseAdmin } from "../clients/supabase";
+import { planGuard } from "../middleware/plan-guard.middleware";
+import { REDIS_CHANNELS } from "../workers/pubsub";
+import { getRedis } from "../clients/redis";
 
 const querySchema = z.object({
   severity: z.coerce.number().int().min(1).max(10).optional(),
@@ -55,5 +58,53 @@ export async function signalsRoutes(app: FastifyInstance) {
     if (error) return reply.status(500).send({ error: "Query failed" });
     return reply.send({ data: data ?? [] });
   });
+
+  // SSE stream for new signals (API tier + Pro can use it; free/analyst rely on polling)
+  app.get(
+    "/stream",
+    { preHandler: planGuard(["pro", "api"]) },
+    async (req, reply) => {
+      reply.raw.setHeader("Content-Type", "text/event-stream");
+      reply.raw.setHeader("Cache-Control", "no-cache");
+      reply.raw.setHeader("Connection", "keep-alive");
+      reply.raw.flushHeaders();
+
+      const pub = getRedis();
+      const sub = pub.duplicate();
+      await sub.connect();
+      await sub.subscribe(REDIS_CHANNELS.newSignal);
+
+      const heartbeat = setInterval(() => {
+        reply.raw.write(`: ping\n\n`);
+      }, 30_000);
+
+      const onMessage = async (_channel: string, message: string) => {
+        try {
+          const payload = JSON.parse(message) as { signalId: string };
+          const supabase = getSupabaseAdmin();
+          const { data } = await supabase.from("signals").select("*").eq("id", payload.signalId).maybeSingle();
+          if (!data) return;
+          reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
+        } catch {
+          // ignore malformed messages
+        }
+      };
+
+      sub.on("message", onMessage);
+
+      req.raw.on("close", async () => {
+        clearInterval(heartbeat);
+        sub.off("message", onMessage);
+        try {
+          await sub.unsubscribe(REDIS_CHANNELS.newSignal);
+          await sub.quit();
+        } catch {
+          // ignore
+        }
+      });
+
+      return reply;
+    },
+  );
 }
 

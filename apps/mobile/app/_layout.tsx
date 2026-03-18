@@ -4,6 +4,8 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import * as Notifications from "expo-notifications";
+import * as SecureStore from "expo-secure-store";
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -29,6 +31,23 @@ export default function RootLayout() {
   useEffect(() => {
     if (error) throw error;
   }, [error]);
+
+  useEffect(() => {
+    async function registerPush() {
+      try {
+        const settings = await Notifications.getPermissionsAsync();
+        if (!settings.granted) {
+          const req = await Notifications.requestPermissionsAsync();
+          if (!req.granted) return;
+        }
+        const token = (await Notifications.getExpoPushTokenAsync()).data;
+        await SecureStore.setItemAsync("expoPushToken", token);
+      } catch {
+        // Non-fatal: app should still work without push notifications.
+      }
+    }
+    registerPush();
+  }, []);
 
   useEffect(() => {
     if (loaded) {
