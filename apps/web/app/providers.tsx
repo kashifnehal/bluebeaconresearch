@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider
         attribute="data-theme"
         defaultTheme="dark"
-        enableSystem
+        forcedTheme="dark"
         disableTransitionOnChange
       >
         <TooltipProvider>

@@ -65,7 +65,6 @@ type SignalRow = {
   sources_count: number | null;
   commodity_impacts: Signal["commodityImpacts"] | null;
   sanctions_matches: Signal["sanctionsMatches"] | null;
-  shipping_proximity: Signal["shippingProximity"] | null;
   is_breaking: boolean | null;
   is_active: boolean | null;
   created_at: string;
@@ -141,7 +140,6 @@ export async function GET(req: NextRequest) {
         sourcesCount: r.sources_count ?? 1,
         commodityImpacts: r.commodity_impacts ?? [],
         sanctionsMatches: r.sanctions_matches ?? undefined,
-        shippingProximity: r.shipping_proximity ?? undefined,
         isBreaking: r.is_breaking ?? false,
         isActive: r.is_active ?? true,
         createdAt: r.created_at,

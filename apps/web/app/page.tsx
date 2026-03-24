@@ -69,6 +69,14 @@ async function getLatestSignal(): Promise<LandingSignalPreview | null> {
 }
 
 export default async function Home() {
+  // ─── DEV SHORTCUT ──────────────────────────────────────────────────────────
+  // In local development, jump straight to the dashboard so you can preview
+  // the Stitch-matching UI without an auth session. Remove before deploying.
+  if (process.env.NODE_ENV === "development") {
+    const { redirect } = await import("next/navigation");
+    redirect("/dashboard");
+  }
+  // ──────────────────────────────────────────────────────────────────────────
   const latestSignal = await getLatestSignal();
 
   return (

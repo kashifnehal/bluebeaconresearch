@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
+
 
 @tailwind base;
 @tailwind components;
@@ -6,26 +8,26 @@
 
 :root {
   /* Dark theme (default) */
-  --bg-app: #050914;
-  --bg-primary: #0D1117;
-  --bg-secondary: #161B22;
-  --bg-elevated: #1C2333;
-  --border: #2D3748;
-  --border-subtle: #1E2736;
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #4B5563;
-  --accent: #3B82F6;
-  --accent-hover: #2563EB;
-  --accent-subtle: #1D2D50;
-  --danger: #EF4444;
-  --danger-subtle: #2D1B1B;
+  --bg-app: #0E0E0E;
+  --bg-primary: #131313;
+  --bg-secondary: #1A1919;
+  --bg-elevated: #262626;
+  --border: #484848;
+  --border-subtle: #202020;
+  --text-primary: #E7E5E4;
+  --text-secondary: #ACABAA;
+  --text-muted: #767575;
+  --accent: #10B981;
+  --accent-hover: #4EDEA3;
+  --accent-subtle: #005236;
+  --danger: #EE7D77;
+  --danger-subtle: #7F2927;
   --warning: #F59E0B;
   --warning-subtle: #2D2210;
   --success: #10B981;
-  --success-subtle: #0D2B21;
-  --price-up: #34D399;
-  --price-down: #F87171;
+  --success-subtle: #005236;
+  --price-up: #4EDEA3;
+  --price-down: #EE7D77;
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;

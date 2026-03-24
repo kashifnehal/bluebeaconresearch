@@ -1,78 +1,56 @@
 "use client";
 
-import { useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { Bell, Moon, Search, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-
-function titleFor(pathname: string) {
-  if (pathname.startsWith("/watchlist")) return "Watchlist";
-  if (pathname.startsWith("/alerts")) return "Alerts";
-  if (pathname.startsWith("/backtesting")) return "Backtesting";
-  if (pathname.startsWith("/api-console")) return "API Console";
-  if (pathname.startsWith("/settings")) return "Settings";
-  if (pathname.startsWith("/events")) return "Event";
-  return "Signal Feed";
-}
+import { useRouter } from "next/navigation";
 
 export function TopBar() {
-  const pathname = usePathname();
   const router = useRouter();
-  const { resolvedTheme, setTheme } = useTheme();
-  const title = useMemo(() => titleFor(pathname), [pathname]);
 
   return (
-    <div className="sticky top-0 z-40 h-14 bg-surface border-b border-border flex items-center px-4 lg:ml-[240px]">
-      <div className="text-text-primary text-[18px] font-semibold">{title}</div>
-
-      <div className="mx-auto hidden md:block">
-        <div className="relative w-[320px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
-          <Input
-            placeholder="Search events, countries, commodities..."
-            className="h-9 pl-10 bg-surface-secondary border-border text-text-primary placeholder:text-text-muted focus-visible:ring-0 focus-visible:border-accent"
+    <header
+      className="w-full h-16 sticky top-0 z-40 flex items-center justify-between px-6 font-['Inter'] antialiased tracking-tight"
+      style={{ backgroundColor: "#0e0e0e", borderBottom: "1px solid rgba(72,72,72,0.1)" }}
+    >
+      {/* Left: Search */}
+      <div className="flex items-center gap-8">
+        <div className="hidden md:flex items-center bg-surface-container-lowest rounded-lg px-3 py-1.5 gap-2 w-80 border border-outline-variant/20 relative">
+          <span className="material-symbols-outlined text-on-surface-variant text-sm" style={{ fontFamily: "Material Symbols Outlined" }}>search</span>
+          <input
+            className="bg-transparent border-none focus:ring-0 text-sm w-full text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+            placeholder="Search signals, regions, or assets..."
+            type="text"
           />
+          <span className="text-[10px] bg-surface-container-highest px-1.5 py-0.5 rounded text-on-surface-variant font-mono">/</span>
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <Button
-          variant="outline"
-          className="h-9 w-9 p-0 bg-transparent border-border hover:bg-surface-elevated"
-          onClick={() => {}}
-          aria-label="Notifications"
-        >
-          <Bell size={18} />
-        </Button>
-
-        <Button
-          variant="outline"
-          className="h-9 w-9 p-0 bg-transparent border-border hover:bg-surface-elevated"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          aria-label="Toggle theme"
-        >
-          {resolvedTheme === "dark" ? <Moon size={18} /> : <Sun size={18} />}
-        </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="size-9 rounded-full bg-accent text-white text-sm font-semibold">
+      {/* Right: Status + Actions + Avatar */}
+      <div className="flex items-center gap-5">
+        <div className="hidden sm:flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4edea3" }} />
+          <span className="text-[10px] font-bold tracking-tighter uppercase" style={{ color: "#e7e5e4" }}>Live Network: Secure</span>
+        </div>
+        <div className="flex items-center gap-4 mr-2">
+          <button className="text-on-surface-variant hover:text-white transition-colors duration-200">
+            <span className="material-symbols-outlined" style={{ fontFamily: "Material Symbols Outlined" }}>notifications</span>
+          </button>
+          <button className="text-on-surface-variant hover:text-white transition-colors duration-200">
+            <span className="material-symbols-outlined" style={{ fontFamily: "Material Symbols Outlined" }}>help</span>
+          </button>
+        </div>
+        <div className="flex items-center gap-3 pl-4" style={{ borderLeft: "1px solid rgba(72,72,72,0.2)" }}>
+          <div className="text-right hidden sm:block">
+            <p className="text-xs font-semibold text-on-surface">Terminal Sentinel</p>
+            <p className="text-[10px]" style={{ color: "#4edea3" }}>LVL 4 ACCESS</p>
+          </div>
+          <button
+            onClick={() => router.push("/settings")}
+            className="w-8 h-8 rounded-full border overflow-hidden flex items-center justify-center text-xs font-bold text-on-primary"
+            style={{ backgroundColor: "#4edea3", borderColor: "rgba(78,222,163,0.3)", color: "#004a31" }}
+          >
             GS
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-surface border-border">
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/login")}>
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </button>
+        </div>
       </div>
-    </div>
+    </header>
   );
 }
-

@@ -29,7 +29,6 @@ export interface Signal {
   sourcesCount: number;
   commodityImpacts: CommodityImpact[];
   sanctionsMatches?: { actor: string; list: string }[];
-  shippingProximity?: { chokepoint: string; distanceKm: number };
   isBreaking: boolean;
   isActive: boolean;
   createdAt: string;

@@ -18,7 +18,6 @@ export default function SettingsPage() {
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="subscription">Subscription</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="data">Data</TabsTrigger>
           </TabsList>
@@ -58,18 +57,6 @@ export default function SettingsPage() {
                   <div className="text-text-muted text-sm mt-1">Day mode</div>
                 </button>
               </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="subscription" className="mt-4">
-            <Card className="bg-surface border border-border rounded-xl p-6 shadow-none">
-              <div className="text-text-primary font-medium">Subscription</div>
-              <div className="text-text-secondary text-sm mt-2">
-                Phase 6 will connect Stripe billing portal + plan upgrades.
-              </div>
-              <Button className="mt-4 bg-accent hover:bg-accent-hover text-white h-10">
-                Manage subscription
-              </Button>
             </Card>
           </TabsContent>
 

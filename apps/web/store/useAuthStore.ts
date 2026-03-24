@@ -14,9 +14,9 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       userId: null,
-      planTier: "free",
+      planTier: "pro",
       setUser: (userId, planTier) =>
-        set({ userId, planTier: planTier ?? "free" }),
+        set({ userId, planTier: planTier ?? "pro" }),
     }),
     { name: "geosignal-auth" },
   ),

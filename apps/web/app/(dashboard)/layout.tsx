@@ -1,6 +1,5 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
-import { PriceTicker } from "@/components/layout/PriceTicker";
 
 export default function DashboardLayout({
   children,
@@ -8,14 +7,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-surface-app">
+    <div className="min-h-screen" style={{ backgroundColor: "#0e0e0e" }}>
       <Sidebar />
-      <TopBar />
-      <div className="lg:ml-[240px]">
-        <PriceTicker />
-        <main className="p-6">{children}</main>
+      {/* Main content pushed 256px to the right of the fixed sidebar */}
+      <div className="flex flex-col min-h-screen" style={{ marginLeft: "256px" }}>
+        <TopBar />
+        {/* Children manage their own padding/overflow */}
+        <main className="flex-1" style={{ backgroundColor: "#0e0e0e" }}>
+          {children}
+        </main>
       </div>
     </div>
   );
 }
-

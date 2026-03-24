@@ -23,7 +23,6 @@ function mapRowToSignal(row: any): Signal {
     sourcesCount: row.sources_count ?? row.sourcesCount ?? 1,
     commodityImpacts: (row.commodity_impacts ?? row.commodityImpacts ?? []) as Signal["commodityImpacts"],
     sanctionsMatches: row.sanctions_matches ?? row.sanctionsMatches ?? undefined,
-    shippingProximity: row.shipping_proximity ?? row.shippingProximity ?? undefined,
     isBreaking: Boolean(row.is_breaking ?? row.isBreaking ?? false),
     isActive: Boolean(row.is_active ?? row.isActive ?? true),
     createdAt: String(row.created_at ?? row.createdAt ?? new Date().toISOString()),

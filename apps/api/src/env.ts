@@ -1,5 +1,8 @@
-import { z } from "zod";
+import { config } from "dotenv";
+import { resolve } from "path";
+config({ path: resolve(process.cwd(), "../../.env") });
 
+import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
   PORT: z.coerce.number().int().positive().default(3001),
@@ -15,8 +18,6 @@ const envSchema = z.object({
   REDIS_URL: z.string().min(1).optional(),
 
   ANTHROPIC_API_KEY: z.string().min(10).optional(),
-  RESEND_API_KEY: z.string().min(10).optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
 
   TELEGRAM_BOT_TOKEN: z.string().min(10).optional(),
   ALPHA_VANTAGE_API_KEY: z.string().min(10).optional(),

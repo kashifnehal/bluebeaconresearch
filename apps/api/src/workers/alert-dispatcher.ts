@@ -70,7 +70,7 @@ export function startAlertDispatcherWorker() {
           if (inRange) continue;
         }
 
-        const channels: string[] = Array.isArray(rule.channels) ? rule.channels : ["email"];
+        const channels: string[] = Array.isArray(rule.channels) ? rule.channels : ["telegram"];
         for (const channel of channels) {
           attempted += 1;
           let status: "queued" | "delivered" | "failed" = "queued";

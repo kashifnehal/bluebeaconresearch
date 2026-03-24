@@ -18,17 +18,6 @@ import type { PlanTier } from "@geosignal/shared";
 
 type FormValues = z.infer<typeof signupSchema>;
 
-const PLANS: Array<{
-  id: PlanTier;
-  name: string;
-  price: string;
-  features: string[];
-}> = [
-  { id: "free", name: "Free", price: "$0", features: ["Delayed feed", "Basic alerts"] },
-  { id: "analyst", name: "Analyst", price: "$49/mo", features: ["Real-time feed", "Telegram alerts"] },
-  { id: "pro", name: "Pro", price: "$199/mo", features: ["Backtesting", "Slack + exports"] },
-];
-
 function passwordScore(pw: string) {
   let score = 0;
   if (pw.length >= 8) score++;
@@ -48,7 +37,7 @@ function scoreColor(i: number, score: number) {
 
 export default function SignupPage() {
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<PlanTier>("analyst");
+  const selectedPlan: PlanTier = "pro";
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,9 +84,8 @@ export default function SignupPage() {
           .upsert({ id: data.user.id, full_name: values.fullName, plan_tier: selectedPlan });
       }
 
-      // Stripe checkout wiring comes in Phase 6; for now follow spec: paid → checkout, free → onboarding.
-      if (selectedPlan === "free") router.push("/onboarding");
-      else router.push("/verify?email=" + encodeURIComponent(values.email));
+      // Default all signups to pro plan and go to onboarding
+      router.push("/onboarding");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign up.");
     } finally {
@@ -141,33 +129,7 @@ export default function SignupPage() {
           No credit card required. Real signals in 5 minutes.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          {PLANS.map((p) => {
-            const active = selectedPlan === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setSelectedPlan(p.id)}
-                className={[
-                  "text-left bg-surface-secondary border rounded-lg p-3 transition-colors",
-                  active ? "border-accent border-2" : "border-border hover:bg-surface-elevated",
-                ].join(" ")}
-              >
-                <div className="text-text-primary font-semibold">{p.name}</div>
-                <div className="text-[20px] font-bold text-text-primary">{p.price}</div>
-                <ul className="mt-2 space-y-1">
-                  {p.features.slice(0, 2).map((f) => (
-                    <li key={f} className="flex items-center gap-1.5 text-xs text-text-secondary">
-                      <Check className="text-success" size={14} />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </button>
-            );
-          })}
-        </div>
+        <div className="mb-6"></div>
 
         <Button
           type="button"

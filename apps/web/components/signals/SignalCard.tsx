@@ -25,9 +25,9 @@ export function SignalCard({
       role="button"
       tabIndex={0}
       className={[
-        "bg-surface border border-border rounded-xl p-4 cursor-pointer transition-colors duration-150",
-        "hover:border-accent/50 hover:bg-surface-elevated",
-        isBreaking ? "border-l-4 border-danger bg-danger-subtle" : "",
+        "bg-surface-elevated/60 backdrop-blur-2xl border border-border-subtle/20 rounded-xl p-4 cursor-pointer transition-colors duration-150",
+        "hover:border-accent/40 hover:bg-surface-secondary",
+        isBreaking ? "border-l-4 border-danger bg-danger-subtle/50" : "",
       ].join(" ")}
     >
       <div className="flex items-start justify-between gap-2">
@@ -70,11 +70,6 @@ export function SignalCard({
           <MapPin size={12} />
           <span>{signal.country}</span>
         </div>
-        {signal.shippingProximity ? (
-          <span className="bg-danger-subtle text-danger text-xs rounded-full px-2 py-0.5">
-            ⚠ {signal.shippingProximity.distanceKm}km from {signal.shippingProximity.chokepoint}
-          </span>
-        ) : null}
       </div>
     </div>
   );

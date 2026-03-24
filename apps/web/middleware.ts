@@ -7,11 +7,18 @@ const PROTECTED = [
   "/watchlist",
   "/alerts",
   "/backtesting",
-  "/api-console",
   "/settings",
 ];
 
 export async function middleware(request: NextRequest) {
+  // ─── DEV BYPASS ───────────────────────────────────────────────────────────
+  // In local development, skip auth so you can preview all screens instantly.
+  // Remove this block before deploying to production.
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next();
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   const response = NextResponse.next();
 
   const supabase = createServerClient(
