@@ -7,6 +7,8 @@ import { startAiClassifierWorker } from "./workers/ai-classifier";
 import { startSignalGeneratorWorker } from "./workers/signal-generator";
 import { startAlertDispatcherWorker } from "./workers/alert-dispatcher";
 import { runGdeltCollectorOnce } from "./workers/gdelt-collector";
+import { runAcledCollectorOnce } from "./workers/acled-collector";
+import { runGnewsCollectorOnce } from "./workers/gnews-collector";
 import { runPriceSyncOnce } from "./workers/price-syncer";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer";
 
@@ -32,6 +34,20 @@ async function main() {
       app.log.info({ res }, "gdelt-collector");
     } catch (e) {
       app.log.error({ err: e }, "gdelt-collector failed");
+      Sentry.captureException(e);
+    }
+    try {
+      const res = await runAcledCollectorOnce();
+      app.log.info({ res }, "acled-collector");
+    } catch (e) {
+      app.log.error({ err: e }, "acled-collector failed");
+      Sentry.captureException(e);
+    }
+    try {
+      const res = await runGnewsCollectorOnce();
+      app.log.info({ res }, "gnews-collector");
+    } catch (e) {
+      app.log.error({ err: e }, "gnews-collector failed");
       Sentry.captureException(e);
     }
   });

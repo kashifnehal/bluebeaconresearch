@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 
 
@@ -7,27 +7,38 @@
 @tailwind utilities;
 
 :root {
-  /* Dark theme (default) */
-  --bg-app: #0E0E0E;
-  --bg-primary: #131313;
-  --bg-secondary: #1A1919;
-  --bg-elevated: #262626;
-  --border: #484848;
-  --border-subtle: #202020;
-  --text-primary: #E7E5E4;
-  --text-secondary: #ACABAA;
-  --text-muted: #767575;
-  --accent: #10B981;
-  --accent-hover: #4EDEA3;
-  --accent-subtle: #005236;
-  --danger: #EE7D77;
-  --danger-subtle: #7F2927;
-  --warning: #F59E0B;
-  --warning-subtle: #2D2210;
-  --success: #10B981;
-  --success-subtle: #005236;
+  /* BlueBeaconResearch - Absolute Dark Architecture */
+  --bg-app: #0E0E0E;           /* surface-container-lowest */
+  --bg-primary: #131313;       /* surface */
+  --bg-secondary: #1C1B1B;     /* surface-container-low */
+  --bg-container: #201F1F;     /* surface-container */
+  --bg-elevated: #2A2A2A;      /* surface-container-high */
+  --bg-highest: #353534;       /* surface-container-highest */
+  
+  --border: #3C4A42;           /* outline-variant @ 20% opacity */
+  --border-subtle: rgba(60, 74, 66, 0.1);
+  
+  --text-primary: #E5E2E1;     /* on-surface */
+  --text-secondary: #BBCAC0;   /* on-surface-variant */
+  --text-muted: #86948A;       /* outline */
+  
+  --accent: #4EDEA3;           /* primary-fixed-dim */
+  --accent-hover: #6FFBBE;     /* primary */
+  --accent-subtle: #005236;    /* on-primary-fixed-variant */
+  
+  --danger: #FFB4AB;           /* error */
+  --danger-subtle: #7F2927;    /* tertiary-fixed-variant / critical bg */
+  --on-danger-subtle: #FF9993; /* light red text on dark red bg */
+  
+  --warning: #FFB3AE;          /* tertiary-fixed-dim */
+  --warning-subtle: #410004;    /* on-tertiary-fixed */
+  
+  --success: #4EDEA3;
+  --success-subtle: #002114;
+  
   --price-up: #4EDEA3;
   --price-down: #EE7D77;
+  
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -107,4 +118,14 @@ body {
 
 .font-mono {
   font-family: 'JetBrains Mono', monospace;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(1000%); opacity: 0; }
+}
+
+.animate-scan {
+  animation: scan 4s linear infinite;
 }

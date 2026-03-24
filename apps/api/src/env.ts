@@ -21,6 +21,9 @@ const envSchema = z.object({
 
   TELEGRAM_BOT_TOKEN: z.string().min(10).optional(),
   ALPHA_VANTAGE_API_KEY: z.string().min(10).optional(),
+  ACLED_EMAIL: z.string().email().optional(),
+  ACLED_PASSWORD: z.string().min(6).optional(),
+  NEWS_API_KEY: z.string().min(10).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -33,4 +36,3 @@ export function getEnv(): Env {
   }
   return parsed.data;
 }
-

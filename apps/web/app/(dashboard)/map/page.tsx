@@ -16,175 +16,229 @@ export default function MapPage() {
   const signals = data?.signals ?? [];
   const liveItems = signals.slice(0, 6);
 
+  // BlueBeaconResearch Glassmorphism Style
+  const glassStyle = {
+    background: "rgba(19, 19, 19, 0.6)",
+    backdropFilter: "blur(20px)",
+    border: "1px solid #484848",
+  };
+
   return (
-    <div className="flex flex-col bg-surface-container-lowest" style={{ height: "calc(100vh - 64px)", overflow: "hidden", position: "relative" }}>
-      {/* Background Tactical Map */}
-      <div className="absolute inset-0 z-0">
+    <div className="flex flex-col h-full w-full relative overflow-hidden" style={{ backgroundColor: "#0e0e0e" }}>
+      {/* ── Background Tactical Canvas (Map) ────────────────────────── */}
+      <div className="absolute inset-0 z-0 bg-black">
         <div
-          className="w-full h-full opacity-40 bg-cover bg-center grayscale contrast-125"
+          className="w-full h-full opacity-30 bg-cover bg-center grayscale brightness-[0.4] contrast-125"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-surface/80 via-transparent to-surface/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-surface via-transparent to-surface/40" />
+        {/* Tactical scanning lines effect */}
+        <div className="absolute inset-0 pointer-events-none opacity-5" style={{ backgroundImage: "linear-gradient(rgba(78, 222, 163, 0.1) 1px, transparent 1px)", backgroundSize: "100% 4px" }} />
+        {/* Glow gradients */}
+        <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-bg-app to-transparent" />
+        <div className="absolute bottom-0 left-0 w-full h-[30%] bg-gradient-to-t from-bg-app to-transparent" />
       </div>
 
-      {/* Hotspot: Signal Omega (Europe) */}
-      <div className="absolute top-1/4 left-1/3 z-10">
+      {/* ── Hotspot Markers ─────────────────────────────────────────── */}
+      {/* Europe Signal */}
+      <div className="absolute top-[35%] left-[45%] z-10 group">
         <div className="relative">
-          <div className="w-4 h-4 rounded-full bg-primary" style={{
-            boxShadow: "0 0 0 0 rgba(78, 222, 163, 0.7)",
-            animation: "pulse-emerald 2s infinite",
-          }} />
-          <div className="absolute top-6 left-6 border border-primary/20 p-2 rounded-lg min-w-[120px]" style={{ background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
-            <p className="text-[9px] uppercase tracking-widest text-primary font-bold">Signal: Omega-7</p>
-            <p className="text-xs text-white">Kyiv Displacement</p>
-            <p className="text-[10px] text-on-surface-variant">Conf: 98.4%</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Hotspot: Alert High Tension (Asia) */}
-      <div className="absolute bottom-1/3 right-1/4 z-10">
-        <div className="relative">
-          <div className="w-3 h-3 rounded-full bg-error animate-pulse" />
-          <div className="absolute top-5 -left-24 border border-error/20 p-2 rounded-lg min-w-[120px] text-right" style={{ background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
-            <p className="text-[9px] uppercase tracking-widest text-error font-bold">Alert: High Tension</p>
-            <p className="text-xs text-white">Taiwan Strait</p>
-            <p className="text-[10px] text-on-surface-variant">Vessel Movement detected</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Global Tension Index (Top Left) */}
-      <div className="absolute top-6 left-6 z-20 w-80 space-y-4">
-        <div className="p-5 rounded-xl border border-outline-variant/10" style={{ background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
-          <div className="flex justify-between items-end mb-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.1em] text-on-surface-variant font-bold">Global Tension Index</p>
-              <h2 className="text-3xl font-extrabold tracking-tighter text-white">74.8<span className="text-sm text-error ml-1">▲ 2.4</span></h2>
+          <div className="w-5 h-5 rounded-full bg-accent animate-ping opacity-40 absolute -top-1.5 -left-1.5" />
+          <div className="w-2 h-2 rounded-full bg-accent relative z-10 shadow-[0_0_10px_#4edea3]" />
+          
+          <div className="absolute top-6 left-6 p-3 rounded-sm min-w-[160px] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0" style={glassStyle}>
+            <p className="text-[9px] uppercase tracking-[0.2em] font-bold mb-1" style={{ color: "#4edea3", fontFamily: "'Space Grotesk', sans-serif" }}>Signal: Gamma-44</p>
+            <p className="text-xs font-bold mb-1" style={{ color: "#e5e2e1" }}>Energy Drift: North Sea</p>
+            <div className="flex justify-between items-center text-[10px] font-mono">
+              <span style={{ color: "#86948a" }}>Confidence</span>
+              <span style={{ color: "#4edea3" }}>98.4%</span>
             </div>
-            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontFamily: "Material Symbols Outlined", fontVariationSettings: "'FILL' 1" }}>insights</span>
           </div>
-          <div className="space-y-3">
+        </div>
+      </div>
+
+      {/* Asia Signal */}
+      <div className="absolute top-[45%] left-[75%] z-10 group">
+        <div className="relative">
+          <div className="w-4 h-4 rounded-full bg-danger animate-pulse absolute -top-1 -left-1 opacity-50" />
+          <div className="w-2 h-2 rounded-full bg-danger relative z-10 shadow-[0_0_12px_#ee7d77]" />
+          
+          <div className="absolute top-6 left-6 p-3 rounded-sm min-w-[160px] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0" style={glassStyle}>
+            <p className="text-[9px] uppercase tracking-[0.2em] font-bold mb-1" style={{ color: "#ee7d77", fontFamily: "'Space Grotesk', sans-serif" }}>Priority: Critical</p>
+            <p className="text-xs font-bold mb-1" style={{ color: "#e5e2e1" }}>Taiwan Supply Blockade</p>
+            <div className="flex justify-between items-center text-[10px] font-mono">
+              <span style={{ color: "#86948a" }}>Risk Level</span>
+              <span style={{ color: "#ee7d77" }}>9.8 IMMINENT</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Floating Tactical Overlays ─────────────────────────────── */}
+      
+      {/* 1. Global Tension Monitor (Top Left) */}
+      <div className="absolute top-8 left-8 z-20 w-[320px] flex flex-col gap-6">
+        <div className="p-6 rounded-lg shadow-2xl" style={glassStyle}>
+          <header className="flex justify-between items-start mb-6">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] font-black mb-1" style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}>Global Tension Index</p>
+              <h2 className="text-4xl font-extrabold tracking-tighter" style={{ color: "#e5e2e1", fontFamily: "Inter, sans-serif" }}>
+                74.8 <span className="text-sm font-bold align-top" style={{ color: "#ee7d77" }}>▲ 2.4</span>
+              </h2>
+            </div>
+            <div className="w-10 h-10 rounded bg-white/5 flex items-center justify-center border border-white/10">
+               <span className="material-symbols-outlined text-accent" style={{ fontFamily: "Material Symbols Outlined" }}>verified_user</span>
+            </div>
+          </header>
+
+          <div className="flex flex-col gap-5">
             {[
-              { label: "Cyber Warfare", value: 88 },
-              { label: "Kinetic Conflict", value: 42 },
-              { label: "Diplomatic Friction", value: 65 },
+              { label: "Trade Compliance", value: 88, color: "#4edea3" },
+              { label: "Navigational Risk", value: 65, color: "#f4fed3" },
+              { label: "Commodity Volatility", value: 92, color: "#ee7d77" },
             ].map(r => (
               <div key={r.label}>
-                <div className="flex justify-between text-[10px] uppercase tracking-widest mb-1">
-                  <span className="text-on-surface-variant">{r.label}</span>
-                  <span className="text-primary font-bold">{r.value}%</span>
+                <div className="flex justify-between text-[10px] uppercase font-bold tracking-[0.15em] mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <span style={{ color: "#acabaa" }}>{r.label}</span>
+                  <span style={{ color: r.color }}>{r.value}%</span>
                 </div>
-                <div className="h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${r.value}%` }} />
+                <div className="h-1 bg-black/40 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${r.value}%`, backgroundColor: r.color }} />
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div className="p-4 rounded-xl border border-outline-variant/10" style={{ background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
-          <p className="text-[10px] uppercase tracking-[0.1em] text-on-surface-variant font-bold mb-3">Active Sentiment</p>
-          <div className="flex gap-2">
-            {[
-              { label: "Bullish", val: "24.5%", color: "text-primary" },
-              { label: "Neutral", val: "52.1%", color: "text-primary", active: true },
-              { label: "Bearish", val: "23.4%", color: "text-error" },
-            ].map(s => (
-              <div key={s.label} className={`flex-1 bg-surface-container-lowest/50 p-2 rounded flex flex-col items-center ${s.active ? "border-b-2 border-primary" : ""}`}>
-                <span className="text-xs font-bold text-white">{s.label}</span>
-                <span className={`text-[9px] ${s.color}`}>{s.val}</span>
-              </div>
-            ))}
-          </div>
+
+        {/* Tactical Quick Search */}
+        <div className="p-4 rounded-lg flex items-center gap-4" style={glassStyle}>
+           <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined", color: "#4edea3" }}>radar</span>
+           <input 
+             className="bg-transparent border-none text-xs w-full focus:ring-0 outline-none" 
+             style={{ color: "#e5e2e1" }}
+             placeholder="SCAN COORDINATES OR REGION..."
+           />
         </div>
       </div>
 
-      {/* Live Intelligence Feed (Right Side) */}
-      <div className="absolute top-6 right-6 bottom-6 z-20 w-80 rounded-xl border border-outline-variant/10 flex flex-col overflow-hidden" style={{ background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
-        <div className="p-4 border-b border-outline-variant/10 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <h3 className="text-[11px] uppercase tracking-[0.15em] font-bold text-white">Live Intelligence</h3>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {liveItems.map((signal, i) => {
-            const timeAgo = formatDistanceToNowStrict(new Date(signal.createdAt), { addSuffix: true });
-            const isUrgent = signal.severity >= 9;
-            return (
-              <div key={signal.id}>
-                <div className="space-y-2 group cursor-pointer" onClick={() => { window.location.href = `/events/${signal.id}`; }}>
-                  <div className="flex justify-between items-start">
-                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest border ${isUrgent ? "bg-error-container/30 text-error border-error/20" : "bg-primary-container/30 text-primary border-primary/20"}`}>
-                      {isUrgent ? "Urgent" : "Satellite"}
+      {/* 2. Intelligence Legend (Right side) */}
+      <div className="absolute top-8 right-8 bottom-8 z-20 w-[340px] flex flex-col gap-6">
+        <div className="flex-1 rounded-lg flex flex-col overflow-hidden shadow-2xl" style={glassStyle}>
+          <header className="p-5 border-b flex justify-between items-center" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+             <div className="flex items-center gap-3">
+               <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+               <h3 className="text-[10px] font-bold uppercase tracking-[0.25em]" style={{ color: "#e5e2e1", fontFamily: "'Space Grotesk', sans-serif" }}>Tactical Stream</h3>
+             </div>
+             <button className="text-[9px] font-bold uppercase tracking-widest text-muted hover:text-accent transition-colors">Filter</button>
+          </header>
+
+          <div className="flex-1 overflow-y-auto px-5 py-6 flex flex-col gap-6">
+            {liveItems.length > 0 ? liveItems.map((signal, i) => {
+              const isUrgent = signal.severity >= 8;
+              return (
+                <div key={signal.id} className="group cursor-pointer">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-[9px] font-black uppercase tracking-[0.1em] px-1.5 py-0.5 rounded-sm border" 
+                      style={{ 
+                        backgroundColor: isUrgent ? "rgba(127, 41, 39, 0.2)" : "rgba(78, 222, 163, 0.1)", 
+                        color: isUrgent ? "#ee7d77" : "#4edea3",
+                        borderColor: isUrgent ? "rgba(127, 41, 39, 0.2)" : "rgba(78, 222, 163, 0.2)"
+                      }}>
+                      {isUrgent ? "Critical" : "Active"}
                     </span>
-                    <span className="text-[9px] text-on-surface-variant">{timeAgo}</span>
+                    <span className="text-[9px] font-mono text-muted uppercase">
+                      {formatDistanceToNowStrict(new Date(signal.createdAt)).replace(' seconds', 's').replace(' minutes', 'm')} ago
+                    </span>
                   </div>
-                  <p className="text-xs text-on-surface leading-relaxed group-hover:text-white transition-colors line-clamp-2">{signal.title}</p>
-                  <div className="flex gap-2 items-center text-[9px] text-on-surface-variant">
-                    <span className="material-symbols-outlined text-[10px]" style={{ fontFamily: "Material Symbols Outlined" }}>share</span>
-                    <span>Forward to Command</span>
+                  <h4 className="text-sm font-bold leading-snug group-hover:text-accent transition-colors mb-2" style={{ color: "#e5e2e1" }}>
+                    {signal.title}
+                  </h4>
+                  <div className="flex gap-4 font-mono text-[9px] uppercase" style={{ color: "#86948a" }}>
+                    <span>CON: 94.2%</span>
+                    <span>GEO: 34.2N 118.4E</span>
                   </div>
+                  {i < liveItems.length - 1 && <div className="mt-6 border-b" style={{ borderColor: "rgba(72,72,72,0.15)" }} />}
                 </div>
-                {i < liveItems.length - 1 && <div className="h-px bg-outline-variant/10 mt-4" />}
+              );
+            }) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-10 opacity-40">
+                <span className="material-symbols-outlined text-4xl mb-2 animate-spin" style={{ fontFamily: "Material Symbols Outlined" }}>sync</span>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-center">Syncing Geo-Channel...</p>
               </div>
-            );
-          })}
-          {liveItems.length === 0 && (
-            <p className="text-[10px] text-on-surface-variant text-center pt-8">Awaiting intelligence stream...</p>
-          )}
+            )}
+          </div>
+
+          <footer className="p-4 bg-black/40 border-t" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+            <button 
+              onClick={() => window.location.href='/dashboard'}
+              className="w-full py-3 rounded-sm bg-accent text-bg-app text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              Initialize Intelligence Terminal
+            </button>
+          </footer>
         </div>
-        <div className="p-3 bg-surface-container-lowest/80 border-t border-outline-variant/10">
-          <button onClick={() => { window.location.href = "/dashboard"; }} className="w-full py-2 bg-primary text-on-primary rounded text-[10px] font-bold uppercase tracking-[0.1em] hover:brightness-110 transition-all flex items-center justify-center gap-2">
-            <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined", fontVariationSettings: "'FILL' 1" }}>terminal</span>
-            Open Full Terminal
-          </button>
+
+        {/* Environment Profile (Bottom Right Overlay) */}
+        <div className="p-5 rounded-lg flex flex-col gap-4 shadow-xl" style={glassStyle}>
+           <div className="flex justify-between items-center">
+             <span className="text-[10px] font-bold uppercase tracking-widest text-muted" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Profile: Sentinel-X</span>
+             <span className="text-[10px] font-mono text-accent">LEVEL 4 AUTH</span>
+           </div>
+           <div className="flex gap-4">
+              <div className="w-12 h-12 rounded bg-accent/20 border border-accent/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-accent" style={{ fontFamily: "Material Symbols Outlined" }}>fingerprint</span>
+              </div>
+              <div className="flex flex-col justify-center gap-1">
+                 <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
+                   <div className="h-full bg-accent" style={{ width: "74%" }} />
+                 </div>
+                 <span className="text-[9px] font-mono text-muted uppercase">Sync Reliability: 99.98%</span>
+              </div>
+           </div>
         </div>
       </div>
 
-      {/* Map Controls (Bottom Left) */}
-      <div className="absolute bottom-6 left-6 z-20 flex flex-col gap-2">
-        <div className="p-2 rounded-lg border border-outline-variant/10 flex flex-col gap-1" style={{ background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
-          <button className="w-8 h-8 rounded bg-surface-container hover:bg-surface-bright flex items-center justify-center text-on-surface transition-colors">
-            <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined" }}>add</span>
-          </button>
-          <button className="w-8 h-8 rounded bg-surface-container hover:bg-surface-bright flex items-center justify-center text-on-surface transition-colors">
-            <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined" }}>remove</span>
-          </button>
-        </div>
-        <button className="w-10 h-10 rounded-lg border border-outline-variant/10 flex items-center justify-center text-primary hover:text-white transition-colors" style={{ background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
-          <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined" }}>layers</span>
-        </button>
-      </div>
-
-      {/* Ticker (Bottom Center) */}
-      <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 px-6 py-2 rounded-full border border-outline-variant/10 flex items-center gap-8 overflow-hidden" style={{ width: "calc(100% - 800px)", minWidth: "300px", background: "rgba(38,38,38,0.6)", backdropFilter: "blur(20px)" }}>
+      {/* 3. Tactical Ticker (Bottom Center) ── Fixed width narrow bar */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 px-10 py-3 rounded-full shadow-2xl flex items-center gap-12" style={{ ...glassStyle, minWidth: "600px" }}>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[9px] font-bold uppercase text-on-surface-variant tracking-widest">Global Ticker:</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]" style={{ color: "#e5e2e1", fontFamily: "'Space Grotesk', sans-serif" }}>Live Volatility Feed</span>
         </div>
-        <div className="flex items-center gap-10 whitespace-nowrap overflow-hidden">
+        <div className="flex-1 flex items-center gap-12 overflow-hidden whitespace-nowrap mask-fade-edges font-mono text-[11px]">
           {[
-            { label: "BTC/USD", val: "64,281.40 (+1.2%)", up: true },
-            { label: "BRENT", val: "82.14 (-0.4%)", up: false },
-            { label: "GOLD", val: "2,154.20 (+0.8%)", up: true },
-            { label: "EUR/USD", val: "1.08 (-0.1%)", up: null },
+            { label: "WTI CRUDE", val: "74.12 (+0.4%)", up: true },
+            { label: "BRENT", val: "82.50 (-0.2%)", up: false },
+            { label: "XAU/USD", val: "2,154.20 (+0.8%)", up: true },
+            { label: "BTC", val: "64,281 (+1.4%)", up: true },
           ].map(t => (
-            <div key={t.label} className="flex items-center gap-2">
-              <span className="text-[10px] text-white font-medium">{t.label}</span>
-              <span className={`text-[10px] ${t.up === true ? "text-primary" : t.up === false ? "text-error" : "text-on-surface-variant"}`}>{t.val}</span>
+            <div key={t.label} className="flex items-center gap-3">
+               <span style={{ color: "#86948a" }}>{t.label}</span>
+               <span style={{ color: t.up ? "var(--price-up)" : "var(--price-down)" }}>{t.val}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <style>{`
-        @keyframes pulse-emerald {
-          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(78,222,163,0.7); }
-          70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(78,222,163,0); }
-          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(78,222,163,0); }
+      {/* 4. Zoom Controls (Bottom Left) */}
+      <div className="absolute bottom-10 left-10 z-30 flex flex-col gap-3">
+         <div className="flex flex-col rounded-md overflow-hidden bg-surface shadow-xl" style={{ border: "1px solid #484848" }}>
+            <button className="w-10 h-10 flex items-center justify-center hover:bg-white/5 transition-colors border-b" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+              <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined", color: "#e5e2e1" }}>add</span>
+            </button>
+            <button className="w-10 h-10 flex items-center justify-center hover:bg-white/5 transition-colors">
+              <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined", color: "#e5e2e1" }}>remove</span>
+            </button>
+         </div>
+         <button className="w-10 h-10 rounded-md bg-surface flex items-center justify-center shadow-xl hover:bg-white/5 transition-colors" style={{ border: "1px solid #484848" }}>
+            <span className="material-symbols-outlined text-sm" style={{ fontFamily: "Material Symbols Outlined", color: "#4edea3" }}>layers</span>
+         </button>
+      </div>
+
+      <style jsx>{`
+        .mask-fade-edges {
+          mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
         }
       `}</style>
     </div>
   );
 }
+

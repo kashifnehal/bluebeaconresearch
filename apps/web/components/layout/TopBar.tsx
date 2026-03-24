@@ -2,50 +2,143 @@
 
 import { useRouter } from "next/navigation";
 
+const C = {
+  bg: "#000000",
+  border: "rgba(72,72,72,0.1)",
+  inputBg: "#000000",
+  inputBorder: "rgba(72,72,72,0.2)",
+  primary: "#4edea3",
+  text: "#e7e5e4",
+  muted: "#acabaa",
+  surfaceHighest: "#353534",
+};
+
 export function TopBar() {
   const router = useRouter();
 
   return (
     <header
-      className="w-full h-16 sticky top-0 z-40 flex items-center justify-between px-6 font-['Inter'] antialiased tracking-tight"
-      style={{ backgroundColor: "#0e0e0e", borderBottom: "1px solid rgba(72,72,72,0.1)" }}
+      style={{
+        width: "100%",
+        height: "64px",
+        position: "sticky",
+        top: 0,
+        zIndex: 40,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 24px",
+        backgroundColor: C.bg,
+        borderBottom: `1px solid ${C.border}`,
+        fontFamily: "'Space Grotesk', sans-serif",
+      }}
     >
-      {/* Left: Search */}
-      <div className="flex items-center gap-8">
-        <div className="hidden md:flex items-center bg-surface-container-lowest rounded-lg px-3 py-1.5 gap-2 w-80 border border-outline-variant/20 relative">
-          <span className="material-symbols-outlined text-on-surface-variant text-sm" style={{ fontFamily: "Material Symbols Outlined" }}>search</span>
+      {/* Left: Search input */}
+      <div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            width: "320px",
+            padding: "6px 12px",
+            backgroundColor: C.inputBg,
+            border: `1px solid ${C.inputBorder}`,
+            borderRadius: "8px",
+          }}
+        >
+          <span style={{ fontFamily: "Material Symbols Outlined", fontSize: "16px", color: C.muted }}>search</span>
           <input
-            className="bg-transparent border-none focus:ring-0 text-sm w-full text-on-surface placeholder:text-on-surface-variant/50 outline-none"
-            placeholder="Search signals, regions, or assets..."
             type="text"
+            placeholder="Search signals, regions, or assets..."
+            style={{
+              background: "none",
+              border: "none",
+              outline: "none",
+              color: C.text,
+              fontSize: "14px",
+              width: "100%",
+              fontFamily: "'Inter', sans-serif",
+            }}
           />
-          <span className="text-[10px] bg-surface-container-highest px-1.5 py-0.5 rounded text-on-surface-variant font-mono">/</span>
+          <span
+            style={{
+              fontSize: "10px",
+              fontFamily: "'JetBrains Mono', monospace",
+              color: C.muted,
+              backgroundColor: C.surfaceHighest,
+              padding: "1px 6px",
+              borderRadius: "4px",
+              flexShrink: 0,
+            }}
+          >
+            /
+          </span>
         </div>
       </div>
 
-      {/* Right: Status + Actions + Avatar */}
-      <div className="flex items-center gap-5">
-        <div className="hidden sm:flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: "#4edea3" }} />
-          <span className="text-[10px] font-bold tracking-tighter uppercase" style={{ color: "#e7e5e4" }}>Live Network: Secure</span>
+      {/* Right side */}
+      <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+        {/* Live status badge */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <span
+            style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: C.primary, display: "block" }}
+            className="animate-pulse"
+          />
+          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: C.text }}>
+            Live Network: Secure
+          </span>
         </div>
-        <div className="flex items-center gap-4 mr-2">
-          <button className="text-on-surface-variant hover:text-white transition-colors duration-200">
-            <span className="material-symbols-outlined" style={{ fontFamily: "Material Symbols Outlined" }}>notifications</span>
+
+        {/* Separator */}
+        <div style={{ width: "1px", height: "20px", backgroundColor: "rgba(72,72,72,0.3)" }} />
+
+        {/* Icons */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button
+            style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 0 }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = C.muted; }}
+          >
+            <span style={{ fontFamily: "Material Symbols Outlined", fontSize: "22px" }}>notifications</span>
           </button>
-          <button className="text-on-surface-variant hover:text-white transition-colors duration-200">
-            <span className="material-symbols-outlined" style={{ fontFamily: "Material Symbols Outlined" }}>help</span>
+          <button
+            style={{ background: "none", border: "none", cursor: "pointer", color: C.muted, padding: 0 }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = C.muted; }}
+          >
+            <span style={{ fontFamily: "Material Symbols Outlined", fontSize: "22px" }}>help</span>
           </button>
         </div>
-        <div className="flex items-center gap-3 pl-4" style={{ borderLeft: "1px solid rgba(72,72,72,0.2)" }}>
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-semibold text-on-surface">Terminal Sentinel</p>
-            <p className="text-[10px]" style={{ color: "#4edea3" }}>LVL 4 ACCESS</p>
+
+        {/* Separator */}
+        <div style={{ width: "1px", height: "20px", backgroundColor: "rgba(72,72,72,0.3)" }} />
+
+        {/* User info + avatar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ textAlign: "right" }}>
+            <p style={{ fontSize: "12px", fontWeight: 600, color: C.text, margin: 0 }}>Terminal Sentinel</p>
+            <p style={{ fontSize: "10px", color: C.primary, margin: 0, fontWeight: 700, letterSpacing: "0.05em" }}>
+              LVL 4 ACCESS
+            </p>
           </div>
           <button
             onClick={() => router.push("/settings")}
-            className="w-8 h-8 rounded-full border overflow-hidden flex items-center justify-center text-xs font-bold text-on-primary"
-            style={{ backgroundColor: "#4edea3", borderColor: "rgba(78,222,163,0.3)", color: "#004a31" }}
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: C.primary,
+              border: `1px solid #6ffbbe`,
+              color: "#003824",
+              fontSize: "11px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
           >
             GS
           </button>

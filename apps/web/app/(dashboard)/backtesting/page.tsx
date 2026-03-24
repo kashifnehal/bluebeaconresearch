@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Download } from "lucide-react";
+import { Download, Play, RotateCcw, Table as TableIcon, FileText } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,27 +37,6 @@ const POPULAR = [
     region: "eastern-europe",
     commodity: "WHEAT",
     horizon: "7d",
-  },
-  {
-    title: "Iran vessel seizure → Brent Crude (24hr)",
-    eventType: "Naval vessel seizure",
-    region: "middle-east",
-    commodity: "UKOIL",
-    horizon: "24hr",
-  },
-  {
-    title: "Ukraine escalation → Natural Gas (48hr)",
-    eventType: "Ground offensive",
-    region: "eastern-europe",
-    commodity: "NGAS",
-    horizon: "48hr",
-  },
-  {
-    title: "Sudan coup → Gold (24hr)",
-    eventType: "Coup/political seizure",
-    region: "africa",
-    commodity: "XAUUSD",
-    horizon: "24hr",
   },
 ] as const;
 
@@ -117,204 +96,189 @@ export default function BacktestingPage() {
 
   const title = useMemo(() => {
     if (!results) return null;
-    return `Results: ${eventType} in ${region} → ${commodity} at ${horizon}`;
+    return `${eventType?.toUpperCase()} / ${region?.toUpperCase()} → ${commodity} (${horizon})`;
   }, [results, eventType, region, commodity, horizon]);
 
   return (
-    <div>
-      <h1 className="text-text-primary text-2xl font-semibold">Backtesting Lab</h1>
-      <p className="text-text-secondary text-sm mt-2 mb-8">
-        See how markets have historically reacted to events like the ones our
-        system detects.
-      </p>
-
-      <div className="mb-6">
-        <div className="text-text-primary font-medium mb-3">Popular backtests</div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {POPULAR.map((p) => (
-            <Card
-              key={p.title}
-              className="bg-surface-secondary border border-border rounded-xl p-4 shadow-none cursor-pointer hover:border-accent/50"
-              onClick={() => {
-                setEventType(p.eventType);
-                setRegion(p.region);
-                setCommodity(p.commodity);
-                setHorizon(p.horizon);
-                setTimeout(() => run.mutate(), 0);
-              }}
-            >
-              <div className="text-text-primary font-medium">{p.title}</div>
-              <div className="text-text-muted text-sm mt-1">Click to run</div>
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      <Card className="bg-surface border border-border rounded-xl p-6 shadow-none">
-        <div className="flex flex-wrap gap-4 items-end">
-          <div className="min-w-[220px] flex-1">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2">
-              Event type
+    <div className="p-8 h-full flex flex-col bg-app" style={{ backgroundColor: "#0e0e0e" }}>
+      {/* ── Header ────────────────────────────────────────────────── */}
+      <header className="mb-10 flex border-b pb-8" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+         <div className="flex-1">
+            <div className="flex items-center gap-4 mb-2">
+               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-accent" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Scenario Research</span>
+               <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
             </div>
-            <Input
-              value={eventType ?? ""}
-              onChange={(e) => setEventType(e.target.value)}
-              placeholder="Select conflict event type"
-              className="h-10 bg-surface-secondary border-border"
-            />
-          </div>
+            <h1 className="text-4xl font-black text-text-primary tracking-tighter">Backtesting Lab</h1>
+         </div>
+         <div className="flex items-center gap-3">
+             <Button variant="outline" className="h-10 border-border text-[9px] font-black uppercase tracking-widest rounded-sm">
+                <FileText size={14} className="mr-2" /> Export History
+             </Button>
+             <Button 
+               disabled={!canRun || run.isPending}
+               onClick={() => run.mutate()}
+               className="h-10 px-8 bg-accent text-bg-app text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+             >
+                {run.isPending ? "SIMULATING..." : "RUN SIMULATION"}
+             </Button>
+         </div>
+      </header>
 
-          <div className="min-w-[200px]">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2">
-              Region
+      {/* ── Configuration Pane ─────────────────────────────────────── */}
+      <section className="grid grid-cols-12 gap-6 mb-10">
+         <div className="col-span-12 lg:col-span-8 p-6 rounded-lg bg-surface/30 border" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+            <div className="grid grid-cols-2 gap-6 mb-6">
+               <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-muted ml-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Event Type</label>
+                  <Input 
+                    value={eventType ?? ""} 
+                    onChange={e => setEventType(e.target.value)}
+                    placeholder="E.G. NAVAL BLOCKADE"
+                    className="bg-black/20 border-border h-11 text-[11px] font-bold tracking-widest rounded-sm placeholder:opacity-30"
+                  />
+               </div>
+               <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-muted ml-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Asset Class</label>
+                  <Select value={commodity || ""} onValueChange={setCommodity}>
+                    <SelectTrigger className="bg-black/20 border-border h-11 text-[11px] font-bold uppercase tracking-widest rounded-sm">
+                       <SelectValue placeholder="SELECT ASSET" />
+                    </SelectTrigger>
+                    <SelectContent>
+                       {COMMODITIES.map(c => <SelectItem key={c.symbol} value={c.symbol} className="text-[10px] uppercase font-bold">{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+               </div>
             </div>
-            <Select value={region} onValueChange={(v) => setRegion(v)}>
-              <SelectTrigger className="h-10 bg-surface-secondary border-border">
-                <SelectValue placeholder="Region" />
-              </SelectTrigger>
-              <SelectContent>
-                {REGIONS.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-                <SelectItem value="global">Global</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            
+            <div className="grid grid-cols-3 gap-6">
+               <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-muted ml-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Geographic Filter</label>
+                  <Select value={region || ""} onValueChange={setRegion}>
+                    <SelectTrigger className="bg-black/20 border-border h-11 text-[11px] font-bold uppercase tracking-widest rounded-sm">
+                       <SelectValue placeholder="WORLDWIDE" />
+                    </SelectTrigger>
+                    <SelectContent>
+                       {REGIONS.map(r => <SelectItem key={r.id} value={r.id} className="text-[10px] uppercase font-bold">{r.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+               </div>
+               <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-muted ml-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Analysis Horizon</label>
+                  <div className="flex bg-black/40 p-1 rounded-sm border border-border h-11">
+                    {(["4hr", "24hr", "48hr", "7d"] as const).map((h) => (
+                      <button
+                        key={h}
+                        onClick={() => setHorizon(h)}
+                        className={`flex-1 text-[9px] font-black uppercase tracking-widest rounded-sm transition-all ${horizon === h ? 'bg-accent text-bg-app' : 'text-muted hover:text-white'}`}
+                      >{h}</button>
+                    ))}
+                  </div>
+               </div>
+               <div className="flex flex-col gap-2">
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-muted ml-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>History Window</label>
+                  <div className="flex gap-2">
+                     <Input value={from} onChange={e => setFrom(e.target.value)} className="bg-black/20 border-border h-11 text-[10px] font-mono text-center px-1" />
+                     <div className="flex items-center text-muted">→</div>
+                     <Input value={to} onChange={e => setTo(e.target.value)} className="bg-black/20 border-border h-11 text-[10px] font-mono text-center px-1" />
+                  </div>
+               </div>
+            </div>
+         </div>
 
-          <div className="min-w-[200px]">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2">
-              Commodity
-            </div>
-            <Select value={commodity} onValueChange={(v) => setCommodity(v)}>
-              <SelectTrigger className="h-10 bg-surface-secondary border-border">
-                <SelectValue placeholder="Commodity" />
-              </SelectTrigger>
-              <SelectContent>
-                {COMMODITIES.map((c) => (
-                  <SelectItem key={c.symbol} value={c.symbol}>
-                    {c.label} ({c.symbol})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="min-w-[160px]">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2">
-              Horizon
-            </div>
-            <div className="flex gap-2">
-              {(["4hr", "24hr", "48hr", "7d"] as const).map((h) => (
-                <button
-                  key={h}
-                  className={[
-                    "h-10 px-3 rounded-md border text-sm font-medium",
-                    horizon === h
-                      ? "bg-accent text-white border-accent"
-                      : "bg-surface-secondary text-text-secondary border-border hover:bg-surface-elevated",
-                  ].join(" ")}
-                  onClick={() => setHorizon(h)}
-                >
-                  {h}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="min-w-[150px]">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2">
-              From
-            </div>
-            <Input
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              className="h-10 bg-surface-secondary border-border"
-            />
-          </div>
-          <div className="min-w-[150px]">
-            <div className="text-text-muted text-xs uppercase tracking-wider mb-2">
-              To
-            </div>
-            <Input
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              className="h-10 bg-surface-secondary border-border"
-            />
-          </div>
-
-          <Button
-            disabled={!canRun || run.isPending}
-            className="h-10 bg-accent hover:bg-accent-hover text-white px-6"
-            onClick={() => run.mutate()}
-          >
-            {run.isPending ? "Running..." : "Run backtest"}
-          </Button>
-        </div>
-      </Card>
-
-      {results ? (
-        <div className="mt-8">
-          <div className="text-text-primary font-medium mb-3">{title}</div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            {[
-              { label: "Total events", value: results.totalEvents },
-              { label: "Directional accuracy %", value: results.accuracyPct },
-              { label: "Average move %", value: results.avgMovePct },
-              { label: "Max move %", value: results.maxMovePct },
-              { label: "Min move %", value: results.minMovePct },
-            ].map((m) => (
-              <Card
-                key={m.label}
-                className="bg-surface-secondary border border-border rounded-lg p-4 shadow-none"
-              >
-                <div className="text-text-muted text-xs uppercase tracking-wider">
-                  {m.label}
-                </div>
-                <div className="mt-2 text-text-primary text-2xl font-semibold font-mono">
-                  {m.value}
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <Card className="bg-surface-secondary border border-border rounded-xl p-4 shadow-none">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-text-primary font-medium">Results table</div>
-              <Button
-                variant="outline"
-                className="h-9 bg-transparent border-border hover:bg-surface-elevated"
-              >
-                <Download size={16} /> Download CSV
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {results.rows.map((r, idx) => (
+         <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+            <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted ml-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Popular Simulations</h4>
+            <div className="flex flex-col gap-3">
+              {POPULAR.map((p) => (
                 <div
-                  key={idx}
-                  className="flex items-center justify-between gap-3 rounded-md px-3 py-2 hover:bg-surface-elevated"
+                  key={p.title}
+                  className="p-4 rounded-lg bg-surface/20 border border-border transition-all hover:bg-surface/40 hover:border-accent/40 cursor-pointer group"
+                  onClick={() => {
+                    setEventType(p.eventType);
+                    setRegion(p.region);
+                    setCommodity(p.commodity);
+                    setHorizon(p.horizon);
+                    setTimeout(() => run.mutate(), 0);
+                  }}
                 >
-                  <div className="text-text-muted text-xs font-mono w-24">
-                    {r.date}
-                  </div>
-                  <div className="text-text-muted text-xs w-28">{r.country}</div>
-                  <div className="flex-1 text-text-secondary text-sm">{r.summary}</div>
-                  <div
-                    className={`font-mono text-sm ${r.movePct >= 0 ? "text-price-up" : "text-price-down"}`}
-                  >
-                    {r.movePct >= 0 ? "+" : ""}
-                    {r.movePct.toFixed(2)}%
-                  </div>
-                  <div className={r.correct ? "text-success" : "text-danger"}>
-                    {r.correct ? "✓" : "✗"}
-                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-text-primary group-hover:text-accent transition-colors leading-relaxed">
+                    {p.title}
+                  </p>
                 </div>
               ))}
             </div>
-          </Card>
-        </div>
-      ) : null}
+         </div>
+      </section>
+
+      {/* ── Results Area ─────────────────────────────────────────── */}
+      {results ? (
+        <section className="flex-1 flex flex-col min-h-0">
+           {/* Performance Metrics */}
+           <div className="grid grid-cols-5 gap-6 mb-8">
+              {[
+                { label: "Detected Events", value: results.totalEvents, type: 'count' },
+                { label: "Directional Accuracy", value: `${results.accuracyPct}%`, type: 'accuracy' },
+                { label: "Mean Price Delta", value: `${results.avgMovePct}%`, type: 'delta' },
+                { label: "Apex Movement", value: `${results.maxMovePct}%`, type: 'high' },
+                { label: "Nadir Movement", value: `${results.minMovePct}%`, type: 'low' },
+              ].map((m) => (
+                <div key={m.label} className="p-6 rounded-lg bg-surface/30 border" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+                   <p className="text-[9px] font-black uppercase tracking-widest text-muted mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{m.label}</p>
+                   <p className="text-3xl font-black font-mono tracking-tighter" style={{ color: "#e5e2e1" }}>{m.value}</p>
+                </div>
+              ))}
+           </div>
+
+           {/* Results Table */}
+           <div className="flex-1 min-h-0 flex flex-col rounded-lg border overflow-hidden" style={{ borderColor: "rgba(72,72,72,0.15)", backgroundColor: "rgba(19, 19, 19, 0.4)" }}>
+              <header className="p-5 border-b bg-black/20 flex justify-between items-center" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+                 <div className="flex items-center gap-4">
+                    <TableIcon size={16} className="text-accent" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-primary" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Raw Intelligence Log: {title}</span>
+                 </div>
+                 <Button variant="ghost" className="h-8 text-[9px] font-black uppercase tracking-widest text-muted hover:text-accent">
+                    <Download size={12} className="mr-2" /> DATA.CSV
+                 </Button>
+              </header>
+
+              <div className="flex-1 overflow-y-auto">
+                 <table className="w-full text-left font-mono text-[11px]">
+                    <thead className="sticky top-0 bg-black/60 backdrop-blur-md z-10 border-b" style={{ borderColor: "rgba(72,72,72,0.15)" }}>
+                       <tr>
+                          <th className="p-4 uppercase text-muted font-black tracking-widest">Timestamp</th>
+                          <th className="p-4 uppercase text-muted font-black tracking-widest">Geography</th>
+                          <th className="p-4 uppercase text-muted font-black tracking-widest">Synthesis</th>
+                          <th className="p-4 uppercase text-muted font-black tracking-widest text-right">Delta %</th>
+                          <th className="p-4 uppercase text-muted font-black tracking-widest text-center">Status</th>
+                       </tr>
+                    </thead>
+                    <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.03)" }}>
+                       {results.rows.map((r, idx) => (
+                          <tr key={idx} className="hover:bg-white/5 transition-colors">
+                             <td className="p-4 text-text-secondary">{r.date}</td>
+                             <td className="p-4 font-bold text-text-primary uppercase tracking-tighter">{r.country}</td>
+                             <td className="p-4 text-text-secondary opacity-80 leading-relaxed max-w-md truncate">{r.summary}</td>
+                             <td className={`p-4 font-black text-right ${r.movePct >= 0 ? "text-price-up" : "text-price-down"}`}>
+                                {r.movePct >= 0 ? "+" : ""}{r.movePct.toFixed(2)}%
+                             </td>
+                             <td className="p-4 text-center">
+                                <span className={`px-2 py-0.5 rounded-sm text-[9px] font-black uppercase tracking-widest border ${r.correct ? "bg-accent/10 text-accent border-accent/20" : "bg-danger/10 text-danger border-danger/20"}`}>
+                                   {r.correct ? "SUCCESS" : "NO_HIT"}
+                                </span>
+                             </td>
+                          </tr>
+                       ))}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+        </section>
+      ) : (
+        <section className="flex-1 flex flex-col items-center justify-center opacity-30">
+           <RotateCcw className="w-12 h-12 mb-6 animate-spin-slow" />
+           <p className="text-[11px] font-black uppercase tracking-[0.5em]">System Idle: Ready for Simulation</p>
+        </section>
+      )}
     </div>
   );
 }
+

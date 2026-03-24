@@ -1,434 +1,431 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronRight, Mail, Send, Slack } from "lucide-react";
 import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Logo } from "@/components/Logo";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { COMMODITIES, REGIONS } from "@geosignal/shared";
-
-type Step = 1 | 2 | 3;
-
-const REGION_DESCS: Record<string, string> = {
-  "middle-east": "Oil, gas, Strait of Hormuz events",
-  "eastern-europe": "Ukraine war, wheat, Russian gas",
-  africa: "Sudan, DRC, food security events",
-  "asia-pacific": "China-Taiwan tensions, shipping lanes",
-  americas: "Venezuela oil, US sanctions",
-};
-
-function Progress({ step }: { step: Step }) {
-  const items: Array<{ n: Step; label: string }> = [
-    { n: 1, label: "Regions" },
-    { n: 2, label: "Commodities" },
-    { n: 3, label: "Alerts" },
-  ];
-
-  return (
-    <div className="w-full">
-      <div className="flex items-center justify-between gap-2">
-        {items.map((it, idx) => {
-          const isDone = step > it.n;
-          const isActive = step === it.n;
-          return (
-            <div key={it.n} className="flex-1 flex flex-col items-center">
-              <div className="flex items-center w-full">
-                {idx !== 0 ? <div className="flex-1 h-px bg-border" /> : <div className="w-0" />}
-                <div
-                  className={[
-                    "size-8 rounded-full flex items-center justify-center border text-xs font-semibold",
-                    isDone ? "bg-success text-white border-success" : "",
-                    isActive ? "bg-accent text-white border-accent" : "",
-                    !isDone && !isActive ? "bg-surface-secondary text-text-muted border-border" : "",
-                  ].join(" ")}
-                >
-                  {isDone ? <Check size={16} /> : it.n}
-                </div>
-                {idx !== items.length - 1 ? <div className="flex-1 h-px bg-border" /> : <div className="w-0" />}
-              </div>
-              <div className="mt-2 text-xs text-text-secondary">{it.label}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+import { ArrowRight, Terminal } from "lucide-react";
+import Image from "next/image";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>(1);
-  const [regions, setRegions] = useState<string[]>([]);
-  const [assets, setAssets] = useState<string[]>([]);
-  const [emailFrequency, setEmailFrequency] = useState("immediate");
-  const [slackWebhook, setSlackWebhook] = useState("");
-  const [telegramConnected, setTelegramConnected] = useState(false);
-  const [telegramConnectCode, setTelegramConnectCode] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [useCase, setUseCase] = useState("trader");
+  const [telegram, setTelegram] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [prices, setPrices] = useState<Record<string, { price: number; changePct24h: number }>>({});
-  const [loadingPrices, setLoadingPrices] = useState(false);
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-  useEffect(() => {
-    if (step !== 2) return;
-    let cancelled = false;
-    async function load() {
-      setLoadingPrices(true);
-      try {
-        const res = await fetch("/api/prices");
-        const json = await res.json();
-        if (cancelled) return;
-        const map: Record<string, { price: number; changePct24h: number }> = {};
-        for (const p of json.prices ?? []) {
-          map[p.symbol] = { price: p.price, changePct24h: p.change_pct_24h ?? p.changePct24h ?? 0 };
-        }
-        setPrices(map);
-      } finally {
-        if (!cancelled) setLoadingPrices(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [step]);
-
-  const regionCards = useMemo(() => {
-    return REGIONS.map((r) => ({
-      id: r.id,
-      label: r.label,
-      desc: REGION_DESCS[r.id] ?? "",
-    }));
-  }, []);
-
-  function toggleRegion(id: string) {
-    setRegions((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-  }
-
-  function toggleAsset(symbol: string) {
-    setAssets((prev) => (prev.includes(symbol) ? prev.filter((x) => x !== symbol) : [...prev, symbol]));
-  }
-
-  function selectAllRegions() {
-    setRegions(regionCards.map((r) => r.id));
-  }
-
-  async function complete(onSkip = false) {
     try {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
+
       if (user) {
+        await supabase.from("profiles").upsert({
+          id: user.id,
+          full_name: name,
+          onboarding_completed: true,
+        });
+
         await supabase.from("user_preferences").upsert({
           user_id: user.id,
-          regions: regions,
-          commodities: assets,
-          min_severity: 7,
+          use_case: useCase,
           theme: "dark",
         });
 
-        if (slackWebhook.trim().length) {
+        if (telegram.trim().length) {
+          const cleanTelegram = telegram.startsWith("@") ? telegram : `@${telegram}`;
           await supabase.from("user_channels").upsert({
             user_id: user.id,
-            slack_webhook_url: slackWebhook.trim(),
+            telegram_chat_id: cleanTelegram,
             updated_at: new Date().toISOString(),
           });
         }
-
-        await supabase.from("profiles").upsert({
-          id: user.id,
-          onboarding_completed: true,
-        });
       }
-    } catch {
-      // allow onboarding to proceed during bootstrap
+
+      toast.success("Profile initialized successfully");
+      router.push("/dashboard");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to initialize profile. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-    toast.success(onSkip ? "Setup skipped" : "Setup complete");
-    router.push("/dashboard");
   }
 
+  const useCaseOptions = [
+    { value: "trader", label: "Trader" },
+    { value: "analyst", label: "Analyst" },
+    { value: "risk", label: "Risk Manager" },
+    { value: "other", label: "Other" },
+  ];
+
   return (
-    <div className="min-h-screen bg-surface-app px-4 py-10">
-      <div className="mx-auto w-full max-w-[560px]">
-        <div className="mb-6 flex items-center justify-center">
-          <Logo />
-        </div>
-        <Progress step={step} />
+    <div
+      className="min-h-screen w-full flex items-center justify-center relative overflow-hidden"
+      style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
+    >
+      {/* Tactical grid overlay */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: "radial-gradient(#4edea3 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+          opacity: 0.1,
+        }}
+      />
 
-        {step === 1 ? (
-          <Card className="mt-8 bg-surface border border-border rounded-xl p-6 shadow-none">
-            <div className="flex items-center justify-between">
-              <h2 className="text-text-primary text-xl font-semibold">
-                Which regions do you trade?
-              </h2>
-              <button
-                onClick={selectAllRegions}
-                className="text-accent text-sm hover:underline"
-              >
-                Select all
-              </button>
-            </div>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {regionCards.map((r) => {
-                const selected = regions.includes(r.id);
-                return (
-                  <button
-                    key={r.id}
-                    onClick={() => toggleRegion(r.id)}
-                    className={[
-                      "text-left bg-surface-secondary border border-border rounded-lg p-4 cursor-pointer",
-                      selected ? "border-accent bg-[color:var(--accent-subtle)]" : "hover:bg-surface-elevated",
-                    ].join(" ")}
-                  >
-                    <div className="text-text-primary font-medium">{r.label}</div>
-                    <div className="text-text-muted text-xs mt-1">{r.desc}</div>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-6">
-              <Button
-                disabled={regions.length < 1}
-                onClick={() => setStep(2)}
-                className="w-full h-10 bg-accent hover:bg-accent-hover text-white font-medium"
-              >
-                Continue <ChevronRight size={16} />
-              </Button>
-            </div>
-          </Card>
-        ) : null}
+      {/* Globe background */}
+      <div className="absolute inset-0 z-0 pointer-events-none" style={{ opacity: 0.2 }}>
+        <Image
+          src="/onboarding-bg.jpg"
+          alt="Global digital network"
+          fill
+          className="object-cover grayscale"
+          priority
+        />
+      </div>
 
-        {step === 2 ? (
-          <Card className="mt-8 bg-surface border border-border rounded-xl p-6 shadow-none">
-            <h2 className="text-text-primary text-xl font-semibold">
-              Which assets do you watch?
-            </h2>
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {COMMODITIES.map((c) => {
-                const selected = assets.includes(c.symbol);
-                const p = prices[c.symbol];
-                const pct = p?.changePct24h ?? 0;
-                const isUp = pct >= 0;
-                return (
-                  <button
-                    key={c.symbol}
-                    onClick={() => toggleAsset(c.symbol)}
-                    className={[
-                      "text-left bg-surface-secondary border border-border rounded-lg p-4 cursor-pointer",
-                      selected ? "border-accent bg-[color:var(--accent-subtle)]" : "hover:bg-surface-elevated",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-mono text-xs text-text-muted">{c.symbol}</div>
-                        <div className="text-text-primary font-medium">{c.label}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono text-sm text-text-primary">
-                          {loadingPrices && !p ? "—" : p ? p.price.toFixed(2) : "—"}
-                        </div>
-                        <Badge
-                          className={[
-                            "mt-1",
-                            isUp ? "bg-success-subtle text-price-up" : "bg-danger-subtle text-price-down",
-                          ].join(" ")}
-                        >
-                          {pct >= 0 ? "+" : ""}
-                          {pct.toFixed(2)}%
-                        </Badge>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-6">
-              <Button
-                disabled={assets.length < 1}
-                onClick={() => setStep(3)}
-                className="w-full h-10 bg-accent hover:bg-accent-hover text-white font-medium"
-              >
-                Continue <ChevronRight size={16} />
-              </Button>
-            </div>
-          </Card>
-        ) : null}
+      {/* Main container */}
+      <main className="relative z-10 w-full flex justify-center px-6">
+        {/* Card */}
+        <div
+          style={{
+            width: "100%",
+            maxWidth: "480px",
+            backgroundColor: "#131313",
+            border: "1px solid rgba(60,74,66,0.3)",
+            borderRadius: "8px",
+            padding: "32px",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Status ribbon */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "2px",
+              background: "linear-gradient(90deg, #4edea3, #6ffbbe)",
+            }}
+          />
 
-        {step === 3 ? (
-          <Card className="mt-8 bg-surface border border-border rounded-xl p-6 shadow-none">
-            <h2 className="text-text-primary text-[20px] font-semibold">
-              Never miss a signal
-            </h2>
-            <p className="text-text-secondary text-sm mt-1">
-              Get real-time alerts the moment a high-impact event fires
+          {/* Header */}
+          <header style={{ marginBottom: "40px", textAlign: "center" }}>
+            <div style={{ marginBottom: "24px", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+              <Terminal size={28} color="#4edea3" />
+              <span
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  color: "#4edea3",
+                  fontSize: "18px",
+                  fontWeight: 700,
+                }}
+              >
+                GeoSignal Pro
+              </span>
+            </div>
+            <h1
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "30px",
+                fontWeight: 800,
+                color: "#e5e2e1",
+                marginBottom: "8px",
+                lineHeight: 1.2,
+              }}
+            >
+              Set up your profile
+            </h1>
+            <p style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}>
+              Tell us how you'll use GeoSignal
             </p>
+          </header>
 
-            <div className="mt-6 space-y-3">
-              <Card className="bg-surface-secondary border border-border rounded-lg p-4 shadow-none">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-[#229ED9] flex items-center justify-center text-white">
-                      <Send size={18} />
-                    </div>
-                    <div>
-                      <div className="text-text-primary font-medium">
-                        Telegram (Recommended)
-                      </div>
-                      <div className="text-text-muted text-xs">
-                        Fastest delivery — alerts in under 2 minutes
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={telegramConnected ? "text-success text-sm" : "text-text-muted text-sm"}>
-                      {telegramConnected ? "Connected" : "Not connected"}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        toast("Generating Telegram connect code...");
-                        (async () => {
-                          try {
-                            const res = await fetch("/api/telegram/connect-code", { method: "POST" });
-                            const json = await res.json().catch(() => null);
-                            if (!res.ok) throw new Error(json?.error ?? "Failed to generate code");
-                            const code = String(json?.code ?? "");
-                            if (!code) throw new Error("Invalid connect code");
-                            setTelegramConnectCode(code);
-                            toast(`Telegram connect code: ${code}`);
-
-                            // Poll connection status after user submits `/connect <code>`
-                            const start = Date.now();
-                            const interval = setInterval(async () => {
-                              try {
-                                const statusRes = await fetch("/api/telegram/status");
-                                const statusJson = await statusRes.json().catch(() => null);
-                                if (statusJson?.telegramConnected) {
-                                  setTelegramConnected(true);
-                                  clearInterval(interval);
-                                  toast("Telegram connected!");
-                                  return;
-                                }
-                                if (Date.now() - start > 60_000) {
-                                  clearInterval(interval);
-                                }
-                              } catch {
-                                // ignore poll errors
-                              }
-                            }, 3000);
-                          } catch (e) {
-                            toast.error(e instanceof Error ? e.message : "Failed to generate connect code");
-                          }
-                        })();
-                      }}
-                      className="mt-2 h-9 bg-transparent border-border text-text-primary hover:bg-surface-elevated"
-                    >
-                      Connect Telegram
-                    </Button>
-                  </div>
-                </div>
-                <div className="mt-3 text-text-muted text-xs">
-                  1. Open Telegram and search <span className="text-text-secondary">@GeoSignalBot</span> 2. Press Start 3. Send{" "}
-                  <span className="font-mono text-text-secondary">/connect {telegramConnectCode ?? "CODE"}</span>
-                </div>
-              </Card>
-
-              <Card className="bg-surface-secondary border border-border rounded-lg p-4 shadow-none">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-accent-subtle flex items-center justify-center text-accent">
-                      <Mail size={18} />
-                    </div>
-                    <div>
-                      <div className="text-text-primary font-medium">Email</div>
-                      <div className="text-text-muted text-xs">
-                        Daily digest or real-time — your choice
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-success text-sm">Connected ✓</div>
-                    <div className="mt-2">
-                      <Select
-                        value={emailFrequency}
-                        onValueChange={(v) => setEmailFrequency(v ?? "immediate")}
-                      >
-                        <SelectTrigger className="h-9 w-[180px] bg-surface border-border">
-                          <SelectValue placeholder="Frequency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="immediate">Real-time</SelectItem>
-                          <SelectItem value="hourly">Hourly digest</SelectItem>
-                          <SelectItem value="daily">Daily 06:00 UTC</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="bg-surface-secondary border border-border rounded-lg p-4 shadow-none">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-[#4A154B] flex items-center justify-center text-white">
-                      <Slack size={18} />
-                    </div>
-                    <div>
-                      <div className="text-text-primary font-medium">Slack</div>
-                      <div className="text-text-muted text-xs">
-                        Alert your trading channel directly
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-[240px]">
-                    <Input
-                      value={slackWebhook}
-                      onChange={(e) => setSlackWebhook(e.target.value)}
-                      placeholder="Slack webhook URL"
-                      className="h-9 bg-surface border-border text-text-primary placeholder:text-text-muted"
-                    />
-                    <div className="mt-2 flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => toast.success("Test payload sent (stub)")}
-                        className="h-9 bg-transparent border-border text-text-primary hover:bg-surface-elevated"
-                      >
-                        Test
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+          {/* Form */}
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Name field */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label
+                htmlFor="name"
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontSize: "11px",
+                  color: "#bbcac0",
+                }}
+              >
+                YOUR NAME
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Enter operator name..."
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={{
+                  width: "100%",
+                  backgroundColor: "#0e0e0e",
+                  border: "none",
+                  borderBottom: "1px solid #3c4a42",
+                  color: "#e5e2e1",
+                  padding: "12px 0",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "14px",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  transition: "border-color 0.2s",
+                }}
+                onFocus={(e) => { e.target.style.borderBottomColor = "#4edea3"; }}
+                onBlur={(e) => { e.target.style.borderBottomColor = "#3c4a42"; }}
+              />
             </div>
 
-            <div className="mt-6 space-y-3">
-              <Button
-                onClick={() => complete(false)}
-                className="w-full h-10 bg-accent hover:bg-accent-hover text-white font-medium"
+            {/* Use Case */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontSize: "11px",
+                  color: "#bbcac0",
+                }}
               >
-                Complete setup <ChevronRight size={16} />
-              </Button>
+                USE CASE
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                {useCaseOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setUseCase(option.value)}
+                    style={{
+                      border: `1px solid ${useCase === option.value ? "#4edea3" : "rgba(60,74,66,0.3)"}`,
+                      backgroundColor: useCase === option.value ? "#4edea3" : "#1c1b1b",
+                      color: useCase === option.value ? "#005f40" : "#e5e2e1",
+                      padding: "12px 16px",
+                      borderRadius: "4px",
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      textTransform: "uppercase" as const,
+                      letterSpacing: "0.05em",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Telegram field */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label
+                htmlFor="telegram"
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontSize: "11px",
+                  color: "#bbcac0",
+                }}
+              >
+                TELEGRAM CHAT ID
+              </label>
+              <input
+                id="telegram"
+                name="telegram"
+                type="text"
+                placeholder="@yourusername"
+                value={telegram}
+                onChange={(e) => setTelegram(e.target.value)}
+                style={{
+                  width: "100%",
+                  backgroundColor: "#0e0e0e",
+                  border: "none",
+                  borderBottom: "1px solid #3c4a42",
+                  color: "#e5e2e1",
+                  padding: "12px 0",
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "14px",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  transition: "border-color 0.2s",
+                }}
+                onFocus={(e) => { e.target.style.borderBottomColor = "#4edea3"; }}
+                onBlur={(e) => { e.target.style.borderBottomColor = "#3c4a42"; }}
+              />
+              <p
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "10px",
+                  color: "#86948a",
+                  fontStyle: "italic",
+                }}
+              >
+                System requires valid ID for real-time tactical alerts.
+              </p>
+            </div>
+
+            {/* Submit */}
+            <div style={{ paddingTop: "24px" }}>
               <button
-                onClick={() => complete(true)}
-                className="w-full text-center text-text-muted text-sm hover:text-text-secondary"
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  width: "100%",
+                  background: "linear-gradient(135deg, #6ffbbe, #4edea3)",
+                  color: "#003824",
+                  padding: "16px",
+                  borderRadius: "4px",
+                  border: "none",
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontWeight: 700,
+                  textTransform: "uppercase" as const,
+                  letterSpacing: "0.08em",
+                  fontSize: "14px",
+                  cursor: isSubmitting ? "not-allowed" : "pointer",
+                  opacity: isSubmitting ? 0.5 : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  boxShadow: "0 0 20px rgba(78,222,163,0.15)",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => { if (!isSubmitting) { (e.target as HTMLButtonElement).style.filter = "brightness(1.1)"; } }}
+                onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.filter = ""; }}
               >
-                Set up alerts later
+                {isSubmitting ? "INITIALIZING..." : "SAVE AND ENTER DASHBOARD"}
+                <ArrowRight size={18} />
               </button>
             </div>
-          </Card>
-        ) : null}
+          </form>
+
+          {/* Footer */}
+          <footer
+            style={{
+              marginTop: "32px",
+              paddingTop: "32px",
+              borderTop: "1px solid rgba(60,74,66,0.2)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontSize: "10px",
+                  color: "#86948a",
+                }}
+              >
+                NODE STATUS
+              </div>
+              <div
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "10px",
+                  color: "#4edea3",
+                }}
+              >
+                GS-ALPHA-ONLINE
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontSize: "10px",
+                  color: "#86948a",
+                }}
+              >
+                ENCRYPTION
+              </div>
+              <div
+                style={{
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "10px",
+                  color: "#e5e2e1",
+                }}
+              >
+                AES-256 ACTIVE
+              </div>
+            </div>
+          </footer>
+        </div>
+      </main>
+
+      {/* Bottom-left status */}
+      <div
+        className="fixed bottom-10 left-10 hidden xl:flex flex-col gap-1 z-0"
+        style={{ opacity: 0.4 }}
+      >
+        {[
+          { label: "LATENCY: 14MS", pulse: false },
+          { label: "UPTIME: 99.998%", pulse: false },
+          { label: "SOCKET: CONNECTED", pulse: true },
+        ].map(({ label, pulse }) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span
+              style={{
+                height: "4px",
+                width: "4px",
+                backgroundColor: "#4edea3",
+                borderRadius: "50%",
+                display: "block",
+              }}
+              className={pulse ? "animate-pulse" : ""}
+            />
+            <span
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "10px",
+                color: "#e5e2e1",
+              }}
+            >
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Top-right timestamp */}
+      <div
+        className="fixed top-10 right-10 hidden xl:block z-0"
+        style={{ opacity: 0.4 }}
+      >
+        <div
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "10px",
+            textAlign: "right",
+            color: "#e5e2e1",
+          }}
+        >
+          TIMESTAMP: 2024-05-21T14:48:02Z<br />
+          COORDS: 40.7128° N, 74.0060° W
+        </div>
       </div>
     </div>
   );
 }
-

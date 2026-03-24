@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | GeoSignal Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#006c4a",
+                        "tertiary": "#ffdad7",
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#7f2927",
+                        "on-tertiary-container": "#8e3432",
+                        "surface-container": "#201f1f",
+                        "surface-variant": "#353534",
+                        "on-secondary-fixed": "#042100",
+                        "background": "#131313",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#8efc67",
+                        "surface-container-low": "#1c1b1b",
+                        "on-tertiary": "#611213",
+                        "surface-tint": "#4edea3",
+                        "secondary-container": "#3ba615",
+                        "inverse-surface": "#e5e2e1",
+                        "on-secondary-container": "#093100",
+                        "on-secondary-fixed-variant": "#145200",
+                        "surface-container-highest": "#353534",
+                        "primary": "#6ffbbe",
+                        "inverse-on-surface": "#313030",
+                        "on-background": "#e5e2e1",
+                        "surface-dim": "#131313",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-fixed": "#ffdad7",
+                        "tertiary-container": "#ffb3ad",
+                        "on-primary-fixed": "#002114",
+                        "primary-container": "#4edea3",
+                        "outline": "#86948a",
+                        "on-primary-container": "#005f40",
+                        "surface": "#131313",
+                        "secondary-fixed-dim": "#72df4d",
+                        "on-primary": "#003824",
+                        "outline-variant": "#3c4a42",
+                        "surface-bright": "#393939",
+                        "on-surface-variant": "#bbcac0",
+                        "secondary": "#72df4d",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#6ffbbe",
+                        "on-primary-fixed-variant": "#005236",
+                        "on-secondary": "#0b3900",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-tertiary-fixed": "#410004",
+                        "primary-fixed-dim": "#4edea3"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Space Grotesk"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "2xl": "1rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0e0e0e;
+        }
+    </style>
+</head>
+<body class="font-body text-on-surface antialiased min-h-screen flex items-center justify-center p-6 bg-surface-container-lowest">
+<!-- Login Container -->
+<main class="w-full max-w-[440px] bg-surface border border-outline-variant rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+<!-- Tactical Header Status Ribbon -->
+<div class="absolute top-0 left-0 w-full h-[2px] bg-primary"></div>
+<!-- Header Section -->
+<header class="flex flex-col items-center mb-8">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="shield">shield</span>
+<span class="text-xl font-bold tracking-tighter text-on-surface font-headline uppercase">GeoSignal Pro</span>
+</div>
+<div class="text-center">
+<h1 class="text-2xl font-bold tracking-tight text-on-surface mb-2 font-headline">Welcome back</h1>
+<p class="text-on-surface-variant text-sm font-label uppercase tracking-wider">Sign in to your intelligence feed</p>
+</div>
+</header>
+<!-- Social Login -->
+<section class="mb-6">
+<button class="w-full flex items-center justify-center gap-3 bg-surface-container-high hover:bg-surface-bright text-on-surface border border-outline-variant py-3 rounded-xl transition-all duration-150 active:scale-[0.98]">
+<img alt="Google Icon" class="w-5 h-5" data-alt="Official Google G-Logo icon on a transparent background with standard multi-color branding" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa9C8bH3y3FH8pJCxvsHM-1fefKQZNyg0uJaOqtHXo7uB-QXPKWJYj8qld2qLaV_n9P5ip-n2Lw412LW1iAo8i6SsRkEXi-s_-JOuMD6-m3anZGMI2Z79Oxo1KKv-qqBVqCZTU9EswjYm-H3aU0uyxfHavCISaZEVjrGJivtcQu9FCxhAfpovecw6Q3G_yObFUgU9IkvRDFGrWe60Mww2HtEvW-k_uInu9aXaoQjh6h_xF9yGRDwSTfsLaC6iGYyDWXZ_ICCmEiUCR"/>
+<span class="font-label text-sm font-medium">Continue with Google</span>
+</button>
+</section>
+<!-- Divider -->
+<div class="relative mb-6">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-outline-variant/30"></div>
+</div>
+<div class="relative flex justify-center">
+<span class="bg-surface px-4 text-xs font-label text-on-surface-variant uppercase tracking-[0.2em]">or</span>
+</div>
+</div>
+<!-- Login Form -->
+<form action="#" class="space-y-5" method="POST">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="block text-xs font-label font-bold uppercase tracking-widest text-on-surface-variant" for="email">Email</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border-b border-outline-variant focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/40 py-3 px-1 font-mono text-sm transition-colors" id="email" name="email" placeholder="you@example.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<label class="block text-xs font-label font-bold uppercase tracking-widest text-on-surface-variant" for="password">Password</label>
+<a class="text-xs font-label font-bold text-primary hover:text-primary-fixed uppercase tracking-tight transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border-b border-outline-variant focus:border-primary focus:ring-0 text-on-surface placeholder:text-on-surface-variant/40 py-3 px-1 font-mono text-sm transition-colors" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-xl" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+<!-- Action Button -->
+<div class="pt-4">
+<button class="w-full bg-primary-container hover:bg-primary text-on-primary-container font-headline font-extrabold tracking-widest py-4 rounded-xl transition-all duration-150 active:scale-[0.97] shadow-lg shadow-primary/5" type="submit">
+                    SIGN IN
+                </button>
+</div>
+</form>
+<!-- Footer -->
+<footer class="mt-10 text-center">
+<p class="text-sm font-label text-on-surface-variant">
+                Don't have an account? 
+                <a class="text-primary font-bold hover:underline underline-offset-4 transition-all ml-1" href="#">Sign up</a>
+</p>
+</footer>
+<!-- System Meta -->
+<div class="mt-8 flex justify-center items-center gap-4 text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.3em]">
+<span>Secure Node: GS-ALPHA-09</span>
+<span class="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
+<span>v.4.22.0</span>
+</div>
+</main>
+<!-- Background Decoration (Tactical Aesthetic) -->
+<div class="fixed inset-0 pointer-events-none z-[-1] opacity-20">
+<div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full"></div>
+<div class="absolute top-0 right-0 w-[400px] h-[400px] bg-secondary/5 blur-[100px] rounded-full"></div>
+<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03]"></div>
+</div>
+</body></html>
