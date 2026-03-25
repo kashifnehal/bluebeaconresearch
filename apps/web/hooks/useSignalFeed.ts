@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 
 type Options = {
   enabled?: boolean;

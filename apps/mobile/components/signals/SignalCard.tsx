@@ -1,4 +1,4 @@
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 import { Pressable, View } from "react-native";
 import { Text } from "react-native";
 

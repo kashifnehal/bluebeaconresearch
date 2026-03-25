@@ -1,6 +1,6 @@
 # Walkthrough — Tactical Intelligence Terminal Porting Complete
 
-I have successfully completed the high-fidelity porting of the entire **GeoSignal Pro** terminal. Every screen now matches the "Tactical Intelligence Terminal" design system (Stitch) with pixel-perfect accuracy, while maintaining full integration with your Supabase backend and real-time intelligence feeds.
+I have successfully completed the high-fidelity porting of the entire **Blue Beacon Research** terminal. Every screen now matches the "Tactical Intelligence Terminal" design system (Stitch) with pixel-perfect accuracy, while maintaining full integration with your Supabase backend and real-time intelligence feeds.
 
 ## 🚀 Key Achievements
 

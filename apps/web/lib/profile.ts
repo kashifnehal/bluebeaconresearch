@@ -1,6 +1,6 @@
 "use client";
 
-import type { PlanTier } from "@geosignal/shared";
+import type { PlanTier } from "@blue-beacon-research/shared";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export type Profile = {

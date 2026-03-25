@@ -130,7 +130,7 @@ export default function OnboardingPage() {
                   fontWeight: 700,
                 }}
               >
-                GeoSignal Pro
+                Blue Beacon Research
               </span>
             </div>
             <h1
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
               Set up your profile
             </h1>
             <p style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}>
-              Tell us how you'll use GeoSignal
+              Tell us how you'll use Blue Beacon Research
             </p>
           </header>
 

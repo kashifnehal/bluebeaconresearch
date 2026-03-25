@@ -1,6 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 import { formatDistanceToNowStrict } from "date-fns";
 
 export default function MapPage() {

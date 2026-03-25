@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { PlanTier } from "@geosignal/shared";
+import type { PlanTier } from "@blue-beacon-research/shared";
 
 type AuthState = {
   userId: string | null;
@@ -18,7 +18,6 @@ export const useAuthStore = create<AuthState>()(
       setUser: (userId, planTier) =>
         set({ userId, planTier: planTier ?? "pro" }),
     }),
-    { name: "geosignal-auth" },
+    { name: "blue-beacon-auth" },
   ),
 );
-

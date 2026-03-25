@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { rateLimitOrPass } from "@/lib/ratelimit";
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 
 function mockSignals(): Signal[] {
   const now = Date.now();

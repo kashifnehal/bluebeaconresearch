@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@geosignal/shared"],
+  transpilePackages: ["@blue-beacon-research/shared"],
 };
 
 export default nextConfig;

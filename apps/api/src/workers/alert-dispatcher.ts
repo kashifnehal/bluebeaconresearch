@@ -89,7 +89,7 @@ export function startAlertDispatcherWorker() {
               } else {
                 await telegram.sendMessage(
                   channelsRow.telegram_chat_id,
-                  `GeoSignal (${signal.severity}/10) — ${signal.title}\n\n${signal.summary}`,
+                  `Blue Beacon (${signal.severity}/10) — ${signal.title}\n\n${signal.summary}`,
                 );
                 status = "delivered";
               }
@@ -99,7 +99,7 @@ export function startAlertDispatcherWorker() {
               } else {
                 await axios.post(
                   channelsRow.slack_webhook_url,
-                  { text: `GeoSignal (${signal.severity}/10) — ${signal.title}\n${signal.summary}` },
+                  { text: `Blue Beacon Research (${signal.severity}/10) — ${signal.title}\n${signal.summary}` },
                   { timeout: 10_000 },
                 );
                 status = "delivered";

@@ -14,7 +14,6 @@ export const useUIStore = create<UIState>()(
       compactMode: false,
       setCompactMode: (v) => set({ compactMode: v }),
     }),
-    { name: "geosignal-ui" },
+    { name: "blue-beacon-ui" },
   ),
 );
-

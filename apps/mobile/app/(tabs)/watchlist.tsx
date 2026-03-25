@@ -3,7 +3,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { Text } from "react-native";
 import { useRouter } from "expo-router";
 
-import type { CommodityPrice } from "@geosignal/shared";
+import type { CommodityPrice } from "@blue-beacon-research/shared";
 
 import { getSupabaseClient } from "@/lib/supabase";
 import { geoFetch } from "@/lib/api";

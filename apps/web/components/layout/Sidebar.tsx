@@ -37,12 +37,9 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <div
-            className="text-lg font-bold tracking-tighter"
-            style={{ color: "#4edea3", fontFamily: "'Inter', sans-serif" }}
-          >
-            GeoSignal Pro
-          </div>
+          <span className="font-headline font-bold text-sm tracking-tighter text-on-surface text-white">
+            Blue Beacon Research
+          </span>
           <span
             className="text-[10px] px-1.5 py-0.5 border"
             style={{

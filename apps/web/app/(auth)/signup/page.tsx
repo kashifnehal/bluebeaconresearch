@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { signupSchema } from "@/lib/validators";
-import type { PlanTier } from "@geosignal/shared";
+import type { PlanTier } from "@blue-beacon-research/shared";
 
 type FormValues = z.infer<typeof signupSchema>;
 
@@ -54,7 +54,6 @@ export default function SignupPage() {
   const selectedPlan: PlanTier = "pro";
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -75,7 +74,7 @@ export default function SignupPage() {
         for (const issue of parsed.error.issues) {
           const field = issue.path[0];
           if (field === "fullName" || field === "email" || field === "password") {
-            form.setError(field, { message: issue.message });
+            form.setError(field as any, { message: issue.message });
           }
         }
         return;
@@ -193,7 +192,7 @@ export default function SignupPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "24px" }}>
             <Shield size={28} color={C.primaryContainer} />
             <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em", color: C.onSurface, textTransform: "uppercase" }}>
-              GeoSignal Pro
+              Blue Beacon Research
             </span>
           </div>
           <div style={{ textAlign: "center" }}>
@@ -355,7 +354,7 @@ export default function SignupPage() {
         {/* System meta */}
         <div style={{ marginTop: "32px", display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", opacity: 0.3 }}>
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
-            Secure Node: GS-ALPHA-09
+            Secure Node: BB-ALPHA-09
           </span>
           <span style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: C.primaryContainer, display: "block" }} className="animate-pulse" />
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>

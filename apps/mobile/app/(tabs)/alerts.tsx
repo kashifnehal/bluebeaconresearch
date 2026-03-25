@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Switch, TextInput, View } from "react-native";
 import { Text } from "react-native";
 import { geoFetch } from "@/lib/api";
-import { REGIONS } from "@geosignal/shared";
+import { REGIONS } from "@blue-beacon-research/shared";
 
 type AlertRule = {
   id: string;
@@ -19,7 +19,7 @@ export default function AlertsTab() {
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [name, setName] = useState("GeoSignal alerts");
+  const [name, setName] = useState("Blue Beacon Research alerts");
   const [minSeverity, setMinSeverity] = useState(8);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
 
@@ -58,7 +58,7 @@ export default function AlertsTab() {
       });
       setCreating(false);
       setSelectedRegions([]);
-      setName("GeoSignal alerts");
+      setName("Blue Beacon Research alerts");
       setMinSeverity(8);
       await load();
     } catch {

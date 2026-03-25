@@ -1,6 +1,6 @@
 # Production Readiness & Security Guide
 
-This document outlines the security protocols and project structure requirements for the **GeoSignal Pro** terminal. Adhering to these standards is critical for maintaining data integrity and protecting system secrets.
+This document outlines the security protocols and project structure requirements for the **Blue Beacon Research** terminal. Adhering to these standards is critical for maintaining data integrity and protecting system secrets.
 
 ## 1. Environment Variable Management (Secret Safety)
 

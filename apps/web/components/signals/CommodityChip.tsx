@@ -1,6 +1,6 @@
 "use client";
 
-import type { Direction } from "@geosignal/shared";
+import type { Direction } from "@blue-beacon-research/shared";
 
 export function CommodityChip({
   asset,

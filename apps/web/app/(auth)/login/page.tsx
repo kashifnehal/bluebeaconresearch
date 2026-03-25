@@ -63,7 +63,7 @@ export default function LoginPage() {
         for (const issue of parsed.error.issues) {
           const field = issue.path[0];
           if (field === "email" || field === "password") {
-            form.setError(field, { message: issue.message });
+            form.setError(field as any, { message: issue.message });
           }
         }
         return;
@@ -216,7 +216,7 @@ export default function LoginPage() {
                 textTransform: "uppercase",
               }}
             >
-              GeoSignal Pro
+              Blue Beacon Research
             </span>
           </div>
           <div style={{ textAlign: "center" }}>
@@ -466,7 +466,7 @@ export default function LoginPage() {
           }}
         >
           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
-            Secure Node: GS-ALPHA-09
+            Secure Node: BB-ALPHA-09
           </span>
           <span
             style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: C.primaryContainer, display: "block" }}

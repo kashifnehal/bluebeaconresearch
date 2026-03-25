@@ -13,10 +13,15 @@ export function getRedis() {
     throw new Error("Missing REDIS_URL (or UPSTASH_REDIS_REST_URL).");
   }
 
+  if (url.startsWith("https://") || url.startsWith("http://")) {
+    console.warn("⚠️  ioredis: UPSTASH_REDIS_REST_URL detected. This is a REST URL and cannot be used with ioredis. Backend workers and rate-limiting may not function correctly. Use a rediss:// or redis:// URL instead.");
+    // For development, we might not want to hard-fail, but BullMQ will.
+    // Return a proxy or just let it fail later with a better message.
+  }
+
   redis = new Redis(url, {
     maxRetriesPerRequest: null,
     enableReadyCheck: true,
-    // BullMQ recommends disabling offline queue for workers; keep default here and override per Queue if needed.
   });
 
   return redis;

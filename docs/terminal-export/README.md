@@ -1,6 +1,6 @@
 # 📂 Tactical Intelligence Terminal — Project Export (v1.0)
 
-This directory contains the final technical documentation, visual assets, and data flow audits for the **GeoSignal Pro** terminal porting project.
+This directory contains the final technical documentation, visual assets, and data flow audits for the **Blue Beacon Research** terminal porting project.
 
 ## 📑 Contents
 

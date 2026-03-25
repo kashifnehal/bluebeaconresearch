@@ -1,6 +1,6 @@
 "use client";
 
-import { SEVERITY_CONFIG } from "@geosignal/shared";
+import { SEVERITY_CONFIG } from "@blue-beacon-research/shared";
 
 export function SeverityBadge({ score }: { score: number }) {
   let label = "Low";

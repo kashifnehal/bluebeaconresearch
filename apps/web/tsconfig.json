@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@geosignal/shared": ["../../packages/shared/src/index.ts"]
+      "@blue-beacon-research/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": [

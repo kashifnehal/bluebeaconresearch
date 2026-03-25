@@ -2,7 +2,7 @@
 
 import { MapPin, Bookmark } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 
 import { SeverityBadge } from "./SeverityBadge";
 import { CommodityChip } from "./CommodityChip";

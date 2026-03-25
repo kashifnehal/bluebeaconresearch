@@ -1,10 +1,10 @@
-# GeoSignal Pro — Tactical Intelligence Terminal
+# Blue Beacon Research — Tactical Intelligence Terminal
 
-GeoSignal Pro is a high-fidelity geopolitical intelligence terminal that transforms global conflict data into actionable market signals.
+Blue Beacon Research is a high-fidelity geopolitical intelligence terminal that transforms global conflict data into actionable market signals.
 
 ## 🚀 Project Overview
 
-This monorepo (Turborepo) contains the full stack for the GeoSignal platform:
+This monorepo (Turborepo) contains the full stack for the Blue Beacon Research platform:
 - **`apps/web`**: Next.js terminal frontend (Tailwind v4, Shadcn, Framer Motion).
 - **`apps/api`**: Background ingestion workers (GNews, ACLED, GDELT) and AI enrichment services (Claude 3.5).
 - **`packages/shared`**: Shared TypeScript types and business logic.

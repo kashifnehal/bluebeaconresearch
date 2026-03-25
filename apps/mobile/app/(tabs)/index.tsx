@@ -4,7 +4,7 @@ import { Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 
 import { geoFetch } from "@/lib/api";
 import { SignalCard } from "@/components/signals/SignalCard";

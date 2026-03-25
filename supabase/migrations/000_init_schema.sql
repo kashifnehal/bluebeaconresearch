@@ -1,4 +1,4 @@
--- Phase 0 (missing piece): Core schema for GeoSignal
+-- Phase 0 (missing piece): Core schema for Blue Beacon Research
 -- This migration creates the tables described in the blueprint so Phase 2+ code can run locally.
 
 -- Extensions

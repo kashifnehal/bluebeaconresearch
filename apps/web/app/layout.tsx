@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "GeoSignal Pro",
+  title: "Blue Beacon Research",
   description: "Conflict intelligence → actionable trading signals.",
 };
 

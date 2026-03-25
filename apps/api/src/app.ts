@@ -40,7 +40,7 @@ export function buildApp() {
 
   app.register(swagger, {
     openapi: {
-      info: { title: "GeoSignal API", version: "1.0.0" },
+      info: { title: "Blue Beacon API", version: "1.0.0" },
     },
   });
   app.register(swaggerUi, { routePrefix: "/docs" });

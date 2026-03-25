@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { COMMODITIES, REGIONS } from "@geosignal/shared";
+import { COMMODITIES, REGIONS } from "@blue-beacon-research/shared";
 
 const POPULAR = [
   {
@@ -282,7 +282,7 @@ export default function BacktestingPage() {
 
       {/* Footer / System Integrity */}
       <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
-        <div>GEOSIGNAL PRO SYSTEM HASH: 88F9-AX21-KL88</div>
+        <div>BLUE BEACON RESEARCH SYSTEM HASH: 88F9-AX21-KL88</div>
         <div className="flex gap-8">
           <span>LATENCY: 12ms</span>
           <span>DATA INTEGRITY: 100% Verified</span>

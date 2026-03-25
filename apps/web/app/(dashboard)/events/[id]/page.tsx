@@ -8,7 +8,7 @@ import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 
 export default function EventDetailPage() {
   const params = useParams<{ id: string }>();

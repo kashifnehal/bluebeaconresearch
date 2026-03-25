@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 
 /* ─── Static placeholder data (fallback/demo) ────────────────────────────── */
 const FALLBACK_FEATURED: any = {

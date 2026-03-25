@@ -3,7 +3,7 @@ import { ScrollView, Pressable, View } from "react-native";
 import { Text } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import type { Signal } from "@geosignal/shared";
+import type { Signal } from "@blue-beacon-research/shared";
 
 import { geoFetch } from "@/lib/api";
 

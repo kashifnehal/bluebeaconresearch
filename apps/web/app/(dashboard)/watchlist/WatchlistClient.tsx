@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { COMMODITIES } from "@geosignal/shared";
+import { COMMODITIES } from "@blue-beacon-research/shared";
 
 type Price = {
   symbol: string;

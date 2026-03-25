@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "./../lib/supabase-server";
+import { Logo } from "./../components/Logo";
 
 export const metadata: Metadata = {
-  title: "GeoSignal Pro | Tactical Market Intelligence",
-  description: "Real-time AI analysis of global conflict events mapped to commodity and market impact. Stay ahead of the curve with GS-Alpha sentinel nodes.",
+  title: "Blue Beacon Research | Tactical Market Intelligence",
+  description: "High-fidelity geopolitical intelligence → actionable trading signals.",
   openGraph: {
-    title: "GeoSignal Pro | Tactical Market Intelligence",
-    description: "Real-time AI analysis of global conflict events mapped to commodity and market impact.",
+    title: "Blue Beacon Research | Tactical Market Intelligence",
+    description: "High-fidelity geopolitical intelligence → actionable trading signals.",
     type: "website",
   },
 };
@@ -54,14 +55,12 @@ export default async function Home() {
       {/* Sticky Header */}
       <header className="fixed top-0 left-0 right-0 h-16 glass z-50 px-8 flex items-center justify-between border-b border-outline-variant/10">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(111,251,190,0.5)]"></span>
-          <span className="text-xl font-extrabold tracking-tighter uppercase font-headline text-white">GeoSignal</span>
+          <Logo className="h-8" />
+          <span className="text-xl font-extrabold tracking-tighter uppercase font-headline text-white">Blue Beacon Research</span>
         </div>
         <nav className="hidden md:flex items-center gap-10">
-          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#features">Tactical Modules</a>
-          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#pricing">Access Tiers</a>
-          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#">API Cache</a>
-          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#">Documentation</a>
+          <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#features">Tactical Modules</Link>
+          <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#pricing">Access Tiers</Link>
         </nav>
         <div className="flex items-center gap-8">
           <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-white transition-colors" href="/login">Sign in</Link>
@@ -89,12 +88,11 @@ export default async function Home() {
               <span className="font-label text-[9px] font-black uppercase tracking-[0.2em] text-primary">Live — monitoring active global conflicts</span>
             </div>
             <h1 className="text-6xl md:text-8xl lg:text-[120px] font-extrabold tracking-tighter leading-[0.85] mb-10 text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
-              Conflict signals. <br/>
-              <span className="text-primary italic">Market alpha.</span> <br/>
-              Before the news.
+              High-fidelity geopolitical intelligence <br/>
+              <span className="text-primary italic">→ actionable trading signals.</span>
             </h1>
             <p className="text-on-surface/60 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
-              Real-time AI synthesis of global conflict events mapped to commodity and physical asset risk. Stay ahead with GS-Alpha sentinel nodes.
+              Blue Beacon Research provides high-fidelity geopolitical intelligence, synthesized into actionable trading signals for commodity and financial markets.
             </p>
             <div className="flex flex-col md:flex-row items-center justify-center gap-6">
               <Link 
@@ -112,8 +110,8 @@ export default async function Home() {
           </div>
 
           <div className="absolute bottom-12 w-full max-w-6xl px-10 opacity-30 flex items-center justify-between text-[8px] font-mono font-bold text-on-surface-variant uppercase tracking-[0.4em] pointer-events-none">
-             <span>Protocol: GS-ENCRYPT-CH</span>
-             <span>Spatial Layer: ALPHA-V2</span>
+             <span>Protocol: BB-ENCRYPT-CH</span>
+             <span>Spatial Layer: BEACON-V1</span>
              <span>Latency: 42ms</span>
           </div>
         </section>
@@ -123,7 +121,7 @@ export default async function Home() {
           <div className="max-w-[1440px] mx-auto">
             <div className="mb-14 flex items-end justify-between">
               <div>
-                <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Alpha Stream</p>
+                <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Beacon Stream</p>
                 <h3 className="text-4xl font-headline font-extrabold tracking-tight text-white mb-2">Active Intelligence Log</h3>
                 <p className="text-on-surface-variant max-w-lg font-medium">Sub-second synthesis of geopolitical volatility pulses.</p>
               </div>
@@ -188,7 +186,7 @@ export default async function Home() {
                     </>
                   ) : (
                     <div className="py-20 text-center">
-                      <p className="font-mono text-xs text-on-surface-variant animate-pulse tracking-widest uppercase font-bold">Synchronizing with Sentinel-Alpha Mainframe...</p>
+                      <p className="font-mono text-xs text-on-surface-variant animate-pulse tracking-widest uppercase font-bold">Synchronizing with Beacon-Alpha Mainframe...</p>
                     </div>
                   )}
                 </div>
@@ -229,94 +227,35 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Capabilities Matrix */}
-        <section className="px-10 py-32 bg-surface-container-low">
+        {/* Pricing/Capabilities Matrix */}
+        <section className="px-10 py-32 bg-surface-container-low" id="pricing">
           <div className="max-w-[1440px] mx-auto">
             <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-white mb-6">Operational Parameters</h2>
+              <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-white mb-6 uppercase italic">Access Tiers</h2>
               <p className="text-on-surface-variant font-medium max-w-xl mx-auto italic uppercase text-[10px] tracking-widest">Precision instruments for institutional volatility handlers.</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { icon: "rss_feed", title: "Real-time stream", desc: "Websocket delivery of event telemetry with sub-second latency." },
-                { icon: "history", title: "Scenario Lab", desc: "Backtest against 40 years of verified conflict volatility markers." },
-                { icon: "public", title: "Map Overlays", desc: "Visual intelligence layers covering global chokepoints and kinetic zones." },
-                { icon: "terminal", title: "Intel API", desc: "Direct binary interface for algorithmic execution pods." },
-                { icon: "radar", title: "Sentiment Scan", desc: "AI-driven extraction of diplomatic tension pulses." },
-                { icon: "monitoring", title: "Risk Dashboard", desc: "Real-time quantification of asset-to-conflict proximity." }
-              ].map((cap, i) => (
-                <div key={i} className="p-10 bg-surface-container-high rounded-2xl border border-outline-variant/10 hover:border-primary/40 transition-all group">
-                  <span className="material-symbols-outlined text-primary text-3xl mb-6 group-hover:translate-x-2 transition-transform">{cap.icon}</span>
-                  <h5 className="text-lg font-headline font-extrabold text-white mb-3 uppercase tracking-tight">{cap.title}</h5>
-                  <p className="text-[10px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-widest">{cap.desc}</p>
+                { title: "Monitor", price: "$0", features: ["Delayed Feed (4h)", "Limited Map Access", "Base Analytics"] },
+                { title: "Analyst", price: "$49", features: ["Real-time Signal Feed", "Full Map Layers", "Uplink Alerts", "Sentinel Synthesis"], featured: true },
+                { title: "Pro", price: "$199", features: ["Full REST/WS API", "40yr Intel Archive", "Scenario Lab Access", "Multi-user Node"] }
+              ].map((tier, i) => (
+                <div key={i} className={`p-10 rounded-3xl border ${tier.featured ? 'bg-surface-container border-primary/40 shadow-2xl shadow-primary/10' : 'bg-surface-container-high border-outline-variant/10'}`}>
+                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-4">Tier 0{i+1}: {tier.title}</p>
+                  <div className="text-4xl font-mono text-white mb-8 font-extrabold">{tier.price}<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
+                  <ul className="space-y-4 mb-10">
+                    {tier.features.map((f, idx) => (
+                      <li key={idx} className="flex items-center gap-3 text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
+                        <span className="material-symbols-outlined text-primary text-xs">check</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/signup" className={`w-full py-4 text-center rounded-xl font-label text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
+                    Select Tier
+                  </Link>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Pricing Section */}
-        <section className="px-10 py-32 bg-background" id="pricing">
-          <div className="max-w-[1440px] mx-auto">
-            <div className="text-center mb-24">
-              <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tighter text-white uppercase italic">Access Tiers</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-outline-variant/10 rounded-3xl overflow-hidden shadow-3xl bg-surface-container-low">
-              {/* Free */}
-              <div className="p-12 flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant/10">
-                <div className="mb-10">
-                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40">Tier 01: Monitor</p>
-                  <div className="text-5xl font-mono text-white mt-4 font-extrabold">$0<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
-                </div>
-                <ul className="space-y-6 mb-12 flex-grow">
-                  {["Delayed Feed (4h)", "Limited Map Access", "Base Analytics"].map((f, i) => (
-                    <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
-                      <span className="material-symbols-outlined text-primary text-base">check</span> {f}
-                    </li>
-                  ))}
-                  <li className="flex items-center gap-3 text-[10px] font-bold text-on-surface/20 uppercase tracking-widest">
-                    <span className="material-symbols-outlined text-base">close</span> API Restricted
-                  </li>
-                </ul>
-                <Link href="/signup" className="w-full py-4 border border-outline-variant/30 text-on-surface font-label text-[10px] font-black uppercase tracking-widest hover:bg-surface-container-high transition-colors rounded-xl text-center">Establish Link</Link>
-              </div>
-
-              {/* Analyst */}
-              <div className="p-12 flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant/10 bg-surface-container relative z-10">
-                <div className="absolute top-0 right-0 p-6">
-                  <span className="px-3 py-1 bg-primary text-black font-label text-[9px] font-black uppercase tracking-widest rounded-md shadow-lg shadow-primary/20">Recommended</span>
-                </div>
-                <div className="mb-10">
-                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-primary">Tier 02: Analyst</p>
-                  <div className="text-5xl font-mono text-white mt-4 font-extrabold">$49<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
-                </div>
-                <ul className="space-y-6 mb-12 flex-grow">
-                  {["Real-time Signal Feed", "Full Map Layers", "Uplink Alerts", "Sentinel Synthesis"].map((f, i) => (
-                    <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-white uppercase tracking-widest">
-                      <span className="material-symbols-outlined text-primary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup" className="w-full py-4 bg-primary text-black font-label text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all rounded-xl text-center shadow-xl shadow-primary/20">Initiate Protocol</Link>
-              </div>
-
-              {/* Pro */}
-              <div className="p-12 flex flex-col">
-                <div className="mb-10">
-                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40">Tier 03: Pro</p>
-                  <div className="text-5xl font-mono text-white mt-4 font-extrabold">$199<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
-                </div>
-                <ul className="space-y-6 mb-12 flex-grow">
-                  {["Full REST/WS API", "40yr Intel Archive", "Scenario Lab Access", "Multi-user Node"].map((f, i) => (
-                    <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
-                      <span className="material-symbols-outlined text-primary text-base">check</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup" className="w-full py-4 border border-outline-variant/30 text-on-surface font-label text-[10px] font-black uppercase tracking-widest hover:bg-surface-container-high transition-colors rounded-xl text-center">Scale Terminal</Link>
-              </div>
             </div>
           </div>
         </section>
@@ -324,15 +263,15 @@ export default async function Home() {
 
       {/* Footer */}
       <footer className="bg-surface-container-lowest border-t border-outline-variant/10 px-10 py-24">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-20">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-20">
           <div className="col-span-1">
             <div className="flex items-center gap-2 mb-8">
-              <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
-              <span className="text-lg font-extrabold tracking-tighter uppercase font-headline text-white">GeoSignal Pro</span>
+              <Logo className="h-6" />
+              <span className="text-lg font-extrabold tracking-tighter uppercase font-headline text-white">Blue Beacon</span>
             </div>
             <p className="text-[9px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-[0.2em]">
-              Kinetic Monolith v4.0.2<br/>
-              © {new Date().getFullYear()} Signal Dynamics Corp.<br/>
+              Beacon OS v1.0.0<br/>
+              © {new Date().getFullYear()} Blue Beacon Research.<br/>
               Verified Intel Architecture.
             </p>
           </div>

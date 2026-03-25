@@ -1,5 +1,5 @@
 {
-  "name": "thebluezone",
+  "name": "blue-beacon-research",
   "private": true,
   "scripts": {
     "build": "turbo run build",

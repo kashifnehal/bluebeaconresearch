@@ -1,5 +1,5 @@
 {
-  "name": "@geosignal/shared",
+  "name": "@blue-beacon-research/shared",
   "version": "0.1.0",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

@@ -3,9 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@blue-beacon-research/shared": ["../../packages/shared/src"]
     }
   },
   "include": [
