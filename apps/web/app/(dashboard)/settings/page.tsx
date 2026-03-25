@@ -69,7 +69,7 @@ export default function SettingsPage() {
     if (error) {
       toast.error(`Update Failed: ${error.message}`);
     } else {
-      toast.success("Profile Updated: Neural markers synced with GS-CENTRAL", {
+      toast.success("Profile Updated: Neural markers synced with BB-CENTRAL", {
         description: "Your tactical identification has been refreshed."
       });
     }
@@ -111,7 +111,7 @@ export default function SettingsPage() {
               <div className="bg-surface-container p-8 rounded-lg border-t-2 border-primary shadow-xl">
                 {loading ? (
                   <div className="h-48 flex items-center justify-center font-mono text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
-                    Accessing GS-PROFILE-BUFFER...
+                    Accessing BB-PROFILE-BUFFER...
                   </div>
                 ) : (
                   <form className="grid grid-cols-1 md:grid-cols-2 gap-8" onSubmit={(e) => { e.preventDefault(); handleSaveChanges(); }}>
@@ -224,7 +224,7 @@ export default function SettingsPage() {
                 </span>
                 <h3 className="font-label text-xs font-black tracking-[0.3em] text-on-surface/60 mb-2 uppercase">Protocol Restricted</h3>
                 <p className="font-mono text-[10px] text-on-surface-variant/40 max-w-xs uppercase leading-loose font-bold">
-                  Configuration node for {activeTab} is currently being synced with GS-CENTRAL-CLUSTER. access will be restored upon sync completion.
+                  Configuration node for {activeTab} is currently being synced with BB-CENTRAL-CLUSTER. access will be restored upon sync completion.
                 </p>
               </div>
             </section>
@@ -234,7 +234,7 @@ export default function SettingsPage() {
 
       {/* Footer */}
       <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
-        <div>ACCESS_POINT: GS-ALPHA-09</div>
+        <div>ACCESS_POINT: BB-ALPHA-09</div>
         <div className="flex gap-8">
           <span>ENCRYPTION: AES-256</span>
           <span>SESSION_ID: 88F9-AX21</span>

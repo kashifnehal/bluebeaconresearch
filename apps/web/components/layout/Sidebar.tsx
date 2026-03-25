@@ -113,7 +113,7 @@ export function Sidebar() {
         style={{ borderColor: "#3c4a42", backgroundColor: "#0e0e0e" }}
       >
         <div className="text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#4edea3" }}>
-          Node: GS-ALPHA-09
+          Node: BB-ALPHA-09
         </div>
         <a
           href="#"

@@ -346,7 +346,7 @@ export default function OnboardingPage() {
                   color: "#4edea3",
                 }}
               >
-                GS-ALPHA-ONLINE
+                BB-ALPHA-ONLINE
               </div>
             </div>
             <div style={{ textAlign: "right" }}>

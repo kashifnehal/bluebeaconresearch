@@ -21,4 +21,4 @@ This directory contains the final technical documentation, visual assets, and da
 - **Recordings**: Open the `.webp` files in any modern web browser to watch the terminal navigation in real-time.
 
 ---
-*GS-ALPHA EXPORT PROTOCOL: 09-X1*
+*BB-ALPHA EXPORT PROTOCOL: 09-X1*

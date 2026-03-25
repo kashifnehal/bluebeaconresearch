@@ -51,4 +51,4 @@ Detailed technical guides and project walkthroughs are available in the artifact
 - [x] Verified 1:1 visual parity with Stitch design system.
 
 ---
-*GS-ALPHA MAIN CONTROL: v1.0.0*
+*BB-ALPHA MAIN CONTROL: v1.0.0*

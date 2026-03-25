@@ -49,4 +49,4 @@ Verified that both root and package-level `.gitignore` files cover:
 4. **Push**: You should now be able to `git push` without interference from secret scanners.
 
 ---
-*GS-SECURITY PROTOCOL: REV-01*
+*BB-SECURITY PROTOCOL: REV-01*
