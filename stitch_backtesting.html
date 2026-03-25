@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GeoSignal Pro | Backtesting Lab</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "inverse-primary": "#006c4a",
+                "tertiary": "#ffdad7",
+                "error-container": "#93000a",
+                "on-error-container": "#ffdad6",
+                "on-tertiary-fixed-variant": "#7f2927",
+                "on-tertiary-container": "#8e3432",
+                "surface-container": "#201f1f",
+                "surface-variant": "#353534",
+                "on-secondary-fixed": "#042100",
+                "background": "#131313",
+                "on-error": "#690005",
+                "secondary-fixed": "#8efc67",
+                "surface-container-low": "#1c1b1b",
+                "on-tertiary": "#611213",
+                "surface-tint": "#4edea3",
+                "secondary-container": "#3ba615",
+                "inverse-surface": "#e5e2e1",
+                "on-secondary-container": "#093100",
+                "on-secondary-fixed-variant": "#145200",
+                "surface-container-highest": "#353534",
+                "primary": "#6ffbbe",
+                "inverse-on-surface": "#313030",
+                "on-background": "#e5e2e1",
+                "surface-dim": "#131313",
+                "surface-container-lowest": "#0e0e0e",
+                "surface-container-high": "#2a2a2a",
+                "on-surface": "#e5e2e1",
+                "tertiary-fixed": "#ffdad7",
+                "tertiary-container": "#ffb3ad",
+                "on-primary-fixed": "#002114",
+                "primary-container": "#4edea3",
+                "outline": "#86948a",
+                "on-primary-container": "#005f40",
+                "surface": "#131313",
+                "secondary-fixed-dim": "#72df4d",
+                "on-primary": "#003824",
+                "outline-variant": "#3c4a42",
+                "surface-bright": "#393939",
+                "on-surface-variant": "#bbcac0",
+                "secondary": "#72df4d",
+                "error": "#ffb4ab",
+                "primary-fixed": "#6ffbbe",
+                "on-primary-fixed-variant": "#005236",
+                "on-secondary": "#0b3900",
+                "tertiary-fixed-dim": "#ffb3ae",
+                "on-tertiary-fixed": "#410004",
+                "primary-fixed-dim": "#4edea3"
+              },
+              fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Space Grotesk"]
+              },
+              borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0e0e0e;
+            color: #e5e2e1;
+            font-family: 'Inter', sans-serif;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .label-caps { font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0e0e0e; }
+        ::-webkit-scrollbar-thumb { background: #2a2a2a; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar (Left Rail) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 w-[256px] bg-[#000000] border-r border-[#2A2A2A]">
+<div class="p-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-xl" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<h1 class="text-lg font-bold tracking-tighter text-[#4EDEA3]">GeoSignal Pro</h1>
+<p class="text-[10px] label-caps text-[#E5E2E1]/40">Active Intelligence</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span class="label-caps text-xs">TERMINAL</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined">rss_feed</span>
+<span class="label-caps text-xs">INTELLIGENCE FEED</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined">public</span>
+<span class="label-caps text-xs">GLOBAL MAP</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined">notifications_active</span>
+<span class="label-caps text-xs">ALERTS</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined">visibility</span>
+<span class="label-caps text-xs">WATCHLIST</span>
+</a>
+<!-- Active State: BACKTESTING -->
+<a class="flex items-center gap-3 px-4 py-3 text-[#4EDEA3] border-l-2 border-[#4EDEA3] bg-[#131313] transition-colors duration-150 rounded-r" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="label-caps text-xs">BACKTESTING</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="label-caps text-xs">SETTINGS</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-[#2A2A2A]">
+<div class="bg-[#131313] p-3 rounded mb-4">
+<p class="text-[10px] label-caps text-[#4EDEA3] mb-1">Node: GS-ALPHA-09</p>
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-[#4EDEA3] animate-pulse"></div>
+<span class="text-[10px] mono text-[#E5E2E1]/60">Uptime: 432h 12m</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<button class="flex items-center gap-3 px-4 py-2 text-[#E5E2E1]/40 hover:text-[#E5E2E1] transition-colors text-xs label-caps">
+<span class="material-symbols-outlined text-lg">help</span> Help
+                </button>
+<button class="flex items-center gap-3 px-4 py-2 text-[#E5E2E1]/40 hover:text-error transition-colors text-xs label-caps">
+<span class="material-symbols-outlined text-lg">logout</span> Logout
+                </button>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-[256px] h-16 bg-[#000000] border-b border-[#2A2A2A] flex items-center justify-between px-8 z-40">
+<div class="flex items-center bg-[#131313] rounded-lg px-4 py-2 w-96 border border-transparent focus-within:border-[#4EDEA3] transition-all">
+<span class="material-symbols-outlined text-[#E5E2E1]/40 text-sm mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-[#E5E2E1] w-full placeholder-[#E5E2E1]/20 mono" placeholder="Search historical events..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-r border-[#2A2A2A] pr-6">
+<button class="text-[#E5E2E1]/60 hover:text-[#4EDEA3] transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="text-[#E5E2E1]/60 hover:text-[#4EDEA3] transition-colors"><span class="material-symbols-outlined">help</span></button>
+</div>
+<button class="bg-[#4EDEA3] text-[#002114] px-4 py-2 rounded font-bold text-xs label-caps hover:bg-[#6FFBBE] transition-colors">
+                Terminal Sentinel
+            </button>
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center border border-[#4EDEA3]/20">
+<span class="text-[10px] font-bold text-[#4EDEA3]">GS</span>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[256px] mt-16 flex-1 bg-[#0e0e0e] min-h-screen p-8 max-w-[1440px]">
+<!-- Header -->
+<div class="mb-10">
+<h2 class="text-3xl font-extrabold text-[#E5E2E1] tracking-tight mb-2 headline">Backtesting Lab</h2>
+<p class="text-[#E5E2E1]/60 max-w-2xl">See how markets have historically reacted to events like the ones our system detects.</p>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<!-- Left Column: Popular Backtests -->
+<section class="col-span-12 lg:col-span-5 space-y-4">
+<h3 class="label-caps text-[#4EDEA3] text-sm font-bold tracking-widest">Popular backtests</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<!-- Card 1 -->
+<div class="bg-[#131313] p-4 border border-[#2A2A2A] hover:border-[#4EDEA3] transition-all cursor-pointer group">
+<p class="text-sm font-bold text-[#E5E2E1] mb-2 leading-tight">Houthi Red Sea attack → WTI Oil (24hr)</p>
+<p class="text-[10px] label-caps text-[#E5E2E1]/40 group-hover:text-[#4EDEA3] transition-colors">Click to run</p>
+</div>
+<!-- Card 2 -->
+<div class="bg-[#131313] p-4 border border-[#2A2A2A] hover:border-[#4EDEA3] transition-all cursor-pointer group">
+<p class="text-sm font-bold text-[#E5E2E1] mb-2 leading-tight">Russia sanctions announcement → EUR/USD (48hr)</p>
+<p class="text-[10px] label-caps text-[#E5E2E1]/40 group-hover:text-[#4EDEA3] transition-colors">Click to run</p>
+</div>
+<!-- Card 3 -->
+<div class="bg-[#131313] p-4 border border-[#2A2A2A] hover:border-[#4EDEA3] transition-all cursor-pointer group">
+<p class="text-sm font-bold text-[#E5E2E1] mb-2 leading-tight">Black Sea grain corridor halt → Wheat (7d)</p>
+<p class="text-[10px] label-caps text-[#E5E2E1]/40 group-hover:text-[#4EDEA3] transition-colors">Click to run</p>
+</div>
+<!-- Card 4 -->
+<div class="bg-[#131313] p-4 border border-[#2A2A2A] hover:border-[#4EDEA3] transition-all cursor-pointer group">
+<p class="text-sm font-bold text-[#E5E2E1] mb-2 leading-tight">Iran vessel seizure → Brent Crude (24hr)</p>
+<p class="text-[10px] label-caps text-[#E5E2E1]/40 group-hover:text-[#4EDEA3] transition-colors">Click to run</p>
+</div>
+<!-- Card 5 -->
+<div class="bg-[#131313] p-4 border border-[#2A2A2A] hover:border-[#4EDEA3] transition-all cursor-pointer group">
+<p class="text-sm font-bold text-[#E5E2E1] mb-2 leading-tight">Ukraine escalation → Natural Gas (48hr)</p>
+<p class="text-[10px] label-caps text-[#E5E2E1]/40 group-hover:text-[#4EDEA3] transition-colors">Click to run</p>
+</div>
+<!-- Card 6 -->
+<div class="bg-[#131313] p-4 border border-[#2A2A2A] hover:border-[#4EDEA3] transition-all cursor-pointer group">
+<p class="text-sm font-bold text-[#E5E2E1] mb-2 leading-tight">Sudan coup → Gold (24hr)</p>
+<p class="text-[10px] label-caps text-[#E5E2E1]/40 group-hover:text-[#4EDEA3] transition-colors">Click to run</p>
+</div>
+</div>
+</section>
+<!-- Right Column: Context/Viz (Supplementary to the Prompt) -->
+<div class="col-span-12 lg:col-span-7">
+<div class="relative h-full min-h-[300px] w-full bg-[#131313] border border-[#2A2A2A] rounded overflow-hidden">
+<img class="w-full h-full object-cover opacity-30 grayscale mix-blend-screen" data-alt="Dark abstract visualization of market data points across a world map with glowing emerald connection lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0hqP2gSgLrEq5I3emNjPCEVzbstw96Abh9uSkpSwTnGgvWB9rhnw8Yxfsv3ROI0NH7hUb4dK98UMC-YGnQ02w8LahAkROWlMvi7w4htxEiNNzEvbw1eQ95lh_qcfxR48amo5u6HO3aaN2Bt9DvhGRN5zgzEc0BvOH9emU979jrdu5vPVtX9DWixmhl9pR3Y1Am7pEa85cSzBT73xFGel3QF5gcflcXe2vaZbTmwLx7MO8nolo8w-LH3llabqCXWpy5G2bzsm12Ndx"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] via-transparent to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<div class="flex items-center gap-2 mb-2">
+<span class="w-2 h-2 rounded-full bg-[#4EDEA3]"></span>
+<span class="label-caps text-[10px] text-[#4EDEA3]">Active Historical Engine</span>
+</div>
+<h4 class="text-xl font-bold mono">GENESIS-X_V3</h4>
+<p class="text-xs text-[#E5E2E1]/40 mono">Processing 15 years of geo-political volatility markers</p>
+</div>
+</div>
+</div>
+<!-- Custom Backtest Form -->
+<section class="col-span-12">
+<div class="bg-[#1a1919] p-6 border-l-2 border-[#4EDEA3] shadow-lg">
+<h3 class="label-caps text-xs font-bold text-[#E5E2E1]/60 mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">settings_input_component</span> Configure Simulation Parameters
+                    </h3>
+<div class="flex flex-wrap items-end gap-6">
+<div class="flex-1 min-w-[200px] group">
+<label class="block label-caps text-[10px] text-[#E5E2E1]/40 mb-2">Event Type</label>
+<input class="w-full bg-[#0e0e0e] border-b border-[#3c4a42] focus:border-[#4EDEA3] text-sm text-[#E5E2E1] py-2 px-1 focus:ring-0 transition-all mono" placeholder="e.g. Coup, Blockade, Sanction" type="text"/>
+</div>
+<div class="flex-1 min-w-[150px]">
+<label class="block label-caps text-[10px] text-[#E5E2E1]/40 mb-2">Region</label>
+<select class="w-full bg-[#0e0e0e] border-b border-[#3c4a42] focus:border-[#4EDEA3] text-sm text-[#E5E2E1] py-2 px-1 focus:ring-0 transition-all label-caps appearance-none">
+<option>Middle East</option>
+<option>Eastern Europe</option>
+<option>Africa</option>
+<option>Indo-Pacific</option>
+</select>
+</div>
+<div class="flex-1 min-w-[150px]">
+<label class="block label-caps text-[10px] text-[#E5E2E1]/40 mb-2">Commodity</label>
+<select class="w-full bg-[#0e0e0e] border-b border-[#3c4a42] focus:border-[#4EDEA3] text-sm text-[#E5E2E1] py-2 px-1 focus:ring-0 transition-all label-caps appearance-none">
+<option>WTI Oil</option>
+<option>Brent Crude</option>
+<option>Gold</option>
+<option>Wheat</option>
+<option>Natural Gas</option>
+</select>
+</div>
+<div class="flex-1 min-w-[200px]">
+<label class="block label-caps text-[10px] text-[#E5E2E1]/40 mb-2">Horizon</label>
+<div class="flex bg-[#0e0e0e] p-1 rounded border border-[#2A2A2A]">
+<button class="flex-1 py-1 text-[10px] font-bold label-caps rounded bg-[#4EDEA3] text-[#002114]">4hr</button>
+<button class="flex-1 py-1 text-[10px] font-bold label-caps rounded text-[#E5E2E1]/40 hover:text-[#E5E2E1]">24hr</button>
+<button class="flex-1 py-1 text-[10px] font-bold label-caps rounded text-[#E5E2E1]/40 hover:text-[#E5E2E1]">48hr</button>
+<button class="flex-1 py-1 text-[10px] font-bold label-caps rounded text-[#E5E2E1]/40 hover:text-[#E5E2E1]">7d</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div>
+<label class="block label-caps text-[10px] text-[#E5E2E1]/40 mb-2">From</label>
+<input class="bg-[#0e0e0e] border-none text-[10px] text-[#E5E2E1] mono py-2 rounded" type="date"/>
+</div>
+<div>
+<label class="block label-caps text-[10px] text-[#E5E2E1]/40 mb-2">To</label>
+<input class="bg-[#0e0e0e] border-none text-[10px] text-[#E5E2E1] mono py-2 rounded" type="date"/>
+</div>
+</div>
+<button class="bg-[#4EDEA3] hover:bg-[#6FFBBE] text-[#002114] px-8 py-3 rounded font-bold label-caps text-sm flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-lg">play_arrow</span>
+                            RUN BACKTEST
+                        </button>
+</div>
+</div>
+</section>
+<!-- Results Section (Stats) -->
+<section class="col-span-12 grid grid-cols-1 md:grid-cols-5 gap-4">
+<div class="bg-[#131313] p-4 border border-[#2A2A2A]">
+<p class="label-caps text-[10px] text-[#E5E2E1]/40 mb-1">TOTAL EVENTS</p>
+<p class="text-2xl mono text-[#E5E2E1]">142</p>
+</div>
+<div class="bg-[#131313] p-4 border border-[#2A2A2A]">
+<p class="label-caps text-[10px] text-[#E5E2E1]/40 mb-1">DIRECTIONAL ACCURACY %</p>
+<p class="text-2xl mono text-[#4EDEA3]">82.4%</p>
+</div>
+<div class="bg-[#131313] p-4 border border-[#2A2A2A]">
+<p class="label-caps text-[10px] text-[#E5E2E1]/40 mb-1">AVG MOVE %</p>
+<p class="text-2xl mono text-[#E5E2E1]">3.12%</p>
+</div>
+<div class="bg-[#131313] p-4 border border-[#2A2A2A]">
+<p class="label-caps text-[10px] text-[#E5E2E1]/40 mb-1">MAX MOVE %</p>
+<p class="text-2xl mono text-[#4EDEA3]">+12.8%</p>
+</div>
+<div class="bg-[#131313] p-4 border border-[#2A2A2A]">
+<p class="label-caps text-[10px] text-[#E5E2E1]/40 mb-1">MIN MOVE %</p>
+<p class="text-2xl mono text-[#E5E2E1]">0.02%</p>
+</div>
+</section>
+<!-- Results Table -->
+<section class="col-span-12">
+<div class="bg-[#131313] border border-[#2A2A2A] rounded overflow-hidden">
+<div class="flex items-center justify-between p-4 border-b border-[#2A2A2A] bg-[#1c1b1b]">
+<h4 class="label-caps text-xs font-bold text-[#4EDEA3]">Historical Event Trace</h4>
+<button class="flex items-center gap-2 text-[10px] label-caps text-[#E5E2E1]/60 hover:text-[#4EDEA3] transition-colors">
+<span class="material-symbols-outlined text-sm">download</span> Download CSV
+                        </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-[#0e0e0e] border-b border-[#2A2A2A]">
+<tr>
+<th class="px-6 py-3 label-caps text-[10px] text-[#E5E2E1]/40">Date</th>
+<th class="px-6 py-3 label-caps text-[10px] text-[#E5E2E1]/40">Country</th>
+<th class="px-6 py-3 label-caps text-[10px] text-[#E5E2E1]/40">Event Summary</th>
+<th class="px-6 py-3 label-caps text-[10px] text-[#E5E2E1]/40">Move%</th>
+<th class="px-6 py-3 label-caps text-[10px] text-[#E5E2E1]/40">Prediction</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#2A2A2A]/20">
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 mono text-xs text-[#E5E2E1]/60">2023.11.14</td>
+<td class="px-6 py-4 label-caps text-xs text-[#E5E2E1]">Yemen</td>
+<td class="px-6 py-4 text-xs text-[#E5E2E1]/80">Missile fire directed at merchant tanker in Red Sea</td>
+<td class="px-6 py-4 mono text-xs text-[#4EDEA3]">+4.12%</td>
+<td class="px-6 py-4 text-[#4EDEA3]"><span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 mono text-xs text-[#E5E2E1]/60">2023.10.07</td>
+<td class="px-6 py-4 label-caps text-xs text-[#E5E2E1]">Israel</td>
+<td class="px-6 py-4 text-xs text-[#E5E2E1]/80">Major escalation in Gaza border region</td>
+<td class="px-6 py-4 mono text-xs text-[#4EDEA3]">+5.65%</td>
+<td class="px-6 py-4 text-[#4EDEA3]"><span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 mono text-xs text-[#E5E2E1]/60">2023.07.17</td>
+<td class="px-6 py-4 label-caps text-xs text-[#E5E2E1]">Ukraine</td>
+<td class="px-6 py-4 text-xs text-[#E5E2E1]/80">Kerch Bridge drone strike targeting logistics</td>
+<td class="px-6 py-4 mono text-xs text-error">-0.82%</td>
+<td class="px-6 py-4 text-error"><span class="material-symbols-outlined text-lg">cancel</span></td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 mono text-xs text-[#E5E2E1]/60">2023.05.22</td>
+<td class="px-6 py-4 label-caps text-xs text-[#E5E2E1]">Russia</td>
+<td class="px-6 py-4 text-xs text-[#E5E2E1]/80">Border incursion in Belgorod region</td>
+<td class="px-6 py-4 mono text-xs text-[#4EDEA3]">+1.22%</td>
+<td class="px-6 py-4 text-[#4EDEA3]"><span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+</tr>
+<tr class="hover:bg-surface-bright transition-colors">
+<td class="px-6 py-4 mono text-xs text-[#E5E2E1]/60">2023.04.15</td>
+<td class="px-6 py-4 label-caps text-xs text-[#E5E2E1]">Sudan</td>
+<td class="px-6 py-4 text-xs text-[#E5E2E1]/80">Paramilitary RSF conflicts in Khartoum</td>
+<td class="px-6 py-4 mono text-xs text-[#4EDEA3]">+0.45%</td>
+<td class="px-6 py-4 text-[#4EDEA3]"><span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer / System Integrity -->
+<footer class="mt-16 pt-8 border-t border-[#2A2A2A] flex justify-between items-center text-[10px] mono text-[#E5E2E1]/20">
+<div>GEOSIGNAL PRO SYSTEM HASH: 88F9-AX21-KL88</div>
+<div class="flex gap-8">
+<span>LATENCY: 12ms</span>
+<span>DATA INTEGRITY: 100% Verified</span>
+</div>
+</footer>
+</main>
+<!-- SideDrawer (Right) - Sentinel AI Context -->
+<aside class="fixed right-0 top-0 h-full w-[260px] bg-[#0E0E0E] border-l border-[#2A2A2A] z-50 p-6 flex flex-col">
+<div class="mb-8">
+<h2 class="label-caps text-sm font-bold text-[#4EDEA3] mb-1">MARKET &amp; AI</h2>
+<p class="text-[9px] label-caps text-[#E5E2E1]/40">REAL-TIME SYNTHESIS</p>
+</div>
+<div class="space-y-6 flex-1 overflow-y-auto pr-2">
+<div class="space-y-3">
+<div class="flex items-center gap-2 text-[10px] label-caps text-[#4EDEA3]">
+<span class="material-symbols-outlined text-xs">psychology</span> Sentinel Logic
+                </div>
+<div class="bg-[#131313] p-3 border border-[#2A2A2A] rounded">
+<p class="text-[11px] text-[#E5E2E1]/80 italic">"Correlation between Red Sea maritime security events and WTI prompt month futures remains at 0.92 for the trailing 30-day window."</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-2 text-[10px] label-caps text-[#4EDEA3]">
+<span class="material-symbols-outlined text-xs">radar</span> Active Hotzones
+                </div>
+<div class="space-y-2">
+<div class="flex justify-between items-center bg-[#131313] p-2 rounded">
+<span class="text-[10px] mono text-[#E5E2E1]">Gulf of Aden</span>
+<span class="text-[10px] mono text-error">CRITICAL</span>
+</div>
+<div class="flex justify-between items-center bg-[#131313] p-2 rounded">
+<span class="text-[10px] mono text-[#E5E2E1]">Suwalki Gap</span>
+<span class="text-[10px] mono text-warning text-yellow-500">ELEVATED</span>
+</div>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-2 text-[10px] label-caps text-[#4EDEA3]">
+<span class="material-symbols-outlined text-xs">show_chart</span> Volatility Feed
+                </div>
+<div class="h-24 w-full bg-[#131313] rounded border border-[#2A2A2A] relative overflow-hidden">
+<div class="absolute inset-0 opacity-20 bg-gradient-to-r from-transparent via-[#4EDEA3] to-transparent animate-pulse" style="width: 200%; transform: translateX(-50%);"></div>
+<img class="w-full h-full object-cover" data-alt="Close-up of a high-frequency trading screen with glowing green lines on a black background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPYFopSngtVsETnDHnwoz0qoSk-yt_VPVIsBqrhypB4NI0g9rMKPbRRZdhIgHWKssuHCvhdxEfvWGJMyY6c7gZM6U2CdaUKRKWojXGRyGJoGF109U6fqxwtkn-hsquvgiK11hcIjhIJR4bifUCSfqxW7UvHDuy-7CkIWxDNgH2_bMdW6HCVCmH5YXHpmpTV7_6AsHlviwSNPFPtr53v7QgIRi_2xEHUD-Je5ntLvHtBDYKm5yCyAzvxeVFnKdQbs0w1TKUpvT7zAE6"/>
+</div>
+</div>
+</div>
+<div class="mt-auto">
+<button class="w-full bg-[#1c1b1b] border border-[#2A2A2A] py-2 label-caps text-[10px] text-[#E5E2E1]/60 hover:text-[#4EDEA3] transition-colors">
+                REFRESH MODEL 0.9.4
+            </button>
+</div>
+</aside>
+</body></html>

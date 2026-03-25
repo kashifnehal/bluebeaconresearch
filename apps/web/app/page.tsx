@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BarChart2, Bell, BrainCircuit, Code2, Map, Radar, Shield, Zap, Globe, Radio, Target, ChevronRight, Check } from "lucide-react";
 import { createClient } from "./../lib/supabase-server";
-import { Logo } from "@/components/Logo";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "GeoSignal — Tactical conflict intelligence for high-frequency trading.",
-  description:
-    "Real-time AI-powered signal feed: conflict events → physical asset impact. Sub-second latency. No noise. Pure intelligence.",
+  title: "GeoSignal Pro | Tactical Market Intelligence",
+  description: "Real-time AI analysis of global conflict events mapped to commodity and market impact. Stay ahead of the curve with GS-Alpha sentinel nodes.",
   openGraph: {
-    title: "GeoSignal — Tactical conflict intelligence for high-frequency trading.",
-    description:
-      "Real-time AI-powered signal feed: conflict events → physical asset impact. Sub-second latency. No noise. Pure intelligence.",
+    title: "GeoSignal Pro | Tactical Market Intelligence",
+    description: "Real-time AI analysis of global conflict events mapped to commodity and market impact.",
     type: "website",
   },
 };
@@ -31,18 +25,6 @@ type LandingSignalPreview = {
   created_at: string;
   commodity_impacts: Array<{ asset: string; direction: string; confidence: number }> | null;
 };
-
-function formatPct(x: number) {
-  return `${Math.round(x * 100)}%`;
-}
-
-function severityLabel(score: number) {
-  if (score >= 10) return "CRITICAL";
-  if (score >= 9) return "EXTREME";
-  if (score >= 8) return "HIGH";
-  if (score >= 7) return "ELEVATED";
-  return "MONITORING";
-}
 
 async function getLatestSignal(): Promise<LandingSignalPreview | null> {
   try {
@@ -68,265 +50,318 @@ export default async function Home() {
   const latestSignal = await getLatestSignal();
 
   return (
-    <div className="min-h-screen bg-black text-text-primary selection:bg-accent selection:text-bg-app overflow-x-hidden">
-      {/* ── Tactical Overlay ────────────────────────────────────── */}
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-20">
-         <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '80px 80px' }} />
-         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black" />
-      </div>
-
-      <header className="fixed top-0 z-50 w-full border-b border-white/5 bg-black/60 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-3">
-             <Logo size="sm" />
+    <div className="bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen">
+      {/* Sticky Header */}
+      <header className="fixed top-0 left-0 right-0 h-16 glass z-50 px-8 flex items-center justify-between border-b border-outline-variant/10">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(111,251,190,0.5)]"></span>
+          <span className="text-xl font-extrabold tracking-tighter uppercase font-headline text-white">GeoSignal</span>
+        </div>
+        <nav className="hidden md:flex items-center gap-10">
+          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#features">Tactical Modules</a>
+          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#pricing">Access Tiers</a>
+          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#">API Cache</a>
+          <a className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#">Documentation</a>
+        </nav>
+        <div className="flex items-center gap-8">
+          <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-white transition-colors" href="/login">Sign in</Link>
+          <Link 
+            href="/signup"
+            className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
+          >
+            Start Free
           </Link>
-
-          <nav className="hidden items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-muted md:flex" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            <a href="#features" className="hover:text-accent transition-colors">Tactical Modules</a>
-            <a href="#pricing" className="hover:text-accent transition-colors">Access Tiers</a>
-            <a href="#api" className="hover:text-accent transition-colors">Interface (API)</a>
-            <Link href="/docs" className="hover:text-accent transition-colors">Intel Docs</Link>
-          </nav>
-
-          <div className="flex items-center gap-6">
-            <Link href="/login" className="text-[10px] font-black uppercase tracking-[0.2em] text-muted hover:text-text-primary transition-colors" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-              Auth
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex h-10 items-center bg-accent px-6 text-[10px] font-black uppercase tracking-[0.2em] text-bg-app hover:scale-[1.05] transition-all rounded-sm"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              Request Clearance
-            </Link>
-          </div>
         </div>
       </header>
 
-      <main className="relative z-10">
-        {/* ── Hero Section ────────────────────────────────────────── */}
-        <section className="mx-auto flex min-h-screen max-w-7xl flex-col items-center justify-center px-6 pt-24 text-center">
-          <div className="inline-flex items-center gap-3 border border-accent/20 bg-accent/5 px-4 py-1.5 rounded-sm mb-12 animate-pulse">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-            </span>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-accent" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-               Global Monitoring Active: 147 Nodes Online
-            </span>
-          </div>
-
-          <h1 className="text-balance text-6xl font-black leading-[0.85] tracking-tighter md:text-9xl uppercase italic mb-8" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Conflict signals. <br />
-            <span className="text-transparent" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.2)' }}>Market Alpha.</span>
-          </h1>
-          
-          <p className="max-w-xl text-[11px] font-black uppercase tracking-[0.2em] text-muted leading-relaxed mb-12">
-             Real-time AI synthesis of geopolitical unrest mapped to commodity volatility. <br />
-             Cheaper than Bloomberg Professional. Faster than Stratfor intelligence.
-          </p>
-
-          <div className="flex flex-col items-center gap-4 sm:flex-row">
-            <Link
-              href="/signup"
-              className="group inline-flex h-14 items-center gap-4 bg-accent px-10 text-[11px] font-black uppercase tracking-[0.2em] text-bg-app hover:scale-[1.02] transition-all rounded-sm shadow-[0_0_30px_rgba(78,222,163,0.15)]"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              Establish Intelligence Link <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
+      <main className="pt-16">
+        {/* Hero Section */}
+        <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 overflow-hidden">
+          {/* Background Map Visual */}
+          <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
+            <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center grayscale contrast-125"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background"></div>
           </div>
           
-          <div className="mt-20 w-full max-w-4xl opacity-50 flex items-center justify-between text-[8px] font-mono text-muted uppercase tracking-[0.5em] border-t border-white/5 pt-4">
-             <span>SECURE TRANSMISSION</span>
-             <span>GEO-SPATIAL LAYER ALPHA</span>
-             <span>LATENCY: 42MS</span>
+          <div className="relative z-10 text-center max-w-5xl mx-auto">
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-surface-container-high/60 rounded-full border border-primary/20 mb-10 backdrop-blur-sm">
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+              <span className="font-label text-[9px] font-black uppercase tracking-[0.2em] text-primary">Live — monitoring active global conflicts</span>
+            </div>
+            <h1 className="text-6xl md:text-8xl lg:text-[120px] font-extrabold tracking-tighter leading-[0.85] mb-10 text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
+              Conflict signals. <br/>
+              <span className="text-primary italic">Market alpha.</span> <br/>
+              Before the news.
+            </h1>
+            <p className="text-on-surface/60 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
+              Real-time AI synthesis of global conflict events mapped to commodity and physical asset risk. Stay ahead with GS-Alpha sentinel nodes.
+            </p>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+              <Link 
+                href="/signup"
+                className="w-full md:w-auto px-10 py-5 bg-primary text-black font-label font-extrabold uppercase tracking-widest rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20"
+              >
+                Establish Intel Link
+                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+              </Link>
+              <a className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 hover:text-on-surface flex items-center gap-2 transition-colors group" href="#live">
+                View Live Feed 
+                <span className="material-symbols-outlined text-sm group-hover:translate-y-1 transition-transform">south</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="absolute bottom-12 w-full max-w-6xl px-10 opacity-30 flex items-center justify-between text-[8px] font-mono font-bold text-on-surface-variant uppercase tracking-[0.4em] pointer-events-none">
+             <span>Protocol: GS-ENCRYPT-CH</span>
+             <span>Spatial Layer: ALPHA-V2</span>
+             <span>Latency: 42ms</span>
           </div>
         </section>
 
-        {/* ── Live Signal Preview ─────────────────────────────────── */}
-        <section id="live" className="mx-auto max-w-7xl px-6 py-32 border-t border-white/5">
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+        {/* Live Signal Preview */}
+        <section className="px-10 py-32 bg-surface-container-lowest" id="live">
+          <div className="max-w-[1440px] mx-auto">
+            <div className="mb-14 flex items-end justify-between">
               <div>
-                 <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em] mb-4 block" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Live Feed Snapshot</span>
-                 <h2 className="text-5xl font-black text-text-primary tracking-tighter leading-none mb-8 uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>The Speed of Intelligence</h2>
-                 <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted leading-loose mb-8">
-                    Our neural network processes thousands of OND (Open Network Data) strings per minute to synthesize actionable signals before they hit mainstream volatility indexes.
-                 </p>
-                 <Link href="/signup" className="text-[10px] font-black uppercase tracking-[0.3em] text-text-primary flex items-center gap-2 hover:text-accent transition-colors" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                    View Full Mainframe <ChevronRight size={14} />
-                 </Link>
+                <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Alpha Stream</p>
+                <h3 className="text-4xl font-headline font-extrabold tracking-tight text-white mb-2">Active Intelligence Log</h3>
+                <p className="text-on-surface-variant max-w-lg font-medium">Sub-second synthesis of geopolitical volatility pulses.</p>
               </div>
-
-              <div className="relative group">
-                 {/* Decorative elements */}
-                 <div className="absolute -inset-4 bg-accent/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                 
-                 <div className={cn(
-                    "relative overflow-hidden border border-white/10 bg-[#131313]/50 backdrop-blur-2xl p-8 rounded-sm",
-                    "transition-all duration-700 hover:border-accent/40"
-                 )}>
-                    {latestSignal ? (
-                      <>
-                        <div className="flex items-center justify-between mb-8 border-b border-white/5 pb-4">
-                           <div className="flex items-center gap-4">
-                              <Badge className={cn("rounded-none font-black tracking-widest text-[9px]", latestSignal.severity >= 8 ? "bg-danger text-white" : "bg-accent/20 text-accent")}>
-                                {severityLabel(latestSignal.severity)} — LVL 0{latestSignal.severity}
-                              </Badge>
-                              <span className="font-mono text-[9px] text-muted uppercase tracking-widest">{latestSignal.region}</span>
-                           </div>
-                           <span className="font-mono text-[9px] text-accent tracking-widest">{formatPct(latestSignal.confidence)} CONFIDENCE</span>
-                        </div>
-
-                        <h3 className="text-2xl font-black text-text-primary leading-tight mb-4 uppercase tracking-tighter" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{latestSignal.title}</h3>
-                        <p className="text-[10px] font-bold text-muted uppercase leading-relaxed mb-8 tracking-wide italic">"{latestSignal.summary}"</p>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          {(latestSignal.commodity_impacts ?? []).slice(0, 4).map((c) => (
-                            <div key={c.asset} className="bg-black/40 border border-white/5 p-4 rounded-sm">
-                               <div className="font-mono text-[10px] text-text-primary mb-1">{c.asset}</div>
-                               <div className="text-[8px] font-black text-muted uppercase tracking-widest transition-colors group-hover:text-accent">DETECTION: {formatPct(c.confidence)}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="h-64 flex items-center justify-center text-[9px] font-black uppercase tracking-[0.3em] text-muted animate-pulse">
-                         SYNCING WITH MAIN DATAFLOW...
-                      </div>
-                    )}
-                    
-                    {/* Scanning Line */}
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-accent/20 animate-scan pointer-events-none" />
-                 </div>
+              <div className="text-right hidden md:block">
+                <span className="font-mono text-[9px] text-on-surface-variant/40 font-bold uppercase tracking-widest">System Integrity: 100% Verified</span>
               </div>
-           </div>
-        </section>
+            </div>
 
-        {/* ── Features Matrix ─────────────────────────────────────── */}
-        <section id="features" className="mx-auto max-w-7xl px-6 py-32 bg-[#131313]/30">
-          <div className="text-center mb-24">
-             <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em] mb-4 block" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Tactical Deployment</span>
-             <h2 className="text-6xl font-black text-text-primary tracking-tighter leading-none mb-4 uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Operational Parameters</h2>
-          </div>
-
-          <div className="grid gap-px bg-white/5 border border-white/5 md:grid-cols-3">
-             {[
-               { icon: Radar, title: "Threat Detection", desc: "Autonomous scanning of ACLED, GNews, and proprietary military datasets with sub-second analysis." },
-               { icon: BrainCircuit, title: "Neural Synthesis", desc: "Multi-modal AI models correlate civil unrest vectors with physical asset volatility signatures." },
-               { icon: Target, title: "Precision Mapping", desc: "Interactive intelligence layers covering chokepoints, pipelines, and extraction zones worldwide." },
-               { icon: Shield, title: "Risk Mitigation", desc: "Real-time sanctions tracking and counterparty scanning for institutional compliance." },
-               { icon: Code2, title: "Low Latency API", desc: "Structured binary and JSON payloads delivered via global edge clusters for algo-systems." },
-               { icon: Radio, title: "Uplink Alerts", desc: "Synchronized tactical delivery across encrypted channels including Telegram and dedicated Slacks." }
-             ].map((f, i) => (
-                <div key={f.title} className="bg-black p-12 transition-all group hover:bg-accent/[0.02]">
-                   <f.icon className="h-8 w-8 text-white/20 mb-8 transition-colors group-hover:text-accent" />
-                   <h3 className="text-[11px] font-black text-text-primary uppercase tracking-[0.2em] mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{f.title}</h3>
-                   <p className="text-[10px] font-bold text-muted uppercase leading-loose tracking-widest">{f.desc}</p>
-                </div>
-             ))}
-          </div>
-        </section>
-
-        {/* ── Pricing Matrix ──────────────────────────────────────── */}
-        <section id="pricing" className="mx-auto max-w-7xl px-6 py-32">
-           <div className="text-center mb-24">
-             <span className="text-accent text-[10px] font-black uppercase tracking-[0.3em] mb-4 block" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Authorization Tiers</span>
-             <h2 className="text-6xl font-black text-text-primary tracking-tighter leading-none mb-4 uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Clearance Levels</h2>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-3">
-            {[
-              { name: "Level 1: Monitor", price: "$0", desc: "Basic Signal Feed", features: ["1 Hour Latency", "Global Regions", "Email Alerts"] },
-              { name: "Level 2: Analyst", price: "$49", desc: "Real-time Intelligence", features: ["Real-time Feed", "Asset Correlation", "Telegram Uplink"] },
-              { name: "Level 3: Pro", price: "$199", desc: "Full Tactical Suite", features: ["Sub-second API", "Backtesting Lab", "Priority Buffers"] },
-            ].map((p, i) => (
-              <div key={p.name} className={cn(
-                 "p-12 border border-white/5 rounded-sm transition-all flex flex-col",
-                 i === 2 ? "bg-accent/[0.03] border-accent/20" : "bg-[#131313]/30"
-              )}>
-                <div className="text-[10px] font-black text-text-primary uppercase tracking-[0.3em] mb-8" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{p.name}</div>
-                <div className="mb-8">
-                  <span className="font-mono text-5xl font-black">{p.price}</span>
-                  <span className="ml-2 font-black text-[9px] text-muted uppercase tracking-widest">/ Month</span>
-                </div>
+            <div className="relative group">
+              <div className="border border-outline-variant/10 rounded-2xl overflow-hidden bg-surface-container shadow-3xl hover:border-primary/30 transition-all duration-500">
+                <div className="h-2 bg-primary w-full shadow-[0_0_15px_rgba(111,251,190,0.3)]"></div>
                 
-                <ul className="mb-12 space-y-6 flex-1">
-                   {p.features.map(f => (
-                      <li key={f} className="flex items-center gap-3 text-[9px] font-black text-muted uppercase tracking-[0.2em]">
-                         <Check size={12} className="text-accent" /> {f}
-                      </li>
-                   ))}
-                </ul>
-
-                <Link
-                  href="/signup"
-                  className={cn(
-                    "inline-flex h-14 w-full items-center justify-center text-[10px] font-black uppercase tracking-[0.3em] transition-all rounded-sm",
-                    i === 2 ? "bg-accent text-bg-app hover:scale-[1.02]" : "border border-white/10 hover:border-white/20 text-text-primary"
+                <div className="p-10 md:p-16">
+                  {latestSignal ? (
+                    <>
+                      <div className="flex flex-wrap items-center gap-6 mb-10">
+                        <span className={`px-4 py-1.5 font-label text-[9px] font-extrabold uppercase tracking-widest rounded-md ${latestSignal.severity >= 8 ? 'bg-error-container text-on-error-container' : 'bg-primary-container text-on-primary-container'}`}>
+                          {latestSignal.severity >= 8 ? 'Critical Alert' : 'Active Signal'} — LVL 0{latestSignal.severity}
+                        </span>
+                        <span className="font-mono text-[10px] text-primary font-bold uppercase tracking-widest">ID: SIG-{latestSignal.id.slice(0, 8).toUpperCase()}</span>
+                        <span className="font-mono text-[10px] text-on-surface-variant/40 font-medium uppercase tracking-widest">{new Date(latestSignal.created_at).toUTCString()}</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+                        <div className="lg:col-span-7">
+                          <h4 className="text-4xl md:text-5xl font-headline font-extrabold text-white mb-6 tracking-tight leading-tight">{latestSignal.title}</h4>
+                          <p className="text-on-surface/70 leading-relaxed mb-10 font-medium text-lg italic">
+                            "{latestSignal.summary}"
+                          </p>
+                          <div className="flex flex-wrap gap-4">
+                            {latestSignal.commodity_impacts?.map((impact, idx) => (
+                              <div key={idx} className="bg-surface-container-lowest border border-outline-variant/20 px-4 py-3 rounded-lg group/pill hover:border-primary/40 transition-colors">
+                                <p className="font-mono text-[10px] text-white font-bold uppercase tracking-widest mb-1">{impact.asset}</p>
+                                <p className="font-label text-[8px] text-primary font-black uppercase tracking-widest group-hover/pill:animate-pulse">Detection Conf: {Math.round(impact.confidence * 100)}%</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="lg:col-span-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 p-10 flex flex-col justify-center relative overflow-hidden h-full min-h-[300px]">
+                          <img 
+                            className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale blur-[2px]" 
+                            alt="Thermal Map"
+                            src={`https://images.unsplash.com/photo-1544077960-604201fe74bc?auto=format&fit=crop&q=80&w=800`}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent"></div>
+                          
+                          <div className="relative z-10 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-4">
+                              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
+                              <span className="font-label text-[10px] uppercase tracking-[0.2em] font-black text-on-surface">Neural Confidence</span>
+                            </div>
+                            <div className="text-6xl font-mono text-primary font-extrabold tracking-tighter">
+                              {Math.round(latestSignal.confidence * 100)}%
+                            </div>
+                            <div className="w-full bg-surface-container-high h-2 mt-6 rounded-full overflow-hidden max-w-[240px] mx-auto">
+                              <div className="bg-primary h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(111,251,190,0.5)]" style={{ width: `${latestSignal.confidence * 100}%` }}></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-20 text-center">
+                      <p className="font-mono text-xs text-on-surface-variant animate-pulse tracking-widest uppercase font-bold">Synchronizing with Sentinel-Alpha Mainframe...</p>
+                    </div>
                   )}
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                >
-                  {i === 0 ? "Request Base Access" : "Initiate Protocol"}
-                </Link>
+                </div>
+
+                {/* CTA Overlay */}
+                <div className="absolute inset-x-0 bottom-0 top-[60%] flex items-center justify-center bg-gradient-to-t from-surface-container via-surface-container/90 to-transparent pt-20">
+                  <Link 
+                    href="/signup"
+                    className="px-12 py-5 bg-primary text-black font-label font-extrabold uppercase tracking-widest rounded-xl flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all text-sm mb-12"
+                  >
+                    Authorize Full Access
+                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                  </Link>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </section>
 
-        {/* ── API Section ─────────────────────────────────────────── */}
-        <section id="api" className="mx-auto max-w-7xl px-6 py-32 border-t border-white/5">
-           <div className="bg-[#131313]/50 border border-white/5 p-16 rounded-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-10">
-                 <Code2 size={120} className="text-accent" />
-              </div>
-              
-              <div className="max-w-2xl relative z-10">
-                <h2 className="text-4xl font-black text-text-primary tracking-tighter uppercase mb-6" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Machine Interoperability</h2>
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted leading-loose mb-12">
-                   Direct binary interface for algorithmic trading systems. Stream high-fidelity event signatures directly into your execution pods via global WebSocket clusters.
-                </p>
-                <div className="flex items-center gap-6">
-                   <Link href="/signup" className="h-14 bg-white text-bg-app px-10 text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center rounded-sm hover:bg-white/90 transition-colors" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                      Get API Token
-                   </Link>
-                   <code className="text-[10px] font-mono text-muted group-hover:text-accent transition-colors">GET /v1/signals?severity=high</code>
+        {/* Feature Grid */}
+        <section className="px-10 py-32 bg-background border-y border-outline-variant/10">
+          <div className="max-w-[1440px] mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+              {[
+                { icon: "radar", title: "01. Event Detection", desc: "Autonomous scanning of ACLED, GNews, and proprietary military datasets with sub-second analysis." },
+                { icon: "psychology", title: "02. AI Synthesis", desc: "Multi-modal AI models correlate civil unrest vectors with physical asset volatility signatures." },
+                { icon: "notifications_active", title: "03. Tactical Uplink", desc: "Synchronized alert delivery across encrypted channels for immediate portfolio reaction." }
+              ].map((f, i) => (
+                <div key={i} className="group">
+                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 mb-8 group-hover:bg-primary transition-all duration-300">
+                    <span className="material-symbols-outlined text-primary group-hover:text-black transition-colors">{f.icon}</span>
+                  </div>
+                  <h4 className="text-xl font-headline font-extrabold text-white mb-4 tracking-tight uppercase">{f.title}</h4>
+                  <p className="text-on-surface/40 leading-relaxed font-bold text-xs uppercase tracking-widest">{f.desc}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Capabilities Matrix */}
+        <section className="px-10 py-32 bg-surface-container-low">
+          <div className="max-w-[1440px] mx-auto">
+            <div className="text-center mb-20">
+              <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-white mb-6">Operational Parameters</h2>
+              <p className="text-on-surface-variant font-medium max-w-xl mx-auto italic uppercase text-[10px] tracking-widest">Precision instruments for institutional volatility handlers.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { icon: "rss_feed", title: "Real-time stream", desc: "Websocket delivery of event telemetry with sub-second latency." },
+                { icon: "history", title: "Scenario Lab", desc: "Backtest against 40 years of verified conflict volatility markers." },
+                { icon: "public", title: "Map Overlays", desc: "Visual intelligence layers covering global chokepoints and kinetic zones." },
+                { icon: "terminal", title: "Intel API", desc: "Direct binary interface for algorithmic execution pods." },
+                { icon: "radar", title: "Sentiment Scan", desc: "AI-driven extraction of diplomatic tension pulses." },
+                { icon: "monitoring", title: "Risk Dashboard", desc: "Real-time quantification of asset-to-conflict proximity." }
+              ].map((cap, i) => (
+                <div key={i} className="p-10 bg-surface-container-high rounded-2xl border border-outline-variant/10 hover:border-primary/40 transition-all group">
+                  <span className="material-symbols-outlined text-primary text-3xl mb-6 group-hover:translate-x-2 transition-transform">{cap.icon}</span>
+                  <h5 className="text-lg font-headline font-extrabold text-white mb-3 uppercase tracking-tight">{cap.title}</h5>
+                  <p className="text-[10px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-widest">{cap.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing Section */}
+        <section className="px-10 py-32 bg-background" id="pricing">
+          <div className="max-w-[1440px] mx-auto">
+            <div className="text-center mb-24">
+              <h2 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tighter text-white uppercase italic">Access Tiers</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-outline-variant/10 rounded-3xl overflow-hidden shadow-3xl bg-surface-container-low">
+              {/* Free */}
+              <div className="p-12 flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant/10">
+                <div className="mb-10">
+                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40">Tier 01: Monitor</p>
+                  <div className="text-5xl font-mono text-white mt-4 font-extrabold">$0<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
+                </div>
+                <ul className="space-y-6 mb-12 flex-grow">
+                  {["Delayed Feed (4h)", "Limited Map Access", "Base Analytics"].map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
+                      <span className="material-symbols-outlined text-primary text-base">check</span> {f}
+                    </li>
+                  ))}
+                  <li className="flex items-center gap-3 text-[10px] font-bold text-on-surface/20 uppercase tracking-widest">
+                    <span className="material-symbols-outlined text-base">close</span> API Restricted
+                  </li>
+                </ul>
+                <Link href="/signup" className="w-full py-4 border border-outline-variant/30 text-on-surface font-label text-[10px] font-black uppercase tracking-widest hover:bg-surface-container-high transition-colors rounded-xl text-center">Establish Link</Link>
               </div>
-           </div>
+
+              {/* Analyst */}
+              <div className="p-12 flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant/10 bg-surface-container relative z-10">
+                <div className="absolute top-0 right-0 p-6">
+                  <span className="px-3 py-1 bg-primary text-black font-label text-[9px] font-black uppercase tracking-widest rounded-md shadow-lg shadow-primary/20">Recommended</span>
+                </div>
+                <div className="mb-10">
+                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-primary">Tier 02: Analyst</p>
+                  <div className="text-5xl font-mono text-white mt-4 font-extrabold">$49<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
+                </div>
+                <ul className="space-y-6 mb-12 flex-grow">
+                  {["Real-time Signal Feed", "Full Map Layers", "Uplink Alerts", "Sentinel Synthesis"].map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-white uppercase tracking-widest">
+                      <span className="material-symbols-outlined text-primary text-base" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup" className="w-full py-4 bg-primary text-black font-label text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all rounded-xl text-center shadow-xl shadow-primary/20">Initiate Protocol</Link>
+              </div>
+
+              {/* Pro */}
+              <div className="p-12 flex flex-col">
+                <div className="mb-10">
+                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40">Tier 03: Pro</p>
+                  <div className="text-5xl font-mono text-white mt-4 font-extrabold">$199<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
+                </div>
+                <ul className="space-y-6 mb-12 flex-grow">
+                  {["Full REST/WS API", "40yr Intel Archive", "Scenario Lab Access", "Multi-user Node"].map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
+                      <span className="material-symbols-outlined text-primary text-base">check</span> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/signup" className="w-full py-4 border border-outline-variant/30 text-on-surface font-label text-[10px] font-black uppercase tracking-widest hover:bg-surface-container-high transition-colors rounded-xl text-center">Scale Terminal</Link>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
 
-      <footer className="border-t border-white/5 bg-black py-24 relative z-10">
-        <div className="mx-auto grid max-w-7xl gap-16 px-6 md:grid-cols-4">
-          <div>
-            <Logo size="sm" className="mb-8" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted leading-relaxed">
-               Tactical intelligence for commodity and physical asset risk.
-            </p>
-            <p className="mt-8 text-[8px] font-mono text-muted/50 uppercase tracking-[0.2em]">
-              © {new Date().getFullYear()} GEOSIGNAL INTEL. ALL RIGHTS RESERVED.
+      {/* Footer */}
+      <footer className="bg-surface-container-lowest border-t border-outline-variant/10 px-10 py-24">
+        <div className="max-w-[1440px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-20">
+          <div className="col-span-1">
+            <div className="flex items-center gap-2 mb-8">
+              <span className="w-2.5 h-2.5 bg-primary rounded-full"></span>
+              <span className="text-lg font-extrabold tracking-tighter uppercase font-headline text-white">GeoSignal Pro</span>
+            </div>
+            <p className="text-[9px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-[0.2em]">
+              Kinetic Monolith v4.0.2<br/>
+              © {new Date().getFullYear()} Signal Dynamics Corp.<br/>
+              Verified Intel Architecture.
             </p>
           </div>
-          
-          {[
-            { title: "Grid", links: ["Features", "Pricing", "Live Feed", "API Status"] },
-            { title: "Protocol", links: ["Clearance", "Terms", "Privacy", "Status"] },
-            { title: "Resources", links: ["Intelligence Docs", "System Logs", "Whitepapers"] }
-          ].map(c => (
-             <div key={c.title}>
-                <h4 className="text-[10px] font-black text-text-primary uppercase tracking-[0.3em] mb-8" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{c.title}</h4>
-                <ul className="space-y-4">
-                   {c.links.map(l => (
-                      <li key={l}>
-                         <a href="#" className="text-[9px] font-black text-muted uppercase tracking-[0.2em] hover:text-accent transition-colors">{l}</a>
-                      </li>
-                   ))}
-                </ul>
-             </div>
-          ))}
+          <div className="space-y-8">
+            <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Mainframe</h6>
+            <ul className="space-y-4">
+              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/dashboard">Terminal</Link></li>
+              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/map">Global Map</Link></li>
+              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/alerts">Signals</Link></li>
+            </ul>
+          </div>
+          <div className="space-y-8">
+            <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Protocol</h6>
+            <ul className="space-y-4">
+              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Research</a></li>
+              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Documentation</a></li>
+              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Compliance</a></li>
+            </ul>
+          </div>
+          <div className="space-y-8">
+            <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Secure Hub</h6>
+            <ul className="space-y-4">
+              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/login">Auth Center</Link></li>
+              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">System Status</a></li>
+              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Encrypted Support</a></li>
+            </ul>
+          </div>
         </div>
       </footer>
-
     </div>
   );
 }

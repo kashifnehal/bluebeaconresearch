@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GeoSignal Pro | Commodity Watchlist</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#006c4a",
+                        "tertiary": "#ffdad7",
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#7f2927",
+                        "on-tertiary-container": "#8e3432",
+                        "surface-container": "#201f1f",
+                        "surface-variant": "#353534",
+                        "on-secondary-fixed": "#042100",
+                        "background": "#131313",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#8efc67",
+                        "surface-container-low": "#1c1b1b",
+                        "on-tertiary": "#611213",
+                        "surface-tint": "#4edea3",
+                        "secondary-container": "#3ba615",
+                        "inverse-surface": "#e5e2e1",
+                        "on-secondary-container": "#093100",
+                        "on-secondary-fixed-variant": "#145200",
+                        "surface-container-highest": "#353534",
+                        "primary": "#6ffbbe",
+                        "inverse-on-surface": "#313030",
+                        "on-background": "#e5e2e1",
+                        "surface-dim": "#131313",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface": "#e5e2e1",
+                        "tertiary-fixed": "#ffdad7",
+                        "tertiary-container": "#ffb3ad",
+                        "on-primary-fixed": "#002114",
+                        "primary-container": "#4edea3",
+                        "outline": "#86948a",
+                        "on-primary-container": "#005f40",
+                        "surface": "#131313",
+                        "secondary-fixed-dim": "#72df4d",
+                        "on-primary": "#003824",
+                        "outline-variant": "#3c4a42",
+                        "surface-bright": "#393939",
+                        "on-surface-variant": "#bbcac0",
+                        "secondary": "#72df4d",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#6ffbbe",
+                        "on-primary-fixed-variant": "#005236",
+                        "on-secondary": "#0b3900",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-tertiary-fixed": "#410004",
+                        "primary-fixed-dim": "#4edea3"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Space Grotesk"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #0E0E0E;
+            color: #E5E2E1;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- Left Side Navigation (SideNavBar - rail) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 w-[256px] bg-[#000000] border-r border-[#2A2A2A]">
+<div class="p-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary-container rounded-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-xl" style="font-variation-settings: 'FILL' 1;">radar</span>
+</div>
+<div>
+<h1 class="text-lg font-bold tracking-tighter text-[#4EDEA3] font-headline">GeoSignal Pro</h1>
+<p class="text-[10px] font-label text-[#E5E2E1]/60 tracking-widest">ACTIVE INTELLIGENCE</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 mt-4">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 font-label text-xs tracking-wider" href="#">
+<span class="material-symbols-outlined text-lg">terminal</span>
+                        TERMINAL
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 font-label text-xs tracking-wider" href="#">
+<span class="material-symbols-outlined text-lg">rss_feed</span>
+                        INTELLIGENCE FEED
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 font-label text-xs tracking-wider" href="#">
+<span class="material-symbols-outlined text-lg">public</span>
+                        GLOBAL MAP
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 font-label text-xs tracking-wider" href="#">
+<span class="material-symbols-outlined text-lg">notifications_active</span>
+                        ALERTS
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#4EDEA3] border-l-2 border-[#4EDEA3] bg-[#131313] font-label text-xs tracking-wider active:scale-95 duration-75" href="/watchlist">
+<span class="material-symbols-outlined text-lg">visibility</span>
+                        WATCHLIST
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 font-label text-xs tracking-wider" href="#">
+<span class="material-symbols-outlined text-lg">history</span>
+                        BACKTESTING
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-6 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 font-label text-xs tracking-wider" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+                        SETTINGS
+                    </a>
+</li>
+</ul>
+</nav>
+<div class="p-6 border-t border-[#2A2A2A]">
+<div class="bg-surface-container-high p-3 rounded-lg border border-outline-variant/30 mb-6">
+<p class="text-[10px] font-label text-primary tracking-tighter mb-1">NODE STATUS</p>
+<p class="font-mono text-xs text-on-surface">GS-ALPHA-09</p>
+</div>
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-4 text-[#E5E2E1]/60 hover:text-[#E5E2E1] font-label text-[10px] tracking-widest uppercase" href="#">
+<span class="material-symbols-outlined text-sm">help</span> Help
+                    </a>
+</li>
+<li class="mt-4">
+<a class="flex items-center gap-4 text-[#E5E2E1]/60 hover:text-[#E5E2E1] font-label text-[10px] tracking-widest uppercase" href="#">
+<span class="material-symbols-outlined text-sm">logout</span> Logout
+                    </a>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Top Navigation Bar (TopNavBar) -->
+<header class="fixed top-0 right-0 left-[256px] h-16 bg-[#000000] border-b border-[#2A2A2A] flex items-center justify-between px-8 z-40">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container-lowest border-b border-outline-variant w-full pl-10 pr-4 py-2 font-mono text-xs focus:border-primary transition-all outline-none text-on-surface" placeholder="SEARCH ASSETS OR NODES..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="p-2 hover:bg-[#201F1F] transition-all rounded-sm text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-[#201F1F] transition-all rounded-sm text-on-surface-variant">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-[#2A2A2A]"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="font-label text-[10px] text-primary tracking-widest">SENTINEL ACTIVE</p>
+<p class="font-mono text-[11px] text-on-surface">TERMINAL SENTINEL</p>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a high-tech financial analyst with clean lighting and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAytKZeqdlMm0IAdnEz8KGmgC2ra2WSn24YdJrxWUBy8aNjsDnRD1PC69FPlnZKeUGmrDvAPskqvEn54OoZcrrAaaiHsWEO5Ij0FvYc0rPJlgUfzspm579R8e2Il-OZfHFUpdhl3HfFY1JOzgWGnt9FUeaKq0KErVtIykbtaEARswvUwisZ0WPJGJ-ws0RXXUlKGI_mc3i6f2xghMqkrl4QDRFXX8hA6uYtSemUNRNuh5GFLz3khoC2Ao2NwWDhSpfUU0d-wvgQmyyY"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Right Side Sidebar (SideNavBar - drawer) -->
+<aside class="fixed right-0 top-0 h-full w-[260px] bg-[#0E0E0E] border-l border-[#2A2A2A] z-50 flex flex-col">
+<div class="p-6 border-b border-[#2A2A2A]">
+<h2 class="font-headline font-bold text-sm tracking-tighter text-primary">MARKET &amp; AI</h2>
+<p class="text-[10px] font-label text-[#E5E2E1]/50 tracking-[0.2em]">REAL-TIME SYNTHESIS</p>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-6">
+<section>
+<label class="font-label text-[10px] text-on-surface-variant tracking-widest block mb-4">SYSTEM FEED</label>
+<div class="space-y-4">
+<div class="p-3 bg-surface-container rounded-lg border-t-2 border-primary">
+<div class="flex items-center justify-between mb-2">
+<span class="material-symbols-outlined text-primary text-sm">psychology</span>
+<span class="font-mono text-[9px] text-on-surface-variant">12:44:02</span>
+</div>
+<p class="text-xs text-on-surface font-body leading-relaxed">Volatility spike detected in energy sector. Adjusting risk parameters.</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg">
+<div class="flex items-center justify-between mb-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">radar</span>
+<span class="font-mono text-[9px] text-on-surface-variant">12:38:15</span>
+</div>
+<p class="text-xs text-[#E5E2E1]/60 font-body leading-relaxed">Bullish divergence on Silver (XAG) daily chart. Resistance at 24.80.</p>
+</div>
+</div>
+</section>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 p-3 text-on-surface-variant hover:text-primary transition-colors font-label text-xs tracking-widest" href="#">
+<span class="material-symbols-outlined text-lg">show_chart</span> MARKET VOLATILITY
+                </a>
+<a class="flex items-center gap-3 p-3 text-primary transition-colors font-label text-xs tracking-widest" href="#">
+<span class="material-symbols-outlined text-lg">psychology</span> SENTINEL AI
+                </a>
+<a class="flex items-center gap-3 p-3 text-on-surface-variant hover:text-primary transition-colors font-label text-xs tracking-widest" href="#">
+<span class="material-symbols-outlined text-lg">radar</span> HOTZONES
+                </a>
+<a class="flex items-center gap-3 p-3 text-on-surface-variant hover:text-primary transition-colors font-label text-xs tracking-widest" href="#">
+<span class="material-symbols-outlined text-lg">analytics</span> STATS
+                </a>
+</nav>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
+<div class="max-w-[1440px] mx-auto">
+<!-- Page Header -->
+<div class="flex items-end justify-between mb-10">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<div class="w-1 h-6 bg-primary"></div>
+<p class="font-label text-xs text-primary tracking-[0.3em]">ASSET MONITORING</p>
+</div>
+<h1 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface">Commodity Watchlist</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<select class="w-[220px] bg-surface-container-high border-b border-outline-variant text-on-surface font-mono text-xs py-2.5 px-4 appearance-none focus:border-primary outline-none cursor-pointer">
+<option>SELECT COMMODITY</option>
+<option>Brent Crude Oil</option>
+<option>Natural Gas</option>
+<option>Copper</option>
+<option>Platinum</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">keyboard_arrow_down</span>
+</div>
+<button class="bg-gradient-to-br from-primary to-primary-container px-6 py-2.5 rounded-lg text-black font-label font-bold text-sm tracking-tight flex items-center gap-2 hover:opacity-90 transition-opacity active:scale-95">
+<span class="material-symbols-outlined text-lg">add</span>
+                        ADD ASSET
+                    </button>
+</div>
+</div>
+<!-- Commodity Cards Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+<!-- Card 1: WTI Crude Oil -->
+<div class="bg-[#1A1919] border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors">
+<!-- Top section (darker) -->
+<div class="p-6 bg-black/40">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[9px] text-on-surface-variant tracking-widest mb-2 inline-block">ENERGY</span>
+<h3 class="text-xl font-headline font-bold text-on-surface">WTI Crude Oil</h3>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<div class="flex items-baseline gap-4">
+<span class="font-mono text-3xl font-bold text-on-surface">78.45</span>
+<span class="font-mono text-sm text-secondary flex items-center">
+<span class="material-symbols-outlined text-sm">arrow_drop_up</span> +2.14%
+                            </span>
+</div>
+</div>
+<!-- Bottom section (lighter) -->
+<div class="p-6 bg-[#1A1919] relative min-h-[140px] flex flex-col justify-end">
+<div class="absolute inset-x-6 top-6 bottom-12 flex items-end gap-1">
+<div class="flex-1 bg-surface-container h-12 rounded-t-sm"></div>
+<div class="flex-1 bg-surface-container h-16 rounded-t-sm"></div>
+<div class="flex-1 bg-surface-container h-10 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/20 h-24 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/40 h-20 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/60 h-28 rounded-t-sm border-t border-primary"></div>
+</div>
+<p class="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">Mini chart placeholder (Phase 4)</p>
+</div>
+</div>
+<!-- Card 2: Gold -->
+<div class="bg-[#1A1919] border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors">
+<!-- Top section (darker) -->
+<div class="p-6 bg-black/40">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[9px] text-on-surface-variant tracking-widest mb-2 inline-block">PRECIOUS METALS</span>
+<h3 class="text-xl font-headline font-bold text-on-surface">Gold</h3>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<div class="flex items-baseline gap-4">
+<span class="font-mono text-3xl font-bold text-on-surface">2,034.10</span>
+<span class="font-mono text-sm text-error flex items-center">
+<span class="material-symbols-outlined text-sm">arrow_drop_down</span> -0.45%
+                            </span>
+</div>
+</div>
+<!-- Bottom section (lighter) -->
+<div class="p-6 bg-[#1A1919] relative min-h-[140px] flex flex-col justify-end">
+<div class="absolute inset-x-6 top-6 bottom-12 flex items-end gap-1">
+<div class="flex-1 bg-error/40 h-24 rounded-t-sm"></div>
+<div class="flex-1 bg-error/30 h-20 rounded-t-sm"></div>
+<div class="flex-1 bg-surface-container h-16 rounded-t-sm"></div>
+<div class="flex-1 bg-surface-container h-14 rounded-t-sm"></div>
+<div class="flex-1 bg-error/20 h-10 rounded-t-sm"></div>
+<div class="flex-1 bg-error/50 h-18 rounded-t-sm border-t border-error"></div>
+</div>
+<p class="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">Mini chart placeholder (Phase 4)</p>
+</div>
+</div>
+<!-- Card 3: Silver -->
+<div class="bg-[#1A1919] border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors">
+<!-- Top section (darker) -->
+<div class="p-6 bg-black/40">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[9px] text-on-surface-variant tracking-widest mb-2 inline-block">PRECIOUS METALS</span>
+<h3 class="text-xl font-headline font-bold text-on-surface">Silver</h3>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<div class="flex items-baseline gap-4">
+<span class="font-mono text-3xl font-bold text-on-surface">22.84</span>
+<span class="font-mono text-sm text-secondary flex items-center">
+<span class="material-symbols-outlined text-sm">arrow_drop_up</span> +0.82%
+                            </span>
+</div>
+</div>
+<!-- Bottom section (lighter) -->
+<div class="p-6 bg-[#1A1919] relative min-h-[140px] flex flex-col justify-end">
+<div class="absolute inset-x-6 top-6 bottom-12 flex items-end gap-1">
+<div class="flex-1 bg-surface-container h-10 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/10 h-12 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/20 h-16 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/30 h-20 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/40 h-18 rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/60 h-22 rounded-t-sm border-t border-primary"></div>
+</div>
+<p class="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">Mini chart placeholder (Phase 4)</p>
+</div>
+</div>
+</div>
+<!-- Dashboard Analytics Section (Bento Grid) -->
+<div class="grid grid-cols-12 gap-6 mt-12">
+<!-- Large Geo Map Overlay -->
+<div class="col-span-12 lg:col-span-8 h-[400px] bg-surface-container rounded-xl relative overflow-hidden group">
+<img class="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="stylized topographical satellite map of central asia with glowing heat maps and data point overlays in emerald green" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvtvyngSd1Bj6Fha8sLVtBtcFu6bDxnz6yLiyrCVX2YloBm7Owd6ygmLvxEoqnEdbHNwm5CGtARrUjm9v7Tdxk3rH6Qcmx4xthFibWuz-R7ui4IfnlNevAAGSzfqOd_fx-7akHdrhqpZ_TVLpCOQCtGEqrj7V_TmfvTFXCF84iAu6M01yMGXZHCM-TAnbaAZvZx-56KUYhh6GzIDJgPZdI2spu8gnCDiMJ59xu9SH-rWc7TD94MtBQWSiPQqdxkO5g1v9AdUS9DQan"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+<!-- Floating Glass UI -->
+<div class="absolute top-6 left-6 backdrop-blur-md bg-surface/60 p-4 border border-outline-variant/30 rounded-lg">
+<p class="font-label text-[10px] text-primary tracking-widest mb-1">GEOSPATIAL DRILLDOWN</p>
+<h4 class="font-headline font-bold text-white uppercase tracking-tight">Supply Chain Nodes</h4>
+<div class="mt-4 space-y-2">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="font-mono text-xs text-on-surface">NODE-04: ACTIVE</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<span class="font-mono text-xs text-on-surface">NODE-11: DISRUPTED</span>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 right-6 flex gap-2">
+<button class="w-10 h-10 rounded bg-black/60 border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-on-surface">add</span>
+</button>
+<button class="w-10 h-10 rounded bg-black/60 border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-on-surface">remove</span>
+</button>
+</div>
+</div>
+<!-- Secondary Data Insights -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<div class="flex-1 bg-surface-container rounded-xl p-6 border border-outline-variant/30">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<h4 class="font-label text-xs font-bold tracking-widest text-on-surface">AI PREDICTION</h4>
+</div>
+<p class="text-sm font-body leading-relaxed text-on-surface/80 mb-6 italic border-l-2 border-primary/40 pl-4">"WTI Crude expected to test 80.00 psychological level within next 48h based on regional port delays."</p>
+<div class="flex justify-between items-center">
+<span class="font-label text-[10px] text-on-surface-variant uppercase">Confidence Rating</span>
+<span class="font-mono text-sm text-primary">89.4%</span>
+</div>
+<div class="w-full h-1 bg-surface-container-high mt-2 rounded-full overflow-hidden">
+<div class="w-[89.4%] h-full bg-primary"></div>
+</div>
+</div>
+<div class="flex-1 bg-surface-container rounded-xl p-6 border border-outline-variant/30">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">update</span>
+<h4 class="font-label text-xs font-bold tracking-widest text-on-surface">WATCHLIST SYNC</h4>
+</div>
+<div class="flex items-end justify-between">
+<div>
+<p class="font-mono text-2xl text-on-surface">32s</p>
+<p class="font-label text-[10px] text-on-surface-variant uppercase">Time since last update</p>
+</div>
+<button class="text-primary hover:underline font-label text-[10px] uppercase tracking-widest">Force Refresh</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Global Floating Action -->
+<button class="fixed bottom-8 right-[292px] w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_20px_rgba(111,251,190,0.3)] flex items-center justify-center group z-40 transition-transform active:scale-90">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+</body></html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GeoSignal Pro | Tactical Market Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-label { font-family: 'Space Grotesk', sans-serif; }
+        .font-data { font-family: 'JetBrains Mono', monospace; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .glass-panel {
+            background: rgba(19, 19, 19, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "inverse-primary": "#006c4a",
+                "tertiary": "#ffdad7",
+                "error-container": "#93000a",
+                "on-error-container": "#ffdad6",
+                "surface-container": "#201f1f",
+                "background": "#131313",
+                "surface-container-low": "#1c1b1b",
+                "surface-tint": "#4edea3",
+                "primary": "#6ffbbe",
+                "surface-container-lowest": "#0e0e0e",
+                "surface-container-high": "#2a2a2a",
+                "on-surface": "#e5e2e1",
+                "primary-container": "#4edea3",
+                "outline": "#86948a",
+                "on-primary-container": "#005f40",
+                "surface": "#131313",
+                "outline-variant": "#3c4a42",
+                "secondary": "#72df4d",
+                "error": "#ffb4ab",
+              },
+              fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Space Grotesk"]
+              },
+              borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- Sticky Header -->
+<header class="fixed top-0 left-0 right-0 h-16 glass-panel border-b border-outline-variant/20 z-50 px-6 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 bg-primary rounded-full animate-pulse"></span>
+<span class="text-lg font-extrabold tracking-tighter uppercase font-headline">GeoSignal</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-label text-sm uppercase tracking-wider hover:text-primary transition-colors" href="#">Features</a>
+<a class="font-label text-sm uppercase tracking-wider hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="font-label text-sm uppercase tracking-wider hover:text-primary transition-colors" href="#">API</a>
+<a class="font-label text-sm uppercase tracking-wider hover:text-primary transition-colors" href="#">Docs</a>
+</nav>
+<div class="flex items-center gap-6">
+<a class="font-label text-sm uppercase tracking-wider hover:text-primary transition-colors" href="#">Sign in</a>
+<button class="bg-primary-container text-on-primary-container px-5 py-2 rounded-lg font-label text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all">
+                Start free
+            </button>
+</div>
+</header>
+<main class="pt-16">
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex flex-col items-center justify-center px-6 py-24 overflow-hidden">
+<!-- Background Map Visual (Mock) -->
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
+<div class="w-full h-full bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?q=80&amp;w=2000&amp;auto=format&amp;fit=crop')] bg-cover bg-center grayscale contrast-125" data-alt="Dark stylized global map with glowing tactical data points and vector network lines connecting major cities"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background"></div>
+</div>
+<div class="relative z-10 text-center max-w-4xl mx-auto">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-surface-container-high rounded-full border border-primary/20 mb-8">
+<span class="w-2 h-2 bg-primary rounded-full"></span>
+<span class="font-label text-[10px] uppercase tracking-widest text-primary">Live — monitoring active conflicts</span>
+</div>
+<h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter leading-[0.9] mb-8">
+                    Conflict signals. <br/>
+<span class="text-primary italic">Market intelligence.</span> <br/>
+                    Before the news hits.
+                </h1>
+<p class="text-on-surface/70 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+                    Real-time AI analysis of global conflict events — mapped to commodity and market impact. Stay ahead of the curve with GS-Alpha sentinel nodes.
+                </p>
+<div class="flex flex-col md:flex-row items-center justify-center gap-6">
+<button class="w-full md:w-auto px-8 py-4 bg-primary text-on-primary font-label font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all">
+                        Start free trial 
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<a class="font-label text-sm uppercase tracking-widest text-on-surface/50 hover:text-on-surface flex items-center gap-2 transition-colors" href="#live">
+                        See live signals 
+                        <span class="material-symbols-outlined">south</span>
+</a>
+</div>
+</div>
+</section>
+<!-- Live Signal Preview -->
+<section class="px-6 py-24 bg-surface-container-lowest" id="live">
+<div class="max-w-6xl mx-auto">
+<div class="mb-12 flex items-end justify-between">
+<div>
+<h2 class="font-label text-xs uppercase tracking-[0.3em] text-primary mb-2">Alpha Stream</h2>
+<h3 class="text-3xl font-bold font-headline tracking-tight">Active Signal Feed</h3>
+</div>
+<div class="text-right hidden md:block">
+<span class="font-data text-xs text-on-surface/40 uppercase">Latency: 42ms</span>
+</div>
+</div>
+<div class="relative group">
+<!-- Signal Card -->
+<div class="border border-outline-variant/30 rounded-xl overflow-hidden bg-surface-container shadow-2xl">
+<div class="h-2 bg-primary w-full"></div> <!-- Status Ribbon -->
+<div class="p-8 md:p-12">
+<div class="flex flex-wrap items-center gap-4 mb-8">
+<span class="px-3 py-1 bg-error-container text-on-error-container font-label text-[10px] uppercase tracking-tighter font-bold rounded">High Severity</span>
+<span class="font-data text-xs text-primary">ID: SIG-882-DELTA</span>
+<span class="font-data text-xs text-on-surface/40">Timestamp: 2023-11-24 14:22:01 UTC</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+<div>
+<h4 class="text-3xl font-bold font-headline mb-4 tracking-tight">Escalation in Red Sea shipping corridors</h4>
+<p class="text-on-surface/70 leading-relaxed mb-6">
+                                        Multiple reports of kinetic action near Bab al-Mandab Strait. Sentinel AI detected atypical maritime maneuvers 4 hours prior to local reportage.
+                                    </p>
+<div class="flex flex-wrap gap-3">
+<span class="px-2 py-1 bg-surface-container-high border border-outline-variant/50 text-[10px] font-data text-primary uppercase">Commodity: Brent Crude</span>
+<span class="px-2 py-1 bg-surface-container-high border border-outline-variant/50 text-[10px] font-data text-primary uppercase">Risk: Global Supply Chain</span>
+<span class="px-2 py-1 bg-surface-container-high border border-outline-variant/50 text-[10px] font-data text-primary uppercase">Region: Middle East</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant/20 p-6 flex flex-col justify-center overflow-hidden relative">
+<div class="absolute inset-0 opacity-40 grayscale" data-alt="Satellite map view showing a narrow waterway with multiple glowing heat map points indicating vessel traffic density and conflict zones" data-location="Red Sea" style=""></div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="font-label text-xs uppercase tracking-widest font-bold">Sentinel AI Confidence</span>
+</div>
+<div class="text-4xl font-data text-primary font-bold">94.2%</div>
+<div class="w-full bg-surface-container-high h-1.5 mt-4 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[94.2%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Gradient Fade Overlay -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent opacity-90 pointer-events-none"></div>
+<!-- CTA Overlay -->
+<div class="absolute inset-0 flex items-center justify-center p-6 text-center">
+<div class="max-w-md">
+<button class="px-10 py-5 bg-primary text-on-primary font-label font-bold uppercase tracking-widest rounded-lg flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(111,251,190,0.3)] hover:scale-105 transition-transform">
+                                    Sign up to see full analysis
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Features (The Flow) -->
+<section class="px-6 py-24 bg-background">
+<div class="max-w-6xl mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+<div class="space-y-4">
+<div class="w-12 h-12 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary">radar</span>
+</div>
+<h4 class="text-xl font-bold font-headline">01. Event detected</h4>
+<p class="text-on-surface/60 text-sm leading-relaxed">Our global sensor network identifies anomalies in telecommunications, satellite imagery, and localized media feeds instantly.</p>
+</div>
+<div class="space-y-4">
+<div class="w-12 h-12 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">analytics</span>
+</div>
+<h4 class="text-xl font-bold font-headline">02. AI analysis</h4>
+<p class="text-on-surface/60 text-sm leading-relaxed">The Sentinel LLM cross-references the event against 40 years of historical conflict data and current market volatility patterns.</p>
+</div>
+<div class="space-y-4">
+<div class="w-12 h-12 rounded bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary">notifications_active</span>
+</div>
+<h4 class="text-xl font-bold font-headline">03. You get alerted</h4>
+<p class="text-on-surface/60 text-sm leading-relaxed">Receive high-fidelity alerts with a quantified impact score on your specific commodity watchlist or portfolio exposure.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Feature Grid (The Depth) -->
+<section class="px-6 py-24 bg-surface-container-low">
+<div class="max-w-6xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-3xl font-bold font-headline tracking-tight mb-4">Tactical Capabilities</h2>
+<p class="text-on-surface/50 max-w-xl mx-auto">Precision instruments designed for sovereign wealth funds, hedge funds, and energy traders.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Grid Card -->
+<div class="p-8 bg-surface-container-high rounded-xl border border-outline-variant/20 hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary mb-4">rss_feed</span>
+<h5 class="font-bold font-headline mb-2 uppercase tracking-tight">Real-time signal feed</h5>
+<p class="text-xs text-on-surface/60 leading-relaxed">Low-latency websocket stream of geopolitical events categorized by tactical severity.</p>
+</div>
+<!-- Grid Card -->
+<div class="p-8 bg-surface-container-high rounded-xl border border-outline-variant/20 hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary mb-4">history</span>
+<h5 class="font-bold font-headline mb-2 uppercase tracking-tight">Historical backtesting</h5>
+<p class="text-xs text-on-surface/60 leading-relaxed">Test your trading strategies against our archive of 100,000+ verified conflict signals.</p>
+</div>
+<!-- Grid Card -->
+<div class="p-8 bg-surface-container-high rounded-xl border border-outline-variant/20 hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary mb-4">public</span>
+<h5 class="font-bold font-headline mb-2 uppercase tracking-tight">Global Map Overlay</h5>
+<p class="text-xs text-on-surface/60 leading-relaxed">Visual intelligence layer for spatial awareness of supply chain bottlenecks and kinetic zones.</p>
+</div>
+<!-- Grid Card -->
+<div class="p-8 bg-surface-container-high rounded-xl border border-outline-variant/20 hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary mb-4">terminal</span>
+<h5 class="font-bold font-headline mb-2 uppercase tracking-tight">API Command Center</h5>
+<p class="text-xs text-on-surface/60 leading-relaxed">Integrate tactical signals directly into your proprietary execution platforms via REST/GraphQL.</p>
+</div>
+<!-- Grid Card -->
+<div class="p-8 bg-surface-container-high rounded-xl border border-outline-variant/20 hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary mb-4">psychology</span>
+<h5 class="font-bold font-headline mb-2 uppercase tracking-tight">Sentiment Synthesis</h5>
+<p class="text-xs text-on-surface/60 leading-relaxed">AI-driven extraction of diplomatic tension levels from secure and open-source comms.</p>
+</div>
+<!-- Grid Card -->
+<div class="p-8 bg-surface-container-high rounded-xl border border-outline-variant/20 hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-primary mb-4">monitoring</span>
+<h5 class="font-bold font-headline mb-2 uppercase tracking-tight">Exposure Dashboard</h5>
+<p class="text-xs text-on-surface/60 leading-relaxed">Map your asset locations to conflict zones for real-time risk quantification.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="px-6 py-24 bg-background">
+<div class="max-w-5xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="text-4xl font-bold font-headline tracking-tighter mb-4 uppercase">System Access</h2>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-0 border border-outline-variant/30 rounded-2xl overflow-hidden shadow-2xl">
+<!-- Free -->
+<div class="p-10 flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant/30 bg-surface-container-low">
+<div class="mb-8">
+<span class="font-label text-xs uppercase tracking-widest text-on-surface/50">Free Tier</span>
+<div class="text-4xl font-data mt-2">$0<span class="text-sm font-label text-on-surface/40">/mo</span></div>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface/60">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Delayed signal feed (4h)
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface/60">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Limited map access
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface/40">
+<span class="material-symbols-outlined text-on-surface/20 text-sm">close</span>
+                                API access restricted
+                            </li>
+</ul>
+<button class="w-full py-3 border border-outline-variant text-on-surface font-label text-xs uppercase tracking-widest font-bold hover:bg-surface-container-high transition-colors rounded">Join Beta</button>
+</div>
+<!-- Analyst (Featured) -->
+<div class="p-10 flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant/30 bg-surface-container relative">
+<div class="absolute top-0 right-0 p-4">
+<span class="px-2 py-0.5 bg-primary text-on-primary font-label text-[8px] uppercase font-bold tracking-widest rounded-sm">RECOMMENDED</span>
+</div>
+<div class="mb-8">
+<span class="font-label text-xs uppercase tracking-widest text-primary">Analyst</span>
+<div class="text-4xl font-data mt-2">$49<span class="text-sm font-label text-on-surface/40">/mo</span></div>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Real-time signal feed
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Full Global Map access
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Sentinel AI summaries
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Email/SMS alerts
+                            </li>
+</ul>
+<button class="w-full py-3 bg-primary text-on-primary font-label text-xs uppercase tracking-widest font-bold hover:brightness-110 transition-all rounded shadow-[0_0_20px_rgba(111,251,190,0.2)]">Go Analyst</button>
+</div>
+<!-- Pro -->
+<div class="p-10 flex flex-col bg-surface-container-low">
+<div class="mb-8">
+<span class="font-label text-xs uppercase tracking-widest text-on-surface/50">Pro</span>
+<div class="text-4xl font-data mt-2">$199<span class="text-sm font-label text-on-surface/40">/mo</span></div>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm text-on-surface/60">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Full API access
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface/60">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                40yr historical data
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface/60">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Dedicated account manager
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface/60">
+<span class="material-symbols-outlined text-primary text-sm">check</span>
+                                Multi-user teams (5)
+                            </li>
+</ul>
+<button class="w-full py-3 border border-outline-variant text-on-surface font-label text-xs uppercase tracking-widest font-bold hover:bg-surface-container-high transition-colors rounded">Scale Terminal</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant/10 px-6 py-20">
+<div class="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+<div>
+<div class="flex items-center gap-2 mb-6">
+<span class="w-2.5 h-2.5 bg-primary rounded-full"></span>
+<span class="text-sm font-extrabold tracking-tighter uppercase font-headline">GeoSignal Pro</span>
+</div>
+<p class="text-[10px] font-data text-on-surface/40 leading-relaxed uppercase">
+                    Kinetic Monolith v4.0.2<br/>
+                    © 2024 Signal Dynamics Corp.<br/>
+                    Data verified via Sentinel-Alpha.
+                </p>
+</div>
+<div>
+<h6 class="font-label text-[10px] uppercase tracking-widest text-on-surface/40 mb-6">Product</h6>
+<ul class="space-y-3">
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">Terminal</a></li>
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">API Docs</a></li>
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">Data Tiers</a></li>
+</ul>
+</div>
+<div>
+<h6 class="font-label text-[10px] uppercase tracking-widest text-on-surface/40 mb-6">Company</h6>
+<ul class="space-y-3">
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">Research</a></li>
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">Contact</a></li>
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">Careers</a></li>
+</ul>
+</div>
+<div>
+<h6 class="font-label text-[10px] uppercase tracking-widest text-on-surface/40 mb-6">Legal</h6>
+<ul class="space-y-3">
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+<li><a class="text-sm text-on-surface/70 hover:text-primary transition-colors" href="#">SLA</a></li>
+</ul>
+</div>
+</div>
+</footer>
+</body></html>

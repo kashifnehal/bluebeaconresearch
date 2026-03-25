@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GeoSignal Pro | Global Conflict Map</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "inverse-primary": "#006c4a",
+                "tertiary": "#ffdad7",
+                "error-container": "#93000a",
+                "on-error-container": "#ffdad6",
+                "on-tertiary-fixed-variant": "#7f2927",
+                "on-tertiary-container": "#8e3432",
+                "surface-container": "#201f1f",
+                "surface-variant": "#353534",
+                "on-secondary-fixed": "#042100",
+                "background": "#131313",
+                "on-error": "#690005",
+                "secondary-fixed": "#8efc67",
+                "surface-container-low": "#1c1b1b",
+                "on-tertiary": "#611213",
+                "surface-tint": "#4edea3",
+                "secondary-container": "#3ba615",
+                "inverse-surface": "#e5e2e1",
+                "on-secondary-container": "#093100",
+                "on-secondary-fixed-variant": "#145200",
+                "surface-container-highest": "#353534",
+                "primary": "#6ffbbe",
+                "inverse-on-surface": "#313030",
+                "on-background": "#e5e2e1",
+                "surface-dim": "#131313",
+                "surface-container-lowest": "#0e0e0e",
+                "surface-container-high": "#2a2a2a",
+                "on-surface": "#e5e2e1",
+                "tertiary-fixed": "#ffdad7",
+                "tertiary-container": "#ffb3ad",
+                "on-primary-fixed": "#002114",
+                "primary-container": "#4edea3",
+                "outline": "#86948a",
+                "on-primary-container": "#005f40",
+                "surface": "#131313",
+                "secondary-fixed-dim": "#72df4d",
+                "on-primary": "#003824",
+                "outline-variant": "#3c4a42",
+                "surface-bright": "#393939",
+                "on-surface-variant": "#bbcac0",
+                "secondary": "#72df4d",
+                "error": "#ffb4ab",
+                "primary-fixed": "#6ffbbe",
+                "on-primary-fixed-variant": "#005236",
+                "on-secondary": "#0b3900",
+                "tertiary-fixed-dim": "#ffb3ae",
+                "on-tertiary-fixed": "#410004",
+                "primary-fixed-dim": "#4edea3"
+              },
+              fontFamily: {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Space Grotesk"]
+              },
+              borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+            },
+          },
+        }
+    </script>
+<style>
+        .glass {
+            background: rgba(38, 38, 38, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(60, 74, 66, 0.2);
+        }
+        .pulse-emerald {
+            box-shadow: 0 0 0 0 rgba(111, 251, 190, 0.7);
+            animation: pulse-emerald 2s infinite;
+        }
+        @keyframes pulse-emerald {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(111, 251, 190, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(111, 251, 190, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(111, 251, 190, 0); }
+        }
+        .pulse-red {
+            box-shadow: 0 0 0 0 rgba(255, 180, 171, 0.7);
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 180, 171, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 180, 171, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 180, 171, 0); }
+        }
+        .map-vignette {
+            background: radial-gradient(circle, transparent 20%, #131313 100%);
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .label { font-family: 'Space Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-surface overflow-hidden">
+<!-- Left Rail Navigation (SideNavBar - RAIL) -->
+<aside class="fixed left-0 top-0 h-full flex flex-col z-50 w-[256px] border-r border-outline-variant/30 bg-[#000000]">
+<div class="p-6">
+<div class="text-lg font-bold tracking-tighter text-[#4EDEA3] label flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">radar</span>
+                GeoSignal Pro
+            </div>
+<div class="text-[10px] label text-[#4EDEA3]/60 tracking-widest mt-1">ACTIVE INTELLIGENCE</div>
+</div>
+<nav class="flex-1 mt-4">
+<ul class="space-y-1">
+<li class="px-4">
+<a class="flex items-center gap-4 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined text-xl">terminal</span>
+<span class="label text-sm tracking-tight">TERMINAL</span>
+</a>
+</li>
+<li class="px-4">
+<a class="flex items-center gap-4 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined text-xl">rss_feed</span>
+<span class="label text-sm tracking-tight">INTELLIGENCE FEED</span>
+</a>
+</li>
+<li class="px-4">
+<a class="flex items-center gap-4 px-4 py-3 text-[#4EDEA3] border-l-2 border-[#4EDEA3] bg-[#131313] transition-colors duration-150 rounded-r" href="#">
+<span class="material-symbols-outlined text-xl">public</span>
+<span class="label text-sm tracking-tight">GLOBAL MAP</span>
+</a>
+</li>
+<li class="px-4">
+<a class="flex items-center gap-4 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined text-xl">notifications_active</span>
+<span class="label text-sm tracking-tight">ALERTS</span>
+</a>
+</li>
+<li class="px-4">
+<a class="flex items-center gap-4 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined text-xl">visibility</span>
+<span class="label text-sm tracking-tight">WATCHLIST</span>
+</a>
+</li>
+<li class="px-4">
+<a class="flex items-center gap-4 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined text-xl">history</span>
+<span class="label text-sm tracking-tight">BACKTESTING</span>
+</a>
+</li>
+<li class="px-4">
+<a class="flex items-center gap-4 px-4 py-3 text-[#E5E2E1]/60 hover:text-[#E5E2E1] hover:bg-[#131313] transition-colors duration-150 rounded" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="label text-sm tracking-tight">SETTINGS</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="p-4 mt-auto">
+<div class="bg-surface-container-high/50 p-3 rounded-lg border border-outline-variant/20 mb-4">
+<div class="label text-[10px] text-primary/60 mb-1">CURRENT NODE</div>
+<div class="mono text-xs text-primary font-bold">Node: GS-ALPHA-09</div>
+</div>
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-4 px-4 py-2 text-[#E5E2E1]/60 hover:text-[#E5E2E1] transition-colors label text-xs" href="#">
+<span class="material-symbols-outlined text-lg">help</span>
+                        Help
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-2 text-[#E5E2E1]/60 hover:text-[#E5E2E1] transition-colors label text-xs" href="#">
+<span class="material-symbols-outlined text-lg">logout</span>
+                        Logout
+                    </a>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Top Navigation (TopNavBar) -->
+<header class="fixed top-0 right-0 left-[256px] h-16 flex items-center justify-between px-6 z-40 bg-[#000000] border-b border-outline-variant/30">
+<div class="flex items-center gap-6 flex-1">
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="w-full bg-surface-container-lowest border-none border-b border-outline-variant/40 focus:ring-0 focus:border-primary text-sm mono py-2 pl-10 pr-4 placeholder:text-outline/50" placeholder="Scan global parameters..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-[#201F1F] text-[#E5E2E1]/80 rounded transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-[#201F1F] text-[#E5E2E1]/80 rounded transition-all">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="h-8 w-px bg-outline-variant/30 mx-2"></div>
+<button class="bg-primary hover:brightness-110 text-on-primary font-bold px-4 py-2 rounded-lg label text-xs flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm">terminal</span>
+                Terminal Sentinel
+            </button>
+<div class="w-8 h-8 rounded bg-surface-container-high border border-outline-variant/30 flex items-center justify-center text-[10px] font-bold text-primary mono">
+                GS
+            </div>
+</div>
+</header>
+<!-- Main Map Canvas -->
+<main class="fixed inset-0 top-16 left-[256px] bg-background">
+<!-- Map Background -->
+<div class="absolute inset-0 grayscale contrast-125 opacity-40">
+<img class="w-full h-full object-cover" data-alt="Grayscale high-contrast satellite view of world topography with dark shadows and sharp terrain details for a tactical interface." data-location="Global" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5c7e7iZh00wf_kOPKddL93iCoQE5bmfH89jXckzLwZNyuAVYd1q-x_DpIfFXfUZ-P92YHqn5vycAaNHlPgLySzvTBq5gy8a6a7pYVMhPmfGMSlP1F_-2STtZUwQ2AHqJ18dXvgbuupgFx3p9Yb57Dn2T8dINwuGD_yoCq8omnBNQQOnO3WINpfuKCc7dZ7qOh6vLG8NTAZljippankm0ycyE06ggq_bJ5lnT17AkTAah6u6xHcU5gyevdkvq-_h9h71T_B59b0R1M"/>
+<div class="absolute inset-0 map-vignette"></div>
+<!-- Linear Gradients for UI blend -->
+<div class="absolute inset-y-0 left-0 w-64 bg-gradient-to-r from-background to-transparent"></div>
+<div class="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background to-transparent"></div>
+<div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent"></div>
+</div>
+<!-- Hotspot Markers -->
+<!-- Europe: Signal Omega -->
+<div class="absolute top-[35%] left-[45%] group cursor-pointer">
+<div class="w-4 h-4 bg-primary rounded-full pulse-emerald"></div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 glass p-4 rounded-lg w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+<div class="label text-[10px] text-primary font-bold tracking-widest mb-1">SIGNAL: OMEGA-7</div>
+<div class="headline text-sm font-bold text-on-surface mb-2">Kyiv Displacement</div>
+<div class="flex items-center justify-between">
+<span class="mono text-[10px] text-on-surface-variant">CONFIDENCE</span>
+<span class="mono text-[10px] text-primary font-bold">98.4%</span>
+</div>
+</div>
+</div>
+<!-- Asia: Alert High Tension -->
+<div class="absolute top-[48%] left-[75%] group cursor-pointer">
+<div class="w-3 h-3 bg-error rounded-full pulse-red"></div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 glass p-4 rounded-lg w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+<div class="label text-[10px] text-error font-bold tracking-widest mb-1">ALERT: HIGH TENSION</div>
+<div class="headline text-sm font-bold text-on-surface mb-2">Taiwan Strait</div>
+<div class="mono text-[10px] text-on-surface-variant leading-tight">Vessel Movement detected in Sector-7G. High collision probability.</div>
+</div>
+</div>
+<!-- Left Overlay: Global Tension Index -->
+<section class="absolute top-8 left-8 w-80 glass rounded-xl p-6 border-l-2 border-primary/40">
+<div class="flex items-center justify-between mb-6">
+<div>
+<div class="label text-[10px] tracking-[0.2em] text-on-surface-variant mb-1 uppercase">Global Tension Index</div>
+<div class="flex items-baseline gap-2">
+<span class="mono text-4xl font-bold text-on-surface">74.8</span>
+<span class="mono text-sm text-error font-bold">▲ 2.4</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+</div>
+<div class="space-y-4 mb-8">
+<div>
+<div class="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
+<span>Cyber Warfare</span>
+<span class="mono text-primary">88%</span>
+</div>
+<div class="h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[88%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
+<span>Kinetic Conflict</span>
+<span class="mono text-primary">42%</span>
+</div>
+<div class="h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[42%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
+<span>Diplomatic Friction</span>
+<span class="mono text-primary">65%</span>
+</div>
+<div class="h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[65%]"></div>
+</div>
+</div>
+</div>
+<div class="border-t border-outline-variant/30 pt-6">
+<div class="label text-[10px] text-on-surface-variant mb-4 tracking-widest uppercase">Active Sentiment</div>
+<div class="flex items-end gap-3 h-24">
+<div class="flex-1 flex flex-col items-center">
+<div class="w-full bg-primary-container/30 border-t-2 border-primary" style="height: 24.5%;"></div>
+<span class="mono text-[9px] mt-2 text-primary">24.5%</span>
+<span class="label text-[8px] text-on-surface-variant uppercase mt-1">Bull</span>
+</div>
+<div class="flex-1 flex flex-col items-center">
+<div class="w-full bg-surface-container-highest" style="height: 52.1%;"></div>
+<span class="mono text-[9px] mt-2 text-on-surface-variant">52.1%</span>
+<span class="label text-[8px] text-on-surface-variant uppercase mt-1">Neut</span>
+</div>
+<div class="flex-1 flex flex-col items-center">
+<div class="w-full bg-error-container/30 border-t-2 border-error" style="height: 23.4%;"></div>
+<span class="mono text-[9px] mt-2 text-error">23.4%</span>
+<span class="label text-[8px] text-on-surface-variant uppercase mt-1">Bear</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Overlay: Live Intelligence Feed -->
+<aside class="absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex flex-col">
+<div class="p-6 border-b border-outline-variant/30 bg-surface-container-lowest/40">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="label text-xs tracking-[0.2em] font-bold text-on-surface uppercase">Live Intelligence</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4">
+<!-- Feed Item 1 -->
+<div class="p-3 bg-surface-container/40 rounded-lg border-l-2 border-primary hover:bg-surface-container/60 transition-colors cursor-pointer group">
+<div class="flex items-center gap-2 mb-2">
+<span class="px-1.5 py-0.5 bg-primary/10 text-primary label text-[8px] border border-primary/20 uppercase">Satellite</span>
+<span class="mono text-[9px] text-on-surface-variant">14:22:04 UTC</span>
+</div>
+<p class="text-[11px] leading-relaxed text-on-surface mb-2 font-medium">Anomalous heat signature detected in North Arctic quadrant. 84% match for naval propulsion.</p>
+<a class="label text-[9px] text-primary flex items-center gap-1 group-hover:underline" href="#">
+                        ANALYSIS LINK <span class="material-symbols-outlined text-[10px]">arrow_forward</span>
+</a>
+</div>
+<!-- Feed Item 2 -->
+<div class="p-3 bg-surface-container/40 rounded-lg border-l-2 border-error hover:bg-surface-container/60 transition-colors cursor-pointer group">
+<div class="flex items-center gap-2 mb-2">
+<span class="px-1.5 py-0.5 bg-error/10 text-error label text-[8px] border border-error/20 uppercase">Urgent</span>
+<span class="mono text-[9px] text-on-surface-variant">14:18:12 UTC</span>
+</div>
+<p class="text-[11px] leading-relaxed text-on-surface mb-2 font-medium">BGP Route Hijacking attempt detected targeting financial backbone in HK region.</p>
+<a class="label text-[9px] text-primary flex items-center gap-1 group-hover:underline" href="#">
+                        VIEW ATTACK VECTOR <span class="material-symbols-outlined text-[10px]">arrow_forward</span>
+</a>
+</div>
+<!-- Feed Item 3 -->
+<div class="p-3 bg-surface-container/40 rounded-lg border-l-2 border-on-surface-variant hover:bg-surface-container/60 transition-colors cursor-pointer group">
+<div class="flex items-center gap-2 mb-2">
+<span class="px-1.5 py-0.5 bg-surface-container-highest text-on-surface-variant label text-[8px] border border-outline-variant/30 uppercase">Social</span>
+<span class="mono text-[9px] text-on-surface-variant">14:05:55 UTC</span>
+</div>
+<p class="text-[11px] leading-relaxed text-on-surface mb-2">Spike in sentiment volatility across Middle Eastern sectors following official statement.</p>
+<a class="label text-[9px] text-primary flex items-center gap-1 group-hover:underline" href="#">
+                        TRACE ORIGIN <span class="material-symbols-outlined text-[10px]">arrow_forward</span>
+</a>
+</div>
+<!-- Feed Item 4 -->
+<div class="p-3 bg-surface-container/40 rounded-lg border-l-2 border-primary hover:bg-surface-container/60 transition-colors cursor-pointer group">
+<div class="flex items-center gap-2 mb-2">
+<span class="px-1.5 py-0.5 bg-primary/10 text-primary label text-[8px] border border-primary/20 uppercase">Signals</span>
+<span class="mono text-[9px] text-on-surface-variant">13:58:30 UTC</span>
+</div>
+<p class="text-[11px] leading-relaxed text-on-surface mb-2">Encrypted packet burst identified at Alpha-Zulu coordinates. Potential state-actor activity.</p>
+<a class="label text-[9px] text-primary flex items-center gap-1 group-hover:underline" href="#">
+                        DECRYPT STREAM <span class="material-symbols-outlined text-[10px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<div class="p-6 border-t border-outline-variant/30">
+<button class="w-full bg-primary-container py-3 rounded-lg flex items-center justify-center gap-3 hover:brightness-110 transition-all text-on-primary-container font-bold label text-xs">
+<span class="material-symbols-outlined text-sm">terminal</span>
+                    OPEN FULL TERMINAL
+                </button>
+</div>
+</aside>
+<!-- Bottom-Center: Floating Ticker Pill -->
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 -ml-[40px]">
+<div class="glass px-6 py-2.5 rounded-full border border-primary/20 flex items-center gap-6 shadow-2xl">
+<div class="flex items-center gap-2">
+<span class="label text-[9px] font-bold text-on-surface-variant tracking-widest uppercase">Global Ticker</span>
+<span class="h-3 w-px bg-outline-variant/40"></span>
+</div>
+<div class="flex items-center gap-8 overflow-hidden whitespace-nowrap max-w-[500px]">
+<div class="flex items-center gap-2">
+<span class="mono text-[10px] text-on-surface">BTC/USD</span>
+<span class="mono text-[10px] text-primary font-bold">64,281.40</span>
+<span class="mono text-[9px] text-primary">(+1.2%)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="mono text-[10px] text-on-surface">BRENT CRUDE</span>
+<span class="mono text-[10px] text-on-surface font-bold">82.14</span>
+<span class="mono text-[9px] text-error">(-0.4%)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="mono text-[10px] text-on-surface">GOLD</span>
+<span class="mono text-[10px] text-primary font-bold">2,384.10</span>
+<span class="mono text-[9px] text-primary">(+0.3%)</span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-sm">stream</span>
+<span class="mono text-[8px] font-bold">LIVE</span>
+</div>
+</div>
+</div>
+<!-- Bottom-Left: Map Controls -->
+<div class="absolute bottom-8 left-8 flex flex-col gap-2">
+<button class="glass w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="glass w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<div class="h-2"></div>
+<button class="glass w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">layers</span>
+</button>
+</div>
+<!-- Right Side Drawer Toggle (Indicator Only as per layout request) -->
+<div class="absolute inset-y-0 right-80 w-1 bg-gradient-to-l from-primary/10 to-transparent pointer-events-none"></div>
+</main>
+<!-- Bottom Status Ribbon -->
+<div class="fixed bottom-0 left-[256px] right-0 h-0.5 bg-primary z-50"></div>
+</body></html>
