@@ -1,13 +1,55 @@
 # Blue Beacon Research — Tactical Intelligence Terminal
 
-Blue Beacon Research is a high-fidelity geopolitical intelligence terminal that transforms global conflict data into actionable market signals.
+> **Geopolitical Risk Intelligence → Actionable Market Signals**
 
-## 🚀 Project Overview
+Blue Beacon Research is a real-time geopolitical intelligence platform that automatically collects conflict and political risk events from external data sources (GDELT, ACLED, and GNews), classifies them using Claude AI, and converts them into structured "signals" scored by severity and commodity market impact.
 
-This monorepo (Turborepo) contains the full stack for the Blue Beacon Research platform:
-- **`apps/web`**: Next.js terminal frontend (Tailwind v4, Shadcn, Framer Motion).
-- **`apps/api`**: Background ingestion workers (GNews, ACLED, GDELT) and AI enrichment services (Claude 3.5).
-- **`packages/shared`**: Shared TypeScript types and business logic.
+## 🚀 Key Features
+
+- **Autonomous Intelligence Pipeline**: Ingests up to 350+ new world events every 15 minutes.
+- **AI Signal Mapping**: Bridges raw geopolitical news with financial market predictions (Oil, Gold, Natural Gas).
+- **Multi-Channel Alerting**: Instant dispatch via Telegram, Slack, Webhooks, and Push for severity ≥ 7 events.
+- **Tactical Dashboard & Map**: High-fidelity dark-mode interface with interactive conflict hotspots.
+- **Backtesting Engine**: Historical analysis of geopolitical triggers on market volatility.
+
+## 🏗 System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Sources["Data Ingestion"]
+        GDELT["GDELT Project"]
+        ACLED["ACLED API"]
+        GNews["GNews.io"]
+    end
+
+    subgraph API["Fastify Backend"]
+        Collectors["Collectors (15m cron)"]
+        AIWorker["AI Classifier (Claude 3.5)"]
+        Alerts["Alert Dispatcher"]
+        PriceSync["Price Syncer"]
+    end
+
+    subgraph Storage["Persistence & Cache"]
+        DB["Supabase (PG)"]
+        Redis["Redis (Queues/Cache)"]
+    end
+
+    subgraph Clients["Frontend & Delivery"]
+        Web["Next.js Dashboard"]
+        Telegram["Telegram Bot"]
+        Slack["Slack Webhooks"]
+    end
+
+    Sources --> Collectors
+    Collectors --> AIWorker
+    AIWorker --> DB
+    DB --> Alerts
+    Alerts --> Telegram
+    Alerts --> Slack
+    PriceSync --> Redis
+    Web --> DB
+    Web --> Redis
+```
 
 ## 🛠 Getting Started
 

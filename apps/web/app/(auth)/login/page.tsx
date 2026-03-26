@@ -9,6 +9,7 @@ import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { loginSchema } from "@/lib/validators";
 import { fetchMyProfile } from "@/lib/profile";
+import { isProjectReady } from "@/lib/flags";
 
 type FormValues = z.infer<typeof loginSchema>;
 
@@ -75,6 +76,13 @@ export default function LoginPage() {
         password: values.password,
       });
       if (signInError) throw signInError;
+
+      // If project is not ready, redirect to root modal
+      if (!isProjectReady) {
+        router.push("/");
+        return;
+      }
+
       const profile = await fetchMyProfile();
       router.push(profile?.onboardingCompleted ? "/dashboard" : "/onboarding");
     } catch (e: unknown) {

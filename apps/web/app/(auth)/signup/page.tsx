@@ -9,6 +9,7 @@ import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { signupSchema } from "@/lib/validators";
 import type { PlanTier } from "@blue-beacon-research/shared";
+import { isProjectReady } from "@/lib/flags";
 
 type FormValues = z.infer<typeof signupSchema>;
 
@@ -95,6 +96,17 @@ export default function SignupPage() {
         await supabase
           .from("profiles")
           .upsert({ id: data.user.id, full_name: values.fullName, plan_tier: selectedPlan });
+
+        // If project is not ready, track waitlist and redirect to modal
+        if (!isProjectReady) {
+          await supabase.from("waitlist").insert({
+            user_id: data.user.id,
+            full_name: values.fullName,
+            email: values.email,
+          });
+          router.push("/?joined=1");
+          return;
+        }
       }
       router.push("/onboarding");
     } catch (e: unknown) {

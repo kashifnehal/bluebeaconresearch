@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { isProjectReady } from "@/lib/flags";
+import AccessLimitedModalWrapper from "@/components/AccessLimitedModalWrapper";
 
 export const metadata: Metadata = {
   title: "Blue Beacon Research",
@@ -46,6 +48,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full" style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
         <Providers>{children}</Providers>
+        {!isProjectReady && <AccessLimitedModalWrapper />}
       </body>
     </html>
   );
