@@ -246,8 +246,23 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
             }
           }}
         >
-          {joinedWaitlist ? "Thanks for Joining" : "Join Waitlist"}
+          {joinedWaitlist ? "Access Request Received" : "Join Waitlist"}
         </button>
+
+        {/* Already Registered? */}
+        {joinedWaitlist && <p
+          style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: "10px",
+            letterSpacing: "0.08em",
+            color: C.italicText,
+            textAlign: "center",
+            textTransform: "uppercase",
+            margin: "0 0 24px",
+          }}
+        >
+          You’ll be notified as soon as your access is approved
+        </p>}
 
         {/* Footer meta */}
         <div
