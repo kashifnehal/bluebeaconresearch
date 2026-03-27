@@ -22,7 +22,7 @@ Your current project setup uses **Turborepo**, which is excellent for production
 
 ### **Proper Hierarchy**
 - `apps/web`: The Next.js frontend terminal.
-- `apps/api`: The background ingestion and AI enrichment worker.
+- `apps/backend`: The background ingestion and AI enrichment worker.
 - `packages/shared`: Shared types and logic between the terminal and the worker.
 
 ### **`.gitignore` Strategy**

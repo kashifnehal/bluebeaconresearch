@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Both src/env.ts and dist/env.js are 3 levels deep from the project root (.env)
-// e.g. apps/api/src -> apps/api -> apps -> root
+// e.g. apps/backend/src -> apps/backend -> apps -> root
 const envPath = resolve(__dirname, "../../../.env");
 const localEnvPath = resolve(__dirname, "../../../.env.local");
 

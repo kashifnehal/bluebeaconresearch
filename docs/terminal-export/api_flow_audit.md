@@ -4,7 +4,7 @@ The terminal uses a multi-stage background pipeline to ensure high-fidelity data
 
 ```mermaid
 graph TD
-    subgraph "Phase 1: Ingestion (apps/api)"
+    subgraph "Phase 1: Ingestion (apps/backend)"
         A1["GNews Collector (Node-Cron)"] -->|*/15m| B[("Supabase: raw_events")]
         A2["ACLED Collector (Node-Cron)"] -->|*/15m| B
         A3["GDELT Collector (Node-Cron)"] -->|*/15m| B
@@ -35,12 +35,12 @@ graph TD
 
 ## 3. Deep-Dive: Service Level Data Flow
 
-### **Ingestion Workers (`apps/api/src/workers.ts`)**
+### **Ingestion Workers (`apps/backend/src/workers.ts`)**
 - **GNews Collector**: Scrapes headlines using geopolitical keywords (war, strike, blockade).
 - **ACLED Collector**: Syncs with the Armed Conflict Location & Event Data project for verified kinetic event coordinates.
 - **Price Syncer**: Polls external markets to ensure currency and commodity correlations are current.
 
-### **Sentinel Intelligence (`apps/api/src/services`)**
+### **Sentinel Intelligence (`apps/backend/src/services`)**
 - **Claude Service**: Using `claude-3-sonnet`, it synthesizes raw text into structured data. It extracts the **Commodity Impact** (e.g., mapping a refinery fire to `UKOIL` volatility) which is the primary link between conflict and market data.
 
 ### **Frontend Linkages (`apps/web/app`)**
