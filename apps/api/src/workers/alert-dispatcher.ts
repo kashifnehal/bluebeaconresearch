@@ -1,11 +1,11 @@
 import { Worker } from "bullmq";
 import axios from "axios";
 
-import { getRedis } from "../clients/redis";
-import { getSupabaseAdmin } from "../clients/supabase";
-import { QUEUE_NAMES } from "../queues";
-import { TelegramService } from "../services/telegram.service";
-import { ExpoPushService } from "../services/expo-push.service";
+import { getRedis } from "../clients/redis.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
+import { QUEUE_NAMES } from "../queues.js";
+import { TelegramService } from "../services/telegram.service.js";
+import { ExpoPushService } from "../services/expo-push.service.js";
 
 export function startAlertDispatcherWorker() {
   const connection = getRedis();

@@ -1,7 +1,14 @@
 import { config } from "dotenv";
-import { resolve } from "path";
-const envPath = resolve(process.cwd(), "../../.env");
-const localEnvPath = resolve(process.cwd(), "../../.env.local");
+import { resolve, join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Both src/env.ts and dist/env.js are 3 levels deep from the project root (.env)
+// e.g. apps/api/src -> apps/api -> apps -> root
+const envPath = resolve(__dirname, "../../../.env");
+const localEnvPath = resolve(__dirname, "../../../.env.local");
 
 const envConfig = config({ path: envPath });
 const localConfig = config({ path: localEnvPath, override: true });

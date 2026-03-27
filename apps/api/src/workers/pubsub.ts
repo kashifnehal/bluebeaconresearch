@@ -1,4 +1,4 @@
-import { getRedis } from "../clients/redis";
+import { getRedis } from "../clients/redis.js";
 
 export const REDIS_CHANNELS = {
   newSignal: "new_signal",

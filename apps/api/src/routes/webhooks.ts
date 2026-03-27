@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import axios from "axios";
 
-import { requireUser } from "../middleware/auth.middleware";
-import { planGuard } from "../middleware/plan-guard.middleware";
-import { getSupabaseAdmin } from "../clients/supabase";
+import { requireUser } from "../middleware/auth.middleware.js";
+import { planGuard } from "../middleware/plan-guard.middleware.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
 
 const endpointSchema = z.object({
   url: z.string().url(),

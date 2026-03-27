@@ -1,10 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
-import { getSupabaseAdmin } from "../clients/supabase";
-import { planGuard } from "../middleware/plan-guard.middleware";
-import { REDIS_CHANNELS } from "../workers/pubsub";
-import { getRedis } from "../clients/redis";
+import { getSupabaseAdmin } from "../clients/supabase.js";
+import { planGuard } from "../middleware/plan-guard.middleware.js";
+import { REDIS_CHANNELS } from "../workers/pubsub.js";
+import { getRedis } from "../clients/redis.js";
 
 const querySchema = z.object({
   severity: z.coerce.number().int().min(1).max(10).optional(),

@@ -1,6 +1,6 @@
-import { buildQueues } from "../queues";
-import { getSupabaseAdmin } from "../clients/supabase";
-import { AcledService } from "../services/acled.service";
+import { buildQueues } from "../queues.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
+import { AcledService } from "../services/acled.service.js";
 
 export async function runAcledCollectorOnce() {
   const supabase = getSupabaseAdmin();

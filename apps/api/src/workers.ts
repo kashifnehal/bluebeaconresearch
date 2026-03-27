@@ -1,16 +1,16 @@
 import cron from "node-cron";
 import * as Sentry from "@sentry/node";
 
-import { buildApp } from "./app";
-import { getEnv } from "./env";
-import { startAiClassifierWorker } from "./workers/ai-classifier";
-import { startSignalGeneratorWorker } from "./workers/signal-generator";
-import { startAlertDispatcherWorker } from "./workers/alert-dispatcher";
-import { runGdeltCollectorOnce } from "./workers/gdelt-collector";
-import { runAcledCollectorOnce } from "./workers/acled-collector";
-import { runGnewsCollectorOnce } from "./workers/gnews-collector";
-import { runPriceSyncOnce } from "./workers/price-syncer";
-import { runSanctionsSyncOnce } from "./workers/sanctions-syncer";
+import { buildApp } from "./app.js";
+import { getEnv } from "./env.js";
+import { startAiClassifierWorker } from "./workers/ai-classifier.js";
+import { startSignalGeneratorWorker } from "./workers/signal-generator.js";
+import { startAlertDispatcherWorker } from "./workers/alert-dispatcher.js";
+import { runGdeltCollectorOnce } from "./workers/gdelt-collector.js";
+import { runAcledCollectorOnce } from "./workers/acled-collector.js";
+import { runGnewsCollectorOnce } from "./workers/gnews-collector.js";
+import { runPriceSyncOnce } from "./workers/price-syncer.js";
+import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 
 async function main() {
   getEnv();

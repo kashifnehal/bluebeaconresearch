@@ -5,19 +5,19 @@ import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 
-import { getEnv } from "./env";
-import { getRedis } from "./clients/redis";
-import { signalsRoutes } from "./routes/signals";
-import { registerAuth } from "./middleware/auth.middleware";
-import { usersRoutes } from "./routes/users";
-import { commoditiesRoutes } from "./routes/commodities";
-import { apiKeysRoutes } from "./routes/api-keys";
-import { alertsRoutes } from "./routes/alerts";
-import { webhooksRoutes } from "./routes/webhooks";
-import { pricesRoutes } from "./routes/prices";
-import { eventsRoutes } from "./routes/events";
-import { telegramRoutes } from "./routes/telegram";
-import { backtestingRoutes } from "./routes/backtesting";
+import { getEnv } from "./env.js";
+import { getRedis } from "./clients/redis.js";
+import { signalsRoutes } from "./routes/signals.js";
+import { registerAuth } from "./middleware/auth.middleware.js";
+import { usersRoutes } from "./routes/users.js";
+import { commoditiesRoutes } from "./routes/commodities.js";
+import { apiKeysRoutes } from "./routes/api-keys.js";
+import { alertsRoutes } from "./routes/alerts.js";
+import { webhooksRoutes } from "./routes/webhooks.js";
+import { pricesRoutes } from "./routes/prices.js";
+import { eventsRoutes } from "./routes/events.js";
+import { telegramRoutes } from "./routes/telegram.js";
+import { backtestingRoutes } from "./routes/backtesting.js";
 
 export function buildApp() {
   const env = getEnv();

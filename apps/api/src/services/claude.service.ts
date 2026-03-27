@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 
-import { getEnv } from "../env";
+import { getEnv } from "../env.js";
 
 export type ClassificationResult = {
   severity: number;

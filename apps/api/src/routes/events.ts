@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-import { getSupabaseAdmin } from "../clients/supabase";
+import { getSupabaseAdmin } from "../clients/supabase.js";
 
 export async function eventsRoutes(app: FastifyInstance) {
   app.get("/:id", async (req, reply) => {

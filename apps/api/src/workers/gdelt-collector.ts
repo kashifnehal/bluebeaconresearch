@@ -1,7 +1,7 @@
 import axios from "axios";
 
-import { buildQueues } from "../queues";
-import { getSupabaseAdmin } from "../clients/supabase";
+import { buildQueues } from "../queues.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
 
 type GdeltEvent = {
   GLOBALEVENTID?: string;

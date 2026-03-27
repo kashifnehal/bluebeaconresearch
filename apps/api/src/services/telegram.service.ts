@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { getEnv } from "../env";
+import { getEnv } from "../env.js";
 
 export class TelegramService {
   async sendMessage(chatId: string, text: string) {

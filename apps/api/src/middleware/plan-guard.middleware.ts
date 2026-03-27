@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
-import type { AuthedUser } from "./auth.middleware";
+import type { AuthedUser } from "./auth.middleware.js";
 
 export function planGuard(allowed: AuthedUser["planTier"][]) {
   return async (req: FastifyRequest, reply: FastifyReply) => {

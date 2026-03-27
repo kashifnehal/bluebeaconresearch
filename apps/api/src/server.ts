@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/node";
 
-import { buildApp } from "./app";
-import { getEnv } from "./env";
+import { buildApp } from "./app.js";
+import { getEnv } from "./env.js";
 
 async function main() {
   const env = getEnv();

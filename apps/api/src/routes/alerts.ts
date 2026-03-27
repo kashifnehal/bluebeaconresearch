@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
-import { requireUser } from "../middleware/auth.middleware";
-import { getSupabaseAdmin } from "../clients/supabase";
+import { requireUser } from "../middleware/auth.middleware.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
 
 const ruleSchema = z.object({
   name: z.string().min(1).max(120),

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
-import { getRedis } from "../clients/redis";
-import { getSupabaseAdmin } from "../clients/supabase";
+import { getRedis } from "../clients/redis.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
 
 const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "WHEAT", "NGAS", "CORN", "EURUSD", "USDRUB"] as const;
 

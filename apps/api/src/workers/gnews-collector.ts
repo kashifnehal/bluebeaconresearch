@@ -1,7 +1,7 @@
 import axios from "axios";
-import { buildQueues } from "../queues";
-import { getSupabaseAdmin } from "../clients/supabase";
-import { getEnv } from "../env";
+import { buildQueues } from "../queues.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
+import { getEnv } from "../env.js";
 
 export async function runGnewsCollectorOnce() {
   const env = getEnv();

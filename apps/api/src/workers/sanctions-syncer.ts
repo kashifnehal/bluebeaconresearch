@@ -1,7 +1,7 @@
 import axios from "axios";
 import { XMLParser } from "fast-xml-parser";
 
-import { getSupabaseAdmin } from "../clients/supabase";
+import { getSupabaseAdmin } from "../clients/supabase.js";
 
 type SdnEntry = {
   uid?: string;

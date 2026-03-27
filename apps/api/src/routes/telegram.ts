@@ -1,9 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import crypto from "node:crypto";
 
-import { getRedis } from "../clients/redis";
-import { getSupabaseAdmin } from "../clients/supabase";
-import { requireUser } from "../middleware/auth.middleware";
+import { getRedis } from "../clients/redis.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
+import { requireUser } from "../middleware/auth.middleware.js";
 
 function randomCode() {
   return crypto.randomBytes(6).toString("hex"); // 12 chars

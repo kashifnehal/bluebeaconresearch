@@ -1,9 +1,9 @@
 import { Worker } from "bullmq";
 
-import { getRedis } from "../clients/redis";
-import { getSupabaseAdmin } from "../clients/supabase";
-import { QUEUE_NAMES } from "../queues";
-import { ClaudeService } from "../services/claude.service";
+import { getRedis } from "../clients/redis.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
+import { QUEUE_NAMES } from "../queues.js";
+import { ClaudeService } from "../services/claude.service.js";
 
 export function startSignalGeneratorWorker() {
   const connection = getRedis();

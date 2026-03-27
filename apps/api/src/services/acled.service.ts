@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getEnv } from "../env";
+import { getEnv } from "../env.js";
 
 export class AcledService {
   private token: string | null = null;

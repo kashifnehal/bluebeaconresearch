@@ -1,11 +1,11 @@
 import { Worker } from "bullmq";
 import { z } from "zod";
 
-import { getRedis } from "../clients/redis";
-import { getSupabaseAdmin } from "../clients/supabase";
-import { QUEUE_NAMES, buildQueues } from "../queues";
-import { ClaudeService } from "../services/claude.service";
-import { publishNewSignal } from "../workers/pubsub";
+import { getRedis } from "../clients/redis.js";
+import { getSupabaseAdmin } from "../clients/supabase.js";
+import { QUEUE_NAMES, buildQueues } from "../queues.js";
+import { ClaudeService } from "../services/claude.service.js";
+import { publishNewSignal } from "../workers/pubsub.js";
 
 const classificationSchema = z.object({
   severity: z.number().int().min(1).max(10),

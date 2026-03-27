@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { z } from "zod";
 import crypto from "node:crypto";
 
-import { getSupabaseAdmin } from "../clients/supabase";
+import { getSupabaseAdmin } from "../clients/supabase.js";
 
 export type AuthedUser = {
   id: string;
