@@ -1,6 +1,15 @@
 import { config } from "dotenv";
 import { resolve } from "path";
-config({ path: resolve(process.cwd(), "../../.env") });
+const envPath = resolve(process.cwd(), "../../.env");
+const localEnvPath = resolve(process.cwd(), "../../.env.local");
+
+const envConfig = config({ path: envPath });
+const localConfig = config({ path: localEnvPath, override: true });
+
+if (process.env.NODE_ENV !== "production") {
+  console.log(`[API Environment] Loading from: ${envPath} (${envConfig.error ? "NOT FOUND" : "LOADED"})`);
+  console.log(`[API Environment] Loading from: ${localEnvPath} (${localConfig.error ? "NOT FOUND" : "LOADED"})`);
+}
 
 import { z } from "zod";
 const envSchema = z.object({
@@ -15,20 +24,25 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(10).optional(),
 
-  REDIS_URL: z.string().min(1).optional(),
+  REDIS_URL: z.string().optional(),
 
-  ANTHROPIC_API_KEY: z.string().min(10).optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
 
-  TELEGRAM_BOT_TOKEN: z.string().min(10).optional(),
-  ALPHA_VANTAGE_API_KEY: z.string().min(10).optional(),
-  ACLED_EMAIL: z.string().email().optional(),
-  ACLED_PASSWORD: z.string().min(6).optional(),
-  NEWS_API_KEY: z.string().min(10).optional(),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  ALPHA_VANTAGE_API_KEY: z.string().optional(),
+  ACLED_EMAIL: z.string().optional(),
+  ACLED_PASSWORD: z.string().optional(),
+  NEWS_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
 
 export function getEnv(): Env {
+  // Fallback for SUPABASE_URL if only its public variant is provided
+  if (!process.env.SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  }
+
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n");

@@ -9,18 +9,19 @@ export function getRedis() {
 
   // Prefer a single REDIS_URL (Railway/Upstash compatible).
   const url = env.REDIS_URL || env.UPSTASH_REDIS_REST_URL;
-  if (!url) {
-    throw new Error("Missing REDIS_URL (or UPSTASH_REDIS_REST_URL).");
-  }
+  const isRestUrl = url ? (url.startsWith("https://") || url.startsWith("http://")) : false;
 
-  const isRestUrl = url.startsWith("https://") || url.startsWith("http://");
-
-  if (isRestUrl) {
-    console.error("❌ CRITICAL: ioredis: UPSTASH_REDIS_REST_URL (or a REST URL) detected.");
-    console.error("ioredis requires a redis:// or rediss:// protocol URL. REST URLs are for the Upstash REST API only.");
-    console.error("Please add REDIS_URL=rediss://... to your .env file.");
-    // We throw here because using a REST URL with ioredis leads to ENOTSOCK and crashes.
-    throw new Error("Invalid Redis URL: REST URLs (http/https) are not supported by ioredis.");
+  if (!url || isRestUrl) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("⚠️ [API Redis] No valid REDIS_URL found (or REST URL detected).");
+      console.warn("   -> ioredis requires a redis:// or rediss:// protocol URL.");
+      console.warn("   -> Falling back to in-memory mode for development.");
+      return null;
+    }
+    if (isRestUrl) {
+      throw new Error("Invalid Redis URL: REST URLs (http/https) are not supported by ioredis.");
+    }
+    throw new Error("Missing REDIS_URL.");
   }
 
   try {

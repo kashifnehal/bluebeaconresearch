@@ -29,11 +29,10 @@ export function buildApp() {
     credentials: true,
   });
 
-  // Use Redis-backed rate limit (safe default for shared instances).
-  // If Redis is not configured, Fastify will throw at startup (intentionally).
+  // Use Redis-backed rate limit if available
   const redis = getRedis();
   app.register(rateLimit, {
-    redis,
+    ...(redis ? { redis } : {}),
     max: 60,
     timeWindow: "1 minute",
   });
