@@ -8,6 +8,9 @@ const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "WHEAT", "NGAS", "CORN", "EURUSD", 
 export async function pricesRoutes(app: FastifyInstance) {
   app.get("/", async (_req, reply) => {
     const redis = getRedis();
+    if (!redis) {
+      return reply.status(503).send({ error: "Redis not available" });
+    }
     const cached = await Promise.all(SYMBOLS.map((s) => redis.get(`prices:${s}`)));
     const parsed = cached
       .map((v) => {
@@ -41,7 +44,7 @@ export async function pricesRoutes(app: FastifyInstance) {
   app.get("/:symbol", async (req, reply) => {
     const symbol = String((req.params as any)?.symbol ?? "").toUpperCase();
     const redis = getRedis();
-    const v = await redis.get(`prices:${symbol}`);
+    const v = redis ? await redis.get(`prices:${symbol}`) : null;
     if (v) {
       try {
         return reply.send({ data: JSON.parse(v) });

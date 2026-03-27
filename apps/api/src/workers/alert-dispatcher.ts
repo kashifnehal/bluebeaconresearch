@@ -9,6 +9,10 @@ import { ExpoPushService } from "../services/expo-push.service";
 
 export function startAlertDispatcherWorker() {
   const connection = getRedis();
+  if (!connection) {
+    console.warn("⚠️ [Alert Dispatcher] Redis connection missing. Worker not started.");
+    return null;
+  }
   const supabase = getSupabaseAdmin();
   const telegram = new TelegramService();
   const expoPush = new ExpoPushService();

@@ -75,7 +75,7 @@ async function main() {
 
   const shutdown = async () => {
     app.log.info("Shutting down workers...");
-    await Promise.allSettled(workers.map((w) => w.close()));
+    await Promise.allSettled(workers.map((w) => w?.close()));
     await app.close();
     process.exit(0);
   };

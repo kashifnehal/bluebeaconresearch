@@ -89,6 +89,9 @@ export async function signalsRoutes(app: FastifyInstance) {
       reply.raw.flushHeaders();
 
       const pub = getRedis();
+      if (!pub) {
+        return reply.status(503).send({ error: "Redis required for SSE streams" });
+      }
       const sub = pub.duplicate();
       await sub.connect();
       await sub.subscribe(REDIS_CHANNELS.newSignal);

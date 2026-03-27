@@ -24,6 +24,10 @@ const classificationSchema = z.object({
 
 export function startAiClassifierWorker() {
   const connection = getRedis();
+  if (!connection) {
+    console.warn("⚠️ [AI Classifier] Redis connection missing. Worker not started.");
+    return null;
+  }
   const supabase = getSupabaseAdmin();
   const claude = new ClaudeService();
   const queues = buildQueues();

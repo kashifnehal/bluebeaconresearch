@@ -7,6 +7,10 @@ import { ClaudeService } from "../services/claude.service";
 
 export function startSignalGeneratorWorker() {
   const connection = getRedis();
+  if (!connection) {
+    console.warn("⚠️ [Signal Generator] Redis connection missing. Worker not started.");
+    return null;
+  }
   const supabase = getSupabaseAdmin();
   const claude = new ClaudeService();
 

@@ -46,7 +46,9 @@ export async function runPriceSyncOnce() {
     });
     if (!error) inserted += 1;
 
-    await redis.set(`prices:${symbol}`, JSON.stringify({ symbol, price, changePct24h: changePct, fetchedAt }), "EX", 900);
+    if (redis) {
+      await redis.set(`prices:${symbol}`, JSON.stringify({ symbol, price, changePct24h: changePct, fetchedAt }), "EX", 900);
+    }
   }
 
   return { ok: true as const, inserted };

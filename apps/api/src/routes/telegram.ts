@@ -14,6 +14,7 @@ export async function telegramRoutes(app: FastifyInstance) {
   app.post("/connect-code", async (req, reply) => {
     const user = requireUser(req, reply);
     const redis = getRedis();
+    if (!redis) return reply.status(503).send({ error: "Redis not available" });
     const code = randomCode();
     await redis.set(`tg_connect:${code}`, user.id, "EX", 600); // 10 min TTL
     return reply.send({ code });
@@ -35,6 +36,7 @@ export async function telegramRoutes(app: FastifyInstance) {
       const parts = trimmed.split(/\s+/);
       const code = parts[1];
       if (!code) return reply.send({ ok: true });
+      if (!redis) return reply.send({ ok: true });
       const userId = await redis.get(`tg_connect:${code}`);
       if (!userId) return reply.send({ ok: true });
 
@@ -49,7 +51,9 @@ export async function telegramRoutes(app: FastifyInstance) {
           },
           { onConflict: "user_id" },
         );
-      await redis.del(`tg_connect:${code}`);
+      if (redis) {
+        await redis.del(`tg_connect:${code}`);
+      }
       return reply.send({ ok: true });
     }
 

@@ -10,6 +10,9 @@ export const QUEUE_NAMES = {
 
 export function buildQueues() {
   const connection = getRedis();
+  if (!connection) {
+    throw new Error("Redis connection required for BullMQ queues.");
+  }
   return {
     aiClassification: new Queue(QUEUE_NAMES.aiClassification, { connection }),
     signalGeneration: new Queue(QUEUE_NAMES.signalGeneration, { connection }),
