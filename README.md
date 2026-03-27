@@ -14,7 +14,7 @@ Blue Beacon Research is a real-time geopolitical intelligence platform. It autom
 
 ## 🏗 Tech Stack & Architecture
 
-- **Monorepo**: Turborepo, pnpm workspaces (`apps/web`, `apps/api`, `apps/mobile`).
+- **Monorepo**: Turborepo, pnpm workspaces (`apps/web`, `apps/backend`, `apps/mobile`).
 - **Web App**: Next.js 15 (App Router), React, TailwindCSS, Framer Motion.
 - **Backend API**: Fastify, Node.js, BullMQ (for async workers/cron jobs).
 - **Database & Auth**: Supabase (PostgreSQL, Row Level Security).
@@ -79,8 +79,8 @@ pnpm run dev
 
 This will concurrently start:
 - `apps/web`: The Next.js dashboard on `http://localhost:3000`
-- `apps/api` (Server): The Fastify API on `http://localhost:3001`
-- `apps/api` (Workers): The background collectors, AI classifiers, and alert dispatchers.
+- `apps/backend` (Server): The Fastify API on `http://localhost:3001`
+- `apps/backend` (Workers): The background collectors, AI classifiers, and alert dispatchers.
 
 ---
 
@@ -104,10 +104,10 @@ Go to **Vercel -> Settings -> Environment Variables** and add *all* the keys fro
 > **Note on Turbo & Env Vars:** The Vercel build will automatically pull these variables through `turbo` because they are explicitly whitelisted in `turbo.json`. If you add new environment variables in the future, you *must* add them to the `env` array in `turbo.json` or they will be undefined during the build step.
 
 ### 3. Backend Deployment (Optional if moving API away from Next.js serverless)
-Currently, `apps/web` is deployed to Vercel perfectly. `apps/api` is built to pure Node.js ESM. 
-If Vercel's serverless platform limits the long-running background workers in `apps/api`, you can deploy `apps/api` individually setting to platforms like **Railway** or **Render**:
+Currently, `apps/web` is deployed to Vercel perfectly. `apps/backend` is built to pure Node.js ESM. 
+If Vercel's serverless platform limits the long-running background workers in `apps/backend`, you can deploy `apps/backend` individually setting to platforms like **Railway** or **Render**:
 1. Connect the Repo.
-2. Set Root Directory to `apps/api`.
+2. Set Root Directory to `apps/backend`.
 3. Build Command: `pnpm run build`
 4. Start Command: `pnpm run start:server` and a separate worker process running `pnpm run start:workers`.
 

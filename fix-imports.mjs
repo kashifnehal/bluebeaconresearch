@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "fs";
 import { execSync } from "child_process";
 
-const files = execSync('find apps/api/src -name "*.ts"', { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+const files = execSync('find apps/backend/src -name "*.ts"', { encoding: "utf8" }).trim().split("\n").filter(Boolean);
 
 let count = 0;
 
