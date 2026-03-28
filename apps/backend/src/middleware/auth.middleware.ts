@@ -23,8 +23,8 @@ function sha256Hex(input: string) {
 
 export function registerAuth(app: FastifyInstance) {
   app.addHook("preHandler", async (req, reply) => {
-    // Allow health/docs without auth
-    if (req.url.startsWith("/health") || req.url.startsWith("/docs")) return;
+    // Allow health/docs/root without auth
+    if (req.url === "/" || req.url.startsWith("/health") || req.url.startsWith("/docs")) return;
 
     const supabase = getSupabaseAdmin();
 
