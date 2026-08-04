@@ -44,6 +44,7 @@ export function buildApp() {
   });
   app.register(swaggerUi, { routePrefix: "/docs" });
 
+  app.get("/", async () => ({ message: "Blue Beacon API is live", status: "ok" }));
   app.get("/health", async () => ({ status: "ok", uptime: process.uptime() }));
 
   registerAuth(app);
