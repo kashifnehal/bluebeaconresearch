@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blue Beacon Research — Complete System Architecture & Repository Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #111827;
+      --bg-card-header: #1e293b;
+      --border-color: #1f2937;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent-cyan: #6ffbbe;
+      --accent-blue: #38bdf8;
+      --accent-purple: #c084fc;
+      --accent-orange: #fb923c;
+      --accent-red: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 20px;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .summary-box {
+      background: #0f172a;
+      border: 1px solid var(--accent-cyan);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 30px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 40px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+
+    p,
+    ul {
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    strong {
+      color: #ffffff;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #1e293b;
+      color: var(--accent-cyan);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: var(--bg-card);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      padding: 12px 16px;
+      text-anchor: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background: var(--bg-card-header);
+      color: var(--accent-blue);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+
+    .diagram-container {
+      background: #060911;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 24px 0;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .diagram-container img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .page-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .page-card h4 {
+      color: var(--accent-cyan);
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .audit-card {
+      background: #0f172a;
+      border-left: 4px solid var(--accent-purple);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .audit-card.status-unverified {
+      border-left-color: var(--accent-orange);
+    }
+
+    .audit-card.status-mock {
+      border-left-color: var(--accent-red);
+    }
+
+    .audit-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <header>
+      <h1>Blue Beacon Research — Complete System Architecture & Repository Analysis</h1>
+      <p>Real-Time Geopolitical Risk Intelligence &rarr; Actionable Trading Signals</p>
+    </header>
+
+    <div class="summary-box">
+      <strong>Executive Summary:</strong> Blue Beacon Research is an enterprise-grade geopolitical intelligence platform
+      that ingests raw conflict events from global news feeds (GDELT, ACLED, GNews), classifies them using Anthropic
+      Claude 3.5 AI into market impact signals (Oil, Gold, Gas, Wheat), and dispatches sub-second alerts to Telegram,
+      Slack, Webhooks, and Expo Mobile Push.
+    </div>
+
+    <h2>1. Executive Overview & Business Value</h2>
+    <p>Blue Beacon Research acts as a <strong>Tactical Intelligence Terminal</strong> for institutional traders,
+      commodity risk managers, hedge funds, and geopolitical analysts.</p>
+
+    <h2>2. High-Level Architecture & Tech Stack</h2>
+    <div class="diagram-container">
+      <img src="images/architecture_diagram.svg" alt="High-Level System Architecture">
+    </div>
+
+    <h2>3. Database Schema & Data Model</h2>
+    <div class="diagram-container">
+      <img src="images/database_erd.svg" alt="Database Entity Relationship Diagram">
+    </div>
+
+    <h2>4. End-to-End Data & Execution Flows</h2>
+
+    <h3>Flow 1: Autonomous Ingestion, AI Processing & Alert Dispatch</h3>
+    <div class="diagram-container">
+      <img src="images/flow1_ingestion_alert_pipeline.svg" alt="Flow 1 Sequence Diagram">
+    </div>
+
+    <h3>Flow 2: Web Terminal Navigation & Feature Access</h3>
+    <div class="diagram-container">
+      <img src="images/flow2_web_terminal_navigation.svg" alt="Flow 2 Navigation Flowchart">
+    </div>
+
+    <h2>5. Comprehensive Page-by-Page Breakdown</h2>
+
+    <div class="page-card">
+      <h4>1. Landing Page & Access Gating (<code>/</code>)</h4>
+      <p><strong>Business Intent:</strong> Public entry point converting visitors into waitlist registrants or
+        subscribers.</p>
+      <p><strong>UI Features:</strong> Sticky Navigation, Hero Section with Live Signal Preview Card, Feature Grid, and
+        Access Tier Pricing Matrix.</p>
+      <p><strong>Gating:</strong> Controlled by <code>PROJECT_READY</code> flag. Displays
+        <code>AccessLimitedModal</code> when gated.</p>
+    </div>
+
+    <div class="page-card">
+      <h4>2. Tactical Intelligence Terminal (<code>/dashboard</code>)</h4>
+      <p><strong>Business Intent:</strong> Main hub for real-time conflict signal monitoring and market volatility
+        analysis.</p>
+      <p><strong>UI Features:</strong> Filter pills, Featured Critical Alert Banner (severity &ge; 8), Geopolitical
+        Status Card, Market Drift Bar Chart, Recent Signal Feed, and Sentinel AI Sidebar.</p>
+    </div>
+
+    <div class="page-card">
+      <h4>3. Geopolitical Conflict Map (<code>/map</code>)</h4>
+      <p><strong>Business Intent:</strong> Full-canvas Mapbox GL GIS conflict heatmap visualizing global hotspots, troop
+        movements, and maritime choke points.</p>
+      <p><strong>UI Features:</strong> Interactive radar pins, Global Tension Index overlay, sentiment gauge, and
+        floating market ticker.</p>
+    </div>
+
+    <div class="page-card">
+      <h4>4. Alert Rules & Webhooks (<code>/alerts</code>)</h4>
+      <p><strong>Business Intent:</strong> Mission control for setting up real-time notifications across Telegram,
+        Slack, Webhooks, and Expo Mobile Push.</p>
+      <p><strong>UI Features:</strong> Active rules list, 12-char Telegram connect code generator, Slack webhook
+        manager, and REST Webhook signature keys.</p>
+    </div>
+
+    <div class="page-card">
+      <h4>5. Quantitative Backtesting (<code>/backtesting</code>)</h4>
+      <p><strong>Business Intent:</strong> Strategy simulator testing AI signal directional accuracy against historical
+        commodity market movements.</p>
+    </div>
+
+    <div class="page-card">
+      <h4>6. User Settings & API Keys (<code>/settings</code>)</h4>
+      <p><strong>Business Intent:</strong> Profile settings, Stripe subscription management, and
+        <code>bb_live_...</code> API key generation for Pro/API tier clients.</p>
+    </div>
+
+    <h2>6. Technical Audit & Verification Matrix (Claude Audit Responses)</h2>
+
+    <div class="audit-card status-unverified">
+      <div class="audit-title">1. Are workers actually running and producing signals in Railway?</div>
+      <p><strong>Status:</strong> Unverified in Production (Requires separate background worker container on Railway
+        with <code>pnpm run start:workers</code>).</p>
+      <p><strong>Verification SQL:</strong>
+        <code>SELECT COUNT(*) FROM signals WHERE created_at > NOW() - INTERVAL '1 hour';</code></p>
+    </div>
+
+    <div class="audit-card status-unverified">
+      <div class="audit-title">2. Is Telegram webhook set after Railway deployment?</div>
+      <p><strong>Status:</strong> Pending Manual Registration via Telegram Bot API.</p>
+      <p><strong>Verification Command:</strong>
+        <code>curl -s "https://api.telegram.org/bot&lt;TOKEN&gt;/getWebhookInfo"</code></p>
+      <p><strong>Fix:</strong>
+        <code>curl -X POST "https://api.telegram.org/bot&lt;TOKEN&gt;/setWebhook?url=https://&lt;RAILWAY_URL&gt;/v1/telegram/webhook"</code>
+      </p>
+    </div>
+
+    <div class="audit-card status-mock">
+      <div class="audit-title">3. Does backtesting return real data or mock data?</div>
+      <p><strong>Status:</strong> Currently returns Mock Data (<code>mockResult</code> in
+        <code>src/routes/backtesting.ts</code>).</p>
+      <p><strong>Fix:</strong> Replace <code>mockResult()</code> with live SQL aggregation query on <code>signals</code>
+        and <code>commodity_prices</code>.</p>
+    </div>
+
+    <div class="audit-card status-mock">
+      <div class="audit-title">4. Are error boundaries implemented on dashboard components?</div>
+      <p><strong>Status:</strong> Not Currently Implemented (Requires Next.js App Router <code>error.tsx</code>
+        fallbacks).</p>
+      <p><strong>Fix:</strong> Create <code>apps/web/app/error.tsx</code> and
+        <code>apps/web/app/(dashboard)/error.tsx</code>.</p>
+    </div>
+
+    <div class="audit-card status-unverified">
+      <div class="audit-title">5. Is Claude AI cost being monitored? Budget for scale?</div>
+      <p><strong>Status:</strong> Unmonitored Token Spending.</p>
+      <p><strong>Fix:</strong> Add keyword pre-filter in collectors to reduce AI prompt calls and log token usage to
+        Supabase.</p>
+    </div>
+
+    <div class="audit-card status-unverified">
+      <div class="audit-title">6. Is commodity price ticker showing live data?</div>
+      <p><strong>Status:</strong> Limited by Alpha Vantage Free Tier (25 req/day limit).</p>
+      <p><strong>Fix:</strong> Switch to free unlimited provider (Yahoo Finance / Finnhub) and cache prices in Upstash
+        Redis.</p>
+    </div>
+
+    <footer>
+      <p>Blue Beacon Research — System Architecture & Technical Audit Document</p>
+    </footer>
+
+  </div>
+
+</body>
+
+</html>
