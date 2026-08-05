@@ -50,6 +50,16 @@ export function getEnv(): Env {
     process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   }
 
+  // Fallback for NEWS_API_KEY if GNEWS_API_KEY is set
+  if (!process.env.NEWS_API_KEY && process.env.GNEWS_API_KEY) {
+    process.env.NEWS_API_KEY = process.env.GNEWS_API_KEY;
+  }
+
+  // Fallback for ACLED_EMAIL if ACLED_API_EMAIL is set
+  if (!process.env.ACLED_EMAIL && process.env.ACLED_API_EMAIL) {
+    process.env.ACLED_EMAIL = process.env.ACLED_API_EMAIL;
+  }
+
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n");

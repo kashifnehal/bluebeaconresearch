@@ -22,6 +22,24 @@ const classificationSchema = z.object({
   region: z.string().min(1),
 });
 
+const COUNTRY_CODES: Record<string, string> = {
+  US: "United States", IR: "Iran", UA: "Ukraine", RU: "Russia",
+  IL: "Israel", SA: "Saudi Arabia", CN: "China", SY: "Syria",
+  IQ: "Iraq", AF: "Afghanistan", YE: "Yemen", LY: "Libya",
+  SD: "Sudan", ET: "Ethiopia", IN: "India", PK: "Pakistan",
+  GB: "United Kingdom", DE: "Germany", FR: "France", JP: "Japan",
+  KR: "South Korea", TW: "Taiwan", TR: "Turkey", EG: "Egypt",
+  QA: "Qatar", AE: "United Arab Emirates", KP: "North Korea",
+  PL: "Poland", BY: "Belarus", VE: "Venezuela", CO: "Colombia",
+  BR: "Brazil", MX: "Mexico", NG: "Nigeria", ZA: "South Africa",
+};
+
+export function formatCountryName(rawCountry?: string | null): string {
+  if (!rawCountry || rawCountry.toUpperCase() === "UNKNOWN") return "Global";
+  const upper = rawCountry.toUpperCase().trim();
+  return COUNTRY_CODES[upper] || rawCountry;
+}
+
 export function startAiClassifierWorker() {
   const connection = getRedis();
   if (!connection) {
@@ -41,6 +59,18 @@ export function startAiClassifierWorker() {
       const { data: rawEvent, error } = await supabase.from("raw_events").select("*").eq("id", rawEventId).maybeSingle();
       if (error || !rawEvent) throw new Error("raw_event not found");
 
+      // Check if a signal for this raw_event_id already exists to prevent duplicate creation
+      const { data: existingSignal } = await supabase
+        .from("signals")
+        .select("id")
+        .contains("raw_event_ids", [rawEventId])
+        .maybeSingle();
+
+      if (existingSignal?.id) {
+        console.log(`[CLASSIFIER] Duplicate signal skipped for raw_event: ${rawEventId}`);
+        return { signalId: existingSignal.id, duplicate: true };
+      }
+
       const result = await claude.classifyEvent(rawEvent);
       const parsed = classificationSchema.safeParse(result);
       if (!parsed.success) {
@@ -48,6 +78,8 @@ export function startAiClassifierWorker() {
       }
 
       const r = parsed.data;
+      const countryName = formatCountryName(rawEvent.country);
+
       const insert = await supabase.from("signals").insert({
         raw_event_ids: [rawEventId],
         title: rawEvent.title ?? "Untitled event",
@@ -55,7 +87,7 @@ export function startAiClassifierWorker() {
         severity: r.severity,
         confidence: r.confidence,
         event_type: rawEvent.event_type ?? "unknown",
-        country: rawEvent.country ?? "unknown",
+        country: countryName,
         region: r.region,
         lat: rawEvent.lat,
         lng: rawEvent.lng,

@@ -39,6 +39,38 @@ function parseGdeltDate(sqlDate?: string) {
   return new Date(`${yyyy}-${mm}-${dd}T00:00:00.000Z`).toISOString();
 }
 
+export const HIGH_RELEVANCE_KEYWORDS = [
+  // Conflict & Military
+  "war", "conflict", "attack", "strike", "missile", "bomb", "explosion", "troops", 
+  "military", "sanction", "blockade", "invasion", "offensive", "airstrike", "ceasefire",
+  // Energy & Supply Chain  
+  "oil", "crude", "gas", "pipeline", "refinery", "opec", "hormuz", "energy", "fuel",
+  // Economic Policy
+  "tariff", "sanction", "embargo", "trade war", "inflation", "fed", "rate decision",
+  "central bank", "interest rate", "cpi", "gdp", "recession",
+  // Geopolitical
+  "iran", "russia", "ukraine", "china", "taiwan", "israel", "hamas", "houthi",
+  "nato", "nuclear", "coup", "protest", "riot", "civil war", "tension",
+  // Commodities
+  "wheat", "grain", "food", "gold", "copper", "commodity", "shortage", "supply chain",
+  // Maritime
+  "shipping", "tanker", "suez", "malacca", "red sea", "vessel", "port"
+];
+
+export const EXCLUDE_KEYWORDS = [
+  "sports", "football", "soccer", "fifa", "nfl", "nba", "olympics", "marathon",
+  "celebrity", "music", "movie", "film", "award", "oscar", "grammy",
+  "weather", "tourism", "travel", "fashion", "lifestyle", "recipe", "cooking"
+];
+
+export function isRelevantEvent(title: string, summary: string = ""): boolean {
+  const text = (title + " " + summary).toLowerCase();
+  const hasExcludeWord = EXCLUDE_KEYWORDS.some((kw) => text.includes(kw));
+  if (hasExcludeWord) return false;
+  const hasRelevantWord = HIGH_RELEVANCE_KEYWORDS.some((kw) => text.includes(kw));
+  return hasRelevantWord;
+}
+
 export async function runGdeltCollectorOnce() {
   const supabase = getSupabaseAdmin();
   const queues = buildQueues();
@@ -51,11 +83,19 @@ export async function runGdeltCollectorOnce() {
   let fetched = events.length;
   let inserted = 0;
   let duplicates = 0;
+  let filtered = 0;
 
   for (const e of events) {
     const externalId = e.GLOBALEVENTID ? String(e.GLOBALEVENTID) : null;
     if (!externalId) continue;
     if (!isAllowedCameo(e.EventCode ? String(e.EventCode) : undefined)) continue;
+
+    const title = e.SOURCEURL ? String(e.SOURCEURL).slice(0, 280) : "GDELT event";
+    if (!isRelevantEvent(title)) {
+      console.log(`[GDELT] Filtered out irrelevant event: ${title}`);
+      filtered += 1;
+      continue;
+    }
 
     const existing = await supabase.from("raw_events").select("id").eq("external_id", externalId).maybeSingle();
     if (existing.data?.id) {
@@ -63,7 +103,6 @@ export async function runGdeltCollectorOnce() {
       continue;
     }
 
-    const title = e.SOURCEURL ? String(e.SOURCEURL).slice(0, 280) : "GDELT event";
     const insert = await supabase
       .from("raw_events")
       .insert({
@@ -92,6 +131,6 @@ export async function runGdeltCollectorOnce() {
     );
   }
 
-  return { fetched, inserted, duplicates };
+  return { fetched, inserted, duplicates, filtered };
 }
 

@@ -2,6 +2,7 @@ import axios from "axios";
 import { buildQueues } from "../queues.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { getEnv } from "../env.js";
+import { isRelevantEvent } from "./gdelt-collector.js";
 
 export async function runGnewsCollectorOnce() {
   const env = getEnv();
@@ -18,10 +19,19 @@ export async function runGnewsCollectorOnce() {
   let fetched = articles.length;
   let inserted = 0;
   let duplicates = 0;
+  let filtered = 0;
 
   for (const a of articles) {
     const externalId = a.url ? `gnews-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
     if (!externalId) continue;
+
+    const title = a.title?.slice(0, 280) ?? "GNews article";
+    const summary = a.description?.slice(0, 1000) ?? "";
+    if (!isRelevantEvent(title, summary)) {
+      console.log(`[GNews] Filtered out irrelevant event: ${title}`);
+      filtered += 1;
+      continue;
+    }
 
     const existing = await supabase.from("raw_events").select("id").eq("external_id", externalId).maybeSingle();
     if (existing.data?.id) {
@@ -56,5 +66,5 @@ export async function runGnewsCollectorOnce() {
     );
   }
 
-  return { fetched, inserted, duplicates };
+  return { fetched, inserted, duplicates, filtered };
 }

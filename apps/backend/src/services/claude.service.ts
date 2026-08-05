@@ -37,14 +37,21 @@ export class ClaudeService {
     }
 
     const system =
-      "You are a geopolitical risk analyst. Classify this news event for financial market impact.";
+      "You are a senior geopolitical risk analyst. Classify this news event for financial market impact.";
     const user =
       `Event: ${String(rawEvent.title ?? "")}\n` +
       `Country: ${String(rawEvent.country ?? "")}\n` +
       `Type: ${String(rawEvent.event_type ?? "")}\n` +
       `Date: ${String(rawEvent.event_date ?? "")}\n\n` +
-      `Return ONLY valid JSON (no markdown): ` +
-      `{ "severity": number 1-10, "confidence": number 0.0-1.0, "commodityImpacts": [{ "asset": string, "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }], "isBreaking": boolean, "summary": string (max 120 chars), "region": string }`;
+      `Return ONLY valid JSON (no markdown):\n` +
+      `{\n` +
+      `  "severity": integer between 1 and 10,\n` +
+      `  "confidence": a float between 0.0 and 1.0 representing how certain you are that this event will materially impact the listed commodity prices. Score 0.8-1.0 only for direct supply disruptions or major policy changes. Score 0.3-0.5 for indirect risks. Score below 0.3 for unlikely impacts.,\n` +
+      `  "commodityImpacts": [{ "asset": string, "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+      `  "isBreaking": boolean,\n` +
+      `  "summary": string (max 120 chars),\n` +
+      `  "region": string\n` +
+      `}`;
 
     const msg = await client.messages.create({
       model: "claude-3-5-haiku-latest",
@@ -61,6 +68,7 @@ export class ClaudeService {
     const jsonStart = text.indexOf("{");
     const jsonEnd = text.lastIndexOf("}");
     const raw = jsonStart >= 0 && jsonEnd >= 0 ? text.slice(jsonStart, jsonEnd + 1) : text;
+    console.log("[CLAUDE RAW]", raw);
     return JSON.parse(raw) as ClassificationResult;
   }
 
