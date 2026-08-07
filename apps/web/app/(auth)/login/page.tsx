@@ -79,12 +79,13 @@ export default function LoginPage() {
 
       // If project is not ready, redirect to root modal
       if (!isProjectReady) {
-        router.push("/");
+        window.location.href = "/";
         return;
       }
 
       const profile = await fetchMyProfile();
-      router.push(profile?.onboardingCompleted ? "/dashboard" : "/onboarding");
+      const targetUrl = profile?.onboardingCompleted ? "/dashboard" : "/onboarding";
+      window.location.href = targetUrl;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign in.");
     } finally {
