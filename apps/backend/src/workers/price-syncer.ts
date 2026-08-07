@@ -1,56 +1,74 @@
-import axios from "axios";
-
-import { getEnv } from "../env.js";
+import yahooFinance from "yahoo-finance2";
 import { getRedis } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
-const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "WHEAT", "NGAS", "CORN", "EURUSD", "USDRUB"] as const;
-
-function parseNumber(v: unknown): number | null {
-  const n = typeof v === "string" ? Number(v) : typeof v === "number" ? v : NaN;
-  return Number.isFinite(n) ? n : null;
-}
+const COMMODITY_SYMBOLS = {
+  USOIL: "CL=F",   // WTI Crude Oil futures
+  UKOIL: "BZ=F",   // Brent Crude Oil futures
+  XAUUSD: "GC=F",  // Gold futures
+  NGAS: "NG=F",    // Natural Gas futures
+  WHEAT: "ZW=F",   // Wheat futures (CBOT)
+  COPPER: "HG=F",  // Copper futures
+  XAGUSD: "SI=F",  // Silver futures
+  CORN: "ZC=F",    // Corn futures
+} as const;
 
 export async function runPriceSyncOnce() {
-  const env = getEnv();
-  if (!env.ALPHA_VANTAGE_API_KEY) return { ok: false, reason: "Missing ALPHA_VANTAGE_API_KEY" as const };
-
   const supabase = getSupabaseAdmin();
   const redis = getRedis();
 
-  let inserted = 0;
+  const results: Array<{
+    symbol: string;
+    price: number;
+    change_24h: number;
+    change_pct_24h: number;
+    high_24h: number;
+    low_24h: number;
+    fetched_at: string;
+  }> = [];
 
-  for (const symbol of SYMBOLS) {
-    const url = "https://www.alphavantage.co/query";
-    const res = await axios.get(url, {
-      timeout: 20_000,
-      params: { function: "GLOBAL_QUOTE", symbol, apikey: env.ALPHA_VANTAGE_API_KEY },
-    });
+  for (const [symbol, yahooSymbol] of Object.entries(COMMODITY_SYMBOLS)) {
+    try {
+      const quote: any = await yahooFinance.quote(yahooSymbol);
+      if (quote && typeof quote.regularMarketPrice === "number") {
+        const price = quote.regularMarketPrice;
+        const change_24h = quote.regularMarketChange ?? 0;
+        const change_pct_24h = quote.regularMarketChangePercent ?? 0;
+        const high_24h = quote.regularMarketDayHigh ?? price;
+        const low_24h = quote.regularMarketDayLow ?? price;
+        const fetched_at = new Date().toISOString();
 
-    const quote = res.data?.["Global Quote"] ?? {};
-    const price = parseNumber(quote["05. price"]);
-    const change = parseNumber(quote["09. change"]);
-    const changePct = typeof quote["10. change percent"] === "string" ? Number(quote["10. change percent"].replace("%", "")) : null;
-    const high = parseNumber(quote["03. high"]);
-    const low = parseNumber(quote["04. low"]);
+        const record = {
+          symbol,
+          price,
+          change_24h,
+          change_pct_24h,
+          high_24h,
+          low_24h,
+          fetched_at,
+        };
 
-    const fetchedAt = new Date().toISOString();
-    const { error } = await supabase.from("commodity_prices").insert({
-      symbol,
-      price,
-      change_24h: change,
-      change_pct_24h: changePct,
-      high_24h: high,
-      low_24h: low,
-      fetched_at: fetchedAt,
-    });
-    if (!error) inserted += 1;
+        results.push(record);
 
-    if (redis) {
-      await redis.set(`prices:${symbol}`, JSON.stringify({ symbol, price, changePct24h: changePct, fetchedAt }), "EX", 900);
+        // Cache in Redis with 15-minute TTL (900s)
+        if (redis) {
+          await redis.set(`prices:${symbol}`, JSON.stringify(record), "EX", 900);
+        }
+      }
+    } catch (err: any) {
+      console.error(`[PRICE SYNC] Failed for ${symbol}:`, err?.message ?? err);
+      // Keep serving last cached price — don't show null
     }
   }
 
-  return { ok: true as const, inserted };
-}
+  if (results.length > 0) {
+    const { error } = await supabase.from("commodity_prices").insert(results);
+    if (error) {
+      console.error("[PRICE SYNC] Supabase insert error:", error.message);
+    } else {
+      console.log(`[PRICE SYNC] Updated ${results.length} commodity prices via Yahoo Finance`);
+    }
+  }
 
+  return { ok: true as const, updated: results.length };
+}
