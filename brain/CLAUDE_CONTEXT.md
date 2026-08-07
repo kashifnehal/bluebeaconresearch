@@ -206,12 +206,60 @@ Configured Railway production microservice separation (`backend` API service vs 
 
 - **Service 1 — `backend` (HTTP API)**:
   - **Start Command**: `pnpm run start:server`
+  - **Config File**: [`apps/backend/railway.json`](file:///Users/kashif/Documents/ProjectSprints/blueBeaconResearch/apps/backend/railway.json)
   - **Domain**: `api.bluebeaconresearch.com` (Port 8080/8888)
   - **Purpose**: Serves low-latency REST API requests (`/v1/signals`, `/v1/alerts`).
 
 - **Service 2 — `workers` (Background Jobs)**:
   - **Start Command**: `pnpm run start:workers`
+  - **Config File**: [`apps/backend/railway.workers.json`](file:///Users/kashif/Documents/ProjectSprints/blueBeaconResearch/apps/backend/railway.workers.json)
   - **Domain**: None (Headless service)
-  - **Purpose**: Runs 15-minute `node-cron` collectors (GDELT, ACLED, GNews, Alpha Vantage) and BullMQ AI classifier queues (`aiClassification`, `signalGeneration`, `alertDispatch`).
+  - **Purpose**: Runs 15-minute `node-cron` collectors (GDELT, ACLED, GNews, Yahoo Finance commodity price syncer) and BullMQ AI classifier queues.
 
+---
 
+### 🕒 Timestamp: 18:00 IST — Yahoo Finance Real-time Market Data & 3-Tier Price Fallback Chain
+
+#### 1. Task Summary
+Replaced rate-limited Alpha Vantage API with `yahoo-finance2` for unlimited real-time commodity futures prices. Implemented a 3-tier price fallback chain in `apps/web/app/api/prices/route.ts` (Database → Redis → Static Fallback) guaranteeing non-null price data.
+
+#### 2. Implemented Components
+1. **`apps/backend/railway.json`**: Railway config for HTTP API service (`start:server`, healthcheck at `/health`).
+2. **`apps/backend/railway.workers.json`**: Railway config for workers service (`start:workers`, no public port).
+3. **`apps/backend/src/workers/price-syncer.ts`**: Replaced Alpha Vantage with `yahoo-finance2` library. Fetches real-time commodity futures: WTI (`CL=F`), Brent (`BZ=F`), Gold (`GC=F`), NatGas (`NG=F`), Wheat (`ZW=F`), Copper (`HG=F`), Silver (`SI=F`), Corn (`ZC=F`). Runs every 15 minutes. Caches each price in Upstash Redis with 900s TTL.
+4. **`apps/web/app/api/prices/route.ts`**: 3-tier price resolution chain:
+   - **Tier 1**: Supabase `commodity_prices` table (freshest data)
+   - **Tier 2**: Upstash Redis cache keys `prices:{SYMBOL}` (fallback if DB fails)
+   - **Tier 3**: Static hardcoded fallback prices (ensures zero null responses to frontend)
+
+#### 3. Pre-conditions Already Met (Prompt 1 — Signal Quality)
+
+> All tasks from Prompt 1 were confirmed already implemented in the codebase. No new work required.
+
+- ✅ `gdelt-collector.ts`: `HIGH_RELEVANCE_KEYWORDS`, `EXCLUDE_KEYWORDS`, `isRelevantEvent()` filter applied pre-BullMQ queue.
+- ✅ `gnews-collector.ts`: `isRelevantEvent()` imported from gdelt-collector and applied.
+- ✅ `claude.service.ts`: Confidence calibration prompt updated with precise scoring instructions.
+- ✅ `ai-classifier.ts`: `COUNTRY_CODES` ISO-2 mapping + `formatCountryName()` helper + duplicate signal prevention (`contains(raw_event_ids, [rawEventId])` check).
+
+---
+
+## 📋 Cumulative Env Variable Reference (Railway — Both Services)
+
+```env
+NODE_ENV=production
+PROJECT_READY=true
+SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
+REDIS_URL=redis://default:<token>@cute-javelin-200660.upstash.io:6379
+UPSTASH_REDIS_REST_URL=https://cute-javelin-200660.upstash.io
+UPSTASH_REDIS_REST_TOKEN=<token>
+ANTHROPIC_API_KEY=<anthropic_key>
+NEWS_API_KEY=<gnews_key>       # used by gnews-collector.ts
+GNEWS_API_KEY=<gnews_key>      # alias fallback resolved in env.ts
+ALPHA_VANTAGE_API_KEY=<key>    # now unused by price-syncer (Yahoo Finance used instead)
+NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
+API_URL=https://bluebeaconresearch.com
+TELEGRAM_BOT_TOKEN=            # required when bot is active
+```

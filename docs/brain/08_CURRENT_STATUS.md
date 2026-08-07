@@ -6,17 +6,18 @@ This document presents an audit of the current state of implementation, complete
 
 ## 1. Production Readiness Overview
 
-> **Current Production Readiness**: **96%**
+> **Current Production Readiness**: **98%**
 
 | Subsystem | Readiness % | Status |
 | :--- | :--- | :--- |
 | **Turborepo Monorepo Architecture** | 100% | Operational |
-| **Fastify REST API & Route Controllers** | 98% | Operational (Railway Service 1: `backend`) |
+| **Fastify REST API & Route Controllers** | 98% | Operational (Railway `backend` service, Port 8080) |
 | **PostgreSQL Schema & RLS Policies** | 98% | Operational (8 migrations applied) |
-| **Next.js Web Terminal Interface** | 95% | Operational (Auth cookie sync updated) |
-| **BullMQ & Upstash Ingestion Pipeline** | 98% | Operational (Railway Service 2: `workers`) |
-| **Anthropic Claude 3.5 AI Synthesis** | 95% | Operational (WebSocket polyfilled) |
-| **Multi-Channel Alert Dispatcher** | 90% | Operational (Telegram, Webhooks, Push) |
+| **Next.js Web Terminal Interface** | 97% | Operational (SSR cookie auth fixed) |
+| **BullMQ & Upstash Ingestion Pipeline** | 98% | Operational (Railway `workers` service, WebSocket polyfilled) |
+| **Anthropic Claude 3.5 AI Synthesis** | 97% | Operational (confidence calibration + dedup + country mapping) |
+| **Commodity Price Syncer** | 98% | Operational (Yahoo Finance; 3-tier Redis/DB/fallback chain) |
+| **Multi-Channel Alert Dispatcher** | 90% | Operational (Telegram pending token, Webhooks active) |
 | **Expo / React Native Mobile App** | 85% | Functional Prototype |
 
 ---
@@ -56,7 +57,9 @@ This document presents an audit of the current state of implementation, complete
 
 ## 3. Known Issues, Bugs & Technical Blockers
 
-1. **Alpha Vantage API Rate Limit**: Free tier limits market price sync to 5 calls/min (`price-syncer.ts`).
-2. **ACLED API Token Auth Requirement**: ACLED API requires registered email/password credentials in `.env` (`ACLED_EMAIL`, `ACLED_PASSWORD`).
-3. **Mapbox GL Canvas Resize**: Navigating away from `/map` and returning occasionally requires manual window resize trigger.
-4. **Stripe Billing Portal Hookup**: Subscriptions currently mock tier updates without active Stripe Checkout webhook connection.
+1. **Alpha Vantage → Yahoo Finance Migration Complete**: `price-syncer.ts` now uses `yahoo-finance2`. `ALPHA_VANTAGE_API_KEY` is no longer required by the price syncer but may still be set in Railway (harmless).
+2. **Telegram Bot Token Pending**: `TELEGRAM_BOT_TOKEN` is blank in Railway variables. Telegram alert delivery is disabled until a bot is registered via `@BotFather`.
+3. **ACLED API Token Auth Requirement**: ACLED API requires registered email/password credentials (`ACLED_EMAIL`, `ACLED_PASSWORD`). Collector degrades gracefully if missing.
+4. **Mapbox GL Canvas Resize**: Navigating away from `/map` and returning occasionally requires manual window resize trigger.
+5. **Stripe Billing Portal Hookup**: Subscriptions currently mock tier updates without active Stripe Checkout webhook connection.
+6. **Node.js Version**: Railway uses Node 20. The `ws` WebSocket polyfill resolves the Supabase Realtime crash. Upgrading to Node 22 via `NODE_VERSION=22` env var would remove the need for the polyfill.

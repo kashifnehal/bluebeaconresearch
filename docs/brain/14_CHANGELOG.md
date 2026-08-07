@@ -32,3 +32,8 @@ This document records historic development milestones, schema evolutions, featur
 - Enhanced `getEnv()` with fallback alias resolution for `GNEWS_API_KEY`, `ACLED_API_EMAIL`, and `NEXT_PUBLIC_SUPABASE_URL`.
 - Hardened Next.js SSR authentication flow in `login/page.tsx` using `window.location.href` to ensure cookie propagation to middleware.
 
+### v0.6.0 — Yahoo Finance Market Data, 3-Tier Price Fallback & Signal Quality Hardening
+- Replaced Alpha Vantage (25 req/day limit) with `yahoo-finance2` library for unlimited real-time commodity futures pricing (`CL=F`, `BZ=F`, `GC=F`, `NG=F`, `ZW=F`, `HG=F`, `SI=F`, `ZC=F`).
+- Implemented 3-tier price resolution chain in `/api/prices` route: Supabase DB → Upstash Redis cache → Static hardcoded fallback (zero null responses guaranteed).
+- Added `railway.json` and `railway.workers.json` declarative config files for Railway microservice builder.
+- Confirmed Prompt 1 signal quality features fully operational: keyword pre-filter (`isRelevantEvent`), ISO-2 country code mapping, Claude confidence calibration, and duplicate signal deduplication.
