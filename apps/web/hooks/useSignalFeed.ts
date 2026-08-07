@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Signal } from "@blue-beacon-research/shared";
 
@@ -9,9 +10,22 @@ type Options = {
 };
 
 export function useSignalFeed({ enabled = true }: Options = {}) {
-  const [liveSignals, setLiveSignals] = useState<Signal[]>([]);
+  const [realtimeSignals, setRealtimeSignals] = useState<Signal[]>([]);
   const retryRef = useRef(0);
   const esRef = useRef<EventSource | null>(null);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["signals", "feed"],
+    queryFn: async () => {
+      const res = await fetch("/api/signals?sort=severity");
+      if (!res.ok) throw new Error("Failed to fetch signals");
+      return (await res.json()) as { signals: Signal[] };
+    },
+    enabled,
+    refetchInterval: 30_000,
+  });
+
+  const fetchedSignals = data?.signals ?? [];
 
   const supportsSSE = useMemo(() => typeof window !== "undefined" && "EventSource" in window, []);
 
@@ -30,7 +44,7 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
       es.onmessage = (evt) => {
         try {
           const signal = JSON.parse(evt.data) as Signal;
-          setLiveSignals((prev) => [signal, ...prev]);
+          setRealtimeSignals((prev) => [signal, ...prev]);
           if (signal.severity >= 8) toast(signal.title, { description: signal.summary });
         } catch {
           // ignore
@@ -52,6 +66,19 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     };
   }, [enabled, supportsSSE]);
 
-  return { liveSignals };
-}
+  const liveSignals = useMemo(() => {
+    // Combine realtime SSE signals with initial fetched signals, deduplicating by ID
+    const map = new Map<string, Signal>();
+    for (const s of realtimeSignals) {
+      map.set(s.id, s);
+    }
+    for (const s of fetchedSignals) {
+      if (!map.has(s.id)) {
+        map.set(s.id, s);
+      }
+    }
+    return Array.from(map.values());
+  }, [realtimeSignals, fetchedSignals]);
 
+  return { liveSignals, isLoading, isError };
+}

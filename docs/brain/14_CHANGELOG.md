@@ -37,3 +37,16 @@ This document records historic development milestones, schema evolutions, featur
 - Implemented 3-tier price resolution chain in `/api/prices` route: Supabase DB → Upstash Redis cache → Static hardcoded fallback (zero null responses guaranteed).
 - Added `railway.json` and `railway.workers.json` declarative config files for Railway microservice builder.
 - Confirmed Prompt 1 signal quality features fully operational: keyword pre-filter (`isRelevantEvent`), ISO-2 country code mapping, Claude confidence calibration, and duplicate signal deduplication.
+
+### v0.7.0 — Skeleton Loaders, No Mock Data Policy & Complete Interactive UI Polish
+- Eliminated all static mock/fallback data across dashboard, alerts, and map components.
+- Added continuous skeleton loading states (`Skeleton`) across all dashboard feeds, tables, and detail pages on API loading/error.
+- Implemented debounced search bar in `TopBar` with Zustand `useUIStore` state filtering live signals client-side by title, country, or event type.
+- Built slide-in `NotificationPanel` drawer (`/api/alerts/recent`) with unread count tracking and red alert indicator on TopBar bell icon.
+- Built centered `HelpModal` knowledge base guide for 5 core terminal modules.
+- Created TopBar avatar dropdown menu with user profile details, Settings/Alerts links, and Supabase sign-out.
+- Renamed "Deploy Countermeasures" button to "Set Alert for This Signal" with green accent styling and interactive threshold modal trigger.
+- Fixed all landing page footer links (Terminal, Global Map, Signals, Research, Documentation, Compliance, Auth, Encrypted Support).
+- Created `/status` static System Status page displaying 4 sub-system operational statuses and real-time timestamp.
+- Made all signal rows in dashboard stream, alerts bento grid, and map live stream clickable, navigating directly to `/events/[id]`.
+

@@ -207,7 +207,7 @@ export default async function Home() {
         </section>
 
         {/* Feature Grid */}
-        <section className="px-10 py-32 bg-background border-y border-outline-variant/10">
+        <section className="px-10 py-32 bg-background border-y border-outline-variant/10" id="features">
           <div className="max-w-[1440px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
               {[
@@ -251,7 +251,7 @@ export default async function Home() {
                       </li>
                     ))}
                   </ul>
-                  <Link href="/signup" className={`w-full py-4 text-center rounded-xl font-label text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
+                  <Link href="/signup" className={`w-full block py-4 text-center rounded-xl font-label text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
                     Select Tier
                   </Link>
                 </div>
@@ -261,7 +261,7 @@ export default async function Home() {
         </section>
       </main>
 
-      {/* Footer */}
+      {/* TASK 6 — Fixed Footer Links */}
       <footer className="bg-surface-container-lowest border-t border-outline-variant/10 px-10 py-24">
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-20">
           <div className="col-span-1">
@@ -286,17 +286,21 @@ export default async function Home() {
           <div className="space-y-8">
             <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Protocol</h6>
             <ul className="space-y-4">
-              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Research</a></li>
-              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Documentation</a></li>
-              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Compliance</a></li>
+              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/backtesting">Research</Link></li>
+              <li>
+                <Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase flex items-center gap-1" href="/terms">
+                  Documentation <span className="text-[8px] text-primary lowercase font-mono">(full docs coming soon)</span>
+                </Link>
+              </li>
+              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/privacy">Compliance</Link></li>
             </ul>
           </div>
           <div className="space-y-8">
             <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Secure Hub</h6>
             <ul className="space-y-4">
               <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/login">Auth Center</Link></li>
-              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">System Status</a></li>
-              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="#">Encrypted Support</a></li>
+              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/status">System Status</Link></li>
+              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="mailto:support@bluebeaconresearch.com">Encrypted Support</a></li>
             </ul>
           </div>
         </div>

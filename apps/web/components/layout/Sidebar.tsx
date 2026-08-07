@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useUIStore } from "@/store/useUIStore";
 
-type NavItem = { href: string; label: string; icon: string; badge?: number };
+type NavItem = { href: string; label: string; icon: string; showBadge?: boolean };
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "INTELLIGENCE FEED", icon: "rss_feed" },
   { href: "/map", label: "GLOBAL MAP", icon: "public" },
-  { href: "/alerts", label: "ALERTS", icon: "notifications_active", badge: 12 },
+  { href: "/alerts", label: "ALERTS", icon: "notifications_active", showBadge: true },
   { href: "/watchlist", label: "WATCHLIST", icon: "visibility" },
   { href: "/backtesting", label: "BACKTESTING", icon: "history" },
   { href: "/settings", label: "SETTINGS", icon: "settings" },
@@ -18,6 +19,7 @@ const NAV: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { unreadCount, setHelpOpen } = useUIStore();
 
   async function handleLogout() {
     const supabase = getSupabaseBrowserClient();
@@ -37,7 +39,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <span className="font-headline font-bold text-sm tracking-tighter text-on-surface text-white">
+          <span className="font-headline font-bold text-sm tracking-tighter text-white">
             Blue Beacon Research
           </span>
           <span
@@ -89,7 +91,7 @@ export function Sidebar() {
                   {item.icon}
                 </span>
                 <span>{item.label}</span>
-                {item.badge && (
+                {item.showBadge && unreadCount > 0 && (
                   <span
                     className="ml-auto text-[8px] font-bold px-1.5 py-0.5"
                     style={{
@@ -98,7 +100,7 @@ export function Sidebar() {
                       borderRadius: "9999px",
                     }}
                   >
-                    {item.badge}
+                    {unreadCount}
                   </span>
                 )}
               </Link>
@@ -115,16 +117,16 @@ export function Sidebar() {
         <div className="text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#4edea3" }}>
           Node: BB-ALPHA-09
         </div>
-        <a
-          href="#"
-          className="flex items-center gap-2 transition-colors"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: "rgba(229,226,225,0.6)" }}
+        <button
+          onClick={() => setHelpOpen(true)}
+          className="flex items-center gap-2 w-full text-left transition-colors"
+          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: "rgba(229,226,225,0.6)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#e5e2e1"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(229,226,225,0.6)"; }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>help</span>
           Help
-        </a>
+        </button>
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 w-full text-left transition-colors"
