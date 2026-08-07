@@ -243,6 +243,21 @@ Replaced rate-limited Alpha Vantage API with `yahoo-finance2` for unlimited real
 
 ---
 
+### 🕒 Timestamp: 05:00 IST — Google OAuth 2.0 Integration & Trigger Hardening
+
+#### 1. Task Summary
+Audited all 20 steps of the Google OAuth workflow across Google Cloud Console, Supabase Auth Providers, Next.js frontend, and PostgreSQL triggers. Enabled Google OAuth sign-in/up across authentication pages, updated `redirectTo` to dynamically use `window.location.origin`, and enhanced database trigger `handle_new_user()` to capture Google user names into `public.profiles`.
+
+#### 2. Implemented & Verified Components
+1. **`apps/web/app/(auth)/signup/page.tsx`**: Uncommented Google OAuth section; updated `redirectTo` to use `window.location.origin`.
+2. **`apps/web/app/(auth)/login/page.tsx`**: Verified `signInWithOAuth({ provider: 'google' })`; updated `redirectTo` to use `window.location.origin`.
+3. **`apps/web/app/auth/callback/route.ts`**: Verified PKCE code exchange (`exchangeCodeForSession`), profile `onboarding_completed` check, and conditional redirects (`/onboarding` vs `/dashboard`).
+4. **`apps/web/middleware.ts`**: Verified `/auth` is permitted in `GATED_ALLOWED` so `/auth/callback` runs without unauthenticated blocks.
+5. **`supabase/migrations/004_auth_triggers.sql`**: Updated `handle_new_user()` trigger function to `coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name')`.
+
+
+---
+
 ## 📋 Cumulative Env Variable Reference (Railway — Both Services)
 
 ```env

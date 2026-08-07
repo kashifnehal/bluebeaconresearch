@@ -50,3 +50,10 @@ This document records historic development milestones, schema evolutions, featur
 - Created `/status` static System Status page displaying 4 sub-system operational statuses and real-time timestamp.
 - Made all signal rows in dashboard stream, alerts bento grid, and map live stream clickable, navigating directly to `/events/[id]`.
 
+### v0.8.0 — Google OAuth 2.0 Integration & Auth Trigger Hardening
+- Enabled Google OAuth authentication flow across `login/page.tsx` and `signup/page.tsx`.
+- Updated `redirectTo` to dynamically resolve `window.location.origin` for clean callback handling across `http://localhost:3000` and `https://bluebeaconresearch.com`.
+- Updated database trigger `handle_new_user()` in `004_auth_triggers.sql` with `coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name')` to capture Google user names into `public.profiles`.
+- Verified `/auth/callback/route.ts` PKCE code exchange, onboarding state checks, and middleware permissions.
+
+
