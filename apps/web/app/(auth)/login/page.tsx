@@ -51,7 +51,7 @@ export default function LoginPage() {
   const form = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
 
   const redirectTo = useMemo(() => {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const base = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
     return `${base}/auth/callback`;
   }, []);
 

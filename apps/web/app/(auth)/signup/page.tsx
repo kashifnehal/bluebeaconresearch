@@ -62,7 +62,7 @@ export default function SignupPage() {
   });
 
   const redirectTo = useMemo(() => {
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const base = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
     return `${base}/auth/callback`;
   }, []);
 
@@ -218,8 +218,7 @@ export default function SignupPage() {
         </header>
 
         {/* Google OAuth */}
-
-        {/* <section style={{ marginBottom: "24px" }}>
+        <section style={{ marginBottom: "24px" }}>
           <button
             type="button"
             onClick={signUpWithGoogle}
@@ -247,17 +246,18 @@ export default function SignupPage() {
             <GoogleIcon />
             Continue with Google
           </button>
-        </section> */}
+        </section>
 
         {/* Divider */}
-        {/* <div style={{ position: "relative", marginBottom: "24px" }}>
+        <div style={{ position: "relative", marginBottom: "24px" }}>
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center" }}>
             <div style={{ width: "100%", borderTop: "1px solid rgba(60,74,66,0.3)" }} />
           </div>
           <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
             <span style={{ backgroundColor: C.surface, padding: "0 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: "11px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.2em" }}>or</span>
           </div>
-        </div> */}
+        </div>
+
 
         {/* Form */}
         <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
