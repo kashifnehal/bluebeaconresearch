@@ -25,3 +25,10 @@ This document records historic development milestones, schema evolutions, featur
 - Built multi-channel alert dispatch engine supporting Telegram, Slack Webhooks, Custom HTTP Webhooks, and Expo Push Notifications.
 - Implemented Strategy Backtesting engine (`/backtesting`), Asset Watchlist (`/watchlist`), and Developer API Key manager (`/settings`).
 - Created 15-document complete architecture knowledge base in `docs/brain/`.
+
+### v0.5.0 — Railway Multi-Service Deployment & Auth/WebSocket Resilience
+- Split production infrastructure into two Railway microservices: `backend` (Fastify HTTP API) and `workers` (BullMQ + `node-cron` background collectors).
+- Installed `ws` dependency and polyfilled `globalThis.WebSocket` in Supabase client (`supabase.ts`) to fix Node 20 runtime errors.
+- Enhanced `getEnv()` with fallback alias resolution for `GNEWS_API_KEY`, `ACLED_API_EMAIL`, and `NEXT_PUBLIC_SUPABASE_URL`.
+- Hardened Next.js SSR authentication flow in `login/page.tsx` using `window.location.href` to ensure cookie propagation to middleware.
+

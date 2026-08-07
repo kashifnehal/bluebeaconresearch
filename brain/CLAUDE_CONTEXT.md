@@ -169,3 +169,49 @@ NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
 2. **`REDIS_URL` vs REST URL**: `ioredis` requires the TCP `rediss://...` socket string from Upstash Console (Details tab -> Node.js / ioredis connection string). REST `https://` URLs are for `@upstash/redis` HTTP calls only.
 3. **Port Matching**: Set `PORT=8888` on Railway variables tab to align Fastify's listener with Railway's exposed domain port.
 
+---
+
+## 📅 Session Log: 2026-08-07
+
+### 🕒 Timestamp: 17:30 IST — Railway Multi-Service Architecture, Supabase WebSocket Polyfill & Auth Redirection Fix
+
+#### 1. Task Summary
+Configured Railway production microservice separation (`backend` API service vs `workers` background job service), resolved Node 20 Supabase Realtime WebSocket runtime crash, and fixed Next.js SSR auth cookie synchronization on login.
+
+---
+
+#### 2. Modified Files List
+
+1. **`apps/backend/src/env.ts`**
+   - Added robust env variable fallbacks in `getEnv()`:
+     - `GNEWS_API_KEY` → `NEWS_API_KEY`
+     - `ACLED_API_EMAIL` → `ACLED_EMAIL`
+     - `NEXT_PUBLIC_SUPABASE_URL` → `SUPABASE_URL`
+
+2. **`apps/backend/src/clients/supabase.ts`**
+   - Installed `ws` dependency in `apps/backend/package.json`.
+   - Polyfilled `globalThis.WebSocket` with `ws` to resolve Node 20 runtime error (`Error: Node.js detected but native WebSocket not found.`).
+   - Configured `realtime.transport` option on `createClient`.
+
+3. **`apps/web/app/(auth)/login/page.tsx`**
+   - Replaced `router.push` soft client navigation with `window.location.href` upon successful sign-in.
+   - Guaranteed Supabase auth cookies are attached to HTTP headers for Next.js SSR `middleware.ts` evaluation.
+
+4. **`docs/brain/CLAUDE_CONTEXT.md` & `brain/CLAUDE_CONTEXT.md`**
+   - Synchronized complete documentation across docs and root brain directories.
+
+---
+
+#### 3. Production Microservice Architecture (Railway)
+
+- **Service 1 — `backend` (HTTP API)**:
+  - **Start Command**: `pnpm run start:server`
+  - **Domain**: `api.bluebeaconresearch.com` (Port 8080/8888)
+  - **Purpose**: Serves low-latency REST API requests (`/v1/signals`, `/v1/alerts`).
+
+- **Service 2 — `workers` (Background Jobs)**:
+  - **Start Command**: `pnpm run start:workers`
+  - **Domain**: None (Headless service)
+  - **Purpose**: Runs 15-minute `node-cron` collectors (GDELT, ACLED, GNews, Alpha Vantage) and BullMQ AI classifier queues (`aiClassification`, `signalGeneration`, `alertDispatch`).
+
+
