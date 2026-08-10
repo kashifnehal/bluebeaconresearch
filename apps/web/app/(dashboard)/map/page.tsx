@@ -27,7 +27,7 @@ export default function MapPage() {
         <img 
           className="w-full h-full object-cover" 
           alt="Grayscale high-contrast satellite view of world topography" 
-          src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?q=80&w=2000&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop"
         />
         <div className="absolute inset-0 map-vignette"></div>
         <div className="absolute inset-y-0 left-0 w-64 bg-gradient-to-r from-background to-transparent"></div>

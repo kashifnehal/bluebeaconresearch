@@ -88,7 +88,7 @@ export default async function Home(props: {
         <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 overflow-hidden">
           {/* Background Map Visual */}
           <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
-            <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5ce?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center grayscale contrast-125"></div>
+            <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center grayscale contrast-125"></div>
             <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background"></div>
           </div>
           

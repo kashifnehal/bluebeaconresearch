@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
   if (!user) return new Response("Unauthorized", { status: 401 });
 
-  // Phase 3 spec: SSE only for analyst/pro/api. Free tier should rely on polling.
+  let isPro = true;
   try {
     const { data: profile } = await supabase
       .from("profiles")
@@ -54,12 +54,9 @@ export async function GET(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
     const tier = ((profile as { plan_tier?: string | null } | null)?.plan_tier ?? "free") as string;
-    if (!["analyst", "pro", "api"].includes(tier)) {
-      return new Response("Plan upgrade required", { status: 403 });
-    }
+    isPro = ["analyst", "pro", "api"].includes(tier);
   } catch {
-    // if profiles not available, default to forbid SSE (safe)
-    return new Response("Plan upgrade required", { status: 403 });
+    isPro = false;
   }
 
   let lastSeen = new Date(Date.now() - 60_000).toISOString();
@@ -73,27 +70,30 @@ export async function GET(request: NextRequest) {
         controller.enqueue(encoder.encode(`: ping\n\n`));
       }, 30_000);
 
-      const poll = setInterval(async () => {
-        const { data } = await supabase
-          .from("signals")
-          .select("*")
-          .gt("created_at", lastSeen)
-          .order("created_at", { ascending: true })
-          .limit(20);
+      let poll: NodeJS.Timeout | null = null;
+      if (isPro) {
+        poll = setInterval(async () => {
+          const { data } = await supabase
+            .from("signals")
+            .select("*")
+            .gt("created_at", lastSeen)
+            .order("created_at", { ascending: true })
+            .limit(20);
 
-        if (data?.length) {
-          for (const row of data) {
-            lastSeen = row.created_at;
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify(row)}\n\n`),
-            );
+          if (data?.length) {
+            for (const row of data) {
+              lastSeen = row.created_at;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify(row)}\n\n`),
+              );
+            }
           }
-        }
-      }, 15_000);
+        }, 15_000);
+      }
 
       request.signal.addEventListener("abort", () => {
         clearInterval(heartbeat);
-        clearInterval(poll);
+        if (poll) clearInterval(poll);
         controller.close();
       });
     },

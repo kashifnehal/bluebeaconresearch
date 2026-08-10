@@ -9,20 +9,20 @@ function mockSignals(): Signal[] {
   return [
     {
       id: "mock-1",
-      title: "Naval incident near key shipping chokepoint",
-      summary: "Escalation increases supply risk; oil volatility likely.",
-      aiAnalysis: "",
+      title: "Naval incident near key shipping chokepoint in Bab el-Mandeb",
+      summary: "Escalation increases maritime supply chain risk; crude oil volatility likely to spike.",
+      aiAnalysis: "Satellite analysis confirms maritime disruption near Bab el-Mandeb strait affecting container traffic.",
       severity: 9,
-      confidence: 0.78,
+      confidence: 0.88,
       eventType: "Naval escalation",
       country: "Yemen",
       region: "middle-east",
       lat: 15.3694,
       lng: 44.191,
-      sourcesCount: 3,
+      sourcesCount: 8,
       commodityImpacts: [
-        { asset: "USOIL", direction: "up", confidence: 0.7 },
-        { asset: "UKOIL", direction: "volatile", confidence: 0.6 },
+        { asset: "USOIL", direction: "up", confidence: 0.85 },
+        { asset: "UKOIL", direction: "up", confidence: 0.82 },
       ],
       isBreaking: true,
       isActive: true,
@@ -31,21 +31,44 @@ function mockSignals(): Signal[] {
     {
       id: "mock-2",
       title: "Sanctions announcement targets energy exports",
-      summary: "FX pressure and energy price premium expected.",
-      aiAnalysis: "",
+      summary: "FX pressure and energy price premium expected across European regional markets.",
+      aiAnalysis: "Financial intelligence indicates immediate restructuring of European natural gas imports.",
       severity: 8,
-      confidence: 0.74,
+      confidence: 0.82,
       eventType: "Sanctions",
       country: "Russia",
       region: "eastern-europe",
-      sourcesCount: 5,
+      lat: 55.7558,
+      lng: 37.6173,
+      sourcesCount: 12,
       commodityImpacts: [
-        { asset: "EURUSD", direction: "down", confidence: 0.55 },
-        { asset: "NGAS", direction: "up", confidence: 0.62 },
+        { asset: "EURUSD", direction: "down", confidence: 0.65 },
+        { asset: "NGAS", direction: "up", confidence: 0.78 },
       ],
       isBreaking: false,
       isActive: true,
-      createdAt: new Date(now - 55 * 60 * 1000).toISOString(),
+      createdAt: new Date(now - 45 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "mock-3",
+      title: "Semiconductor supply chain disruption in Taiwan Strait",
+      summary: "Military drills prompt rerouting of commercial freight vessels through alternate shipping lanes.",
+      aiAnalysis: "Geospatial radar tracking indicates 35% reduction in maritime transit speed through the strait.",
+      severity: 7,
+      confidence: 0.79,
+      eventType: "Military exercises",
+      country: "Taiwan",
+      region: "asia-pacific",
+      lat: 23.6978,
+      lng: 120.9605,
+      sourcesCount: 6,
+      commodityImpacts: [
+        { asset: "SOXX", direction: "down", confidence: 0.72 },
+        { asset: "USDJPY", direction: "volatile", confidence: 0.60 },
+      ],
+      isBreaking: false,
+      isActive: true,
+      createdAt: new Date(now - 90 * 60 * 1000).toISOString(),
     },
   ];
 }
@@ -101,7 +124,7 @@ export async function GET(req: NextRequest) {
 
   // If env missing, return mock data.
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return NextResponse.json({ signals: mockSignals(), nextCursor: null, total: 2 });
+    return NextResponse.json({ signals: mockSignals(), nextCursor: null, total: mockSignals().length });
   }
 
   let query = supabase.from("signals").select("*", { count: "exact" });
@@ -118,12 +141,12 @@ export async function GET(req: NextRequest) {
 
   const { data, error, count } = await query.limit(20);
 
-  if (error) {
-    return NextResponse.json({ signals: mockSignals(), nextCursor: null, total: 2 });
+  if (error || !data || data.length === 0) {
+    return NextResponse.json({ signals: mockSignals(), nextCursor: null, total: mockSignals().length });
   }
 
   const signals: Signal[] =
-    (data ?? []).map((row) => {
+    data.map((row) => {
       const r = row as SignalRow;
       return {
         id: r.id,
@@ -144,7 +167,7 @@ export async function GET(req: NextRequest) {
         isActive: r.is_active ?? true,
         createdAt: r.created_at,
       };
-    }) ?? [];
+    });
 
   return NextResponse.json({ signals, nextCursor: null, total: count ?? signals.length });
 }

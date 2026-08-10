@@ -154,7 +154,7 @@ export function WatchlistClient() {
             <img 
               className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-1000 grayscale brightness-75 contrast-125" 
               alt="Geospatial Heatmap"
-              src="https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&q=80&w=2000"
+              src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
             
