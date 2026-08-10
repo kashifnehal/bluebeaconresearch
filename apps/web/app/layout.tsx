@@ -46,7 +46,7 @@ export default function RootLayout({
           }
         `}</style>
       </head>
-      <body className="min-h-full" style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
+      <body className="min-h-full" style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }} suppressHydrationWarning>
         <Providers>{children}</Providers>
         {!isProjectReady && <AccessLimitedModalWrapper />}
       </body>

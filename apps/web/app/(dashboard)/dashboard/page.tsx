@@ -82,8 +82,8 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* ── Continuous Skeleton Loader on API Load / Error ────────────────────────── */}
-        {isLoading || isError ? (
+        {/* ── Continuous Skeleton Loader on API Load / Error / No Data ────────────────────────── */}
+        {isLoading || isError || liveSignals.length === 0 ? (
           <div className="space-y-8">
             {/* Featured Card Skeleton */}
             <div className="p-8 bg-[#131313] border border-[#3c4a42] space-y-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -61,10 +61,19 @@ export default function SignupPage() {
     defaultValues: { fullName: "", email: "", password: "" },
   });
 
-  const redirectTo = useMemo(() => {
-    const base = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
-    return `${base}/auth/callback`;
+  const [redirectTo, setRedirectTo] = useState("");
+  useEffect(() => {
+    setRedirectTo(`${window.location.origin}/auth/callback`);
   }, []);
+
+  // Redirect already-logged-in users away from /signup
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/dashboard");
+    });
+  }, [router]);
 
   async function onSubmit(values: FormValues) {
     setError(null);
@@ -82,6 +91,7 @@ export default function SignupPage() {
       }
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
+      const redirectTo = `${window.location.origin}/auth/callback`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -122,9 +132,10 @@ export default function SignupPage() {
     try {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
+      const redirectTo = `${window.location.origin}/auth/callback`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo, queryParams: { state: selectedPlan } },
+        options: { redirectTo },
       });
       if (oauthError) throw oauthError;
     } catch (e: unknown) {

@@ -4,6 +4,7 @@ import { isProjectReady } from "@/lib/flags";
 
 // Routes that can be accessed when the project is not ready (Gate Active)
 const GATED_ALLOWED = [
+  "/login",
   "/signup",
   "/auth", // /auth/callback etc. needed for oauth/email confirmation
 ];
@@ -22,7 +23,7 @@ const PROTECTED = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ── Gate: if project is NOT ready, block everything except /signup, /auth, /api, and static assets ──
+  // ── Gate: if project is NOT ready, block everything except /login, /signup, /auth, /api, and static assets ──
   if (!isProjectReady) {
     const isAllowed =
       pathname === "/" ||
@@ -70,13 +71,15 @@ export async function middleware(request: NextRequest) {
     },
   );
 
+  // getUser() validates the JWT server-side against Supabase on every request,
+  // ensuring expired or revoked tokens are rejected in production.
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
 
-  if (isProtected && !session) {
+  if (isProtected && !user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

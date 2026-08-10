@@ -47,7 +47,17 @@ async function getLatestSignal(): Promise<LandingSignalPreview | null> {
   }
 }
 
-export default async function Home() {
+import { redirect } from "next/navigation";
+
+export default async function Home(props: {
+  searchParams?: Promise<{ error?: string; error_description?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  if (searchParams?.error || searchParams?.error_description) {
+    const msg = encodeURIComponent(searchParams.error_description ?? searchParams.error ?? "Authentication failed");
+    redirect(`/login?error=${msg}`);
+  }
+
   const latestSignal = await getLatestSignal();
 
   return (

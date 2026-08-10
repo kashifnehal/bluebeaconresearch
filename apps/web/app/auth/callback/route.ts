@@ -5,10 +5,25 @@ import type { NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const origin = url.origin;
 
-  const response = NextResponse.redirect(new URL("/onboarding", request.url));
+  // Handle OAuth error params forwarded by Supabase or Google
+  const error = url.searchParams.get("error");
+  const errorDescription = url.searchParams.get("error_description");
+  if (error) {
+    console.error("[OAuth Callback Error]", error, errorDescription);
+    const msg = encodeURIComponent(errorDescription ?? error);
+    return NextResponse.redirect(new URL(`/login?error=${msg}`, origin));
+  }
 
-  if (!code) return response;
+  if (!code) {
+    return NextResponse.redirect(new URL("/login?error=No+auth+code+received", origin));
+  }
+
+  // We construct a single response object that captures cookies set by Supabase
+  let targetPath = "/onboarding";
+
+  const response = NextResponse.redirect(new URL(targetPath, origin));
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,29 +40,41 @@ export async function GET(request: NextRequest) {
     },
   );
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) return response;
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  if (exchangeError) {
+    console.error("[OAuth Code Exchange Error]", exchangeError.message);
+    const msg = encodeURIComponent(exchangeError.message);
+    return NextResponse.redirect(new URL(`/login?error=${msg}`, origin));
+  }
 
-  // Try to route based on onboarding flag (if profiles table exists).
+  // Check onboarding status
   try {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return response;
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", user.id)
-      .maybeSingle();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (profile?.onboarding_completed) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      if (profile?.onboarding_completed) {
+        targetPath = "/dashboard";
+      }
     }
   } catch {
     // ignore bootstrap errors
   }
 
-  return response;
+  // Build final redirect response and copy over all session cookies
+  const finalResponse = NextResponse.redirect(new URL(targetPath, origin));
+  response.cookies.getAll().forEach((c) => {
+    finalResponse.cookies.set(c.name, c.value, c);
+  });
+
+  return finalResponse;
 }
+
 

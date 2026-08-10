@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
@@ -42,18 +43,25 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
 
-  const redirectTo = useMemo(() => {
-    const base = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
-    return `${base}/auth/callback`;
-  }, []);
+
+  // Redirect already-logged-in users away from /login
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/dashboard");
+    });
+  }, [router]);
 
   async function onSubmit(values: FormValues) {
     setError(null);
@@ -99,6 +107,7 @@ export default function LoginPage() {
     try {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
+      const redirectTo = `${window.location.origin}/auth/callback`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },
@@ -383,7 +392,7 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* Error */}
+          {/* Error from form state */}
           {error && (
             <div
               style={{
@@ -402,6 +411,29 @@ export default function LoginPage() {
                 }}
               >
                 {error}
+              </p>
+            </div>
+          )}
+
+          {/* FIX 2: Error from OAuth redirect URL param */}
+          {urlError && !error && (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: "rgba(255,180,171,0.1)",
+                border: "1px solid rgba(255,180,171,0.2)",
+                borderRadius: "4px",
+              }}
+            >
+              <p
+                style={{
+                  color: C.error,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: "11px",
+                  textAlign: "center",
+                }}
+              >
+                {decodeURIComponent(urlError)}
               </p>
             </div>
           )}
@@ -487,5 +519,13 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

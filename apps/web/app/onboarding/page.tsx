@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
@@ -14,6 +14,37 @@ export default function OnboardingPage() {
   const [telegram, setTelegram] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Pre-fill name from OAuth metadata; redirect to /dashboard if already onboarded
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, onboarding_completed")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.onboarding_completed) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      const defaultName =
+        profile?.full_name ||
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split("@")[0] ||
+        "";
+
+      setName(defaultName);
+    })();
+  }, [router]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
@@ -24,9 +55,11 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
+        const finalName = name.trim() || user.user_metadata?.full_name || user.email?.split("@")[0] || "Operator";
+
         await supabase.from("profiles").upsert({
           id: user.id,
-          full_name: name,
+          full_name: finalName,
           onboarding_completed: true,
         });
 
@@ -171,8 +204,8 @@ export default function OnboardingPage() {
                 name="name"
                 type="text"
                 placeholder="Enter operator name..."
-                required
                 value={name}
+                suppressHydrationWarning
                 onChange={(e) => setName(e.target.value)}
                 style={{
                   width: "100%",
