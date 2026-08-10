@@ -25,11 +25,13 @@ export function getRedis() {
   }
 
   try {
+    const isTls = url.startsWith("rediss://");
     redis = new Redis(url, {
       maxRetriesPerRequest: null,
       enableReadyCheck: true,
-      // Add a small connection timeout to fail faster if the URL is wrong but doesn't throw immediately
       connectTimeout: 5000,
+      // Upstash requires TLS — pass tls options when using rediss://
+      ...(isTls ? { tls: { rejectUnauthorized: false } } : {}),
     });
 
     // CRITICAL: Handle error events to prevent process crashes (ENOTSOCK etc)

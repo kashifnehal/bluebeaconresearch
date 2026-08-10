@@ -1,4 +1,4 @@
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 import { getRedis } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
@@ -16,6 +16,7 @@ const COMMODITY_SYMBOLS = {
 export async function runPriceSyncOnce() {
   const supabase = getSupabaseAdmin();
   const redis = getRedis();
+  const yf = new YahooFinance();
 
   const results: Array<{
     symbol: string;
@@ -29,7 +30,7 @@ export async function runPriceSyncOnce() {
 
   for (const [symbol, yahooSymbol] of Object.entries(COMMODITY_SYMBOLS)) {
     try {
-      const quote: any = await yahooFinance.quote(yahooSymbol);
+      const quote: any = await yf.quote(yahooSymbol);
       if (quote && typeof quote.regularMarketPrice === "number") {
         const price = quote.regularMarketPrice;
         const change_24h = quote.regularMarketChange ?? 0;
@@ -52,12 +53,15 @@ export async function runPriceSyncOnce() {
 
         // Cache in Redis with 15-minute TTL (900s)
         if (redis) {
-          await redis.set(`prices:${symbol}`, JSON.stringify(record), "EX", 900);
+          try {
+            await redis.set(`prices:${symbol}`, JSON.stringify(record), "EX", 900);
+          } catch (e: any) {
+            console.warn(`[PRICE SYNC] Redis cache warning for ${symbol}:`, e.message);
+          }
         }
       }
     } catch (err: any) {
       console.error(`[PRICE SYNC] Failed for ${symbol}:`, err?.message ?? err);
-      // Keep serving last cached price — don't show null
     }
   }
 

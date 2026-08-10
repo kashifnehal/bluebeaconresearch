@@ -15,17 +15,6 @@ type CommodityPriceRow = {
 
 const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "NGAS", "WHEAT", "COPPER", "XAGUSD", "CORN"] as const;
 
-const FALLBACK_PRICES: Record<string, Omit<CommodityPriceRow, "symbol" | "fetched_at">> = {
-  USOIL: { price: 78.50, change_24h: 0.42, change_pct_24h: 0.54, high_24h: 79.20, low_24h: 77.80 },
-  UKOIL: { price: 82.30, change_24h: -0.15, change_pct_24h: -0.18, high_24h: 83.10, low_24h: 81.50 },
-  XAUUSD: { price: 2340.0, change_24h: 8.50, change_pct_24h: 0.36, high_24h: 2355.0, low_24h: 2325.0 },
-  NGAS: { price: 2.85, change_24h: 0.04, change_pct_24h: 1.42, high_24h: 2.92, low_24h: 2.78 },
-  WHEAT: { price: 540.0, change_24h: -4.50, change_pct_24h: -0.83, high_24h: 548.0, low_24h: 532.0 },
-  COPPER: { price: 4.25, change_24h: 0.02, change_pct_24h: 0.47, high_24h: 4.30, low_24h: 4.18 },
-  XAGUSD: { price: 27.50, change_24h: 0.30, change_pct_24h: 1.10, high_24h: 28.10, low_24h: 27.10 },
-  CORN: { price: 450.0, change_24h: 2.10, change_pct_24h: 0.47, high_24h: 455.0, low_24h: 442.0 },
-};
-
 function getUpstashRedis() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -102,19 +91,6 @@ export async function GET() {
       }
     } catch (err) {
       console.warn("⚠️ [API Prices] Redis cache fetch failed:", err);
-    }
-  }
-
-  // Tier 3: For any remaining missing symbols, use hardcoded static fallbacks
-  const now = new Date().toISOString();
-  for (const sym of SYMBOLS) {
-    if (!priceMap.has(sym)) {
-      const fallback = FALLBACK_PRICES[sym] ?? { price: 100.0, change_24h: 0, change_pct_24h: 0, high_24h: 100.0, low_24h: 100.0 };
-      priceMap.set(sym, {
-        symbol: sym,
-        ...fallback,
-        fetched_at: now,
-      });
     }
   }
 

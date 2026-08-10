@@ -1,49 +1,23 @@
 import axios from "axios";
-
-import { buildQueues } from "../queues.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { ClaudeService } from "../services/claude.service.js";
+import { formatCountryName } from "./ai-classifier.js";
 
-type GdeltEvent = {
-  GLOBALEVENTID?: string;
-  SQLDATE?: string;
-  EventCode?: string;
-  GoldsteinScale?: string | number;
-  SOURCEURL?: string;
-  ActionGeo_CountryCode?: string;
-  ActionGeo_Lat?: string | number;
-  ActionGeo_Long?: string | number;
-  // plus many more…
+type GdeltArticle = {
+  url?: string;
+  title?: string;
+  seendate?: string;
+  socialimage?: string;
+  domain?: string;
+  language?: string;
+  sourcecountry?: string;
 };
-
-const ALLOWED_PREFIXES = ["18", "19", "190", "191", "192", "193", "194", "195", "196", "14", "20"];
-
-function isAllowedCameo(code?: string) {
-  if (!code) return false;
-  return ALLOWED_PREFIXES.some((p) => code === p || code.startsWith(p));
-}
-
-function parseLatLng(v: unknown): number | null {
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  if (typeof v === "string") {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  }
-  return null;
-}
-
-function parseGdeltDate(sqlDate?: string) {
-  if (!sqlDate || sqlDate.length !== 8) return new Date().toISOString();
-  const yyyy = sqlDate.slice(0, 4);
-  const mm = sqlDate.slice(4, 6);
-  const dd = sqlDate.slice(6, 8);
-  return new Date(`${yyyy}-${mm}-${dd}T00:00:00.000Z`).toISOString();
-}
 
 export const HIGH_RELEVANCE_KEYWORDS = [
   // Conflict & Military
-  "war", "conflict", "attack", "strike", "missile", "bomb", "explosion", "troops", 
+  "war", "conflict", "attack", "strike", "missile", "bomb", "explosion", "troops",
   "military", "sanction", "blockade", "invasion", "offensive", "airstrike", "ceasefire",
-  // Energy & Supply Chain  
+  // Energy & Supply Chain
   "oil", "crude", "gas", "pipeline", "refinery", "opec", "hormuz", "energy", "fuel",
   // Economic Policy
   "tariff", "sanction", "embargo", "trade war", "inflation", "fed", "rate decision",
@@ -71,28 +45,37 @@ export function isRelevantEvent(title: string, summary: string = ""): boolean {
   return hasRelevantWord;
 }
 
+const claude = new ClaudeService();
+
+// GDELT GKG/Doc API — the correct active endpoint for article-level search
+const GDELT_API_URL =
+  "https://api.gdeltproject.org/api/v2/doc/doc?query=conflict+OR+war+OR+sanctions+OR+military+OR+oil&mode=artlist&maxrecords=50&format=json&sort=DateDesc";
+
 export async function runGdeltCollectorOnce() {
   const supabase = getSupabaseAdmin();
-  const queues = buildQueues();
 
-  const url =
-    "https://api.gdeltproject.org/api/v2/events/search?query=conflict+violence&mode=artlist&maxrecords=250&timespan=15m&format=json";
-  const res = await axios.get(url, { timeout: 20_000 });
-  const events: GdeltEvent[] = res.data?.events ?? res.data?.articles ?? [];
+  let res: any;
+  try {
+    res = await axios.get(GDELT_API_URL, { timeout: 25_000 });
+  } catch (e: any) {
+    console.error("[GDELT] Fetch failed:", e.message);
+    return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
+  }
 
-  let fetched = events.length;
+  const articles: GdeltArticle[] = res.data?.articles ?? [];
+
+  let fetched = articles.length;
   let inserted = 0;
   let duplicates = 0;
   let filtered = 0;
+  let signals = 0;
 
-  for (const e of events) {
-    const externalId = e.GLOBALEVENTID ? String(e.GLOBALEVENTID) : null;
+  for (const a of articles) {
+    const externalId = a.url ? `gdelt-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
     if (!externalId) continue;
-    if (!isAllowedCameo(e.EventCode ? String(e.EventCode) : undefined)) continue;
 
-    const title = e.SOURCEURL ? String(e.SOURCEURL).slice(0, 280) : "GDELT event";
+    const title = a.title?.slice(0, 280) ?? a.url ?? "GDELT article";
     if (!isRelevantEvent(title)) {
-      console.log(`[GDELT] Filtered out irrelevant event: ${title}`);
       filtered += 1;
       continue;
     }
@@ -103,6 +86,14 @@ export async function runGdeltCollectorOnce() {
       continue;
     }
 
+    const eventDate = a.seendate
+      ? new Date(
+          a.seendate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/, "$1-$2-$3T$4:$5:$6Z")
+        ).toISOString()
+      : new Date().toISOString();
+
+    const country = a.sourcecountry ?? null;
+
     const insert = await supabase
       .from("raw_events")
       .insert({
@@ -110,12 +101,12 @@ export async function runGdeltCollectorOnce() {
         external_id: externalId,
         title,
         summary: null,
-        country: e.ActionGeo_CountryCode ?? null,
-        lat: parseLatLng(e.ActionGeo_Lat),
-        lng: parseLatLng(e.ActionGeo_Long),
-        event_type: e.EventCode ?? null,
-        event_date: parseGdeltDate(e.SQLDATE),
-        raw_data: e,
+        country,
+        lat: null,
+        lng: null,
+        event_type: "news",
+        event_date: eventDate,
+        raw_data: a,
       })
       .select("id")
       .maybeSingle();
@@ -123,14 +114,41 @@ export async function runGdeltCollectorOnce() {
     if (insert.error || !insert.data?.id) continue;
     inserted += 1;
 
-    const priority = 1;
-    await queues.aiClassification.add(
-      "classify",
-      { rawEventId: insert.data.id },
-      { priority, attempts: 3, backoff: { type: "exponential", delay: 1000 } },
-    );
+    const rawEventId = insert.data.id as string;
+
+    // Classify and write signal directly — reliable even when Redis/BullMQ is unavailable
+    try {
+      const classification = await claude.classifyEvent({
+        id: rawEventId,
+        title,
+        country,
+        event_type: "news",
+        event_date: eventDate,
+      });
+
+      const { error: sigErr } = await supabase.from("signals").insert({
+        raw_event_ids: [rawEventId],
+        title,
+        summary: classification.summary,
+        severity: classification.severity,
+        confidence: classification.confidence,
+        event_type: "news",
+        country: formatCountryName(country),
+        region: classification.region,
+        lat: null,
+        lng: null,
+        sources_count: 1,
+        commodity_impacts: classification.commodityImpacts,
+        is_breaking: classification.isBreaking,
+        is_active: true,
+      });
+
+      if (!sigErr) signals += 1;
+      else console.error("[GDELT] Signal insert error:", sigErr.message);
+    } catch (e: any) {
+      console.error("[GDELT] Classification/signal insert failed:", e.message);
+    }
   }
 
-  return { fetched, inserted, duplicates, filtered };
+  return { fetched, inserted, duplicates, filtered, signals };
 }
-

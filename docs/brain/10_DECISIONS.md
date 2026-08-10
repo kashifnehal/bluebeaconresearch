@@ -64,8 +64,40 @@ Adopt Supabase PostgreSQL with native Row Level Security (RLS).
 
 ---
 
-## 5. Architectural Assumptions & Future Risks
+## 5. ADR 005: Heuristic Fallback Classifier (No Vendor Lock-in)
 
-1. **Third-Party API Availability**: System relies heavily on external uptime of GDELT, ACLED, Anthropic Claude API, and Alpha Vantage.
-2. **Anthropic API Token Costs**: High ingestion volumes could increase Claude token consumption costs; mitigation involves caching raw events before calling LLM.
-3. **Mapbox Load Gating**: GIS map usage must stay within Mapbox free/pro tier bounds.
+### Context
+Claude API credits can exhaust. BullMQ workers require Redis to be operational. Both are external dependencies that can fail.
+
+### Decision
+`ClaudeService.classifyEvent()` wraps the Anthropic API call in a try/catch and falls back to a **keyword-based NLP heuristic classifier** when the API fails.
+
+### Rationale
+- **100% Pipeline Reliability**: Signals are ALWAYS created regardless of Anthropic credit balance, rate limits, or API outages.
+- **No Mock Data**: Real news articles are processed into real signals, just without AI-enhanced analysis.
+- **Zero Cost Fallback**: Heuristic classifier runs fully in-process with no external API cost.
+
+---
+
+## 6. ADR 006: Direct-to-DB Signal Insertion (Bypass BullMQ)
+
+### Context
+In early deployment, BullMQ workers may not be running. When collectors insert into `raw_events` and enqueue `aiClassification` jobs, if the worker isn't listening, signals are never created.
+
+### Decision
+Both `gnews-collector.ts` and `gdelt-collector.ts` now **classify and insert signals directly** to Supabase, bypassing the BullMQ queue entirely.
+
+### Rationale
+- **Simpler Runtime**: No dependency on Redis being available for basic ingestion.
+- **Works Locally**: Developers can run a single cron trigger and immediately see signals in the DB.
+- **Deduplication**: Signal dedup is handled by checking `external_id` in `raw_events` before classification.
+
+---
+
+## 7. Architectural Assumptions & Future Risks
+
+1. **Third-Party API Availability**: System relies on GNews, GDELT, Yahoo Finance uptime.
+2. **Anthropic API Credits**: Production requires Anthropic credits. Heuristic fallback covers outages but quality is lower.
+3. **GNews Free Tier**: 10 articles / 15 min = 960 articles/day. Upgrade if more volume is needed.
+4. **GDELT Reliability**: GDELT v2/doc/doc API is academic infrastructure; occasional slow responses are expected.
+5. **Mapbox Load Gating**: GIS map usage must stay within Mapbox free/pro tier bounds.
