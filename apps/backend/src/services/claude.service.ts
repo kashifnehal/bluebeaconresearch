@@ -122,9 +122,19 @@ export class ClaudeService {
 
     const isBreaking = severity >= 8 || /breaking|urgent|just in|alert/i.test(text);
 
+    // Compute dynamic confidence: more matching signal categories = higher certainty
+    // (heuristic, not AI — max 0.90 to distinguish from actual Claude output)
+    let matchedCategories = 0;
+    if (severity > 5) matchedCategories++;
+    if (region !== "global") matchedCategories++;
+    if (commodityImpacts.length > 1) matchedCategories++;
+    if (isBreaking) matchedCategories++;
+    if (rawEvent.country) matchedCategories++;
+    const dynamicConfidence = Math.min(0.90, 0.55 + matchedCategories * 0.07);
+
     return {
       severity,
-      confidence: 0.82,
+      confidence: parseFloat(dynamicConfidence.toFixed(2)),
       commodityImpacts,
       isBreaking,
       summary: title.slice(0, 120),

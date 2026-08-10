@@ -152,7 +152,7 @@ export default function AlertsPage() {
                   </div>
                   <div className="text-right">
                     <div className="mono text-[10px] text-on-surface/40 uppercase tracking-widest font-bold">
-                      {formatDistanceToNowStrict(new Date(featuredSignal.createdAt))} ago
+                      {formatDistanceToNowStrict(new Date(featuredSignal.eventDate ?? featuredSignal.createdAt))} ago
                     </div>
                     <div className="mono text-sm text-error font-bold mt-1">
                       SEVERITY {featuredSignal.severity}.0
@@ -241,7 +241,7 @@ export default function AlertsPage() {
                             <div className={`w-2 h-2 rounded-full ${isHigh ? 'bg-error pulse-red' : (isMedium ? 'bg-[#ffb340]' : 'bg-primary')}`}></div>
                           </td>
                           <td className="px-2 py-4 mono text-[10px] text-on-surface/40 whitespace-nowrap font-bold">
-                            {formatDistanceToNowStrict(new Date(signal.createdAt))} ago
+                            {formatDistanceToNowStrict(new Date(signal.eventDate ?? signal.createdAt))} ago
                           </td>
                           <td className="px-6 py-4 font-headline text-sm font-bold text-on-surface line-clamp-1 group-hover:text-primary transition-colors">
                             {signal.title}

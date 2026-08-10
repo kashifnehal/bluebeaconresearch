@@ -28,6 +28,16 @@ async function main() {
     startAlertDispatcherWorker(),
   ];
 
+  // ── Run collectors IMMEDIATELY on startup (don't wait up to 15 min for first cron tick) ──
+  // This means after a Railway deploy or restart, data is fresh within ~30 seconds.
+  app.log.info("Running initial ingestion immediately on startup...");
+  Promise.allSettled([
+    runGdeltCollectorOnce().then(r => app.log.info({ r }, "startup:gdelt")),
+    runGnewsCollectorOnce().then(r => app.log.info({ r }, "startup:gnews")),
+    runPriceSyncOnce().then(r => app.log.info({ r }, "startup:prices")),
+  ]).catch(() => {});
+
+  // ── Every 15 min: collect news signals ─────────────────────────────────
   cron.schedule("*/15 * * * *", async () => {
     try {
       const res = await runGdeltCollectorOnce();

@@ -61,8 +61,8 @@ export default function EventDetailPage() {
                      <div className="flex items-center gap-3">
                         <Clock size={16} className="text-accent" />
                         <div className="flex flex-col">
-                           <span className="text-[9px] font-black uppercase tracking-widest text-muted">Detected</span>
-                           <span className="text-xs font-mono font-bold text-text-secondary">{new Date(signal.createdAt).toLocaleString()}</span>
+                           <span className="text-[9px] font-black uppercase tracking-widest text-muted">Published</span>
+                           <span className="text-xs font-mono font-bold text-text-secondary">{new Date(signal.eventDate ?? signal.createdAt).toLocaleString()}</span>
                         </div>
                      </div>
                      <div className="flex items-center gap-3 border-x px-6" style={{ borderColor: "rgba(255,255,255,0.05)" }}>

@@ -91,13 +91,13 @@ export default function SignupPage() {
       }
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
           data: { full_name: values.fullName, plan_tier: selectedPlan },
-          emailRedirectTo: redirectTo,
+          emailRedirectTo: callbackUrl,
         },
       });
       if (signUpError) throw signUpError;
@@ -132,10 +132,10 @@ export default function SignupPage() {
     try {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: { redirectTo: callbackUrl },
       });
       if (oauthError) throw oauthError;
     } catch (e: unknown) {

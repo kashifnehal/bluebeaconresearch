@@ -53,6 +53,12 @@ function LoginForm() {
 
   const form = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
 
+  // Capture window.location.origin safely — only available on client after mount
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
 
   // Redirect already-logged-in users away from /login
   useEffect(() => {
@@ -87,13 +93,13 @@ function LoginForm() {
 
       // If project is not ready, redirect to root modal
       if (!isProjectReady) {
-        window.location.href = "/";
+        router.replace("/");
         return;
       }
 
       const profile = await fetchMyProfile();
       const targetUrl = profile?.onboardingCompleted ? "/dashboard" : "/onboarding";
-      window.location.href = targetUrl;
+      router.replace(targetUrl);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign in.");
     } finally {
@@ -107,7 +113,7 @@ function LoginForm() {
     try {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      const redirectTo = `${origin || window.location.origin}/auth/callback`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },

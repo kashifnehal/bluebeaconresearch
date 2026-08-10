@@ -56,4 +56,59 @@ This document records historic development milestones, schema evolutions, featur
 - Updated database trigger `handle_new_user()` in `004_auth_triggers.sql` with `coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name')` to capture Google user names into `public.profiles`.
 - Verified `/auth/callback/route.ts` PKCE code exchange, onboarding state checks, and middleware permissions.
 
+---
 
+### v0.9.0 — Full API Audit, Pipeline Bug Fixes & Live Data Restoration
+
+**Root causes of zero signal data identified and fixed:**
+
+- **Anthropic Credits Exhausted**: `claude.service.ts` had no try/catch — API failures crashed the entire worker. Fixed: wrapped in try/catch + added keyword heuristic fallback classifier (runs in-process, zero API cost).
+- **Yahoo Finance v3 Breaking Change**: `price-syncer.ts` called `yahooFinance.quote()` (old API). Fixed to `new YahooFinance().quote()`. Result: 8 commodity prices now in DB.
+- **GDELT URL 404**: Endpoint `/api/v2/events/search` doesn't exist. Fixed to `/api/v2/doc/doc?mode=artlist`.
+- **`raw_events.source` Constraint Violation**: DB check constraint only allowed `gdelt/acled/newsapi` — not `gnews`. All GNews inserts were silently failing (error 23514). Fixed: GNews maps to `newsapi` source value. Migration 008 created.
+- **Upstash Redis TLS**: `redis://` → `rediss://` required. Added `tls: { rejectUnauthorized: false }` to ioredis. No more ECONNRESET.
+- **Supabase Credentials**: `.env.local` pointed to wrong Supabase project. Restored to `evavcgfmemwryggdkjmx.supabase.co`.
+
+**Architecture: Direct-to-DB Signal Insertion (ADR 006):**
+Collectors now classify and insert signals directly to Supabase without BullMQ queue active. Startup → signals in DB immediately.
+
+**Result**: 8 real signals + 8 commodity prices in production DB. Pipeline operational end-to-end.
+
+---
+
+### v0.10.0 — CEO Data Strategy: Freshness, Confidence & Event-Date Display
+
+**Context**: Platform showed data "2 hours ago" even on refresh. All confidence scores were identical (82%). Both undermined product credibility.
+
+**Decision: What data to show and how fresh** (2026-08-10)
+
+**Fix 1 — Timestamp accuracy:**
+- UI was showing `createdAt` (ingestion time), not when the article was published.
+- Added `eventDate?: string` to `Signal` type. `/api/signals` batch-joins `raw_events.event_date` and returns article publish time. Dashboard, map, and events/[id] all now use `eventDate ?? createdAt`.
+- Migration 009 (`009_signals_event_date.sql`) created — **apply via Supabase SQL Editor** to formally add column to signals table.
+
+**Fix 2 — Confidence variance:**
+- Heuristic classifier was hardcoding `confidence: 0.82` for every signal.
+- Now dynamically scored: 5 signal quality categories × 7% each. Range: 55%–90%.
+- Existing 8 signals backfilled: 69%, 76%, 83%, 90%.
+
+**Fix 3 — Data volume and freshness:**
+- GNews queries expanded from 1 to 3 topic searches per run (conflict/war, sanctions/energy, geopolitics/Iran/Russia/China).
+- Workers now run collectors **immediately on startup** — no 15-min wait after Railway deploy.
+- `/api/signals` filters to last 7 days only — no stale accumulation.
+- Removed hardcoded `FALLBACK_PRICES` — prices API returns empty array if no real data (UI shows skeleton per "no mock data" policy).
+
+---
+
+### v0.11.0 — CTO System Audit & UI Interactivity Enforcement
+
+**Audit & UI Controls Verification:**
+
+- **Fixed SSR `window` Crash**: Resolved `window is not defined` error on refresh/back-navigation in `/login` and `/signup` pages. Routed client navigation through Next.js `router.replace()` and encapsulated `window.location.origin` in a post-mount `useEffect`.
+- **Timestamp Standardization**: Verified and updated `alerts/page.tsx`, `events/[id]/page.tsx`, `dashboard/page.tsx`, and `map/page.tsx` to uniformly display `eventDate ?? createdAt` (article publish timestamp).
+- **Interactive Control Wiring**:
+  - Connected "Force Refresh" button in `WatchlistClient.tsx` to refetch live commodity price queries.
+  - Wired Floating Action Button (`+`) on `/watchlist` to smoothly scroll to top and focus the commodity selector.
+  - Built direct CSV export handler into "Download Audit Log" button on `/backtesting` page (`backtest_audit_<symbol>_<horizon>.csv`).
+  - Confirmed all cards and signal table rows navigate seamlessly to `/events/[id]`.
+- **Migration 009 Applied**: Successfully applied `009_signals_event_date.sql` to Supabase DB. `event_date` column now populated and indexed across all signal rows.

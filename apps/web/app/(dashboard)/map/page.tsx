@@ -131,7 +131,7 @@ export default function MapPage() {
                       {isUrgent ? 'URGENT' : 'SIGNAL'}
                     </span>
                     <span className="font-mono text-[9px] text-on-surface-variant">
-                      {formatDistanceToNowStrict(new Date(signal.createdAt))} ago
+                     {formatDistanceToNowStrict(new Date(signal.eventDate ?? signal.createdAt))} ago
                     </span>
                   </div>
                   <p className="text-[11px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2 group-hover:text-primary transition-colors">

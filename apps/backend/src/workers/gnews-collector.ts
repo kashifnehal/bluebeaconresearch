@@ -7,16 +7,52 @@ import { formatCountryName } from "./ai-classifier.js";
 
 const claude = new ClaudeService();
 
+// Multiple topic queries so we get diverse, fresh coverage each run
+// GNews free tier: 100 req/day. Running 3 queries × every 15 min = ~288 req/day (requires paid tier).
+// On free tier, use 1 query. Switch to multiple when on GNews Basic ($9/mo).
+const GNEWS_QUERIES = [
+  "conflict OR war OR military OR invasion",
+  "sanctions OR embargo OR oil OR energy OR OPEC",
+  "geopolitics OR Iran OR Russia OR China OR Taiwan",
+];
+
+async function fetchGnewsArticles(query: string, token: string) {
+  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&sortby=publishedAt&token=${token}`;
+  const res = await axios.get(url, { timeout: 20_000 });
+  return (res.data?.articles ?? []) as any[];
+}
+
 export async function runGnewsCollectorOnce() {
   const env = getEnv();
   if (!env.NEWS_API_KEY) return { error: "NEWS_API_KEY missing" };
 
   const supabase = getSupabaseAdmin();
 
-  // Search for conflict and geopolitical event keywords
-  const url = `https://gnews.io/api/v4/search?q=conflict+OR+geopolitics+OR+sanctions+OR+oil+OR+military&lang=en&max=10&token=${env.NEWS_API_KEY}`;
-  const res = await axios.get(url, { timeout: 20_000 });
-  const articles = res.data?.articles ?? [];
+  // Run all queries (parallel would hit rate limits; run sequentially with 300ms gap)
+  const allArticles: any[] = [];
+  for (const query of GNEWS_QUERIES) {
+    try {
+      const articles = await fetchGnewsArticles(query, env.NEWS_API_KEY);
+      allArticles.push(...articles);
+    } catch (e: any) {
+      // If we hit GNews rate limit (402), fall back to single query mode
+      if (e.response?.status === 402 || e.response?.status === 429) {
+        console.warn("[GNews] Rate limit hit, skipping additional queries");
+        break;
+      }
+      console.warn(`[GNews] Query "${query}" failed:`, e.message);
+    }
+    // Small gap to be respectful of rate limits
+    await new Promise((r) => setTimeout(r, 300));
+  }
+
+  // Deduplicate by URL before processing
+  const seen = new Set<string>();
+  const articles = allArticles.filter((a) => {
+    if (!a.url || seen.has(a.url)) return false;
+    seen.add(a.url);
+    return true;
+  });
 
   let fetched = articles.length;
   let inserted = 0;
@@ -50,13 +86,16 @@ export async function runGnewsCollectorOnce() {
       lat: null,
       lng: null,
       event_type: "news",
-      event_date: a.publishedAt ?? new Date().toISOString(),
+      event_date: a.publishedAt ?? new Date().toISOString(),  // article publish time
       raw_data: a,
     };
 
     const insert = await supabase.from("raw_events").insert(rawEventPayload).select("id").maybeSingle();
 
-    if (insert.error || !insert.data?.id) continue;
+    if (insert.error || !insert.data?.id) {
+      console.error("[GNews] raw_events insert error:", insert.error?.message);
+      continue;
+    }
     inserted += 1;
 
     const rawEventId = insert.data.id as string;
@@ -87,6 +126,7 @@ export async function runGnewsCollectorOnce() {
         commodity_impacts: classification.commodityImpacts,
         is_breaking: classification.isBreaking,
         is_active: true,
+        event_date: rawEventPayload.event_date,  // article publish time shown in UI
       });
 
       if (!sigErr) signals += 1;

@@ -233,7 +233,21 @@ export default function BacktestingPage() {
                   <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
                   <h4 className="font-label text-xs font-bold text-on-surface tracking-widest uppercase">Historical Event Trace</h4>
                 </div>
-                <button className="flex items-center gap-2 text-[10px] font-label font-bold text-on-surface-variant hover:text-primary transition-colors tracking-widest uppercase">
+                <button 
+                  onClick={() => {
+                    if (!results?.rows) return;
+                    const headers = "Timestamp,Geography,Synthesis,Delta %,Prediction\n";
+                    const rows = results.rows.map(r => `"${r.date}","${r.country}","${r.summary.replace(/"/g, '""')}",${r.movePct}%,${r.correct ? "CORRECT" : "DEVIATED"}`).join("\n");
+                    const blob = new Blob([headers + rows], { type: "text/csv" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `backtest_audit_${commodity}_${horizon}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="flex items-center gap-2 text-[10px] font-label font-bold text-on-surface-variant hover:text-primary transition-colors tracking-widest uppercase cursor-pointer"
+                >
                   <span className="material-symbols-outlined text-sm">download</span> Download Audit Log
                 </button>
               </div>

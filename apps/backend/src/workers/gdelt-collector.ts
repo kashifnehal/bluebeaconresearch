@@ -141,6 +141,7 @@ export async function runGdeltCollectorOnce() {
         commodity_impacts: classification.commodityImpacts,
         is_breaking: classification.isBreaking,
         is_active: true,
+        event_date: eventDate,  // GDELT article seen date
       });
 
       if (!sigErr) signals += 1;

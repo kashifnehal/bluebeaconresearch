@@ -20,7 +20,7 @@ export function WatchlistClient() {
   );
   const [addSymbol, setAddSymbol] = useState<string>("SELECT COMMODITY");
 
-  const { data } = useQuery({
+  const { data, refetch } = useQuery({
     queryKey: ["prices"],
     queryFn: async () => {
       const res = await fetch("/api/prices");
@@ -217,7 +217,7 @@ export function WatchlistClient() {
                   <p className="font-mono text-3xl text-on-surface font-bold tracking-tighter">32s</p>
                   <p className="font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Time since last update</p>
                 </div>
-                <button className="text-primary hover:text-primary-container font-label text-[10px] uppercase tracking-widest font-bold transition-colors">Force Refresh</button>
+                <button onClick={() => refetch()} className="text-primary hover:text-primary-container font-label text-[10px] uppercase tracking-widest font-bold transition-colors cursor-pointer">Force Refresh</button>
               </div>
             </div>
           </div>
@@ -225,7 +225,16 @@ export function WatchlistClient() {
       </div>
 
       {/* Global Floating Action */}
-      <button className="fixed bottom-8 right-[292px] w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_30px_rgba(111,251,190,0.4)] flex items-center justify-center group z-50 transition-all hover:scale-110 active:scale-95 shadow-lg">
+      <button 
+        onClick={() => {
+          const el = document.querySelector('select');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+            el.focus();
+          }
+        }}
+        className="fixed bottom-8 right-[292px] w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_30px_rgba(111,251,190,0.4)] flex items-center justify-center group z-50 transition-all hover:scale-110 active:scale-95 shadow-lg cursor-pointer"
+      >
         <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-500">add</span>
         <div className="absolute right-full mr-4 px-4 py-2 bg-surface-container border border-outline-variant/30 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap backdrop-blur-md">
           <span className="label text-[10px] tracking-[0.2em] text-on-surface font-black uppercase">Initialize New Monitor</span>

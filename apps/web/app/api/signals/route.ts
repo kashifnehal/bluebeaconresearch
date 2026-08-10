@@ -21,6 +21,7 @@ type SignalRow = {
   sanctions_matches: Signal["sanctionsMatches"] | null;
   is_breaking: boolean | null;
   is_active: boolean | null;
+  raw_event_ids: string[] | null;
   created_at: string;
 };
 
@@ -61,12 +62,16 @@ export async function GET(req: NextRequest) {
   if (region) query = query.eq("region", region);
   if (commodity) query = query.contains("commodity_impacts", [{ asset: commodity }]);
 
+  // Only show active signals from the last 7 days to keep feed fresh
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  query = query.gte("created_at", sevenDaysAgo);
+
   query =
     sort === "newest"
-      ? query.order("created_at", { ascending: false })
+      ? query.order("event_date", { ascending: false }).order("created_at", { ascending: false })
       : sort === "confidence"
         ? query.order("confidence", { ascending: false })
-        : query.order("severity", { ascending: false }).order("created_at", { ascending: false });
+        : query.order("severity", { ascending: false }).order("event_date", { ascending: false }).order("created_at", { ascending: false });
 
   const { data, error, count } = await query.limit(20);
 
@@ -75,8 +80,33 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch signals" }, { status: 500 });
   }
 
-  const signals: Signal[] = (data ?? []).map((row) => {
-    const r = row as SignalRow;
+  const rows = (data ?? []) as SignalRow[];
+
+  // Batch-fetch event dates from raw_events for all signals that have raw_event_ids
+  // This gives us the ARTICLE PUBLISH TIME vs the ingestion time (created_at)
+  const allRawEventIds = rows
+    .flatMap((r) => r.raw_event_ids ?? [])
+    .filter(Boolean)
+    .slice(0, 40); // max 40 IDs
+
+  const eventDateMap = new Map<string, string>(); // rawEventId → event_date
+
+  if (allRawEventIds.length > 0) {
+    const { data: rawEvents } = await supabase
+      .from("raw_events")
+      .select("id, event_date")
+      .in("id", allRawEventIds);
+
+    for (const re of rawEvents ?? []) {
+      if (re.event_date) eventDateMap.set(re.id, re.event_date);
+    }
+  }
+
+  const signals: Signal[] = rows.map((r) => {
+    // Use the article's original publish date if available, else fall back to ingestion time
+    const firstRawId = r.raw_event_ids?.[0];
+    const eventDate = firstRawId ? (eventDateMap.get(firstRawId) ?? r.created_at) : r.created_at;
+
     return {
       id: r.id,
       title: r.title,
@@ -95,6 +125,7 @@ export async function GET(req: NextRequest) {
       isBreaking: r.is_breaking ?? false,
       isActive: r.is_active ?? true,
       createdAt: r.created_at,
+      eventDate,          // ← article publish time: what we show as "X ago" in UI
     };
   });
 

@@ -141,7 +141,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <span className="text-[10px] uppercase tracking-widest" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#86948a" }}>
-                      {formatDistanceToNowStrict(new Date(featured.createdAt))} AGO
+                      {formatDistanceToNowStrict(new Date(featured.eventDate ?? featured.createdAt))} AGO
                     </span>
                   </div>
 
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#131313"; }}>
                     <div className="p-6">
                       <div className="flex justify-between items-center text-[10px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#86948a" }}>
-                        <span>{formatDistanceToNowStrict(new Date(secondaryA.createdAt)).toUpperCase()} AGO</span>
+                        <span>{formatDistanceToNowStrict(new Date(secondaryA.eventDate ?? secondaryA.createdAt)).toUpperCase()} AGO</span>
                         <span className="text-[#4edea3] font-bold">{secondaryA.country}</span>
                       </div>
                       <h3 className="text-lg font-bold mb-3 group-hover:text-[#4edea3] transition-colors" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "#131313"; }}>
                     <div className="p-6">
                       <div className="flex justify-between items-center text-[10px] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#86948a" }}>
-                        <span>{formatDistanceToNowStrict(new Date(secondaryB.createdAt)).toUpperCase()} AGO</span>
+                        <span>{formatDistanceToNowStrict(new Date(secondaryB.eventDate ?? secondaryB.createdAt)).toUpperCase()} AGO</span>
                         <span className="text-[#4edea3] font-bold">{secondaryB.country}</span>
                       </div>
                       <h3 className="text-lg font-bold mb-3 group-hover:text-[#4edea3] transition-colors" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                     >
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.severity >= 8 ? "#ee7d77" : "#4edea3" }} />
                       <div className="w-20 text-[12px] shrink-0" style={{ color: "#86948a", fontFamily: "'JetBrains Mono', monospace" }}>
-                        {formatDistanceToNowStrict(new Date(item.createdAt))}
+                        {formatDistanceToNowStrict(new Date(item.eventDate ?? item.createdAt))}
                       </div>
                       <div className="flex-1 font-semibold transition-colors group-hover:text-[#4edea3]" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
                         {item.title}
