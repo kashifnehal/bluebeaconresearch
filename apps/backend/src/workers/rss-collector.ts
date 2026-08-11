@@ -10,16 +10,22 @@ const parser = new Parser({ timeout: 20_000 });
 // Free, no-auth-required RSS feeds that update every 5–15 minutes
 // These provide TRULY CURRENT news (within the last hour) unlike GNews free tier
 const RSS_FEEDS = [
-  // Reuters - most trusted, fast updates
-  { url: "https://feeds.reuters.com/reuters/worldNews", label: "Reuters World" },
-  { url: "https://feeds.reuters.com/reuters/businessNews", label: "Reuters Business" },
   // BBC World
   { url: "https://feeds.bbci.co.uk/news/world/rss.xml", label: "BBC World" },
-  // Al Jazeera (strong geopolitical coverage)
+  // Al Jazeera (strong geopolitical coverage, updates every 10-15m)
   { url: "https://www.aljazeera.com/xml/rss/all.xml", label: "Al Jazeera" },
+  // France24 International
+  { url: "https://www.france24.com/en/rss", label: "France24" },
+  // DW World (Deutsche Welle)
+  { url: "https://rss.dw.com/rdf/rss-en-world", label: "DW World" },
+  // OilPrice.com (Energy & Oil geopolitics)
+  { url: "https://oilprice.com/rss/main", label: "OilPrice" },
   // The Guardian - World
   { url: "https://www.theguardian.com/world/rss", label: "Guardian World" },
+  // Reuters (when available)
+  { url: "https://feeds.reuters.com/reuters/worldNews", label: "Reuters World" },
 ];
+
 
 export async function runRssCollectorOnce() {
   const supabase = getSupabaseAdmin();
