@@ -93,6 +93,11 @@ async function main() {
     }
   });
 
+  // Expose /health so Railway healthcheck passes (workers have no public API otherwise).
+  const port = Number(process.env.PORT) || 3001;
+  await app.listen({ port, host: "0.0.0.0" });
+  app.log.info({ port, service: process.env.RAILWAY_SERVICE_NAME }, "workers: cron schedulers active, health server listening");
+
   const shutdown = async () => {
     app.log.info("Shutting down workers...");
     await Promise.allSettled(workers.map((w) => w?.close()));

@@ -63,3 +63,22 @@ pnpm run build
 # Start backend server
 pnpm --filter backend start
 ```
+
+---
+
+## 4. Railway Deployment Configuration Matrix
+
+Railway deploys two distinct services from the backend codebase:
+
+| Railway Service | Purpose | Build Command | Start Command | Healthcheck Path |
+| :--- | :--- | :--- | :--- | :--- |
+| **`backend`** | Fastify HTTP API & Webhooks | `pnpm install --no-frozen-lockfile && pnpm run build` | `pnpm run start:server` | `/health` |
+| **`workers`** | RSS, GDELT, GNews & Price Collectors | `pnpm install --no-frozen-lockfile && pnpm run build` | `pnpm run start:workers` (auto via `scripts/railway-start.sh`) | `/health` (workers now listen for healthcheck) |
+
+> **IMPORTANT**: 
+> 1. Both Railway services share `/apps/backend/railway.json`. Deploy settings are **locked in the Railway UI** (config-as-code). The start command uses `scripts/railway-start.sh`, which reads `RAILWAY_SERVICE_NAME` to launch `start:workers` or `start:server` automatically.
+> 2. **Disable Serverless** on the `workers` service (Settings → Deploy → Enable Serverless → OFF). Serverless is not controllable via `railway.json` and will scale workers to zero, stopping all cron jobs.
+> 3. Optionally point the `workers` service at `/apps/backend/railway.workers.json` in Settings → Config-as-code for an explicit worker-only config.
+> 2. `NIXPACKS_NO_FROZEN_LOCKFILE=1` is configured in `nixpacks.toml` to prevent `ERR_PNPM_OUTDATED_LOCKFILE` during CI image builds.
+> 3. `apps/backend/src/index.ts` imports both `server.js` and `workers.js` to ensure fallback support for default `pnpm start` entrypoints.
+

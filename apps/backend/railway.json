@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "pnpm run start:server",
+    "startCommand": "sh scripts/railway-start.sh",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100
   }

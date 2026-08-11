@@ -122,4 +122,8 @@ Collectors now classify and insert signals directly to Supabase without BullMQ q
 - **Word-Boundary Relevance Filter (`isRelevantEvent`)**: Upgraded keyword classifier in `gdelt-collector.ts` and `auto-ingest.ts` to use strict regex word boundary matching (`\bwar\b`, `\boil\b`, `\bgas\b`) and hard exclusions for historical year strings (`1970`–`2005`). Eliminates false positives like *"1970 anti-war protests"* or *"tug-of-war"*.
 - **24-Hour Feed Window & Recency Prioritization (`/api/signals`)**: Updated web signal API to filter by `event_date >= 24h ago` and sort strictly by publication timestamp (`event_date DESC`), guaranteeing real-time breaking events anchor the top of the Intelligence Feed and Alerts stream.
 - **Purged Historical Noise**: Cleaned legacy false-positive signals from Supabase DB.
-- **Production Audit**: Verified clean compilation across `apps/web` and `apps/backend` (`pnpm build`). Worker startup and 15-minute cron ingestion verified end-to-end.
+- **Production & Railway Deployment Audit**:
+  - **Nixpacks Lockfile Fix**: Configured `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` to prevent `ERR_PNPM_OUTDATED_LOCKFILE` during Railway CI container builds.
+  - **Combined Entrypoint (`src/index.ts`)**: Updated default entrypoint to import both `server.js` and `workers.js` to ensure background workers launch reliably under default `pnpm start` execution.
+  - **Railway Service Configuration Matrix**: Documented required start commands (`pnpm run start:workers` vs `pnpm run start:server`) and healthcheck rules in `12_DEPLOYMENT.md`.
+  - **Clean Builds**: Verified zero TypeScript or ESLint errors across `apps/web` and `apps/backend`.
