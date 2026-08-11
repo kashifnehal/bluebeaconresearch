@@ -83,8 +83,21 @@ export async function runGdeltCollectorOnce() {
   try {
     res = await axios.get(GDELT_API_URL, { timeout: 25_000 });
   } catch (e: any) {
-    console.error("[GDELT] Fetch failed:", e.message);
-    return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
+    const status = e.response?.status;
+    // GDELT rate-limits aggressively — retry once after 30s
+    if (status === 429) {
+      console.warn("[GDELT] Rate limited (429), retrying in 30s...");
+      await new Promise((r) => setTimeout(r, 30_000));
+      try {
+        res = await axios.get(GDELT_API_URL, { timeout: 25_000 });
+      } catch (retryErr: any) {
+        console.error("[GDELT] Retry failed:", retryErr.message);
+        return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: retryErr.message };
+      }
+    } else {
+      console.error("[GDELT] Fetch failed:", e.message);
+      return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
+    }
   }
 
   const articles: GdeltArticle[] = res.data?.articles ?? [];

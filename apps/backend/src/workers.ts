@@ -43,21 +43,27 @@ async function main() {
   cron.schedule("*/15 * * * *", async () => {
     try {
       const res = await runGdeltCollectorOnce();
-      app.log.info({ res }, "gdelt-collector");
+      app.log.info({ result: res }, "gdelt-collector");
     } catch (e) {
       app.log.error({ err: e }, "gdelt-collector failed");
       Sentry.captureException(e);
     }
     try {
       const res = await runAcledCollectorOnce();
-      app.log.info({ res }, "acled-collector");
+      app.log.info({ result: res }, "acled-collector");
     } catch (e) {
-      app.log.error({ err: e }, "acled-collector failed");
-      Sentry.captureException(e);
+      // ACLED is optional — missing credentials should not look like a crash
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("ACLED credentials missing")) {
+        app.log.debug("acled-collector skipped (no credentials)");
+      } else {
+        app.log.error({ err: e }, "acled-collector failed");
+        Sentry.captureException(e);
+      }
     }
     try {
       const res = await runGnewsCollectorOnce();
-      app.log.info({ res }, "gnews-collector");
+      app.log.info({ result: res }, "gnews-collector");
     } catch (e) {
       app.log.error({ err: e }, "gnews-collector failed");
       Sentry.captureException(e);
@@ -65,7 +71,7 @@ async function main() {
     // RSS collector: Reuters, BBC, Al Jazeera — free, real-time (<1h fresh)
     try {
       const res = await runRssCollectorOnce();
-      app.log.info({ res }, "rss-collector");
+      app.log.info({ result: res }, "rss-collector");
     } catch (e) {
       app.log.error({ err: e }, "rss-collector failed");
       Sentry.captureException(e);
@@ -75,7 +81,7 @@ async function main() {
   cron.schedule("*/15 * * * *", async () => {
     try {
       const res = await runPriceSyncOnce();
-      app.log.info({ res }, "price-sync");
+      app.log.info({ result: res }, "price-sync");
     } catch (e) {
       app.log.error({ err: e }, "price-sync failed");
       Sentry.captureException(e);

@@ -14,6 +14,8 @@ const RSS_FEEDS = [
   { url: "https://feeds.bbci.co.uk/news/world/rss.xml", label: "BBC World" },
   // Al Jazeera (strong geopolitical coverage, updates every 10-15m)
   { url: "https://www.aljazeera.com/xml/rss/all.xml", label: "Al Jazeera" },
+  // NPR World
+  { url: "https://feeds.npr.org/1004/rss.xml", label: "NPR World" },
   // France24 International
   { url: "https://www.france24.com/en/rss", label: "France24" },
   // DW World (Deutsche Welle)
@@ -22,8 +24,10 @@ const RSS_FEEDS = [
   { url: "https://oilprice.com/rss/main", label: "OilPrice" },
   // The Guardian - World
   { url: "https://www.theguardian.com/world/rss", label: "Guardian World" },
-  // Reuters (when available)
-  { url: "https://feeds.reuters.com/reuters/worldNews", label: "Reuters World" },
+  // Reuters (feeds.reuters.com DNS fails on some hosts — use agency redirect target)
+  { url: "https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best", label: "Reuters" },
+  // UN News (geopolitics, sanctions, conflict)
+  { url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml", label: "UN News" },
 ];
 
 
@@ -41,8 +45,8 @@ export async function runRssCollectorOnce() {
           ? new Date(item.isoDate ?? item.pubDate ?? "").toISOString()
           : new Date().toISOString();
 
-        // Skip articles older than 4 hours to avoid stale items
-        if (Date.now() - new Date(pubDate).getTime() > 4 * 60 * 60 * 1000) continue;
+        // Skip articles older than 12 hours (was 4h — too aggressive, missed afternoon articles)
+        if (Date.now() - new Date(pubDate).getTime() > 12 * 60 * 60 * 1000) continue;
 
         allItems.push({
           title: item.title.slice(0, 280),

@@ -7,13 +7,9 @@ import { formatCountryName } from "./ai-classifier.js";
 
 const claude = new ClaudeService();
 
-// Multiple topic queries so we get diverse, fresh coverage each run
-// GNews free tier: 100 req/day. Running 3 queries × every 15 min = ~288 req/day (requires paid tier).
-// On free tier, use 1 query. Switch to multiple when on GNews Basic ($9/mo).
+// Free tier: 1 query only (~96 req/day at 15-min intervals). Add more when on GNews Basic.
 const GNEWS_QUERIES = [
-  "conflict OR war OR military OR invasion",
-  "sanctions OR embargo OR oil OR energy OR OPEC",
-  "geopolitics OR Iran OR Russia OR China OR Taiwan",
+  "conflict OR war OR sanctions OR military OR oil OR geopolitics",
 ];
 
 async function fetchGnewsArticles(query: string, token: string) {
