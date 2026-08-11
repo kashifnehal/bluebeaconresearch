@@ -1,5 +1,10 @@
+[variables]
+NIXPACKS_NO_FROZEN_LOCKFILE = "1"
+CI = "false"
+
 [phases.install]
 cmds = ["npm install -g corepack@0.24.1 && corepack enable", "pnpm install --no-frozen-lockfile"]
 
 [phases.build]
 cmds = ["pnpm run build"]
+
