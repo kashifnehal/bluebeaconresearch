@@ -93,6 +93,11 @@ async function main() {
     }
   });
 
+  // Log heartbeat every 5 min — confirms container stayed alive between cron ticks
+  cron.schedule("*/5 * * * *", () => {
+    app.log.info({ uptimeSec: Math.round(process.uptime()) }, "workers:heartbeat");
+  });
+
   // Expose /health so Railway healthcheck passes (workers have no public API otherwise).
   const port = Number(process.env.PORT) || 3001;
   await app.listen({ port, host: "0.0.0.0" });

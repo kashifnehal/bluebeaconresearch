@@ -4,6 +4,12 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "pnpm run start:workers"
+    "startCommand": "pnpm run start:workers",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 120,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10,
+    "numReplicas": 1
   }
 }

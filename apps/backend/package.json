@@ -11,6 +11,8 @@
     "start": "node dist/index.js",
     "start:server": "node dist/server.js",
     "start:workers": "node dist/workers.js",
+    "ingest:once": "node dist/scripts/ingest-once.js",
+    "migrate": "echo \"No migrations to run (Supabase managed externally)\"",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"(lint handled at repo root)\"",
     "test": "echo \"(no tests yet)\" && exit 0"

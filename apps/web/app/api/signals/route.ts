@@ -1,8 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 import type { Signal } from "@blue-beacon-research/shared";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type SignalRow = {
   id: string;
@@ -44,12 +48,28 @@ export async function GET(req: NextRequest) {
   }
 
   const cookieStore = await cookies();
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+  const supabaseAuth = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: () => {},
     },
   });
+
+  // Require authenticated session for dashboard data (matches RLS policy).
+  const {
+    data: { user },
+  } = await supabaseAuth.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ signals: [], nextCursor: null, total: 0 });
+  }
+
+  // Prefer service role for server-side reads — avoids RLS/session edge cases on API routes.
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabase =
+    serviceKey && supabaseUrl
+      ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
+      : supabaseAuth;
 
   const url = new URL(req.url);
   const severity = url.searchParams.get("severity");
