@@ -75,6 +75,13 @@ export async function GET(req: NextRequest) {
 
   const { data, error, count } = await query.limit(20);
 
+  // Fail-safe: if newest signal is older than 15 min or missing, trigger inline auto-ingest asynchronously
+  const newestRow = data?.[0];
+  if (!newestRow || (newestRow.created_at && Date.now() - new Date(newestRow.created_at).getTime() > 15 * 60 * 1000)) {
+    const { autoIngestIfStale } = await import("@/lib/auto-ingest");
+    autoIngestIfStale().catch(() => {});
+  }
+
   if (error) {
     console.error("[signals] DB error:", error.message);
     return NextResponse.json({ error: "Failed to fetch signals" }, { status: 500 });
