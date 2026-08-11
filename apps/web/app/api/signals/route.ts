@@ -62,16 +62,21 @@ export async function GET(req: NextRequest) {
   if (region) query = query.eq("region", region);
   if (commodity) query = query.contains("commodity_impacts", [{ asset: commodity }]);
 
-  // Only show active signals from the last 7 days to keep feed fresh
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  query = query.gte("created_at", sevenDaysAgo);
+  // Show signals whose SOURCE ARTICLE was published in the last 24 hours.
+  // This filters out stale GNews free-tier articles (12h+ lag) while keeping
+  // real-time RSS signals that are typically 0–4 hours old.
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  query = query.gte("event_date", twentyFourHoursAgo);
 
+  // Sort: most recent articles first (within severity tier)
+  // event_date = when the article was PUBLISHED (most important for freshness)
+  // created_at = when we ingested it (tiebreaker)
   query =
     sort === "newest"
       ? query.order("event_date", { ascending: false }).order("created_at", { ascending: false })
       : sort === "confidence"
-        ? query.order("confidence", { ascending: false })
-        : query.order("severity", { ascending: false }).order("event_date", { ascending: false }).order("created_at", { ascending: false });
+        ? query.order("confidence", { ascending: false }).order("event_date", { ascending: false })
+        : query.order("event_date", { ascending: false }).order("severity", { ascending: false }).order("created_at", { ascending: false });
 
   const { data, error, count } = await query.limit(20);
 

@@ -1,23 +1,31 @@
 import { createClient } from "@supabase/supabase-js";
 
-export const HIGH_RELEVANCE_KEYWORDS = [
-  "war", "conflict", "attack", "strike", "missile", "bomb", "explosion", "troops",
-  "military", "sanction", "blockade", "invasion", "offensive", "airstrike", "ceasefire",
-  "oil", "crude", "gas", "pipeline", "refinery", "opec", "hormuz", "energy", "fuel",
-  "tariff", "embargo", "trade war", "inflation", "fed", "central bank", "recession",
-  "iran", "russia", "ukraine", "china", "taiwan", "israel", "hamas", "houthi", "nato",
-  "wheat", "grain", "gold", "copper", "shipping", "tanker", "suez", "red sea"
+// Exact-word keywords (can appear inside other words like "anti-war")
+const EXACT_WORD_KW = ["war", "oil", "gas", "bomb", "coup", "riot", "gold"];
+
+const HIGH_RELEVANCE_KW = [
+  "conflict", "missile", "explosion", "troops", "military strike",
+  "sanction", "blockade", "invasion", "airstrike", "ceasefire", "drone attack",
+  "civil war", "crude", "pipeline", "opec", "hormuz", "energy crisis",
+  "tariff", "embargo", "trade war", "inflation", "central bank", "recession",
+  "iran", "russia", "ukraine", "taiwan", "israel", "hamas", "houthi",
+  "nato", "nuclear", "escalation", "tension", "wheat", "tanker", "red sea",
 ];
 
-export const EXCLUDE_KEYWORDS = [
+const EXCLUDE_KW = [
   "sports", "football", "soccer", "fifa", "nfl", "nba", "olympics",
-  "celebrity", "music", "movie", "film", "award", "weather", "tourism"
+  "celebrity", "music", "movie", "film", "award", "weather", "tourism",
+  "1970", "1971", "1972", "1973", "1974", "1975", "1976", "1977", "1978", "1979",
+  "1980", "tug-of-war", "war movie", "war film", "star wars", "anti-war", "bcci", "cricket",
 ];
 
 function isRelevant(title: string, summary: string = ""): boolean {
   const text = (title + " " + summary).toLowerCase();
-  if (EXCLUDE_KEYWORDS.some((kw) => text.includes(kw))) return false;
-  return HIGH_RELEVANCE_KEYWORDS.some((kw) => text.includes(kw));
+  if (EXCLUDE_KW.some((kw) => text.includes(kw))) return false;
+  for (const kw of EXACT_WORD_KW) {
+    if (new RegExp(`\\b${kw}\\b`).test(text)) return true;
+  }
+  return HIGH_RELEVANCE_KW.some((kw) => text.includes(kw));
 }
 
 function heuristicClassify(title: string, summaryText: string) {

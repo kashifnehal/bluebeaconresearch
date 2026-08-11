@@ -9,6 +9,7 @@ import { startAlertDispatcherWorker } from "./workers/alert-dispatcher.js";
 import { runGdeltCollectorOnce } from "./workers/gdelt-collector.js";
 import { runAcledCollectorOnce } from "./workers/acled-collector.js";
 import { runGnewsCollectorOnce } from "./workers/gnews-collector.js";
+import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 
@@ -34,6 +35,7 @@ async function main() {
   Promise.allSettled([
     runGdeltCollectorOnce().then(r => app.log.info({ r }, "startup:gdelt")),
     runGnewsCollectorOnce().then(r => app.log.info({ r }, "startup:gnews")),
+    runRssCollectorOnce().then(r => app.log.info({ r }, "startup:rss")),
     runPriceSyncOnce().then(r => app.log.info({ r }, "startup:prices")),
   ]).catch(() => {});
 
@@ -58,6 +60,14 @@ async function main() {
       app.log.info({ res }, "gnews-collector");
     } catch (e) {
       app.log.error({ err: e }, "gnews-collector failed");
+      Sentry.captureException(e);
+    }
+    // RSS collector: Reuters, BBC, Al Jazeera — free, real-time (<1h fresh)
+    try {
+      const res = await runRssCollectorOnce();
+      app.log.info({ res }, "rss-collector");
+    } catch (e) {
+      app.log.error({ err: e }, "rss-collector failed");
       Sentry.captureException(e);
     }
   });
