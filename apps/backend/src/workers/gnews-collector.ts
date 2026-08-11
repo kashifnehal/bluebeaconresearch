@@ -7,9 +7,9 @@ import { formatCountryName } from "./ai-classifier.js";
 
 const claude = new ClaudeService();
 
-// Free tier: 1 query only (~96 req/day at 15-min intervals). Add more when on GNews Basic.
+// Free tier: 1 query (~96 req/day at 15-min intervals). Covers geopolitical + markets.
 const GNEWS_QUERIES = [
-  "conflict OR war OR sanctions OR military OR oil OR geopolitics",
+  "conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed OR earnings OR futures",
 ];
 
 async function fetchGnewsArticles(query: string, token: string) {

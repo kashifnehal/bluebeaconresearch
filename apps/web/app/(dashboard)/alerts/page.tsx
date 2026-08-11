@@ -7,6 +7,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function AlertsPage() {
@@ -91,6 +92,8 @@ export default function AlertsPage() {
           <button onClick={() => router.push("/backtesting")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer">Lab</button>
         </div>
       </section>
+
+      <IngestionStatusBanner />
 
       {/* Filters Bar */}
       <section className="flex justify-between items-center py-4 border-y border-outline-variant/20 mb-8">

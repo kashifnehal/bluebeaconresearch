@@ -12,6 +12,26 @@ import { runGnewsCollectorOnce } from "./workers/gnews-collector.js";
 import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
+import { buildPipelineStatus, recordPipelineRun } from "./lib/pipeline-status.js";
+
+async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
+  const [gdelt, gnews, rss, prices] = await Promise.allSettled([
+    runGdeltCollectorOnce(),
+    runGnewsCollectorOnce(),
+    runRssCollectorOnce(),
+    runPriceSyncOnce(),
+  ]);
+
+  const collectors = {
+    gdelt: gdelt.status === "fulfilled" ? gdelt.value : { error: String(gdelt.reason) },
+    gnews: gnews.status === "fulfilled" ? gnews.value : { error: String(gnews.reason) },
+    rss: rss.status === "fulfilled" ? rss.value : { error: String(rss.reason) },
+    prices: prices.status === "fulfilled" ? prices.value : { error: String(prices.reason) },
+  };
+
+  await recordPipelineRun(buildPipelineStatus(collectors));
+  return collectors;
+}
 
 async function main() {
   getEnv();
@@ -32,27 +52,23 @@ async function main() {
   // ── Run collectors IMMEDIATELY on startup (don't wait up to 15 min for first cron tick) ──
   // This means after a Railway deploy or restart, data is fresh within ~30 seconds.
   app.log.info("Running initial ingestion immediately on startup...");
-  Promise.allSettled([
-    runGdeltCollectorOnce().then(r => app.log.info({ r }, "startup:gdelt")),
-    runGnewsCollectorOnce().then(r => app.log.info({ r }, "startup:gnews")),
-    runRssCollectorOnce().then(r => app.log.info({ r }, "startup:rss")),
-    runPriceSyncOnce().then(r => app.log.info({ r }, "startup:prices")),
-  ]).catch(() => {});
+  runIngestionCycle(app).then((c) => {
+    app.log.info({ collectors: c }, "startup:ingestion complete");
+  }).catch(() => {});
 
   // ── Every 15 min: collect news signals ─────────────────────────────────
   cron.schedule("*/15 * * * *", async () => {
     try {
-      const res = await runGdeltCollectorOnce();
-      app.log.info({ result: res }, "gdelt-collector");
+      const collectors = await runIngestionCycle(app);
+      app.log.info({ collectors }, "ingestion-cycle complete");
     } catch (e) {
-      app.log.error({ err: e }, "gdelt-collector failed");
+      app.log.error({ err: e }, "ingestion-cycle failed");
       Sentry.captureException(e);
     }
     try {
       const res = await runAcledCollectorOnce();
       app.log.info({ result: res }, "acled-collector");
     } catch (e) {
-      // ACLED is optional — missing credentials should not look like a crash
       const msg = e instanceof Error ? e.message : String(e);
       if (msg.includes("ACLED credentials missing")) {
         app.log.debug("acled-collector skipped (no credentials)");
@@ -60,31 +76,6 @@ async function main() {
         app.log.error({ err: e }, "acled-collector failed");
         Sentry.captureException(e);
       }
-    }
-    try {
-      const res = await runGnewsCollectorOnce();
-      app.log.info({ result: res }, "gnews-collector");
-    } catch (e) {
-      app.log.error({ err: e }, "gnews-collector failed");
-      Sentry.captureException(e);
-    }
-    // RSS collector: Reuters, BBC, Al Jazeera — free, real-time (<1h fresh)
-    try {
-      const res = await runRssCollectorOnce();
-      app.log.info({ result: res }, "rss-collector");
-    } catch (e) {
-      app.log.error({ err: e }, "rss-collector failed");
-      Sentry.captureException(e);
-    }
-  });
-
-  cron.schedule("*/15 * * * *", async () => {
-    try {
-      const res = await runPriceSyncOnce();
-      app.log.info({ result: res }, "price-sync");
-    } catch (e) {
-      app.log.error({ err: e }, "price-sync failed");
-      Sentry.captureException(e);
     }
   });
 

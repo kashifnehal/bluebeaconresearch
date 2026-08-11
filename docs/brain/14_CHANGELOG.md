@@ -127,3 +127,64 @@ Collectors now classify and insert signals directly to Supabase without BullMQ q
   - **Combined Entrypoint (`src/index.ts`)**: Updated default entrypoint to import both `server.js` and `workers.js` to ensure background workers launch reliably under default `pnpm start` execution.
   - **Railway Service Configuration Matrix**: Documented required start commands (`pnpm run start:workers` vs `pnpm run start:server`) and healthcheck rules in `12_DEPLOYMENT.md`.
   - **Clean Builds**: Verified zero TypeScript or ESLint errors across `apps/web` and `apps/backend`.
+
+---
+
+### v0.13.0 — Railway Workers Reliability, Collector Hardening & Timestamp UX Clarification
+
+**Context**: Dashboard appeared "stuck" showing data from hours ago despite Railway deploys. Root cause analysis proved the pipeline was partially working but misunderstood.
+
+**Railway Workers Infrastructure Fix:**
+- **`railway.workers.json`**: Added `"sleepApplication": false`, `/health` healthcheck, `numReplicas: 1`, and restart policy. Prevents Serverless sleep mode from killing 15-minute `node-cron` schedulers.
+- **`scripts/railway-start.sh`**: Smart start script reads `RAILWAY_SERVICE_NAME` to launch `start:workers` vs `start:server` when both services share `/apps/backend`.
+- **`workers.ts`**: Workers now listen on `PORT` and expose `/health` for Railway healthchecks. Added `workers:heartbeat` log every 5 min to verify container stays alive. Fixed Pino log key (`result` not `res` — `res` is reserved and serialized as `{}`).
+- **`ingest-once.ts`**: One-shot collector script for manual/cron triggers (`pnpm run ingest:once`).
+- **`package.json`**: Added no-op `migrate` script so Railway pre-deploy `npm run migrate` does not fail.
+
+**Collector Hardening:**
+- **RSS**: Expanded feeds (NPR World, UN News), extended article window 4h → 12h, fixed broken Reuters URL (old `feeds.reuters.com` DNS fails on Railway).
+- **GNews**: Reduced to 1 query per run (free tier ~96 req/day; 3 queries × every 15 min exceeded daily quota).
+- **GDELT**: Added 30s retry on HTTP 429 rate limit.
+- **ACLED**: Missing credentials now logged as skip, not crash-level error.
+
+**Web API (`/api/signals`):**
+- Added `force-dynamic` + `revalidate = 0` — no Next.js route caching on refresh.
+- Requires authenticated session; prefers `SUPABASE_SERVICE_ROLE_KEY` on Vercel for reliable server-side reads.
+
+**Critical UX Finding — Why Timestamps Look "Old":**
+- UI displays **`eventDate`** (when the source article was **published**), NOT **`createdAt`** (when we **ingested** it).
+- Example from production DB (2026-08-11): signal ingested **6 min ago** can correctly display **"12 hours ago"** if the BBC/Reuters article was published 12 hours earlier.
+- Featured cards on `/alerts` prioritize **`severity >= 8`**, so newly ingested low-severity signals (e.g. severity 5) may not appear as the hero card even though they are in the database.
+- **Refresh works correctly** — it re-fetches Supabase every 30s. When collectors report `inserted: 0, duplicates: N`, the dashboard correctly shows the same rows.
+
+**Verified Production Log Pattern (healthy workers):**
+```
+startup:ingestion complete → collectors.rss.inserted: N
+ingestion-cycle complete → every 15 min
+workers:heartbeat → every 5 min
+```
+
+---
+
+### v0.14.0 — Expanded Market Coverage, Ingestion Banner & Pipeline Documentation
+
+**Product request:** Show last-fetched time in UI; reduce over-filtering of finance/market news; fix Reuters feed; document full ingestion logic.
+
+**Relevance filter refactor (`lib/relevance-filter.ts`):**
+- Extracted shared filter from `gdelt-collector.ts`.
+- Added 50+ **market/finance keywords** (stocks, futures, earnings, fed, inflation, crypto, mergers, etc.).
+- Two-tier RSS filtering: `finance` feeds (BBC Business, MarketWatch, WSJ Markets…) pass with hard-exclude only; `world` feeds require keyword match.
+
+**RSS collector expansion:**
+- Removed broken Reuters URLs (401/404 from server environments).
+- Added: BBC Business, Guardian Business, NYT Business, MarketWatch, WSJ Markets, Investing.com.
+- Article window set to **4 hours** (product requirement).
+
+**GNews + GDELT queries expanded** to include market/finance terms.
+
+**Ingestion status banner (`IngestionStatusBanner.tsx`):**
+- Shows last fetched time, next run estimate, last run signal count.
+- API: `/api/ingestion/status` reads Redis `pipeline:last_run` (fallback: Supabase `max(raw_events.created_at)`).
+- Workers write pipeline status after each ingestion cycle.
+
+**Documentation:** `docs/brain/15_INGESTION_PIPELINE.md` — full source-by-source logic, filters, display rules, and troubleshooting.

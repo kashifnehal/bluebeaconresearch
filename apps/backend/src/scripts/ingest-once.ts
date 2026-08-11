@@ -7,6 +7,7 @@ import { runGdeltCollectorOnce } from "../workers/gdelt-collector.js";
 import { runGnewsCollectorOnce } from "../workers/gnews-collector.js";
 import { runRssCollectorOnce } from "../workers/rss-collector.js";
 import { runPriceSyncOnce } from "../workers/price-syncer.js";
+import { buildPipelineStatus, recordPipelineRun } from "../lib/pipeline-status.js";
 
 async function main() {
   getEnv();
@@ -19,15 +20,16 @@ async function main() {
     runPriceSyncOnce(),
   ]);
 
-  const summary = {
+  const collectors = {
     gdelt: gdelt.status === "fulfilled" ? gdelt.value : { error: String(gdelt.reason) },
     gnews: gnews.status === "fulfilled" ? gnews.value : { error: String(gnews.reason) },
     rss: rss.status === "fulfilled" ? rss.value : { error: String(rss.reason) },
     prices: prices.status === "fulfilled" ? prices.value : { error: String(prices.reason) },
-    finishedAt: new Date().toISOString(),
   };
 
-  console.log("[ingest-once] done:", JSON.stringify(summary));
+  const status = buildPipelineStatus(collectors);
+  await recordPipelineRun(status);
+  console.log("[ingest-once] done:", JSON.stringify(status));
 }
 
 main().catch((e) => {

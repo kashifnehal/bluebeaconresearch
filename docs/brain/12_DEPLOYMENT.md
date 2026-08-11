@@ -76,10 +76,19 @@ Railway deploys two distinct services from the backend codebase:
 | **`workers`** | RSS, GDELT, GNews & Price Collectors | `pnpm install --no-frozen-lockfile && pnpm run build` | `pnpm run start:workers` | `/health` |
 
 > **IMPORTANT**:
-> 1. Workers service must use `/apps/backend/railway.workers.json` which sets `"sleepApplication": false`. **Serverless/sleep mode kills 15-minute cron jobs** because the container scales to zero with no traffic.
-> 2. Clear any broken pre-deploy command (`npm run migrate` is now a no-op in `package.json` if you keep it).
-> 3. After deploy, verify logs show `startup:rss` immediately, then `rss-collector` every 15 min and `workers:heartbeat` every 5 min.
-> 4. Add `SUPABASE_SERVICE_ROLE_KEY` to **Vercel** env so `/api/signals` reads reliably when users refresh the dashboard.
-> 2. `NIXPACKS_NO_FROZEN_LOCKFILE=1` is configured in `nixpacks.toml` to prevent `ERR_PNPM_OUTDATED_LOCKFILE` during CI image builds.
-> 3. `apps/backend/src/index.ts` imports both `server.js` and `workers.js` to ensure fallback support for default `pnpm start` entrypoints.
+> 1. Workers service **must** use config file `/apps/backend/railway.workers.json` (not `railway.json`). Settings are locked in Railway UI when config-as-code is active — change the file in GitHub and redeploy.
+> 2. `"sleepApplication": false` in `railway.workers.json` is **required**. Serverless/sleep mode scales workers to zero with no HTTP traffic, killing 15-minute cron jobs.
+> 3. After deploy, verify logs: `startup:rss` within 30s, `workers:heartbeat` every 5 min, `rss-collector` every 15 min.
+> 4. Add `SUPABASE_SERVICE_ROLE_KEY` to **Vercel** (not just Railway) so `/api/signals` reads reliably on dashboard refresh.
+> 5. `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` prevents lockfile errors during Railway builds.
+> 6. Pre-deploy `npm run migrate` is a no-op in `package.json` — safe if left configured in Railway UI.
+
+### Troubleshooting: "Dashboard shows old data after deploy"
+
+This is usually **not** a caching or Railway failure. Check in order:
+
+1. **Workers logs** — did `startup:rss` show `inserted > 0`? If `inserted: 0, duplicates: N`, feeds had no new articles.
+2. **Supabase** — compare `created_at` (ingestion) vs `event_date` (publish). UI shows `event_date`.
+3. **Vercel env** — is `SUPABASE_SERVICE_ROLE_KEY` set? Without it, `/api/signals` may return empty for some sessions.
+4. **Featured card logic** — `/alerts` hero picks `severity >= 8` first; new low-severity signals won't replace the hero card.
 

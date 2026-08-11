@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,6 +54,8 @@ export default function DashboardPage() {
             Real-time global signal monitoring
           </p>
         </div>
+
+        <IngestionStatusBanner />
 
         {/* Filter Pills */}
         <div className="flex gap-3 mb-8">

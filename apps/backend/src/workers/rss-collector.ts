@@ -2,39 +2,39 @@ import Parser from "rss-parser";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
-import { isRelevantEvent } from "./gdelt-collector.js";
+import { isRelevantEvent, type FeedTier } from "../lib/relevance-filter.js";
 
 const claude = new ClaudeService();
 const parser = new Parser({ timeout: 20_000 });
 
-// Free, no-auth-required RSS feeds that update every 5–15 minutes
-// These provide TRULY CURRENT news (within the last hour) unlike GNews free tier
-const RSS_FEEDS = [
-  // BBC World
-  { url: "https://feeds.bbci.co.uk/news/world/rss.xml", label: "BBC World" },
-  // Al Jazeera (strong geopolitical coverage, updates every 10-15m)
-  { url: "https://www.aljazeera.com/xml/rss/all.xml", label: "Al Jazeera" },
-  // NPR World
-  { url: "https://feeds.npr.org/1004/rss.xml", label: "NPR World" },
-  // France24 International
-  { url: "https://www.france24.com/en/rss", label: "France24" },
-  // DW World (Deutsche Welle)
-  { url: "https://rss.dw.com/rdf/rss-en-world", label: "DW World" },
-  // OilPrice.com (Energy & Oil geopolitics)
-  { url: "https://oilprice.com/rss/main", label: "OilPrice" },
-  // The Guardian - World
-  { url: "https://www.theguardian.com/world/rss", label: "Guardian World" },
-  // Reuters (feeds.reuters.com DNS fails on some hosts — use agency redirect target)
-  { url: "https://www.reutersagency.com/feed/?taxonomy=best-topics&post_type=best", label: "Reuters" },
-  // UN News (geopolitics, sanctions, conflict)
-  { url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml", label: "UN News" },
-];
+/** Max article age — 4h window per product requirement for market-moving news */
+const MAX_ARTICLE_AGE_MS = 4 * 60 * 60 * 1000;
 
+type RssFeed = { url: string; label: string; tier: FeedTier };
+
+const RSS_FEEDS: RssFeed[] = [
+  // ── World / geopolitical ──
+  { url: "https://feeds.bbci.co.uk/news/world/rss.xml", label: "BBC World", tier: "world" },
+  { url: "https://www.aljazeera.com/xml/rss/all.xml", label: "Al Jazeera", tier: "world" },
+  { url: "https://feeds.npr.org/1004/rss.xml", label: "NPR World", tier: "world" },
+  { url: "https://www.france24.com/en/rss", label: "France24", tier: "world" },
+  { url: "https://rss.dw.com/rdf/rss-en-world", label: "DW World", tier: "world" },
+  { url: "https://www.theguardian.com/world/rss", label: "Guardian World", tier: "world" },
+  { url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml", label: "UN News", tier: "world" },
+  // ── Finance / markets (lighter filter — only hard-exclude sports/celebrity) ──
+  { url: "https://feeds.bbci.co.uk/news/business/rss.xml", label: "BBC Business", tier: "finance" },
+  { url: "https://www.theguardian.com/business/rss", label: "Guardian Business", tier: "finance" },
+  { url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml", label: "NYT Business", tier: "finance" },
+  { url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", label: "MarketWatch", tier: "finance" },
+  { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", label: "WSJ Markets", tier: "finance" },
+  { url: "https://www.investing.com/rss/news.rss", label: "Investing.com", tier: "finance" },
+  { url: "https://oilprice.com/rss/main", label: "OilPrice", tier: "finance" },
+];
 
 export async function runRssCollectorOnce() {
   const supabase = getSupabaseAdmin();
 
-  const allItems: { title: string; summary: string; url: string; pubDate: string; label: string }[] = [];
+  const allItems: { title: string; summary: string; url: string; pubDate: string; label: string; tier: FeedTier }[] = [];
 
   for (const feed of RSS_FEEDS) {
     try {
@@ -45,8 +45,7 @@ export async function runRssCollectorOnce() {
           ? new Date(item.isoDate ?? item.pubDate ?? "").toISOString()
           : new Date().toISOString();
 
-        // Skip articles older than 12 hours (was 4h — too aggressive, missed afternoon articles)
-        if (Date.now() - new Date(pubDate).getTime() > 12 * 60 * 60 * 1000) continue;
+        if (Date.now() - new Date(pubDate).getTime() > MAX_ARTICLE_AGE_MS) continue;
 
         allItems.push({
           title: item.title.slice(0, 280),
@@ -54,6 +53,7 @@ export async function runRssCollectorOnce() {
           url: item.link,
           pubDate,
           label: feed.label,
+          tier: feed.tier,
         });
       }
       await new Promise((r) => setTimeout(r, 200));
@@ -62,7 +62,6 @@ export async function runRssCollectorOnce() {
     }
   }
 
-  // Deduplicate by URL
   const seen = new Set<string>();
   const items = allItems.filter((item) => {
     if (seen.has(item.url)) return false;
@@ -77,7 +76,7 @@ export async function runRssCollectorOnce() {
   let signals = 0;
 
   for (const item of items) {
-    if (!isRelevantEvent(item.title, item.summary)) {
+    if (!isRelevantEvent(item.title, item.summary, item.tier)) {
       filtered++;
       continue;
     }
@@ -105,7 +104,7 @@ export async function runRssCollectorOnce() {
       lng: null,
       event_type: "news",
       event_date: item.pubDate,
-      raw_data: { url: item.url, source: item.label },
+      raw_data: { url: item.url, source: item.label, tier: item.tier },
     };
 
     const insert = await supabase
