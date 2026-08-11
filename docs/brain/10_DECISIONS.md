@@ -94,9 +94,26 @@ Both `gnews-collector.ts` and `gdelt-collector.ts` now **classify and insert sig
 
 ---
 
-## 7. Architectural Assumptions & Future Risks
+## 7. ADR 007: RSS Real-Time Collector & Strict Word-Boundary Ingestion
 
-1. **Third-Party API Availability**: System relies on GNews, GDELT, Yahoo Finance uptime.
+### Context
+GNews API free tier caches articles with a 12-hour lag, serving stale news despite workers running every 15 minutes. Additionally, simple substring keyword filters (`"war"`) produced false positives from historical or benign articles (e.g., *"1970 anti-war protests"*, *"tug-of-war"*).
+
+### Decision
+1. Introduce a dedicated RSS Collector (`apps/backend/src/workers/rss-collector.ts`) fetching live feeds from Reuters, BBC World, Al Jazeera, and The Guardian without API keys or rate limits.
+2. Upgrade `isRelevantEvent` across collectors and inline auto-ingest to enforce **regex word-boundary matching** (`\bwar\b`, `\boil\b`, `\bgas\b`) and hard exclusions for historic year ranges (`1970`–`2005`).
+3. Limit the web signal feed (`/api/signals`) to a **24-hour `event_date` window** sorted by publication timestamp `event_date DESC`.
+
+### Rationale
+- **Sub-Hour Freshness**: Wire RSS feeds provide breaking news within minutes (<1h), overcoming third-party API cache delays.
+- **Zero API Costs**: RSS feeds require no authentication keys or paid subscriptions.
+- **Signal Precision**: Regex word-boundary filtering ensures only true geopolitical/military/economic events reach severity 8–9.
+
+---
+
+## 8. Architectural Assumptions & Future Risks
+
+1. **Third-Party API & RSS Feed Availability**: System relies on GNews, GDELT, RSS endpoints, Yahoo Finance uptime.
 2. **Anthropic API Credits**: Production requires Anthropic credits. Heuristic fallback covers outages but quality is lower.
 3. **GNews Free Tier**: 10 articles / 15 min = 960 articles/day. Upgrade if more volume is needed.
 4. **GDELT Reliability**: GDELT v2/doc/doc API is academic infrastructure; occasional slow responses are expected.

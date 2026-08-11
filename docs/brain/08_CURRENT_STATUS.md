@@ -1,6 +1,6 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 
 ---
 
@@ -10,22 +10,23 @@ Last updated: 2026-08-10
 | :--- | :--- | :--- |
 | **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
 | **Next.js 16 Web App (Vercel)** | ✅ Operational | Build clean, SSR-safe, zero window crashes |
-| **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date) |
+| **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date index) |
+| **RSS Real-Time Collector** | ✅ Operational | Reuters, BBC, Al Jazeera, Guardian (real-time news <1h old) |
 | **GNews Ingestion** | ✅ Operational | Multi-query search, automatic deduplication |
 | **GDELT Ingestion** | ✅ Operational | Connected to active `v2/doc/doc` endpoint |
 | **Price Syncer (Yahoo Finance)** | ✅ Operational | Real-time prices synced for 8 commodity benchmarks |
 | **Claude AI Classifier** | ⚠️ Degraded | Zero Anthropic credit — dynamic heuristic fallback active |
-| **Heuristic Fallback Classifier** | ✅ Operational | Dynamic confidence scoring (55%–90%) across 5 factors |
+| **Heuristic Fallback Classifier** | ✅ Operational | Dynamic confidence scoring (55%–90%) + word-boundary filtering |
 | **Upstash Redis / BullMQ** | ✅ Operational | Fixed `rediss://` TLS protocol |
 | **Interactive UI Controls** | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active |
 
 ---
 
-## 2. Data Pipeline State (as of 2026-08-10)
+## 2. Data Pipeline State (as of 2026-08-11)
 
-- **`raw_events`**: 14 rows (GNews & GDELT events)
-- **`signals`**: 14 rows (all with accurate `event_date` publication timestamps)
-- **`commodity_prices`**: 8 rows (WTI Crude $78.80, Gold $4,399.50, Natural Gas, Wheat, Copper, Silver, Corn, Brent)
+- **`raw_events`**: Active ingestion across RSS, GNews, and GDELT.
+- **`signals`**: Real-time geopolitical signals filtered by 24h `event_date` window.
+- **`commodity_prices`**: 8 rows (WTI Crude, Gold, Natural Gas, Wheat, Copper, Silver, Corn, Brent).
 
 The pipeline runs automatically on startup and on 15-minute cron intervals.
 
@@ -34,21 +35,21 @@ The pipeline runs automatically on startup and on 15-minute cron intervals.
 ## 3. How the Data Pipeline Works
 
 ```
-GNews API (every 15m)
+RSS Feeds (Reuters, BBC, Al Jazeera, Guardian) + GNews + GDELT (every 15m)
         ↓
-gnews-collector.ts fetches 10 articles
+rss-collector.ts / gnews-collector.ts / gdelt-collector.ts fetch articles
         ↓
-isRelevantEvent() keyword filter
+isRelevantEvent() word-boundary keyword filter (\bwar\b, \boil\b, \bgas\b)
         ↓
-Insert into raw_events (source='newsapi')
+Insert into raw_events (source='newsapi' or 'gdelt')
         ↓
 ClaudeService.classifyEvent()
   → If Anthropic API has credit: calls claude-3-5-haiku
   → If Anthropic fails (credit/rate): heuristicClassify() runs locally
         ↓
-Insert into signals table
+Insert into signals table (with event_date publication timestamp)
         ↓
-Next.js /api/signals → Frontend
+Next.js /api/signals (24h event_date window, sorted by event_date DESC) → Frontend
 ```
 
 Workers also sync commodity prices via Yahoo Finance every 15 minutes into `commodity_prices`.
@@ -59,6 +60,8 @@ Workers also sync commodity prices via Yahoo Finance every 15 minutes into `comm
 
 | Issue | Severity | Status |
 | :--- | :--- | :--- |
+| GNews 12h free tier cache delay | Fixed | Integrated real-time RSS collector (<1h fresh) + 24h event_date filter |
+| Loose keyword false positives (e.g. 1970 anti-war) | Fixed | Implemented strict regex word-boundary matching (`\bwar\b`) and year exclusions |
 | Anthropic API credit exhausted | High | **Add credits at console.anthropic.com** — heuristic fallback active |
 | `raw_events.source` check constraint excludes `gnews` | Fixed | Mapped GNews → `newsapi` source value; migration 008 created |
 | `yahoo-finance2` v3 API change (`new YahooFinance()`) | Fixed | price-syncer.ts updated |

@@ -112,3 +112,14 @@ Collectors now classify and insert signals directly to Supabase without BullMQ q
   - Built direct CSV export handler into "Download Audit Log" button on `/backtesting` page (`backtest_audit_<symbol>_<horizon>.csv`).
   - Confirmed all cards and signal table rows navigate seamlessly to `/events/[id]`.
 - **Migration 009 Applied**: Successfully applied `009_signals_event_date.sql` to Supabase DB. `event_date` column now populated and indexed across all signal rows.
+
+---
+
+### v0.12.0 — Real-Time RSS Ingestion, Word-Boundary Precision & Production Audit
+
+**Real-Time Data Pipeline Upgrade:**
+- **RSS Collector Added (`apps/backend/src/workers/rss-collector.ts`)**: Integrated live RSS ingestion from Reuters, BBC World, Al Jazeera, and The Guardian. Delivers sub-hour breaking news (<1h fresh) directly into `raw_events` and `signals`, solving GNews free tier's 12-hour caching lag.
+- **Word-Boundary Relevance Filter (`isRelevantEvent`)**: Upgraded keyword classifier in `gdelt-collector.ts` and `auto-ingest.ts` to use strict regex word boundary matching (`\bwar\b`, `\boil\b`, `\bgas\b`) and hard exclusions for historical year strings (`1970`–`2005`). Eliminates false positives like *"1970 anti-war protests"* or *"tug-of-war"*.
+- **24-Hour Feed Window & Recency Prioritization (`/api/signals`)**: Updated web signal API to filter by `event_date >= 24h ago` and sort strictly by publication timestamp (`event_date DESC`), guaranteeing real-time breaking events anchor the top of the Intelligence Feed and Alerts stream.
+- **Purged Historical Noise**: Cleaned legacy false-positive signals from Supabase DB.
+- **Production Audit**: Verified clean compilation across `apps/web` and `apps/backend` (`pnpm build`). Worker startup and 15-minute cron ingestion verified end-to-end.
