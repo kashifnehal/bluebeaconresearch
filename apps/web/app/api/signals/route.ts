@@ -27,6 +27,8 @@ type SignalRow = {
   is_active: boolean | null;
   raw_event_ids: string[] | null;
   created_at: string;
+  updated_at: string | null;
+  event_date: string | null;
 };
 
 export async function GET(req: NextRequest) {
@@ -68,7 +70,9 @@ export async function GET(req: NextRequest) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabase =
     serviceKey && supabaseUrl
-      ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
+      ? createClient(supabaseUrl, serviceKey, {
+          auth: { persistSession: false },
+        })
       : supabaseAuth;
 
   const url = new URL(req.url);
@@ -76,40 +80,72 @@ export async function GET(req: NextRequest) {
   const region = url.searchParams.get("region");
   const commodity = url.searchParams.get("commodity");
   const sort = url.searchParams.get("sort") ?? "severity";
+  const window =
+    url.searchParams.get("window") ?? url.searchParams.get("range");
 
-  let query = supabase.from("signals").select("*", { count: "exact" });
+  let query = supabase
+    .from("signals")
+    .select("*, event_date", { count: "exact" });
   if (severity) query = query.gte("severity", Number(severity));
   if (region) query = query.eq("region", region);
-  if (commodity) query = query.contains("commodity_impacts", [{ asset: commodity }]);
+  if (commodity)
+    query = query.contains("commodity_impacts", [{ asset: commodity }]);
 
-  // Show signals whose SOURCE ARTICLE was published in the last 24 hours.
-  // This filters out stale GNews free-tier articles (12h+ lag) while keeping
-  // real-time RSS signals that are typically 0–4 hours old.
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  query = query.gte("event_date", twentyFourHoursAgo);
+  const twentyFourHoursAgo = new Date(
+    Date.now() - 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const sevenDaysAgo = new Date(
+    Date.now() - 7 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
+  if (window === "active") {
+    query = query.eq("is_active", true);
+  } else if (window === "7d") {
+    query = query.gte("event_date", sevenDaysAgo);
+  } else if (window === "24h") {
+    query = query.gte("event_date", twentyFourHoursAgo);
+  } else {
+    // Default and "latest" behavior: preserve fresh intelligence while keeping
+    // ongoing active/developing events visible beyond 24h.
+    query = query.or(`event_date.gte.${twentyFourHoursAgo},is_active.eq.true`);
+  }
 
   // Sort: most recent articles first (within severity tier)
   // event_date = when the article was PUBLISHED (most important for freshness)
   // created_at = when we ingested it (tiebreaker)
   query =
     sort === "newest"
-      ? query.order("event_date", { ascending: false }).order("created_at", { ascending: false })
+      ? query
+          .order("event_date", { ascending: false })
+          .order("created_at", { ascending: false })
       : sort === "confidence"
-        ? query.order("confidence", { ascending: false }).order("event_date", { ascending: false })
-        : query.order("event_date", { ascending: false }).order("severity", { ascending: false }).order("created_at", { ascending: false });
+        ? query
+            .order("confidence", { ascending: false })
+            .order("event_date", { ascending: false })
+        : query
+            .order("event_date", { ascending: false })
+            .order("severity", { ascending: false })
+            .order("created_at", { ascending: false });
 
   const { data, error, count } = await query.limit(20);
 
   // Fail-safe: if newest signal is older than 15 min or missing, trigger inline auto-ingest asynchronously
   const newestRow = data?.[0];
-  if (!newestRow || (newestRow.created_at && Date.now() - new Date(newestRow.created_at).getTime() > 15 * 60 * 1000)) {
+  if (
+    !newestRow ||
+    (newestRow.created_at &&
+      Date.now() - new Date(newestRow.created_at).getTime() > 15 * 60 * 1000)
+  ) {
     const { autoIngestIfStale } = await import("@/lib/auto-ingest");
     autoIngestIfStale().catch(() => {});
   }
 
   if (error) {
     console.error("[signals] DB error:", error.message);
-    return NextResponse.json({ error: "Failed to fetch signals" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch signals" },
+      { status: 500 },
+    );
   }
 
   const rows = (data ?? []) as SignalRow[];
@@ -137,7 +173,10 @@ export async function GET(req: NextRequest) {
   const signals: Signal[] = rows.map((r) => {
     // Use the article's original publish date if available, else fall back to ingestion time
     const firstRawId = r.raw_event_ids?.[0];
-    const eventDate = firstRawId ? (eventDateMap.get(firstRawId) ?? r.created_at) : r.created_at;
+    const eventDate =
+      r.event_date ??
+      (firstRawId ? eventDateMap.get(firstRawId) : null) ??
+      r.created_at;
 
     return {
       id: r.id,
@@ -157,9 +196,14 @@ export async function GET(req: NextRequest) {
       isBreaking: r.is_breaking ?? false,
       isActive: r.is_active ?? true,
       createdAt: r.created_at,
-      eventDate,          // ← article publish time: what we show as "X ago" in UI
+      updatedAt: r.updated_at ?? undefined,
+      eventDate, // ← article publish time: what we show as "X ago" in UI
     };
   });
 
-  return NextResponse.json({ signals, nextCursor: null, total: count ?? signals.length });
+  return NextResponse.json({
+    signals,
+    nextCursor: null,
+    total: count ?? signals.length,
+  });
 }

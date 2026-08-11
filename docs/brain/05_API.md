@@ -18,12 +18,18 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 ### 2.1 Signal Intelligence Endpoints
 
 #### `GET /api/signals`
+
 - **Description**: Fetches paginated tactical intelligence signals.
 - **Auth**: Required (Bearer JWT or API Key).
 - **Query Params**:
   - `severity` (`number`, optional, e.g. `7`): Min severity threshold.
   - `commodity` (`string`, optional, e.g. `USOIL`): Target symbol.
   - `region` (`string`, optional, e.g. `Middle East`).
+  - `window` (`string`, optional): signal lifecycle filter. Allowed values:
+    - `latest` → fresh intelligence feed: `event_date >= 24h` or `is_active = true`.
+    - `24h` → published within the last 24 hours only.
+    - `7d` → published within the last 7 days.
+    - `active` → currently active signals regardless of publish age.
   - `limit` (`number`, default `50`, max `100`).
   - `offset` (`number`, default `0`).
 - **Response `200 OK`**:
@@ -42,10 +48,12 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
         "lat": 12.5,
         "lng": 43.3,
         "commodity_impacts": [
-          { "symbol": "USOIL", "impact": "BULLISH", "score": 0.85 }
+          { "asset": "USOIL", "direction": "up", "confidence": 0.85 }
         ],
         "is_breaking": true,
-        "created_at": "2026-08-04T12:00:00Z"
+        "created_at": "2026-08-04T12:00:00Z",
+        "updated_at": "2026-08-04T12:15:00Z",
+        "eventDate": "2026-08-04T11:45:00Z"
       }
     ],
     "total": 1
@@ -54,6 +62,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Consumers**: Next.js Dashboard, Mapbox Map, Mobile Client.
 
 #### `GET /api/signals/:id`
+
 - **Description**: Fetches granular single signal details and raw news source references.
 - **Auth**: Required.
 - **Consumers**: Event Deep-Dive page (`/events/[id]`).
@@ -63,10 +72,12 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 ### 2.2 Alert Rules & Dispatch Endpoints
 
 #### `GET /api/alerts`
+
 - **Description**: Fetches user-configured alert rules.
 - **Auth**: Required.
 
 #### `POST /api/alerts`
+
 - **Description**: Creates a new user alert rule.
 - **Request Body**:
   ```json
@@ -80,6 +91,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
   ```
 
 #### `DELETE /api/alerts/:id`
+
 - **Description**: Deletes an alert rule by ID.
 
 ---
@@ -87,6 +99,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 ### 2.3 Backtesting Suite Endpoint
 
 #### `POST /api/backtesting/run`
+
 - **Description**: Executes historical signal backtest against commodity price action.
 - **Auth**: Required (`Analyst`, `Pro`, or `API` tier required).
 - **Request Body**:
@@ -118,6 +131,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 ### 2.4 Commodities & Prices Endpoints
 
 #### `GET /api/prices`
+
 - **Description**: Returns latest cached 24h commodity prices ticker (`USOIL`, `GOLD`, `NG`, `COPPER`, `WHEAT`).
 - **Auth**: None (Public/Cached).
 
@@ -126,7 +140,9 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 ### 2.5 API Keys & Developer Webhooks
 
 #### `GET /api/api-keys` & `POST /api/api-keys`
+
 - **Description**: Generates new enterprise `x-api-key` strings (`bb_live_...`).
 
 #### `GET /api/webhooks` & `POST /api/webhooks`
+
 - **Description**: Subscribes target HTTP endpoint to real-time signal dispatches.

@@ -170,19 +170,20 @@ After passing the filter and dedup check:
    - `commodity_impacts` JSON (USOIL, XAUUSD, etc.)
    - **`event_date`** = article publish time (from RSS `pubDate`, GNews `publishedAt`, GDELT `seendate`)
 
----
-
-## 5. What the Dashboard Shows
+- `created_at` = first ingestion time into BBR
+- `updated_at` = last signal update time in the DB
+- dashboard default: signals with `event_date >= 24h` OR `is_active = true`
+- explicit window filters: `latest`, `24h`, `7d`, `active`
 
 ### 5.1 API: `/api/signals`
 
-| Rule         | Value                                   |
-| :----------- | :-------------------------------------- |
-| Auth         | Requires logged-in user                 |
-| DB read      | Service role key (if set on Vercel)     |
-| Time window  | `event_date >= 24 hours ago`            |
-| Sort default | `event_date DESC`, then `severity DESC` |
-| Cache        | `force-dynamic` — no Next.js cache      |
+| Rule         | Value                                                               |
+| :----------- | :------------------------------------------------------------------ |
+| Auth         | Requires logged-in user                                             |
+| DB read      | Service role key (if set on Vercel)                                 |
+| Time window  | `event_date >= 24 hours ago` OR `is_active = true` (default/latest) |
+| Sort default | `event_date DESC`, then `severity DESC`                             |
+| Cache        | `force-dynamic` — no Next.js cache                                  |
 
 ### 5.2 Timestamp display
 

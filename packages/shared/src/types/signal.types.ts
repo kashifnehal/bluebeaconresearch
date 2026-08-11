@@ -31,8 +31,9 @@ export interface Signal {
   sanctionsMatches?: { actor: string; list: string }[];
   isBreaking: boolean;
   isActive: boolean;
-  createdAt: string;       // when WE ingested it
-  eventDate?: string;      // when the article/event was PUBLISHED
+  createdAt: string; // when WE ingested it
+  eventDate?: string; // when the article/event was PUBLISHED
+  updatedAt?: string; // last updated time for this signal record
 }
 
 export interface CommodityPrice {
@@ -44,4 +45,3 @@ export interface CommodityPrice {
   low24h: number;
   fetchedAt: string;
 }
-

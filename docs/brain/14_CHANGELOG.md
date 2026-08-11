@@ -132,7 +132,7 @@ Collectors now classify and insert signals directly to Supabase without BullMQ q
 
 - **RSS Collector Added (`apps/backend/src/workers/rss-collector.ts`)**: Integrated live RSS ingestion from Reuters, BBC World, Al Jazeera, and The Guardian. Delivers sub-hour breaking news (<1h fresh) directly into `raw_events` and `signals`, solving GNews free tier's 12-hour caching lag.
 - **Word-Boundary Relevance Filter (`isRelevantEvent`)**: Upgraded keyword classifier in `gdelt-collector.ts` and `auto-ingest.ts` to use strict regex word boundary matching (`\bwar\b`, `\boil\b`, `\bgas\b`) and hard exclusions for historical year strings (`1970`–`2005`). Eliminates false positives like _"1970 anti-war protests"_ or _"tug-of-war"_.
-- **24-Hour Feed Window & Recency Prioritization (`/api/signals`)**: Updated web signal API to filter by `event_date >= 24h ago` and sort strictly by publication timestamp (`event_date DESC`), guaranteeing real-time breaking events anchor the top of the Intelligence Feed and Alerts stream.
+- **Signal lifecycle feed improvement (`/api/signals`)**: Default dashboard query now returns fresh `event_date >= 24h` signals plus ongoing `is_active=true` events. Explicit `window=latest|24h|7d|active` query filters are now supported.
 - **Purged Historical Noise**: Cleaned legacy false-positive signals from Supabase DB.
 - **Production & Railway Deployment Audit**:
   - **Nixpacks Lockfile Fix**: Configured `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` to prevent `ERR_PNPM_OUTDATED_LOCKFILE` during Railway CI container builds.

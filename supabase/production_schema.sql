@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS public.signals (
   is_active BOOLEAN DEFAULT true,
   commodity_impacts JSONB DEFAULT '[]'::jsonb, -- Array of { asset, direction, confidence }
   event_type TEXT, -- 'CIVIL_UNREST', 'ARMED_CONFLICT', etc.
+  event_date TIMESTAMP WITH TIME ZONE,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
