@@ -4,7 +4,11 @@ import { getEnv } from "../env.js";
 export type ClassificationResult = {
   severity: number;
   confidence: number;
-  commodityImpacts: Array<{ asset: string; direction: "up" | "down" | "volatile" | "neutral"; confidence: number }>;
+  commodityImpacts: Array<{
+    asset: string;
+    direction: "up" | "down" | "volatile" | "neutral";
+    confidence: number;
+  }>;
   isBreaking: boolean;
   summary: string;
   region: string;
@@ -12,6 +16,17 @@ export type ClassificationResult = {
 
 export class ClaudeService {
   private client: Anthropic | null = null;
+
+  private static readonly ALLOWED_COMMODITY_ASSETS = new Set([
+    "USOIL",
+    "UKOIL",
+    "NGAS",
+    "XAUUSD",
+    "WHEAT",
+    "CORN",
+    "EURUSD",
+    "USDRUB",
+  ]);
 
   private getClient() {
     if (this.client) return this.client;
@@ -21,7 +36,9 @@ export class ClaudeService {
     return this.client;
   }
 
-  async classifyEvent(rawEvent: Record<string, unknown>): Promise<ClassificationResult> {
+  async classifyEvent(
+    rawEvent: Record<string, unknown>,
+  ): Promise<ClassificationResult> {
     const client = this.getClient();
     const title = String(rawEvent.title ?? "New geopolitical event");
     const summaryText = String(rawEvent.summary ?? "");
@@ -59,27 +76,50 @@ export class ClaudeService {
           .trim();
         const jsonStart = text.indexOf("{");
         const jsonEnd = text.lastIndexOf("}");
-        const raw = jsonStart >= 0 && jsonEnd >= 0 ? text.slice(jsonStart, jsonEnd + 1) : text;
+        const raw =
+          jsonStart >= 0 && jsonEnd >= 0
+            ? text.slice(jsonStart, jsonEnd + 1)
+            : text;
         console.log("[CLAUDE AI CLASSIFICATION SUCCESS]");
-        return JSON.parse(raw) as ClassificationResult;
+        const parsed = JSON.parse(raw) as ClassificationResult;
+        parsed.commodityImpacts = this.sanitizeCommodityImpacts(
+          parsed.commodityImpacts ?? [],
+        );
+        return parsed;
       } catch (err: any) {
-        console.warn(`⚠️ [Claude AI Classifier] API error (${err.message}). Using intelligent heuristic fallback classifier.`);
+        console.warn(
+          `⚠️ [Claude AI Classifier] API error (${err.message}). Using intelligent heuristic fallback classifier.`,
+        );
       }
     }
 
     return this.heuristicClassify(title, summaryText, rawEvent);
   }
 
-  private heuristicClassify(title: string, summaryText: string, rawEvent: Record<string, unknown>): ClassificationResult {
+  private heuristicClassify(
+    title: string,
+    summaryText: string,
+    rawEvent: Record<string, unknown>,
+  ): ClassificationResult {
     const text = (title + " " + summaryText).toLowerCase();
-    
+
     // Severity Calculation
     let severity = 5;
-    if (/war|invasion|nuclear|missile|heavy strike|airstrike|escalation|blockade/i.test(text)) {
+    if (
+      /war|invasion|nuclear|missile|heavy strike|airstrike|escalation|blockade/i.test(
+        text,
+      )
+    ) {
       severity = 9;
-    } else if (/sanction|embargo|oil spill|drone attack|explosion|military|opec/i.test(text)) {
+    } else if (
+      /sanction|embargo|oil spill|drone attack|explosion|military|opec/i.test(
+        text,
+      )
+    ) {
       severity = 8;
-    } else if (/tariff|trade war|recession|pipeline|tanker|strike|protest/i.test(text)) {
+    } else if (
+      /tariff|trade war|recession|pipeline|tanker|strike|protest/i.test(text)
+    ) {
       severity = 7;
     } else if (/tension|talks|negotiation|diplomat|election/i.test(text)) {
       severity = 6;
@@ -87,64 +127,128 @@ export class ClaudeService {
 
     // Region Detection
     let region = "global";
-    if (/iran|israel|middle east|gaza|yemen|red sea|hormuz|saudi|qatar|iraq|syria/i.test(text)) {
+    if (
+      /iran|israel|middle east|gaza|yemen|red sea|hormuz|saudi|qatar|iraq|syria/i.test(
+        text,
+      )
+    ) {
       region = "middle-east";
     } else if (/russia|ukraine|black sea|poland|belarus|europe/i.test(text)) {
       region = "eastern-europe";
-    } else if (/china|taiwan|asia|pacific|japan|korea|south china sea/i.test(text)) {
+    } else if (
+      /china|taiwan|asia|pacific|japan|korea|south china sea/i.test(text)
+    ) {
       region = "asia-pacific";
-    } else if (/us|united states|fed|dollar|america|mexico|brazil/i.test(text)) {
+    } else if (
+      /us|united states|fed|dollar|america|mexico|brazil/i.test(text)
+    ) {
       region = "americas";
     } else if (/sudan|ethiopia|nigeria|africa|congo/i.test(text)) {
       region = "africa";
     }
 
     // Commodity Impacts
-    const commodityImpacts: Array<{ asset: string; direction: "up" | "down" | "volatile" | "neutral"; confidence: number }> = [];
-    
-    if (/oil|crude|opec|tanker|hormuz|pipeline|refinery|energy/i.test(text)) {
-      commodityImpacts.push({ asset: "USOIL", direction: "up", confidence: 0.85 });
-      commodityImpacts.push({ asset: "UKOIL", direction: "up", confidence: 0.82 });
-    }
-    if (/gas|nord stream|lng|pipeline/i.test(text)) {
-      commodityImpacts.push({ asset: "NGAS", direction: "up", confidence: 0.80 });
-    }
-    if (/war|conflict|missile|attack|sanction|gold|safe haven/i.test(text)) {
-      commodityImpacts.push({ asset: "XAUUSD", direction: "up", confidence: 0.88 });
-    }
-    if (/grain|wheat|corn|agriculture|food|black sea/i.test(text)) {
-      commodityImpacts.push({ asset: "WHEAT", direction: "up", confidence: 0.75 });
+    const commodityImpacts: Array<{
+      asset: string;
+      direction: "up" | "down" | "volatile" | "neutral";
+      confidence: number;
+    }> = [];
+
+    const isSafeHaven =
+      /\b(gold|safe[- ]haven|safe haven asset|safe-haven asset)\b/i.test(text);
+    const oilSignal =
+      /\b(?:crude|opec|tanker|hormuz|pipeline|refinery|oil price|crude price|oil production|oil shipment|oil export|oil import|oil supply|oil demand)\b/i.test(
+        text,
+      );
+    const gasSignal =
+      /\b(?:natural gas|ng|lng|nord stream|pipeline|gas prices|gas supply|gas demand|gas export|gas import|gas fields?|gas shipments?)\b/i.test(
+        text,
+      );
+    const wheatSignal =
+      /\b(?:grain|wheat|corn|agriculture|food|black sea|crop|shipments?)\b/i.test(
+        text,
+      );
+
+    if (oilSignal) {
+      commodityImpacts.push({
+        asset: "USOIL",
+        direction: "up",
+        confidence: 0.85,
+      });
+      commodityImpacts.push({
+        asset: "UKOIL",
+        direction: "up",
+        confidence: 0.82,
+      });
     }
 
-    if (commodityImpacts.length === 0) {
-      commodityImpacts.push({ asset: "USOIL", direction: "volatile", confidence: 0.50 });
+    if (gasSignal) {
+      commodityImpacts.push({
+        asset: "NGAS",
+        direction: "up",
+        confidence: 0.8,
+      });
     }
 
-    const isBreaking = severity >= 8 || /breaking|urgent|just in|alert/i.test(text);
+    if (isSafeHaven) {
+      commodityImpacts.push({
+        asset: "XAUUSD",
+        direction: "up",
+        confidence: 0.88,
+      });
+    }
+
+    if (wheatSignal) {
+      commodityImpacts.push({
+        asset: "WHEAT",
+        direction: "up",
+        confidence: 0.75,
+      });
+    }
+
+    const isBreaking =
+      severity >= 8 || /breaking|urgent|just in|alert/i.test(text);
 
     // Compute dynamic confidence: more matching signal categories = higher certainty
-    // (heuristic, not AI — max 0.90 to distinguish from actual Claude output)
+    // Top-level confidence is the source/classification confidence while each impact
+    // confidence is the market-impact confidence for that asset.
     let matchedCategories = 0;
     if (severity > 5) matchedCategories++;
     if (region !== "global") matchedCategories++;
     if (commodityImpacts.length > 1) matchedCategories++;
     if (isBreaking) matchedCategories++;
     if (rawEvent.country) matchedCategories++;
-    const dynamicConfidence = Math.min(0.90, 0.55 + matchedCategories * 0.07);
+    const dynamicConfidence = Math.min(0.9, 0.55 + matchedCategories * 0.07);
 
     return {
       severity,
       confidence: parseFloat(dynamicConfidence.toFixed(2)),
-      commodityImpacts,
+      commodityImpacts: this.sanitizeCommodityImpacts(commodityImpacts),
       isBreaking,
       summary: title.slice(0, 120),
       region,
     };
   }
 
-  async generateAnalysis(_signal: Record<string, unknown>, _context: { contextNotes: string[] }) {
+  private sanitizeCommodityImpacts(
+    impacts: Array<{
+      asset: string;
+      direction: "up" | "down" | "volatile" | "neutral";
+      confidence: number;
+    }>,
+  ) {
+    return impacts.filter((impact) =>
+      ClaudeService.ALLOWED_COMMODITY_ASSETS.has(impact.asset),
+    );
+  }
+
+  async generateAnalysis(
+    _signal: Record<string, unknown>,
+    _context: { contextNotes: string[] },
+  ) {
     const client = this.getClient();
-    if (!client) return "AI intelligence briefing generated via Blue Beacon heuristic analysis engine.";
+    if (!client)
+      return "AI intelligence briefing generated via Blue Beacon heuristic analysis engine.";
 
     try {
       const system =
@@ -159,9 +263,12 @@ export class ClaudeService {
         messages: [{ role: "user", content: user }],
       });
 
-      return msg.content.map((c) => (c.type === "text" ? c.text : "")).join("").trim();
+      return msg.content
+        .map((c) => (c.type === "text" ? c.text : ""))
+        .join("")
+        .trim();
     } catch {
-      return `Geopolitical Signal Briefing: High-priority event detected in region ${_signal.region ?? "Global"}. Market volatility expected across impacted commodity benchmarks (${(_signal.commodityImpacts as any[])?.map(c => c.asset).join(", ") || "Energy/Metals"}). Traders should monitor strategic chokepoints and policy responses.`;
+      return `Geopolitical Signal Briefing: High-priority event detected in region ${_signal.region ?? "Global"}. Market volatility expected across impacted commodity benchmarks (${(_signal.commodityImpacts as any[])?.map((c) => c.asset).join(", ") || "Energy/Metals"}). Traders should monitor strategic chokepoints and policy responses.`;
     }
   }
 }

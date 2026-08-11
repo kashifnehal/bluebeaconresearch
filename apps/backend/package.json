@@ -15,7 +15,7 @@
     "migrate": "echo \"No migrations to run (Supabase managed externally)\"",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"(lint handled at repo root)\"",
-    "test": "echo \"(no tests yet)\" && exit 0"
+    "test": "tsx src/services/claude.service.test.ts"
   },
   "keywords": [],
   "author": "",
