@@ -19,15 +19,26 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     queryFn: async () => {
       const res = await fetch("/api/signals?sort=severity");
       if (!res.ok) throw new Error("Failed to fetch signals");
-      return (await res.json()) as { signals: Signal[] };
+      return (await res.json()) as {
+        signals?: Signal[];
+        fallback?: boolean;
+        fallbackReason?: string;
+        fallbackLastUpdated?: string;
+      };
     },
     enabled,
     refetchInterval: 30_000,
   });
 
   const fetchedSignals = data?.signals ?? [];
+  const fallback = data?.fallback ?? false;
+  const fallbackReason = data?.fallbackReason ?? null;
+  const fallbackLastUpdated = data?.fallbackLastUpdated ?? null;
 
-  const supportsSSE = useMemo(() => typeof window !== "undefined" && "EventSource" in window, []);
+  const supportsSSE = useMemo(
+    () => typeof window !== "undefined" && "EventSource" in window,
+    [],
+  );
 
   useEffect(() => {
     if (!enabled) return;
@@ -45,7 +56,8 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
         try {
           const signal = JSON.parse(evt.data) as Signal;
           setRealtimeSignals((prev) => [signal, ...prev]);
-          if (signal.severity >= 8) toast(signal.title, { description: signal.summary });
+          if (signal.severity >= 8)
+            toast(signal.title, { description: signal.summary });
         } catch {
           // ignore
         }
@@ -54,7 +66,10 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
       es.onerror = () => {
         es.close();
         retryRef.current += 1;
-        const backoff = Math.min(30_000, 1000 * 2 ** Math.min(5, retryRef.current));
+        const backoff = Math.min(
+          30_000,
+          1000 * 2 ** Math.min(5, retryRef.current),
+        );
         setTimeout(connect, backoff);
       };
     };
@@ -80,5 +95,12 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     return Array.from(map.values());
   }, [realtimeSignals, fetchedSignals]);
 
-  return { liveSignals, isLoading, isError };
+  return {
+    liveSignals,
+    isLoading,
+    isError,
+    fallback,
+    fallbackReason,
+    fallbackLastUpdated,
+  };
 }

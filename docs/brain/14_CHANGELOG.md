@@ -80,6 +80,9 @@ This document records historic development milestones, schema evolutions, featur
 **Architecture: Direct-to-DB Signal Insertion (ADR 006):**
 Collectors now classify and insert signals directly to Supabase without BullMQ queue active. Startup → signals in DB immediately.
 
+- Fixed backend `/v1/signals` lifecycle query semantics so the default feed preserves recent published signals (`event_date >= 24h`) while keeping ongoing `is_active=true` events visible.
+- Removed synthetic auto-ingest fallback commodity assignment in `apps/web/lib/auto-ingest.ts`; inline ingestion now only emits commodity impacts when the headline contains explicit market/commodity evidence.
+
 **Result**: 8 real signals + 8 commodity prices in production DB. Pipeline operational end-to-end.
 
 ---
@@ -133,6 +136,7 @@ Collectors now classify and insert signals directly to Supabase without BullMQ q
 - **RSS Collector Added (`apps/backend/src/workers/rss-collector.ts`)**: Integrated live RSS ingestion from Reuters, BBC World, Al Jazeera, and The Guardian. Delivers sub-hour breaking news (<1h fresh) directly into `raw_events` and `signals`, solving GNews free tier's 12-hour caching lag.
 - **Word-Boundary Relevance Filter (`isRelevantEvent`)**: Upgraded keyword classifier in `gdelt-collector.ts` and `auto-ingest.ts` to use strict regex word boundary matching (`\bwar\b`, `\boil\b`, `\bgas\b`) and hard exclusions for historical year strings (`1970`–`2005`). Eliminates false positives like _"1970 anti-war protests"_ or _"tug-of-war"_.
 - **Signal lifecycle feed improvement (`/api/signals`)**: Default dashboard query now returns fresh `event_date >= 24h` signals plus ongoing `is_active=true` events. Explicit `window=latest|24h|7d|active` query filters are now supported.
+- **Map UX improvement**: `/map` now renders real geolocated `lat`/`lng` signal markers from `/api/signals`, with popups and event click navigation to `/events/[id]`.
 - **Purged Historical Noise**: Cleaned legacy false-positive signals from Supabase DB.
 - **Production & Railway Deployment Audit**:
   - **Nixpacks Lockfile Fix**: Configured `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` to prevent `ERR_PNPM_OUTDATED_LOCKFILE` during Railway CI container builds.

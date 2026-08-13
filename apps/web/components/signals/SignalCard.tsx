@@ -17,7 +17,10 @@ export function SignalCard({
   onClick?: () => void;
 }) {
   const isBreaking = signal.isBreaking || signal.severity >= 9;
-  const timeAgo = formatDistanceToNowStrict(new Date(signal.createdAt), { addSuffix: true });
+  const timeAgo = formatDistanceToNowStrict(
+    new Date(signal.eventDate ?? signal.createdAt),
+    { addSuffix: true },
+  );
 
   return (
     <div
@@ -41,7 +44,10 @@ export function SignalCard({
           <span>{timeAgo}</span>
           <span>{signal.sourcesCount} sources</span>
           {variant === "feed" ? (
-            <Bookmark className="text-text-muted hover:text-text-primary" size={14} />
+            <Bookmark
+              className="text-text-muted hover:text-text-primary"
+              size={14}
+            />
           ) : null}
         </div>
       </div>
@@ -74,4 +80,3 @@ export function SignalCard({
     </div>
   );
 }
-

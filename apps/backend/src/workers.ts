@@ -14,6 +14,11 @@ import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { buildPipelineStatus, recordPipelineRun } from "./lib/pipeline-status.js";
 
+function isWorkersEntrypoint() {
+  const entry = process.argv[1] ?? "";
+  return /[/\\]workers\.(ts|js)$/.test(entry);
+}
+
 async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
   const [gdelt, gnews, rss, prices] = await Promise.allSettled([
     runGdeltCollectorOnce(),
@@ -95,10 +100,15 @@ async function main() {
     app.log.info({ uptimeSec: Math.round(process.uptime()) }, "workers:heartbeat");
   });
 
-  // Expose /health so Railway healthcheck passes (workers have no public API otherwise).
-  const port = Number(process.env.PORT) || 3001;
-  await app.listen({ port, host: "0.0.0.0" });
-  app.log.info({ port, service: process.env.RAILWAY_SERVICE_NAME }, "workers: cron schedulers active, health server listening");
+  // Only bind HTTP when run as standalone workers process (Railway workers service).
+  // When imported from index.ts alongside server.ts, skip listen to avoid EADDRINUSE on PORT.
+  if (isWorkersEntrypoint()) {
+    const port = Number(process.env.PORT) || 3001;
+    await app.listen({ port, host: "0.0.0.0" });
+    app.log.info({ port, service: process.env.RAILWAY_SERVICE_NAME }, "workers: cron schedulers active, health server listening");
+  } else {
+    app.log.info("workers: cron schedulers active (embedded — no duplicate HTTP listener)");
+  }
 
   const shutdown = async () => {
     app.log.info("Shutting down workers...");

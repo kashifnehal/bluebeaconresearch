@@ -10,6 +10,7 @@ const querySchema = z.object({
   severity: z.coerce.number().int().min(1).max(10).optional(),
   region: z.string().min(1).optional(),
   commodity: z.string().min(1).optional(),
+  window: z.enum(["latest", "24h", "7d", "active"]).optional(),
   cursor: z.string().min(1).optional(),
   sort: z.enum(["severity", "newest"]).default("severity"),
   page: z.coerce.number().int().min(1).default(1),
@@ -20,10 +21,13 @@ export async function signalsRoutes(app: FastifyInstance) {
   app.get("/", async (req, reply) => {
     const parsed = querySchema.safeParse(req.query);
     if (!parsed.success) {
-      return reply.status(400).send({ error: "Invalid query", issues: parsed.error.issues });
+      return reply
+        .status(400)
+        .send({ error: "Invalid query", issues: parsed.error.issues });
     }
 
-    const { severity, region, commodity, sort, page, limit, cursor } = parsed.data;
+    const { severity, region, commodity, window, sort, page, limit, cursor } =
+      parsed.data;
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -32,11 +36,31 @@ export async function signalsRoutes(app: FastifyInstance) {
     const maxLimit = planTier === "api" ? 100 : 20;
     const clampedLimit = Math.min(limit, maxLimit);
 
-    let query = supabase.from("signals").select("*", { count: "exact" }).eq("is_active", true);
+    let query = supabase.from("signals").select("*", { count: "exact" });
 
     if (severity) query = query.gte("severity", severity);
     if (region) query = query.eq("region", region);
-    if (commodity) query = query.contains("commodity_impacts", [{ asset: commodity }]);
+    if (commodity)
+      query = query.contains("commodity_impacts", [{ asset: commodity }]);
+
+    const twentyFourHoursAgo = new Date(
+      Date.now() - 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const sevenDaysAgo = new Date(
+      Date.now() - 7 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    if (window === "active") {
+      query = query.eq("is_active", true);
+    } else if (window === "7d") {
+      query = query.gte("event_date", sevenDaysAgo);
+    } else if (window === "24h") {
+      query = query.gte("event_date", twentyFourHoursAgo);
+    } else {
+      query = query.or(
+        `event_date.gte.${twentyFourHoursAgo},is_active.eq.true`,
+      );
+    }
 
     // Cursor-based pagination (by created_at). If cursor is present, ignore offset.
     if (cursor) {
@@ -47,7 +71,9 @@ export async function signalsRoutes(app: FastifyInstance) {
     query =
       sort === "newest"
         ? query.order("created_at", { ascending: false })
-        : query.order("severity", { ascending: false }).order("created_at", { ascending: false });
+        : query
+            .order("severity", { ascending: false })
+            .order("created_at", { ascending: false });
 
     const { data, error, count } = cursor
       ? await query.limit(clampedLimit)
@@ -57,12 +83,18 @@ export async function signalsRoutes(app: FastifyInstance) {
     const nextCursor =
       Array.isArray(data) && data.length
         ? // Use the last row's created_at as the next cursor
-          (data[data.length - 1] as { created_at?: string }).created_at ?? null
+          ((data[data.length - 1] as { created_at?: string }).created_at ??
+          null)
         : null;
 
     return reply.send({
       data: data ?? [],
-      meta: { total: count ?? (data?.length ?? 0), page, limit: clampedLimit, nextCursor },
+      meta: {
+        total: count ?? data?.length ?? 0,
+        page,
+        limit: clampedLimit,
+        nextCursor,
+      },
     });
   });
 
@@ -70,7 +102,9 @@ export async function signalsRoutes(app: FastifyInstance) {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from("signals")
-      .select("id,title,summary,severity,confidence,created_at,is_breaking,sources_count,commodity_impacts,region,country,event_type")
+      .select(
+        "id,title,summary,severity,confidence,created_at,is_breaking,sources_count,commodity_impacts,region,country,event_type",
+      )
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(5);
@@ -90,7 +124,9 @@ export async function signalsRoutes(app: FastifyInstance) {
 
       const pub = getRedis();
       if (!pub) {
-        return reply.status(503).send({ error: "Redis required for SSE streams" });
+        return reply
+          .status(503)
+          .send({ error: "Redis required for SSE streams" });
       }
       const sub = pub.duplicate();
       await sub.connect();
@@ -100,7 +136,9 @@ export async function signalsRoutes(app: FastifyInstance) {
       // Clients can pass `lastSeen` (ISO timestamp). If omitted, we start 60s behind.
       const url = new URL(req.url, "http://localhost");
       const lastSeenRaw = url.searchParams.get("lastSeen");
-      const lastSeen = lastSeenRaw ? new Date(lastSeenRaw) : new Date(Date.now() - 60_000);
+      const lastSeen = lastSeenRaw
+        ? new Date(lastSeenRaw)
+        : new Date(Date.now() - 60_000);
       let cursor = lastSeen.toISOString();
 
       const heartbeat = setInterval(() => {
@@ -132,7 +170,11 @@ export async function signalsRoutes(app: FastifyInstance) {
         try {
           const payload = JSON.parse(message) as { signalId: string };
           const supabase = getSupabaseAdmin();
-          const { data } = await supabase.from("signals").select("*").eq("id", payload.signalId).maybeSingle();
+          const { data } = await supabase
+            .from("signals")
+            .select("*")
+            .eq("id", payload.signalId)
+            .maybeSingle();
           if (!data) return;
           reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
         } catch {
@@ -158,4 +200,3 @@ export async function signalsRoutes(app: FastifyInstance) {
     },
   );
 }
-
