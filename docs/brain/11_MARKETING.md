@@ -18,16 +18,18 @@ This document specifies the marketing strategy, value proposition, landing page 
 ## 2. Landing Page Copy & Messaging Audit (`/`)
 
 ### Hero Section Copy
+
 - **Headline**: "High-fidelity geopolitical intelligence → actionable trading signals."
 - **Subheadline**: "Blue Beacon Research provides high-fidelity geopolitical intelligence, synthesized into actionable trading signals for commodity and financial markets."
 - **Live Status Pill**: `Live — monitoring active global conflicts` (Pulsing green indicator).
 - **Primary CTA**: "Start Free" (`/signup`) / "Get Early Access" (Opens Waitlist Modal when `isProjectReady` is gated).
 
 ### Core Features Value Props
+
 1. **Autonomous 15-Minute Ingestion**: 350+ global conflict events collected from GDELT, ACLED, and GNews.
 2. **AI Military Rationale**: Claude 3.5 Sonnet severity scoring (1–10) and asset confidence ratings (0–100%).
 3. **Sub-second Alerting**: Instant dispatch via Telegram Bots, Slack Webhooks, custom HTTP webhooks, and Expo Mobile Push.
-4. **Interactive GIS Heatmap**: Mapbox GL JS spatial conflict density mapping.
+4. **Interactive GIS Heatmap**: MapLibre GL spatial conflict density mapping using OpenStreetMap tiles.
 
 ---
 

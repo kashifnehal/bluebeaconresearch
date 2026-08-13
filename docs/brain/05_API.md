@@ -56,10 +56,15 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
         "eventDate": "2026-08-04T11:45:00Z"
       }
     ],
-    "total": 1
+    "total": 1,
+    "fallback": false,
+    "fallbackReason": null,
+    "fallbackLastUpdated": null
   }
   ```
-- **Consumers**: Next.js Dashboard, Mapbox Map, Mobile Client.
+- **Consumers**: Next.js Dashboard, MapLibre Map (OpenStreetMap tiles), Mobile Client.
+
+**Notes**: In degraded or rate-limited scenarios `/api/signals` may return the last-known payload with additional non-breaking fields: `fallback` (boolean), `fallbackReason` (string), and `fallbackLastUpdated` (ISO timestamp). The server also sets header `x-signals-feed-status: degraded` when serving cached/fallback data.
 
 #### `GET /api/signals/:id`
 

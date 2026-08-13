@@ -11,6 +11,7 @@ Role: Principal Backend & AI Engineer
 Task: Rebuild the autonomous news ingestion and Claude 3.5 AI classifier pipeline.
 
 Specifications:
+
 1. Create cron-based ingestion collectors (GDELT 2.0 API, ACLED API, GNews API) running every 15 minutes.
 2. Store raw articles in a PostgreSQL `raw_events` table with unique constraint `UNIQUE(source, external_id)` for deduplication.
 3. Queue new raw events into a BullMQ queue named `ai-classification`.
@@ -35,6 +36,7 @@ Role: Senior Frontend Engineer
 Task: Rebuild the Next.js 16 App Router Web Terminal for tactical market intelligence.
 
 Specifications:
+
 1. Setup Next.js 16 with Tailwind CSS v4, Lucide icons, and Mapbox GL JS.
 2. Build a dark-mode terminal layout featuring:
    - Fixed TopBar with real-time scrolling commodity price ticker (`PriceTicker.tsx`).
@@ -43,6 +45,8 @@ Specifications:
 4. Implement `/map` using Mapbox GL JS, populating interactive conflict markers with popups linking to `/events/[id]`.
 5. Enforce gating middleware (`middleware.ts`) that checks `isProjectReady` flag and redirects ungated traffic to `/` waitlist modal (`AccessLimitedModal.tsx`).
 ```
+
+<!-- Implementation Note: During actual implementation we diverged from the original Prompt 2 to remove a hard dependency on Mapbox tokens. The web client uses MapLibre GL (`maplibre-gl`) with OpenStreetMap raster tiles (`https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png`). The map maintains the specified features (heatmap, clustering, popups, link to `/events/[id]`) while avoiding the need for a Mapbox account or token. -->
 
 ---
 
@@ -53,6 +57,7 @@ Role: Systems & Integration Engineer
 Task: Rebuild the sub-second alert dispatch engine for Telegram, Slack, Webhooks, and Mobile Push.
 
 Specifications:
+
 1. Listen to `alert-dispatch` BullMQ queue triggered whenever a new `signal` record is created.
 2. Fetch active `alert_rules` matching the signal's region, commodity impact, and minimum severity threshold.
 3. Fetch user target channels from `user_channels` table (`telegram_chat_id`, `slack_webhook_url`, `push_tokens`).

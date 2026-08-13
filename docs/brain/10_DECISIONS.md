@@ -145,4 +145,4 @@ GNews API free tier caches articles with a 12-hour lag, serving stale news despi
 2. **Anthropic API Credits**: Production requires Anthropic credits. Heuristic fallback covers outages but quality is lower.
 3. **GNews Free Tier**: 10 articles / 15 min = 960 articles/day. Upgrade if more volume is needed.
 4. **GDELT Reliability**: GDELT v2/doc/doc API is academic infrastructure; occasional slow responses are expected.
-5. **Mapbox Load Gating**: GIS map usage must stay within Mapbox free/pro tier bounds.
+5. **Map Rendering Choice**: To avoid Mapbox account/token dependencies and ensure out-of-the-box functionality, the web client uses **MapLibre GL** with OpenStreetMap raster tiles. This preserves GIS features (heatmap, clustering) while removing reliance on Mapbox tier limits.

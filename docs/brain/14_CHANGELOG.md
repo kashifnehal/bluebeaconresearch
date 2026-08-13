@@ -212,3 +212,10 @@ workers:heartbeat → every 5 min
 - Workers write pipeline status after each ingestion cycle.
 
 **Documentation:** `docs/brain/15_INGESTION_PIPELINE.md` — full source-by-source logic, filters, display rules, and troubleshooting.
+
+### v0.15.0 — Map Engine Migration & Signals Degraded-Mode Fallback
+
+- Migrated frontend map implementation from Mapbox GL JS to **MapLibre GL** using OpenStreetMap raster tiles to remove Mapbox token/account dependency and ensure the map works out-of-the-box.
+- Implemented `/api/signals` in-memory last-successful payload cache and degraded-mode behavior: when upstream rate-limiting or DB errors occur the server responds with the cached payload plus non-breaking fields `fallback`, `fallbackReason`, `fallbackLastUpdated` and header `x-signals-feed-status: degraded`.
+- Added compact UI banner on `/map` and dashboard components to surface degraded feed status and last-updated time to users.
+- Rationale: avoid production 500s caused by unhandled rate-limiter errors (Upstash quota exceeded) and improve user trust by showing older data with clear status messaging.

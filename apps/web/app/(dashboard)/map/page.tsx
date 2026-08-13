@@ -9,6 +9,7 @@ import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   BASEMAP_TILE_URL,
+  BASEMAP_TILE_URLS,
   BASEMAP_ATTRIBUTION,
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
@@ -154,7 +155,7 @@ export default function MapPage() {
             sources: {
               osm: {
                 type: "raster",
-                tiles: [BASEMAP_TILE_URL],
+                tiles: BASEMAP_TILE_URLS,
                 tileSize: 256,
                 attribution: BASEMAP_ATTRIBUTION,
               },
@@ -175,6 +176,14 @@ export default function MapPage() {
 
         mapRef.current = map;
         setMapError(null);
+
+        try {
+          // Add compact attribution control (OpenStreetMap credit)
+          map.addControl(new maplib.AttributionControl({ compact: true }));
+        } catch (err) {
+          // Non-fatal: continue without attribution control if it fails
+          console.warn("[map] addControl failed", err);
+        }
 
         map.on("load", () => {
           try {

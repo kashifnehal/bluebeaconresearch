@@ -13,11 +13,13 @@ Blue Beacon Research is an automated, real-time geopolitical intelligence monore
 ## 2. Why It Exists & Vision
 
 ### Problem Solved
+
 1. **News Latency & Signal Noise**: Geopolitical crises (e.g., Strait of Hormuz blockades, Red Sea missile attacks, pipeline sabotage) move financial markets in seconds. Human analyst teams take 30–60 minutes to vet, write, and publish intel reports.
 2. **Unstructured Data Volume**: Over 350+ conflict news items are published every 15 minutes globally. Manual monitoring leads to analytical overload, missing black-swan events, or acting on unverified rumours.
 3. **Lack of Quantitative Asset Coupling**: Traditional news platforms (Bloomberg, Reuters) report events without structured market mapping (e.g., specifying whether an event is bullish for `USOIL` with explicit severity and geographic coordinates).
 
 ### Project Vision
+
 To become the definitive sub-second tactical intelligence terminal that bridges real-time military & geopolitical intelligence with algorithmic risk management and quantitative backtesting.
 
 ---
@@ -25,6 +27,7 @@ To become the definitive sub-second tactical intelligence terminal that bridges 
 ## 3. Current Scope vs. Future Scope
 
 ### Current Scope
+
 - **Ingestion Workers**: Cron-based background workers collecting data from GDELT, ACLED, and GNews every 15 minutes.
 - **AI Synthesis Pipeline**: Anthropic Claude 3.5 Sonnet/Haiku structured prompt generation producing JSON-formatted signals (severity, confidence, target commodities, rationale).
 - **Fastify Backend API**: High-performance REST server with Swagger/OpenAPI documentation, JWT authentication, and plan-based access controls (`free`, `analyst`, `pro`, `api`).
@@ -33,6 +36,7 @@ To become the definitive sub-second tactical intelligence terminal that bridges 
 - **Gating & Feature Controls**: Integrated project readiness flag (`isProjectReady`) controlling waitlist access and landing page gating.
 
 ### Future Scope
+
 - **Live Order Execution**: Integration with broker APIs (Interactive Brokers, MetaTrader 5) to auto-hedge commodity portfolios based on signal severity thresholds.
 - **Satellite Imagery Integration**: Computer vision analysis of synthetic aperture radar (SAR) satellite imagery over key maritime chokepoints and oil refineries.
 - **Multi-LLM Ensemble Voting**: Cross-verifying signals using DeepSeek-R1, OpenAI o3-mini, and Claude 3.5 Sonnet to minimize AI hallucinations.
@@ -59,15 +63,15 @@ blueBeaconResearch/
 
 ## 5. Technology Stack Matrix
 
-| Layer | Technology | Version | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Monorepo Engine** | Turborepo + pnpm | `turbo@2.8.18` / `pnpm@10.32.1` | Build pipeline orchestration & workspace linking |
-| **Frontend Framework** | Next.js (App Router) | `16.2.0` (React `19.2.4`) | Institutional dark terminal UI, SSR, middleware |
-| **Styling & Icons** | Tailwind CSS v4 + Lucide | `tailwindcss@4` / `lucide-react` | Custom dark glassmorphic design system |
-| **Interactive Maps** | Mapbox GL JS | `3.20.0` | GIS conflict heatmap & tactical event pin markers |
-| **Backend REST API** | Fastify | `5.8.2` | High-throughput Node.js backend with ESM support |
-| **Database & Auth** | Supabase (PostgreSQL) | `supabase-js@2.99.2` | Row Level Security (RLS), Postgres DB, JWT Auth |
-| **Caching & Queues** | Upstash Redis + BullMQ | `bullmq@5.71.0` / `ioredis@5.9.3` | Asynchronous background workers & rate-limiting |
-| **AI Intelligence** | Anthropic Claude SDK | `@anthropic-ai/sdk@0.79.0` | Claude 3.5 Sonnet / Haiku signal classification |
-| **Mobile App** | Expo / React Native | Expo `55.0.7` / RN `0.83.2` | Mobile terminal dashboard & native push alerts |
-| **Scheduler** | node-cron | `4.2.1` | Automated 15-min news ingestion triggers |
+| Layer                  | Technology                                        | Version                           | Purpose                                                                                     |
+| :--------------------- | :------------------------------------------------ | :-------------------------------- | :------------------------------------------------------------------------------------------ |
+| **Monorepo Engine**    | Turborepo + pnpm                                  | `turbo@2.8.18` / `pnpm@10.32.1`   | Build pipeline orchestration & workspace linking                                            |
+| **Frontend Framework** | Next.js (App Router)                              | `16.2.0` (React `19.2.4`)         | Institutional dark terminal UI, SSR, middleware                                             |
+| **Styling & Icons**    | Tailwind CSS v4 + Lucide                          | `tailwindcss@4` / `lucide-react`  | Custom dark glassmorphic design system                                                      |
+| **Interactive Maps**   | MapLibre GL (`maplibre-gl`) + OpenStreetMap tiles | `maplibre-gl@6.x`                 | GIS conflict heatmap, clustering, and tactical event pin markers (no Mapbox token required) |
+| **Backend REST API**   | Fastify                                           | `5.8.2`                           | High-throughput Node.js backend with ESM support                                            |
+| **Database & Auth**    | Supabase (PostgreSQL)                             | `supabase-js@2.99.2`              | Row Level Security (RLS), Postgres DB, JWT Auth                                             |
+| **Caching & Queues**   | Upstash Redis + BullMQ                            | `bullmq@5.71.0` / `ioredis@5.9.3` | Asynchronous background workers & rate-limiting                                             |
+| **AI Intelligence**    | Anthropic Claude SDK                              | `@anthropic-ai/sdk@0.79.0`        | Claude 3.5 Sonnet / Haiku signal classification                                             |
+| **Mobile App**         | Expo / React Native                               | Expo `55.0.7` / RN `0.83.2`       | Mobile terminal dashboard & native push alerts                                              |
+| **Scheduler**          | node-cron                                         | `4.2.1`                           | Automated 15-min news ingestion triggers                                                    |

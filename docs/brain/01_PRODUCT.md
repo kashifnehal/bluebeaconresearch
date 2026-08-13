@@ -60,7 +60,7 @@ This document defines every user-facing page and view across the Web Terminal (`
 
 - **Route**: `/map`
 - **Business Purpose**: Visualizes spatial geopolitical risk density and event coordinates overlaying global commodity pipelines, maritime straits, and refinery hubs.
-- **Components Used**: `Mapbox GL JS` map canvas, custom HTML marker pins, severity popups, `Sidebar`, `TopBar`.
+- **Components Used**: `MapLibre GL` map canvas (OpenStreetMap raster tiles), custom HTML marker pins, severity popups, `Sidebar`, `TopBar`.
 - **API Dependencies**: `GET /api/signals?has_coords=true` (lat/lng signal list).
 - **User Journey**: User selects region (e.g. Middle East) → Map zooms to conflict cluster → Hover/Click pin opens signal summary card with direct link to full event.
 - **Navigation**: Accessible from primary sidebar navigation.

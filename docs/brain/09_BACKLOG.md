@@ -15,7 +15,7 @@ This document outlines prioritized tasks, technical debt resolution, feature enh
 ## 2. High Priority (P1 — Core Experience & Reliability)
 
 - [ ] **Sub-100ms WebSocket Signal Feed**: Replace REST polling on `/dashboard` with persistent Supabase Realtime / WebSocket stream.
-- [ ] **Mapbox Layer Toggles**: Add maritime shipping straits (Hormuz, Bab-el-Mandeb, Malacca, Suez) overlay and crude oil pipeline maps to `/map`.
+- [ ] **Map Layer Toggles (MapLibre)**: Add maritime shipping straits (Hormuz, Bab-el-Mandeb, Malacca, Suez) overlay and crude oil pipeline maps to `/map` using MapLibre-compatible vector/raster layers.
 - [ ] **Multi-Model AI Cross-Verification**: Implement parallel classification using OpenAI o3-mini alongside Claude 3.5 Sonnet to verify high-severity signals ($\ge 9$).
 
 ---

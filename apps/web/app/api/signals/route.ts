@@ -43,6 +43,23 @@ export async function GET(req: NextRequest) {
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
       req.headers.get("x-real-ip") ??
       "unknown";
+    // Short-circuit: if we have a very recent cached payload, return it
+    // immediately to avoid calling the rate-limit service on every poll.
+    const CACHE_TTL_MS = 60_000; // 1 minute
+    if (
+      _cachedSignals &&
+      Date.now() - _cachedSignals.timestamp <= CACHE_TTL_MS
+    ) {
+      return NextResponse.json(
+        {
+          ..._cachedSignals.payload,
+          fallback: true,
+          fallbackReason: "cached",
+          fallbackLastUpdated: new Date(_cachedSignals.timestamp).toISOString(),
+        },
+        { status: 200, headers: { "x-signals-feed-status": "cached" } },
+      );
+    }
 
     let rl;
     try {

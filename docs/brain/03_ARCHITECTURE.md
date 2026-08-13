@@ -40,6 +40,12 @@ Blue Beacon Research uses a decoupled, event-driven monorepo architecture manage
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+_Implementation note_: the web client map engine uses **MapLibre GL** with OpenStreetMap raster tiles (no Mapbox token required). The frontend requests tiles using the standard template `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png` (subdomains a/b/c), and displays the required OpenStreetMap attribution. The `/api/signals` route includes a process-local in-memory cache and degraded-mode behavior to return the last-known payload when upstream rate-limiting or DB errors occur, enabling the UI to display older data and a small degraded banner instead of failing with 500s.
+
+```
+
+```
+
 ---
 
 ## 2. Ingestion & Signal Processing Pipeline

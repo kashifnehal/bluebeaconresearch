@@ -27,7 +27,8 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
       };
     },
     enabled,
-    refetchInterval: 30_000,
+    // Reduce polling frequency to 60s to lower request volume against rate-limited services
+    refetchInterval: 60_000,
   });
 
   const fetchedSignals = data?.signals ?? [];
