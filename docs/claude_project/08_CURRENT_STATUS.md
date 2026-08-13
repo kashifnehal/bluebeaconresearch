@@ -1,223 +1,135 @@
-# 08_CURRENT_STATUS.md — Exact Project State (August 2026)
+# 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-**Classification: Internal — CTO Level**
-**Last verified: August 2026**
-
----
-
-## 1. INFRASTRUCTURE STATUS
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Vercel (web) | ✅ Live | bluebeaconresearch.com serving correctly |
-| Railway (API server) | ❌ OFFLINE | Never deployed. Root Directory not set, no start command configured. $1.00 credit left — needs billing added immediately. |
-| Railway (workers) | ❌ DOES NOT EXIST | Second Railway service not created. Workers process has never run in production. |
-| Supabase DB | ✅ Running | Database exists. Tables created. Some migrations may not all be applied. |
-| Upstash Redis | ✅ Connected | Env vars set in Railway. |
-| Telegram bot | ❌ Webhook not set | Bot exists (@BlueBeaconBot), token set in env, but setWebhook never called after deployment. |
-| Domain | ✅ Live | bluebeaconresearch.com → Vercel. api.bluebeaconresearch.com → Railway (but Railway offline). |
+Last updated: 2026-08-12
 
 ---
 
-## 2. FEATURE STATUS (GRANULAR)
+## 1. Production Readiness Overview
 
-### Authentication
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Email/password signup | ✅ Works | Supabase auth, profile trigger confirmed |
-| Email/password login | ✅ Works | |
-| Google OAuth | ❌ Broken | UI button exists. No /auth/callback route. Google Cloud Console credentials not configured. Supabase Google provider not enabled. |
-| Email verification | ✅ Works | Supabase handles |
-| Forgot password | ✅ Works | |
-| Session persistence | ✅ Works | Cookie-based via @supabase/ssr |
-| Middleware auth guard | ✅ Works | Protected routes redirect to /login |
-| Profile auto-creation on signup | ⚠️ Unverified | Trigger created but not confirmed working for OAuth users |
-
-### Onboarding (/onboarding)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Name input | ✅ Works | Saved to profiles.full_name |
-| Use case selection | ✅ Works | Saved to user_preferences.use_case |
-| Telegram connect | ❌ Broken | Shows "@yourusername" placeholder — wrong. Telegram IDs are numeric. No bot connect flow built. |
-| Region selection | ❌ Not built | Planned but missing from current onboarding |
-| Commodity preferences | ❌ Not built | Missing |
-| Min severity selection | ❌ Not built | Missing |
-| Save and complete | ⚠️ Partial | Saves some fields, not all. Sets onboarding_completed = true. |
-
-### Landing Page (/)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Hero section | ✅ Works | Looks great |
-| Live signal preview | ⚠️ Works but bad data | Shows FIFA Vancouver story from 4 months ago — workers not running |
-| Pricing section | ✅ Works | 3 tiers displayed |
-| ACCESS TIERS nav link | ⚠️ Unverified | Should scroll to pricing |
-| Tactical Modules nav link | ⚠️ Unverified | Should scroll to features |
-| SELECT TIER buttons | ⚠️ Partial | Go to /signup, but plan param may not be passed |
-| AUTHORIZE FULL ACCESS button | ⚠️ Unverified | Should go to /signup |
-| AccessLimitedModal (scarcity) | ✅ Built | Controlled by PROJECT_READY flag |
-| Founding member banner | ⚠️ Unverified | May or may not be implemented |
-| Footer links | ❌ Broken | Most 404 — Research, Documentation, Compliance, Auth Center, System Status |
-| sitemap.xml | ❌ Not built | |
-| robots.txt | ❌ Not built | |
-| OG meta tags | ⚠️ Partial | Basic title/description, no og:image |
-
-### Dashboard (/dashboard)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Signal feed renders | ✅ Works | Shows 20 old signals from 4 months ago |
-| Signal quality | ❌ BAD | FIFA Vancouver as top signal. Country shows UNKNOWN. All 40% confidence. Duplicates. Workers not running. |
-| HIGH RISK filter tab | ⚠️ Partial | Works UI-wise but 0 HIGH signals exist |
-| Search bar | ❌ Not functional | Input renders, no handler wired |
-| Notification bell | ❌ Not functional | Icon renders, no panel opens |
-| ? Help icon | ❌ Not functional | Icon renders, does nothing |
-| User avatar dropdown | ❌ Not functional | Click does nothing |
-| ANALYZE IMPACT button | ✅ Works | Navigates to /events/[id] |
-| Signal rows clickable | ⚠️ Unverified | Chevron renders but click handler may not be attached |
-| Breaking alert banner | ⚠️ Conditional | Shows when severity≥9 signal in last 4hr — no such signal exists currently |
-| Right sidebar (breakdown) | ✅ Renders | HIGH:0, MEDIUM:20, LOW:0 |
-| Right sidebar (hotzones) | ❌ Shows UNKNOWN | Country field not populated on signals |
-| Real-time SSE | ⚠️ Connected but no new data | SSE stream opens but workers not sending new signals |
-
-### Map (/map)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Map renders | ✅ Works | Mapbox GL, dark style |
-| Conflict pins | ❌ None showing | Signals have no lat/lng (country extraction broken) |
-| Global Tension Index | ❌ Wrong data | 100% Diplomatic, 0% Kinetic — because only FIFA "diplomatic" signals exist |
-| Right intel stream | ❌ Old data | Shows "4 months ago" timestamps — workers offline |
-| Price ticker | ❌ "SYNCING" forever | Alpha Vantage quota exhausted, no prices loading |
-| OPEN FULL TERMINAL button | ✅ Works | Goes to /dashboard |
-
-### Alerts (/alerts)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Featured signal card | ✅ Renders | Shows oldest critical signal (4 months old) |
-| DEPLOY COUNTERMEASURES button | ❌ Wrong | Red button, confusing name, should be renamed/repurposed |
-| Signal velocity chart | ✅ Renders | Shows bar chart (bars represent old data) |
-| Geospatial intelligence stream | ✅ Renders | List of old signals |
-| Signal stream items clickable | ⚠️ Unverified | Should navigate to /events/[id] |
-| Filter tabs (ALL/WATCHLIST/ARCHIVES) | ⚠️ Partial | Tabs switch but filter logic unverified |
-| Severity filter pills | ⚠️ Partial | Visually active, API filter unverified |
-| Floating bell button | ⚠️ Unclear | Renders but behavior unknown |
-| Telegram connect code | ⚠️ Unverified | POST /v1/telegram/connect-code exists but end-to-end untested |
-| Alert rule creation | ⚠️ Partial | Form exists, API route exists, delivery chain untested |
-
-### Watchlist (/watchlist)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Page renders | ✅ Works | |
-| Price cards | ❌ BLANK | Shows skeleton loading forever — Alpha Vantage quota exhausted |
-| Commodity data | ❌ Not loading | price-syncer worker not running |
-| Star/bookmark | ❌ No-op | Page blank so toggles can't work |
-
-### Backtesting (/backtesting)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Page renders | ✅ Works | Looks great |
-| Pre-built simulation cards | ✅ Render | 6 scenarios shown |
-| INITIALIZE SIMULATION buttons | ⚠️ Partial | Pre-fills form, may auto-trigger run |
-| Form fields | ✅ Work | All inputs functional |
-| RUN BACKTEST button | ⚠️ Returns mock | Runs, returns sine-curve fake data, NO "Demo Mode" disclaimer shown |
-| Results display | ✅ Renders | Fake data looks convincing — dangerous without disclaimer |
-
-### Settings (/settings)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Account tab | ✅ Works | Name editable, SAVE CHANGES updates DB |
-| Notifications tab | ❌ Empty | Tab exists but likely no content |
-| Appearance tab | ❌ Empty | Tab exists but likely no content |
-| Security tab | ❌ Empty | Tab exists but likely no content |
-| Data tab | ❌ Empty | Tab exists but likely no content |
-| API key generation | ⚠️ Unverified | UI exists in settings but flow untested end-to-end |
-
-### events/[id]
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Page renders | ✅ Works | Navigates from signal cards |
-| AI analysis | ⚠️ Shows but wrong | Shows Claude analysis of FIFA Vancouver |
-| Price at signal | ❌ Not showing | price_at_signal column not added yet |
-| Commodity impact table | ✅ Renders | Populated from commodity_impacts JSONB |
-| Sanctions panel | ⚠️ Conditional | Shows if sanctions_matches populated — usually empty |
-| Shipping proximity | ⚠️ Conditional | Shows if shipping_proximity populated — usually null |
-| Source articles | ⚠️ Partial | Listed but links may not work |
+| Subsystem                           | Status              | Notes                                                                     |
+| :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
+| **Turborepo Monorepo Architecture** | ✅ Operational      | Clean monorepo structure                                                  |
+| **Next.js 16 Web App (Vercel)**     | ✅ Operational      | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
+| **PostgreSQL Schema (Supabase)**    | ✅ Operational      | 9 migrations applied (including 009 event_date index)                     |
+| **Railway Workers (Cron)**          | ✅ Operational      | `sleepApplication: false`, heartbeat every 5m, collectors every 15m       |
+| **Railway Backend (HTTP API)**      | ✅ Operational      | `api.bluebeaconresearch.com` healthcheck passing                          |
+| **RSS Real-Time Collector**         | ⚠️ Partial          | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404    |
+| **GNews Ingestion**                 | ⚠️ Degraded         | Free tier — 1 query/run; mostly duplicates after initial ingest           |
+| **GDELT Ingestion**                 | ⚠️ Degraded         | HTTP 429 rate limits; 30s retry added                                     |
+| **Price Syncer (Yahoo Finance)**    | ✅ Operational      | 8 commodity prices every 15 min                                           |
+| **Claude AI Classifier**            | ⚠️ Degraded         | Zero Anthropic credit — heuristic fallback active                         |
+| **Heuristic Fallback Classifier**   | ✅ Operational      | Dynamic confidence scoring (55%–90%) + word-boundary filtering            |
+| **Upstash Redis / BullMQ**          | ✅ Operational      | Fixed `rediss://` TLS protocol                                            |
+| **Interactive UI Controls**         | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active              |
 
 ---
 
-## 3. BACKEND WORKER STATUS
+## 2. Data Pipeline State (as of 2026-08-12)
 
-| Worker | Status | Notes |
-|--------|--------|-------|
-| GDELT collector | ❌ NOT RUNNING | Workers process not started in Railway |
-| ACLED collector | ❌ NOT RUNNING | Same |
-| GNews collector | ❌ NOT RUNNING | Same |
-| AI classifier | ❌ NOT RUNNING | Same |
-| Signal generator | ❌ NOT RUNNING | Same |
-| Alert dispatcher | ❌ NOT RUNNING | Same |
-| Price syncer | ❌ NOT RUNNING + broken | Not running + Alpha Vantage free tier exhausted |
-| Sanctions syncer | ❌ NOT RUNNING | Same |
-| Morning brief | ❌ Not built | |
-| Outcome tracker | ❌ Not built | alerts_sent.outcome_direction never filled |
-| Calendar collector | ❌ Not built | |
+- **`raw_events`**: Ingestion active on deploy startup + 15-min cron. Typical run: `inserted: 0–2`, `duplicates: 15–40`, `filtered: 40–80`.
+- **`signals`**: 20+ signals in 24h `event_date` window, plus active ongoing events older than 24h are preserved in the default feed.
+- **`Global Map`**: `/map` now plots geolocated events from real `lat`/`lng` values in `/api/signals`; missing Mapbox tokens gracefully fall back to a neutral overlay.
+- **`commodity_prices`**: Updated every 15 min (8 commodities via Yahoo Finance).
 
-**Root cause of all worker failures:** Railway workers service does not exist. Only API server is configured (and even that is offline). See 12_DEPLOYMENT.md for fix steps.
+**Latest verified ingest** (2026-08-11T18:37 UTC deploy): `startup:rss → inserted: 1, signals: 1`.
 
 ---
 
-## 4. KNOWN BUGS (CRITICAL)
+## 3. How the Data Pipeline Works
 
-1. **Railway not deployed** — The backend service has never run in production. Root Directory not set in Railway Settings. No active deployment exists.
-
-2. **Railway credits at $1.00** — Free plan almost exhausted. Services will stop when it hits $0. Add billing immediately.
-
-3. **Signal quality broken** — FIFA Vancouver story as top signal. Country = UNKNOWN on all signals. All signals show 40% confidence (parsing issue or lack of context in prompt). Duplicate signals appearing. Pre-filter not working.
-
-4. **Watchlist blank forever** — Alpha Vantage 25 req/day limit exhausted immediately. Yahoo Finance replacement not implemented.
-
-5. **Google OAuth broken** — No /auth/callback route. No Google Cloud credentials configured. No Supabase provider enabled.
-
-6. **Telegram webhook not set** — setWebhook never called against Railway URL. Bot messages never reach backend.
-
-7. **Backtesting shows fake data without disclaimer** — Users may trust fake sine-curve data as real historical analysis.
-
-8. **Settings has 4 empty tabs** — Notifications, Appearance, Security, Data tabs have no content.
-
-9. **Search/Bell/? non-functional** — TopBar elements render but have no handlers.
-
-10. **"DEPLOY COUNTERMEASURES" button** — Confusing red military-style button on alerts page. Wrong name, wrong color, wrong behavior.
+```
+Railway workers (startup + every 15m)
+  RSS (BBC, Al Jazeera, Guardian, NPR, UN News) + GNews + GDELT
+        ↓
+isRelevantEvent() word-boundary filter — ~70% of articles filtered out
+        ↓
+Deduplicate by external_id — most remaining articles already in DB
+        ↓
+Insert into raw_events + signals (event_date = article PUBLISH time)
+        ↓
+Next.js /api/signals (default feed: 24h fresh + active ongoing events; explicit `window=latest|24h|7d|active` filters available)
+        ↓
+Dashboard shows eventDate → "X hours ago" = when article was PUBLISHED
+```
 
 ---
 
-## 5. KNOWN TECHNICAL DEBT
+## 4. Why Dashboard Timestamps Look "Old" (Not a Bug)
 
-1. **Claude AI cost unmonitored** — No token usage logging. At 350 events/15min without pre-filter = ~$400/month risk.
-2. **SSE polls DB directly** — At scale (10K+ users), 10K queries every 60 seconds will overload Supabase. Should switch to Redis pub/sub.
-3. **No error boundaries** — Any React crash = white screen.
-4. **No loading.tsx** — No loading states for RSC data fetching.
-5. **No sitemap or robots.txt** — Bad for SEO.
-6. **Backtesting returns mock data** — Core feature is fake.
-7. **Empty settings tabs** — Promised features not delivered.
-8. **Onboarding missing region/commodity/severity steps** — Feed not personalized.
-9. **No rate limiting verified** — CRITICAL security gap if backend is brought online.
-10. **No error monitoring (Sentry)** — Production crashes invisible.
-11. **price_at_signal column not added** — Migration 008 not run.
-12. **economic_events table not created** — Migration 009 not run.
-13. **PostGIS may not be enabled** — Shipping proximity calculation would fail.
-14. **Outcome tracker not built** — Alert accuracy never computed. /accuracy page impossible.
+| Field        | Meaning                                   | Shown in UI?                     |
+| :----------- | :---------------------------------------- | :------------------------------- |
+| `created_at` | When **we ingested** the signal           | ❌ No (except NotificationPanel) |
+| `event_date` | When the **source article was published** | ✅ Yes — `"12 hours ago"`        |
+
+A signal ingested **5 minutes ago** from a BBC article published **12 hours ago** will display **"12 hours ago"**. Refreshing the page does not change this — it is intentional (v0.10.0 decision).
+
+Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New ingested signals with lower severity (e.g. 5) exist in the DB but may not become the hero card.
 
 ---
 
-## 6. WHAT IS ACTUALLY WORKING END-TO-END
+## 5. Known Issues & Action Items
 
-The only complete end-to-end flows are:
+| Issue                                  | Severity  | Status                                                           |
+| :------------------------------------- | :-------- | :--------------------------------------------------------------- |
+| Railway Serverless sleep killing cron  | Fixed     | `sleepApplication: false` in `railway.workers.json`              |
+| Wrong start command on workers service | Fixed     | `railway.workers.json` → `pnpm run start:workers`                |
+| UI timestamps look stale vs ingestion  | Explained | By design — shows `event_date`, not `created_at`                 |
+| Reuters RSS feed 404 on Railway        | Open      | `reutersagency.com` feed URL returns 404; other feeds compensate |
+| GDELT HTTP 429 rate limiting           | Open      | 30s retry added; may still fail during peak                      |
+| GNews free tier quota                  | Open      | 1 query/run; mostly returns duplicates after initial ingest      |
+| Anthropic API credit exhausted         | High      | Heuristic fallback active                                        |
+| ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
+| `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
+| Telegram alerts not working            | Open      | `TELEGRAM_BOT_TOKEN` not set in Railway                          |
 
-1. **Email signup → onboarding → dashboard (partial)** — User can create an account, complete basic onboarding (without Telegram), see the dashboard with old signal data.
+---
 
-2. **Navigate between pages** — Sidebar navigation between all 6 pages works.
+## 6. How to Verify Workers Are Healthy
 
-3. **View old signal cards** — The 20 signals from 4 months ago display correctly in the feed with correct UI.
+Railway → **workers** → Logs. Expect:
 
-4. **View event detail** — Clicking ANALYZE IMPACT shows the event detail page with Claude analysis (of wrong events).
+```
+Running initial ingestion immediately on startup...
+startup:rss → { inserted: N, signals: N, ... }
+workers: cron schedulers active, health server listening
+workers:heartbeat → every 5 min
+rss-collector / price-sync → every 15 min
+```
 
-5. **Backtesting UI flow** — Can select scenario, run backtest, see results (fake data).
+Supabase SQL:
 
-6. **Settings account tab** — Can update display name.
+```sql
+SELECT title, created_at, event_date,
+       NOW() - created_at AS ingested_ago,
+       NOW() - event_date AS published_ago
+FROM signals ORDER BY created_at DESC LIMIT 5;
+```
+
+If `created_at` advances but UI still shows old times → check `event_date` (publish time), not ingestion.
+
+---
+
+## 7. Environment Variables Required
+
+### Supabase (Vercel + Railway + `.env.local`)
+
+```
+NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
+SUPABASE_SERVICE_ROLE_KEY=<service role key>   ← REQUIRED on Vercel for /api/signals
+```
+
+### Redis (Railway workers + backend)
+
+```
+REDIS_URL=rediss://default:<token>@<host>:6379   ← MUST be rediss:// (TLS)
+```
+
+### Data Sources (Railway workers)
+
+```
+GNEWS_API_KEY=<gnews token>
+ANTHROPIC_API_KEY=<optional — heuristic fallback works without credits>
+ACLED_EMAIL=<optional>
+ACLED_PASSWORD=<optional>
+```
