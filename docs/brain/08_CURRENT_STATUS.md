@@ -1,26 +1,17 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-Last updated: 2026-08-12
-Last updated: 2026-08-14
+Last updated: 2026-08-15
 
 ---
 
-| Subsystem | Status | Notes |
+## Recent UI Chrome Audit & Cleanup (2026-08-15)
 
-- **`Global Map`**: `/map` now plots geolocated events from real `lat`/`lng` values in `/api/signals` using **MapLibre GL** with OpenStreetMap tiles (no Mapbox token required). The frontend will display a small degraded-mode banner and continue to show the last available data when the server returns a cached fallback due to upstream rate-limiting or DB errors.
-
-## Recent Reliability Work (2026-08-13 → 2026-08-14)
-
-- **Adaptive Signals Cooldown**: `/api/signals` now implements an adaptive cooldown (exponential backoff) when upstream rate-limiting or errors occur. The server will return the last-successful cached payload and enter a cooldown window (configurable via `SIGNALS_COOLDOWN_MS` and `SIGNALS_COOLDOWN_MAX_MS`) to avoid repeated external calls.
-- **In-Process Gate + DEV_SKIP_UPSTASH**: Added a per-process token gate to short-circuit repeated external calls during bursts and a `DEV_SKIP_UPSTASH` env flag to skip rate-limit checks in dev for better local DX.
-- **Redis Rate-Limiter POCs**: Implemented centralized Redis POCs including a sorted-set token-bucket and a Lua atomic token-bucket. `rateLimitOrPass` prefers the Redis/Lua implementation when `REDIS_URL` is present and falls back to Upstash or in-process checks.
-- **SSE Token/Proxy Pattern**: Stabilized Server-Sent Events by minting short-lived tokens and exposing a `/api/events/proxy` that allows `EventSource` connections without Authorization headers.
-- **Reduced Client Polling**: Increased signal polling interval to 120s with jitter to reduce Upstash/REST pressure during load tests.
-- **UI Controls**: `TopBar` debounced search now applies client-side filtering only when empty or >=3 chars (Enter still triggers server search). `Backtesting` mock responses now include `isDemo: true` and the UI displays an amber disclaimer banner.
-
-These changes aim to preserve the `/api/signals` contract and ensure graceful degraded-mode semantics (the API returns `fallback: true` and `fallbackReason` when serving cached data). For production hardening the next step is provisioning a central Redis instance and migrating the token-bucket to a single authoritative store (or upgrading Upstash plan).
-
-Infra update: On 2026-08-14 the Redis migration scaffolding and docs were added and merged into `main`. See `infra/redis/README_REDIS.md` for provisioning steps and the recommended canary rollout. The local docker-compose and CI job were also added to validate the Lua token-bucket implementation.
+- **UI Chrome Audit Completed**: Executed comprehensive UI audit across all 8 page sections (A1–H5). All buttons, modals, dropdowns, scope tabs, filters, and drawers are fully functional with zero fake data.
+- **Global Map Fix (H1/H3)**: Added dynamic MapLibre GL CSS injection (`maplibre-gl.css`) so the map canvas renders correctly with OpenStreetMap tiles. Added Diplomatic Friction score bar to Global Tension Index.
+- **Watchlist & Dashboard Data Integrity (B4/D4/D5)**: Removed static Supply Chain Nodes panel and fake AI Prediction quote. Replaced with honest operational system status link to `/status` and transparent note.
+- **Legal/Trust Disclaimer (E2)**: Added amber Scenario Research Mode disclaimer banner to all backtest simulation results when running in demo mode.
+- **Scope Violation Removal**: Cleared out all unrequested infrastructure/Redis rate-limiting POC files and Terraform templates from the UI PR, restoring clean architecture boundaries.
+- **Build Verification**: Turborepo build (`pnpm build --filter web`) passes with zero compilation or type-check errors.
 | :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
 | **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
 | **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |

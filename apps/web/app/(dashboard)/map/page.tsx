@@ -144,6 +144,16 @@ export default function MapPage() {
         const module = await import("maplibre-gl");
         const maplib = module;
 
+        // H1 fix: inject MapLibre CSS if not already present
+        // Without this the map canvas renders blank — no tiles, no attribution styling
+        if (!document.querySelector('link[data-maplibre-css]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css';
+          link.setAttribute('data-maplibre-css', '1');
+          document.head.appendChild(link);
+        }
+
         if (canceled || !mapContainerRef.current) return;
 
         mapLibRef.current = maplib;

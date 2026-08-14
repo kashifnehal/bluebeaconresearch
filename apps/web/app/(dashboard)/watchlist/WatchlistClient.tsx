@@ -20,9 +20,7 @@ export function WatchlistClient() {
   );
   const [addSymbol, setAddSymbol] = useState<string>("SELECT COMMODITY");
 
-  const [lastFetchAt, setLastFetchAt] = useState<number | null>(null);
-
-  const { data, refetch } = useQuery({
+  const { data, refetch, dataUpdatedAt } = useQuery({
     queryKey: ["prices"],
     queryFn: async () => {
       const res = await fetch("/api/prices");
@@ -30,8 +28,9 @@ export function WatchlistClient() {
       return json;
     },
     refetchInterval: 15_000,
-    onSuccess: () => setLastFetchAt(Date.now()),
   });
+
+  const lastFetchAt = dataUpdatedAt || null;
 
   const priceBySymbol = useMemo(() => {
     const map = new Map<string, Price>();

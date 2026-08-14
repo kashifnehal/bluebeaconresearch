@@ -1,7 +1,0 @@
-region = "us-east-1" # replace with your target region
-vpc_id = "vpc-xxxxxxxx"
-subnet_ids = ["subnet-aaaaaaa","subnet-bbbbbbb"] # private subnets for ElastiCache
-redis_node_type = "cache.t3.small"
-replication_group_id = "bb-redis-staging"
-auth_token = "<REPLACE_WITH_SECURE_TOKEN>"
-allowed_cidrs = ["10.0.0.0/8"]

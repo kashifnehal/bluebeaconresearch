@@ -416,7 +416,7 @@ export default function EventDetailPage() {
               </label>
               <input
                 value={modalRegion}
-                onChange={(e) => setModalRegion(e.target.value)}
+                onChange={(e) => setModalRegion(e.target.value as any)}
                 className="w-full bg-[#0e0e0e] border border-[#3c4a42] p-2 text-xs text-white rounded font-mono"
               />
             </div>

@@ -34,13 +34,8 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
       };
     },
     enabled,
-    // Reduce polling frequency to 120s with jitter to lower request volume against rate-limited services
-    // Uses a function to add random jitter (0-30s) per interval
-    refetchInterval: () => {
-      const base = 120_000; // 120s
-      const jitter = Math.floor(Math.random() * 30_000); // up to 30s
-      return base + jitter;
-    },
+    // Poll every 60s to stay current without hammering the rate limiter
+    refetchInterval: 60_000,
   });
 
   const fetchedSignals = data?.signals ?? [];
@@ -59,27 +54,12 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
 
     let cancelled = false;
 
-    const connect = async () => {
+    const connect = () => {
       if (cancelled) return;
       esRef.current?.close();
-      // Mint a short-lived SSE token and connect to the proxy endpoint.
-      try {
-        const tRes = await fetch("/api/events/token", { method: "POST" });
-        if (!tRes.ok) throw new Error("unable to mint sse token");
-        const { token } = await tRes.json();
-        const es = new EventSource(
-          `/api/events/proxy?token=${encodeURIComponent(token)}`,
-        );
-        esRef.current = es;
+      const es = new EventSource("/api/events/stream");
+      esRef.current = es;
 
-        es.onopen = () => {
-          retryRef.current = 0;
-        };
-      } catch (err) {
-        // fallback to previous stream if token path fails
-        const es = new EventSource("/api/events/stream");
-        esRef.current = es;
-      }
       es.onmessage = (evt) => {
         try {
           const signal = JSON.parse(evt.data) as Signal;
@@ -87,7 +67,7 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
           if (signal.severity >= 8)
             toast(signal.title, { description: signal.summary });
         } catch {
-          // ignore
+          // ignore malformed SSE frames
         }
       };
 

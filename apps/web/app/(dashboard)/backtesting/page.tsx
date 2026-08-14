@@ -95,6 +95,7 @@ export default function BacktestingPage() {
         avgMovePct: number;
         maxMovePct: number;
         minMovePct: number;
+        isDemo?: boolean;
         rows: Array<{
           date: string;
           country: string;

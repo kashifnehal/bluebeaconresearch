@@ -6,6 +6,15 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.13.0 — UI Chrome Audit Completion & Scope Violation Cleanup (2026-08-15)
+
+- **UI Chrome Audit Completed**: Fixed all non-functional interactive elements across global chrome, intelligence feed, alerts, watchlist, backtesting lab, settings, event deep-dives, and global map (A1–H5 audit matrix).
+- **MapLibre GL CSS Fix**: Injected MapLibre CSS directly into `map/page.tsx` client component, resolving the blank canvas rendering issue (H1).
+- **Data Integrity Enforcement**: Removed static decorative elements (D4 Supply Chain Nodes, D5 static AI Prediction text, B4 Sentinel AI static progress bar) and replaced with honest status states.
+- **Legal Disclaimer Compliance**: Enforced amber Scenario Research Mode warning banner on all backtest simulation results in demo mode (E2).
+- **Scope Violation Removal**: Purged 23 unrequested Redis rate-limiting/Terraform/load-test files that violated task scope boundaries, restoring clean monorepo architecture.
+- **Monorepo Build Verification**: Passed Turborepo web build (`pnpm build --filter web`) with 0 errors.
+
 ### v0.1.0 — Monorepo Architecture & Ingestion Setup
 
 - Initialized Turborepo monorepo with `pnpm` workspaces (`apps/web`, `apps/backend`, `apps/mobile`, `packages/shared`).
