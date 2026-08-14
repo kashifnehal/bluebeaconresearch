@@ -209,7 +209,7 @@ export function WatchlistClient() {
                   </span>
                 </div>
                 <h4 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
-                  AI Predictions
+                  Market Signal Forecast
                 </h4>
               </div>
               <p className="text-sm font-body leading-relaxed text-on-surface/80 mb-6 italic border-l-2 border-outline-variant/20 pl-4 font-medium">

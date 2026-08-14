@@ -577,7 +577,7 @@ export default function DashboardPage() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              MARKET & AI
+              MARKET & INTELLIGENCE
             </div>
             <div
               className="text-[10px] tracking-widest mt-1"
@@ -610,7 +610,7 @@ export default function DashboardPage() {
                     fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
-                  SENTINEL AI
+                  SENTINEL
                 </span>
               </div>
               <div

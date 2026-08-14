@@ -4,6 +4,16 @@ Last updated: 2026-08-15
 
 ---
 
+## Recent Event Detail Page Rebuild & Alert Fix (2026-08-15)
+
+- **Event Page Was Showing Wrong Signals**: Root cause of the empty "Projected Impact" box — `/events/[id]` fetched only the newest 20 signals and fell back to `signals[0]` when the requested ID wasn't in that batch. Fixed with a dedicated `/api/signals/[id]` route that fetches the exact signal.
+- **Alert Creation Crash Fixed**: `alert_rules.name` NOT NULL violation on "Save Rule" — was happening in both the event page and Alerts page modals. Now auto-generated (e.g. "Middle East — Severity 5+").
+- **Event Page Tabs Now Real**: HISTORICAL, MAP, and SOURCES tabs pull from the DB (`signals`, `raw_events`, `commodity_prices`) instead of showing placeholder content.
+- **Price-at-Signal Added**: Event page now shows "{asset} was $X when this fired. Now: $Y (±Z%)" using existing `commodity_prices` data — no new API/AI dependency.
+- **Verification Nodes Removed**: No real 3-part confidence model existed behind the three progress bars; replaced with one honest "Confirmed by N source(s)" line.
+- **Terminology Sweep**: Removed "AI" labeling from 7 user-facing spots (event page, Alerts, Watchlist, HelpModal, landing page, dashboard sidebar) per the research-platform positioning rule.
+- **Build Verification**: `pnpm build --filter web` passes with 0 errors.
+
 ## Recent System Stability & Reliability Fixes (2026-08-15)
 
 - **SSE 401 Authentication Fix**: Resolved HTTP 401 stream disconnects in `apps/web/app/api/events/stream/route.ts` by allowing preview/dev connections and service role fallback, eliminating the persistent stream error loop.

@@ -222,7 +222,7 @@ export default async function Home(props: {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
               {[
                 { icon: "radar", title: "01. Event Detection", desc: "Autonomous scanning of ACLED, GNews, and proprietary military datasets with sub-second analysis." },
-                { icon: "psychology", title: "02. AI Synthesis", desc: "Multi-modal AI models correlate civil unrest vectors with physical asset volatility signatures." },
+                { icon: "psychology", title: "02. Signal Synthesis", desc: "Our analyst classification pipeline correlates civil unrest vectors with physical asset volatility signatures." },
                 { icon: "notifications_active", title: "03. Tactical Uplink", desc: "Synchronized alert delivery across encrypted channels for immediate portfolio reaction." }
               ].map((f, i) => (
                 <div key={i} className="group">

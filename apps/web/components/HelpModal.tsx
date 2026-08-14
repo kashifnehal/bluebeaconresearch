@@ -64,7 +64,7 @@ export function HelpModal() {
                 <strong className="text-white">Severity (1–10 Scale):</strong> 10 represents maximum systemic impact (e.g. major conflict, trade blockade). 1–3 are baseline regional notices.
               </li>
               <li>
-                <strong className="text-white">Confidence:</strong> Percentage certainty evaluated by Claude 3.5 AI based on multi-source verification and cross-referencing.
+                <strong className="text-white">Confidence:</strong> Percentage certainty evaluated by our classification pipeline based on multi-source verification and cross-referencing.
               </li>
               <li>
                 <strong className="text-white">Direction & Asset Volatility:</strong> Projected direction (Bullish/Bearish/Volatile) for key commodities (WTI Crude, Gold, Natural Gas, Wheat).

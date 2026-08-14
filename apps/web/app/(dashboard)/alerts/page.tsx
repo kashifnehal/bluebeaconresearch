@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
-import { safeFormatDistanceToNow } from "@/lib/utils";
+import { safeFormatDistanceToNow, generateAlertRuleName } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
@@ -17,6 +17,7 @@ export default function AlertsPage() {
   const [modalRegion, setModalRegion] = useState("middle-east");
   const [modalMinSeverity, setModalMinSeverity] = useState(7);
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
+  const [modalEventType, setModalEventType] = useState<string | undefined>(undefined);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["signals", "feed"],
@@ -45,6 +46,9 @@ export default function AlertsPage() {
     if (signal) {
       setModalRegion(signal.region || "middle-east");
       setModalMinSeverity(Math.max(1, signal.severity - 1));
+      setModalEventType(signal.eventType);
+    } else {
+      setModalEventType(undefined);
     }
     setModalChannels(["telegram"]);
     setAlertModalOpen(true);
@@ -59,6 +63,7 @@ export default function AlertsPage() {
 
       const { error } = await supabase.from("alert_rules").insert({
         user_id: user.id,
+        name: generateAlertRuleName(modalRegion, modalMinSeverity, modalEventType),
         regions: [modalRegion],
         min_severity: modalMinSeverity,
         channels: modalChannels,
@@ -173,7 +178,7 @@ export default function AlertsPage() {
                     <span className="mono text-xs font-bold text-on-surface uppercase">{featuredSignal.country}</span>
                   </div>
                   <div>
-                    <span className="label text-[9px] text-on-surface/40 uppercase font-bold block">AI Confidence</span>
+                    <span className="label text-[9px] text-on-surface/40 uppercase font-bold block">Signal Confidence</span>
                     <span className="mono text-xs font-bold text-primary">{Math.round(featuredSignal.confidence * 100)}%</span>
                   </div>
                 </div>

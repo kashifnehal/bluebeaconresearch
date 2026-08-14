@@ -8,57 +8,97 @@ import {
   MapPin,
   Share2,
   Bookmark,
-  Bell,
   ChevronLeft,
   Shield,
   Target,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { CommodityChip } from "@/components/signals/CommodityChip";
+import { EventLocationMap } from "@/components/signals/EventLocationMap";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import type { Signal } from "@blue-beacon-research/shared";
-import { useState, useMemo } from "react";
+import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
+import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } from "@/lib/utils";
+import { getSignalCoordinates } from "@/lib/geo-coords";
 import { toast } from "sonner";
+
+function eventTypeLabel(eventType?: string | null): string {
+  if (!eventType) return "this event";
+  return eventType
+    .split("_")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(" ");
+}
 
 export default function EventDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params.id;
 
-  const { data: signal } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["signal", id],
     queryFn: async () => {
-      const res = await fetch(`/api/signals?sort=newest`);
-      const json = (await res.json()) as { signals: Signal[] };
-      return json.signals.find((s) => s.id === id) ?? json.signals[0];
+      const res = await fetch(`/api/signals/${id}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error === "not_found" ? "not_found" : "fetch_failed");
+      }
+      return (await res.json()) as EventDetailResponse;
     },
+    retry: false,
   });
 
-  const verificationPercentages = useMemo(() => {
-    if (!signal || !signal.sourcesCount) return null;
-    const base = Math.min(100, Math.floor((signal.sourcesCount || 0) * 20));
-    return [
-      Math.min(100, base),
-      Math.max(10, Math.floor(base * 0.7)),
-      Math.max(5, Math.floor(base * 0.4)),
-    ];
-  }, [signal]);
+  const signal = data?.signal;
 
   const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [modalRegion, setModalRegion] = useState(
-    signal?.region || "middle-east",
-  );
-
+  const [modalRegion, setModalRegion] = useState<string>(signal?.region || "middle-east");
   const [modalMinSeverity, setModalMinSeverity] = useState(
     Math.max(1, (signal?.severity || 7) - 1),
   );
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
 
-  if (!signal) return null;
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-app" style={{ backgroundColor: "var(--bg-app)" }}>
+        <span className="text-[10px] font-black uppercase tracking-widest text-muted">
+          Loading signal…
+        </span>
+      </div>
+    );
+  }
+
+  if (error || !signal) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-4 bg-app" style={{ backgroundColor: "var(--bg-app)" }}>
+        <span className="text-sm font-black uppercase tracking-widest text-text-primary">
+          Signal not found
+        </span>
+        <p className="text-xs text-muted max-w-sm text-center">
+          This signal doesn't exist or is no longer available. It may have been superseded by a
+          newer signal for the same event.
+        </p>
+        <Button variant="outline" onClick={() => router.push("/dashboard")}>
+          Back to Command Center
+        </Button>
+      </div>
+    );
+  }
+
+  const sources = data.sources ?? [];
+  const historicalComparisons = data.historicalComparisons ?? [];
+  const pricesAtSignal = data.pricesAtSignal ?? [];
+
+  const hasPreciseLocation =
+    typeof signal.lat === "number" &&
+    typeof signal.lng === "number" &&
+    (signal.lat !== 0 || signal.lng !== 0);
+  const [mapLng, mapLat] = getSignalCoordinates(signal);
 
   const createAlertRule = async () => {
     try {
@@ -71,6 +111,7 @@ export default function EventDetailPage() {
 
       const { error } = await supabase.from("alert_rules").insert({
         user_id: user.id,
+        name: generateAlertRuleName(modalRegion, modalMinSeverity, signal.eventType),
         regions: [modalRegion],
         min_severity: modalMinSeverity,
         channels: modalChannels,
@@ -224,17 +265,40 @@ export default function EventDetailPage() {
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  {signal.commodityImpacts.map((c) => (
-                    <CommodityChip
-                      key={c.asset}
-                      asset={c.asset}
-                      direction={c.direction}
-                      confidence={c.confidence}
-                      size="md"
-                    />
-                  ))}
-                </div>
+                {signal.commodityImpacts.length > 0 ? (
+                  <div className="space-y-3">
+                    {signal.commodityImpacts.map((c) => {
+                      const priceInfo = pricesAtSignal.find((p) => p.asset === c.asset);
+                      return (
+                        <div key={c.asset} className="space-y-1">
+                          <CommodityChip
+                            asset={c.asset}
+                            direction={c.direction}
+                            confidence={c.confidence}
+                            size="md"
+                          />
+                          {priceInfo?.priceAtSignal != null && priceInfo?.currentPrice != null && (
+                            <p className="text-[9px] font-mono text-muted pl-1">
+                              {c.asset} was ${priceInfo.priceAtSignal.toFixed(2)} when this fired.
+                              Now: ${priceInfo.currentPrice.toFixed(2)} (
+                              {priceInfo.currentPrice >= priceInfo.priceAtSignal ? "+" : ""}
+                              {(
+                                ((priceInfo.currentPrice - priceInfo.priceAtSignal) /
+                                  priceInfo.priceAtSignal) *
+                                100
+                              ).toFixed(1)}
+                              %)
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-[10px] font-mono text-muted">
+                    No direct commodity impact identified for this event.
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-2">
@@ -284,6 +348,7 @@ export default function EventDetailPage() {
             </TabsList>
 
             <div className="py-8">
+              {/* ── ANALYSIS TAB ─────────────────────────────────── */}
               <TabsContent value="analysis" className="m-0 outline-none">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
                   <div className="md:col-span-8 space-y-8">
@@ -292,23 +357,61 @@ export default function EventDetailPage() {
                         className="text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
                         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                       >
-                        AI Intelligence Briefing
+                        Signal Summary
                       </div>
                       <p className="text-xl text-text-secondary leading-relaxed font-medium">
-                        {signal.aiAnalysis ||
-                          "System is calculating narrative synthesis based on the latest signal feed. This briefing will be finalized once multi-source verification is complete."}
+                        {signal.summary}
                       </p>
                     </div>
 
-                    <div
-                      className="p-8 rounded-lg bg-surface/20 border border-dashed text-center"
-                      style={{ borderColor: "var(--border-subtle)" }}
-                    >
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted">
-                        Advanced Narrative Analysis Pending Integration (Next
-                        Phase)
-                      </p>
+                    <div>
+                      <div
+                        className="text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
+                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                      >
+                        Full Analyst Briefing
+                      </div>
+                      {signal.aiAnalysis ? (
+                        <p className="text-base text-text-secondary leading-relaxed whitespace-pre-line">
+                          {signal.aiAnalysis}
+                        </p>
+                      ) : (
+                        <div
+                          className="p-8 rounded-lg bg-surface/20 border border-dashed text-center"
+                          style={{ borderColor: "var(--border-subtle)" }}
+                        >
+                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted">
+                            Full analyst briefing pending — restoring as intelligence capacity is
+                            added back online.
+                          </p>
+                        </div>
+                      )}
                     </div>
+
+                    {signal.commodityImpacts.length > 0 && (
+                      <div className="space-y-3">
+                        <div
+                          className="text-[10px] font-black uppercase tracking-[0.2em] text-accent"
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        >
+                          Impact Breakdown
+                        </div>
+                        {signal.commodityImpacts.map((c) => (
+                          <div
+                            key={c.asset}
+                            className="flex items-center gap-3 p-3 rounded-lg bg-surface/20 border"
+                            style={{ borderColor: "var(--border-subtle)" }}
+                          >
+                            <CommodityChip asset={c.asset} direction={c.direction} confidence={c.confidence} />
+                            <p className="text-xs text-text-secondary">
+                              {c.asset} — {c.direction} — flagged from this{" "}
+                              {eventTypeLabel(signal.eventType).toLowerCase()} signal in{" "}
+                              {formatRegionLabel(signal.region)}.
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="md:col-span-4 space-y-6">
@@ -320,81 +423,106 @@ export default function EventDetailPage() {
                         className="text-[10px] font-black uppercase tracking-widest text-text-primary mb-4"
                         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                       >
-                        Verification Nodes
+                        Verification
                       </h5>
-                      <div className="space-y-4">
-                        {verificationPercentages ? (
-                          verificationPercentages.map((pct, idx) => (
-                            <div key={idx} className="flex items-center gap-3">
-                              <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                              <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-accent"
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-                              <span className="text-[9px] font-mono text-muted">
-                                {pct}%
-                              </span>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-[10px] font-mono text-on-surface-variant/70">
-                            Verification metrics unavailable for this event.
-                          </div>
-                        )}
-                      </div>
+                      <p className="text-xs font-mono text-text-secondary">
+                        Confirmed by {signal.sourcesCount} source{signal.sourcesCount === 1 ? "" : "s"}.
+                      </p>
                     </div>
                   </div>
                 </div>
               </TabsContent>
 
+              {/* ── HISTORICAL TAB ───────────────────────────────── */}
               <TabsContent value="historical" className="m-0 outline-none">
-                <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
-                  <Database className="w-12 h-12 text-muted mb-6" />
-                  <h3 className="text-sm font-black uppercase tracking-[0.3em] text-text-primary mb-2">
-                    Precedent Mapping Pending
-                  </h3>
-                  <p className="text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
-                    Historical market reaction maps for this event signature
-                    will be loaded in the next deployment
-                  </p>
-                </div>
+                {historicalComparisons.length >= 2 ? (
+                  <div className="space-y-3">
+                    {historicalComparisons.map((h) => (
+                      <button
+                        key={h.id}
+                        onClick={() => router.push(`/events/${h.id}`)}
+                        className="w-full text-left p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 transition-all"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-bold text-text-primary">{h.title}</span>
+                          <span className="text-[9px] font-mono text-muted uppercase">
+                            {h.country} · {h.eventDate ? safeFormatDistanceToNow(h.eventDate, { addSuffix: true }) : "unknown date"} · Severity {h.severity}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          {h.commodityImpacts.slice(0, 2).map((c) => (
+                            <CommodityChip key={c.asset} asset={c.asset} direction={c.direction} confidence={c.confidence} />
+                          ))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
+                    <Database className="w-12 h-12 text-muted mb-6" />
+                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-text-primary mb-2">
+                      Not Enough Historical Data Yet
+                    </h3>
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                      Comparisons for this event type will appear as more signals are recorded.
+                    </p>
+                  </div>
+                )}
               </TabsContent>
 
+              {/* ── MAP TAB ──────────────────────────────────────── */}
               <TabsContent value="map" className="m-0 outline-none">
                 <div
-                  className="aspect-video w-full bg-surface/20 rounded-lg border flex items-center justify-center"
+                  className="aspect-video w-full rounded-lg border overflow-hidden relative"
                   style={{ borderColor: "var(--border-subtle)" }}
                 >
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted">
-                    Awaiting Satellite Link [Mapbox Engine]
-                  </span>
+                  <EventLocationMap lng={mapLng} lat={mapLat} zoom={hasPreciseLocation ? 6 : 3} />
+                  <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-sm">
+                    <span className="text-[9px] font-mono text-muted uppercase">
+                      {hasPreciseLocation
+                        ? "Precise coordinates"
+                        : "Approximate location — precise coordinates unavailable for this event"}
+                    </span>
+                  </div>
                 </div>
               </TabsContent>
 
+              {/* ── SOURCES TAB ──────────────────────────────────── */}
               <TabsContent value="sources" className="m-0 outline-none">
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 cursor-pointer transition-all"
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-text-primary">
-                          Source Node {i}: Verified Signal Provider
-                        </span>
-                        <span className="text-[9px] font-mono text-muted uppercase">
-                          Intelligence Integrity: 0.9{i}
-                        </span>
-                      </div>
-                      <ChevronLeft
-                        className="rotate-180 text-muted group-hover:text-accent transition-colors"
-                        size={16}
-                      />
-                    </div>
-                  ))}
-                </div>
+                {sources.length > 0 ? (
+                  <div className="space-y-3">
+                    {sources.map((s, i) => (
+                      <a
+                        key={i}
+                        href={s.url ?? "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 cursor-pointer transition-all"
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-text-primary">
+                            {s.title}
+                          </span>
+                          <span className="text-[9px] font-mono text-muted uppercase">
+                            {s.sourceLabel ?? "Unknown source"}
+                            {s.publishedAt ? ` · ${safeFormatDistanceToNow(s.publishedAt, { addSuffix: true })}` : ""}
+                          </span>
+                        </div>
+                        <ExternalLink
+                          className="text-muted group-hover:text-accent transition-colors"
+                          size={16}
+                        />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
+                    <Database className="w-12 h-12 text-muted mb-6" />
+                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                      No source articles are linked to this signal.
+                    </p>
+                  </div>
+                )}
               </TabsContent>
             </div>
           </Tabs>

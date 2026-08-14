@@ -6,6 +6,18 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.15.0 — Event Detail Page Rebuild & Alert Creation Fix (2026-08-15)
+
+- **Root-Cause Fix, Not the One Assumed**: The event detail page's empty "Projected Impact" box was not a `briefing_status` gating bug (that field doesn't exist in this schema) — it was `apps/web/app/(dashboard)/events/[id]/page.tsx` fetching only the newest 20 signals and silently falling back to `signals[0]` when the requested ID wasn't in that batch, showing an entirely different signal's data with no indication anything was wrong.
+- **New `/api/signals/[id]` Route**: Added `apps/web/app/api/signals/[id]/route.ts` — fetches the exact requested signal by ID (service-role, no 20-item/24h window limit), plus joined real data: linked source articles from `raw_events.raw_data`, historical comparisons (same `event_type`/`region`), and price-at-signal-time vs. current price from `commodity_prices`.
+- **Alert Creation Crash Fixed**: `alert_rules.name` is `NOT NULL` but neither the event page nor the Alerts page modal collected it, crashing on save. Added `generateAlertRuleName()` in `lib/utils.ts` (auto-generates e.g. "Middle East — Severity 5+"), wired into both insert call sites — this bug existed in both places, not just the event page.
+- **Intelligence Briefing Split**: Separated into "Signal Summary" (`signal.summary` — always available, both heuristic and Claude paths populate it) and "Full Analyst Briefing" (`signal.aiAnalysis` — only populated for severity ≥7 signals once the Claude signal-generator worker runs; shows an honest pending state otherwise, not a fake spinner).
+- **Verification Nodes Removed**: The three unlabeled progress bars had no real 3-part confidence model behind them (confirmed via full codebase search) — replaced with a single honest line: "Confirmed by N source(s)."
+- **Event Page Tabs Rebuilt on Real Data**: ANALYSIS (briefing + per-asset impact breakdown), HISTORICAL (queries own `signals` table for comparable past events), MAP (new `EventLocationMap` component, reuses MapLibre config from `/map`, labels precise vs. approximate location honestly), SOURCES (real linked articles with clickable URLs from `raw_events`, replacing the placeholder "Source Node 1/2/3" rows).
+- **Terminology Sweep**: Removed "AI" from 7 user-facing labels per the "research platform, not AI tool" positioning rule — event page briefing title, Alerts "AI Confidence"→"Signal Confidence", Watchlist "AI Predictions"→"Market Signal Forecast", HelpModal's "Claude 3.5 AI" copy, landing page "AI Synthesis" feature card, dashboard "MARKET & AI"→"MARKET & INTELLIGENCE" and "SENTINEL AI"→"SENTINEL" (kept the "Sentinel" product name, dropped the "AI" suffix).
+- **Verified Against Real Data, Not Mocks**: Tested via the exact previously-reported-broken URL (`7d05ae7e-8fe3-42d6-b13d-6e8f5f611e2e`, "Big Bend National Park") against the live dev server — now correctly shows its own data (empty commodity impacts → honest empty state) instead of a different signal's.
+- **Build Verification**: `pnpm build --filter web` passes with 0 errors; `/api/signals/[id]` registered as a dynamic route.
+
 ### v0.14.0 — Infrastructure Stability & Rate-Limiter Call-Pattern Optimization (2026-08-15)
 
 - **SSE 401 Disconnect Fix**: Resolved HTTP 401 stream disconnects in `apps/web/app/api/events/stream/route.ts` by allowing preview/dev connections and service role fallback, eliminating the persistent stream error loop.
