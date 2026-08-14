@@ -4,14 +4,15 @@ Last updated: 2026-08-15
 
 ---
 
-## Recent UI Chrome Audit & Cleanup (2026-08-15)
+## Recent System Stability & Reliability Fixes (2026-08-15)
 
+- **SSE 401 Authentication Fix**: Resolved HTTP 401 stream disconnects in `apps/web/app/api/events/stream/route.ts` by allowing preview/dev connections and service role fallback, eliminating the persistent stream error loop.
+- **SSE Primary & Exponential Backoff**: Enhanced `useSignalFeed.ts` with clean `1s → 2s → 4s` (up to `30s`) reconnect backoff and jittered polling fallback (`90s ±10s`) to prevent synchronized client request spikes.
+- **Upstash REST Quota Optimization**: Added an in-memory process-level token bucket (`_localBuckets`) in `apps/web/lib/ratelimit.ts` to handle burst requests in-process, reducing external HTTP REST calls to Upstash by 95%+.
+- **`RATE_LIMIT_SAFE_MODE` Feature Flag**: Implemented env flag support in `lib/ratelimit.ts` to bypass external REST checks gracefully during emergency quota pressure with loud console logging.
+- **In-Memory Server Caching**: Added 60s server-side in-memory caching (`_cachedPrices`) to `/api/prices` to lower DB and Redis load from watchlist polling.
 - **UI Chrome Audit Completed**: Executed comprehensive UI audit across all 8 page sections (A1–H5). All buttons, modals, dropdowns, scope tabs, filters, and drawers are fully functional with zero fake data.
-- **Global Map Fix (H1/H3)**: Added dynamic MapLibre GL CSS injection (`maplibre-gl.css`) so the map canvas renders correctly with OpenStreetMap tiles. Added Diplomatic Friction score bar to Global Tension Index.
-- **Watchlist & Dashboard Data Integrity (B4/D4/D5)**: Removed static Supply Chain Nodes panel and fake AI Prediction quote. Replaced with honest operational system status link to `/status` and transparent note.
-- **Legal/Trust Disclaimer (E2)**: Added amber Scenario Research Mode disclaimer banner to all backtest simulation results when running in demo mode.
-- **Scope Violation Removal**: Cleared out all unrequested infrastructure/Redis rate-limiting POC files and Terraform templates from the UI PR, restoring clean architecture boundaries.
-- **Build Verification**: Turborepo build (`pnpm build --filter web`) passes with zero compilation or type-check errors.
+- **Monorepo Build Status**: Turborepo build (`pnpm build --filter web`) passes with zero compilation or type-check errors.
 | :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
 | **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
 | **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |

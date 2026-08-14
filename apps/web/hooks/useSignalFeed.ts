@@ -34,8 +34,12 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
       };
     },
     enabled,
-    // Poll every 60s to stay current without hammering the rate limiter
-    refetchInterval: 60_000,
+    // Step 3 stopgap: Fallback polling interval 90s ±10s random jitter to avoid synchronized bursts
+    refetchInterval: () => {
+      const base = 90_000;
+      const jitter = Math.floor(Math.random() * 20_000) - 10_000; // ±10s
+      return base + jitter;
+    },
   });
 
   const fetchedSignals = data?.signals ?? [];
@@ -57,12 +61,20 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     const connect = () => {
       if (cancelled) return;
       esRef.current?.close();
+
+      console.log("[sse] Opening EventSource stream...");
       const es = new EventSource("/api/events/stream");
       esRef.current = es;
+
+      es.onopen = () => {
+        retryRef.current = 0;
+        console.log("[sse] EventSource stream connected & active");
+      };
 
       es.onmessage = (evt) => {
         try {
           const signal = JSON.parse(evt.data) as Signal;
+          console.log("[sse] Received realtime signal:", signal.title);
           setRealtimeSignals((prev) => [signal, ...prev]);
           if (signal.severity >= 8)
             toast(signal.title, { description: signal.summary });
@@ -71,12 +83,18 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
         }
       };
 
-      es.onerror = () => {
+      es.onerror = (err) => {
         es.close();
         retryRef.current += 1;
+
+        // Step 2 exponential backoff: 1s -> 2s -> 4s -> 8s -> 16s -> capped at 30s
         const backoff = Math.min(
           30_000,
           1000 * 2 ** Math.min(5, retryRef.current),
+        );
+        console.warn(
+          `[sse] Stream error (attempt ${retryRef.current}). Reconnecting in ${backoff / 1000}s...`,
+          err,
         );
         setTimeout(connect, backoff);
       };

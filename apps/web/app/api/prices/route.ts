@@ -15,6 +15,10 @@ type CommodityPriceRow = {
 
 const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "NGAS", "WHEAT", "COPPER", "XAGUSD", "CORN"] as const;
 
+// Step 3: Server-side in-memory cache for /api/prices (60s TTL)
+let _cachedPrices: { payload: { prices: CommodityPriceRow[] }; timestamp: number } | null = null;
+const CACHE_TTL_MS = 60_000; // 60s in-memory cache
+
 function getUpstashRedis() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -23,6 +27,15 @@ function getUpstashRedis() {
 }
 
 export async function GET() {
+  const now = Date.now();
+
+  // Short-circuit: return in-memory cached prices if fresh (under 60s old)
+  if (_cachedPrices && now - _cachedPrices.timestamp <= CACHE_TTL_MS) {
+    return NextResponse.json(_cachedPrices.payload, {
+      headers: { "x-prices-cache-status": "hit" },
+    });
+  }
+
   const priceMap = new Map<string, CommodityPriceRow>();
 
   // Tier 1: Try querying Supabase commodity_prices table first
@@ -94,5 +107,17 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json({ prices: Array.from(priceMap.values()) });
+  const payload = { prices: Array.from(priceMap.values()) };
+
+  // Store in memory cache if we got results, or extend existing cache under DB failure
+  if (payload.prices.length > 0) {
+    _cachedPrices = { payload, timestamp: now };
+  } else if (_cachedPrices) {
+    console.warn("⚠️ [API Prices] Empty fetch — serving stale cached prices");
+    return NextResponse.json(_cachedPrices.payload, {
+      headers: { "x-prices-cache-status": "stale-fallback" },
+    });
+  }
+
+  return NextResponse.json(payload);
 }

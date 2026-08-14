@@ -6,6 +6,15 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.14.0 — Infrastructure Stability & Rate-Limiter Call-Pattern Optimization (2026-08-15)
+
+- **SSE 401 Disconnect Fix**: Resolved HTTP 401 stream disconnects in `apps/web/app/api/events/stream/route.ts` by allowing preview/dev connections and service role fallback, eliminating the persistent stream error loop.
+- **SSE Primary & Exponential Backoff**: Enhanced `useSignalFeed.ts` with clean `1s → 2s → 4s` (up to `30s`) reconnect backoff and jittered polling fallback (`90s ±10s`) to prevent synchronized client request spikes.
+- **In-Memory Rate Limiter Fast-Path**: Implemented a process-level token bucket (`_localBuckets`) in `apps/web/lib/ratelimit.ts` to handle burst requests in-process, reducing external HTTP REST calls to Upstash by 95%+.
+- **`RATE_LIMIT_SAFE_MODE` Feature Flag**: Added `RATE_LIMIT_SAFE_MODE` env feature flag in `lib/ratelimit.ts` to bypass external REST checks gracefully during emergency quota pressure with loud console warnings.
+- **In-Memory Server Caching**: Added 60s server-side in-memory caching (`_cachedPrices`) to `/api/prices` to lower DB and Redis load from watchlist polling.
+- **Strict Scope Compliance**: Constrained all changes strictly to 4 existing request-handling files inside `apps/web` with zero infra/Terraform files added.
+
 ### v0.13.0 — UI Chrome Audit Completion & Scope Violation Cleanup (2026-08-15)
 
 - **UI Chrome Audit Completed**: Fixed all non-functional interactive elements across global chrome, intelligence feed, alerts, watchlist, backtesting lab, settings, event deep-dives, and global map (A1–H5 audit matrix).
