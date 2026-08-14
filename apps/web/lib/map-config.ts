@@ -1,18 +1,18 @@
 /**
- * Basemap configuration for MapLibre + OpenStreetMap tiles.
- * Keep this isolated so the intelligence layers do not depend on the basemap provider.
+ * Basemap configuration for MapLibre + OpenStreetMap / CartoDB Dark tiles.
+ * Uses free CartoDB Dark Matter vector/raster tiles designed for dark mode UI dashboards.
  */
-// Provide explicit tile subdomain URLs so MapLibre makes concrete requests.
 export const BASEMAP_TILE_URLS = [
-  "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+  "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+  "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+  "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
 ];
 
-// Backwards-compatible single-template string (keep for docs/tests)
+// Backwards-compatible single-template string
 export const BASEMAP_TILE_URL = BASEMAP_TILE_URLS[0];
 
-export const BASEMAP_ATTRIBUTION = "© OpenStreetMap contributors";
+export const BASEMAP_ATTRIBUTION = "© OpenStreetMap contributors, © CARTO";
 
 export const DEFAULT_MAP_CENTER: [number, number] = [0, 20];
-export const DEFAULT_MAP_ZOOM = 1.2;
+export const DEFAULT_MAP_ZOOM = 1.8;

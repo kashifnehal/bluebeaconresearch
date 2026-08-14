@@ -38,8 +38,6 @@ export default function EventDetailPage() {
     },
   });
 
-  if (!signal) return null;
-
   const verificationPercentages = useMemo(() => {
     if (!signal || !signal.sourcesCount) return null;
     const base = Math.min(100, Math.floor((signal.sourcesCount || 0) * 20));
@@ -52,12 +50,15 @@ export default function EventDetailPage() {
 
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [modalRegion, setModalRegion] = useState(
-    signal.region || "middle-east",
+    signal?.region || "middle-east",
   );
+
   const [modalMinSeverity, setModalMinSeverity] = useState(
-    Math.max(1, (signal.severity || 7) - 1),
+    Math.max(1, (signal?.severity || 7) - 1),
   );
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
+
+  if (!signal) return null;
 
   const createAlertRule = async () => {
     try {

@@ -51,12 +51,7 @@ export async function GET(req: NextRequest) {
       Date.now() - _cachedSignals.timestamp <= CACHE_TTL_MS
     ) {
       return NextResponse.json(
-        {
-          ..._cachedSignals.payload,
-          fallback: true,
-          fallbackReason: "cached",
-          fallbackLastUpdated: new Date(_cachedSignals.timestamp).toISOString(),
-        },
+        _cachedSignals.payload,
         { status: 200, headers: { "x-signals-feed-status": "cached" } },
       );
     }

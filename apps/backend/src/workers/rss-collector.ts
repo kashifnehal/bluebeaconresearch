@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent, type FeedTier } from "../lib/relevance-filter.js";
@@ -131,6 +132,12 @@ export async function runRssCollectorOnce() {
         event_date: rawEventPayload.event_date,
       });
 
+      const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
+        rawEventPayload.title,
+        rawEventPayload.country,
+        classification.region
+      );
+
       const { error: sigErr } = await supabase.from("signals").insert({
         raw_event_ids: [rawEventId],
         title: rawEventPayload.title,
@@ -140,8 +147,8 @@ export async function runRssCollectorOnce() {
         event_type: rawEventPayload.event_type,
         country: formatCountryName(null),
         region: classification.region,
-        lat: null,
-        lng: null,
+        lat: resolvedLat,
+        lng: resolvedLng,
         sources_count: 1,
         commodity_impacts: classification.commodityImpacts,
         is_breaking: classification.isBreaking,

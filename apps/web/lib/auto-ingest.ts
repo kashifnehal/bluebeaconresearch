@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { getSignalCoordinates } from "@/lib/geo-coords";
 
 // Exact-word keywords (can appear inside other words like "anti-war")
 const EXACT_WORD_KW = ["war", "oil", "gas", "bomb", "coup", "riot", "gold"];
@@ -241,6 +242,8 @@ export async function autoIngestIfStale() {
       if (errRaw || !insRaw?.id) continue;
 
       const classification = heuristicClassify(title, summary);
+      const [resolvedLng, resolvedLat] = getSignalCoordinates({ title, region: classification.region as any });
+
       await supabase.from("signals").insert({
         raw_event_ids: [insRaw.id],
         title,
@@ -250,8 +253,8 @@ export async function autoIngestIfStale() {
         event_type: "news",
         country: "Global",
         region: classification.region,
-        lat: null,
-        lng: null,
+        lat: resolvedLat,
+        lng: resolvedLng,
         sources_count: 1,
         commodity_impacts: classification.commodityImpacts,
         is_breaking: classification.isBreaking,

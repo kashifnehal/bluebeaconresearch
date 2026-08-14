@@ -172,5 +172,7 @@ body {
 }
 
 .map-vignette {
-  background: radial-gradient(circle, transparent 20%, #131313 100%);
+  background: radial-gradient(circle, transparent 40%, #131313 100%);
+  pointer-events: none;
+  opacity: 0.4;
 }

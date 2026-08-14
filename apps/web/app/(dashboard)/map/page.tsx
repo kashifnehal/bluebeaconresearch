@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Signal } from "@blue-beacon-research/shared";
 import { formatDistanceToNowStrict } from "date-fns";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,10 +16,26 @@ import {
   DEFAULT_MAP_ZOOM,
 } from "@/lib/map-config";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
+import { getSignalCoordinates } from "@/lib/geo-coords";
+
+function safeDistanceToNow(dateVal?: string | Date | null): string {
+  if (!dateVal) return "recently";
+  try {
+    const d = typeof dateVal === "string" ? new Date(dateVal) : dateVal;
+    if (!(d instanceof Date) || isNaN(d.getTime())) return "recently";
+    return formatDistanceToNowStrict(d);
+  } catch {
+    return "recently";
+  }
+}
 
 export default function MapPage() {
   const router = useRouter();
-  // Use existing feed hook (fetch + SSE). We'll rely on server-side filtering when applying filters.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const {
     liveSignals,
     isLoading,
@@ -36,24 +53,29 @@ export default function MapPage() {
 
   const geolocatedSignals = useMemo(() => {
     const source = (serverSignalsRef.current ?? signals) as Signal[];
-    return source.filter(
-      (signal) =>
-        typeof signal.lat === "number" &&
-        typeof signal.lng === "number" &&
-        signal.severity >= minSeverity &&
-        (selectedCategory ? signal.eventType === selectedCategory : true) &&
-        (selectedRegion ? signal.region === selectedRegion : true) &&
-        (timeWindow === "all"
-          ? true
-          : timeWindow === "24h"
-            ? new Date(signal.eventDate ?? signal.createdAt) >=
-              new Date(Date.now() - 24 * 60 * 60 * 1000)
-            : timeWindow === "7d"
+    return source
+      .map((s) => {
+        const [lng, lat] = getSignalCoordinates(s);
+        return { ...s, lat, lng };
+      })
+      .filter(
+        (signal) =>
+          signal.severity >= minSeverity &&
+          (selectedCategory ? signal.eventType === selectedCategory : true) &&
+          (selectedRegion ? signal.region === selectedRegion : true) &&
+          (timeWindow === "all"
+            ? true
+            : timeWindow === "24h"
               ? new Date(signal.eventDate ?? signal.createdAt) >=
-                new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-              : true),
-    );
+                new Date(Date.now() - 24 * 60 * 60 * 1000)
+              : timeWindow === "7d"
+                ? new Date(signal.eventDate ?? signal.createdAt) >=
+                  new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                : true),
+      );
   }, [signals, minSeverity, selectedCategory, selectedRegion, timeWindow]);
+  const geolocatedSignalsRef = useRef<Signal[]>([]);
+  geolocatedSignalsRef.current = geolocatedSignals;
   const liveItems = signals.slice(0, 6);
 
   const [mapError, setMapError] = useState<string | null>(null);
@@ -66,21 +88,11 @@ export default function MapPage() {
 
   // Helper: convert signals to GeoJSON FeatureCollection, excluding invalid coordinates
   function signalsToGeoJSON(items: Signal[]) {
-    const features = items
-      .filter(
-        (s) =>
-          typeof s.lat === "number" &&
-          typeof s.lng === "number" &&
-          isFinite(s.lat) &&
-          isFinite(s.lng) &&
-          s.lat >= -90 &&
-          s.lat <= 90 &&
-          s.lng >= -180 &&
-          s.lng <= 180,
-      )
-      .map((s) => ({
+    const features = items.map((s) => {
+      const [lng, lat] = getSignalCoordinates(s);
+      return {
         type: "Feature",
-        geometry: { type: "Point", coordinates: [s.lng!, s.lat!] },
+        geometry: { type: "Point", coordinates: [lng, lat] },
         properties: {
           id: s.id,
           title: s.title,
@@ -91,7 +103,8 @@ export default function MapPage() {
           eventDate: s.eventDate ?? s.createdAt,
           summary: s.summary,
         },
-      }));
+      };
+    });
 
     return { type: "FeatureCollection", features };
   }
@@ -100,7 +113,6 @@ export default function MapPage() {
     const map = mapRef.current;
     const maplib = mapLibRef.current;
     if (!map || !maplib) {
-      // fallback: navigate to details
       router.push(`/events/${signal.id}`);
       return;
     }
@@ -110,28 +122,24 @@ export default function MapPage() {
       popupRef.current = null;
     }
 
-    if (typeof signal.lat === "number" && typeof signal.lng === "number") {
-      map.easeTo({
-        center: [signal.lng, signal.lat],
-        zoom: Math.max(map.getZoom(), 5),
-      });
+    const [lng, lat] = getSignalCoordinates(signal);
+    map.easeTo({
+      center: [lng, lat],
+      zoom: Math.max(map.getZoom(), 5),
+    });
 
-      const html = `<div style="font-family: Inter, sans-serif; color: #e5e2e1; width: 260px;">
-        <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">${signal.title}</div>
-        <div style="font-size: 10px; color: #bbcaca; margin-bottom: 6px;">${signal.country ?? "Global"}</div>
-        <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${formatDistanceToNowStrict(new Date(signal.eventDate ?? signal.createdAt))}</div>
-        <div style="margin-top:8px; text-align:right;"><a href=\"/events/${signal.id}\" style=\"color:#4edea3;font-weight:700;text-decoration:none\">VIEW EVENT</a></div>
-      </div>`;
+    const html = `<div style="font-family: Inter, sans-serif; color: #e5e2e1; width: 260px;">
+      <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">${signal.title}</div>
+      <div style="font-size: 10px; color: #bbcaca; margin-bottom: 6px;">${signal.country ?? "Global"}</div>
+      <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeDistanceToNow(signal.eventDate ?? signal.createdAt)}</div>
+      <div style="margin-top:8px; text-align:right;"><a href="/events/${signal.id}" style="color:#4edea3;font-weight:700;text-decoration:none">VIEW EVENT</a></div>
+    </div>`;
 
-      const popup = new maplib.Popup({ offset: 12, closeButton: false })
-        .setLngLat([signal.lng, signal.lat])
-        .setHTML(html)
-        .addTo(map);
-      popupRef.current = popup;
-    } else {
-      // No coordinates: navigate to event detail
-      router.push(`/events/${signal.id}`);
-    }
+    const popup = new maplib.Popup({ offset: 12, closeButton: false })
+      .setLngLat([lng, lat])
+      .setHTML(html)
+      .addTo(map);
+    popupRef.current = popup;
   }
 
   useEffect(() => {
@@ -144,12 +152,11 @@ export default function MapPage() {
         const module = await import("maplibre-gl");
         const maplib = module;
 
-        // H1 fix: inject MapLibre CSS if not already present
-        // Without this the map canvas renders blank — no tiles, no attribution styling
+        // H1 fix: inject MapLibre CSS matching package.json version 6.3.0
         if (!document.querySelector('link[data-maplibre-css]')) {
           const link = document.createElement('link');
           link.rel = 'stylesheet';
-          link.href = 'https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css';
+          link.href = 'https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl.css';
           link.setAttribute('data-maplibre-css', '1');
           document.head.appendChild(link);
         }
@@ -157,7 +164,7 @@ export default function MapPage() {
         if (canceled || !mapContainerRef.current) return;
 
         mapLibRef.current = maplib;
-        // Create a raster tile style for OpenStreetMap tiles with proper attribution
+        // Create a raster tile style for CartoDB Dark Matter tiles with proper attribution
         const map = new maplib.Map({
           container: mapContainerRef.current,
           style: {
@@ -187,6 +194,12 @@ export default function MapPage() {
         mapRef.current = map;
         setMapError(null);
 
+        // Ensure map resizes properly on container mount & window resize
+        const handleResize = () => map.resize();
+        window.addEventListener("resize", handleResize);
+        setTimeout(handleResize, 100);
+        setTimeout(handleResize, 500);
+
         try {
           // Add compact attribution control (OpenStreetMap credit)
           map.addControl(new maplib.AttributionControl({ compact: true }));
@@ -197,15 +210,18 @@ export default function MapPage() {
 
         map.on("load", () => {
           try {
-            // Add an initially-empty GeoJSON source for signals with clustering enabled
+            const initialGeoJson = signalsGeoJsonRef.current || signalsToGeoJSON(geolocatedSignalsRef.current);
+            // Add GeoJSON source for signals with clustering enabled
             if (!map.getSource("signals")) {
               map.addSource("signals", {
                 type: "geojson",
-                data: { type: "FeatureCollection", features: [] },
+                data: initialGeoJson,
                 cluster: true,
                 clusterRadius: 50,
                 clusterMaxZoom: 14,
               });
+            } else {
+              (map.getSource("signals") as any)?.setData(initialGeoJson);
             }
 
             // Heatmap layer (density of events) - weight = 1 per event
@@ -286,7 +302,6 @@ export default function MapPage() {
                 filter: ["has", "point_count"],
                 layout: {
                   "text-field": "{point_count_abbreviated}",
-                  "text-font": ["Inter Regular"],
                   "text-size": 12,
                 },
                 paint: {
@@ -371,9 +386,9 @@ export default function MapPage() {
                 <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #86948a; margin-bottom: 6px;">${sev >= 8 ? "Critical Event" : "Active Signal"}</div>
                 <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">${title}</div>
                 <div style="font-size: 10px; color: #bbcaca; margin-bottom: 6px;">${country}</div>
-                <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${formatDistanceToNowStrict(new Date(eventDate))}</div>
+                <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeDistanceToNow(eventDate)}</div>
                 <div style="margin-top:8px; font-size:12px;">${summary ? (summary.length > 180 ? summary.slice(0, 177) + "..." : summary) : ""}</div>
-                <div style="margin-top:8px; text-align:right;"><a href=\"/events/${props.id}\" style=\"color:#4edea3;font-weight:700;text-decoration:none\">VIEW EVENT</a></div>
+                <div style="margin-top:8px; text-align:right;"><a href="/events/${props.id}" style="color:#4edea3;font-weight:700;text-decoration:none">VIEW EVENT</a></div>
               </div>`;
 
               // Remove existing popup
@@ -494,52 +509,39 @@ export default function MapPage() {
 
   // Compute Global Tension Index components from liveSignals
   const tensionMetrics = useMemo(() => {
-    const counts = { cyber: 0, kinetic: 0, diplomatic: 0 };
+    let cyber = 0;
+    let kinetic = 0;
+    let diplomatic = 0;
+
     for (const s of liveSignals) {
       const t = (s.eventType || "").toLowerCase();
       const title = (s.title || "").toLowerCase();
 
-      if (t.includes("cyber") || title.includes("cyber")) counts.cyber += 1;
-      else if (
-        t.includes("attack") ||
-        t.includes("strike") ||
-        t.includes("kinetic") ||
-        title.includes("strike") ||
-        title.includes("attack")
-      )
-        counts.kinetic += 1;
-      else if (
-        t.includes("sanction") ||
-        t.includes("diplom") ||
-        title.includes("sanction") ||
-        title.includes("diplom")
-      )
-        counts.diplomatic += 1;
-      else counts.kinetic += 0;
+      if (/cyber|hack|drone|tech|ai|digital|network|telecom|satellite/i.test(t + " " + title)) {
+        cyber += 1;
+      } else if (/military|navy|troops|strike|attack|missile|war|ship|tanker|border|conflict|weapon|defense/i.test(t + " " + title)) {
+        kinetic += 1;
+      } else if (/sanction|diplom|bank|trade|market|tariff|opec|bond|fund|asset|deal|negotiation|talks|economy/i.test(t + " " + title)) {
+        diplomatic += 1;
+      } else {
+        kinetic += 1;
+      }
     }
 
-    const total = Math.max(
-      1,
-      counts.cyber + counts.kinetic + counts.diplomatic,
-    );
+    const total = Math.max(1, cyber + kinetic + diplomatic);
     return {
-      cyber: Math.round((counts.cyber / total) * 100),
-      kinetic: Math.round((counts.kinetic / total) * 100),
-      diplomatic: Math.round((counts.diplomatic / total) * 100),
-      score:
-        Math.round(
-          ((counts.cyber + counts.kinetic + counts.diplomatic) / total) *
-            100 *
-            0.75,
-        ) || 0,
+      cyber: Math.round((cyber / total) * 100),
+      kinetic: Math.round((kinetic / total) * 100),
+      diplomatic: Math.round((diplomatic / total) * 100),
+      score: Math.min(99, Math.round(50 + (kinetic * 3 + cyber * 2 + diplomatic) * 1.5)),
     };
   }, [liveSignals]);
 
   return (
-    <main className="fixed inset-0 top-16 left-[256px] bg-background overflow-hidden">
-      <div className="absolute inset-0 grayscale contrast-125 opacity-40">
-        <div ref={mapContainerRef} className="absolute inset-0" />
-        <div className="absolute inset-0 map-vignette" />
+    <main className="relative w-full h-[calc(100vh-64px)] bg-background overflow-hidden">
+      <div className="absolute inset-0">
+        <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+        <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />
 
         {mapError && (
           <div className="absolute inset-0 bg-[#111111] flex items-center justify-center text-center p-8">
@@ -562,19 +564,25 @@ export default function MapPage() {
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
       </div>
 
-      <div className="absolute bottom-2 left-2 z-20 text-[10px] text-on-surface-variant/80 px-2 py-1.5">
+      <div
+        className="absolute bottom-2 left-2 z-20 text-[10px] text-on-surface-variant/80 px-2 py-1.5"
+        suppressHydrationWarning
+      >
         {BASEMAP_ATTRIBUTION}
       </div>
 
       {fallback && (
         <div className="absolute bottom-12 left-2 z-30">
-          <div className="bg-yellow-600/95 text-black px-3 py-2 rounded shadow-md text-[11px] font-medium">
+          <div
+            className="bg-yellow-600/95 text-black px-3 py-2 rounded shadow-md text-[11px] font-medium"
+            suppressHydrationWarning
+          >
             Signal feed degraded — {fallbackReason ?? "unknown"}. Showing last
             available data
             {fallbackLastUpdated ? (
-              <span className="ml-2 text-[10px] text-black/80">
+              <span className="ml-2 text-[10px] text-black/80" suppressHydrationWarning>
                 (updated{" "}
-                {formatDistanceToNowStrict(new Date(fallbackLastUpdated))} ago)
+                {safeDistanceToNow(fallbackLastUpdated)} ago)
               </span>
             ) : null}
           </div>
@@ -771,9 +779,7 @@ export default function MapPage() {
                       {isUrgent ? "URGENT" : "SIGNAL"}
                     </span>
                     <span className="font-mono text-[9px] text-on-surface-variant">
-                      {formatDistanceToNowStrict(
-                        new Date(signal.eventDate ?? signal.createdAt),
-                      )}{" "}
+                      {safeDistanceToNow(signal.eventDate ?? signal.createdAt)}{" "}
                       ago
                     </span>
                   </div>
