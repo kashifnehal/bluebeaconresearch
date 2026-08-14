@@ -18,7 +18,12 @@ export function incr(key: string, delta = 1) {
   const thr = THRESHOLDS[key];
   if (thr !== undefined && v < thr && next >= thr) {
     // non-blocking send
-    void sendAlert({ key, value: next, threshold: thr, ts: new Date().toISOString() });
+    void sendAlert({
+      key,
+      value: next,
+      threshold: thr,
+      ts: new Date().toISOString(),
+    });
   }
 }
 

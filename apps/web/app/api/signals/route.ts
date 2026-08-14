@@ -15,6 +15,12 @@ export const revalidate = 0;
 // This is process-local but sufficient for degraded-mode fallback when
 // upstream rate-limiter or DB calls fail.
 let _cachedSignals: { payload: any; timestamp: number } | null = null;
+// Adaptive cooldown state: when upstream rate limits or errors occur we enter
+// a cooldown window to avoid repeated external calls. Exponential backoff
+// multiplier increases on subsequent failures and resets after a successful
+// fetch.
+let _cacheCooldownUntil = 0;
+let _cacheCooldownMultiplier = 0;
 
 type SignalRow = {
   id: string;
@@ -48,19 +54,56 @@ export async function GET(req: NextRequest) {
     // Short-circuit: if we have a very recent cached payload, return it
     // immediately to avoid calling the rate-limit service on every poll.
     const CACHE_TTL_MS = Number(process.env.SIGNALS_CACHE_TTL_MS ?? 60000); // default 1 minute, configurable
+    const COOLDOWN_BASE_MS = Number(
+      process.env.SIGNALS_COOLDOWN_MS ?? 5 * 60 * 1000,
+    ); // 5m
+    const COOLDOWN_MAX_MS = Number(
+      process.env.SIGNALS_COOLDOWN_MAX_MS ?? 60 * 60 * 1000,
+    ); // 1h
+
+    const inActiveCooldown =
+      _cacheCooldownUntil && Date.now() <= _cacheCooldownUntil;
     if (
-      _cachedSignals &&
-      Date.now() - _cachedSignals.timestamp <= CACHE_TTL_MS
+      (_cachedSignals &&
+        Date.now() - _cachedSignals.timestamp <= CACHE_TTL_MS) ||
+      inActiveCooldown
     ) {
+      const reason = inActiveCooldown ? "cooldown" : "cached";
       return NextResponse.json(
         {
-          ..._cachedSignals.payload,
+          ..._cachedSignals!.payload,
           fallback: true,
-          fallbackReason: "cached",
-          fallbackLastUpdated: new Date(_cachedSignals.timestamp).toISOString(),
+          fallbackReason: reason,
+          fallbackLastUpdated: new Date(
+            _cachedSignals!.timestamp,
+          ).toISOString(),
         },
-        { status: 200, headers: { "x-signals-feed-status": "cached" } },
+        {
+          status: 200,
+          headers: {
+            "x-signals-feed-status":
+              reason === "cached" ? "cached" : "degraded",
+          },
+        },
       );
+    }
+
+    function setCooldown() {
+      try {
+        _cacheCooldownMultiplier = Math.min(6, _cacheCooldownMultiplier + 1);
+        const ms = Math.min(
+          COOLDOWN_BASE_MS * Math.pow(2, _cacheCooldownMultiplier - 1),
+          COOLDOWN_MAX_MS,
+        );
+        _cacheCooldownUntil = Date.now() + ms;
+      } catch (e) {
+        _cacheCooldownUntil = Date.now() + COOLDOWN_BASE_MS;
+      }
+    }
+
+    function resetCooldown() {
+      _cacheCooldownMultiplier = 0;
+      _cacheCooldownUntil = 0;
     }
 
     // Optionally skip Upstash/ratelimit checks in local/dev to preserve developer UX
@@ -76,6 +119,7 @@ export async function GET(req: NextRequest) {
         incr("signals.inproc_rate_limit_hits");
         if (_cachedSignals) {
           incr("signals.inproc_rate_limit_served_cached");
+          setCooldown();
           return NextResponse.json(
             {
               ..._cachedSignals.payload,
@@ -107,6 +151,7 @@ export async function GET(req: NextRequest) {
           if (_cachedSignals) {
             incr("signals.rate_limited_served_cached");
             console.warn("[signals] rate limited — serving cached payload");
+            setCooldown();
             return NextResponse.json(
               {
                 ..._cachedSignals.payload,
@@ -144,6 +189,7 @@ export async function GET(req: NextRequest) {
           console.warn(
             "[signals] rate-limit check error — serving cached payload",
           );
+          setCooldown();
           return NextResponse.json(
             {
               ..._cachedSignals.payload,
@@ -302,6 +348,7 @@ export async function GET(req: NextRequest) {
       if (_cachedSignals) {
         incr("signals.db_error_served_cached");
         console.warn("[signals] DB error — serving cached payload");
+        setCooldown();
         return NextResponse.json(
           {
             ..._cachedSignals.payload,
@@ -383,6 +430,8 @@ export async function GET(req: NextRequest) {
     // Update in-memory cache of last successful payload
     try {
       _cachedSignals = { payload, timestamp: Date.now() };
+      // Successful fetch — reset cooldown multiplier
+      resetCooldown();
     } catch (e) {
       // ignore cache write failures — not critical
     }

@@ -37,7 +37,14 @@ export function TopBar() {
     setSearchSubmitted(null);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
-      setSearchQuery(val);
+      const trimmed = val.trim();
+      // Only apply client-side filtering when user has typed at least 3 chars,
+      // or when clearing the field entirely.
+      if (trimmed.length === 0) {
+        setSearchQuery("");
+      } else if (trimmed.length >= 3) {
+        setSearchQuery(trimmed);
+      }
     }, 300);
   };
 
