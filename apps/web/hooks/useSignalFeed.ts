@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useUIStore } from "@/store/useUIStore";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Signal } from "@blue-beacon-research/shared";
@@ -14,10 +15,16 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
   const retryRef = useRef(0);
   const esRef = useRef<EventSource | null>(null);
 
+  const { searchSubmitted } = useUIStore();
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["signals", "feed"],
+    queryKey: ["signals", "feed", searchSubmitted ?? ""],
     queryFn: async () => {
-      const res = await fetch("/api/signals?sort=severity");
+      const url =
+        searchSubmitted && searchSubmitted.trim().length >= 3
+          ? `/api/signals?search=${encodeURIComponent(searchSubmitted.trim())}`
+          : "/api/signals?sort=severity";
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch signals");
       return (await res.json()) as {
         signals?: Signal[];
@@ -27,8 +34,13 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
       };
     },
     enabled,
-    // Reduce polling frequency to 60s to lower request volume against rate-limited services
-    refetchInterval: 60_000,
+    // Reduce polling frequency to 120s with jitter to lower request volume against rate-limited services
+    // Uses a function to add random jitter (0-30s) per interval
+    refetchInterval: () => {
+      const base = 120_000; // 120s
+      const jitter = Math.floor(Math.random() * 30_000); // up to 30s
+      return base + jitter;
+    },
   });
 
   const fetchedSignals = data?.signals ?? [];
@@ -47,12 +59,27 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
 
     let cancelled = false;
 
-    const connect = () => {
+    const connect = async () => {
       if (cancelled) return;
       esRef.current?.close();
-      const es = new EventSource("/api/events/stream");
-      esRef.current = es;
+      // Mint a short-lived SSE token and connect to the proxy endpoint.
+      try {
+        const tRes = await fetch("/api/events/token", { method: "POST" });
+        if (!tRes.ok) throw new Error("unable to mint sse token");
+        const { token } = await tRes.json();
+        const es = new EventSource(
+          `/api/events/proxy?token=${encodeURIComponent(token)}`,
+        );
+        esRef.current = es;
 
+        es.onopen = () => {
+          retryRef.current = 0;
+        };
+      } catch (err) {
+        // fallback to previous stream if token path fails
+        const es = new EventSource("/api/events/stream");
+        esRef.current = es;
+      }
       es.onmessage = (evt) => {
         try {
           const signal = JSON.parse(evt.data) as Signal;

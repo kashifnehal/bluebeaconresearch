@@ -482,6 +482,49 @@ export default function MapPage() {
     }
   }, [geolocatedSignals, router]);
 
+  // Compute Global Tension Index components from liveSignals
+  const tensionMetrics = useMemo(() => {
+    const counts = { cyber: 0, kinetic: 0, diplomatic: 0 };
+    for (const s of liveSignals) {
+      const t = (s.eventType || "").toLowerCase();
+      const title = (s.title || "").toLowerCase();
+
+      if (t.includes("cyber") || title.includes("cyber")) counts.cyber += 1;
+      else if (
+        t.includes("attack") ||
+        t.includes("strike") ||
+        t.includes("kinetic") ||
+        title.includes("strike") ||
+        title.includes("attack")
+      )
+        counts.kinetic += 1;
+      else if (
+        t.includes("sanction") ||
+        t.includes("diplom") ||
+        title.includes("sanction") ||
+        title.includes("diplom")
+      )
+        counts.diplomatic += 1;
+      else counts.kinetic += 0;
+    }
+
+    const total = Math.max(
+      1,
+      counts.cyber + counts.kinetic + counts.diplomatic,
+    );
+    return {
+      cyber: Math.round((counts.cyber / total) * 100),
+      kinetic: Math.round((counts.kinetic / total) * 100),
+      diplomatic: Math.round((counts.diplomatic / total) * 100),
+      score:
+        Math.round(
+          ((counts.cyber + counts.kinetic + counts.diplomatic) / total) *
+            100 *
+            0.75,
+        ) || 0,
+    };
+  }, [liveSignals]);
+
   return (
     <main className="fixed inset-0 top-16 left-[256px] bg-background overflow-hidden">
       <div className="absolute inset-0 grayscale contrast-125 opacity-40">
@@ -553,19 +596,43 @@ export default function MapPage() {
           <div>
             <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
               <span>Cyber Warfare</span>
-              <span className="font-mono text-primary">88%</span>
+              <span className="font-mono text-primary">
+                {tensionMetrics.cyber}%
+              </span>
             </div>
             <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[88%]" />
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${tensionMetrics.cyber}%` }}
+              />
             </div>
           </div>
           <div>
             <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
               <span>Kinetic Conflict</span>
-              <span className="font-mono text-primary">42%</span>
+              <span className="font-mono text-primary">
+                {tensionMetrics.kinetic}%
+              </span>
             </div>
             <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[42%]" />
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${tensionMetrics.kinetic}%` }}
+              />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
+              <span>Diplomatic Friction</span>
+              <span className="font-mono text-primary">
+                {tensionMetrics.diplomatic}%
+              </span>
+            </div>
+            <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${tensionMetrics.diplomatic}%` }}
+              />
             </div>
           </div>
         </div>

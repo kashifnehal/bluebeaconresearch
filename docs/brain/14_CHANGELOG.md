@@ -219,3 +219,13 @@ workers:heartbeat → every 5 min
 - Implemented `/api/signals` in-memory last-successful payload cache and degraded-mode behavior: when upstream rate-limiting or DB errors occur the server responds with the cached payload plus non-breaking fields `fallback`, `fallbackReason`, `fallbackLastUpdated` and header `x-signals-feed-status: degraded`.
 - Added compact UI banner on `/map` and dashboard components to surface degraded feed status and last-updated time to users.
 - Rationale: avoid production 500s caused by unhandled rate-limiter errors (Upstash quota exceeded) and improve user trust by showing older data with clear status messaging.
+
+### v0.16.0 — Adaptive Signals Cooldown, Rate-Limiter POCs & SSE Stability
+
+- **Adaptive Signals Cooldown**: Implemented an exponential backoff cooldown in `/api/signals` so when external rate-limits or errors occur the API serves the last-successful payload and suppresses repeated upstream calls for a configurable cooldown window (`SIGNALS_COOLDOWN_MS`, `SIGNALS_COOLDOWN_MAX_MS`). This preserves degraded-mode semantics (`fallback: true`, `fallbackReason`) and reduces downstream quota pressure.
+- **In-Process Gate & Dev Flag**: Added a per-process short-circuit gate to limit immediate request bursts and a `DEV_SKIP_UPSTASH` env flag to skip rate-limit checks during local development.
+- **Redis Token-Bucket POCs**: Added centralized Redis implementations (sorted-set token-bucket and Lua atomic token-bucket) and wired them into the central `rateLimitOrPass` path. When `REDIS_URL` is configured the Redis/Lua path is preferred.
+- **SSE Token/Proxy Flow**: Stabilized Server-Sent Event connections by issuing short-lived tokens and allowing `EventSource` to connect via `/api/events/proxy` without Authorization headers.
+- **Client Polling & UI Fixes**: Reduced polling frequency (120s + jitter), updated `TopBar` search debouncing (client-filter only when empty or >=3 chars), and added `isDemo` backtesting responses with an amber disclaimer banner in the UI.
+
+These changes are targeted at immediate production stability under Upstash quota constraints and to remove UX surprises by making degraded-mode transparent to end users.

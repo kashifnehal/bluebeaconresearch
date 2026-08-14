@@ -1,26 +1,40 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
 Last updated: 2026-08-12
+Last updated: 2026-08-14
 
 ---
 
-## 1. Production Readiness Overview
+| Subsystem | Status | Notes |
 
-| Subsystem                           | Status              | Notes                                                                     |
+- **`Global Map`**: `/map` now plots geolocated events from real `lat`/`lng` values in `/api/signals` using **MapLibre GL** with OpenStreetMap tiles (no Mapbox token required). The frontend will display a small degraded-mode banner and continue to show the last available data when the server returns a cached fallback due to upstream rate-limiting or DB errors.
+
+## Recent Reliability Work (2026-08-13 → 2026-08-14)
+
+- **Adaptive Signals Cooldown**: `/api/signals` now implements an adaptive cooldown (exponential backoff) when upstream rate-limiting or errors occur. The server will return the last-successful cached payload and enter a cooldown window (configurable via `SIGNALS_COOLDOWN_MS` and `SIGNALS_COOLDOWN_MAX_MS`) to avoid repeated external calls.
+- **In-Process Gate + DEV_SKIP_UPSTASH**: Added a per-process token gate to short-circuit repeated external calls during bursts and a `DEV_SKIP_UPSTASH` env flag to skip rate-limit checks in dev for better local DX.
+- **Redis Rate-Limiter POCs**: Implemented centralized Redis POCs including a sorted-set token-bucket and a Lua atomic token-bucket. `rateLimitOrPass` prefers the Redis/Lua implementation when `REDIS_URL` is present and falls back to Upstash or in-process checks.
+- **SSE Token/Proxy Pattern**: Stabilized Server-Sent Events by minting short-lived tokens and exposing a `/api/events/proxy` that allows `EventSource` connections without Authorization headers.
+- **Reduced Client Polling**: Increased signal polling interval to 120s with jitter to reduce Upstash/REST pressure during load tests.
+- **UI Controls**: `TopBar` debounced search now applies client-side filtering only when empty or >=3 chars (Enter still triggers server search). `Backtesting` mock responses now include `isDemo: true` and the UI displays an amber disclaimer banner.
+
+These changes aim to preserve the `/api/signals` contract and ensure graceful degraded-mode semantics (the API returns `fallback: true` and `fallbackReason` when serving cached data). For production hardening the next step is provisioning a central Redis instance and migrating the token-bucket to a single authoritative store (or upgrading Upstash plan).
+
+Infra update: On 2026-08-14 the Redis migration scaffolding and docs were added and merged into `main`. See `infra/redis/README_REDIS.md` for provisioning steps and the recommended canary rollout. The local docker-compose and CI job were also added to validate the Lua token-bucket implementation.
 | :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
-| **Turborepo Monorepo Architecture** | ✅ Operational      | Clean monorepo structure                                                  |
-| **Next.js 16 Web App (Vercel)**     | ✅ Operational      | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
-| **PostgreSQL Schema (Supabase)**    | ✅ Operational      | 9 migrations applied (including 009 event_date index)                     |
-| **Railway Workers (Cron)**          | ✅ Operational      | `sleepApplication: false`, heartbeat every 5m, collectors every 15m       |
-| **Railway Backend (HTTP API)**      | ✅ Operational      | `api.bluebeaconresearch.com` healthcheck passing                          |
-| **RSS Real-Time Collector**         | ⚠️ Partial          | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404    |
-| **GNews Ingestion**                 | ⚠️ Degraded         | Free tier — 1 query/run; mostly duplicates after initial ingest           |
-| **GDELT Ingestion**                 | ⚠️ Degraded         | HTTP 429 rate limits; 30s retry added                                     |
-| **Price Syncer (Yahoo Finance)**    | ✅ Operational      | 8 commodity prices every 15 min                                           |
-| **Claude AI Classifier**            | ⚠️ Degraded         | Zero Anthropic credit — heuristic fallback active                         |
-| **Heuristic Fallback Classifier**   | ✅ Operational      | Dynamic confidence scoring (55%–90%) + word-boundary filtering            |
-| **Upstash Redis / BullMQ**          | ✅ Operational      | Fixed `rediss://` TLS protocol                                            |
-| **Interactive UI Controls**         | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active              |
+| **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
+| **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
+| **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date index) |
+| **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
+| **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
+| **RSS Real-Time Collector** | ⚠️ Partial | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404 |
+| **GNews Ingestion** | ⚠️ Degraded | Free tier — 1 query/run; mostly duplicates after initial ingest |
+| **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits; 30s retry added |
+| **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 15 min |
+| **Claude AI Classifier** | ⚠️ Degraded | Zero Anthropic credit — heuristic fallback active |
+| **Heuristic Fallback Classifier** | ✅ Operational | Dynamic confidence scoring (55%–90%) + word-boundary filtering |
+| **Upstash Redis / BullMQ** | ✅ Operational | Fixed `rediss://` TLS protocol |
+| **Interactive UI Controls** | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active |
 
 ---
 

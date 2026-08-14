@@ -16,8 +16,20 @@ type Result = {
   avgMovePct: number;
   maxMovePct: number;
   minMovePct: number;
-  points: Array<{ severity: number; movePct: number; summary: string; date: string; country: string }>;
-  rows: Array<{ date: string; country: string; summary: string; movePct: number; correct: boolean }>;
+  points: Array<{
+    severity: number;
+    movePct: number;
+    summary: string;
+    date: string;
+    country: string;
+  }>;
+  rows: Array<{
+    date: string;
+    country: string;
+    summary: string;
+    movePct: number;
+    correct: boolean;
+  }>;
 };
 
 const cache = new Map<string, { expiresAt: number; value: Result }>();
@@ -47,14 +59,25 @@ function mockResult(p: z.infer<typeof schema>): Result {
     movePct: pt.movePct,
     correct: pt.movePct > 0,
   }));
-  return { totalEvents, accuracyPct, avgMovePct, maxMovePct, minMovePct, points, rows };
+  return {
+    totalEvents,
+    accuracyPct,
+    avgMovePct,
+    maxMovePct,
+    minMovePct,
+    points,
+    rows,
+  };
 }
 
 export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid body", issues: parsed.error.issues }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid body", issues: parsed.error.issues },
+      { status: 400 },
+    );
   }
 
   const key = cacheKey(parsed.data);
@@ -63,6 +86,6 @@ export async function POST(req: Request) {
 
   const value = mockResult(parsed.data);
   cache.set(key, { value, expiresAt: Date.now() + 24 * 60 * 60 * 1000 });
-  return NextResponse.json(value);
+  // Mark mocked results as demo mode so the UI can show an explicit disclaimer banner.
+  return NextResponse.json({ ...value, isDemo: true });
 }
-

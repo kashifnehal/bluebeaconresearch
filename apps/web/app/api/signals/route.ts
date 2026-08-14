@@ -3,6 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { rateLimitOrPass } from "@/lib/ratelimit";
+import { inprocAllow } from "@/lib/inproc-rate-limit";
+import { incr } from "@/lib/metrics";
 import { dedupeSignalsByTitle } from "@/lib/dedupe-signals";
 import type { Signal } from "@blue-beacon-research/shared";
 
@@ -13,6 +15,12 @@ export const revalidate = 0;
 // This is process-local but sufficient for degraded-mode fallback when
 // upstream rate-limiter or DB calls fail.
 let _cachedSignals: { payload: any; timestamp: number } | null = null;
+// Adaptive cooldown state: when upstream rate limits or errors occur we enter
+// a cooldown window to avoid repeated external calls. Exponential backoff
+// multiplier increases on subsequent failures and resets after a successful
+// fetch.
+let _cacheCooldownUntil = 0;
+let _cacheCooldownMultiplier = 0;
 
 type SignalRow = {
   id: string;
@@ -45,34 +53,78 @@ export async function GET(req: NextRequest) {
       "unknown";
     // Short-circuit: if we have a very recent cached payload, return it
     // immediately to avoid calling the rate-limit service on every poll.
-    const CACHE_TTL_MS = 60_000; // 1 minute
+    const CACHE_TTL_MS = Number(process.env.SIGNALS_CACHE_TTL_MS ?? 60000); // default 1 minute, configurable
+    const COOLDOWN_BASE_MS = Number(
+      process.env.SIGNALS_COOLDOWN_MS ?? 5 * 60 * 1000,
+    ); // 5m
+    const COOLDOWN_MAX_MS = Number(
+      process.env.SIGNALS_COOLDOWN_MAX_MS ?? 60 * 60 * 1000,
+    ); // 1h
+
+    const inActiveCooldown =
+      _cacheCooldownUntil && Date.now() <= _cacheCooldownUntil;
     if (
-      _cachedSignals &&
-      Date.now() - _cachedSignals.timestamp <= CACHE_TTL_MS
+      (_cachedSignals &&
+        Date.now() - _cachedSignals.timestamp <= CACHE_TTL_MS) ||
+      inActiveCooldown
     ) {
+      const reason = inActiveCooldown ? "cooldown" : "cached";
       return NextResponse.json(
         {
-          ..._cachedSignals.payload,
+          ..._cachedSignals!.payload,
           fallback: true,
-          fallbackReason: "cached",
-          fallbackLastUpdated: new Date(_cachedSignals.timestamp).toISOString(),
+          fallbackReason: reason,
+          fallbackLastUpdated: new Date(
+            _cachedSignals!.timestamp,
+          ).toISOString(),
         },
-        { status: 200, headers: { "x-signals-feed-status": "cached" } },
+        {
+          status: 200,
+          headers: {
+            "x-signals-feed-status":
+              reason === "cached" ? "cached" : "degraded",
+          },
+        },
       );
     }
 
-    let rl;
-    try {
-      rl = await rateLimitOrPass(`signals:${ip}`);
-      if (!rl.success) {
-        // Upstash reports the client is rate-limited — serve cached payload if available
+    function setCooldown() {
+      try {
+        _cacheCooldownMultiplier = Math.min(6, _cacheCooldownMultiplier + 1);
+        const ms = Math.min(
+          COOLDOWN_BASE_MS * Math.pow(2, _cacheCooldownMultiplier - 1),
+          COOLDOWN_MAX_MS,
+        );
+        _cacheCooldownUntil = Date.now() + ms;
+      } catch (e) {
+        _cacheCooldownUntil = Date.now() + COOLDOWN_BASE_MS;
+      }
+    }
+
+    function resetCooldown() {
+      _cacheCooldownMultiplier = 0;
+      _cacheCooldownUntil = 0;
+    }
+
+    // Optionally skip Upstash/ratelimit checks in local/dev to preserve developer UX
+    const SKIP_UPSTASH =
+      (process.env.DEV_SKIP_UPSTASH ?? "false").toLowerCase() === "true";
+    if (!SKIP_UPSTASH) {
+      // Quick in-process gate: if we've exhausted local tokens, avoid calling Upstash/redis
+      // and serve cached payload to reduce external REST calls.
+      if (!inprocAllow()) {
+        console.warn(
+          "[signals] in-process rate limit exceeded — serving cached payload if available",
+        );
+        incr("signals.inproc_rate_limit_hits");
         if (_cachedSignals) {
-          console.warn("[signals] rate limited — serving cached payload");
+          incr("signals.inproc_rate_limit_served_cached");
+          setCooldown();
           return NextResponse.json(
             {
               ..._cachedSignals.payload,
               fallback: true,
-              fallbackReason: "rate-limit",
+              fallbackReason: "inproc-rate-limit",
               fallbackLastUpdated: new Date(
                 _cachedSignals.timestamp,
               ).toISOString(),
@@ -80,41 +132,82 @@ export async function GET(req: NextRequest) {
             { status: 200, headers: { "x-signals-feed-status": "degraded" } },
           );
         }
+        incr("signals.inproc_rate_limit_served_empty");
+        return NextResponse.json({
+          signals: [],
+          nextCursor: null,
+          total: 0,
+          fallback: true,
+          fallbackReason: "inproc-rate-limit",
+        });
+      }
 
-        return NextResponse.json(
-          {
-            signals: [],
-            nextCursor: null,
-            total: 0,
-            fallback: true,
-            fallbackReason: "rate-limit",
-          },
-          { status: 200, headers: { "x-signals-feed-status": "degraded" } },
-        );
-      }
-    } catch (err: any) {
-      console.warn(
-        "[signals] rate limit check failed, continuing:",
-        err?.message ?? err,
-      );
-      // If the rate-limit check itself fails (Upstash down/quota), return cached payload when possible
-      if (_cachedSignals) {
+      let rl;
+      try {
+        rl = await rateLimitOrPass(`signals:${ip}`);
+        if (!rl.success) {
+          // Upstash reports the client is rate-limited — serve cached payload if available
+          incr("signals.upstash_rate_limited");
+          if (_cachedSignals) {
+            incr("signals.rate_limited_served_cached");
+            console.warn("[signals] rate limited — serving cached payload");
+            setCooldown();
+            return NextResponse.json(
+              {
+                ..._cachedSignals.payload,
+                fallback: true,
+                fallbackReason: "rate-limit",
+                fallbackLastUpdated: new Date(
+                  _cachedSignals.timestamp,
+                ).toISOString(),
+              },
+              { status: 200, headers: { "x-signals-feed-status": "degraded" } },
+            );
+          }
+
+          incr("signals.rate_limited_served_empty");
+          return NextResponse.json(
+            {
+              signals: [],
+              nextCursor: null,
+              total: 0,
+              fallback: true,
+              fallbackReason: "rate-limit",
+            },
+            { status: 200, headers: { "x-signals-feed-status": "degraded" } },
+          );
+        }
+      } catch (err: any) {
         console.warn(
-          "[signals] rate-limit check error — serving cached payload",
+          "[signals] rate limit check failed, continuing:",
+          err?.message ?? err,
         );
-        return NextResponse.json(
-          {
-            ..._cachedSignals.payload,
-            fallback: true,
-            fallbackReason: "ratelimit-check-failed",
-            fallbackLastUpdated: new Date(
-              _cachedSignals.timestamp,
-            ).toISOString(),
-          },
-          { status: 200, headers: { "x-signals-feed-status": "degraded" } },
-        );
+        incr("signals.ratelimit_check_errors");
+        // If the rate-limit check itself fails (Upstash down/quota), return cached payload when possible
+        if (_cachedSignals) {
+          incr("signals.ratelimit_check_failed_served_cached");
+          console.warn(
+            "[signals] rate-limit check error — serving cached payload",
+          );
+          setCooldown();
+          return NextResponse.json(
+            {
+              ..._cachedSignals.payload,
+              fallback: true,
+              fallbackReason: "ratelimit-check-failed",
+              fallbackLastUpdated: new Date(
+                _cachedSignals.timestamp,
+              ).toISOString(),
+            },
+            { status: 200, headers: { "x-signals-feed-status": "degraded" } },
+          );
+        }
+        // otherwise continue and try to query DB — we prefer to keep the API available
       }
-      // otherwise continue and try to query DB — we prefer to keep the API available
+    } else {
+      console.warn(
+        "[signals] DEV_SKIP_UPSTASH=true — skipping rate-limit checks",
+      );
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -154,6 +247,7 @@ export async function GET(req: NextRequest) {
         : supabaseAuth;
 
     const url = new URL(req.url);
+    const searchQ = url.searchParams.get("search")?.trim() ?? null;
     const severity = url.searchParams.get("severity");
     const region = url.searchParams.get("region");
     const commodity = url.searchParams.get("commodity");
@@ -168,6 +262,15 @@ export async function GET(req: NextRequest) {
     if (region) query = query.eq("region", region);
     if (commodity)
       query = query.contains("commodity_impacts", [{ asset: commodity }]);
+
+    // Server-side free-text search if query provided
+    if (searchQ && searchQ.length >= 3) {
+      // Basic ILIKE search across title, summary, country, and event_type
+      const ilike = `%${searchQ.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+      query = query.or(
+        `title.ilike.${ilike},summary.ilike.${ilike},country.ilike.${ilike},event_type.ilike.${ilike}`,
+      );
+    }
 
     const twentyFourHoursAgo = new Date(
       Date.now() - 24 * 60 * 60 * 1000,
@@ -241,8 +344,11 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error("[signals] DB error:", error?.message ?? error);
+      incr("signals.db_errors");
       if (_cachedSignals) {
+        incr("signals.db_error_served_cached");
         console.warn("[signals] DB error — serving cached payload");
+        setCooldown();
         return NextResponse.json(
           {
             ..._cachedSignals.payload,
@@ -324,6 +430,8 @@ export async function GET(req: NextRequest) {
     // Update in-memory cache of last successful payload
     try {
       _cachedSignals = { payload, timestamp: Date.now() };
+      // Successful fetch — reset cooldown multiplier
+      resetCooldown();
     } catch (e) {
       // ignore cache write failures — not critical
     }
@@ -332,7 +440,9 @@ export async function GET(req: NextRequest) {
   } catch (err: any) {
     // Catch-all to avoid unexpected function crashes causing 500s in production.
     console.error("[signals] unexpected handler error:", err?.stack ?? err);
+    incr("signals.handler_exceptions");
     if (_cachedSignals) {
+      incr("signals.handler_exception_served_cached");
       console.warn(
         "[signals] unexpected handler error — serving cached payload",
       );
