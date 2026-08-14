@@ -144,19 +144,19 @@ NODE_ENV=production
 
 # 2. Database & Auth (Supabase)
 SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2YXZjZ2ZtZW13cnlnZ2Rram14Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mzk0MjIwOSwiZXhwIjoyMDg5NTE4MjA5fQ.uqKvVOsGrjuB1Disa-uZIBv7YknqJVsnyi-zC8Ve6eM
+SUPABASE_SERVICE_ROLE_KEY=<service_role_key>  # REDACTED 2026-08-15 — rotate in Supabase dashboard, this value was exposed in git history
 
 # 3. AI Engine (Anthropic Claude)
-ANTHROPIC_API_KEY=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
+ANTHROPIC_API_KEY=<anthropic_key>  # REDACTED 2026-08-15 — rotate at console.anthropic.com, this value was exposed in git history
 
 # 4. News & Market Ingestion
-NEWS_API_KEY=0be0d72df15f0e7616dc4e67a2c8907b
-ALPHA_VANTAGE_API_KEY=7X3ZTK5BYGNWXZ7K
+NEWS_API_KEY=<gnews_key>  # REDACTED 2026-08-15 — rotate at gnews.io dashboard
+ALPHA_VANTAGE_API_KEY=<alpha_vantage_key>  # REDACTED 2026-08-15 — unused (Yahoo Finance replaced it), rotate or revoke anyway
 
 # 5. Caching & BullMQ Queues (Upstash Redis)
 UPSTASH_REDIS_REST_URL=https://cute-javelin-200660.upstash.io
-UPSTASH_REDIS_REST_TOKEN=gQAAAAAAAw_UAAIgcDFhMjQ3ZjVhNDk0YmE0ZTFmOTI5YmUxMmQyNTZmN2ZlMw
-REDIS_URL=rediss://default:gQAAAAAAAw_UAAIgcDFhMjQ3ZjVhNDk0YmE0ZTFmOTI5YmUxMmQyNTZmN2ZlMw@cute-javelin-200660.upstash.io:6379
+UPSTASH_REDIS_REST_TOKEN=<upstash_token>  # REDACTED 2026-08-15 — rotate in Upstash dashboard, this value was exposed in git history
+REDIS_URL=rediss://default:<upstash_token>@cute-javelin-200660.upstash.io:6379  # REDACTED 2026-08-15 — same token as above
 
 # 6. Public Client App URL
 NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
