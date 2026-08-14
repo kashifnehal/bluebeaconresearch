@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPin, Bookmark } from "lucide-react";
-import { formatDistanceToNowStrict } from "date-fns";
+import { safeFormatDistanceToNow } from "@/lib/utils";
 import type { Signal } from "@blue-beacon-research/shared";
 
 import { SeverityBadge } from "./SeverityBadge";
@@ -17,8 +17,8 @@ export function SignalCard({
   onClick?: () => void;
 }) {
   const isBreaking = signal.isBreaking || signal.severity >= 9;
-  const timeAgo = formatDistanceToNowStrict(
-    new Date(signal.eventDate ?? signal.createdAt),
+  const timeAgo = safeFormatDistanceToNow(
+    signal.eventDate ?? signal.createdAt,
     { addSuffix: true },
   );
 

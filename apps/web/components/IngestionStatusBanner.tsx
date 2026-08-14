@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNowStrict } from "date-fns";
+import { safeFormatDistanceToNow } from "@/lib/utils";
 
 type IngestionStatusResponse = {
   status: {
@@ -53,7 +53,7 @@ export function IngestionStatusBanner() {
       <span>
         Last fetched{" "}
         <strong style={{ color: "#e5e2e1" }}>
-          {formatDistanceToNowStrict(lastFetched, { addSuffix: true })}
+          {safeFormatDistanceToNow(lastFetched, { addSuffix: true })}
         </strong>
       </span>
 
@@ -61,7 +61,7 @@ export function IngestionStatusBanner() {
         <span>
           Next run ~{" "}
           <strong style={{ color: "#e5e2e1" }}>
-            {formatDistanceToNowStrict(nextFetch, { addSuffix: true })}
+            {safeFormatDistanceToNow(nextFetch, { addSuffix: true })}
           </strong>
         </span>
       )}

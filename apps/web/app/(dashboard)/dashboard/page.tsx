@@ -6,7 +6,7 @@ import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDistanceToNowStrict } from "date-fns";
+import { safeFormatDistanceToNow } from "@/lib/utils";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -201,9 +201,9 @@ export default function DashboardPage() {
                         color: "#86948a",
                       }}
                     >
-                      {formatDistanceToNowStrict(
-                        new Date(featured.eventDate ?? featured.createdAt),
-                      )}{" "}
+                      {safeFormatDistanceToNow(
+                        featured.eventDate ?? featured.createdAt,
+                      ).toUpperCase()}{" "}
                       AGO
                     </span>
                   </div>
@@ -314,10 +314,8 @@ export default function DashboardPage() {
                         }}
                       >
                         <span>
-                          {formatDistanceToNowStrict(
-                            new Date(
-                              secondaryA.eventDate ?? secondaryA.createdAt,
-                            ),
+                          {safeFormatDistanceToNow(
+                            secondaryA.eventDate ?? secondaryA.createdAt,
                           ).toUpperCase()}{" "}
                           AGO
                         </span>
@@ -395,10 +393,8 @@ export default function DashboardPage() {
                         }}
                       >
                         <span>
-                          {formatDistanceToNowStrict(
-                            new Date(
-                              secondaryB.eventDate ?? secondaryB.createdAt,
-                            ),
+                          {safeFormatDistanceToNow(
+                            secondaryB.eventDate ?? secondaryB.createdAt,
                           ).toUpperCase()}{" "}
                           AGO
                         </span>
@@ -513,9 +509,7 @@ export default function DashboardPage() {
                           fontFamily: "'JetBrains Mono', monospace",
                         }}
                       >
-                        {formatDistanceToNowStrict(
-                          new Date(item.eventDate ?? item.createdAt),
-                        )}
+                        {safeFormatDistanceToNow(item.eventDate ?? item.createdAt)}
                       </div>
                       <div
                         className="flex-1 font-semibold transition-colors group-hover:text-[#4edea3]"

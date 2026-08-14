@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useUIStore } from "@/store/useUIStore";
+import { safeFormatDistanceToNow } from "@/lib/utils";
 import { formatDistanceToNowStrict } from "date-fns";
 
 type AlertItem = {
@@ -137,7 +138,7 @@ export function NotificationPanel() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <span className="text-[10px] font-mono uppercase text-[#86948a]">
-                        {formatDistanceToNowStrict(new Date(item.created_at))} ago
+                        {safeFormatDistanceToNow(item.created_at)} ago
                       </span>
                       <span
                         className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[#4edea3] hover:underline"

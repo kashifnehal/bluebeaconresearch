@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Signal } from "@blue-beacon-research/shared";
-import { formatDistanceToNowStrict } from "date-fns";
+import { safeFormatDistanceToNow } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
@@ -17,17 +17,6 @@ import {
 } from "@/lib/map-config";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { getSignalCoordinates } from "@/lib/geo-coords";
-
-function safeDistanceToNow(dateVal?: string | Date | null): string {
-  if (!dateVal) return "recently";
-  try {
-    const d = typeof dateVal === "string" ? new Date(dateVal) : dateVal;
-    if (!(d instanceof Date) || isNaN(d.getTime())) return "recently";
-    return formatDistanceToNowStrict(d);
-  } catch {
-    return "recently";
-  }
-}
 
 export default function MapPage() {
   const router = useRouter();
@@ -131,7 +120,7 @@ export default function MapPage() {
     const html = `<div style="font-family: Inter, sans-serif; color: #e5e2e1; width: 260px;">
       <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">${signal.title}</div>
       <div style="font-size: 10px; color: #bbcaca; margin-bottom: 6px;">${signal.country ?? "Global"}</div>
-      <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeDistanceToNow(signal.eventDate ?? signal.createdAt)}</div>
+      <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)}</div>
       <div style="margin-top:8px; text-align:right;"><a href="/events/${signal.id}" style="color:#4edea3;font-weight:700;text-decoration:none">VIEW EVENT</a></div>
     </div>`;
 
@@ -386,7 +375,7 @@ export default function MapPage() {
                 <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #86948a; margin-bottom: 6px;">${sev >= 8 ? "Critical Event" : "Active Signal"}</div>
                 <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">${title}</div>
                 <div style="font-size: 10px; color: #bbcaca; margin-bottom: 6px;">${country}</div>
-                <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeDistanceToNow(eventDate)}</div>
+                <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeFormatDistanceToNow(eventDate)}</div>
                 <div style="margin-top:8px; font-size:12px;">${summary ? (summary.length > 180 ? summary.slice(0, 177) + "..." : summary) : ""}</div>
                 <div style="margin-top:8px; text-align:right;"><a href="/events/${props.id}" style="color:#4edea3;font-weight:700;text-decoration:none">VIEW EVENT</a></div>
               </div>`;
@@ -582,7 +571,7 @@ export default function MapPage() {
             {fallbackLastUpdated ? (
               <span className="ml-2 text-[10px] text-black/80" suppressHydrationWarning>
                 (updated{" "}
-                {safeDistanceToNow(fallbackLastUpdated)} ago)
+                {safeFormatDistanceToNow(fallbackLastUpdated)} ago)
               </span>
             ) : null}
           </div>
@@ -779,7 +768,7 @@ export default function MapPage() {
                       {isUrgent ? "URGENT" : "SIGNAL"}
                     </span>
                     <span className="font-mono text-[9px] text-on-surface-variant">
-                      {safeDistanceToNow(signal.eventDate ?? signal.createdAt)}{" "}
+                      {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)}{" "}
                       ago
                     </span>
                   </div>
