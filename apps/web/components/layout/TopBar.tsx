@@ -17,10 +17,15 @@ export function TopBar() {
     unreadCount,
     setHelpOpen,
   } = useUIStore();
+  const { setSearchSubmitted } = useUIStore();
 
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string; initials: string } | null>(null);
+  const [user, setUser] = useState<{
+    name: string;
+    email: string;
+    initials: string;
+  } | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -28,6 +33,8 @@ export function TopBar() {
   // Debounced sync from local input to global searchQuery store
   const handleInputChange = (val: string) => {
     setLocalQuery(val);
+    // Clear any previous server-submitted search while editing
+    setSearchSubmitted(null);
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     debounceTimerRef.current = setTimeout(() => {
       setSearchQuery(val);
@@ -41,7 +48,10 @@ export function TopBar() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && localQuery.trim().length >= 3) {
-      setSearchQuery(localQuery.trim());
+      // Trigger server-side search
+      const q = localQuery.trim();
+      setSearchQuery(q);
+      setSearchSubmitted(q);
     }
   };
 
@@ -50,15 +60,24 @@ export function TopBar() {
     async function loadUser() {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) return;
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
       if (currentUser) {
-        const name = currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0] || "Terminal User";
+        const name =
+          currentUser.user_metadata?.full_name ||
+          currentUser.email?.split("@")[0] ||
+          "Terminal User";
         const email = currentUser.email || "";
         const parts = name.trim().split(" ");
         const initials = (parts[0]?.[0] || "G") + (parts[1]?.[0] || "S");
         setUser({ name, email, initials: initials.toUpperCase() });
       } else {
-        setUser({ name: "Terminal Sentinel", email: "sentinel@bluebeacon.com", initials: "GS" });
+        setUser({
+          name: "Terminal Sentinel",
+          email: "sentinel@bluebeacon.com",
+          initials: "GS",
+        });
       }
     }
     loadUser();
@@ -67,7 +86,10 @@ export function TopBar() {
   // Close avatar dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setAvatarOpen(false);
       }
     }
@@ -122,7 +144,10 @@ export function TopBar() {
                 onClick={handleClear}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-[#86948a] hover:text-[#e5e2e1] transition-colors p-1"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: "14px" }}
+                >
                   close
                 </span>
               </button>
@@ -137,18 +162,28 @@ export function TopBar() {
             <button
               onClick={() => setNotifOpen(!notifOpen)}
               className="relative transition-colors"
-              style={{ color: "#bbcac0", background: "none", border: "none", cursor: "pointer" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#4edea3"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0"; }}
+              style={{
+                color: "#bbcac0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
+              }}
               title="Notifications"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "24px" }}
+              >
                 notifications
               </span>
               {unreadCount > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ee7d77] animate-pulse"
-                />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ee7d77] animate-pulse" />
               )}
             </button>
 
@@ -156,18 +191,32 @@ export function TopBar() {
             <button
               onClick={() => setHelpOpen(true)}
               className="transition-colors"
-              style={{ color: "#bbcac0", background: "none", border: "none", cursor: "pointer" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#4edea3"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0"; }}
+              style={{
+                color: "#bbcac0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
+              }}
               title="Help & Guidance"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "24px" }}
+              >
                 help
               </span>
             </button>
           </div>
 
-          <div style={{ width: "1px", height: "32px", backgroundColor: "#3c4a42" }} />
+          <div
+            style={{ width: "1px", height: "32px", backgroundColor: "#3c4a42" }}
+          />
 
           {/* User Info & Avatar Dropdown */}
           <div className="relative" ref={dropdownRef}>
@@ -183,7 +232,13 @@ export function TopBar() {
                 >
                   {user?.name || "Terminal Sentinel"}
                 </div>
-                <div style={{ fontSize: "10px", fontFamily: "'JetBrains Mono', monospace", color: "#86948a" }}>
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontFamily: "'JetBrains Mono', monospace",
+                    color: "#86948a",
+                  }}
+                >
                   v2.4.0-STABLE
                 </div>
               </div>
@@ -214,8 +269,12 @@ export function TopBar() {
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 <div className="px-4 py-2 border-b border-[#2a2a2a]">
-                  <p className="font-bold text-[#e5e2e1] truncate">{user?.name || "Terminal User"}</p>
-                  <p className="text-[10px] text-[#86948a] font-mono truncate">{user?.email || "sentinel@bluebeacon.com"}</p>
+                  <p className="font-bold text-[#e5e2e1] truncate">
+                    {user?.name || "Terminal User"}
+                  </p>
+                  <p className="text-[10px] text-[#86948a] font-mono truncate">
+                    {user?.email || "sentinel@bluebeacon.com"}
+                  </p>
                 </div>
 
                 <div className="py-1">
@@ -226,7 +285,10 @@ export function TopBar() {
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-[#201f1f] hover:text-[#4edea3] flex items-center gap-2 transition-colors"
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: "16px" }}
+                    >
                       settings
                     </span>
                     Settings
@@ -239,7 +301,10 @@ export function TopBar() {
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-[#201f1f] hover:text-[#4edea3] flex items-center gap-2 transition-colors"
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: "16px" }}
+                    >
                       notifications
                     </span>
                     Alert Rules
@@ -251,7 +316,10 @@ export function TopBar() {
                     onClick={handleSignOut}
                     className="w-full text-left px-4 py-2 hover:bg-[#7f2927]/20 text-[#ff9993] flex items-center gap-2 transition-colors"
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: "16px" }}
+                    >
                       logout
                     </span>
                     Sign out
