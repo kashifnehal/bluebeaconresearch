@@ -22,6 +22,11 @@ export function EventLocationMap({
     async function init() {
       if (!containerRef.current) return;
       const maplib = await import("maplibre-gl");
+      // See map/page.tsx for why this is required — without it, MapLibre's worker
+      // silently fails to load under this bundler setup and no source data ever renders.
+      maplib.setWorkerUrl(
+        "https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl-worker.mjs",
+      );
       if (canceled || !containerRef.current) return;
 
       const map = new maplib.Map({

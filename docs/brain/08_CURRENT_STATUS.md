@@ -4,6 +4,14 @@ Last updated: 2026-08-15
 
 ---
 
+## Map Markers Were Completely Broken Since v0.13.0 — Now Fixed (2026-08-15)
+
+- **Map has never shown a single marker**, in any state, since the original MapLibre setup — invisible from code review (no console errors, all layers/paint correctly configured, data valid). Only surfaced via live Playwright interaction + JS introspection of the actual MapLibre instance.
+- **Root cause**: MapLibre's internal Web Worker (used for all GeoJSON source processing) silently fails to load under this app's Next.js/Turbopack bundling of the dynamic `import("maplibre-gl")` — worker URL resolves empty, construction fails with no thrown/logged error.
+- **Fixed**: explicit `setWorkerUrl()` pointing at the CDN-hosted worker bundle (same pattern as the existing MapLibre CSS CDN workaround), applied both in `/map` and the event detail page's embedded map.
+- **Now visually + interactively confirmed working**: markers render, clicking a signal eases the map to it with a working popup, severity filter genuinely narrows visible markers.
+- **Takeaway**: this class of bug (silently-failing Worker, zero console signal) is exactly why UI-rendering claims need a real browser check, not just a clean build + code read.
+
 ## Recent Map, Watchlist & Backtesting Fixes (2026-08-15)
 
 - **Map Filters Actually Work Now**: Fixed a `ref`/`useState` race between two competing effects that made severity/region/window filters appear to do nothing — both the map markers and the Live Intelligence stream list now share one filtered source of truth.

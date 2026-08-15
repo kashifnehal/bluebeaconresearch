@@ -160,6 +160,17 @@ export default function MapPage() {
         const module = await import("maplibre-gl");
         const maplib = module;
 
+        // Root-cause fix (found via live browser verification, not visible from code review):
+        // under Next.js/Turbopack's bundling of a dynamic `import("maplibre-gl")`, MapLibre's
+        // internal worker URL resolves to an empty string, so the Worker construction fails
+        // immediately (silently — no console error). Every GeoJSON source (heatmap, clusters,
+        // unclustered points) depends on that worker for parsing, so signals never rendered as
+        // markers even though the source/layers were added without error. Pointing at the
+        // prebuilt worker bundle explicitly fixes it. Must run before any `new maplib.Map(...)`.
+        maplib.setWorkerUrl(
+          "https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl-worker.mjs",
+        );
+
         // H1 fix: inject MapLibre CSS matching package.json version 6.3.0
         if (!document.querySelector('link[data-maplibre-css]')) {
           const link = document.createElement('link');
