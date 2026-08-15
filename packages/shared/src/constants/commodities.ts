@@ -10,8 +10,10 @@ export const COMMODITIES = [
     category: "energy",
   },
   { symbol: "CORN", label: "Corn", unit: "USc/bu", category: "agriculture" },
-  { symbol: "EURUSD", label: "EUR/USD", unit: "", category: "fx" },
-  { symbol: "USDRUB", label: "USD/RUB", unit: "", category: "fx" },
+  // EURUSD / USDRUB removed 2026-08-15: addable in the watchlist but /api/prices
+  // never fetches them (not in its SYMBOLS list), so they permanently showed a
+  // flat "— 0.00%" placeholder. Re-add only once the price-syncer worker actually
+  // ingests FX pairs from Yahoo Finance.
 ] as const;
 
 export const REGIONS = [

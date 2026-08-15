@@ -13,10 +13,10 @@ const POPULAR = [
     horizon: "24hr",
   },
   {
-    title: "Russia sanctions announcement → EUR/USD (48hr)",
+    title: "Russia sanctions announcement → Brent Crude (48hr)",
     eventType: "Sanctions announcement",
     region: "eastern-europe",
-    commodity: "EURUSD",
+    commodity: "UKOIL",
     horizon: "48hr",
   },
   {
@@ -30,14 +30,14 @@ const POPULAR = [
     title: "Iran vessel seizure → Brent Crude (24hr)",
     eventType: "Vessel Seizure",
     region: "middle-east",
-    commodity: "BRENT",
+    commodity: "UKOIL",
     horizon: "24hr",
   },
   {
     title: "Ukraine escalation → Natural Gas (48hr)",
     eventType: "Infrastructure Strike",
     region: "eastern-europe",
-    commodity: "NATGAS",
+    commodity: "NGAS",
     horizon: "48hr",
   },
   {
@@ -379,7 +379,7 @@ export default function BacktestingPage() {
                   onClick={() => {
                     if (!results?.rows) return;
                     const headers =
-                      "Timestamp,Geography,Synthesis,Delta %,Prediction\n";
+                      "Sample Case,Geography,Synthesis,Delta %,Prediction\n";
                     const rows = results.rows
                       .map(
                         (r) =>
@@ -409,7 +409,7 @@ export default function BacktestingPage() {
                   <thead className="bg-black/40 border-b border-outline-variant/10">
                     <tr>
                       <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
-                        Timestamp
+                        Sample Case
                       </th>
                       <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
                         Geography

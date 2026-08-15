@@ -4,6 +4,16 @@ Last updated: 2026-08-15
 
 ---
 
+## Recent Map, Watchlist & Backtesting Fixes (2026-08-15)
+
+- **Map Filters Actually Work Now**: Fixed a `ref`/`useState` race between two competing effects that made severity/region/window filters appear to do nothing — both the map markers and the Live Intelligence stream list now share one filtered source of truth.
+- **Map Coordinate Fallback Gap**: India (and ~45 other countries) were missing from the frontend's country-name fallback dictionary, causing known-country signals with no stored lat/lng to mis-pin at a generic Sahara centroid. Dictionary expanded. Root ingestion-side geocoding gap (raw_events/signals lat/lng not populated for RSS articles) is still open.
+- **Fake Tension Index Number Removed**: "Global Tension Index" was showing a hardcoded 74.8/▲2.4 instead of the real computed score.
+- **Watchlist Dead Globe Shell Removed**; unsupported `EURUSD`/`USDRUB` removed from the addable commodity list (were permanently stuck at flat 0.00%).
+- **Backtesting Date Realism**: Mock results no longer show real-looking calendar dates for fabricated events — relabeled "Sample Case #N". Demo-mode disclaimer confirmed correct and unchanged.
+- **Open**: Watchlist sparkline bars still use `Math.random()` per render (fabricated), not yet fixed — flagged for a future pass.
+- **Verification caveat**: No browser/Playwright tool was available this session; fixes verified via build + direct API calls, not visual walkthrough.
+
 ## Recent Event Detail Page Rebuild & Alert Fix (2026-08-15)
 
 - **Event Page Was Showing Wrong Signals**: Root cause of the empty "Projected Impact" box — `/events/[id]` fetched only the newest 20 signals and fell back to `signals[0]` when the requested ID wasn't in that batch. Fixed with a dedicated `/api/signals/[id]` route that fetches the exact signal.

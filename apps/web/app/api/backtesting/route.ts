@@ -44,12 +44,14 @@ function mockResult(p: z.infer<typeof schema>): Result {
   const avgMovePct = 3.2;
   const maxMovePct = 9.1;
   const minMovePct = -6.4;
-  const now = Date.now();
   const points = Array.from({ length: totalEvents }).map((_, i) => ({
     severity: 6 + (i % 5),
     movePct: (Math.sin(i) * 4 + (i % 2 ? 1.2 : -0.7)) as number,
     summary: `${p.eventType} impact case #${i + 1}`,
-    date: new Date(now - i * 86400000 * 13).toISOString().slice(0, 10),
+    // Deliberately NOT a real calendar date — this is synthesized demo data
+    // (see isDemo below) and a specific date like "2026-08-14" would read as
+    // if it cites an actual recorded event, which it doesn't.
+    date: `Sample Case #${i + 1}`,
     country: ["Yemen", "Ukraine", "Sudan", "Iran", "Nigeria"][i % 5],
   }));
   const rows = points.slice(0, 20).map((pt) => ({

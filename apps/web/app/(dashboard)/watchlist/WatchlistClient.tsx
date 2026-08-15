@@ -176,31 +176,10 @@ export function WatchlistClient() {
           })}
         </div>
 
-        {/* Dashboard Analytics Section (Bento Grid) */}
+        {/* Dashboard Analytics Section */}
         <div className="grid grid-cols-12 gap-6 mt-12 mb-12">
-          {/* Large Geo Map Overlay */}
-          <div className="col-span-12 lg:col-span-8 h-[400px] bg-surface-container rounded-xl relative overflow-hidden group border border-outline-variant/10">
-            <img
-              className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-1000 grayscale brightness-75 contrast-125"
-              alt="Geospatial Heatmap"
-              src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=2000"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
-
-            {/* Removed static Supply Chain Nodes — feature requires backend data source */}
-
-            <div className="absolute bottom-6 right-6 flex gap-3">
-              <button className="w-10 h-10 rounded bg-black/60 border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors text-on-surface backdrop-blur-md">
-                <span className="material-symbols-outlined">add</span>
-              </button>
-              <button className="w-10 h-10 rounded bg-black/60 border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors text-on-surface backdrop-blur-md">
-                <span className="material-symbols-outlined">remove</span>
-              </button>
-            </div>
-          </div>
-
           {/* Secondary Data Insights */}
-          <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+          <div className="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex-1 bg-surface-container rounded-xl p-6 border border-outline-variant/10 shadow-xl group">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded bg-surface-variant/50 flex items-center justify-center border border-outline-variant/20">

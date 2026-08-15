@@ -34,15 +34,29 @@ export default function MapPage() {
     fallbackLastUpdated,
   } = useSignalFeed();
   const signals = liveSignals ?? [];
-  const serverSignalsRef = useRef<Signal[] | null>(null);
+  // Server-side filtered results (severity/region/window) — proper React state, not a ref,
+  // so it reliably triggers recomputation. Previously this was a ref that the map source was
+  // poked with directly, out of band from React state, which raced with the SSE-driven
+  // `geolocatedSignals` recompute and meant filter changes often didn't stick on the map.
+  const [serverFilteredSignals, setServerFilteredSignals] = useState<Signal[]>([]);
   const [timeWindow, setTimeWindow] = useState<"24h" | "7d" | "all">("all");
   const [minSeverity, setMinSeverity] = useState<number>(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
+  // Server-side filtering only narrows by severity/region/window (the params /api/signals
+  // actually supports). Merge those results with the live feed so the pool always includes
+  // anything newer than the last server fetch, then apply the full filter set (including
+  // category, which has no server param and is always client-side) below.
+  const filterPool = useMemo(() => {
+    const map = new Map<string, Signal>();
+    for (const s of serverFilteredSignals) map.set(s.id, s);
+    for (const s of signals) if (!map.has(s.id)) map.set(s.id, s);
+    return Array.from(map.values());
+  }, [serverFilteredSignals, signals]);
+
   const geolocatedSignals = useMemo(() => {
-    const source = (serverSignalsRef.current ?? signals) as Signal[];
-    return source
+    return filterPool
       .map((s) => {
         const [lng, lat] = getSignalCoordinates(s);
         return { ...s, lat, lng };
@@ -62,10 +76,15 @@ export default function MapPage() {
                   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                 : true),
       );
-  }, [signals, minSeverity, selectedCategory, selectedRegion, timeWindow]);
+  }, [filterPool, minSeverity, selectedCategory, selectedRegion, timeWindow]);
   const geolocatedSignalsRef = useRef<Signal[]>([]);
   geolocatedSignalsRef.current = geolocatedSignals;
-  const liveItems = signals.slice(0, 6);
+  // Stream list now shares the exact same filtered set as the map markers —
+  // previously it always showed the unfiltered feed regardless of active filters.
+  const liveItems = geolocatedSignals.slice(0, 6);
+
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [streamCollapsed, setStreamCollapsed] = useState(false);
 
   const [mapError, setMapError] = useState<string | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -438,7 +457,9 @@ export default function MapPage() {
     };
   }, []);
 
-  // Fetch server-side filtered signals when filters change so filters affect actual dataset
+  // Fetch server-side filtered signals when filters change so filters affect actual dataset.
+  // Only sets React state here — Effect below (keyed on `geolocatedSignals`) is the single
+  // writer to the map source, so there's no race between this fetch and the live feed.
   useEffect(() => {
     let cancelled = false;
     async function fetchFiltered() {
@@ -455,18 +476,7 @@ export default function MapPage() {
         if (!res.ok) return;
         const json = (await res.json()) as { signals: Signal[] };
         if (cancelled) return;
-        serverSignalsRef.current = json.signals ?? [];
-
-        // If map exists, update source data
-        const map = mapRef.current;
-        if (map && map.getSource && map.getSource("signals")) {
-          const fc = signalsToGeoJSON(serverSignalsRef.current);
-          try {
-            map.getSource("signals").setData(fc);
-          } catch {
-            setTimeout(() => map.getSource("signals").setData(fc), 50);
-          }
-        }
+        setServerFilteredSignals(json.signals ?? []);
       } catch (err) {
         // ignore
       }
@@ -523,11 +533,12 @@ export default function MapPage() {
       kinetic: Math.round((kinetic / total) * 100),
       diplomatic: Math.round((diplomatic / total) * 100),
       score: Math.min(99, Math.round(50 + (kinetic * 3 + cyber * 2 + diplomatic) * 1.5)),
+      sampleSize: liveSignals.length,
     };
   }, [liveSignals]);
 
   return (
-    <main className="relative w-full h-[calc(100vh-64px)] bg-background overflow-hidden">
+    <main className="relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
       <div className="absolute inset-0">
         <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />
@@ -578,7 +589,15 @@ export default function MapPage() {
         </div>
       )}
 
+      {!filtersCollapsed && (
       <section className="absolute top-8 left-8 w-80 glass rounded-xl p-6 border-l-2 border-primary/40">
+        <button
+          onClick={() => setFiltersCollapsed(true)}
+          className="absolute -right-3 top-6 w-6 h-6 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors"
+          aria-label="Collapse filters panel"
+        >
+          <span className="material-symbols-outlined text-[14px]">chevron_left</span>
+        </button>
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="label text-[10px] tracking-[0.2em] text-on-surface-variant mb-1 uppercase">
@@ -586,10 +605,10 @@ export default function MapPage() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-mono text-4xl font-bold text-on-surface">
-                74.8
+                {tensionMetrics.score}
               </span>
-              <span className="font-mono text-sm text-error font-bold">
-                ▲ 2.4
+              <span className="font-mono text-[9px] text-on-surface-variant/70">
+                from {tensionMetrics.sampleSize} active signal{tensionMetrics.sampleSize === 1 ? "" : "s"}
               </span>
             </div>
           </div>
@@ -728,8 +747,26 @@ export default function MapPage() {
           </div>
         </div>
       </section>
+      )}
+      {filtersCollapsed && (
+        <button
+          onClick={() => setFiltersCollapsed(false)}
+          className="absolute top-8 left-8 w-10 h-10 rounded-full bg-surface-container glass border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors z-10"
+          aria-label="Expand filters panel"
+        >
+          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+        </button>
+      )}
 
+      {!streamCollapsed && (
       <aside className="absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex flex-col">
+        <button
+          onClick={() => setStreamCollapsed(true)}
+          className="absolute -left-3 top-6 w-6 h-6 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors"
+          aria-label="Collapse live intelligence panel"
+        >
+          <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+        </button>
         <div className="p-6 border-b border-outline-variant/30 bg-surface-container-lowest/40 space-y-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -809,6 +846,16 @@ export default function MapPage() {
           </button>
         </div>
       </aside>
+      )}
+      {streamCollapsed && (
+        <button
+          onClick={() => setStreamCollapsed(false)}
+          className="absolute top-8 right-8 w-10 h-10 rounded-full bg-surface-container glass border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors z-10"
+          aria-label="Expand live intelligence panel"
+        >
+          <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+        </button>
+      )}
     </main>
   );
 }
