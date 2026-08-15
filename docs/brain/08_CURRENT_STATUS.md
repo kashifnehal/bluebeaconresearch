@@ -33,20 +33,20 @@ Last updated: 2026-08-15
 - **In-Memory Server Caching**: Added 60s server-side in-memory caching (`_cachedPrices`) to `/api/prices` to lower DB and Redis load from watchlist polling.
 - **UI Chrome Audit Completed**: Executed comprehensive UI audit across all 8 page sections (A1–H5). All buttons, modals, dropdowns, scope tabs, filters, and drawers are fully functional with zero fake data.
 - **Monorepo Build Status**: Turborepo build (`pnpm build --filter web`) passes with zero compilation or type-check errors.
-| :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
-| **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
-| **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
-| **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date index) |
-| **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
-| **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
-| **RSS Real-Time Collector** | ⚠️ Partial | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404 |
-| **GNews Ingestion** | ⚠️ Degraded | Free tier — 1 query/run; mostly duplicates after initial ingest |
-| **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits; 30s retry added |
-| **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 15 min |
-| **Claude AI Classifier** | ⚠️ Degraded | Zero Anthropic credit — heuristic fallback active |
-| **Heuristic Fallback Classifier** | ✅ Operational | Dynamic confidence scoring (55%–90%) + word-boundary filtering |
-| **Upstash Redis / BullMQ** | ✅ Operational | Fixed `rediss://` TLS protocol |
-| **Interactive UI Controls** | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active |
+  | :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
+  | **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
+  | **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
+  | **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date index) |
+  | **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
+  | **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
+  | **RSS Real-Time Collector** | ⚠️ Partial | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404 |
+  | **GNews Ingestion** | ⚠️ Degraded | Free tier — 1 query/run; mostly duplicates after initial ingest |
+  | **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits; 30s retry added |
+  | **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 15 min |
+  | **Claude AI Classifier** | ⚠️ Degraded | Zero Anthropic credit — heuristic fallback active |
+  | **Heuristic Fallback Classifier** | ✅ Operational | Dynamic confidence scoring (55%–90%) + word-boundary filtering |
+  | **Upstash Redis / BullMQ** | ✅ Operational | Fixed `rediss://` TLS protocol |
+  | **Interactive UI Controls** | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active |
 
 ---
 
