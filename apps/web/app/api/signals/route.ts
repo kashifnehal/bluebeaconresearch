@@ -211,32 +211,6 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await query.limit(20);
 
-    // Fail-safe: if newest signal is older than 15 min or missing, trigger inline auto-ingest asynchronously
-    const newestRow = data?.[0];
-    if (
-      !newestRow ||
-      (newestRow.created_at &&
-        Date.now() - new Date(newestRow.created_at).getTime() > 15 * 60 * 1000)
-    ) {
-      try {
-        const imported = await import("@/lib/auto-ingest");
-        const autoIngestIfStale = imported?.autoIngestIfStale;
-        if (typeof autoIngestIfStale === "function") {
-          autoIngestIfStale().catch((err: any) => {
-            console.warn(
-              "[signals] auto-ingest task error:",
-              err?.message ?? err,
-            );
-          });
-        }
-      } catch (err: any) {
-        console.warn(
-          "[signals] failed to import auto-ingest:",
-          err?.message ?? err,
-        );
-      }
-    }
-
     if (error) {
       console.error("[signals] DB error:", error?.message ?? error);
       if (_cachedSignals) {

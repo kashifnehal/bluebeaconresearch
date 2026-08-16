@@ -22,6 +22,19 @@ type UIState = {
 
   helpOpen: boolean;
   setHelpOpen: (open: boolean) => void;
+
+  // Product tour (react-joyride). Lives here (not local component state)
+  // because the tour spans a dashboard->event-page navigation, and this
+  // store is mounted once in the shared (dashboard) layout.
+  tourActive: boolean;
+  tourPhase: "dashboard" | "event";
+  tourStepIndex: number;
+  tourEventId: string | null;
+  startTour: () => void;
+  endTour: () => void;
+  setTourPhase: (phase: "dashboard" | "event") => void;
+  setTourStepIndex: (index: number) => void;
+  setTourEventId: (id: string | null) => void;
 };
 
 export const useUIStore = create<UIState>()(
@@ -44,6 +57,18 @@ export const useUIStore = create<UIState>()(
 
       helpOpen: false,
       setHelpOpen: (open) => set({ helpOpen: open }),
+
+      tourActive: false,
+      tourPhase: "dashboard",
+      tourStepIndex: 0,
+      tourEventId: null,
+      startTour: () =>
+        set({ tourActive: true, tourPhase: "dashboard", tourStepIndex: 0, tourEventId: null }),
+      endTour: () =>
+        set({ tourActive: false, tourPhase: "dashboard", tourStepIndex: 0, tourEventId: null }),
+      setTourPhase: (phase) => set({ tourPhase: phase }),
+      setTourStepIndex: (index) => set({ tourStepIndex: index }),
+      setTourEventId: (id) => set({ tourEventId: id }),
     }),
     { name: "blue-beacon-ui" },
   ),

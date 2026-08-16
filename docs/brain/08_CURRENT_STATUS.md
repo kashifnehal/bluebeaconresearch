@@ -1,6 +1,24 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-Last updated: 2026-08-15
+Last updated: 2026-08-16
+
+---
+
+## First-Time User Onboarding: Dashboard Product Tour (2026-08-16)
+
+- **New skippable 6-step `react-joyride` tour** (pinned to `2.9.3` — the `3.x` default install has a breaking-changed API) fires once for first-time users on `/dashboard`, then continues onto that user's featured event's detail page for the last 2 steps (alert action + sidebar nav), matching the "dashboard/single event page combination" scope.
+- **New `profiles.product_tour_completed` column**, deliberately separate from the existing `onboarding_completed` (which gates the unrelated `/onboarding` wizard). Migration applied manually via Supabase SQL editor (no CLI/DB access from this environment) — confirmed applied before shipping, since the shared `fetchMyProfile()` query would otherwise 400 on the unknown column and break the *existing* login onboarding-gate too.
+- **"Replay product tour"** added to the Help modal — resets the tour and navigates to `/dashboard` if needed, no full page reload.
+- **Two bugs found and fixed during live Playwright verification** (not visible from code): (1) the auto-start effect re-triggered itself right after skip/finish, racing the async DB write and restarting the tour it just ended — fixed with a one-shot ref guard; (2) the event-page tour step mounted before the async signal fetch resolved, silently failing to find its target — fixed by polling for the DOM target before running.
+- **Verified live**: fresh signup → auto-fires correctly with right copy/styling on all 6 steps (screenshotted each) → phase transition navigates to the correct real event → completion and skip both persist to the DB and survive reload → replay works from both the dashboard and another page.
+
+---
+
+## Security & Cost Follow-Up: Hardcoded Key + Shadow Ingestion Path (2026-08-16)
+
+- **Hardcoded GNews key removed from source** — was a live-key fallback literal in `auto-ingest.ts`. **Founder action still required**: rotate the key at gnews.io, it's still in git history.
+- **`auto-ingest.ts` deleted** — a second, independent ingestion path triggered from page loads on Vercel, separate from and undermining the Railway workers cron interval control added in v0.17.0. No documented rationale found for keeping it; workers are confirmed operational, so removed rather than hardened.
+- **`/api/prices`, `/api/prices/history`, `/api/backtesting`** now rate-limited (previously had zero limit, unlike every other route) — verified live, 429s kick in correctly after 60 req/min.
 
 ---
 

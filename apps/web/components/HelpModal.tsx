@@ -1,11 +1,20 @@
 "use client";
 
+import { usePathname, useRouter } from "next/navigation";
 import { useUIStore } from "@/store/useUIStore";
 
 export function HelpModal() {
-  const { helpOpen, setHelpOpen } = useUIStore();
+  const { helpOpen, setHelpOpen, startTour } = useUIStore();
+  const pathname = usePathname();
+  const router = useRouter();
 
   if (!helpOpen) return null;
+
+  function handleReplayTour() {
+    setHelpOpen(false);
+    startTour();
+    if (pathname !== "/dashboard") router.push("/dashboard");
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -142,7 +151,14 @@ export function HelpModal() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[#2a2a2a] bg-[#131313] rounded-b-lg flex justify-end">
+        <div className="p-4 border-t border-[#2a2a2a] bg-[#131313] rounded-b-lg flex justify-between items-center">
+          <button
+            onClick={handleReplayTour}
+            className="text-xs font-bold text-[#86948a] hover:text-[#4edea3] uppercase tracking-wider transition-colors"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Replay product tour
+          </button>
           <button
             onClick={() => setHelpOpen(false)}
             className="px-6 py-2 bg-[#4edea3] text-[#003824] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"

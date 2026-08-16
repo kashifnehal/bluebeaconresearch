@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { safeFormatDistanceToNow } from "@/lib/utils";
+import { fetchMyProfile } from "@/lib/profile";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { liveSignals, isLoading, isError } = useSignalFeed({ enabled: true });
-  const { searchQuery } = useUIStore();
+  const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
   const [filter, setFilter] = useState<"all" | "high">("all");
 
   // Compute top hotzones from liveSignals
@@ -60,6 +61,40 @@ export default function DashboardPage() {
   const secondaryB = filteredSignals[2];
   const streamList = filteredSignals.slice(0, 10);
 
+  // First-time tour: only fires once real signal data (and a featured card
+  // to anchor steps 2-4 to) has actually loaded, and only for users who
+  // haven't completed it — checked server-side via profiles so it doesn't
+  // reappear across devices/cleared cookies. Checked once per mount via a
+  // ref (not a `tourActive` dependency) — otherwise skipping/finishing the
+  // tour flips tourActive back to false, which would re-run this effect and
+  // race the async completion write, restarting the tour it just ended.
+  const hasCheckedTourRef = useRef(false);
+  useEffect(() => {
+    if (hasCheckedTourRef.current || isLoading || !featured || tourActive) return;
+    hasCheckedTourRef.current = true;
+    let cancelled = false;
+    (async () => {
+      const profile = await fetchMyProfile();
+      if (cancelled || !profile || profile.productTourCompleted) return;
+      setTourEventId(featured.id);
+      startTour();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, featured?.id]);
+
+  // Keep the tour's target event id in sync with the featured card while
+  // the dashboard phase of the tour is active (covers both first-run and
+  // "Replay product tour" from the Help modal).
+  useEffect(() => {
+    if (tourActive && tourPhase === "dashboard" && featured) {
+      setTourEventId(featured.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourActive, tourPhase, featured?.id]);
+
   return (
     <div
       className="flex h-screen w-full pt-16"
@@ -71,7 +106,7 @@ export default function DashboardPage() {
         style={{ padding: "32px", maxWidth: "1440px", margin: "0 auto" }}
       >
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-10" data-tour="feed-header">
           <h1
             className="text-3xl font-extrabold tracking-tight"
             style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
@@ -172,6 +207,7 @@ export default function DashboardPage() {
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex gap-4 items-center">
                       <span
+                        data-tour="severity-badge"
                         className="px-2 py-0.5 text-[10px] font-bold tracking-tighter"
                         style={{
                           fontFamily: "'Space Grotesk', sans-serif",
@@ -241,7 +277,7 @@ export default function DashboardPage() {
                             {featured.country || "Global"}
                           </div>
                         </div>
-                        <div>
+                        <div data-tour="confidence-score">
                           <div
                             className="text-[10px] uppercase mb-1"
                             style={{
@@ -265,6 +301,7 @@ export default function DashboardPage() {
                     </div>
 
                     <button
+                      data-tour="analyze-impact"
                       onClick={(e) => {
                         e.stopPropagation();
                         router.push(`/events/${featured.id}`);

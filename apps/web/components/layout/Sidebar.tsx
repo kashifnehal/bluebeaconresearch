@@ -55,7 +55,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-1">
+        <nav className="space-y-1" data-tour="sidebar-nav">
           {NAV.map((item) => {
             const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
             return (

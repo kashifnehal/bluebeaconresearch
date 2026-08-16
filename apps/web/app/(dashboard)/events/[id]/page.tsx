@@ -303,6 +303,7 @@ export default function EventDetailPage() {
 
               <div className="flex flex-col gap-2">
                 <Button
+                  data-tour="set-alert"
                   onClick={() => setAlertModalOpen(true)}
                   className="h-11 bg-accent text-bg-app text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >

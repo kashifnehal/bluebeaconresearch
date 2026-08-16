@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { Redis } from "@upstash/redis";
+import { rateLimitOrPass } from "@/lib/ratelimit";
 
 type CommodityPriceRow = {
   symbol: string;
@@ -26,7 +27,7 @@ function getUpstashRedis() {
   return new Redis({ url, token });
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const now = Date.now();
 
   // Short-circuit: return in-memory cached prices if fresh (under 60s old)
@@ -34,6 +35,27 @@ export async function GET() {
     return NextResponse.json(_cachedPrices.payload, {
       headers: { "x-prices-cache-status": "hit" },
     });
+  }
+
+  // This route intentionally has no auth check — prices are public market data — but it
+  // must not be exempt from rate limiting just because it's unauthenticated.
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+  try {
+    const rl = await rateLimitOrPass(`prices:${ip}`);
+    if (!rl.success) {
+      if (_cachedPrices) {
+        return NextResponse.json(_cachedPrices.payload, {
+          status: 200,
+          headers: { "x-prices-cache-status": "stale-rate-limited" },
+        });
+      }
+      return NextResponse.json({ prices: [] }, { status: 429 });
+    }
+  } catch (err) {
+    console.warn("⚠️ [API Prices] Rate limit check failed, continuing:", err);
   }
 
   const priceMap = new Map<string, CommodityPriceRow>();

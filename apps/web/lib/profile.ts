@@ -6,6 +6,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 export type Profile = {
   id: string;
   onboardingCompleted: boolean;
+  productTourCompleted: boolean;
   planTier: PlanTier;
   fullName?: string | null;
 };
@@ -13,6 +14,7 @@ export type Profile = {
 type ProfileRow = {
   id: string;
   onboarding_completed: boolean | null;
+  product_tour_completed: boolean | null;
   plan_tier: PlanTier | null;
   full_name: string | null;
 };
@@ -28,7 +30,7 @@ export async function fetchMyProfile(): Promise<Profile | null> {
 
   const { data } = await supabase
     .from("profiles")
-    .select("id, onboarding_completed, plan_tier, full_name")
+    .select("id, onboarding_completed, product_tour_completed, plan_tier, full_name")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -37,6 +39,7 @@ export async function fetchMyProfile(): Promise<Profile | null> {
   return {
     id: user.id,
     onboardingCompleted: Boolean(row?.onboarding_completed),
+    productTourCompleted: Boolean(row?.product_tour_completed),
     planTier: (row?.plan_tier ?? "free") as PlanTier,
     fullName: row?.full_name ?? null,
   };

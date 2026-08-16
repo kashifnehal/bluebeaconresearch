@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { rateLimitOrPass } from "@/lib/ratelimit";
 
 const schema = z.object({
   eventType: z.string().min(1),
@@ -73,6 +74,21 @@ function mockResult(p: z.infer<typeof schema>): Result {
 }
 
 export async function POST(req: Request) {
+  // No auth check (backtesting is explicitly mock data), but still rate-limited —
+  // otherwise this endpoint is wide open to abuse regardless of what it returns.
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown";
+  try {
+    const rl = await rateLimitOrPass(`backtesting:${ip}`);
+    if (!rl.success) {
+      return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    }
+  } catch (err) {
+    console.warn("⚠️ [API Backtesting] Rate limit check failed, continuing:", err);
+  }
+
   const json = await req.json().catch(() => null);
   const parsed = schema.safeParse(json);
   if (!parsed.success) {

@@ -125,8 +125,16 @@ function SignupForm() {
           return;
         }
       }
-      // New signups always land on /onboarding, matching the same
-      // onboardingCompleted-gated pattern the login page already uses.
+
+      // With email confirmation ON, signUp() returns no session and the user
+      // isn't authenticated yet — /onboarding is a protected route and would
+      // just bounce them to /login. Only send confirmed/session-bearing users
+      // there; everyone else goes to /verify to confirm their email first.
+      const isConfirmed = Boolean(data.session) || Boolean(data.user?.email_confirmed_at);
+      if (!isConfirmed) {
+        window.location.href = `/verify?email=${encodeURIComponent(values.email)}`;
+        return;
+      }
       window.location.href = "/onboarding";
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign up.");
