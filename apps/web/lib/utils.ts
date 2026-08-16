@@ -25,6 +25,16 @@ export function safeFormatDistanceToNow(
   }
 }
 
+/**
+ * Shared visual treatment for every native <select> dropdown across the app
+ * (Map filters, Watchlist commodity picker, Backtesting selectors). These were
+ * each styled independently (different backgrounds, padding, fonts) — this keeps
+ * them as plain <select> elements (zero behavior change to onChange/value
+ * handling) while making the rendering consistent, per the design-system audit.
+ */
+export const SELECT_CLASSES =
+  "bg-surface-container-high border border-outline-variant rounded-md px-3 py-2 text-xs font-mono uppercase tracking-wide text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none cursor-pointer appearance-none";
+
 export function formatRegionLabel(region?: string | null): string {
   if (!region) return "Global";
   return region

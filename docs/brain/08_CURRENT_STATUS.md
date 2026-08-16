@@ -4,6 +4,16 @@ Last updated: 2026-08-15
 
 ---
 
+## Auth Flow, GDELT Language Filter & Dropdown Consistency Fixes (2026-08-15)
+
+- **Auth fixes, verified via Playwright**: email now persists between Login ↔ Signup (`?email=` param), login tab order fixed (Forgot-password link no longer interrupts Email→Password→Submit), signup redirect now uses `window.location.href` (was `router.push`, violating the SSR-cookie decision), resend-confirmation button has a 60s cooldown.
+- **Two premises from the source prompt didn't hold up against live evidence**: no Gmail-only restriction exists in code (if real, it's a Supabase dashboard setting — founder action); the search bar was already correctly scoped to authenticated pages only (`TopBar` only lives in `(dashboard)/layout.tsx`), confirmed via Playwright on `/`, `/status`, `/login`, `/signup`.
+- **Non-English signal titles root-caused to GDELT** — its global query had no language filter (GNews and RSS were already English-only). Fixed with `sourcelang:eng` + a per-article language check. Old non-English rows already in the DB aren't purged, and this only affects the deployed Railway worker once it redeploys — not confirmed live from this session.
+- **Dropdown visual consistency**: all 7 `<select>` elements across Map, Watchlist, Backtesting, and Settings now share one Tailwind class constant (`SELECT_CLASSES`), kept as native selects (not swapped to the unused `components/ui/select.tsx`) to avoid risking existing filter behavior.
+- **Map Live Intelligence** items now keep a persistent highlight after being clicked, not just on hover — verified live.
+- **Watchlist**: added "Select All" to the commodity add-dropdown; fixed the `Math.random()` fake sparkline — now real recent `commodity_prices` history via a new `/api/prices/history` route.
+- **Not verified**: Watchlist/Backtesting/Settings pages and authenticated Map states remain unverified visually — behind real Supabase auth, founder opted to skip credential sharing.
+
 ## Map Markers Were Completely Broken Since v0.13.0 — Now Fixed (2026-08-15)
 
 - **Map has never shown a single marker**, in any state, since the original MapLibre setup — invisible from code review (no console errors, all layers/paint correctly configured, data valid). Only surfaced via live Playwright interaction + JS introspection of the actual MapLibre instance.

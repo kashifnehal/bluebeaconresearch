@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { Suspense } from "react";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { signupSchema } from "@/lib/validators";
@@ -50,16 +51,19 @@ function GoogleIcon() {
   );
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const prefillEmail = searchParams.get("email") ?? "";
   const selectedPlan: PlanTier = "pro";
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
-    defaultValues: { fullName: "", email: "", password: "" },
+    defaultValues: { fullName: "", email: prefillEmail, password: "" },
   });
+  const emailValue = form.watch("email");
 
   const [redirectTo, setRedirectTo] = useState("");
   useEffect(() => {
@@ -107,18 +111,23 @@ export default function SignupPage() {
           .from("profiles")
           .upsert({ id: data.user.id, full_name: values.fullName, plan_tier: selectedPlan });
 
-        // If project is not ready, track waitlist and redirect to modal
+        // If project is not ready, track waitlist and redirect to modal.
+        // window.location.href (not router.push) is required here — a signup just
+        // established a new session, and SSR middleware needs the auth cookie to have
+        // attached via a full navigation, per the existing decision in 10_DECISIONS.md.
         if (!isProjectReady) {
           await supabase.from("waitlist").insert({
             user_id: data.user.id,
             full_name: values.fullName,
             email: values.email,
           });
-          router.push("/?joined=1");
+          window.location.href = "/?joined=1";
           return;
         }
       }
-      router.push("/onboarding");
+      // New signups always land on /onboarding, matching the same
+      // onboardingCompleted-gated pattern the login page already uses.
+      window.location.href = "/onboarding";
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign up.");
     } finally {
@@ -369,7 +378,10 @@ export default function SignupPage() {
         <footer style={{ marginTop: "40px", textAlign: "center" }}>
           <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "14px", color: C.onSurfaceVariant }}>
             Already have an account?{" "}
-            <Link href="/login" style={{ color: C.primaryContainer, fontWeight: 700, textDecoration: "none", marginLeft: "4px" }}>
+            <Link
+              href={emailValue ? `/login?email=${encodeURIComponent(emailValue)}` : "/login"}
+              style={{ color: C.primaryContainer, fontWeight: 700, textDecoration: "none", marginLeft: "4px" }}
+            >
               Sign in
             </Link>
           </p>
@@ -387,5 +399,13 @@ export default function SignupPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }

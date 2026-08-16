@@ -47,11 +47,13 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
+  const prefillEmail = searchParams.get("email") ?? "";
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<FormValues>({ defaultValues: { email: "", password: "" } });
+  const form = useForm<FormValues>({ defaultValues: { email: prefillEmail, password: "" } });
+  const emailValue = form.watch("email");
 
   // Capture window.location.origin safely — only available on client after mount
   const [origin, setOrigin] = useState("");
@@ -276,6 +278,7 @@ function LoginForm() {
             type="button"
             onClick={signInWithGoogle}
             disabled={isLoading}
+            tabIndex={1}
             style={{
               width: "100%",
               display: "flex",
@@ -333,6 +336,8 @@ function LoginForm() {
               type="email"
               placeholder="you@example.com"
               style={inputStyle}
+              tabIndex={2}
+              autoFocus
               {...form.register("email")}
               onFocus={(e) => { e.target.style.borderBottomColor = C.primaryContainer; }}
               onBlur={(e) => { e.target.style.borderBottomColor = C.outlineVariant; }}
@@ -350,6 +355,7 @@ function LoginForm() {
               <label htmlFor="password" style={{ ...labelStyle, marginBottom: 0 }}>Password</label>
               <Link
                 href="/forgot-password"
+                tabIndex={6}
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
                   fontSize: "11px",
@@ -369,6 +375,7 @@ function LoginForm() {
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 style={{ ...inputStyle, paddingRight: "40px" }}
+                tabIndex={3}
                 {...form.register("password")}
                 onFocus={(e) => { e.target.style.borderBottomColor = C.primaryContainer; }}
                 onBlur={(e) => { e.target.style.borderBottomColor = C.outlineVariant; }}
@@ -376,6 +383,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
+                tabIndex={4}
                 style={{
                   position: "absolute",
                   right: "8px",
@@ -449,6 +457,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
+              tabIndex={5}
               style={{
                 width: "100%",
                 backgroundColor: C.primaryContainer,
@@ -488,7 +497,8 @@ function LoginForm() {
           <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "14px", color: C.onSurfaceVariant }}>
             Don&apos;t have an account?{" "}
             <Link
-              href="/signup"
+              href={emailValue ? `/signup?email=${encodeURIComponent(emailValue)}` : "/signup"}
+              tabIndex={7}
               style={{
                 color: C.primaryContainer,
                 fontWeight: 700,

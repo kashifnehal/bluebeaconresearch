@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { COMMODITIES, REGIONS } from "@blue-beacon-research/shared";
+import { SELECT_CLASSES } from "@/lib/utils";
 
 const POPULAR = [
   {
@@ -234,7 +235,7 @@ export default function BacktestingPage() {
                 <select
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="w-full bg-transparent border-b border-outline-variant focus:border-primary text-sm text-on-surface py-2.5 px-0 focus:ring-0 transition-all font-label uppercase appearance-none outline-none cursor-pointer"
+                  className={`w-full ${SELECT_CLASSES}`}
                 >
                   {REGIONS.map((r) => (
                     <option
@@ -254,7 +255,7 @@ export default function BacktestingPage() {
                 <select
                   value={commodity}
                   onChange={(e) => setCommodity(e.target.value)}
-                  className="w-full bg-transparent border-b border-outline-variant focus:border-primary text-sm text-on-surface py-2.5 px-0 focus:ring-0 transition-all font-label uppercase appearance-none outline-none cursor-pointer"
+                  className={`w-full ${SELECT_CLASSES}`}
                 >
                   {COMMODITIES.map((c) => (
                     <option

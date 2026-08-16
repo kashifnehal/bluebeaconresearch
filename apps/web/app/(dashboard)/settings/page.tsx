@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { toast } from "sonner";
+import { SELECT_CLASSES } from "@/lib/utils";
 
 const TABS = [
   "ACCOUNT",
@@ -425,7 +426,7 @@ export default function SettingsPage() {
                         onChange={(e) =>
                           setRetentionDays(Number(e.target.value))
                         }
-                        className="ml-3 bg-surface-container-lowest p-2 rounded"
+                        className={`ml-3 ${SELECT_CLASSES}`}
                       >
                         {[30, 60, 90, 180, 365].map((d) => (
                           <option key={d} value={d}>

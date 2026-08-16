@@ -19,6 +19,22 @@ function isWorkersEntrypoint() {
   return /[/\\]workers\.(ts|js)$/.test(entry);
 }
 
+// Pre-launch, this runs 24/7 with zero real user traffic — pure fixed Railway cost for
+// no current benefit. Configurable via env so the interval can be widened now (e.g.
+// "*/30 * * * *" or hourly) without a redeploy, and tightened back to 15 min for launch
+// the same way. Default matches the existing always-on behavior unless overridden.
+const DEFAULT_INGESTION_CRON = "*/15 * * * *";
+const INGESTION_CRON =
+  process.env.INGESTION_INTERVAL_CRON && cron.validate(process.env.INGESTION_INTERVAL_CRON)
+    ? process.env.INGESTION_INTERVAL_CRON
+    : DEFAULT_INGESTION_CRON;
+
+if (process.env.INGESTION_INTERVAL_CRON && INGESTION_CRON !== process.env.INGESTION_INTERVAL_CRON) {
+  console.warn(
+    `[workers] INGESTION_INTERVAL_CRON="${process.env.INGESTION_INTERVAL_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_INGESTION_CRON}"`,
+  );
+}
+
 async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
   const [gdelt, gnews, rss, prices] = await Promise.allSettled([
     runGdeltCollectorOnce(),
@@ -61,8 +77,9 @@ async function main() {
     app.log.info({ collectors: c }, "startup:ingestion complete");
   }).catch(() => {});
 
-  // ── Every 15 min: collect news signals ─────────────────────────────────
-  cron.schedule("*/15 * * * *", async () => {
+  // ── Collect news signals — interval set by INGESTION_INTERVAL_CRON, default 15 min ──
+  app.log.info({ schedule: INGESTION_CRON }, "workers: ingestion cron schedule");
+  cron.schedule(INGESTION_CRON, async () => {
     try {
       const collectors = await runIngestionCycle(app);
       app.log.info({ collectors }, "ingestion-cycle complete");

@@ -20,8 +20,11 @@ type GdeltArticle = {
 const claude = new ClaudeService();
 
 // Expanded query: geopolitical + markets/finance/macroeconomics
+// sourcelang:eng — product is English-first (see 10_DECISIONS.md); without this,
+// GDELT's global query returns articles in whatever language the source published in
+// (confirmed live: Azerbaijani and French titles reaching the feed unfiltered).
 const GDELT_API_URL =
-  "https://api.gdeltproject.org/api/v2/doc/doc?query=(conflict+OR+war+OR+sanctions+OR+military+OR+oil+OR+stock+market+OR+trade+OR+inflation+OR+fed+OR+earnings)&mode=artlist&maxrecords=50&format=json&sort=DateDesc";
+  "https://api.gdeltproject.org/api/v2/doc/doc?query=(conflict+OR+war+OR+sanctions+OR+military+OR+oil+OR+stock+market+OR+trade+OR+inflation+OR+fed+OR+earnings)+sourcelang:eng&mode=artlist&maxrecords=50&format=json&sort=DateDesc";
 
 export async function runGdeltCollectorOnce() {
   const supabase = getSupabaseAdmin();
@@ -59,6 +62,15 @@ export async function runGdeltCollectorOnce() {
     if (!externalId) continue;
 
     const title = a.title?.slice(0, 280) ?? a.url ?? "GDELT article";
+
+    // Defense-in-depth behind the sourcelang:eng query filter above — GDELT's query-level
+    // language filter isn't always exhaustive, and the article's own `language` field
+    // (when present) is a more direct signal than guessing from title characters.
+    if (a.language && a.language.toLowerCase() !== "english") {
+      filtered += 1;
+      continue;
+    }
+
     if (!isRelevantEvent(title)) {
       filtered += 1;
       continue;

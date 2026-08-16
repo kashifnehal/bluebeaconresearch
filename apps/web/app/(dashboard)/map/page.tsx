@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Signal } from "@blue-beacon-research/shared";
-import { safeFormatDistanceToNow } from "@/lib/utils";
+import { safeFormatDistanceToNow, SELECT_CLASSES } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
@@ -85,6 +85,7 @@ export default function MapPage() {
 
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [streamCollapsed, setStreamCollapsed] = useState(false);
+  const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
 
   const [mapError, setMapError] = useState<string | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -118,6 +119,7 @@ export default function MapPage() {
   }
 
   function handleFeedSelect(signal: Signal) {
+    setSelectedSignalId(signal.id);
     const map = mapRef.current;
     const maplib = mapLibRef.current;
     if (!map || !maplib) {
@@ -707,7 +709,7 @@ export default function MapPage() {
             <select
               value={minSeverity}
               onChange={(e) => setMinSeverity(Number(e.target.value))}
-              className="ml-2 bg-surface-container/20 rounded px-2 py-1 text-sm"
+              className={`ml-2 ${SELECT_CLASSES}`}
             >
               {[...Array(10)].map((_, i) => (
                 <option key={i} value={i + 1}>
@@ -724,7 +726,7 @@ export default function MapPage() {
             <select
               value={selectedCategory ?? ""}
               onChange={(e) => setSelectedCategory(e.target.value || null)}
-              className="ml-2 bg-surface-container/20 rounded px-2 py-1 text-sm"
+              className={`ml-2 ${SELECT_CLASSES}`}
             >
               <option value="">All</option>
               {Array.from(
@@ -744,7 +746,7 @@ export default function MapPage() {
             <select
               value={selectedRegion ?? ""}
               onChange={(e) => setSelectedRegion(e.target.value || null)}
-              className="ml-2 bg-surface-container/20 rounded px-2 py-1 text-sm"
+              className={`ml-2 ${SELECT_CLASSES}`}
             >
               <option value="">All</option>
               {Array.from(
@@ -802,12 +804,17 @@ export default function MapPage() {
             liveItems.map((signal) => {
               const isUrgent = signal.severity >= 8;
               const borderStyle = isUrgent ? "border-error" : "border-primary";
+              const isSelected = signal.id === selectedSignalId;
 
               return (
                 <div
                   key={signal.id}
                   onClick={() => handleFeedSelect(signal)}
-                  className={`p-3 bg-surface-container/40 rounded-lg border-l-2 ${borderStyle} hover:bg-surface-container/60 transition-colors cursor-pointer group`}
+                  className={`p-3 rounded-lg border-l-2 ${borderStyle} transition-colors cursor-pointer group ${
+                    isSelected
+                      ? "bg-primary/15 ring-1 ring-primary/40"
+                      : "bg-surface-container/40 hover:bg-surface-container/60"
+                  }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span

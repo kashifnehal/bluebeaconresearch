@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { COMMODITIES } from "@blue-beacon-research/shared";
+import { SELECT_CLASSES } from "@/lib/utils";
 
 type Price = {
   symbol: string;
@@ -11,6 +12,70 @@ type Price = {
   change_pct_24h?: number;
   changePct24h?: number;
 };
+
+/**
+ * Real recent-price sparkline (replaces a previous Math.random() placeholder that
+ * presented fabricated bars as a "LIVE VOLATILITY INDEX" — same pattern already
+ * removed elsewhere in this product; not okay to leave in a paying trader's view).
+ */
+function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["price-history", symbol],
+    queryFn: async () => {
+      const res = await fetch(`/api/prices/history?symbol=${encodeURIComponent(symbol)}`);
+      const json = (await res.json()) as { points: number[] };
+      return json.points ?? [];
+    },
+    staleTime: 60_000,
+  });
+
+  const points = data ?? [];
+
+  if (isLoading) {
+    return (
+      <p className="text-[9px] font-mono text-on-surface-variant/50 uppercase tracking-[0.2em] text-center">
+        Loading history…
+      </p>
+    );
+  }
+
+  if (points.length < 2) {
+    return (
+      <p className="text-[9px] font-mono text-on-surface-variant/50 uppercase tracking-[0.2em] text-center leading-relaxed">
+        Not enough price history yet for a trend view
+      </p>
+    );
+  }
+
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1;
+
+  return (
+    <>
+      <div className="absolute inset-x-6 top-6 bottom-12 flex items-end gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+        {points.map((price, i) => {
+          const h = 15 + ((price - min) / range) * 85;
+          return (
+            <div
+              key={i}
+              className={`flex-1 rounded-t-sm transition-all duration-500 ${isUp ? "bg-primary/20" : "bg-error/20"}`}
+              style={{ height: `${h}%` }}
+            >
+              <div
+                className={`w-full h-full rounded-t-sm transition-all duration-700 ${isUp ? "bg-primary/40 group-hover:bg-primary" : "bg-error/40 group-hover:bg-error"}`}
+                style={{ opacity: 0.3 + (i / points.length) * 0.7 }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center mt-4 font-bold border-t border-outline-variant/10 pt-4">
+        Recent price trend
+      </p>
+    </>
+  );
+}
 
 export function WatchlistClient() {
   const params = useSearchParams();
@@ -42,7 +107,11 @@ export function WatchlistClient() {
 
   const handleAdd = () => {
     if (addSymbol === "SELECT COMMODITY") return;
-    setWatch((p) => [...new Set([...p, addSymbol])]);
+    if (addSymbol === "__ALL__") {
+      setWatch((p) => [...new Set([...p, ...available.map((c) => c.symbol)])]);
+    } else {
+      setWatch((p) => [...new Set([...p, addSymbol])]);
+    }
     setAddSymbol("SELECT COMMODITY");
   };
 
@@ -71,11 +140,16 @@ export function WatchlistClient() {
               <select
                 value={addSymbol}
                 onChange={(e) => setAddSymbol(e.target.value)}
-                className="w-[220px] bg-surface-container-high border-b border-outline-variant text-on-surface font-mono text-xs py-2.5 px-4 appearance-none focus:border-primary outline-none cursor-pointer"
+                className={`w-[220px] ${SELECT_CLASSES}`}
               >
                 <option disabled value="SELECT COMMODITY">
                   SELECT COMMODITY
                 </option>
+                {available.length > 1 && (
+                  <option value="__ALL__">
+                    Select All ({available.length} remaining)
+                  </option>
+                )}
                 {available.map((c) => (
                   <option key={c.symbol} value={c.symbol}>
                     {c.label}
@@ -150,26 +224,7 @@ export function WatchlistClient() {
                 </div>
                 {/* Bottom section (Sparkline) */}
                 <div className="p-6 bg-surface-container/20 relative min-h-[140px] flex flex-col justify-end">
-                  <div className="absolute inset-x-6 top-6 bottom-12 flex items-end gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                    {Array.from({ length: 12 }).map((_, i) => {
-                      const h = 20 + Math.random() * 80;
-                      return (
-                        <div
-                          key={i}
-                          className={`flex-1 rounded-t-sm transition-all duration-500 ${isUp ? "bg-primary/20" : "bg-error/20"}`}
-                          style={{ height: `${h}%` }}
-                        >
-                          <div
-                            className={`w-full h-full rounded-t-sm transition-all duration-700 ${isUp ? "bg-primary/40 group-hover:bg-primary" : "bg-error/40 group-hover:bg-error"}`}
-                            style={{ opacity: 0.3 + (i / 12) * 0.7 }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center mt-4 font-bold border-t border-outline-variant/10 pt-4">
-                    LIVE VOLATILITY INDEX
-                  </p>
+                  <PriceSparkline symbol={sym} isUp={isUp} />
                 </div>
               </div>
             );

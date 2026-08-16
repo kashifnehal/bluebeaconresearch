@@ -16,12 +16,25 @@ export function VerifyClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
     if (!sent) return;
     const t = setTimeout(() => setSent(false), 3000);
     return () => clearTimeout(t);
   }, [sent]);
+
+  // Supabase's default shared SMTP has a low email-send rate limit (confirmed live:
+  // 429 "email rate limit exceeded" on repeated signup/resend attempts). A visible
+  // cooldown stops a user (or repeated testing) from hammering the resend button
+  // straight into that wall.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const RESEND_COOLDOWN_SECONDS = 60;
 
   async function resend() {
     setError(null);
@@ -35,8 +48,16 @@ export function VerifyClient() {
       });
       if (resendError) throw resendError;
       setSent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to resend email.");
+      const message = e instanceof Error ? e.message : "Failed to resend email.";
+      setError(message);
+      // Rate-limit errors mean the cooldown wasn't respected (or an earlier attempt
+      // already used it up) — start the cooldown anyway so the next click doesn't
+      // immediately repeat the same failure.
+      if (message.toLowerCase().includes("rate limit")) {
+        setCooldown(RESEND_COOLDOWN_SECONDS);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,10 +88,14 @@ export function VerifyClient() {
             type="button"
             variant="outline"
             onClick={resend}
-            disabled={!email || isLoading}
+            disabled={!email || isLoading || cooldown > 0}
             className="w-full h-10 bg-transparent border-border text-text-primary hover:bg-surface-elevated"
           >
-            {isLoading ? "Sending..." : "Resend email"}
+            {isLoading
+              ? "Sending..."
+              : cooldown > 0
+                ? `Resend email (${cooldown}s)`
+                : "Resend email"}
           </Button>
           {sent ? <p className="text-success text-sm mt-3">Email sent!</p> : null}
           {error ? <p className="text-danger text-sm mt-3">{error}</p> : null}
