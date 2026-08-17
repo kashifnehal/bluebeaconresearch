@@ -1,6 +1,16 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-Last updated: 2026-08-16
+Last updated: 2026-08-17
+
+---
+
+## RLS Remediation, GNews Constraint Fix, Signup Root-Cause Found (2026-08-17)
+
+- **RLS now enabled on all 7 previously-exposed tables** (`sanctions_entities`, `raw_events`, `alerts_sent`, `backtest_cache`, `webhook_endpoints`, `webhook_deliveries`, `subscriptions`) — Security Advisor's "RLS Disabled in Public" criticals confirmed cleared. `handle_new_user()` hardened (pinned `search_path`, EXECUTE revoked from public/anon/authenticated). All already-RLS'd tables' policies now use the perf-recommended `(select auth.uid())` pattern.
+- **Known follow-up**: Security Advisor now shows a new (lower-severity) "Multiple Permissive Policies" warning on `user_channels` — pre-existing redundant policies (4 overlapping names from migrations 003+006) preserved as-is per this task's scope; needs a founder decision on whether to consolidate.
+- **GNews collector was silently losing every insert in production** — the constraint fix that was supposed to allow `source='gnews'` (migration 008, dated 2026-08-15) had never actually been applied to the live DB despite the changelog claiming otherwise. Re-applied and verified live; GNews ingestion should recover going forward.
+- **Signup 400 "email address is invalid" — resolved, root cause was `Confirm email` + mailer coupling, not a code bug.** GoTrue rolls back the entire signup transaction if it can't send the confirmation email; the shared mailer's 2-emails/hour quota was chronically exhausted from testing, silently blocking all real signups regardless of email address validity. Founder turned off `Confirm email` (Authentication → Sign In/Providers → Email) — signups work immediately now, no code changes required.
+- **Founder action still open**: configure custom SMTP (Resend) — needed again once `Confirm email` is re-enabled, and for password-reset emails today regardless.
 
 ---
 
