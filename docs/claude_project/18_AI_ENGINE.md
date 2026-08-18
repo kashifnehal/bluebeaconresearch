@@ -1,10 +1,14 @@
 # 18_AI_ENGINE.md — AI Engine: Prompts, Models, Fallbacks
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 
 ---
 
 ## 1. MODEL SELECTION
+
+> ⚠️ UPDATED 2026-08-19 — this whole prompt/model spec describes the intended Claude-powered pipeline, but Anthropic API credit is currently exhausted ($0), so none of these Claude prompts are actually being called right now — the heuristic keyword-based fallback classifier is what's actually running in production. This is a good-faith spec for when credits are restored, not a description of current runtime behavior.
 
 | Task | Model | Why | Cost per 1K tokens |
 |------|-------|-----|--------------------|

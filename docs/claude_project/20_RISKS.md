@@ -1,5 +1,7 @@
 # 20_RISKS.md — Risk Register & Mitigations
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 
 ---
@@ -14,6 +16,8 @@ WorldMonitor already has 59K GitHub stars and launched a paid tier. If they reve
 ### BR2 — Signal quality too poor to retain users
 **Probability: High (currently) | Impact: Critical**
 The current state (FIFA Vancouver as top signal) will cause immediate churn if shown to real users. One bad first impression = user never returns.
+
+> ⚠️ UPDATED 2026-08-19 — this specific FIFA-Vancouver-as-top-signal quality bug is long since resolved (it's from an earlier project phase also referenced in this tree's `09_BACKLOG.md`); it's not reflective of current signal quality.
 **Mitigation:** Fix signal pre-filter BEFORE opening to any users. Set PROJECT_READY=false until signal quality is verified. Benchmark: at least 5 consecutive high-quality signals (real geopolitical events, severity ≥ 7, correct commodity mapping) before enabling access.
 
 ### BR3 — No paying customers after 3 months

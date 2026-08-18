@@ -1,5 +1,7 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 Last updated: 2026-08-12
 
 ---
@@ -22,6 +24,8 @@ Last updated: 2026-08-12
 | **Upstash Redis / BullMQ**          | ✅ Operational      | Fixed `rediss://` TLS protocol                                            |
 | **Interactive UI Controls**         | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active              |
 
+> ⚠️ UPDATED 2026-08-19 — the "9 migrations applied" row above is stale; `supabase/migrations/` now goes through 012 (13 files total), with migration 012 (RLS consolidation, 6 new indexes, unique constraint) applied to the live DB 2026-08-19, verified via Supabase Advisors.
+
 ---
 
 ## 2. Data Pipeline State (as of 2026-08-12)
@@ -29,6 +33,8 @@ Last updated: 2026-08-12
 - **`raw_events`**: Ingestion active on deploy startup + 15-min cron. Typical run: `inserted: 0–2`, `duplicates: 15–40`, `filtered: 40–80`.
 - **`signals`**: 20+ signals in 24h `event_date` window, plus active ongoing events older than 24h are preserved in the default feed.
 - **`Global Map`**: `/map` now plots geolocated events from real `lat`/`lng` values in `/api/signals`; missing Mapbox tokens gracefully fall back to a neutral overlay.
+
+> ⚠️ UPDATED 2026-08-19 — this Mapbox-token framing is stale; the map now uses `maplibre-gl` (MapLibre GL JS) + OpenStreetMap tiles and doesn't require a Mapbox token at all. Separately, the `lat`/`lng` values plotted here for RSS/GNews/GDELT-sourced signals are still not real per-article geocoding — they come from a hardcoded keyword/country/region lookup table with jitter, not a geocoding API; this is a confirmed, explicitly deferred founder decision, not a bug.
 - **`commodity_prices`**: Updated every 15 min (8 commodities via Yahoo Finance).
 
 **Latest verified ingest** (2026-08-11T18:37 UTC deploy): `startup:rss → inserted: 1, signals: 1`.
@@ -81,6 +87,8 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
 | Telegram alerts not working            | Open      | `TELEGRAM_BOT_TOKEN` not set in Railway                          |
+
+> ⚠️ UPDATED 2026-08-19 — the missing `TELEGRAM_BOT_TOKEN` is still true and still blocks Telegram delivery specifically, but this table's diagnosis was incomplete: as of 2026-08-18 it turned out alert dispatch to ALL channels (Telegram, Slack, webhook, push) had been completely non-functional due to a separate wiring bug — the `alert-dispatch` BullMQ queue was never fed, so nothing ever triggered dispatch even when other prerequisites were met. That's now fixed (collectors call `dispatchAlertsForSignal()` inline); Telegram itself still needs the bot token added.
 
 ---
 

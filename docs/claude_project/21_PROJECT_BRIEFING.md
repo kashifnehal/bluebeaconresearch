@@ -1,5 +1,7 @@
 # 21_PROJECT_BRIEFING.md — New Project Onboarding Brief
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **PURPOSE: Paste this file FIRST in any new Claude conversation or project about BBR.**
 **Last synced: August 2026 — reflects CLAUDE_CONTEXT.md session logs through 2026-08-07**
 
@@ -46,6 +48,8 @@ Both Railway services (backend API + workers) are currently **OPERATIONAL**. The
 | Google OAuth 2.0 | ✅ Operational | PKCE flow, `/auth/callback/route.ts`, profile trigger |
 | Interactive UI Controls | ✅ 100% Operational | All buttons, filters, modals, FABs, CSV downloads active |
 | RSS Collectors | ✅ Operational | BBC, Al Jazeera, Guardian, NPR, UN News (Reuters 404 — others compensate) |
+
+> ⚠️ UPDATED 2026-08-19 — the "9 migrations applied (000–008 + event_date index)" row is stale; `supabase/migrations/` now has 000–012 (13 files), including migration 012 (RLS consolidation, 6 new indexes, unique constraint) applied to the live DB 2026-08-19.
 
 ### ⚠️ DEGRADED (working but impaired)
 
@@ -220,9 +224,13 @@ PROJECT_READY=true
 NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
 ```
 
+> ⚠️ UPDATED 2026-08-19 — `NEXT_PUBLIC_MAPBOX_TOKEN` is stale (same Mapbox→MapLibre issue already corrected above at the tech-stack table): the map uses `maplibre-gl` + OpenStreetMap tiles and does not require a Mapbox token.
+
 ---
 
 ## IMMEDIATE PRIORITY — THE ONLY 4 THINGS THAT MATTER NOW
+
+> ⚠️ UPDATED 2026-08-19 — items 1–3 below are still literally open, but this list is no longer "the only things that matter": a 2026-08-18/19 pass fixed a separate, more severe bug (alert dispatch and severity≥7 AI briefings were never triggered at all due to a dormant/unfed BullMQ queue, independent of the Telegram token issue below), plus wired up Sentry, PostHog, CI, and a DB cleanup/reliability pass. See `docs/brain/08_CURRENT_STATUS.md` and `14_CHANGELOG.md` for the current punch list.
 
 **1. Top up Anthropic API credits** (15 minutes)
 Go to console.anthropic.com → Billing → Add credits. The heuristic fallback keeps the system alive but Claude briefings are the core product value. Without credits, signal quality is degraded.
@@ -254,6 +262,8 @@ curl -X POST "https://api.telegram.org/botYOUR_TOKEN/setWebhook?url=https://api.
 007_waitlist.sql           — waitlist submission schema
 008 (event_date index)     — index on event_date for feed performance
 ```
+
+> ⚠️ UPDATED 2026-08-19 — this list is stale; `supabase/migrations/` now goes through 012: `009_signals_event_date.sql`, `010_add_product_tour_flag.sql`, `011_rls_remediation.sql`, and `012_reliability_indexes_and_cleanup.sql` (applied to the live DB 2026-08-19, verified via Supabase Advisors) have since landed. Also, `production_schema.sql` (mentioned as a possible schema reference elsewhere in the docs) was deleted 2026-08-19 for only describing 4 of 17 real tables — `supabase/migrations/*.sql` is now the only accurate schema source.
 
 **user_channels table** (actual structure — differs from earlier docs):
 ```sql

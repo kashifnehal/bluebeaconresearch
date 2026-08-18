@@ -1,5 +1,7 @@
 # 16_DATA_PIPELINE.md — Complete Data Pipeline Documentation
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 
 ---
@@ -224,6 +226,8 @@ const url = `https://content.guardianapis.com/search?api-key=${GUARDIAN_API_KEY}
 
 ### 3.1 ai-classifier.ts (BullMQ consumer)
 
+> ⚠️ UPDATED 2026-08-19 — this describes `ai-classifier.ts`'s code accurately, but that queue-consumer path is dormant in production: nothing ever enqueues a job onto the `aiClassification` queue it listens on, so this exact flow never runs live. The real collectors (rss/gnews/gdelt) call Claude classification inline instead, bypassing this queue entirely — and today that inline call itself falls back to a heuristic classifier, not live Claude, since Anthropic API credit is exhausted. Step 8 ("queue in signal-generation") describes a second, similarly-dormant queue — that one was fixed 2026-08-19 by wiring the equivalent call inline into the collectors too (see `docs/brain/14_CHANGELOG.md` v0.22.0), mirroring the fix already applied to alert-dispatch on 2026-08-18 (v0.20.0). Kept as dormant/reserved code, not deleted, in all cases.
+
 **Input:** { rawEventId: string, priority: number }
 **Process:**
 1. Fetch raw_event from Supabase
@@ -242,6 +246,8 @@ const url = `https://content.guardianapis.com/search?api-key=${GUARDIAN_API_KEY}
 - Repeated failure: mark job as failed, log to dead letter queue
 
 ### 3.2 signal-generator.ts (BullMQ consumer)
+
+> ⚠️ UPDATED 2026-08-19 — the actual current `signal-generator.ts` is simpler than this spec: it fetches the signal, calls Claude for the briefing (`ai_analysis`), and updates the row — steps 3–5 here (sanctions cross-reference, shipping proximity, price-at-signal capture) are not implemented in this worker as described; check `17_SIGNAL_ENGINE.md` and the live code before treating this as current. As of 2026-08-19 this worker is called inline from the collectors for severity ≥7 signals (see note on §3.1 above), not solely via the BullMQ consumer path described here, though that consumer still exists and would still work if the queue were ever fed.
 
 **Input:** { signalId: string }
 **Process:**
@@ -278,6 +284,8 @@ const url = `https://content.guardianapis.com/search?api-key=${GUARDIAN_API_KEY}
 ## 4. ALERT DISPATCH PIPELINE
 
 ### 4.1 alert-dispatcher.ts (BullMQ consumer)
+
+> ⚠️ UPDATED 2026-08-19 — same dormant-queue situation as §3.1: this consumer was never actually fed a job until 2026-08-18, when it was fixed by extracting this same logic into `dispatchAlertsForSignal()` and calling it inline from the collectors right after each insert. The BullMQ consumer described below still exists (kept intentionally, commented as dormant/reserved), it's just not the live trigger path anymore. See `docs/brain/14_CHANGELOG.md` v0.20.0 for the full incident writeup — the alert pipeline had never fired a single real notification before this fix.
 
 **Input:** { signalId: string }
 **Process:**

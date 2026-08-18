@@ -1,5 +1,7 @@
 # 12_DEPLOYMENT.md — Deployment Architecture, Infrastructure & Environment Variables
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document provides a guide to infrastructure hosting, CI/CD deployment pipelines, required secrets, environment variable configurations, and external API service dependencies.
 
 ---
@@ -43,6 +45,8 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
 ### Alert Channels & Geospatial
 - `TELEGRAM_BOT_TOKEN`: Bot token for instant Telegram alert dispatch.
 - `NEXT_PUBLIC_MAPBOX_TOKEN`: Mapbox GL JS map tile access token.
+
+> ⚠️ UPDATED 2026-08-19 — the map actually uses `maplibre-gl` (MapLibre GL JS) + OpenStreetMap tiles, not Mapbox, and does not require this token.
 - `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis HTTP credentials.
 
 ---

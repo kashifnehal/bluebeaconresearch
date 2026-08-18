@@ -1,5 +1,7 @@
 # 00_PROJECT.md — Blue Beacon Research: Project Foundation
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 **Last Updated: August 2026**
 **Document Owner: Founding CTO**
@@ -177,6 +179,8 @@ They give you headlines in seconds. BBR gives you analysis in 2 minutes. We are 
 
 **Domain:** bluebeaconresearch.com ✓ (live)
 **API Domain:** api.bluebeaconresearch.com ✓ (configured, currently offline)
+
+> ⚠️ UPDATED 2026-08-19 — this is stale; the Railway backend API is confirmed operational (`api.bluebeaconresearch.com` healthcheck passing), not offline.
 
 ---
 

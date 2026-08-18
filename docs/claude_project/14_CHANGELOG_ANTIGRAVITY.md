@@ -1,5 +1,7 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
@@ -22,6 +24,8 @@ This document records historic development milestones, schema evolutions, featur
 
 - Implemented Next.js 16 dark glassmorphic terminal interface (`apps/web`).
 - Added Mapbox GL JS interactive conflict heatmap (`/map`).
+
+> ⚠️ UPDATED 2026-08-19 — this map was later migrated to `maplibre-gl` (MapLibre GL JS) + OpenStreetMap tiles (no Mapbox token required); that migration isn't captured as its own entry in this changelog.
 - Configured project readiness feature flag (`isProjectReady`) and gating middleware (`middleware.ts`) with early access waitlist modal (`AccessLimitedModal.tsx`).
 
 ### v0.4.0 — Multi-Channel Alert Router & Institutional Tools
@@ -212,3 +216,7 @@ workers:heartbeat → every 5 min
 - Workers write pipeline status after each ingestion cycle.
 
 **Documentation:** `docs/brain/15_INGESTION_PIPELINE.md` — full source-by-source logic, filters, display rules, and troubleshooting.
+
+---
+
+> ⚠️ UPDATED 2026-08-19 — this changelog stops at v0.14.0 and doesn't cover the 2026-08-18/19 pass, which found and fixed two significant bugs not related to anything above: (1) the `alert-dispatch` BullMQ queue referenced back in v0.2.0 was never actually fed, so alert dispatch (Telegram/Slack/webhook/push) was completely non-functional until collectors were wired to call `dispatchAlertsForSignal()` inline; (2) severity≥7 AI briefings (`ai_analysis`) had the identical dormant-queue problem in a separate queue — 0 of 423 severity≥7 signals ever had it populated before the same inline-wiring fix. That same pass also wired up Sentry, PostHog, and CI, and applied migrations 010–012 (the last, a reliability/RLS/index migration, applied 2026-08-19).

@@ -1,5 +1,7 @@
 # 13_PROMPTS.md — AI Rebuilder Prompt Specifications
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document contains modular system prompts designed to allow an autonomous AI engineer or LLM to independently rebuild or extend any module of Blue Beacon Research from scratch without prior repository context.
 
 ---
@@ -36,6 +38,8 @@ Task: Rebuild the Next.js 16 App Router Web Terminal for tactical market intelli
 
 Specifications:
 1. Setup Next.js 16 with Tailwind CSS v4, Lucide icons, and Mapbox GL JS.
+
+> ⚠️ UPDATED 2026-08-19 — the actual dependency is `maplibre-gl` (MapLibre GL JS) + OpenStreetMap tiles, not Mapbox GL JS; no Mapbox token is required.
 2. Build a dark-mode terminal layout featuring:
    - Fixed TopBar with real-time scrolling commodity price ticker (`PriceTicker.tsx`).
    - Vertical Navigation Sidebar with links to `/dashboard`, `/map`, `/alerts`, `/backtesting`, `/watchlist`, `/settings`.
@@ -54,6 +58,8 @@ Task: Rebuild the sub-second alert dispatch engine for Telegram, Slack, Webhooks
 
 Specifications:
 1. Listen to `alert-dispatch` BullMQ queue triggered whenever a new `signal` record is created.
+
+> ⚠️ UPDATED 2026-08-19 — this describes the originally-intended design, but that queue was never actually fed (a wiring gap, not a credentials problem) so dispatch never fired. As of 2026-08-18, collectors (rss/gnews/gdelt) call `dispatchAlertsForSignal()` inline right after each insert instead; the BullMQ queue/worker was deliberately kept but is now dormant/commented as such rather than deleted.
 2. Fetch active `alert_rules` matching the signal's region, commodity impact, and minimum severity threshold.
 3. Fetch user target channels from `user_channels` table (`telegram_chat_id`, `slack_webhook_url`, `push_tokens`).
 4. Dispatch parallel notifications via Axios HTTP POST:

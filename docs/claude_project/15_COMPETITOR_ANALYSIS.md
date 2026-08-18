@@ -1,5 +1,7 @@
 # 15_COMPETITOR_ANALYSIS.md — Full Competitor Analysis
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 
 ---
@@ -264,3 +266,5 @@ This is exactly the context commodity and FX traders need alongside geopolitical
 | Self-serve < 5 min | ✅ | ⚠ Complex | ❌ Sales | ✅ | ✅ | ✅ |
 | Price | $49-499/mo | Free+Pro | $2K/mo | Free+paid | Free+Pro | Free |
 | Mobile app | ⚠ Partial | ✅ Android | ✅ | ❌ | ❌ | ✅ |
+
+> ⚠️ UPDATED 2026-08-19 — the "✅ Mapbox" cell is stale; BBR's map runs on `maplibre-gl` (MapLibre GL JS) + OpenStreetMap tiles, not Mapbox.

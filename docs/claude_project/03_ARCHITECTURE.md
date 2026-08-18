@@ -1,5 +1,7 @@
 # 03_ARCHITECTURE.md — System Architecture & Data Pipelines
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document details the high-level and low-level software architecture, data flow diagrams, background queue workers, state synchronization, and component dependencies across the Turborepo workspace.
 
 ---
@@ -39,6 +41,8 @@ Blue Beacon Research uses a decoupled, event-driven monorepo architecture manage
 │  - Sub-second Multi-channel Alert Dispatcher Worker                                            │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+> ⚠️ UPDATED 2026-08-19 — the "Sub-second Multi-channel Alert Dispatcher Worker" was actually completely non-functional (dormant/unfed queue) until fixed 2026-08-18; see the detailed note under section 2 below.
 
 ---
 
@@ -86,6 +90,8 @@ Blue Beacon Research uses a decoupled, event-driven monorepo architecture manage
 └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
+> ⚠️ UPDATED 2026-08-19 — the `BullMQ Alert Dispatcher` / `alert-dispatch` queue step shown above was never actually fed (a wiring gap, not a credentials issue), so alert dispatch was completely non-functional until 2026-08-18. It's now fixed by having collectors (rss/gnews/gdelt) call `dispatchAlertsForSignal()` inline right after each insert; the BullMQ queue/worker was deliberately kept but is dormant, not the live trigger path shown in this diagram.
+
 ---
 
 ## 3. Background Workers & Queue Architecture
@@ -98,7 +104,12 @@ The worker processes run independently in `apps/backend/src/workers.ts` managed 
 4. **`ai-classifier.ts`**: Consumes pending events from `ai-classification` queue, sends structured prompts to Claude 3.5, and parses JSON signal outputs.
 5. **`signal-generator.ts`**: Persists enriched AI intelligence signals into `signals` database table.
 6. **`alert-dispatcher.ts`**: Matches newly created signals against user `alert_rules` and dispatches multi-channel payload notifications.
+
+> ⚠️ UPDATED 2026-08-19 — as of 2026-08-18 this worker's queue is dormant; the collectors call `dispatchAlertsForSignal()` inline instead (see the pipeline-diagram note above for the full story).
+
 7. **`price-syncer.ts`**: Syncs real-time physical commodity prices from Alpha Vantage API into `commodity_prices` every hour.
+
+> ⚠️ UPDATED 2026-08-19 — prices are synced from Yahoo Finance (`yahoo-finance2`), not Alpha Vantage; Alpha Vantage was fully replaced (kept only as an unused env var).
 8. **`sanctions-syncer.ts`**: Monitors global sanctions list updates for defense compliance.
 
 ---

@@ -1,5 +1,7 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Framework:** Next.js 16 + React 18 + TypeScript
 **Component library:** Shadcn/ui (Radix UI primitives)
 **Styling:** Tailwind CSS + CSS variables

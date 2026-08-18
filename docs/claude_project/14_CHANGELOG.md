@@ -1,5 +1,7 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 
 ---
@@ -47,6 +49,8 @@ After evaluating the product-market fit more carefully, restricting to India was
 
 **AI cost problem identified early:**
 At 350 raw events per 15-minute GDELT cycle = ~33,600 events/day. Without pre-filtering, every event sent to Claude costs ~$0.40/1000 tokens. Risk: $400/month with zero revenue. Solution identified: keyword pre-filter before AI classification. Implementation: STILL PENDING as of August 2026.
+
+> ⚠️ UPDATED 2026-08-19 — this "still pending" note is stale; the keyword pre-filter (`isRelevantEvent()` with `HIGH_RELEVANCE_KEYWORDS`/`EXCLUDE_KEYWORDS`) has since been implemented and is confirmed operational in `gdelt-collector.ts` and `gnews-collector.ts`.
 
 **Data sources decided:**
 - GDELT: free, updates every 15 minutes, global coverage, machine-readable
@@ -159,6 +163,8 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 
 ## PHASE 6 — CURRENT STATE (August 2026)
 
+> ⚠️ UPDATED 2026-08-19 — this "current state" snapshot is itself an early, now-superseded point in the changelog (predates even the "9 migrations" / Railway-operational state described elsewhere in this doc tree). By the 2026-08-18/19 ground truth, Railway backend+workers are operational, the signal pre-filter and Google OAuth are fixed, Yahoo Finance replaced Alpha Vantage, and the alert-dispatch pipeline (a separate, later-discovered bug) has also been fixed. Treat this section as a historical snapshot, not current status.
+
 **The app is live at bluebeaconresearch.com but:**
 - Backend API has never deployed (Railway misconfiguration)
 - Workers have never run in production
@@ -177,3 +183,18 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 6. Fix Google OAuth
 7. Wire all non-functional UI elements
 8. Open to public users
+
+---
+
+## PHASE 7 — RELIABILITY, VERIFICATION & DOCUMENTATION HARDENING (2026-08-18 to 2026-08-19)
+
+**Everything in "PHASE 6 — CURRENT STATE"'s blocker list above is now resolved.** See `docs/brain/14_CHANGELOG.md` v0.19.0 through v0.23.0 for the full technical record — this entry is a narrative summary for this tree, not a replacement for that log.
+
+- **Alert dispatch found completely non-functional and fixed**: every collector was inserting signals correctly, but nothing had ever triggered dispatch to any channel (Telegram/Slack/webhook/push) — a wiring gap upstream of credentials, not a config problem. Fixed by calling the dispatch logic inline from each collector right after insert, mirroring the pattern already used for inline classification. The dormant BullMQ queue this bypassed was kept in code, not deleted, and clearly commented as reserved/inactive.
+- **Password reset, login-redirect, and Tailwind styling bugs** across the most-rendered dashboard components (SignalCard, SeverityBadge, CommodityChip, PriceTicker, Logo, and the auth pages) fixed. A related, deeper Tailwind token-naming fragmentation was found still open in the shadcn UI primitives and two other pages — flagged, not yet fixed.
+- **Observability wired for the first time**: Sentry (web app had zero wiring despite the dependency being installed), PostHog (signup → first-signal-view → first-alert-rule funnel), a CI gate (`type-check` on every push/PR, previously nothing ran automatically).
+- **Database cleanup**: a stale, actively-misleading `production_schema.sql` (described 4 of 17 real tables) deleted; RLS policy consolidation, six missing indexes, and a duplicate-signal guard shipped in a new migration, applied to the live database and verified via Supabase's own Security/Performance Advisors — not just assumed from a clean `git commit`.
+- **Auth & UX items re-verified live**, not just re-read from code: Watchlist's "Select All," the price-history sparkline, dropdown styling consistency across three pages, and the onboarding walkthrough were all driven through a real browser session with a throwaway test account to confirm they actually work, after a prior report on these had gone unconfirmed for several days.
+- **The `signal-generation` dormant-queue bug** (severity ≥7 briefings never actually generating — confirmed 0 of 423 qualifying signals had one, ever) found and fixed the same way alert-dispatch was.
+- **Geocoding investigated and explicitly deferred past launch by founder decision** — confirmed still using region-centroid-plus-jitter, not real per-article coordinates; not fixed, not forgotten, a deliberate scoping call pending either a geocoding API integration or a much larger gazetteer.
+- **This documentation pass itself**: both `docs/brain/` and `docs/claude_project/` annotated in place — additive only, nothing deleted or reworded — to close the gap between what these planning docs said and what's actually true as of 2026-08-19. Also surfaced, as a decision point for the founder rather than something resolved here: several filenames exist in both doc trees as either true forks (same origin, diverged) or entirely different documents that happen to share a name — and separately, `docs/claude_project/22_IMPLEMENTATION_LOG.md` was found to be a content-identical copy of `docs/brain/CLAUDE_CONTEXT.md` under a different filename, missed by the filename-based duplicate check until read directly.

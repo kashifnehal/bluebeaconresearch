@@ -1,5 +1,7 @@
 # CLAUDE_CONTEXT.md — Project Synchronization & Change Log for Claude
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 > **Purpose**: This file acts as the primary contextual changelog and implementation record for uploading directly into the Claude Project context. Every task execution, code change, architectural refinement, and bugfix is documented here with precise timestamps, modified files, diff summaries, and verification results.
 
 ---
@@ -162,12 +164,16 @@ REDIS_URL=rediss://default:<upstash_token>@cute-javelin-200660.upstash.io:6379  
 NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
 ```
 
+> ⚠️ UPDATED 2026-08-19 — `PORT=8888` here is wrong; the actual backend port default (per `apps/backend/src/env.ts` and `docs/brain/10_DECISIONS.md`) is 3001. This session log's instruction to set `PORT=8888` was itself a mistake, not just a later-superseded value.
+
 ---
 
 #### 3. Key Findings & Configuration Rules
 1. **`SUPABASE_URL`**: Required by Fastify backend (`env.ts`). Added fallback logic `if (!process.env.SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL) process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL`.
 2. **`REDIS_URL` vs REST URL**: `ioredis` requires the TCP `rediss://...` socket string from Upstash Console (Details tab -> Node.js / ioredis connection string). REST `https://` URLs are for `@upstash/redis` HTTP calls only.
 3. **Port Matching**: Set `PORT=8888` on Railway variables tab to align Fastify's listener with Railway's exposed domain port.
+
+> ⚠️ UPDATED 2026-08-19 — this port guidance is wrong; the actual backend port default is 3001, not 8888 (see note above).
 
 ---
 
@@ -208,6 +214,8 @@ Configured Railway production microservice separation (`backend` API service vs 
   - **Start Command**: `pnpm run start:server`
   - **Config File**: [`apps/backend/railway.json`](file:///Users/kashif/Documents/ProjectSprints/blueBeaconResearch/apps/backend/railway.json)
   - **Domain**: `api.bluebeaconresearch.com` (Port 8080/8888)
+
+> ⚠️ UPDATED 2026-08-19 — actual backend port default is 3001, not 8080/8888.
   - **Purpose**: Serves low-latency REST API requests (`/v1/signals`, `/v1/alerts`).
 
 - **Service 2 — `workers` (Background Jobs)**:
@@ -278,3 +286,5 @@ NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
 API_URL=https://bluebeaconresearch.com
 TELEGRAM_BOT_TOKEN=            # required when bot is active
 ```
+
+> ⚠️ UPDATED 2026-08-19 — the project ref above (`jzomoxsbnssnibshecui`) is an old/wrong project; the real `.env.local` and current status docs agree on `evavcgfmemwryggdkjmx.supabase.co` (same correction already made in `21_PROJECT_BRIEFING.md`). Note this same file's earlier session-log block above (Aug-05) actually had the correct ref — this later "cumulative" listing regressed to the wrong one.

@@ -1,5 +1,7 @@
 # 07_DESIGN_SYSTEM.md — Visual Design System
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 **Theme: Dark-first terminal aesthetic. Bloomberg meets modern SaaS.**
 
@@ -102,6 +104,8 @@ All colors defined in `apps/web/app/globals.css` as CSS variables. Never use hex
 ---
 
 ## 3. TAILWIND CSS MAPPING
+
+> ⚠️ UPDATED 2026-08-19 — the actual current `apps/web/tailwind.config.ts` does NOT use this `surface`/`border`/`content` naming scheme as the working convention. The live config carries two token systems: this doc's naming survives only as a `_legacy`-suffixed (e.g. `surface_legacy`, `border_legacy`) set that most components don't actually reference, alongside a separate "STITCH"-generated flat token set (`surface-container-*`, `on-surface`, `on-surface-variant`, `outline`, `outline-variant`, plus flat `accent`/`danger`/`warning`/`success`/`price-up`/`price-down`) that's what's actually rendering across the app. This exact fragmentation caused a real bug — 7 of the most-rendered dashboard components (SignalCard, SeverityBadge, CommodityChip, PriceTicker, Logo, forgot-password/verify auth pages) were using class names (matching more or less this doc's scheme) that compiled to nothing, silently breaking default/low-severity styling — fixed 2026-08-18 (see `docs/brain/14_CHANGELOG.md` v0.20.0). The same broken-token pattern is confirmed still present, not yet fixed, in the shadcn `ui/*` primitives (button.tsx, badge.tsx, card.tsx, dropdown-menu.tsx, select.tsx, separator.tsx) and in `events/[id]/page.tsx`/`privacy/page.tsx`.
 
 In `tailwind.config.ts`, all CSS variables mapped to Tailwind classes:
 

@@ -1,5 +1,7 @@
 # 01_PRODUCT.md — Complete Product Definition
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 
 ---
@@ -343,6 +345,7 @@ Restore when first paying customer asks to subscribe.
 
 **Layout:**
 - Full-screen Mapbox GL JS dark map (style: dark-v11)
+> ⚠️ UPDATED 2026-08-19 — the actual implementation uses `maplibre-gl` (MapLibre GL JS) with OpenStreetMap raster tiles, not Mapbox, and requires no Mapbox token (see `14_CHANGELOG.md` v0.13.0/v0.16.1 in `docs/brain/`).
 - Left panel (floating): Global Tension Index + breakdown
 - Right panel: "LIVE INTELLIGENCE" stream
 - Bottom bar: GLOBAL TICKER + SYNCING PRICE FEED + LIVE indicator

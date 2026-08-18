@@ -1,7 +1,11 @@
 # 09_BACKLOG.md — Complete Product Backlog
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 **Priority method: MoSCoW (Must / Should / Could / Won't)**
+
+> ⚠️ UPDATED 2026-08-19 — this backlog reflects a much earlier project phase (basic Railway deployment setup, Google OAuth setup, FIFA-appearing-as-a-signal quality bugs). Most items here (M1–M24, and most S-items) are long since resolved; it's kept as a historical record, not a current punch list. Note also that M23 ("Add PORT=8888 env var") was itself based on a since-corrected mistaken belief — the actual backend port default is 3001, not 8888.
 
 ---
 

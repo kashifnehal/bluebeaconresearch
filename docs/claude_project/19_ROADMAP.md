@@ -1,10 +1,14 @@
 # 19_ROADMAP.md — Product & Company Roadmap
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 
 ---
 
 ## MONTH 1 — GET IT WORKING
+
+> ⚠️ UPDATED 2026-08-19 — this Month 1 checklist reflects a much earlier project phase; most items below (signal pre-filter, country extraction, Yahoo Finance migration, Google OAuth, search bar, notification bell, footer links, empty states, error boundaries) are long since shipped. The exception: Telegram delivery is still blocked (`TELEGRAM_BOT_TOKEN` still not configured), and note that alert dispatch overall (not just Telegram) also had a separate, more severe wiring bug — a dormant/unfed BullMQ queue meant nothing ever triggered dispatch to any channel — that was only fixed 2026-08-18.
 
 **Goal: First 10 real users receiving working alerts**
 
@@ -69,6 +73,8 @@ Product:
 - [ ] Email alerts via Resend
 - [ ] PostHog analytics (understand where users drop off)
 - [ ] Sentry error monitoring
+
+> ⚠️ UPDATED 2026-08-19 — both of these are now done: Sentry is wired on the web app, and PostHog is wired for a signup→first-signal-view→first-alert-rule funnel (landed in the 2026-08-18/19 reliability/observability pass).
 - [ ] Severity 9+ audio alert in browser
 - [ ] Real backtesting (Alpha Vantage paid, GDELT historical)
 - [ ] Watchlist alert toggle → auto-creates alert rule
@@ -106,6 +112,9 @@ Marketing:
 
 Infrastructure:
 - [ ] CI/CD pipeline (GitHub Actions)
+
+> ⚠️ UPDATED 2026-08-19 — a CI workflow now exists (`.github/workflows/ci.yml`, runs type-check on push/PR); it was empty before the 2026-08-18/19 pass.
+
 - [ ] Read replica for Supabase signal queries
 - [ ] Redis pub/sub SSE (if > 2K concurrent users)
 

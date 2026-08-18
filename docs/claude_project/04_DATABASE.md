@@ -1,5 +1,7 @@
 # 04_DATABASE.md — PostgreSQL Database Schema & Migration Architecture
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document provides a comprehensive specification of the Supabase PostgreSQL database schema, table structures, Row Level Security (RLS) policies, foreign key relationships, performance indexes, constraint enums, and sequential migrations.
 
 ---
@@ -67,6 +69,8 @@ Stores LLM-synthesized military/geopolitical intelligence and asset impact data.
 Ingested news articles and military incident logs before AI processing.
 - `id` (`uuid`, PK)
 - `source` (`text`, NOT NULL, check: `gdelt`, `acled`, `newsapi`)
+
+> ⚠️ UPDATED 2026-08-19 — this check constraint is stale; migration `008_fix_source_constraint.sql` added `gnews` and `manual` to the allowed list (the original constraint was silently rejecting all GNews collector inserts).
 - `external_id` (`text`, nullable)
 - `title` / `summary` / `country` (`text`)
 - `lat` / `lng` (`double precision`)
@@ -129,3 +133,5 @@ CREATE INDEX idx_raw_events_dedup ON public.raw_events (external_id, source);
 6. **`005_fix_profiles_rls.sql`**: RLS update allowing profile creation during auth flow.
 7. **`006_onboarding_schema_fix.sql`**: Onboarding wizard state column updates.
 8. **`007_waitlist.sql`**: Gated waitlist submission schema.
+
+> ⚠️ UPDATED 2026-08-19 — this migration list is stale; `supabase/migrations/` now goes through 012: `008_fix_source_constraint.sql`, `009_signals_event_date.sql`, `010_add_product_tour_flag.sql`, `011_rls_remediation.sql`, and `012_reliability_indexes_and_cleanup.sql` (applied to the live DB 2026-08-19, verified via Supabase Advisors) have since landed. Also, `production_schema.sql` (a separate, inaccurate schema doc that only described 4 of 17 real tables) was deleted 2026-08-19 — `supabase/migrations/*.sql` is now the only accurate schema source.

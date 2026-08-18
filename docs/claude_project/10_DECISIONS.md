@@ -1,5 +1,7 @@
 # 10_DECISIONS.md — Architectural & Product Decision Log
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 **Classification: Internal — CTO Level**
 **Format: Decision → Context → Options considered → Choice → Rationale → Trade-offs**
 
@@ -183,6 +185,7 @@
 - Target: $0 AI cost using Gemini + Groq
 
 **Current production:** Uses Claude 3.5 Haiku (classification) + Claude 3.5 Sonnet (briefings). Cost not monitored. Estimated $15-30/month at current low volume, but risks $400/month without pre-filter at scale.
+> ⚠️ UPDATED 2026-08-19 — this decision (Claude as the model choice) still stands, but "current production" is no longer accurate as written: Anthropic API credit has been exhausted for some time, so a heuristic keyword-based fallback classifier is what's actually running in production today, not live Claude calls. Signals still generate; they lack Claude's classification/briefing quality until credit is restored.
 
 **Rationale for Claude:**
 - Best-in-class instruction following for structured JSON output
