@@ -24,9 +24,9 @@ export function PriceTicker() {
 
   if (isLoading) {
     return (
-      <div className="h-10 bg-surface-secondary border-b border-border flex items-center px-4 gap-4 overflow-hidden">
+      <div className="h-10 bg-surface-container-low border-b border-outline-variant flex items-center px-4 gap-4 overflow-hidden">
         {[...Array(8)].map((_, i) => (
-          <Skeleton key={i} className="h-5 w-24 bg-surface-elevated" />
+          <Skeleton key={i} className="h-5 w-24 bg-surface-container-high" />
         ))}
       </div>
     );
@@ -35,7 +35,7 @@ export function PriceTicker() {
   const prices = data?.prices ?? [];
 
   return (
-    <div className="h-10 bg-surface-secondary border-b border-border overflow-hidden">
+    <div className="h-10 bg-surface-container-low border-b border-outline-variant overflow-hidden">
       <div
         className="flex items-center gap-6 px-4 h-full whitespace-nowrap"
         style={{
@@ -51,15 +51,15 @@ export function PriceTicker() {
               onClick={() => router.push(`/watchlist?symbol=${encodeURIComponent(p.symbol)}`)}
               className="flex items-center gap-2"
             >
-              <span className="font-mono text-xs text-text-muted">{p.symbol}</span>
-              <span className="font-mono text-sm text-text-primary font-medium">
+              <span className="font-mono text-xs text-outline">{p.symbol}</span>
+              <span className="font-mono text-sm text-on-surface font-medium">
                 {Number(p.price).toFixed(2)}
               </span>
               <span className={`text-xs ${isUp ? "text-price-up" : "text-price-down"}`}>
                 {pct >= 0 ? "+" : ""}
                 {pct.toFixed(2)}%
               </span>
-              <span className="mx-2 inline-block h-4 w-px bg-border" />
+              <span className="mx-2 inline-block h-4 w-px bg-outline-variant" />
             </button>
           );
         })}

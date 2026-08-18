@@ -64,20 +64,20 @@ export function VerifyClient() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-app px-4">
-      <Card className="w-full max-w-[440px] bg-surface border border-border rounded-xl p-8 shadow-none text-center">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest px-4">
+      <Card className="w-full max-w-[440px] bg-surface border border-outline-variant rounded-xl p-8 shadow-none text-center">
         <div className="mb-2">
           <Logo />
         </div>
         <div className="mx-auto mt-4 mb-4 flex items-center justify-center">
           <Mail className="text-accent" size={48} />
         </div>
-        <h1 className="text-[24px] font-semibold text-text-primary">
+        <h1 className="text-[24px] font-semibold text-on-surface">
           Check your email
         </h1>
-        <p className="text-text-secondary text-sm mt-2">
+        <p className="text-on-surface-variant text-sm mt-2">
           We sent a verification link to{" "}
-          <span className="text-text-primary font-medium">
+          <span className="text-on-surface font-medium">
             {email || "your email"}
           </span>
           . Click it to activate your account.
@@ -89,7 +89,7 @@ export function VerifyClient() {
             variant="outline"
             onClick={resend}
             disabled={!email || isLoading || cooldown > 0}
-            className="w-full h-10 bg-transparent border-border text-text-primary hover:bg-surface-elevated"
+            className="w-full h-10 bg-transparent border-outline-variant text-on-surface hover:bg-surface-container-high"
           >
             {isLoading
               ? "Sending..."
@@ -101,7 +101,7 @@ export function VerifyClient() {
           {error ? <p className="text-danger text-sm mt-3">{error}</p> : null}
         </div>
 
-        <p className="mt-6 text-text-muted text-sm">
+        <p className="mt-6 text-outline text-sm">
           Wrong email?{" "}
           <Link className="text-accent hover:underline" href="/signup">
             Sign up again

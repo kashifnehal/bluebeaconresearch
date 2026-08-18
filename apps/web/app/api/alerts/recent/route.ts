@@ -17,38 +17,23 @@ export async function GET(req: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Query recent alerts_sent joined with signals if user is authenticated
-  if (user) {
-    const { data, error } = await supabase
-      .from("alerts_sent")
-      .select("*, signals(id, title, severity)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    if (!error && data) {
-      return NextResponse.json({ alerts: data });
-    }
+  if (!user) {
+    return NextResponse.json({ alerts: [] });
   }
 
-  // Fallback: Query latest high-severity signals as recent alerts
-  const { data: signals } = await supabase
-    .from("signals")
-    .select("id, title, severity, created_at")
+  // Real alerts_sent rows only — no fallback to raw signals relabeled as delivered
+  // alerts. An empty result here means no alert_rules have matched anything yet, which
+  // is a genuine "no alerts" state, not a gap to paper over.
+  const { data, error } = await supabase
+    .from("alerts_sent")
+    .select("*, signals(id, title, severity)")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const alerts = (signals ?? []).map((s) => ({
-    id: s.id,
-    signal_id: s.id,
-    created_at: s.created_at,
-    is_read: false,
-    signals: {
-      id: s.id,
-      title: s.title,
-      severity: s.severity,
-    },
-  }));
+  if (error) {
+    return NextResponse.json({ alerts: [], error: error.message }, { status: 500 });
+  }
 
-  return NextResponse.json({ alerts });
+  return NextResponse.json({ alerts: data ?? [] });
 }

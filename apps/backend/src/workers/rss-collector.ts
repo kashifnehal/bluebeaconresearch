@@ -4,6 +4,7 @@ import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent, type FeedTier } from "../lib/relevance-filter.js";
+import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 
 const claude = new ClaudeService();
 const parser = new Parser({ timeout: 20_000 });
@@ -138,7 +139,7 @@ export async function runRssCollectorOnce() {
         classification.region
       );
 
-      const { error: sigErr } = await supabase.from("signals").insert({
+      const { data: sigInsert, error: sigErr } = await supabase.from("signals").insert({
         raw_event_ids: [rawEventId],
         title: rawEventPayload.title,
         summary: classification.summary,
@@ -154,10 +155,21 @@ export async function runRssCollectorOnce() {
         is_breaking: classification.isBreaking,
         is_active: true,
         event_date: rawEventPayload.event_date,
-      });
+      }).select("id").maybeSingle();
 
-      if (!sigErr) signals++;
-      else console.error("[RSS] Signal insert error:", sigErr.message);
+      if (!sigErr) {
+        signals++;
+        // Dispatch inline — bypass the queue, same as classification above, since
+        // nothing feeds the dormant `alertDispatcher` BullMQ queue.
+        if (sigInsert?.id) {
+          try {
+            const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
+            console.log(`[RSS] alert-dispatch for signal ${sigInsert.id}:`, dispatchResult);
+          } catch (e) {
+            console.error(`[RSS] alert-dispatch failed for signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
+          }
+        }
+      } else console.error("[RSS] Signal insert error:", sigErr.message);
     } catch (e: any) {
       console.error("[RSS] Classification/signal insert failed:", e.message);
     }

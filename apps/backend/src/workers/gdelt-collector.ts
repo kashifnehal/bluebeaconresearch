@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent } from "../lib/relevance-filter.js";
+import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -121,7 +122,7 @@ export async function runGdeltCollectorOnce() {
         event_date: eventDate,
       });
 
-      const { error: sigErr } = await supabase.from("signals").insert({
+      const { data: sigInsert, error: sigErr } = await supabase.from("signals").insert({
         raw_event_ids: [rawEventId],
         title,
         summary: classification.summary,
@@ -137,10 +138,21 @@ export async function runGdeltCollectorOnce() {
         is_breaking: classification.isBreaking,
         is_active: true,
         event_date: eventDate,
-      });
+      }).select("id").maybeSingle();
 
-      if (!sigErr) signals += 1;
-      else console.error("[GDELT] Signal insert error:", sigErr.message);
+      if (!sigErr) {
+        signals += 1;
+        // Dispatch inline — bypass the queue, same as classification above, since
+        // nothing feeds the dormant `alertDispatcher` BullMQ queue.
+        if (sigInsert?.id) {
+          try {
+            const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
+            console.log(`[GDELT] alert-dispatch for signal ${sigInsert.id}:`, dispatchResult);
+          } catch (e) {
+            console.error(`[GDELT] alert-dispatch failed for signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
+          }
+        }
+      } else console.error("[GDELT] Signal insert error:", sigErr.message);
     } catch (e: any) {
       console.error("[GDELT] Classification/signal insert failed:", e.message);
     }

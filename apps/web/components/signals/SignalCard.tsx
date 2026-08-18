@@ -28,34 +28,34 @@ export function SignalCard({
       role="button"
       tabIndex={0}
       className={[
-        "bg-surface-elevated/60 backdrop-blur-2xl border border-border-subtle/20 rounded-xl p-4 cursor-pointer transition-colors duration-150",
-        "hover:border-accent/40 hover:bg-surface-secondary",
+        "bg-surface-container-high/60 backdrop-blur-2xl border border-outline-variant/20 rounded-xl p-4 cursor-pointer transition-colors duration-150",
+        "hover:border-accent/40 hover:bg-surface-container-low",
         isBreaking ? "border-l-4 border-danger bg-danger-subtle/50" : "",
       ].join(" ")}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <SeverityBadge score={signal.severity} />
-          <span className="text-text-muted text-xs uppercase tracking-wide">
+          <span className="text-outline text-xs uppercase tracking-wide">
             {signal.eventType}
           </span>
         </div>
-        <div className="flex items-center gap-2 text-text-muted text-xs">
+        <div className="flex items-center gap-2 text-outline text-xs">
           <span>{timeAgo}</span>
           <span>{signal.sourcesCount} sources</span>
           {variant === "feed" ? (
             <Bookmark
-              className="text-text-muted hover:text-text-primary"
+              className="text-outline hover:text-on-surface"
               size={14}
             />
           ) : null}
         </div>
       </div>
 
-      <div className="mt-2 mb-1 text-text-primary text-base font-medium leading-snug line-clamp-2">
+      <div className="mt-2 mb-1 text-on-surface text-base font-medium leading-snug line-clamp-2">
         {signal.title}
       </div>
-      <div className="text-text-secondary text-sm line-clamp-2 mb-3">
+      <div className="text-on-surface-variant text-sm line-clamp-2 mb-3">
         {signal.summary}
       </div>
 
@@ -72,7 +72,7 @@ export function SignalCard({
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1 text-text-muted text-xs">
+        <div className="flex items-center gap-1 text-outline text-xs">
           <MapPin size={12} />
           <span>{signal.country}</span>
         </div>

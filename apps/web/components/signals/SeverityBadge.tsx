@@ -16,7 +16,7 @@ export function SeverityBadge({ score }: { score: number }) {
         ? "bg-warning text-black"
         : score >= 7
           ? "bg-warning/30 text-warning"
-          : "bg-surface-secondary text-text-muted";
+          : "bg-surface-container-low text-outline";
 
   return (
     <span className={`inline-flex items-center gap-1 rounded-md text-xs font-semibold px-2 py-0.5 ${cls}`}>

@@ -4,6 +4,7 @@ import { getEnv } from "../env.js";
 import { isRelevantEvent } from "./gdelt-collector.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
+import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 
 const claude = new ClaudeService();
 
@@ -107,7 +108,7 @@ export async function runGnewsCollectorOnce() {
         event_date: rawEventPayload.event_date,
       });
 
-      const { error: sigErr } = await supabase.from("signals").insert({
+      const { data: sigInsert, error: sigErr } = await supabase.from("signals").insert({
         raw_event_ids: [rawEventId],
         title: rawEventPayload.title,
         summary: classification.summary,
@@ -123,10 +124,21 @@ export async function runGnewsCollectorOnce() {
         is_breaking: classification.isBreaking,
         is_active: true,
         event_date: rawEventPayload.event_date,  // article publish time shown in UI
-      });
+      }).select("id").maybeSingle();
 
-      if (!sigErr) signals += 1;
-      else console.error("[GNews] Signal insert error:", sigErr.message);
+      if (!sigErr) {
+        signals += 1;
+        // Dispatch inline — bypass the queue, same as classification above, since
+        // nothing feeds the dormant `alertDispatcher` BullMQ queue.
+        if (sigInsert?.id) {
+          try {
+            const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
+            console.log(`[GNews] alert-dispatch for signal ${sigInsert.id}:`, dispatchResult);
+          } catch (e) {
+            console.error(`[GNews] alert-dispatch failed for signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
+          }
+        }
+      } else console.error("[GNews] Signal insert error:", sigErr.message);
     } catch (e: any) {
       console.error("[GNews] Classification/signal insert failed:", e.message);
     }

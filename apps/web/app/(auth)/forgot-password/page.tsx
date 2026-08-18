@@ -37,25 +37,25 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface-app px-4">
-      <Card className="w-full max-w-[440px] bg-surface border border-border rounded-xl p-8 shadow-none">
+    <div className="min-h-screen flex items-center justify-center bg-surface-container-lowest px-4">
+      <Card className="w-full max-w-[440px] bg-surface border border-outline-variant rounded-xl p-8 shadow-none">
         <div className="mb-2">
           <Logo />
         </div>
-        <h1 className="text-[24px] font-semibold text-text-primary text-center">
+        <h1 className="text-[24px] font-semibold text-on-surface text-center">
           Reset your password
         </h1>
-        <p className="text-[14px] text-text-secondary text-center mb-8">
+        <p className="text-[14px] text-on-surface-variant text-center mb-8">
           We&apos;ll email you a secure reset link.
         </p>
 
         <div className="space-y-2">
-          <Label className="text-text-secondary">Email</Label>
+          <Label className="text-on-surface-variant">Email</Label>
           <Input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="h-10 bg-surface-secondary border-border text-text-primary placeholder:text-text-muted focus-visible:ring-0 focus-visible:border-accent"
+            className="h-10 bg-surface-container-low border-outline-variant text-on-surface placeholder:text-outline focus-visible:ring-0 focus-visible:border-accent"
           />
         </div>
 
@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
           {isLoading ? "Sending..." : "Send reset link"}
         </Button>
 
-        <div className="mt-6 text-center text-sm text-text-secondary">
+        <div className="mt-6 text-center text-sm text-on-surface-variant">
           Back to{" "}
           <Link className="text-accent hover:underline" href="/login">
             sign in

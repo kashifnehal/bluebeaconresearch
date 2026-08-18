@@ -20,7 +20,7 @@ export function CommodityChip({
         ? "bg-danger-subtle text-price-down"
         : direction === "volatile"
           ? "bg-warning-subtle text-warning"
-          : "bg-surface-secondary text-text-muted";
+          : "bg-surface-container-low text-outline";
 
   const arrow =
     direction === "up" ? "↑" : direction === "down" ? "↓" : direction === "volatile" ? "↕" : "→";
@@ -29,7 +29,7 @@ export function CommodityChip({
     <span className={`inline-flex items-center gap-1 rounded-full text-xs font-medium px-2.5 py-1 ${cls}`}>
       <span className="font-mono">{asset}</span>
       <span>{arrow}</span>
-      {size === "md" ? <span className="text-text-muted">{Math.round(confidence * 100)}%</span> : null}
+      {size === "md" ? <span className="text-outline">{Math.round(confidence * 100)}%</span> : null}
     </span>
   );
 }

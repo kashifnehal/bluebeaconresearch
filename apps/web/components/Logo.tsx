@@ -10,7 +10,7 @@ export function Logo({ className, size = "md" }: { className?: string; size?: "s
   };
 
   return (
-    <div className={cn("flex items-center font-black tracking-tighter text-text-primary", sizeClasses[size], className)} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className={cn("flex items-center font-black tracking-tighter text-on-surface", sizeClasses[size], className)} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
       <div className="flex items-center gap-0.5 select-none scale-90 origin-left">
         <span className="text-primary font-black tracking-[-0.05em] text-xl">BLUE</span>
         <span className="text-on-surface font-black tracking-[-0.05em] text-xl">BEACON</span>

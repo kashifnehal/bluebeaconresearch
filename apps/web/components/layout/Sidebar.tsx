@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { usePathname } from "next/navigation";
+import { signOutAndRedirect } from "@/lib/supabase";
 import { useUIStore } from "@/store/useUIStore";
 
 type NavItem = { href: string; label: string; icon: string; showBadge?: boolean };
@@ -18,13 +18,10 @@ const NAV: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { unreadCount, setHelpOpen } = useUIStore();
 
   async function handleLogout() {
-    const supabase = getSupabaseBrowserClient();
-    if (supabase) await supabase.auth.signOut();
-    router.push("/login");
+    await signOutAndRedirect();
   }
 
   return (

@@ -93,15 +93,17 @@ function LoginForm() {
       });
       if (signInError) throw signInError;
 
-      // If project is not ready, redirect to root modal
+      // Full navigation (window.location.href, not router.push/replace) — required so
+      // middleware sees the auth cookie on the very next request, same SSR-cookie rule
+      // already applied to the post-signup redirect.
       if (!isProjectReady) {
-        router.replace("/");
+        window.location.href = "/";
         return;
       }
 
       const profile = await fetchMyProfile();
       const targetUrl = profile?.onboardingCompleted ? "/dashboard" : "/onboarding";
-      router.replace(targetUrl);
+      window.location.href = targetUrl;
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign in.");
     } finally {

@@ -16,3 +16,12 @@ export function getSupabaseBrowserClient(): SupabaseClient | null {
   return cached;
 }
 
+// Full navigation (window.location.href, not router.push) — required so middleware
+// sees the cleared session cookie on the very next request, same SSR-cookie rule as
+// the post-signup/post-login redirects.
+export async function signOutAndRedirect(target: string = "/login") {
+  const supabase = getSupabaseBrowserClient();
+  if (supabase) await supabase.auth.signOut();
+  window.location.href = target;
+}
+
