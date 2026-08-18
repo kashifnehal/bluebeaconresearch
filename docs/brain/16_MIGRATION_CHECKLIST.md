@@ -8,15 +8,15 @@ Every schema change in this project has, until now, been hand-applied via the Su
 
 This is exactly the same failure shape as the alert-pipeline bug fixed 2026-08-18 (v0.20.0): a thing that *looked* done because the code/docs said so, but was never actually verified against reality.
 
-## The real fix: CLI-linked migrations (scaffolded, not yet linked)
+## The real fix: CLI-linked migrations (linked 2026-08-19)
 
-`supabase/config.toml` now exists (`supabase init` was run 2026-08-18) — the project is CLI-ready. **It is not yet linked to the live project**, because linking requires an interactive `supabase login` or a `SUPABASE_ACCESS_TOKEN`, neither of which is available in an unattended agent environment. This is a decision point for whoever has interactive access (founder), not something that could be resolved unilaterally.
+`supabase/config.toml` exists (`supabase init`, 2026-08-18). **Linked to the live project 2026-08-19** — the founder generated a Supabase Personal Access Token (Dashboard → Account → Access Tokens) and added it as `SUPABASE_ACCESS_TOKEN` in `apps/web/.env.local`; `npx supabase link --project-ref evavcgfmemwryggdkjmx` (run with that token exported into the shell) succeeded.
 
-**One-time setup (founder, interactive):**
-```bash
-npx supabase login                                    # opens a browser, generates an access token
-npx supabase link --project-ref evavcgfmemwryggdkjmx   # links this repo to the live project
-```
+**What this token actually unlocks, confirmed empirically**:
+- ✅ **Management API** (`https://api.supabase.com/v1/projects/{ref}/...`) — works. This includes `/advisors/security` and `/advisors/performance`, which is how migration `012`'s effects were verified live (see `04_DATABASE.md` §4 item 13) without needing Dashboard access.
+- ❌ **Direct Postgres access via the CLI** (`supabase migration list`, `supabase db push`, `supabase db diff`) — does **not** work on this project. It fails with `permission denied to alter role` — the CLI tries to create/alter a temporary login role for the direct DB connection, and this project's Postgres role permissions reject that. Cause not yet diagnosed (could be a plan-tier restriction, an org policy, or something specific to this project's role setup) — a decision point if automated `db push` is wanted later; for now, schema changes still go through the SQL editor manually, same as before.
+
+**Note on token scope**: this PAT is account-wide (not scoped to just this project) per Supabase's current PAT design — worth knowing if the account has other projects.
 
 **Going forward, every schema change should be:**
 ```bash
