@@ -1,5 +1,7 @@
 # 03_ARCHITECTURE.md — System Architecture & Data Pipelines
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document details the high-level and low-level software architecture, data flow diagrams, background queue workers, state synchronization, and component dependencies across the Turborepo workspace.
 
 ---
@@ -92,6 +94,8 @@ _Implementation note_: the web client map engine uses **MapLibre GL** with OpenS
 └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
+> ⚠️ UPDATED 2026-08-19 — This diagram describes the originally-designed queue-triggered flow, not what actually ran until 2026-08-18. The `alert-dispatch` BullMQ queue shown above was never fed by any collector — a wiring gap, not a credentials problem — so alert dispatch was completely non-functional. Fixed 2026-08-18: collectors (rss/gnews/gdelt) now call `dispatchAlertsForSignal()` inline right after each signal insert, bypassing this queue entirely; the dormant queue/worker was kept in code but is unused. Separately, the "Anthropic Claude 3.5 AI Synthesis Service" step is currently running as a heuristic fallback classifier — Anthropic API credit is exhausted. And the `ai_analysis` field this pipeline is meant to populate for severity ≥7 signals had the identical dormant-queue bug (0 of 423 such signals ever had it populated) — fixed the same way (inline `generateSignalAnalysis()` call) on 2026-08-19.
+
 ---
 
 ## 3. Background Workers & Queue Architecture
@@ -104,6 +108,7 @@ The worker processes run independently in `apps/backend/src/workers.ts` managed 
 4. **`ai-classifier.ts`**: Consumes pending events from `ai-classification` queue, sends structured prompts to Claude 3.5, and parses JSON signal outputs.
 5. **`signal-generator.ts`**: Persists enriched AI intelligence signals into `signals` database table.
 6. **`alert-dispatcher.ts`**: Matches newly created signals against user `alert_rules` and dispatches multi-channel payload notifications.
+> ⚠️ UPDATED 2026-08-19 — This queue-based worker was never actually triggered (the queue was never fed). As of 2026-08-18, dispatch instead happens via `dispatchAlertsForSignal()` called inline from the rss/gnews/gdelt collectors right after insert; the queue-based worker file is kept but dormant. Telegram as a channel remains non-functional regardless (`TELEGRAM_BOT_TOKEN` not configured).
 7. **`price-syncer.ts`**: Syncs real-time physical commodity prices from Alpha Vantage API into `commodity_prices` every hour.
 8. **`sanctions-syncer.ts`**: Monitors global sanctions list updates for defense compliance.
 

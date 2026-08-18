@@ -1,5 +1,7 @@
 # 10_DECISIONS.md — Architectural Decision Records (ADRs) & Trade-offs
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document records the foundational architectural decisions, framework selections, infrastructure trade-offs, underlying assumptions, and system risks for Blue Beacon Research.
 
 ---

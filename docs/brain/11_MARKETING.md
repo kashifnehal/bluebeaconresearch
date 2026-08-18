@@ -1,5 +1,7 @@
 # 11_MARKETING.md — Product Positioning & Marketing Strategy
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document specifies the marketing strategy, value proposition, landing page copy audit, CTA conversion funnels, positioning, and SEO architecture for Blue Beacon Research.
 
 ---
@@ -28,7 +30,9 @@ This document specifies the marketing strategy, value proposition, landing page 
 
 1. **Autonomous 15-Minute Ingestion**: 350+ global conflict events collected from GDELT, ACLED, and GNews.
 2. **AI Military Rationale**: Claude 3.5 Sonnet severity scoring (1–10) and asset confidence ratings (0–100%).
+> ⚠️ UPDATED 2026-08-19 — Anthropic API credit is currently exhausted; the heuristic classifier fallback is what's actually scoring signals right now, not live Claude classification.
 3. **Sub-second Alerting**: Instant dispatch via Telegram Bots, Slack Webhooks, custom HTTP webhooks, and Expo Mobile Push.
+> ⚠️ UPDATED 2026-08-19 — Alert dispatch itself was fixed 2026-08-18 (collectors now call `dispatchAlertsForSignal()` inline), but Telegram specifically is still not functional — `TELEGRAM_BOT_TOKEN` is not configured anywhere, deferred by founder decision.
 4. **Interactive GIS Heatmap**: MapLibre GL spatial conflict density mapping using OpenStreetMap tiles.
 
 ---

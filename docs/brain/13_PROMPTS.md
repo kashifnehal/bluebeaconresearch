@@ -1,5 +1,7 @@
 # 13_PROMPTS.md — AI Rebuilder Prompt Specifications
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document contains modular system prompts designed to allow an autonomous AI engineer or LLM to independently rebuild or extend any module of Blue Beacon Research from scratch without prior repository context.
 
 ---
@@ -16,6 +18,7 @@ Specifications:
 2. Store raw articles in a PostgreSQL `raw_events` table with unique constraint `UNIQUE(source, external_id)` for deduplication.
 3. Queue new raw events into a BullMQ queue named `ai-classification`.
 4. Create a BullMQ worker using `@anthropic-ai/sdk` (Claude 3.5 Sonnet).
+> ⚠️ UPDATED 2026-08-19 — Anthropic API credit is currently exhausted; a heuristic classifier fallback is what's actually running in production, not live Claude classification.
 5. Send structured prompt to Claude demanding a JSON response with schema:
    - severity (1 to 10)
    - confidence (0 to 1.0)
@@ -68,3 +71,5 @@ Specifications:
    - Custom HTTP Webhooks (`webhook_endpoints` table).
 5. Log dispatch outcome in `alerts_sent` table.
 ```
+
+<!-- Implementation Note (⚠️ UPDATED 2026-08-19): Actual implementation diverged from the queue-triggered design above. The `alert-dispatch` BullMQ queue was never fed by any collector — a wiring gap, not a credentials problem — so dispatch was completely non-functional until 2026-08-18, when collectors (rss/gnews/gdelt) were changed to call `dispatchAlertsForSignal()` inline right after each signal insert instead of going through the queue. The dormant BullMQ queue/worker was deliberately kept in the codebase (commented as dormant), not deleted. Separately, Telegram specifically remains non-functional today because `TELEGRAM_BOT_TOKEN` is still not configured anywhere (deferred by founder decision), independent of the dispatch-wiring fix. -->

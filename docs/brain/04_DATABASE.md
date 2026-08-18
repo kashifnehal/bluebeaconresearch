@@ -1,5 +1,7 @@
 # 04_DATABASE.md — PostgreSQL Database Schema & Migration Architecture
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document provides a comprehensive specification of the Supabase PostgreSQL database schema, table structures, Row Level Security (RLS) policies, foreign key relationships, performance indexes, constraint enums, and sequential migrations.
 
 ---
@@ -67,6 +69,7 @@ Stores LLM-synthesized military/geopolitical intelligence and asset impact data.
 Ingested news articles and military incident logs before AI processing.
 - `id` (`uuid`, PK)
 - `source` (`text`, NOT NULL, check: `gdelt`, `acled`, `newsapi`)
+> ⚠️ UPDATED 2026-08-19 — This list is incomplete relative to §4's own migration history below: `008_fix_source_constraint.sql` added `gnews` as an allowed source, and the RSS collector (`rss-collector.ts`, added per `10_DECISIONS.md` ADR 007) also writes to this table, so the live check constraint's actual allowed-values set is broader than shown here.
 - `external_id` (`text`, nullable)
 - `title` / `summary` / `country` (`text`)
 - `lat` / `lng` (`double precision`)

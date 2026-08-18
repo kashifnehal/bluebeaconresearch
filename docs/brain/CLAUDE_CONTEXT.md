@@ -1,5 +1,7 @@
 # CLAUDE_CONTEXT.md — Project Synchronization & Change Log for Claude
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 > **⚠️ ARCHIVED — superseded 2026-08-18 (audited as of commit `97b7c4b`).** This file stopped being updated after the 2026-08-07 session below (last real commit touching it: `57cf5c0`, 2026-08-15, an unrelated sync edit). `docs/brain/14_CHANGELOG.md` and `docs/brain/08_CURRENT_STATUS.md` have been the live, actively-maintained record since — per `CLAUDE.md`'s doc-precedence rule, trust those two over this file for anything technical. Kept here for historical reference only; do not treat its "Cumulative Env Variable Reference" section as current (see correction below — it names the **wrong Supabase project**).
 >
 > **Original purpose statement** (no longer accurate — this file is not the live changelog): "This file acts as the primary contextual changelog and implementation record for uploading directly into the Claude Project context. Every task execution, code change, architectural refinement, and bugfix is documented here with precise timestamps, modified files, diff summaries, and verification results."

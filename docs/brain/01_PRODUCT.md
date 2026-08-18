@@ -1,5 +1,7 @@
 # 01_PRODUCT.md — Product Architecture & Page Specifications
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document defines every user-facing page and view across the Web Terminal (`apps/web`) and Mobile Application (`apps/mobile`), including routes, component hierarchies, state management, API endpoints, user journeys, and implementation status.
 
 ---
@@ -78,6 +80,7 @@ This document defines every user-facing page and view across the Web Terminal (`
 - **User Journey**: Click "Create Rule" → Select commodity (`GOLD`), region (`Middle East`), min severity (`8`) → Choose dispatch channel (`Telegram`) → Save Rule.
 - **Navigation**: Accessible from primary sidebar navigation.
 - **Implementation Status**: **Fully Functional**.
+> ⚠️ UPDATED 2026-08-19 — Alert dispatch (Slack/webhook/push) was fixed 2026-08-18 after being completely non-functional (no collector ever triggered dispatch). Telegram specifically is still non-functional as a dispatch channel: `TELEGRAM_BOT_TOKEN` is not configured, deferred by founder decision.
 - **Missing Features**: Dynamic threshold triggers based on % price volatility changes.
 
 ---
@@ -130,4 +133,5 @@ This document defines every user-facing page and view across the Web Terminal (`
 - **User Journey**: Click signal card on Dashboard or Map pin → Direct routing to `/events/[id]` → Audit raw news source and military breakdown.
 - **Navigation**: Direct URL link from Dashboard or Map pins.
 - **Implementation Status**: **Fully Functional**.
+> ⚠️ UPDATED 2026-08-19 — `events/[id]/page.tsx` still has the same broken Tailwind-token pattern that was fixed on 7 other files (SignalCard, SeverityBadge, CommodityChip, PriceTicker, Logo, forgot-password, verify) on 2026-08-18 — this page was not in scope for that fix and remains unfixed.
 - **Missing Features**: Social share image auto-generator (OG image generator).

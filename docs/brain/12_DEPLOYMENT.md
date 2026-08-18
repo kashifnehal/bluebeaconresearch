@@ -1,5 +1,7 @@
 # 12_DEPLOYMENT.md — Deployment Architecture, Infrastructure & Environment Variables
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document provides a guide to infrastructure hosting, CI/CD deployment pipelines, required secrets, environment variable configurations, and external API service dependencies.
 
 ---
@@ -91,6 +93,7 @@ Railway deploys two distinct services from the backend codebase:
 > 5. `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` prevents lockfile errors during Railway builds.
 > 6. Pre-deploy `npm run migrate` is a no-op in `package.json` — safe if left configured in Railway UI.
 > 7. **Schema changes**: see `16_MIGRATION_CHECKLIST.md` (added 2026-08-18) — `supabase/config.toml` now exists and the CLI is scaffolded (`supabase db push`), but not yet linked to the live project (needs an interactive `supabase login`). Until it's linked, migrations still go through the SQL editor manually — but the standing verification checklist in that file is mandatory regardless, after the `008` constraint fix silently failed to apply for two days despite being marked done.
+> ⚠️ UPDATED 2026-08-19 — The CLI is now linked (as of 2026-08-19, via a Supabase Personal Access Token, not interactive login). The Management API works (used to verify migration 012 via Advisors), but direct-Postgres CLI commands (`supabase db push`, `migration list`) still fail with a permission error on this project — cause not yet diagnosed. Schema changes still go through the SQL editor manually for now.
 
 ### Troubleshooting: "Dashboard shows old data after deploy"
 

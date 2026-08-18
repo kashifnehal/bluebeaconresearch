@@ -1,5 +1,7 @@
 # Blue Beacon Research — Post-Prompt-02 CTO Execution Prompts
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 Last reviewed: 2026-08-14
 
 ## Scope
@@ -24,6 +26,7 @@ This plan was revalidated against the current `docs/brain` files and the current
 | Order | Prompt | Priority | Dependency | Execute when |
 |---|---|---|---|---|
 | 1 | **PROMPT 03 — MULTI-CHANNEL ALERT ROUTER** | P0 | Existing signals + alert rules | **Now** |
+> ⚠️ UPDATED 2026-08-19 — This objective was accomplished 2026-08-18, though by a different mechanism than the queue-triggered design this prompt assumes: collectors now call `dispatchAlertsForSignal()` inline right after each insert (the root cause was that nothing ever fed the `alert-dispatch` BullMQ queue). Slack/webhook/push now fire; Telegram specifically is still blocked, `TELEGRAM_BOT_TOKEN` not configured.
 | 2 | **PROMPT 04 — EVENT DEEP-DIVE PAGE** | P0 | Prompt 02 + existing `/api/events/:id` | **Now** |
 | 3 | **PROMPT 05 — DATA RETENTION & IMPORTANT EVENT VISIBILITY** | P0 | Existing `signals` + ingestion pipeline | **Now** |
 | 4 | **PROMPT 06 — AUTHENTICATION & SESSION** | P0 | Supabase Auth already present | **Now** |
@@ -134,6 +137,8 @@ Backend starting point:
 apps/backend/src/routes/events.ts
 
 The current page renders incomplete/non-functional content. Some buttons/tabs are visibly inactive. Fix the page as a real research-intelligence detail view.
+
+> ⚠️ UPDATED 2026-08-19 — Much of this was addressed by the 2026-08-15 "Event Detail Page Rebuild" (see `08_CURRENT_STATUS.md`): dedicated `/api/signals/[id]` route, real HISTORICAL/MAP/SOURCES tabs, price-at-signal, honest confirmation-source line. Separately, this exact page (`events/[id]/page.tsx`) still has an unfixed broken-Tailwind-token styling bug (not in scope for the 2026-08-18 token fix pass).
 
 FIRST: inspect the actual repository implementation and current API registration. Do not trust stale documentation if the code differs.
 
@@ -313,6 +318,7 @@ FIRST inspect the actual implementation:
 - logout implementation
 
 BUGS TO FIX
+> ⚠️ UPDATED 2026-08-19 — The login/logout full-page-navigation bug (same family as items 2–5 below) was fixed 2026-08-18: `login/page.tsx` now uses `window.location.href` instead of `router.push` (needed for Supabase SSR cookie attachment), plus a new shared `signOutAndRedirect()` helper. Signup had already been fixed the same way earlier.
 1. Authenticated users must not see a Sign In button when a valid session exists.
 2. Authenticated users must not be redirected to `/login` from protected pages because the browser/client session is stale while the server session is valid.
 3. After login, redirect reliably to the intended protected page/dashboard.

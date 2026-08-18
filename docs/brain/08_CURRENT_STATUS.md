@@ -1,12 +1,16 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 Last updated: 2026-08-19 (Reliability/Observability/DB-cleanup pass — committed as `c7fa5ef`, migration 012 applied + Advisor-verified live — see `14_CHANGELOG.md` v0.21.0)
 
 ---
 
 ## Reliability, Observability & DB Cleanup Pass (2026-08-18)
 
-Sentry + PostHog wired on web (previously zero wiring despite installed deps); `error.tsx`/`global-error.tsx`/`(dashboard)/error.tsx` added; CI workflow added (`type-check` on push/PR, was empty); Supabase CLI scaffolded but not linked (needs interactive login — decision point); dashboard stale-data banner wired, price staleness surfaced, two routes' DB-error states now distinct from empty/unconfigured, orphaned-`raw_events` reconciliation job added, pipeline zero-yield alerting added, cold-start signal-feed state distinguished; `production_schema.sql` deleted (was describing 4 of 17 real tables) and a new migration adds missing indexes + consolidates `user_channels` RLS + a duplicate-signal guard (**applied to live DB 2026-08-19, verified via Security/Performance Advisors + a live unique-constraint test — see `16_MIGRATION_CHECKLIST.md`**); shared `getRouteSupabaseClients()` + standardized API error shape replace 4x copy-pasted auth boilerplate; backend CORS now fails closed; backend's live-called `/v1/backtesting` had its fabricated-dates bug fixed to match the web version; onboarding brief (`docs/claude_project/21_PROJECT_BRIEFING.md`) corrected (wrong Supabase project ref, wrong port, stale migration count, stale Mapbox→MapLibre claim). Full detail: `14_CHANGELOG.md` v0.21.0.
+Sentry + PostHog wired on web (previously zero wiring despite installed deps); `error.tsx`/`global-error.tsx`/`(dashboard)/error.tsx` added; CI workflow added (`type-check` on push/PR, was empty); Supabase CLI scaffolded but not linked (needs interactive login — decision point);
+> ⚠️ UPDATED 2026-08-19 — Now linked, via a Supabase Personal Access Token rather than interactive login. Management API works (used for Advisors); direct-Postgres CLI commands (`db push`, `migration list`) still fail with a permission error, cause not yet diagnosed — see `16_MIGRATION_CHECKLIST.md`.
+dashboard stale-data banner wired, price staleness surfaced, two routes' DB-error states now distinct from empty/unconfigured, orphaned-`raw_events` reconciliation job added, pipeline zero-yield alerting added, cold-start signal-feed state distinguished; `production_schema.sql` deleted (was describing 4 of 17 real tables) and a new migration adds missing indexes + consolidates `user_channels` RLS + a duplicate-signal guard (**applied to live DB 2026-08-19, verified via Security/Performance Advisors + a live unique-constraint test — see `16_MIGRATION_CHECKLIST.md`**); shared `getRouteSupabaseClients()` + standardized API error shape replace 4x copy-pasted auth boilerplate; backend CORS now fails closed; backend's live-called `/v1/backtesting` had its fabricated-dates bug fixed to match the web version; onboarding brief (`docs/claude_project/21_PROJECT_BRIEFING.md`) corrected (wrong Supabase project ref, wrong port, stale migration count, stale Mapbox→MapLibre claim). Full detail: `14_CHANGELOG.md` v0.21.0.
 
 ## Alert Pipeline Actually Wired, Password Reset Built, Auth/Tailwind Fixes (2026-08-18, commit `97b7c4b`)
 
@@ -16,6 +20,7 @@ Sentry + PostHog wired on web (previously zero wiring despite installed deps); `
 - **Login/logout full-navigation bug fixed** (same family as the already-fixed signup bug) — `login/page.tsx` and a new shared `signOutAndRedirect()` helper.
 - **Tailwind token fixes on 7 files** (SignalCard, SeverityBadge, CommodityChip, PriceTicker, Logo, forgot-password, verify) — broken classes compiling to nothing, fixed the default/low-severity card styling app-wide. Same bug pattern still present in `events/[id]/page.tsx`, `privacy/page.tsx`, and the shadcn `ui/*` primitives — not fixed yet, flagged below.
 - **Still open, found but not fixed this pass**: `signal-generation` (severity ≥7 briefings) has the identical dormant-queue bug alert-dispatch just had.
+> ⚠️ UPDATED 2026-08-19 — Fixed. Confirmed live before the fix that 0 of 423 severity≥7 signals had a populated `ai_analysis` field, ever. Fixed the same way as alert-dispatch: extracted `generateSignalAnalysis()`, wired inline into all three collectors (rss/gnews/gdelt) and the reconciliation worker, gated on `severity >= 7`. Verified live — now actually populates.
 
 ---
 
@@ -69,6 +74,7 @@ Sentry + PostHog wired on web (previously zero wiring despite installed deps); `
 
 - **Map Filters Actually Work Now**: Fixed a `ref`/`useState` race between two competing effects that made severity/region/window filters appear to do nothing — both the map markers and the Live Intelligence stream list now share one filtered source of truth.
 - **Map Coordinate Fallback Gap**: India (and ~45 other countries) were missing from the frontend's country-name fallback dictionary, causing known-country signals with no stored lat/lng to mis-pin at a generic Sahara centroid. Dictionary expanded. Root ingestion-side geocoding gap (raw_events/signals lat/lng not populated for RSS articles) is still open.
+> ⚠️ UPDATED 2026-08-19 — Re-investigated and confirmed still not implemented, now explicitly deferred (not forgotten) by founder decision. `resolveGeoCoords()` (`apps/backend/src/lib/geo-resolver.ts`) uses hardcoded title keywords, a country-name lookup, and a 6-bucket region-centroid lookup with deterministic jitter — not a real geocoding API call. Confirmed via live DB query that RSS-sourced signals cluster tightly around region centroids, not real article locations. A real fix needs either a geocoding API call per article or a much larger gazetteer.
 - **Fake Tension Index Number Removed**: "Global Tension Index" was showing a hardcoded 74.8/▲2.4 instead of the real computed score.
 - **Watchlist Dead Globe Shell Removed**; unsupported `EURUSD`/`USDRUB` removed from the addable commodity list (were permanently stuck at flat 0.00%).
 - **Backtesting Date Realism**: Mock results no longer show real-looking calendar dates for fabricated events — relabeled "Sample Case #N". Demo-mode disclaimer confirmed correct and unchanged.
@@ -98,6 +104,7 @@ Sentry + PostHog wired on web (previously zero wiring despite installed deps); `
   | **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
   | **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
   | **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date index) |
+  > ⚠️ UPDATED 2026-08-19 — Stale count. Migrations now run 000–012; `012_reliability_indexes_and_cleanup.sql` was applied to the live DB 2026-08-19 and Advisor-verified (see top-of-file summary and `04_DATABASE.md` §4).
   | **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
   | **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
   | **RSS Real-Time Collector** | ⚠️ Partial | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404 |
@@ -109,6 +116,7 @@ Sentry + PostHog wired on web (previously zero wiring despite installed deps); `
   | **Upstash Redis / BullMQ** | ✅ Operational | Fixed `rediss://` TLS protocol |
   | **Interactive UI Controls** | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active |
   | **Multi-Channel Alert Dispatch (Telegram/Slack/Webhook/Push)** | ⚠️ Partial | Trigger wiring fixed 2026-08-18 (commit `97b7c4b`) — fires inline on every signal insert, live-verified against a real signal. No real Telegram/Slack destinations configured to confirm live delivery; Telegram additionally blocked on missing `TELEGRAM_BOT_TOKEN`. `signal-generation` (severity ≥7 briefings) has the same still-unfixed dormant-queue gap. |
+  > ⚠️ UPDATED 2026-08-19 — `signal-generation` was fixed 2026-08-19 (inline `generateSignalAnalysis()` call, same pattern as alert-dispatch), no longer an open gap.
 
 ---
 
@@ -172,6 +180,7 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | Telegram alerts not working            | Open (narrowed) | Wiring fixed 2026-08-18; blocker now is only `TELEGRAM_BOT_TOKEN` not set in Railway |
 | Password reset dead-end route          | Fixed (2026-08-18, `97b7c4b`) | `/reset-password` built and live-verified end-to-end |
 | `signal-generation` queue never triggered (severity ≥7 briefings) | Open | Same dormant-queue root cause as alert-dispatch had; found 2026-08-18, not yet fixed |
+| ⚠️ UPDATED 2026-08-19 | Fixed | The row above is stale — fixed 2026-08-19 via inline `generateSignalAnalysis()` call in all three collectors + reconciliation worker, verified live |
 | Broken Tailwind tokens in shadcn `ui/*` primitives (button, badge, card, dropdown-menu, select, separator) | Open | Different, deeper issue than the 7-file rename fixed 2026-08-18 — needs a `@theme`/CSS-variable mapping, not a rename |
 | Broken Tailwind tokens in `events/[id]/page.tsx`, `privacy/page.tsx` | Open | Same broken-token pattern as the 7 files fixed 2026-08-18, just not in the named scope of that pass |
 

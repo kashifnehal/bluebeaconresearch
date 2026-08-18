@@ -1,5 +1,7 @@
 # 02_BUSINESS.md — Business Model, Pricing & Monetization Strategy
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document outlines the commercial framework, user target personas, pricing tiers, feature gating limits, and monetization strategy for Blue Beacon Research.
 
 ---
@@ -9,6 +11,7 @@ This document outlines the commercial framework, user target personas, pricing t
 | Persona | Core Need | Primary Platform Workflows | Willingness to Pay |
 | :--- | :--- | :--- | :--- |
 | **Commodities Energy Trader** | Sub-second notifications on Middle East / Red Sea pipeline threats impacting Crude Oil (`USOIL`) and Natural Gas (`NG`). | Telegram instant alerts, live ticker monitoring, quick market impact reading. | Very High ($500–$2,000/mo) |
+> ⚠️ UPDATED 2026-08-19 — Telegram alerts specifically are still non-functional (`TELEGRAM_BOT_TOKEN` not configured anywhere, deferred by founder decision). Alert dispatch itself (Slack/webhook/push) was fixed 2026-08-18.
 | **Global Macro Hedge Fund Analyst** | Quantitative geopolitical event data for strategy backtesting and portfolio risk positioning. | Backtesting Engine, historical signal exports, API integration, Mapbox GIS. | Extremely High ($1,000–$5,000/mo) |
 | **Corporate Supply Chain Officer** | Tracking maritime chokepoint blockades, sanctions updates, and shipping disruption risks. | GIS Map monitoring, email summaries, custom alert rules. | Medium-High ($250–$1,000/mo) |
 | **Geopolitical & Military Analyst** | Automated ingestion of GDELT/ACLED event streams with structured LLM military synthesis. | Event Deep-Dive (`/events/[id]`), structured JSON feeds, raw source auditing. | Medium ($100–$300/mo) |
@@ -35,6 +38,9 @@ The application enforces tier gating via the `plan_tier` column in the `profiles
                   │  - Telegram & Slack push notifications       │
                   │  - Max 25 active alert rules                 │
                   └──────────────────────┬───────────────────────┘
+```
+> ⚠️ UPDATED 2026-08-19 — Slack/webhook/push dispatch was fixed 2026-08-18 (previously entirely non-functional for all channels). Telegram specifically remains non-functional: `TELEGRAM_BOT_TOKEN` is still not configured, deferred by founder decision.
+```
                                          │ Upgrade
                                          ▼
                   ┌──────────────────────────────────────────────┐
@@ -56,6 +62,8 @@ The application enforces tier gating via the `plan_tier` column in the `profiles
 | **Backtesting Engine** | Disabled | 5 runs/month | Unlimited runs | Unlimited + Raw Data Export |
 | **REST API Access** | No | No | Yes (10k req/mo) | Yes (100k req/mo) |
 | **Mapbox Layers** | Basic GIS | Full GIS Heatmap | Full GIS Heatmap | Custom GIS GeoJSON Export |
+
+> ⚠️ UPDATED 2026-08-19 — On the "Dispatch Channels" row: Slack/webhook/push dispatch was fixed 2026-08-18 (previously non-functional across the board — no collector ever triggered dispatch). Telegram specifically is still non-functional (`TELEGRAM_BOT_TOKEN` not configured, deferred by founder decision).
 
 ---
 

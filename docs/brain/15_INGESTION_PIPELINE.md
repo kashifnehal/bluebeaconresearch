@@ -1,5 +1,7 @@
 # 15_INGESTION_PIPELINE.md — News Ingestion Logic, Filters & Display Rules
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document describes **exactly** how Blue Beacon Research fetches news, filters it, stores it, and displays it on the dashboard. Read this before changing collectors or wondering why certain headlines appear (or don't).
 
 ---
@@ -160,6 +162,7 @@ After passing the filter and dedup check:
 1. Insert row into `raw_events`
 2. Call `ClaudeService.classifyEvent()`:
    - If Anthropic API has credit → Claude 3.5 Haiku JSON classification
+   > ⚠️ UPDATED 2026-08-19 — Anthropic API credit is currently exhausted, so this branch is not the one running in production right now; every classification is currently going through the heuristic fallback below.
    - If API fails → **heuristic fallback** (local, zero cost) with conservative commodity impact assignment
      - never invent commodity exposure without evidence
      - return an empty `commodityImpacts` array when no defensible commodity signal exists

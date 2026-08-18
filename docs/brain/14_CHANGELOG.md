@@ -1,10 +1,29 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.23.0 — Documentation Refresh Pass (2026-08-19)
+
+- **Scope**: an additive-only documentation pass across `docs/brain/` (19 files) and `docs/claude_project/` (25 files) — no product/code changes, no deletions or rewrites of existing doc prose. Purpose: bring both trees up to date with everything shipped this cycle (Core Pipeline, Reliability/Observability/DB Cleanup, Auth/UX verification, `signal-generation` fix, geocoding deferral) while preserving the original text as a historical trail, per standing instruction not to erase planning/architecture history.
+- **Part 0 — inventory + duplicate/fork analysis**: 15 filenames exist in both trees. Confirmed via direct diff, not assumption: `03_ARCHITECTURE.md`, `04_DATABASE.md`, `08_CURRENT_STATUS.md`, and `12_DEPLOYMENT.md` are true forks of the same original content — `docs/brain`'s copies kept accumulating live updates all session while `docs/claude_project`'s copies are frozen at an earlier point. The other 11 overlapping filenames (`00_PROJECT.md`, `01_PRODUCT.md`, `02_BUSINESS.md`, `05_API.md`, `06_COMPONENTS.md`, `07_DESIGN_SYSTEM.md`, `09_BACKLOG.md`, `10_DECISIONS.md`, `11_MARKETING.md`, `13_PROMPTS.md`, `14_CHANGELOG.md` — this file) are genuinely different documents that happen to share a name (wildly different lengths/structure/era, e.g. `claude_project/01_PRODUCT.md` is 771 lines vs this tree's 133) — not forks. Reported as a decision point for the founder on whether/how to consolidate; not resolved unilaterally.
+- **Part 1 — status headers**: added an identical, mechanically-greppable `> **📍 Doc status — reviewed 2026-08-19.**` header to the top of all 44 files in both trees (scripted insertion, verified byte-identical across every file afterward).
+- **Part 2 — inline `⚠️ UPDATED` annotations**: added next to specific stale/superseded claims throughout both trees, additive only — original text left standing for history, same pattern already used on `01_PRODUCT.md`'s onboarding-walkthrough correction earlier this cycle. Full per-file breakdown in the session report, not duplicated here.
+- **Verification**: spot-checked a sample of annotated files directly to confirm no existing text was deleted or reworded — only insertions.
+- **Build**: doc-only pass, no code touched, no type-check needed.
+
+### v0.22.0 — Auth/UX Verification, `signal-generation` Fix, Geocoding Deferral (2026-08-19)
+
+- **Auth & UX Consistency close-out** — three previously-unverified items confirmed live via Playwright with a throwaway account (not just a code read): Watchlist's "Select All" dropdown option correctly adds every remaining commodity in one click. The Watchlist sparkline is confirmed still using real `/api/prices/history` data, not `Math.random()` (this had already been fixed; this pass re-confirmed the fix held). Dropdown styling (`SELECT_CLASSES`) confirmed consistent across Watchlist, Backtesting, and Settings — Settings' select lives under its "DATA" tab, not the default "ACCOUNT" tab, which is likely why an earlier pass's own audit list missed it.
+- **Onboarding tour re-confirmed live**: the 6-step `react-joyride` tour (shipped 2026-08-16) was driven end-to-end again via a fresh throwaway signup — all 4 dashboard steps + 2 event-detail-page steps fired correctly, completion persisted across a reload. This resolved a three-way doc disagreement: `08_CURRENT_STATUS.md` was right that it shipped; `01_PRODUCT.md` and a separate architecture-audit document were both wrong to describe it as missing/not-started. `01_PRODUCT.md` corrected same-day.
+- **Geocoding gap — investigated, confirmed still open, explicitly deferred (not fixed, not forgotten) by founder decision.** `resolveGeoCoords()` (`apps/backend/src/lib/geo-resolver.ts`) uses hardcoded title-keyword/country/region lookup tables with a small deterministic jitter, not a real geocoding API — confirmed live via DB query that RSS-sourced signals cluster tightly around region centroids rather than real article locations (RSS's `raw_events.country` is always `null`, so even the country-level lookup branch can never fire for RSS specifically). A real fix needs either a geocoding API call per article (new dependency + per-request cost) or a much larger gazetteer — flagged as a scoping decision point, deliberately not implemented unilaterally.
+- **`signal-generation` (severity ≥7 AI analyst briefings) — fixed, identical dormant-queue bug alert-dispatch had.** Confirmed live before the fix: 0 of 423 severity-≥7 signals in the database had ever had a populated `ai_analysis` field — this worker was only ever fed from the same unreachable `ai-classifier.ts` queue-consumer path that alert-dispatch's dormant queue had. Fixed the same way: extracted `generateSignalAnalysis(signalId)` into `signal-generator.ts`, wired inline into all three collectors (rss/gnews/gdelt) and the `reconciliation.ts` worker, right alongside the existing `dispatchAlertsForSignal` call, gated on `severity >= 7`. Dormant BullMQ queue/worker kept in place, commented, not deleted — same guardrail as every other dormant-queue fix this cycle. Verified live: populated a real signal's previously-null `ai_analysis` field.
+- **Build**: `pnpm type-check` clean.
 
 ### v0.21.0 — Reliability, Observability & DB Cleanup Pass (2026-08-18)
 

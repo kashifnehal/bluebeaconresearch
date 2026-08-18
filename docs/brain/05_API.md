@@ -1,5 +1,7 @@
 # 05_API.md — Fastify REST API Architecture & OpenAPI Specifications
 
+> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+
 This document details every REST endpoint in `apps/backend/src/routes`, including HTTP methods, authentication requirements, rate limiting thresholds, request/response payload schemas, and client consumers.
 
 ---
@@ -62,6 +64,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
     "fallbackLastUpdated": null
   }
   ```
+> ⚠️ UPDATED 2026-08-19 — Two caveats on the `ai_analysis` field above: (1) Anthropic API credit is currently exhausted, so a heuristic classifier fallback is generating this content, not live Claude; (2) for severity ≥7 signals specifically, this field was found completely unpopulated (0 of 423 signals, ever) due to a dormant-BullMQ-queue wiring bug, fixed 2026-08-19 by wiring `generateSignalAnalysis()` inline into the collectors and reconciliation worker.
 - **Consumers**: Next.js Dashboard, MapLibre Map (OpenStreetMap tiles), Mobile Client.
 
 **Notes**: In degraded or rate-limited scenarios `/api/signals` may return the last-known payload with additional non-breaking fields: `fallback` (boolean), `fallbackReason` (string), and `fallbackLastUpdated` (ISO timestamp). The server also sets header `x-signals-feed-status: degraded` when serving cached/fallback data.
