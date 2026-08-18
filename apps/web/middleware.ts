@@ -7,6 +7,11 @@ const GATED_ALLOWED = [
   "/login",
   "/signup",
   "/auth", // /auth/callback etc. needed for oauth/email confirmation
+  "/verify", // "check your email" post-signup state — must stay reachable so a
+  // gated signup can still confirm their address, not just OAuth
+  "/confirm", // receiving end of the signup confirmation email link
+  "/forgot-password",
+  "/reset-password",
 ];
 
 // Routes that require authentication (only relevant if isProjectReady is true)

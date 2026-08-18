@@ -58,6 +58,11 @@ export default async function Home(props: {
     redirect(`/login?error=${msg}`);
   }
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const latestSignal = await getLatestSignal();
 
   return (
@@ -73,13 +78,24 @@ export default async function Home(props: {
           <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#pricing">Access Tiers</Link>
         </nav>
         <div className="flex items-center gap-8">
-          <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-white transition-colors" href="/login">Sign in</Link>
-          <Link 
-            href="/signup"
-            className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
-          >
-            Start Free
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-white transition-colors" href="/login">Sign in</Link>
+              <Link
+                href="/signup"
+                className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
+              >
+                Start Free
+              </Link>
+            </>
+          )}
         </div>
       </header>
 

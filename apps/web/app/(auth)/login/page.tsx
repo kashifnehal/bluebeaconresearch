@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { loginSchema } from "@/lib/validators";
-import { fetchMyProfile } from "@/lib/profile";
+import { fetchMyProfile, resolvePostAuthRedirect } from "@/lib/profile";
 import { isProjectReady } from "@/lib/flags";
 
 type FormValues = z.infer<typeof loginSchema>;
@@ -96,14 +96,8 @@ function LoginForm() {
       // Full navigation (window.location.href, not router.push/replace) — required so
       // middleware sees the auth cookie on the very next request, same SSR-cookie rule
       // already applied to the post-signup redirect.
-      if (!isProjectReady) {
-        window.location.href = "/";
-        return;
-      }
-
-      const profile = await fetchMyProfile();
-      const targetUrl = profile?.onboardingCompleted ? "/dashboard" : "/onboarding";
-      window.location.href = targetUrl;
+      const profile = isProjectReady ? await fetchMyProfile() : null;
+      window.location.href = resolvePostAuthRedirect(profile);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign in.");
     } finally {

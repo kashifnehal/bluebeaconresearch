@@ -3,7 +3,13 @@
 
 create table if not exists public.waitlist (
   id          uuid primary key default uuid_generate_v4(),
-  user_id     uuid references auth.users(id) on delete set null,
+  -- ON DELETE CASCADE, matching profiles.id (000_init_schema.sql). Not SET NULL:
+  -- since email is UNIQUE below, a SET NULL'd row would survive user deletion and
+  -- permanently block that address from ever appearing in waitlist again (real users
+  -- who delete their account, and — the case that actually surfaced this — a deleted
+  -- test account leaving a stale row that fails re-signup with a confusing unrelated
+  -- unique-constraint error).
+  user_id     uuid references auth.users(id) on delete cascade,
   full_name   text,
   email       text not null unique,
   joined_at   timestamptz not null default now()

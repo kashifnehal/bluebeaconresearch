@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { Suspense } from "react";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
 import { signupSchema } from "@/lib/validators";
 import type { PlanTier } from "@blue-beacon-research/shared";
 import { isProjectReady } from "@/lib/flags";
@@ -95,38 +96,41 @@ function SignupForm() {
         return;
       }
       track("signup_started");
-      const supabase = getSupabaseBrowserClient();
+      // Uses the shared implicit-flow email-auth client, not the shared PKCE client --
+      // the confirmation email link is opened in whatever browser/device/app the user
+      // has Gmail in, not necessarily this one. Must match confirm/page.tsx. See
+      // lib/supabase-email-auth.ts.
+      const supabase = getSupabaseEmailAuthClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
-      const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`;
+      const confirmUrl = `${window.location.origin}/confirm`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
           data: { full_name: values.fullName, plan_tier: selectedPlan },
-          emailRedirectTo: callbackUrl,
+          emailRedirectTo: confirmUrl,
         },
       });
       if (signUpError) throw signUpError;
       track("signup_completed");
 
-      if (data.user?.id) {
-        await supabase
-          .from("profiles")
-          .upsert({ id: data.user.id, full_name: values.fullName, plan_tier: selectedPlan });
+      // profiles row is created by the on_auth_user_created trigger on auth.users
+      // (004_auth_triggers.sql / 011_rls_remediation.sql), reading full_name/plan_tier
+      // straight out of the raw_user_meta_data set above -- it already exists by the
+      // time this code runs. A client-side upsert here used to duplicate that and,
+      // with Confirm Email on, 401'd every time (signUp() returns no session until the
+      // email is confirmed, so this call had no JWT and RLS blocked it as anon).
 
-        // If project is not ready, track waitlist and redirect to modal.
-        // window.location.href (not router.push) is required here — a signup just
-        // established a new session, and SSR middleware needs the auth cookie to have
-        // attached via a full navigation, per the existing decision in 10_DECISIONS.md.
-        if (!isProjectReady) {
-          await supabase.from("waitlist").insert({
-            user_id: data.user.id,
-            full_name: values.fullName,
-            email: values.email,
-          });
-          window.location.href = "/?joined=1";
-          return;
-        }
+      if (data.user?.id && !isProjectReady) {
+        // Pre-launch waitlist path — window.location.href (not router.push) is required
+        // here per the existing SSR-cookie-attachment decision in 10_DECISIONS.md.
+        await supabase.from("waitlist").insert({
+          user_id: data.user.id,
+          full_name: values.fullName,
+          email: values.email,
+        });
+        window.location.href = "/?joined=1";
+        return;
       }
 
       // With email confirmation ON, signUp() returns no session and the user

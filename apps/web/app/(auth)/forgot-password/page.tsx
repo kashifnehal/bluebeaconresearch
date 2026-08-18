@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
-import { getSupabaseRecoveryClient } from "@/lib/supabase-recovery";
+import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -21,9 +21,9 @@ export default function ForgotPasswordPage() {
     setError(null);
     setIsLoading(true);
     try {
-      // Uses the dedicated implicit-flow client, not the shared PKCE client --
-      // see lib/supabase-recovery.ts for why. Must match reset-password/page.tsx.
-      const supabase = getSupabaseRecoveryClient();
+      // Uses the shared implicit-flow email-auth client, not the shared PKCE client --
+      // see lib/supabase-email-auth.ts for why. Must match reset-password/page.tsx.
+      const supabase = getSupabaseEmailAuthClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
       const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
       const { error: e } = await supabase.auth.resetPasswordForEmail(email, {

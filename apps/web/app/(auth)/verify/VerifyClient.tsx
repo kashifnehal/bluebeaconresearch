@@ -8,7 +8,7 @@ import { Mail } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
 
 export function VerifyClient() {
   const params = useSearchParams();
@@ -40,7 +40,9 @@ export function VerifyClient() {
     setError(null);
     setIsLoading(true);
     try {
-      const supabase = getSupabaseBrowserClient();
+      // Same implicit-flow client signUp() uses (lib/supabase-email-auth.ts) --
+      // the resent link must match what confirm/page.tsx expects to receive.
+      const supabase = getSupabaseEmailAuthClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",

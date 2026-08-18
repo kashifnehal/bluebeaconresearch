@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
-import { getSupabaseRecoveryClient } from "@/lib/supabase-recovery";
+import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { fetchMyProfile, resolvePostAuthRedirect } from "@/lib/profile";
 
 function ResetPasswordForm() {
   const [status, setStatus] = useState<"validating" | "ready" | "invalid">("validating");
@@ -24,7 +26,7 @@ function ResetPasswordForm() {
   // PASSWORD_RECOVERY auth event once it has exchanged it for a session. We also check
   // getSession() directly in case that event fired before this listener attached.
   useEffect(() => {
-    const supabase = getSupabaseRecoveryClient();
+    const supabase = getSupabaseEmailAuthClient();
     if (!supabase) {
       setStatus("invalid");
       return;
@@ -83,15 +85,37 @@ function ResetPasswordForm() {
 
     setIsLoading(true);
     try {
-      const supabase = getSupabaseRecoveryClient();
+      const supabase = getSupabaseEmailAuthClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
+
+      // The recovery session lives in this implicit-flow client's own storage
+      // (localStorage), not in the cookies middleware/SSR actually check -- so
+      // without this, redirecting anywhere protected would just bounce back to
+      // /login regardless of destination. Bridge it into the shared cookie-based
+      // client (same one login/page.tsx uses) so the very next request is
+      // recognized as authenticated. Falls back to /login if this fails for any
+      // reason -- the password update itself already succeeded either way.
+      let target = "/login";
+      const { data: sessionData } = await supabase.auth.getSession();
+      const sharedClient = getSupabaseBrowserClient();
+      if (sessionData.session && sharedClient) {
+        const { error: bridgeError } = await sharedClient.auth.setSession({
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+        });
+        if (!bridgeError) {
+          const profile = await fetchMyProfile();
+          target = resolvePostAuthRedirect(profile);
+        }
+      }
+
       setDone(true);
-      // Full navigation (not router.push) — required so the refreshed session cookie
-      // attaches correctly for SSR/middleware on the next page, same rule as signup.
+      // Full navigation (not router.push) — required so the bridged session cookie
+      // attaches correctly for SSR/middleware on the next page, same rule as login.
       setTimeout(() => {
-        window.location.href = "/login";
+        window.location.href = target;
       }, 1500);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to reset password.");
@@ -128,7 +152,7 @@ function ResetPasswordForm() {
         ) : done ? (
           <div className="py-8 text-center flex flex-col items-center gap-3">
             <ShieldCheck className="text-success" size={40} />
-            <p className="text-on-surface text-sm">Password updated. Redirecting to sign in…</p>
+            <p className="text-on-surface text-sm">Password updated. Redirecting…</p>
           </div>
         ) : (
           <>
