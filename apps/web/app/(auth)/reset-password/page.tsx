@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
 import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -10,27 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
-
-// Supabase's password-recovery email links always use the implicit/hash-token flow
-// (#access_token=...&type=recovery), never a PKCE ?code=. The app's shared browser
-// client (lib/supabase.ts, via @supabase/ssr's createBrowserClient) hardcodes
-// flowType: "pkce" and cannot be overridden — passing it here through options is
-// silently ignored — so it actively rejects recovery tokens with "Not a valid PKCE
-// flow url." This page needs its own client, configured for the implicit flow, to
-// read the recovery session. Scoped to this page only — the shared client is left
-// untouched since OAuth/signup are handled server-side via /auth/callback and don't
-// depend on the browser client's flowType.
-let cachedResetClient: ReturnType<typeof createClient> | null = null;
-function getResetPasswordSupabaseClient() {
-  if (cachedResetClient) return cachedResetClient;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) return null;
-  cachedResetClient = createClient(url, anonKey, {
-    auth: { flowType: "implicit", detectSessionInUrl: true, persistSession: true },
-  });
-  return cachedResetClient;
-}
+import { getSupabaseRecoveryClient } from "@/lib/supabase-recovery";
 
 function ResetPasswordForm() {
   const [status, setStatus] = useState<"validating" | "ready" | "invalid">("validating");
@@ -45,7 +24,7 @@ function ResetPasswordForm() {
   // PASSWORD_RECOVERY auth event once it has exchanged it for a session. We also check
   // getSession() directly in case that event fired before this listener attached.
   useEffect(() => {
-    const supabase = getResetPasswordSupabaseClient();
+    const supabase = getSupabaseRecoveryClient();
     if (!supabase) {
       setStatus("invalid");
       return;
@@ -104,7 +83,7 @@ function ResetPasswordForm() {
 
     setIsLoading(true);
     try {
-      const supabase = getResetPasswordSupabaseClient();
+      const supabase = getSupabaseRecoveryClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
