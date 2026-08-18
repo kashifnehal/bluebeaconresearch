@@ -72,11 +72,15 @@ Both Railway services (backend API + workers) are currently **OPERATIONAL**. The
 ```
 Monorepo:     Turborepo + pnpm workspaces
 Web:          Next.js 16 App Router + TypeScript + Tailwind CSS + Shadcn/ui
-Backend:      Fastify 4 + Node.js 20 + TypeScript (PORT=8888 on Railway)
+Backend:      Fastify 4 + Node.js 20 + TypeScript (PORT=3001 — corrected 2026-08-18; this
+              line previously said 8888, which contradicted both apps/backend/src/env.ts's
+              actual default and docs/brain/10_DECISIONS.md's "port 3001" record)
 Queue:        BullMQ + Upstash Redis (MUST use rediss:// TLS, not redis://)
-Database:     Supabase PostgreSQL (9 migrations applied)
+Database:     Supabase PostgreSQL (12 migrations applied as of 2026-08-18 — was 9)
 AI:           Claude 3.5 Haiku (classification) + Sonnet (briefings) — HEURISTIC FALLBACK ACTIVE
-Maps:         Mapbox GL JS
+Maps:         MapLibre GL JS + OpenStreetMap tiles (corrected 2026-08-18 — this said "Mapbox
+              GL JS" but the actual dependency is maplibre-gl, no Mapbox token required;
+              see 14_CHANGELOG.md v0.13.0/v0.16.1)
 Price data:   Yahoo Finance (yahoo-finance2 npm) — Alpha Vantage fully replaced
 Deploy web:   Vercel (bluebeaconresearch.com)
 Deploy api:   Railway service "backend" — start:server — api.bluebeaconresearch.com
@@ -168,11 +172,14 @@ price-sync                                    ← every 15 min
 ```env
 NODE_ENV=production
 PROJECT_READY=true
-PORT=8888
+PORT=3001
 
-# Supabase
-SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
-NEXT_PUBLIC_SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
+# Supabase — corrected 2026-08-18: this block previously cited project ref
+# jzomoxsbnssnibshecui, an old/wrong project. The current status doc and the real
+# .env.local agree on evavcgfmemwryggdkjmx — updated to match those, not the other
+# way around (see docs/brain/CLAUDE_CONTEXT.md's own correction of the same stale ref).
+SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
 
@@ -205,7 +212,7 @@ ACLED_PASSWORD=              ← ADD THIS
 
 ### Vercel (web app)
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>   ← REQUIRED — add to Vercel or /api/signals unreliable
 NEXT_PUBLIC_MAPBOX_TOKEN=<mapbox_token>

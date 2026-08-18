@@ -26,15 +26,19 @@ function mockResult(p: z.infer<typeof schema>): Result {
   const avgMovePct = 3.2;
   const maxMovePct = 9.1;
   const minMovePct = -6.4;
-  const now = Date.now();
 
   const countries = ["Yemen", "Ukraine", "Sudan", "Iran", "Nigeria"];
 
+  // Deliberately NOT a real calendar date — this is synthesized demo data (mobile app
+  // via /v1/backtesting, confirmed live-called 2026-08-18) and a specific date like
+  // "2026-08-14" would read as citing an actual recorded event. Same fix already
+  // applied on the web side's /api/backtesting (see 14_CHANGELOG.md v0.16.0) — this
+  // backend copy had the exact bug that fix was meant to prevent from recurring.
   const points = Array.from({ length: totalEvents }).map((_, i) => ({
     severity: 5 + (i % 5),
     movePct: (Math.sin(i / 2) * 4 + (i % 2 ? 1.2 : -0.7)) as number,
     summary: `${p.eventType} impact case #${i + 1}`,
-    date: new Date(now - i * 86400000 * 6).toISOString().slice(0, 10),
+    date: `Sample Case #${i + 1}`,
     country: countries[i % countries.length],
   }));
 

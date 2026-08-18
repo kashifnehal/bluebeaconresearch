@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase-server";
+import { apiError } from "@/lib/api-response";
 
 export async function GET() {
-  type UserChannelsRow = {
-    telegram_chat_id: string | null;
-    slack_webhook_url: string | null;
-  };
-
   const supabase = await createClient();
   const {
     data: { session },
@@ -15,21 +11,23 @@ export async function GET() {
 
   if (!session?.user) return NextResponse.json({ telegramConnected: false }, { status: 200 });
 
-  let row: UserChannelsRow | null = null;
-  try {
-    const { data } = await supabase
-      .from("user_channels")
-      .select("telegram_chat_id, slack_webhook_url")
-      .single();
-    row = (data ?? null) as UserChannelsRow | null;
-  } catch {
-    row = null;
+  // maybeSingle (not single) — a brand-new user genuinely has no user_channels row yet,
+  // which is a normal "not connected" state, not an error. A real DB error is a
+  // separate, distinct state below — previously both were swallowed into the same
+  // `telegramConnected: false` response, indistinguishable from each other.
+  const { data, error } = await supabase
+    .from("user_channels")
+    .select("telegram_chat_id, slack_webhook_url")
+    .maybeSingle();
+
+  if (error) {
+    return apiError(500, "db_error", error.message);
   }
 
   return NextResponse.json({
-    telegramConnected: Boolean(row?.telegram_chat_id),
-    telegramChatId: row?.telegram_chat_id ?? null,
-    slackWebhookUrl: row?.slack_webhook_url ?? null,
+    telegramConnected: Boolean(data?.telegram_chat_id),
+    telegramChatId: data?.telegram_chat_id ?? null,
+    slackWebhookUrl: data?.slack_webhook_url ?? null,
   });
 }
 

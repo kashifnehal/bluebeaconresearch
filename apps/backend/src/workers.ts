@@ -12,6 +12,7 @@ import { runGnewsCollectorOnce } from "./workers/gnews-collector.js";
 import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
+import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
 import { buildPipelineStatus, recordPipelineRun } from "./lib/pipeline-status.js";
 
 function isWorkersEntrypoint() {
@@ -98,6 +99,24 @@ async function main() {
         app.log.error({ err: e }, "acled-collector failed");
         Sentry.captureException(e);
       }
+    }
+  });
+
+  // Reconciliation: a transient failure between the raw_events insert and the
+  // signals insert can orphan a news item forever, since the dedup check only looks
+  // at raw_events.external_id. Every 30 min, catch anything older than the same
+  // window with no matching signal and re-attempt classification.
+  cron.schedule("*/30 * * * *", async () => {
+    try {
+      const res = await reconcileOrphanedRawEventsOnce();
+      if (res.orphaned > 0) {
+        app.log.warn({ res }, "reconciliation: orphaned raw_events found");
+      } else {
+        app.log.debug({ res }, "reconciliation: no orphans found");
+      }
+    } catch (e) {
+      app.log.error({ err: e }, "reconciliation failed");
+      Sentry.captureException(e);
     }
   });
 

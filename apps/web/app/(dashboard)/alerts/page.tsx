@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { track } from "@/lib/analytics";
 
 export default function AlertsPage() {
   const router = useRouter();
@@ -73,6 +74,7 @@ export default function AlertsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      track("alert_rule_created", { source: "alerts_page", region: modalRegion, minSeverity: modalMinSeverity });
       toast.success("Alert Rule Activated", {
         description: `Alerts set for ${modalRegion} (Severity >= ${modalMinSeverity})`,
       });

@@ -25,14 +25,17 @@ export function NotificationPanel() {
   const { notifOpen, setNotifOpen, resetUnread, setUnreadCount } = useUIStore();
   const [readItems, setReadItems] = useState<Record<string, boolean>>({});
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["alerts", "recent"],
     queryFn: async () => {
       const res = await fetch("/api/alerts/recent");
-      if (!res.ok) return { alerts: [] };
+      // Throw on a real failure (5xx / network) rather than silently returning the
+      // same shape as "no alerts yet" — those are different states for the user.
+      if (!res.ok) throw new Error(`Failed to load alerts (${res.status})`);
       return (await res.json()) as { alerts: AlertItem[] };
     },
     refetchInterval: 30_000,
+    retry: 1,
   });
 
   const alerts = data?.alerts ?? [];
@@ -110,6 +113,13 @@ export function NotificationPanel() {
             <div className="p-8 text-center flex flex-col items-center gap-3">
               <div className="w-6 h-6 border-2 border-[#4edea3]/20 border-t-[#4edea3] rounded-full animate-spin" />
               <span className="text-xs text-[#86948a] font-mono uppercase">Loading notifications...</span>
+            </div>
+          ) : isError ? (
+            <div className="p-12 text-center flex flex-col items-center justify-center gap-4 text-[#86948a]">
+              <span className="material-symbols-outlined text-4xl text-[#ee7d77]">error_outline</span>
+              <p className="text-xs font-medium text-[#acabaa]">
+                Couldn't load alerts right now — this is a fetch error, not "no alerts yet."
+              </p>
             </div>
           ) : alerts.length > 0 ? (
             alerts.map((item) => {

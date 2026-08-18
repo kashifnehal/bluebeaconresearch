@@ -1,6 +1,21 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18 (Reliability/Observability/DB-cleanup pass, uncommitted at time of writing — see `14_CHANGELOG.md` v0.21.0)
+
+---
+
+## Reliability, Observability & DB Cleanup Pass (2026-08-18)
+
+Sentry + PostHog wired on web (previously zero wiring despite installed deps); `error.tsx`/`global-error.tsx`/`(dashboard)/error.tsx` added; CI workflow added (`type-check` on push/PR, was empty); Supabase CLI scaffolded but not linked (needs interactive login — decision point); dashboard stale-data banner wired, price staleness surfaced, two routes' DB-error states now distinct from empty/unconfigured, orphaned-`raw_events` reconciliation job added, pipeline zero-yield alerting added, cold-start signal-feed state distinguished; `production_schema.sql` deleted (was describing 4 of 17 real tables) and a new migration adds missing indexes + consolidates `user_channels` RLS + a duplicate-signal guard (**written, not yet applied to live DB** — same CLI-link gap); shared `getRouteSupabaseClients()` + standardized API error shape replace 4x copy-pasted auth boilerplate; backend CORS now fails closed; backend's live-called `/v1/backtesting` had its fabricated-dates bug fixed to match the web version; onboarding brief (`docs/claude_project/21_PROJECT_BRIEFING.md`) corrected (wrong Supabase project ref, wrong port, stale migration count, stale Mapbox→MapLibre claim). Full detail: `14_CHANGELOG.md` v0.21.0.
+
+## Alert Pipeline Actually Wired, Password Reset Built, Auth/Tailwind Fixes (2026-08-18, commit `97b7c4b`)
+
+- **The alert pipeline had never fired a single notification, ever** — confirmed `alerts_sent` was 0 rows before this fix. Root cause: the real collectors classify+insert inline, bypassing the BullMQ queue whose consumer (`ai-classifier.ts`) was the only code that enqueued a dispatch job. Nothing fed that queue, so dispatch never triggered — a wiring gap upstream of credentials, not a config problem. Fixed: collectors now call `dispatchAlertsForSignal()` inline after every insert. Dormant BullMQ queue/worker kept in place (commented, not deleted) as a reserved future option. N+1 query pattern batched in the same pass. Full detail: `14_CHANGELOG.md` v0.20.0.
+- **`/api/alerts/recent` no longer fabricates delivered alerts** from raw signals when `alerts_sent` is empty — returns honest empty state instead.
+- **`/reset-password` built and verified live end-to-end** (was a dead-end route before today). Also fixed a deeper pre-existing bug this surfaced: the shared browser Supabase client can't process password-recovery links at all (hardcoded `flowType: "pkce"` vs. recovery's hash-token flow) — worked around with a page-scoped client, shared client untouched.
+- **Login/logout full-navigation bug fixed** (same family as the already-fixed signup bug) — `login/page.tsx` and a new shared `signOutAndRedirect()` helper.
+- **Tailwind token fixes on 7 files** (SignalCard, SeverityBadge, CommodityChip, PriceTicker, Logo, forgot-password, verify) — broken classes compiling to nothing, fixed the default/low-severity card styling app-wide. Same bug pattern still present in `events/[id]/page.tsx`, `privacy/page.tsx`, and the shadcn `ui/*` primitives — not fixed yet, flagged below.
+- **Still open, found but not fixed this pass**: `signal-generation` (severity ≥7 briefings) has the identical dormant-queue bug alert-dispatch just had.
 
 ---
 
@@ -74,7 +89,7 @@ Last updated: 2026-08-17
 
 - **SSE 401 Authentication Fix**: Resolved HTTP 401 stream disconnects in `apps/web/app/api/events/stream/route.ts` by allowing preview/dev connections and service role fallback, eliminating the persistent stream error loop.
 - **SSE Primary & Exponential Backoff**: Enhanced `useSignalFeed.ts` with clean `1s → 2s → 4s` (up to `30s`) reconnect backoff and jittered polling fallback (`90s ±10s`) to prevent synchronized client request spikes.
-- **Upstash REST Quota Optimization**: Added an in-memory process-level token bucket (`_localBuckets`) in `apps/web/lib/ratelimit.ts` to handle burst requests in-process, reducing external HTTP REST calls to Upstash by 95%+.
+- **Upstash REST Quota Optimization**: Added an in-memory process-level token bucket (`_localBuckets`) in `apps/web/lib/ratelimit.ts`. **Correction (2026-08-18)**: this claim was inaccurate — the local bucket only short-circuits the Upstash REST call once a key is *already over* its limit (`bucket.count > limit`); every request under the limit, i.e. essentially all normal traffic, still round-trips to Upstash on every single request. The actual savings only apply to a client that's already being rate-limited and hammering the endpoint past its cap — not a 95%+ reduction in the general case. The code isn't dangerous, just was described inaccurately.
 - **`RATE_LIMIT_SAFE_MODE` Feature Flag**: Implemented env flag support in `lib/ratelimit.ts` to bypass external REST checks gracefully during emergency quota pressure with loud console logging.
 - **In-Memory Server Caching**: Added 60s server-side in-memory caching (`_cachedPrices`) to `/api/prices` to lower DB and Redis load from watchlist polling.
 - **UI Chrome Audit Completed**: Executed comprehensive UI audit across all 8 page sections (A1–H5). All buttons, modals, dropdowns, scope tabs, filters, and drawers are fully functional with zero fake data.
@@ -93,6 +108,7 @@ Last updated: 2026-08-17
   | **Heuristic Fallback Classifier** | ✅ Operational | Dynamic confidence scoring (55%–90%) + word-boundary filtering |
   | **Upstash Redis / BullMQ** | ✅ Operational | Fixed `rediss://` TLS protocol |
   | **Interactive UI Controls** | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active |
+  | **Multi-Channel Alert Dispatch (Telegram/Slack/Webhook/Push)** | ⚠️ Partial | Trigger wiring fixed 2026-08-18 (commit `97b7c4b`) — fires inline on every signal insert, live-verified against a real signal. No real Telegram/Slack destinations configured to confirm live delivery; Telegram additionally blocked on missing `TELEGRAM_BOT_TOKEN`. `signal-generation` (severity ≥7 briefings) has the same still-unfixed dormant-queue gap. |
 
 ---
 
@@ -152,7 +168,12 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | Anthropic API credit exhausted         | High      | Heuristic fallback active                                        |
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
-| Telegram alerts not working            | Open      | `TELEGRAM_BOT_TOKEN` not set in Railway                          |
+| Alert dispatch never triggered (any channel) | Fixed (2026-08-18, `97b7c4b`) | Was a wiring gap upstream of credentials, not a config problem — see v0.20.0 in `14_CHANGELOG.md` |
+| Telegram alerts not working            | Open (narrowed) | Wiring fixed 2026-08-18; blocker now is only `TELEGRAM_BOT_TOKEN` not set in Railway |
+| Password reset dead-end route          | Fixed (2026-08-18, `97b7c4b`) | `/reset-password` built and live-verified end-to-end |
+| `signal-generation` queue never triggered (severity ≥7 briefings) | Open | Same dormant-queue root cause as alert-dispatch had; found 2026-08-18, not yet fixed |
+| Broken Tailwind tokens in shadcn `ui/*` primitives (button, badge, card, dropdown-menu, select, separator) | Open | Different, deeper issue than the 7-file rename fixed 2026-08-18 — needs a `@theme`/CSS-variable mapping, not a rename |
+| Broken Tailwind tokens in `events/[id]/page.tsx`, `privacy/page.tsx` | Open | Same broken-token pattern as the 7 files fixed 2026-08-18, just not in the named scope of that pass |
 
 ---
 

@@ -22,11 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import type { Signal } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } from "@/lib/utils";
 import { getSignalCoordinates } from "@/lib/geo-coords";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 function eventTypeLabel(eventType?: string | null): string {
   if (!eventType) return "this event";
@@ -47,7 +48,9 @@ export default function EventDetailPage() {
       const res = await fetch(`/api/signals/${id}`);
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error === "not_found" ? "not_found" : "fetch_failed");
+        // /api/signals/[id] standardized its error shape to { error: { code, message } }
+        // on 2026-08-18 — was a bare `body.error === "not_found"` string before.
+        throw new Error(body?.error?.code === "not_found" ? "not_found" : "fetch_failed");
       }
       return (await res.json()) as EventDetailResponse;
     },
@@ -62,6 +65,12 @@ export default function EventDetailPage() {
     Math.max(1, (signal?.severity || 7) - 1),
   );
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
+
+  // Minimum funnel step: "first signal viewed" — PostHog computes first-occurrence
+  // itself from this event, no client-side "is this the first" tracking needed.
+  useEffect(() => {
+    if (signal) track("signal_viewed", { signalId: signal.id, severity: signal.severity });
+  }, [signal?.id]);
 
   if (isLoading) {
     return (
@@ -118,6 +127,7 @@ export default function EventDetailPage() {
         is_active: true,
       });
       if (error) throw error;
+      track("alert_rule_created", { source: "event_detail", region: modalRegion, minSeverity: modalMinSeverity });
       toast.success("Alert Rule Activated", {
         description: `Alerts set for ${modalRegion} (Severity >= ${modalMinSeverity})`,
       });

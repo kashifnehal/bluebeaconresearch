@@ -1,6 +1,8 @@
 # CLAUDE_CONTEXT.md — Project Synchronization & Change Log for Claude
 
-> **Purpose**: This file acts as the primary contextual changelog and implementation record for uploading directly into the Claude Project context. Every task execution, code change, architectural refinement, and bugfix is documented here with precise timestamps, modified files, diff summaries, and verification results.
+> **⚠️ ARCHIVED — superseded 2026-08-18 (audited as of commit `97b7c4b`).** This file stopped being updated after the 2026-08-07 session below (last real commit touching it: `57cf5c0`, 2026-08-15, an unrelated sync edit). `docs/brain/14_CHANGELOG.md` and `docs/brain/08_CURRENT_STATUS.md` have been the live, actively-maintained record since — per `CLAUDE.md`'s doc-precedence rule, trust those two over this file for anything technical. Kept here for historical reference only; do not treat its "Cumulative Env Variable Reference" section as current (see correction below — it names the **wrong Supabase project**).
+>
+> **Original purpose statement** (no longer accurate — this file is not the live changelog): "This file acts as the primary contextual changelog and implementation record for uploading directly into the Claude Project context. Every task execution, code change, architectural refinement, and bugfix is documented here with precise timestamps, modified files, diff summaries, and verification results."
 
 ---
 
@@ -260,11 +262,13 @@ Audited all 20 steps of the Google OAuth workflow across Google Cloud Console, S
 
 ## 📋 Cumulative Env Variable Reference (Railway — Both Services)
 
+> **⚠️ STALE, confirmed wrong as of 2026-08-18**: the `SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_URL` values below (`jzomoxsbnssnibshecui.supabase.co`) are an **old, no-longer-used Supabase project ref**. The actual live project (confirmed against `.env.local` and by direct API calls this session) is `https://evavcgfmemwryggdkjmx.supabase.co`. Do not use this block to configure Railway — check current `.env.local` / Railway dashboard instead. Left as-is below rather than silently rewritten, since this whole file is archived (see banner at top) and its other values (Redis, Anthropic, etc.) were not independently re-verified.
+
 ```env
 NODE_ENV=production
 PROJECT_READY=true
-SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
-NEXT_PUBLIC_SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
+SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co   # WRONG — see warning above, actual project is evavcgfmemwryggdkjmx.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co   # WRONG — see warning above
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
 REDIS_URL=redis://default:<token>@cute-javelin-200660.upstash.io:6379

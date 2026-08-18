@@ -1,7 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 import { dedupeSignalsByTitle } from "@/lib/dedupe-signals";
 import type { Signal } from "@blue-beacon-research/shared";
@@ -112,41 +110,20 @@ export async function GET(req: NextRequest) {
       // otherwise continue and try to query DB — we prefer to keep the API available
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
+    const clients = await getRouteSupabaseClients();
+    if (!clients) {
       return NextResponse.json({ signals: [], nextCursor: null, total: 0 });
     }
-
-    const cookieStore = await cookies();
-    const supabaseAuth = createServerClient(supabaseUrl, supabaseKey, {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => {},
-      },
-    });
 
     // Require authenticated session for dashboard data (matches RLS policy).
     // In local development we allow unauthenticated reads when `NEXT_PUBLIC_PROJECT_READY` is set
     // so the dev dashboard can show signals without a logged-in session.
-    const {
-      data: { user },
-    } = await supabaseAuth.auth.getUser();
+    const { supabase, user } = clients;
 
     // Enforce authentication only in production; allow unauthenticated reads in local/dev.
     if (!user && process.env.NODE_ENV === "production") {
       return NextResponse.json({ signals: [], nextCursor: null, total: 0 });
     }
-
-    // Prefer service role for server-side reads — avoids RLS/session edge cases on API routes.
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const supabase =
-      serviceKey && supabaseUrl
-        ? createClient(supabaseUrl, serviceKey, {
-            auth: { persistSession: false },
-          })
-        : supabaseAuth;
 
     const url = new URL(req.url);
     const searchQ = url.searchParams.get("search")?.trim() ?? null;
@@ -228,7 +205,21 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      return NextResponse.json({ signals: [], nextCursor: null, total: 0 });
+      // Cold-start case: a DB error with no cache yet to fall back to (e.g. right
+      // after a fresh deploy) previously returned the exact same empty-list shape as
+      // a genuinely quiet news day — indistinguishable to the UI. Mark it explicitly
+      // instead, same fallback contract the other branches in this route already use.
+      console.warn("[signals] DB error with no cache available (cold start) — returning explicit fallback state, not a bare empty list");
+      return NextResponse.json(
+        {
+          signals: [],
+          nextCursor: null,
+          total: 0,
+          fallback: true,
+          fallbackReason: "db-error-cold-start",
+        },
+        { status: 200, headers: { "x-signals-feed-status": "degraded" } },
+      );
     }
 
     const rows = (data ?? []) as SignalRow[];

@@ -90,6 +90,7 @@ Railway deploys two distinct services from the backend codebase:
 > 4. Add `SUPABASE_SERVICE_ROLE_KEY` to **Vercel** (not just Railway) so `/api/signals` reads reliably on dashboard refresh.
 > 5. `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` prevents lockfile errors during Railway builds.
 > 6. Pre-deploy `npm run migrate` is a no-op in `package.json` — safe if left configured in Railway UI.
+> 7. **Schema changes**: see `16_MIGRATION_CHECKLIST.md` (added 2026-08-18) — `supabase/config.toml` now exists and the CLI is scaffolded (`supabase db push`), but not yet linked to the live project (needs an interactive `supabase login`). Until it's linked, migrations still go through the SQL editor manually — but the standing verification checklist in that file is mandatory regardless, after the `008` constraint fix silently failed to apply for two days despite being marked done.
 
 ### Troubleshooting: "Dashboard shows old data after deploy"
 

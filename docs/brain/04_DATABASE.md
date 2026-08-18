@@ -115,6 +115,21 @@ CREATE INDEX idx_signals_fulltext ON public.signals USING gin (
 CREATE INDEX idx_commodity_prices_symbol ON public.commodity_prices (symbol, fetched_at DESC);
 CREATE INDEX idx_alerts_sent_user ON public.alerts_sent (user_id, created_at DESC);
 CREATE INDEX idx_raw_events_dedup ON public.raw_events (external_id, source);
+
+-- Added 2026-08-18 (012_reliability_indexes_and_cleanup.sql) — ownership columns that
+-- are both application-filtered and RLS-checked on every row had no supporting index:
+CREATE INDEX idx_alert_rules_user_id ON public.alert_rules (user_id);
+CREATE INDEX idx_api_keys_user_id ON public.api_keys (user_id);
+CREATE INDEX idx_webhook_endpoints_user_id ON public.webhook_endpoints (user_id);
+CREATE INDEX idx_webhook_deliveries_endpoint_id ON public.webhook_deliveries (endpoint_id);
+CREATE INDEX idx_subscriptions_user_id ON public.subscriptions (user_id);
+-- The main feed's commodity filter (`.contains("commodity_impacts", [{asset}])`) had
+-- no index either, unlike the equivalent full-text search column above:
+CREATE INDEX idx_signals_commodity_impacts ON public.signals USING gin (commodity_impacts jsonb_path_ops);
+-- Guards against duplicate signals for the same raw_event if the dormant
+-- ai-classifier.ts queue worker is ever reactivated (its duplicate check today is a
+-- check-then-insert race with no DB-level backstop):
+CREATE UNIQUE INDEX idx_signals_raw_event_ids_unique ON public.signals (raw_event_ids);
 ```
 
 ---
@@ -129,3 +144,18 @@ CREATE INDEX idx_raw_events_dedup ON public.raw_events (external_id, source);
 6. **`005_fix_profiles_rls.sql`**: RLS update allowing profile creation during auth flow.
 7. **`006_onboarding_schema_fix.sql`**: Onboarding wizard state column updates.
 8. **`007_waitlist.sql`**: Gated waitlist submission schema.
+9. **`008_fix_source_constraint.sql`**: Allowed `source='gnews'` in `raw_events` — believed applied for 2 days before it actually was (see `14_CHANGELOG.md` v0.19.0 and `16_MIGRATION_CHECKLIST.md`).
+10. **`009_signals_event_date.sql`**: Added `event_date` index for publish-time ordering.
+11. **`010_add_product_tour_flag.sql`**: `profiles.product_tour_completed` column.
+12. **`011_rls_remediation.sql`**: Enabled RLS on 7 previously-exposed tables; hardened `handle_new_user()`.
+13. **`012_reliability_indexes_and_cleanup.sql`** (2026-08-18): Consolidated `user_channels`' 4 overlapping RLS policies into 1; added the 6 indexes above; see full rationale in the migration file itself and `16_MIGRATION_CHECKLIST.md`.
+
+## 5. Data Retention & Archival — planned, not yet built
+
+No archival or pruning strategy currently exists for `raw_events`, `signals`, or `commodity_prices` — all three grow forever. A full archival system (cold storage, partitioning, etc.) is bigger than any single task scoped so far; this section exists so the decision is a planned one, not a surprise when one of these tables eventually becomes a performance problem.
+
+**Proposed retention plan (not yet implemented — flagged as a decision point for the founder, not resolved unilaterally here):**
+- `raw_events`: archive or delete rows older than ~180 days that already have a corresponding `signals` row (the source article's raw text has no ongoing product use once classified; the `signals` row is the durable artifact). Rows *without* a corresponding signal should go through the reconciliation job (`reconciliation.ts`, added 2026-08-18) first — don't archive an unprocessed orphan.
+- `signals`: no deletion — these are the actual product (historical signals feed comparable events, backtesting references them). If storage becomes a real concern, consider moving `signals` older than ~2 years to a separate cold-storage table rather than deleting, since `HISTORICAL` tab comparisons (`events/[id]/page.tsx`) and backtesting both query historical signals directly.
+- `commodity_prices`: prune raw per-15-minute rows older than ~90 days, keeping only a daily/weekly rollup for anything older (the watchlist sparkline and price-at-signal comparisons only need recent granularity; long-range history doesn't need 15-minute resolution).
+- Whichever of the above is chosen, implement as a scheduled job in `workers.ts` (same pattern as the existing daily sanctions sync `cron.schedule("0 4 * * *", ...)`), not a one-off manual script — so it doesn't require remembering to run it.

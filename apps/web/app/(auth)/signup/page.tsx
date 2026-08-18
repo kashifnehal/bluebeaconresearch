@@ -11,6 +11,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { signupSchema } from "@/lib/validators";
 import type { PlanTier } from "@blue-beacon-research/shared";
 import { isProjectReady } from "@/lib/flags";
+import { track } from "@/lib/analytics";
 
 type FormValues = z.infer<typeof signupSchema>;
 
@@ -93,6 +94,7 @@ function SignupForm() {
         }
         return;
       }
+      track("signup_started");
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Missing Supabase env vars.");
       const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`;
@@ -105,6 +107,7 @@ function SignupForm() {
         },
       });
       if (signUpError) throw signUpError;
+      track("signup_completed");
 
       if (data.user?.id) {
         await supabase

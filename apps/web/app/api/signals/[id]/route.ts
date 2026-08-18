@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { getRouteSupabaseClients } from "@/lib/supabase-server";
+import { apiError } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 
 export const dynamic = "force-dynamic";
@@ -38,50 +37,23 @@ export type EventDetailResponse = {
   pricesAtSignal: PriceAtSignal[];
 };
 
-function getSupabaseClients(cookieStore: Awaited<ReturnType<typeof cookies>>) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) return null;
-
-  const supabaseAuth = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll: () => cookieStore.getAll(),
-      setAll: () => {},
-    },
-  });
-
-  const supabase =
-    serviceKey && supabaseUrl
-      ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
-      : supabaseAuth;
-
-  return { supabaseAuth, supabase };
-}
-
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   if (!id) {
-    return NextResponse.json({ error: "missing_id" }, { status: 400 });
+    return apiError(400, "missing_id");
   }
 
-  const cookieStore = await cookies();
-  const clients = getSupabaseClients(cookieStore);
+  const clients = await getRouteSupabaseClients();
   if (!clients) {
-    return NextResponse.json({ error: "config_error" }, { status: 500 });
+    return apiError(500, "config_error");
   }
-  const { supabaseAuth, supabase } = clients;
-
-  const {
-    data: { user },
-  } = await supabaseAuth.auth.getUser();
+  const { supabase, user } = clients;
 
   if (!user && process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return apiError(401, "unauthorized");
   }
 
   const { data: row, error } = await supabase
@@ -92,11 +64,11 @@ export async function GET(
 
   if (error) {
     console.error("[signals/:id] DB error:", error.message);
-    return NextResponse.json({ error: "db_error" }, { status: 500 });
+    return apiError(500, "db_error", error.message);
   }
 
   if (!row) {
-    return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return apiError(404, "not_found");
   }
 
   const rawEventIds: string[] = row.raw_event_ids ?? [];

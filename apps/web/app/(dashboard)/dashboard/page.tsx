@@ -11,7 +11,8 @@ import { fetchMyProfile } from "@/lib/profile";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { liveSignals, isLoading, isError } = useSignalFeed({ enabled: true });
+  const { liveSignals, isLoading, isError, fallback, fallbackReason, fallbackLastUpdated } =
+    useSignalFeed({ enabled: true });
   const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
   const [filter, setFilter] = useState<"all" | "high">("all");
 
@@ -122,6 +123,20 @@ export default function DashboardPage() {
         </div>
 
         <IngestionStatusBanner />
+
+        {fallback && (
+          <div
+            className="mb-6 px-3 py-2 rounded text-[11px] font-medium bg-yellow-600/95 text-black"
+            suppressHydrationWarning
+          >
+            Signal feed degraded — {fallbackReason ?? "unknown"}. Showing last available data
+            {fallbackLastUpdated ? (
+              <span className="ml-2 text-[10px] text-black/80" suppressHydrationWarning>
+                (updated {safeFormatDistanceToNow(fallbackLastUpdated)} ago)
+              </span>
+            ) : null}
+          </div>
+        )}
 
         {/* Filter Pills */}
         <div className="flex gap-3 mb-8">

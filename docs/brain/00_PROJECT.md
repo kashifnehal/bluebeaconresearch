@@ -55,8 +55,9 @@ blueBeaconResearch/
 ├── packages/
 │   └── shared/        # Shared TypeScript models, enums & commodity constants
 └── supabase/
-    ├── production_schema.sql  # Core Database schema & RLS policies
-    └── migrations/            # Versioned SQL migrations (000–007)
+    ├── config.toml             # Supabase CLI config (added 2026-08-18, not yet linked — see 16_MIGRATION_CHECKLIST.md)
+    └── migrations/             # Versioned SQL migrations (000–012) — the only accurate schema source;
+                                 # production_schema.sql was deleted 2026-08-18 (described 4 of 17 real tables, actively misleading)
 ```
 
 ---

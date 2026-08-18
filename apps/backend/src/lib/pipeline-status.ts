@@ -29,6 +29,12 @@ export type PipelineRunStatus = {
 
 const REDIS_KEY = "pipeline:last_run";
 const CRON_INTERVAL_MS = 15 * 60 * 1000;
+const ZERO_YIELD_STREAK_KEY = "pipeline:consecutive_zero_yield";
+// 3 consecutive 15-min cycles with literally nothing fetched from any source is a
+// different signal than normal per-source degradation (rate limits, one feed 404ing) —
+// it's the "a shared format change broke every collector at once" scenario, and
+// nothing currently distinguishes that from a slow news day without this counter.
+const ZERO_YIELD_ALERT_THRESHOLD = 3;
 
 export function buildPipelineStatus(
   collectors: PipelineRunStatus["collectors"],
@@ -62,6 +68,33 @@ export async function recordPipelineRun(status: PipelineRunStatus): Promise<void
     await redis.set(REDIS_KEY, JSON.stringify(status), "EX", 86400);
   } catch (e: any) {
     console.warn("[pipeline-status] Redis write failed:", e.message);
+  }
+
+  await trackZeroYieldStreak(status, redis);
+}
+
+async function trackZeroYieldStreak(
+  status: PipelineRunStatus,
+  redis: ReturnType<typeof getRedis>,
+): Promise<void> {
+  if (!redis) return;
+  const isZeroYield = status.totals.fetched === 0;
+  try {
+    if (!isZeroYield) {
+      await redis.del(ZERO_YIELD_STREAK_KEY);
+      return;
+    }
+    const streak = await redis.incr(ZERO_YIELD_STREAK_KEY);
+    await redis.expire(ZERO_YIELD_STREAK_KEY, 86400);
+    if (streak >= ZERO_YIELD_ALERT_THRESHOLD) {
+      console.error(
+        `[pipeline-status] ALERT: ${streak} consecutive zero-yield ingestion cycles (nothing fetched from RSS, GNews, or GDELT) — likely a shared failure (feed format change, network block, upstream outage), not normal per-source degradation.`,
+      );
+    } else {
+      console.warn(`[pipeline-status] zero-yield cycle ${streak}/${ZERO_YIELD_ALERT_THRESHOLD} — nothing fetched this run`);
+    }
+  } catch (e: any) {
+    console.warn("[pipeline-status] zero-yield streak tracking failed:", e.message);
   }
 }
 

@@ -24,8 +24,13 @@ export function buildApp() {
   const app = Fastify({ logger: { level: "info" } });
 
   app.register(helmet);
+  // Fail closed, not open: if NEXT_PUBLIC_APP_URL is ever unset, `origin: true` would
+  // reflect back *any* request's Origin header — combined with credentials: true,
+  // that's an open CORS misconfiguration (mitigated today by this API using
+  // token-based, not cookie-based, auth, but not something to rely on staying true).
+  // `origin: false` rejects cross-origin requests outright instead.
   app.register(cors, {
-    origin: env.NEXT_PUBLIC_APP_URL ? [env.NEXT_PUBLIC_APP_URL] : true,
+    origin: env.NEXT_PUBLIC_APP_URL ? [env.NEXT_PUBLIC_APP_URL] : false,
     credentials: true,
   });
 

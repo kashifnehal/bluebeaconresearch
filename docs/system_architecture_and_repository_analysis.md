@@ -92,8 +92,10 @@ blueBeaconResearch/
 ├── pnpm-workspace.yaml              # pnpm workspace definition (apps/*, packages/*)
 ├── turbo.json                       # Turborepo task pipeline configuration
 ├── supabase/
-│   ├── production_schema.sql        # Core database schema with Row Level Security
-│   └── migrations/                  # Sequential SQL migration files (000 - 007)
+│   ├── config.toml                  # Supabase CLI config (added 2026-08-18, not yet linked)
+│   └── migrations/                  # Sequential SQL migration files (000 - 012) — the only accurate
+│                                     # schema source; production_schema.sql deleted 2026-08-18 (was
+│                                     # stale — described 4 of 17 real tables)
 ├── packages/
 │   └── shared/                      # Shared TypeScript models and constants
 │       └── src/
