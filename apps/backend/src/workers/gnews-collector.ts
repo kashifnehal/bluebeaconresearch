@@ -5,6 +5,7 @@ import { isRelevantEvent } from "./gdelt-collector.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
+import { generateSignalAnalysis } from "./signal-generator.js";
 
 const claude = new ClaudeService();
 
@@ -128,9 +129,17 @@ export async function runGnewsCollectorOnce() {
 
       if (!sigErr) {
         signals += 1;
-        // Dispatch inline — bypass the queue, same as classification above, since
-        // nothing feeds the dormant `alertDispatcher` BullMQ queue.
+        // Dispatch + briefing generation inline — bypass the queue for both, same as
+        // classification above, since nothing feeds either dormant BullMQ queue.
         if (sigInsert?.id) {
+          if (classification.severity >= 7) {
+            try {
+              await generateSignalAnalysis(sigInsert.id as string);
+              console.log(`[GNews] signal-generation completed for signal ${sigInsert.id}`);
+            } catch (e) {
+              console.error(`[GNews] signal-generation failed for signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
+            }
+          }
           try {
             const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
             console.log(`[GNews] alert-dispatch for signal ${sigInsert.id}:`, dispatchResult);

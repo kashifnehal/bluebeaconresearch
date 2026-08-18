@@ -4,6 +4,7 @@ import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
+import { generateSignalAnalysis } from "./signal-generator.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -142,9 +143,17 @@ export async function runGdeltCollectorOnce() {
 
       if (!sigErr) {
         signals += 1;
-        // Dispatch inline — bypass the queue, same as classification above, since
-        // nothing feeds the dormant `alertDispatcher` BullMQ queue.
+        // Dispatch + briefing generation inline — bypass the queue for both, same as
+        // classification above, since nothing feeds either dormant BullMQ queue.
         if (sigInsert?.id) {
+          if (classification.severity >= 7) {
+            try {
+              await generateSignalAnalysis(sigInsert.id as string);
+              console.log(`[GDELT] signal-generation completed for signal ${sigInsert.id}`);
+            } catch (e) {
+              console.error(`[GDELT] signal-generation failed for signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
+            }
+          }
           try {
             const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
             console.log(`[GDELT] alert-dispatch for signal ${sigInsert.id}:`, dispatchResult);

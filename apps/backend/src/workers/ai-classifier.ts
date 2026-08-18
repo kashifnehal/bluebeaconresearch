@@ -100,14 +100,15 @@ export function startAiClassifierWorker() {
       if (insert.error || !insert.data?.id) throw new Error("Failed to insert signal");
       const signalId = insert.data.id as string;
 
+      // Dormant path: nothing currently enqueues jobs onto `aiClassification` (this
+      // worker's own queue), so neither line below ever runs in the live system today.
+      // The real collectors (rss/gnews/gdelt) and the reconciliation job call
+      // generateSignalAnalysis() and dispatchAlertsForSignal() directly instead — see
+      // signal-generator.ts and alert-dispatcher.ts. Kept as-is, reserved for a
+      // possible future move back to a fully queued classify→generate→dispatch pipeline.
       if (r.severity >= 7) {
         await queues.signalGeneration.add("generate", { signalId }, { attempts: 3, backoff: { type: "exponential", delay: 1000 } });
       }
-      // Dormant path: nothing currently enqueues jobs onto `aiClassification` (this
-      // worker's own queue), so this line never runs in the live system today. The real
-      // collectors (rss/gnews/gdelt) call dispatchAlertsForSignal() directly instead —
-      // see alert-dispatcher.ts. Kept as-is, reserved for a possible future move back to
-      // a fully queued classify→dispatch pipeline.
       await queues.alertDispatcher.add("dispatch", { signalId }, { attempts: 5, backoff: { type: "exponential", delay: 1000 } });
 
       await publishNewSignal({ signalId });

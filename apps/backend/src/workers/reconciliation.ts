@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
+import { generateSignalAnalysis } from "./signal-generator.js";
 
 const claude = new ClaudeService();
 
@@ -94,6 +95,15 @@ export async function reconcileOrphanedRawEventsOnce() {
 
       recovered++;
       console.log(`[Reconciliation] Recovered raw_event ${raw.id} -> signal ${sigInsert.id}`);
+
+      if (classification.severity >= 7) {
+        try {
+          await generateSignalAnalysis(sigInsert.id as string);
+          console.log(`[Reconciliation] signal-generation completed for recovered signal ${sigInsert.id}`);
+        } catch (e) {
+          console.error(`[Reconciliation] signal-generation failed for recovered signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
+        }
+      }
 
       try {
         const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);

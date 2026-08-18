@@ -39,7 +39,7 @@ This document defines every user-facing page and view across the Web Terminal (`
 - **User Journey**: Post-signup redirect → Select Plan (`Analyst`/`Pro`) → Connect Telegram Chat ID → Set default commodities → Transition to `/dashboard`.
 - **Navigation**: Redirects to `/dashboard` upon wizard completion.
 - **Implementation Status**: **Fully Functional**.
-- **Missing Features**: Interactive onboarding walkthrough overlay for terminal features.
+- **Missing Features**: none remaining here — corrected 2026-08-19: this line previously listed "Interactive onboarding walkthrough overlay for terminal features" as missing, but it shipped 2026-08-16 (a 6-step `react-joyride` tour covering the dashboard + featured event detail page, with a "Replay product tour" option in the Help modal — see `08_CURRENT_STATUS.md`) and was live-verified again 2026-08-19 via a fresh throwaway signup driven through Playwright: all 6 steps fired correctly, completion persisted across a reload. This doc and the 2026-08-18 architecture audit (which separately listed it as "not started") were both stale relative to `08_CURRENT_STATUS.md`, which was correct — same "update the outlier doc" resolution used for the Supabase-ref and port-number conflicts.
 
 ---
 
