@@ -141,7 +141,25 @@ GNews API free tier caches articles with a 12-hour lag, serving stale news despi
 
 ---
 
-## 8. Architectural Assumptions & Future Risks
+## 8. ADR 008: Rate Limiter — Periodic Reconciliation, Not Local-Only or Per-Request
+
+### Context
+
+`apps/web/lib/ratelimit.ts` guards 4 routes against abuse using Upstash as the cross-instance source of truth. A prior pass added an in-memory local bucket meant to cut Upstash REST calls, but the logic was backwards — it only skipped Upstash once a key was *already over* its limit, so normal traffic (the common case) round-tripped externally on every request, contributing to the 2026-08-19 quota-exhaustion incident (`14_CHANGELOG.md` v0.24.0). Two honest options existed to fix this: accept a stated amount of under-enforcement from a purely local-only bucket, or keep Upstash as authoritative via periodic touches. `apps/web` runs as multiple Vercel serverless instances with no shared memory, so a purely local bucket would under-count a single client's true request rate once traffic spans instances/regions.
+
+### Decision
+
+**Periodic reconciliation, not accepted under-enforcement.** Each rate-limit key is resolved from local memory alone unless it's within 20% of its limit or hasn't consulted Upstash in the last 10 requests or 5 seconds (whichever comes first) — sub-linear in request volume (roughly 1 Upstash touch per ~10 requests per key under normal load), not the two rejected extremes of "1 call per request" (the pre-fix bug) or "0 calls ever" (would silently under-enforce at scale).
+
+### Rationale
+
+- **Correctness under the case that matters**: a key split evenly across several instances could look "well under limit" on each instance individually while being over limit in aggregate — the near-limit check (always reconcile above 80% of the local count) catches exactly this case before it matters, rather than after.
+- **Cost stays bounded as traffic grows**: reconcile frequency is capped per key regardless of request volume, so Upstash command usage grows sub-linearly with user count instead of 1:1.
+- **Known gap, explicitly accepted**: between reconcile touches, a key could locally under-count relative to its true cross-instance total by up to ~10 requests or 5 seconds' worth of traffic — acceptable for abuse *prevention* (the goal is stopping sustained hammering, not exact-request accounting), not acceptable to silently ignore, which is why it's written down here rather than left implicit in the code.
+
+---
+
+## 9. Architectural Assumptions & Future Risks
 
 1. **Third-Party API & RSS Feed Availability**: System relies on GNews, GDELT, RSS endpoints, Yahoo Finance uptime.
 2. **Anthropic API Credits**: Production requires Anthropic credits. Heuristic fallback covers outages but quality is lower.

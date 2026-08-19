@@ -6,7 +6,6 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 
 import { getEnv } from "./env.js";
-import { getRedis } from "./clients/redis.js";
 import { signalsRoutes } from "./routes/signals.js";
 import { registerAuth } from "./middleware/auth.middleware.js";
 import { usersRoutes } from "./routes/users.js";
@@ -34,10 +33,20 @@ export function buildApp() {
     credentials: true,
   });
 
-  // Use Redis-backed rate limit if available
-  const redis = getRedis();
+  // In-memory store, not Redis-backed. This previously passed the shared ioredis
+  // client as the rate-limit store, which meant EVERY incoming request — including
+  // Railway's own /health probe (registered below, with no rate-limit exemption) —
+  // ran a Lua eval/evalsha against Redis before reaching any route handler. That's a
+  // Redis command on every single request regardless of user count, and worse: when
+  // Redis errors (e.g. quota exhaustion), @fastify/rate-limit propagates the failure
+  // rather than failing open, so the entire API 500s on every request until Redis
+  // recovers — a rate limiter taking down the whole service is the opposite of what
+  // it's for. Railway runs this service at numReplicas: 1 today (railway.json has no
+  // replica count set, defaulting to 1), so a single in-memory bucket enforces
+  // correctly; if this service is ever scaled to multiple replicas, per-instance
+  // in-memory limits will under-count a single client's true request rate across
+  // instances — revisit then (same trade-off as apps/web/lib/ratelimit.ts).
   app.register(rateLimit, {
-    ...(redis ? { redis } : {}),
     max: 60,
     timeWindow: "1 minute",
   });

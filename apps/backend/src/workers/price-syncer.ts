@@ -1,5 +1,5 @@
 import YahooFinance from "yahoo-finance2";
-import { getRedis } from "../clients/redis.js";
+import { getRedis, recordRedisError } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
 const COMMODITY_SYMBOLS = {
@@ -56,6 +56,7 @@ export async function runPriceSyncOnce() {
           try {
             await redis.set(`prices:${symbol}`, JSON.stringify(record), "EX", 900);
           } catch (e: any) {
+            recordRedisError(e?.message);
             console.warn(`[PRICE SYNC] Redis cache warning for ${symbol}:`, e.message);
           }
         }

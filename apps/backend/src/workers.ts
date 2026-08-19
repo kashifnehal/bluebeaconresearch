@@ -14,6 +14,7 @@ import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
 import { buildPipelineStatus, recordPipelineRun } from "./lib/pipeline-status.js";
+import { getLastKnownRedisUsage } from "./clients/redis.js";
 
 function isWorkersEntrypoint() {
   const entry = process.argv[1] ?? "";
@@ -65,11 +66,25 @@ async function main() {
   // Use Fastify logger (but do not listen).
   const app = buildApp();
 
-  const workers = [
-    startAiClassifierWorker(),
-    startSignalGeneratorWorker(),
-    startAlertDispatcherWorker(),
-  ];
+  // Dormant scaffolding: per ADR 006 (10_DECISIONS.md), the real collectors
+  // (rss/gnews/gdelt) classify and insert signals directly to Supabase, bypassing
+  // BullMQ entirely — see the "Dormant BullMQ path" comments in ai-classifier.ts,
+  // signal-generator.ts, and alert-dispatcher.ts. With nothing ever enqueuing jobs,
+  // these three Workers still poll Redis continuously just to stay alive (lock
+  // renewal, stalled-job checks) — a flat, constant Upstash cost regardless of user
+  // count. Gated off by default so that idle cost doesn't recur; flip
+  // ENABLE_BULLMQ_WORKERS=true if/when the system moves back to a queued pipeline.
+  const workersEnabled = (process.env.ENABLE_BULLMQ_WORKERS || "false").toLowerCase() === "true";
+  let workers: Array<ReturnType<typeof startAiClassifierWorker>> = [];
+  if (workersEnabled) {
+    workers = [
+      startAiClassifierWorker(),
+      startSignalGeneratorWorker(),
+      startAlertDispatcherWorker(),
+    ];
+  } else {
+    app.log.info("workers: BullMQ workers disabled (ENABLE_BULLMQ_WORKERS not set) — dormant scaffolding skipped");
+  }
 
   // ── Run collectors IMMEDIATELY on startup (don't wait up to 15 min for first cron tick) ──
   // This means after a Railway deploy or restart, data is fresh within ~30 seconds.
@@ -134,6 +149,30 @@ async function main() {
   // Log heartbeat every 5 min — confirms container stayed alive between cron ticks
   cron.schedule("*/5 * * * *", () => {
     app.log.info({ uptimeSec: Math.round(process.uptime()) }, "workers:heartbeat");
+
+    // Reactive Redis-quota check, piggybacked on the existing heartbeat rather than a
+    // separate cron. Upstash doesn't expose usage proactively through the credentials
+    // this project has (see clients/redis.ts) — this only knows the real Limit/Usage
+    // numbers once a command has actually failed against the quota, parsed straight out
+    // of Upstash's own error string. Real proactive (pre-failure) 70%/90% checks need
+    // UPSTASH_API_KEY + UPSTASH_EMAIL wired to Upstash's account-level Management API —
+    // not present today; this is the best signal available without those.
+    const usage = getLastKnownRedisUsage();
+    if (usage) {
+      const pct = usage.usage / usage.limit;
+      const ageMin = (Date.now() - usage.at) / 60_000;
+      if (pct >= 0.9) {
+        app.log.error(
+          { usage, ageMin: Math.round(ageMin * 10) / 10 },
+          `[REDIS QUOTA] 90%+ of Upstash quota used (${usage.usage}/${usage.limit}), last confirmed ${ageMin.toFixed(1)}min ago`,
+        );
+      } else if (pct >= 0.7) {
+        app.log.warn(
+          { usage, ageMin: Math.round(ageMin * 10) / 10 },
+          `[REDIS QUOTA] 70%+ of Upstash quota used (${usage.usage}/${usage.limit}), last confirmed ${ageMin.toFixed(1)}min ago`,
+        );
+      }
+    }
   });
 
   // Only bind HTTP when run as standalone workers process (Railway workers service).
