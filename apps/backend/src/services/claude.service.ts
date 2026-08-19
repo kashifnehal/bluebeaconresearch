@@ -63,7 +63,7 @@ export class ClaudeService {
           `}`;
 
         const msg = await client.messages.create({
-          model: "claude-3-5-haiku-20241022",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 500,
           temperature: 0.2,
           system,
@@ -256,7 +256,7 @@ export class ClaudeService {
       const user = `Write a 5-8 sentence intelligence briefing for the following event.\n\n${JSON.stringify(_signal).slice(0, 6000)}`;
 
       const msg = await client.messages.create({
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-sonnet-5",
         max_tokens: 800,
         temperature: 0.3,
         system,

@@ -339,6 +339,7 @@ Email 4 (day 14): "Your research seat is ready — limited time"
 
 **Email service:** Resend (3,000 free emails/month)
 **Waitlist storage:** Supabase — email signups before accounts
+> ⚠️ UPDATED 2026-08-19 — The Resend infrastructure referenced here is now live in production, verified end-to-end: domain `send.bluebeaconresearch.com` (Verified, DNS via Cloudflare, us-east-1), wired as Supabase Auth's custom SMTP provider (`/auth/smtp` project setting, not an app-level `RESEND_API_KEY`). This closes the account-level setup this section anticipated. Confirmed for the signup-confirmation/password-reset auth-email use case specifically — full detail in `docs/brain/14_CHANGELOG.md` v0.26.0; this doc's own drip-sequence waitlist emails (Email 1–4 above) are a separate feature and their build status wasn't part of this pass.
 
 ---
 

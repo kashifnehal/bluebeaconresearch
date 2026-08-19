@@ -6,6 +6,7 @@ import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent, type FeedTier } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
+import { insertOrMergeSignal } from "./signal-merge.js";
 
 const claude = new ClaudeService();
 const parser = new Parser({ timeout: 20_000 });
@@ -140,45 +141,43 @@ export async function runRssCollectorOnce() {
         classification.region
       );
 
-      const { data: sigInsert, error: sigErr } = await supabase.from("signals").insert({
-        raw_event_ids: [rawEventId],
+      const mergeResult = await insertOrMergeSignal({
+        supabase,
+        collectorLabel: "RSS",
+        rawEventId,
+        classification,
         title: rawEventPayload.title,
-        summary: classification.summary,
-        severity: classification.severity,
-        confidence: classification.confidence,
-        event_type: rawEventPayload.event_type,
+        eventType: rawEventPayload.event_type,
+        eventDate: rawEventPayload.event_date,
         country: formatCountryName(null),
-        region: classification.region,
         lat: resolvedLat,
         lng: resolvedLng,
-        sources_count: 1,
-        commodity_impacts: classification.commodityImpacts,
-        is_breaking: classification.isBreaking,
-        is_active: true,
-        event_date: rawEventPayload.event_date,
-      }).select("id").maybeSingle();
+      });
 
-      if (!sigErr) {
+      // Dispatch + briefing generation inline — bypass the queue for both, same as
+      // classification above, since nothing feeds either dormant BullMQ queue. Only
+      // for genuinely new signals: a duplicate merge reuses the existing signal's
+      // ai_analysis and skips Sonnet/dispatch entirely; an escalation regenerates the
+      // briefing itself (gated on the new severity, inside insertOrMergeSignal) but
+      // doesn't re-dispatch alerts — a deliberate scope decision, not an oversight
+      // (re-notifying already-alerted users on escalation is a separate product call).
+      if (mergeResult.outcome === "new" && mergeResult.signalId) {
         signals++;
-        // Dispatch + briefing generation inline — bypass the queue for both, same as
-        // classification above, since nothing feeds either dormant BullMQ queue.
-        if (sigInsert?.id) {
-          if (classification.severity >= 7) {
-            try {
-              await generateSignalAnalysis(sigInsert.id as string);
-              console.log(`[RSS] signal-generation completed for signal ${sigInsert.id}`);
-            } catch (e) {
-              console.error(`[RSS] signal-generation failed for signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
-            }
-          }
+        if (classification.severity >= 7) {
           try {
-            const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
-            console.log(`[RSS] alert-dispatch for signal ${sigInsert.id}:`, dispatchResult);
+            await generateSignalAnalysis(mergeResult.signalId);
+            console.log(`[RSS] signal-generation completed for signal ${mergeResult.signalId}`);
           } catch (e) {
-            console.error(`[RSS] alert-dispatch failed for signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
+            console.error(`[RSS] signal-generation failed for signal ${mergeResult.signalId}:`, e instanceof Error ? e.message : e);
           }
         }
-      } else console.error("[RSS] Signal insert error:", sigErr.message);
+        try {
+          const dispatchResult = await dispatchAlertsForSignal(mergeResult.signalId);
+          console.log(`[RSS] alert-dispatch for signal ${mergeResult.signalId}:`, dispatchResult);
+        } catch (e) {
+          console.error(`[RSS] alert-dispatch failed for signal ${mergeResult.signalId}:`, e instanceof Error ? e.message : e);
+        }
+      }
     } catch (e: any) {
       console.error("[RSS] Classification/signal insert failed:", e.message);
     }

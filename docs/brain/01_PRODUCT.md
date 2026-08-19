@@ -29,6 +29,7 @@ This document defines every user-facing page and view across the Web Terminal (`
 - **Navigation**: Bidirectional switching between Login, Signup, and Reset password views.
 - **Implementation Status**: **Fully Functional**.
 - **Missing Features**: Single-Sign-On (SSO) for enterprise clients (SAML/Okta).
+> ⚠️ UPDATED 2026-08-19 — Custom SMTP (Resend, via Cloudflare DNS) went live, so `Confirm email` is back on and the verified-email signup flow is now the real production path, not a bypassed/OFF setting — full detail in `08_CURRENT_STATUS.md` and `14_CHANGELOG.md` v0.26.0. New missing feature identified, not yet started (founder hasn't decided if it's worth building): **cross-device signup confirmation auto-detect** — the "Check your email" screen doesn't notice if the confirmation link is clicked on a different device than the one waiting on that screen; two implementation paths (polling vs. Supabase Realtime) are scoped in the BBR Claude project's `22_SESSION_HANDOFF.md`.
 
 ---
 
