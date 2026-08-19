@@ -77,12 +77,13 @@ export function VerifyClient() {
         <h1 className="text-[24px] font-semibold text-on-surface">
           Check your email
         </h1>
+        {/* Deliberately a single, non-conditional message shown to every submitter
+            regardless of whether the email was new or already registered — GoTrue's
+            anti-enumeration response is distinguishable server-side (see signup/page.tsx),
+            but that difference must never surface here. Don't reintroduce a branch. */}
         <p className="text-on-surface-variant text-sm mt-2">
-          We sent a verification link to{" "}
-          <span className="text-on-surface font-medium">
-            {email || "your email"}
-          </span>
-          . Click it to activate your account.
+          Check your inbox — we&apos;ve sent a link to confirm your account. It should
+          arrive in a minute or two.
         </p>
 
         <div className="mt-6">
