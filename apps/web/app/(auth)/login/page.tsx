@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
 import { loginSchema } from "@/lib/validators";
 import { fetchMyProfile, resolvePostAuthRedirect } from "@/lib/profile";
 import { isProjectReady } from "@/lib/flags";
@@ -51,6 +52,8 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
 
   const form = useForm<FormValues>({ defaultValues: { email: prefillEmail, password: "" } });
   const emailValue = form.watch("email");
@@ -73,6 +76,8 @@ function LoginForm() {
 
   async function onSubmit(values: FormValues) {
     setError(null);
+    setUnconfirmedEmail(null);
+    setResendState("idle");
     setIsLoading(true);
     try {
       const parsed = loginSchema.safeParse(values);
@@ -91,7 +96,16 @@ function LoginForm() {
         email: values.email,
         password: values.password,
       });
-      if (signInError) throw signInError;
+      if (signInError) {
+        // GoTrue's own error.code, not a string match on .message — stable across
+        // copy changes. The app already has a working resend flow (VerifyClient) --
+        // this reuses it inline instead of leaving the raw error as a dead end.
+        if ((signInError as { code?: string }).code === "email_not_confirmed") {
+          setUnconfirmedEmail(values.email);
+          return;
+        }
+        throw signInError;
+      }
 
       // Full navigation (window.location.href, not router.push/replace) — required so
       // middleware sees the auth cookie on the very next request, same SSR-cookie rule
@@ -102,6 +116,24 @@ function LoginForm() {
       setError(e instanceof Error ? e.message : "Failed to sign in.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function resendConfirmation() {
+    if (!unconfirmedEmail) return;
+    setResendState("sending");
+    try {
+      const supabase = getSupabaseEmailAuthClient();
+      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: unconfirmedEmail,
+      });
+      if (resendError) throw resendError;
+      setResendState("sent");
+    } catch (e: unknown) {
+      setResendState("idle");
+      setError(e instanceof Error ? e.message : "Failed to resend confirmation email.");
     }
   }
 
@@ -401,6 +433,46 @@ function LoginForm() {
               </p>
             )}
           </div>
+
+          {/* Unconfirmed email — friendly next step instead of a raw error dead end */}
+          {unconfirmedEmail && (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: "rgba(78,222,163,0.08)",
+                border: `1px solid ${C.outlineVariant}`,
+                borderRadius: "4px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
+            >
+              <p style={{ color: C.onSurface, fontFamily: "'Space Grotesk', sans-serif", fontSize: "13px", textAlign: "center" }}>
+                Your email isn&apos;t confirmed yet. Check your inbox for the confirmation link.
+              </p>
+              <button
+                type="button"
+                onClick={resendConfirmation}
+                disabled={resendState === "sending" || resendState === "sent"}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: C.primaryContainer,
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: resendState === "idle" ? "pointer" : "default",
+                  textAlign: "center",
+                }}
+              >
+                {resendState === "sending"
+                  ? "Sending..."
+                  : resendState === "sent"
+                    ? "Confirmation email resent — check your inbox"
+                    : "Resend confirmation email"}
+              </button>
+            </div>
+          )}
 
           {/* Error from form state */}
           {error && (

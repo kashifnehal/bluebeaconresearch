@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isProjectReady } from "@/lib/flags";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -47,21 +48,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`/login?error=${msg}`, origin));
   }
 
-  // Check onboarding status
+  // Check onboarding status — same destination logic as resolvePostAuthRedirect()
+  // (lib/profile.ts), used by every other post-auth flow (login, password reset,
+  // signup confirmation). OAuth gives a session synchronously with no confirmation
+  // step, so there's no "check your email" branch here — just onboarding/dashboard,
+  // gated the same way as everywhere else.
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    if (!isProjectReady) {
+      targetPath = "/";
+    } else {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("onboarding_completed")
-        .eq("id", user.id)
-        .maybeSingle();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .maybeSingle();
 
-      if (profile?.onboarding_completed) {
-        targetPath = "/dashboard";
+        if (profile?.onboarding_completed) {
+          targetPath = "/dashboard";
+        }
       }
     }
   } catch {

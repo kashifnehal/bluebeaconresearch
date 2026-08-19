@@ -104,13 +104,25 @@ function ConfirmForm() {
               Confirmation link expired or invalid
             </h1>
             <p className="text-on-surface-variant text-sm mb-6">
-              {error ?? "This confirmation link is no longer valid. Sign up again or request a new link."}
+              {error ??
+                // GoTrue returns the identical otp_expired error whether the link was
+                // already used (e.g. clicked twice, or prefetched by an email security
+                // scanner) or is genuinely past its expiry window — the client can't
+                // tell those apart, so this covers both without guessing which one it is.
+                "This link has already been used or is no longer valid. If you've already confirmed your account, sign in below — otherwise, sign up again to get a new link."}
             </p>
-            <Link href="/signup">
-              <Button className="w-full h-10 bg-accent hover:bg-accent-hover text-white">
-                Back to sign up
-              </Button>
-            </Link>
+            <div className="flex flex-col gap-3">
+              <Link href="/login">
+                <Button className="w-full h-10 bg-accent hover:bg-accent-hover text-white">
+                  Sign in
+                </Button>
+              </Link>
+              <Link href="/signup">
+                <Button variant="outline" className="w-full h-10">
+                  Back to sign up
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
       </Card>

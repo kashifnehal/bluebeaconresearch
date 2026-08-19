@@ -121,28 +121,31 @@ function SignupForm() {
       // with Confirm Email on, 401'd every time (signUp() returns no session until the
       // email is confirmed, so this call had no JWT and RLS blocked it as anon).
 
+      // Pre-launch waitlist record — independent of confirmation status below, so a
+      // gated signup still gets a waitlist row even if they haven't confirmed yet.
       if (data.user?.id && !isProjectReady) {
-        // Pre-launch waitlist path — window.location.href (not router.push) is required
-        // here per the existing SSR-cookie-attachment decision in 10_DECISIONS.md.
         await supabase.from("waitlist").insert({
           user_id: data.user.id,
           full_name: values.fullName,
           email: values.email,
         });
-        window.location.href = "/?joined=1";
-        return;
       }
 
-      // With email confirmation ON, signUp() returns no session and the user
-      // isn't authenticated yet — /onboarding is a protected route and would
-      // just bounce them to /login. Only send confirmed/session-bearing users
-      // there; everyone else goes to /verify to confirm their email first.
+      // With email confirmation ON, signUp() returns no session and the user isn't
+      // authenticated yet. This check must run BEFORE any isProjectReady branching:
+      // an unconfirmed user always needs to see "check your email" first, regardless
+      // of pre-launch gate state — silently dropping them on the marketing homepage
+      // (the old !isProjectReady branch did this) left them with zero indication
+      // anything happened at all.
       const isConfirmed = Boolean(data.session) || Boolean(data.user?.email_confirmed_at);
       if (!isConfirmed) {
         window.location.href = `/verify?email=${encodeURIComponent(values.email)}`;
         return;
       }
-      window.location.href = "/onboarding";
+
+      // window.location.href (not router.push) is required here per the existing
+      // SSR-cookie-attachment decision in 10_DECISIONS.md.
+      window.location.href = isProjectReady ? "/onboarding" : "/?joined=1";
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to sign up.");
     } finally {
