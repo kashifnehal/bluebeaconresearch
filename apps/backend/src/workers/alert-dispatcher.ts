@@ -11,15 +11,26 @@ const supabase = getSupabaseAdmin();
 const telegram = new TelegramService();
 const expoPush = new ExpoPushService();
 
+export type EscalationAlertContext = { oldSeverity: number; newSeverity: number };
+
 /**
- * Matches a freshly-inserted signal against active alert_rules and dispatches to each
- * matched rule's configured channels. Called directly (inline, no queue) from each
- * collector right after it inserts a signal — the same "bypass BullMQ" pattern already
- * used for classification, since nothing currently feeds the dormant `alertDispatcher`
- * queue (see startAlertDispatcherWorker below). Batches per-rule lookups (prefs,
- * channels, push tokens, webhook endpoints) instead of querying once per rule/channel.
+ * Matches a freshly-inserted (or escalated) signal against active alert_rules and
+ * dispatches to each matched rule's configured channels. Called directly (inline, no
+ * queue) from each collector right after it inserts a signal — the same "bypass
+ * BullMQ" pattern already used for classification, since nothing currently feeds the
+ * dormant `alertDispatcher` queue (see startAlertDispatcherWorker below). Batches
+ * per-rule lookups (prefs, channels, push tokens, webhook endpoints) instead of
+ * querying once per rule/channel.
+ *
+ * `escalation`, when passed, is the ONLY thing that changes: the outgoing Telegram/
+ * Slack text and push title get a distinct "UPDATED: severity X -> Y" framing instead
+ * of the default new-signal wording, so a re-alert is never confusable with a
+ * first-time alert. Every other part of this function (rule matching, batching,
+ * alerts_sent/webhook_deliveries writes, channel iteration) is untouched and shared —
+ * this is the same send path, not a parallel one. Omitting the argument (every
+ * existing call site) preserves the exact original template byte-for-byte.
  */
-export async function dispatchAlertsForSignal(signalId: string) {
+export async function dispatchAlertsForSignal(signalId: string, escalation?: EscalationAlertContext) {
   const { data: signal, error } = await supabase.from("signals").select("*").eq("id", signalId).maybeSingle();
   if (error || !signal) throw new Error("signal not found");
 
@@ -46,6 +57,13 @@ export async function dispatchAlertsForSignal(signalId: string) {
   });
 
   if (matchedRules.length === 0) return { attempted: 0, delivered: 0 };
+
+  const messagePrefix = escalation
+    ? `Blue Beacon UPDATED (${escalation.oldSeverity} → ${escalation.newSeverity}/10)`
+    : `Blue Beacon (${signal.severity}/10)`;
+  const slackMessagePrefix = escalation
+    ? `Blue Beacon Research UPDATED (${escalation.oldSeverity} → ${escalation.newSeverity}/10)`
+    : `Blue Beacon Research (${signal.severity}/10)`;
 
   const userIds = [...new Set(matchedRules.map((r) => r.user_id as string))];
   const webhookUserIds = [
@@ -107,7 +125,7 @@ export async function dispatchAlertsForSignal(signalId: string) {
           } else {
             const result = await telegram.sendMessage(
               channelsRow.telegram_chat_id,
-              `Blue Beacon (${signal.severity}/10) — ${signal.title}\n\n${signal.summary}`,
+              `${messagePrefix} — ${signal.title}\n\n${signal.summary}`,
             );
             status = result.ok ? "delivered" : "failed";
           }
@@ -117,7 +135,7 @@ export async function dispatchAlertsForSignal(signalId: string) {
           } else {
             await axios.post(
               channelsRow.slack_webhook_url,
-              { text: `Blue Beacon Research (${signal.severity}/10) — ${signal.title}\n${signal.summary}` },
+              { text: `${slackMessagePrefix} — ${signal.title}\n${signal.summary}` },
               { timeout: 10_000 },
             );
             status = "delivered";
@@ -170,9 +188,12 @@ export async function dispatchAlertsForSignal(signalId: string) {
     // Push notifications for any user with tokens (best-effort) — once per matched
     // rule, not once per channel (channel-sending logic above is otherwise untouched).
     const tokens = pushTokensByUser.get(rule.user_id) ?? [];
+    const pushTitle = escalation
+      ? `UPDATED (${escalation.oldSeverity} → ${escalation.newSeverity}/10): ${signal.title}`
+      : signal.title;
     for (const t of tokens) {
       try {
-        await expoPush.send(t, signal.title, signal.summary, { signalId });
+        await expoPush.send(t, pushTitle, signal.summary, { signalId });
       } catch {
         // ignore
       }

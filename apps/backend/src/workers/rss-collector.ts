@@ -159,8 +159,10 @@ export async function runRssCollectorOnce() {
       // for genuinely new signals: a duplicate merge reuses the existing signal's
       // ai_analysis and skips Sonnet/dispatch entirely; an escalation regenerates the
       // briefing itself (gated on the new severity, inside insertOrMergeSignal) but
-      // doesn't re-dispatch alerts — a deliberate scope decision, not an oversight
-      // (re-notifying already-alerted users on escalation is a separate product call).
+      // conditionally re-dispatches a distinctly-labeled "UPDATED" alert on a
+      // threshold-crossing escalation (see shouldReAlertOnEscalation() in
+      // signal-merge.ts) — that dispatch happens inside insertOrMergeSignal itself,
+      // not here, so it isn't duplicated across all 3 collectors.
       if (mergeResult.outcome === "new" && mergeResult.signalId) {
         signals++;
         if (classification.severity >= 7) {

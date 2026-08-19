@@ -1,6 +1,7 @@
 import type { getSupabaseAdmin } from "../clients/supabase.js";
 import type { ClassificationResult } from "../services/claude.service.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
+import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 
 /**
  * Cross-source signal merge. Runs AFTER classifyEvent() — classification is never
@@ -47,6 +48,25 @@ function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
   for (const word of a) if (b.has(word)) intersection++;
   const union = a.size + b.size - intersection;
   return union === 0 ? 0 : intersection / union;
+}
+
+/**
+ * Founder decision (Prompt J.6, 2026-08-19): an escalation should re-alert
+ * already-notified users — "a trader who acted on a severity-5 signal needs to know
+ * it's now a 9" — but gated so minor severity refinements don't spam users who
+ * already got the original alert. Fires on EITHER: the new severity crosses >=7 for
+ * the first time (was below, now at/above), OR the jump is >=2 points in one go, even
+ * if already at/above 7 (e.g. 7->9, 8->10). Literal spec as given: clause (b) also
+ * fires on a jump that doesn't cross 7 at all (e.g. 3->5) — kept as-is, not narrowed,
+ * per the task's explicit instruction not to second-guess it without checking first.
+ */
+const RE_ALERT_MIN_JUMP = 2;
+const RE_ALERT_SEVERITY_THRESHOLD = 7;
+
+function shouldReAlertOnEscalation(oldSeverity: number, newSeverity: number): boolean {
+  const crossedThreshold = oldSeverity < RE_ALERT_SEVERITY_THRESHOLD && newSeverity >= RE_ALERT_SEVERITY_THRESHOLD;
+  const bigJump = newSeverity - oldSeverity >= RE_ALERT_MIN_JUMP;
+  return crossedThreshold || bigJump;
 }
 
 type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
@@ -149,9 +169,12 @@ async function findMergeCandidate(
  * Inserts a new signal, or — if a plausible cross-source match is found — merges into
  * it as either a duplicate (severity <= existing, Sonnet skipped, existing ai_analysis
  * reused) or an escalation (severity > existing, severity updated, Sonnet regenerated
- * if the new severity crosses the same >=7 gate every other signal uses). Classification
- * (the Haiku call) has already happened by the time this runs — this function never
- * decides whether to classify, only what to do with an already-classified result.
+ * if the new severity crosses the same >=7 gate every other signal uses, and — gated
+ * by `shouldReAlertOnEscalation()` above — already-notified users re-alerted with a
+ * distinctly-labeled "UPDATED" message, not the original new-signal template).
+ * Classification (the Haiku call) has already happened by the time this runs — this
+ * function never decides whether to classify, only what to do with an
+ * already-classified result.
  */
 export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<InsertOrMergeResult> {
   const { supabase, collectorLabel, rawEventId, classification, title, eventType, eventDate, country, lat, lng } = params;
@@ -234,19 +257,45 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
     return { signalId: null, outcome: "new" };
   }
 
+  const oldSeverity = match.severity;
+  const newSeverity = classification.severity;
+  const reAlert = shouldReAlertOnEscalation(oldSeverity, newSeverity);
+  const logTag = reAlert ? "SIGNAL-MERGE:escalation-realerted" : "SIGNAL-MERGE:escalation";
+
   console.log(
-    `[${collectorLabel}] [SIGNAL-MERGE:escalation] rawEvent=${rawEventId} -> signal=${match.id} ` +
+    `[${collectorLabel}] [${logTag}] rawEvent=${rawEventId} -> signal=${match.id} ` +
       `similarity=${match.similarity.toFixed(3)} deltaHours=${deltaHours.toFixed(2)} ` +
-      `severity ${match.severity} -> ${classification.severity} region=${classification.region} sourcesCount=${newSourcesCount}`,
+      `severity ${oldSeverity} -> ${newSeverity} region=${classification.region} sourcesCount=${newSourcesCount}`,
   );
 
-  if (classification.severity >= 7) {
+  if (newSeverity >= 7) {
     try {
       await generateSignalAnalysis(match.id);
-      console.log(`[${collectorLabel}] [SIGNAL-MERGE:escalation] briefing regenerated for signal ${match.id}`);
+      console.log(`[${collectorLabel}] [${logTag}] briefing regenerated for signal ${match.id}`);
     } catch (e) {
       console.error(
-        `[${collectorLabel}] [SIGNAL-MERGE:escalation] briefing regeneration failed for signal ${match.id}:`,
+        `[${collectorLabel}] [${logTag}] briefing regeneration failed for signal ${match.id}:`,
+        e instanceof Error ? e.message : e,
+      );
+    }
+  }
+
+  // Idempotency: reuses the same guarantee the original new-signal dispatch already
+  // relies on — dispatchAlertsForSignal is called at most once per triggering DB
+  // write, never on a re-read/retry loop. No separate "already alerted" table/flag is
+  // introduced. This is safe here for the same reason it's safe for new signals: the
+  // re-alert condition is evaluated against the signal's severity *before* this
+  // update landed (`match.severity`, read once above), so a given real severity jump
+  // can only ever be classified as crossing the threshold once — once the update
+  // lands, the next read of this signal reflects the new severity, so a later
+  // same-or-lower-severity article hits the duplicate branch instead, not escalation.
+  if (reAlert) {
+    try {
+      const dispatchResult = await dispatchAlertsForSignal(match.id, { oldSeverity, newSeverity });
+      console.log(`[${collectorLabel}] [${logTag}] alert dispatched for signal ${match.id}:`, dispatchResult);
+    } catch (e) {
+      console.error(
+        `[${collectorLabel}] [${logTag}] alert dispatch failed for signal ${match.id}:`,
         e instanceof Error ? e.message : e,
       );
     }
