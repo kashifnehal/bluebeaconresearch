@@ -183,7 +183,37 @@ Both are configured `flowType: "implicit", detectSessionInUrl: true, persistSess
 
 ---
 
-## 10. Architectural Assumptions & Future Risks
+## 10. ADR 010: Post-Classification Cross-Source Signal Merge
+
+### Context
+
+A cost-scaling audit (2026-08-19, done before funding real Anthropic credits) found that GNews, GDELT, and RSS each build their own `external_id` per source, so the same real-world event covered by multiple outlets produces multiple separate `signals` rows and multiple separate Claude calls for what's really one event — confirmed live against production data (120 exact-duplicate-text signal pairs in a 500-row sample), worse for high-severity stories that naturally get picked up by more outlets.
+
+An earlier version of this design proposed skipping the Haiku classification call entirely on a pre-classification title-text match. **That design was explicitly rejected.** Skipping classification risks silently suppressing a genuinely distinct event if the match heuristic is wrong, with no error or log to catch it — for a product whose value proposition is "the most recent, most accurate signal," an invisible dropped signal is a worse business outcome than the cost being optimized away. It also freezes severity at whatever the first source produced: a real escalation (death toll rises, market reacts) covered by a second source would never update the existing signal — the opposite of what paying users need from a signal that's supposed to track a live situation.
+
+### Decision
+
+**Classification never gets skipped, ever.** `classifyEvent()` (Haiku) still runs on every article that passes the existing per-source `external_id` dedup check, unchanged, in all 3 live collectors. Only the expensive Sonnet briefing call may be skipped, and only *after* independent classification confirms two articles plausibly describe the same event.
+
+The new step (`apps/backend/src/workers/signal-merge.ts`, `insertOrMergeSignal()`) runs after classification returns, using its structured output — not raw article text:
+- **Match candidates**: recent `signals` (±8h window on `event_date`, the article's real publish time, not our ingestion time — chosen so GNews's ~12h ingestion-side cache lag doesn't force a wider window) with the same `region` (exact match; skipped entirely when region is missing/"global" — too broad a bucket to be a useful signal, confirmed live as the single largest region bucket mixing unrelated stories).
+- **Similarity**: Jaccard token-overlap on `classification.summary`, threshold 0.55 — tuned against 500 real production signals, sitting above the zone where same-region pairs start looking like genuinely different developments of an evolving story rather than the same event.
+- **No match** → insert new signal exactly as before, existing `severity >= 7` Sonnet gate unchanged.
+- **Match, new severity <= existing** → duplicate: append `raw_event_ids`, increment `sources_count`, reuse existing `ai_analysis`, skip Sonnet entirely.
+- **Match, new severity > existing** → escalation: update `severity`, append `raw_event_ids`, increment `sources_count`, regenerate the Sonnet briefing (gated on the *new* severity crossing >=7, same rule as everywhere else — an explicit judgment call, since the task spec was ambiguous on whether regeneration should be unconditional).
+- Every merge/escalation decision is logged distinctly (`[SIGNAL-MERGE:duplicate]` / `[SIGNAL-MERGE:escalation]`) with the matched signal id, similarity score, and time delta, so real decisions are greppable and spot-checkable after shipping.
+
+### Rationale
+
+- **Bias toward not merging when uncertain, by design**: a missed duplicate costs one extra Sonnet call (a few cents); a wrongful merge or a missed escalation costs the user real information. The 0.55 similarity threshold, the 8h window, and the exact (not fuzzy) region match were all chosen on the conservative side of that tradeoff, backed by a real backtest rather than picked blind.
+- **Structured classification output is a higher-confidence match signal than raw article text** — comparing two independent AI classifications of the same event (region, severity, a paraphrased summary) is far less noisy than comparing raw, differently-styled headlines across outlets.
+- **Escalation handling is the reason classification can never be skipped**: a design that skips classification on a text match can never know a second article represents a worse outcome than the first. This design always knows, because it always classifies first.
+- **Not extended to `reconciliation.ts`** — deliberately scoped to the 3 live collectors only; the orphan-recovery job still inserts signals the old way, a small residual gap (rare, capped at 200/run) rather than an oversight.
+- **Does not re-dispatch alerts on escalation** — an escalated signal crossing a `min_severity` threshold arguably deserves a fresh alert, but that's a separate product decision (risk of duplicate-notifying already-alerted users) not decided unilaterally here.
+
+---
+
+## 11. Architectural Assumptions & Future Risks
 
 1. **Third-Party API & RSS Feed Availability**: System relies on GNews, GDELT, RSS endpoints, Yahoo Finance uptime.
 2. **Anthropic API Credits**: Production requires Anthropic credits. Heuristic fallback covers outages but quality is lower.

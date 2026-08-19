@@ -173,6 +173,8 @@ After passing the filter and dedup check:
    - `commodity_impacts` JSON (USOIL, XAUUSD, etc.)
    - **`event_date`** = article publish time (from RSS `pubDate`, GNews `publishedAt`, GDELT `seendate`)
 
+> ⚠️ UPDATED 2026-08-19 — Step 3 is no longer an unconditional insert in the 3 live collectors (`rss-collector.ts`, `gnews-collector.ts`, `gdelt-collector.ts`). After classification returns, `insertOrMergeSignal()` (`apps/backend/src/workers/signal-merge.ts`) checks recent same-region signals for a plausible cross-source match on the classified summary. No match → inserts exactly as described above. A match with lower/equal severity → merges into the existing signal instead (`raw_event_ids` grows, `sources_count` increments, no new row, Sonnet briefing reused not regenerated). A match with higher severity → treated as an escalation: updates the existing signal's `severity` and regenerates its briefing rather than creating a second row. **Classification itself is never skipped** — this only changes what happens to an already-classified result. Full design and thresholds: `10_DECISIONS.md` ADR 010; `14_CHANGELOG.md` v0.27.0. Not wired into `reconciliation.ts`'s orphan-recovery insert path — that one is unchanged.
+
 - `created_at` = first ingestion time into BBR
 - `updated_at` = last signal update time in the DB
 - dashboard default: signals with `event_date >= 24h` OR `is_active = true`

@@ -9,6 +9,7 @@
 ## 1. MODEL SELECTION
 
 > ⚠️ UPDATED 2026-08-19 — this whole prompt/model spec describes the intended Claude-powered pipeline, but Anthropic API credit is currently exhausted ($0), so none of these Claude prompts are actually being called right now — the heuristic keyword-based fallback classifier is what's actually running in production. This is a good-faith spec for when credits are restored, not a description of current runtime behavior.
+> ⚠️ UPDATED 2026-08-19 (same day, later pass) — Two more things found and fixed since the note above, worth knowing before credits are restored: (1) the model IDs actually wired into `claude.service.ts` were retired by Anthropic months ago (`claude-3-5-haiku-20241022` since 2026-02-19, `claude-3-5-sonnet-20241022` since 2025-10-28) — funding the account alone would *not* have fixed classification, it would have just traded the billing error for a model-not-found error. Updated to `claude-haiku-4-5-20251001` and `claude-sonnet-5`. (2) The API key itself was found to be mismatched between `apps/web/.env.local` and the repo-root `.env.local` that the backend actually reads — fixed and re-verified live (error changed from `401 authentication_error` to `400 "credit balance too low"`, confirming the key is valid, just unfunded). See `docs/brain/14_CHANGELOG.md` v0.27.0.
 
 | Task | Model | Why | Cost per 1K tokens |
 |------|-------|-----|--------------------|
@@ -264,6 +265,11 @@ async function checkDailySpendCap(): Promise<boolean> {
 
 // After every Claude call, log cost:
 async function logAiCost(model: string, inputTokens: number, outputTokens: number) {
+  // ⚠️ UPDATED 2026-08-19 — these model keys/rates are stale (spec-only code, never
+  // implemented — see "NEEDS IMPLEMENTATION" heading above). The IDs actually in use
+  // now are `claude-haiku-4-5-20251001` and `claude-sonnet-5` (docs/brain/14_CHANGELOG.md
+  // v0.27.0); if this spend-cap feature gets built, look up current per-model pricing at
+  // implementation time rather than reusing these numbers.
   const costs: Record<string, [number, number]> = {
     'claude-3-5-haiku-latest': [0.0000008, 0.000001],
     'claude-3-5-sonnet-latest': [0.000003, 0.000015],

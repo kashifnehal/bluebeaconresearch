@@ -10,10 +10,13 @@
 
 A signal is the core output of Blue Beacon Research. It answers one question: "What does this event mean for markets, and why?"
 
+> ⚠️ UPDATED 2026-08-19 — A signal is no longer necessarily static once created. If a later article from a different source is classified as the same event at a *higher* severity, the existing signal's `severity`, `sources_count`, and `ai_analysis` are updated in place (an "escalation") rather than a second signal being created — see `docs/brain/10_DECISIONS.md` ADR 010. A same-or-lower-severity match from another source is a plain duplicate merge (`sources_count` grows, everything else stays put). `title` and `summary` are still fixed at first-insert time and are not updated by either case.
+
 A signal contains:
 - **Title**: concise event description (what happened)
 - **Summary**: 1-2 sentence neutral factual summary
 - **AI Analysis**: 5-7 paragraph intelligence briefing (Claude 3.5 Sonnet)
+  > ⚠️ UPDATED 2026-08-19 — Model is now `claude-sonnet-5` (Claude 3.5 Sonnet, model ID `claude-3-5-sonnet-20241022`, was retired by Anthropic 2025-10-28 and had been silently non-functional). See `docs/brain/14_CHANGELOG.md` v0.27.0.
 - **Severity**: 1–10 (how significant is this for markets)
 - **Confidence**: 0.0–1.0 (how certain is the commodity impact assessment)
 - **Event type**: conflict / sanctions / trade_policy / central_bank / etc.

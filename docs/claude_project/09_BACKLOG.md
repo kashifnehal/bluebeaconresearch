@@ -18,6 +18,7 @@
 | M3 | Fix signal quality pre-filter (block FIFA/sports/celebrity) | 2 hr | Top signal is FIFA — product unusable |
 | M4 | Fix country extraction from GDELT (UNKNOWN on all signals) | 2 hr | Every signal shows UNKNOWN |
 | M5 | Fix duplicate signal detection | 1 hr | Same story appears 3x in feed |
+> ⚠️ UPDATED 2026-08-19 — Done, and turned out to need more than 1 hour of design: a cross-source signal merge step now runs after classification in all 3 live collectors, matching on region + AI-classified summary similarity (not raw title text) within an 8h window. Classification is never skipped (an earlier design that pre-filtered before classifying was explicitly rejected as too risky — see `docs/brain/10_DECISIONS.md` ADR 010). A genuine duplicate merges and skips the Sonnet briefing call; a same-story escalation (severity rises) updates the existing signal instead of creating a new one. Full detail: `docs/brain/14_CHANGELOG.md` v0.27.0.
 | M6 | Fix confidence calibration (all signals 40%) | 2 hr | Makes all signals look identical |
 | M7 | Replace Alpha Vantage with Yahoo Finance (watchlist broken) | 2 hr | Watchlist shows skeleton forever |
 | M8 | Fix Google OAuth (/auth/callback route + Google Cloud setup) | 2 hr | Most users want Google login |

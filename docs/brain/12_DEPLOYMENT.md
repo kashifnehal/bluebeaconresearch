@@ -88,6 +88,7 @@ Railway deploys two distinct services from the backend codebase:
 >
 > 1. Workers service **must** use config file `/apps/backend/railway.workers.json` (not `railway.json`). Settings are locked in Railway UI when config-as-code is active — change the file in GitHub and redeploy.
 > 2. `"sleepApplication": false` in `railway.workers.json` is **required**. Serverless/sleep mode scales workers to zero with no HTTP traffic, killing 15-minute cron jobs.
+> ⚠️ UPDATED 2026-08-19 — `railway.json` (the backend service's config, confirmed as its default by elimination since point 1 above is the only documented override) had the same gap and lacked the same override: added `"sleepApplication": false` plus `restartPolicyType`/`restartPolicyMaxRetries`/`numReplicas` to match, healthcheck untouched. Railway's own docs warn the first request to a slept service can `502`, not just add latency — low urgency pre-launch (founder-only traffic) but cheap to close before real API customers or Telegram webhooks depend on first-hit reliability. Full detail: `14_CHANGELOG.md` v0.27.0.
 > 3. After deploy, verify logs: `startup:rss` within 30s, `workers:heartbeat` every 5 min, `rss-collector` every 15 min.
 > 4. Add `SUPABASE_SERVICE_ROLE_KEY` to **Vercel** (not just Railway) so `/api/signals` reads reliably on dashboard refresh.
 > 5. `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` prevents lockfile errors during Railway builds.

@@ -6,6 +6,18 @@ Last updated: 2026-08-19 (Reliability/Observability/DB-cleanup pass — committe
 
 ---
 
+## Cross-Source Signal Merge, Cost Audit, Railway Backend Sleep Fix, Anthropic Model/Key Fixes (2026-08-19)
+
+All landed same-day as the entries below, committed as `8a775ea` (Railway), `b0a41a7` (model IDs + signal-merge feature + docs). Full detail: `14_CHANGELOG.md` v0.27.0, `10_DECISIONS.md` ADR 010.
+
+- **Cost-scaling audit, done before funding real Anthropic credits for the first time.** Traced every call site of `ClaudeService.classifyEvent()`/`generateAnalysis()` across the whole repo. Confirmed: **no code path lets a user request trigger a Claude call** — every call originates from cron-scheduled ingestion, never from an `apps/web` route/page/button. This means Claude spend scales with news ingestion volume (fixed, cron-driven), not with signup count — a real, load-bearing architectural property worth having confirmed rather than assumed before spending money.
+- **Real cost gap found by that audit, now fixed: cross-source duplicate classification.** GNews, GDELT, and RSS each build their own `external_id`, so the same real-world event covered by multiple sources produced multiple separate `signals` rows and multiple separate Sonnet briefing calls for what's really one event — confirmed live against real production data (120 exact-duplicate-text signal pairs found in a 500-row sample). Fixed via a new post-classification cross-source merge step — see ADR 010 in `10_DECISIONS.md` for the full design (classification itself is never skipped; only the Sonnet briefing call can be skipped, and only after independent classification confirms two articles describe the same event at the same or lower severity — a genuine escalation still updates severity and regenerates the briefing).
+- **Retired Claude model IDs fixed.** `claude-3-5-haiku-20241022` (retired 2026-02-19) → `claude-haiku-4-5-20251001`; `claude-3-5-sonnet-20241022` (retired 2025-10-28) → `claude-sonnet-5`. Both had been non-functional on the Anthropic API for months — even once credits were funded, classification would have failed on a different error (model not found) instead of the billing error. Verified against live Anthropic docs, not just the prompt's claimed strings.
+- **Anthropic key mismatch found and fixed** — see the "Claude AI Classifier" and "Anthropic API credit exhausted" rows below for detail.
+- **Backend Railway service sleep risk fixed, mirroring the workers-service fix.** `apps/backend/railway.json` (the backend service's config, confirmed via `12_DEPLOYMENT.md`'s documented service→config mapping) was missing `sleepApplication: false` — Railway's own docs warn the *first* request to a slept service can `502`, not just add latency. Added the same override plus `restartPolicyType`/`restartPolicyMaxRetries`/`numReplicas` already used in `railway.workers.json`, healthcheck untouched. Low urgency today (founder-only traffic) but cheap insurance before real API customers or Telegram webhooks depend on first-hit reliability.
+
+---
+
 ## Auth Flow Foundations, Confirmation Page & Enumeration-Safe Copy (2026-08-19)
 
 Three commits (`05831e2`, `9113ff7`, `e8b9600`) plus one uncommitted change landed the same day as the Upstash pass above but were never written into this doc — backfilled here from the actual diffs, not memory. Full detail: `14_CHANGELOG.md` v0.25.0.
@@ -140,6 +152,7 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
   | **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits; 30s retry added |
   | **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 15 min |
   | **Claude AI Classifier** | ⚠️ Degraded | Zero Anthropic credit — heuristic fallback active |
+  > ⚠️ UPDATED 2026-08-19 — Two separate issues found and resolved, one billing-only issue remains. (1) Both model IDs were retired by Anthropic (`claude-3-5-haiku-20241022` retired 2026-02-19, `claude-3-5-sonnet-20241022` retired 2025-10-28) — updated to `claude-haiku-4-5-20251001` and `claude-sonnet-5`, verified against live Anthropic docs. (2) `.env.local` (repo root, the one `apps/backend` actually reads) held a stale/invalid key while `apps/web/.env.local` had the correct one — a real cross-file mismatch, not just a funding issue; synced, verified live (error changed from `401 authentication_error: "API key is invalid"` to `400 invalid_request_error: "Your credit balance is too low"` — same error Railway's workers service already showed, confirming the key now matches everywhere). Remaining blocker is purely billing — see `14_CHANGELOG.md` v0.27.0.
   | **Heuristic Fallback Classifier** | ✅ Operational | Dynamic confidence scoring (55%–90%) + word-boundary filtering |
   | **Upstash Redis / BullMQ** | ✅ Operational | Fixed `rediss://` TLS protocol |
   | **Interactive UI Controls** | ✅ 100% Operational | All buttons, filters, modals, FABs, and CSV downloads active |
@@ -196,12 +209,14 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | Issue                                  | Severity  | Status                                                           |
 | :------------------------------------- | :-------- | :--------------------------------------------------------------- |
 | Railway Serverless sleep killing cron  | Fixed     | `sleepApplication: false` in `railway.workers.json`              |
+| Backend service (`api.bluebeaconresearch.com`) same sleep risk | Fixed (2026-08-19) | Mirrored the fix into `railway.json`: added `sleepApplication: false`, `restartPolicyType: ON_FAILURE`, `restartPolicyMaxRetries: 10`, `numReplicas: 1`. Low urgency pre-launch (founder-only traffic) but the failure mode is a real `502` on first request after 10 min idle, not just latency — cheap to close before real API customers or Telegram webhooks depend on it. Healthcheck path/settings untouched. Live "stayed Active after 10+ min idle" confirmation is a post-deploy follow-up, not verifiable synchronously. |
 | Wrong start command on workers service | Fixed     | `railway.workers.json` → `pnpm run start:workers`                |
 | UI timestamps look stale vs ingestion  | Explained | By design — shows `event_date`, not `created_at`                 |
 | Reuters RSS feed 404 on Railway        | Open      | `reutersagency.com` feed URL returns 404; other feeds compensate |
 | GDELT HTTP 429 rate limiting           | Open      | 30s retry added; may still fail during peak                      |
 | GNews free tier quota                  | Open      | 1 query/run; mostly returns duplicates after initial ingest      |
 | Anthropic API credit exhausted         | High      | Heuristic fallback active                                        |
+| ⚠️ UPDATED 2026-08-19 | Narrowed | Retired model IDs fixed + key mismatch fixed (see Claude AI Classifier row above) — remaining blocker is purely funding the account, not a code/config problem anymore. |
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
 | Alert dispatch never triggered (any channel) | Fixed (2026-08-18, `97b7c4b`) | Was a wiring gap upstream of credentials, not a config problem — see v0.20.0 in `14_CHANGELOG.md` |
