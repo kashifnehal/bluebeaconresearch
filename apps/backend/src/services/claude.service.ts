@@ -258,7 +258,6 @@ export class ClaudeService {
       const msg = await client.messages.create({
         model: "claude-sonnet-5",
         max_tokens: 800,
-        temperature: 0.3,
         system,
         messages: [{ role: "user", content: user }],
       });
