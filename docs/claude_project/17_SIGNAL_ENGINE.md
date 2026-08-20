@@ -11,6 +11,7 @@
 A signal is the core output of Blue Beacon Research. It answers one question: "What does this event mean for markets, and why?"
 
 > ⚠️ UPDATED 2026-08-19 — A signal is no longer necessarily static once created. If a later article from a different source is classified as the same event at a *higher* severity, the existing signal's `severity`, `sources_count`, and `ai_analysis` are updated in place (an "escalation") rather than a second signal being created — see `docs/brain/10_DECISIONS.md` ADR 010. A same-or-lower-severity match from another source is a plain duplicate merge (`sources_count` grows, everything else stays put). `title` and `summary` are still fixed at first-insert time and are not updated by either case.
+> ⚠️ UPDATED 2026-08-19 (later, Prompt J.6) — An escalation can also now re-notify users. Already-alerted users get a second, distinctly-labeled "UPDATED: severity X → Y" alert, but only when the escalation crosses severity >=7 for the first time or jumps >=2 points in one go — a minor refinement (7→8) updates the signal quietly, no second alert. Full detail: `docs/brain/10_DECISIONS.md` ADR 010 addendum.
 
 A signal contains:
 - **Title**: concise event description (what happened)
