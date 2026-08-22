@@ -160,7 +160,7 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
   | **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
   | **RSS Real-Time Collector** | ⚠️ Partial | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404 |
   | **GNews Ingestion** | ⚠️ Degraded | Free tier — 1 query/run; mostly duplicates after initial ingest |
-  | **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits; 30s retry added |
+  | **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits (GDELT is keyless, no auth tier exists); exponential backoff (60s/120s + jitter, 3 attempts) added 2026-08-22, replacing a flat 30s retry that often landed inside GDELT's own ~15min IP block window |
   | **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 15 min |
   | **Claude AI Classifier** | ⚠️ Degraded | Zero Anthropic credit — heuristic fallback active |
   > ⚠️ UPDATED 2026-08-19 — Two separate issues found and resolved, one billing-only issue remains. (1) Both model IDs were retired by Anthropic (`claude-3-5-haiku-20241022` retired 2026-02-19, `claude-3-5-sonnet-20241022` retired 2025-10-28) — updated to `claude-haiku-4-5-20251001` and `claude-sonnet-5`, verified against live Anthropic docs. (2) `.env.local` (repo root, the one `apps/backend` actually reads) held a stale/invalid key while `apps/web/.env.local` had the correct one — a real cross-file mismatch, not just a funding issue; synced, verified live (error changed from `401 authentication_error: "API key is invalid"` to `400 invalid_request_error: "Your credit balance is too low"` — same error Railway's workers service already showed, confirming the key now matches everywhere). Remaining blocker is purely billing — see `14_CHANGELOG.md` v0.27.0.
@@ -225,7 +225,7 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | Wrong start command on workers service | Fixed     | `railway.workers.json` → `pnpm run start:workers`                |
 | UI timestamps look stale vs ingestion  | Explained | By design — shows `event_date`, not `created_at`                 |
 | Reuters RSS feed 404 on Railway        | Open      | `reutersagency.com` feed URL returns 404; other feeds compensate |
-| GDELT HTTP 429 rate limiting           | Open      | 30s retry added; may still fail during peak                      |
+| GDELT HTTP 429 rate limiting           | Open      | Exponential backoff added 2026-08-22 (60s/120s+jitter, 3 attempts); still open since GDELT offers no way to eliminate 429s outright (keyless, no paid tier) — may still fail during sustained blocks |
 | GNews free tier quota                  | Open      | 1 query/run; mostly returns duplicates after initial ingest      |
 | Anthropic API credit exhausted         | High      | Heuristic fallback active                                        |
 | ⚠️ UPDATED 2026-08-19 | Narrowed | Retired model IDs fixed + key mismatch fixed (see Claude AI Classifier row above) — remaining blocker is purely funding the account, not a code/config problem anymore. |

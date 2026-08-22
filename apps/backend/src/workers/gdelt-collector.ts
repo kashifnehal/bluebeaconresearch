@@ -29,27 +29,42 @@ const claude = new ClaudeService();
 const GDELT_API_URL =
   "https://api.gdeltproject.org/api/v2/doc/doc?query=(conflict+OR+war+OR+sanctions+OR+military+OR+oil+OR+stock+market+OR+trade+OR+inflation+OR+fed+OR+earnings)+sourcelang:eng&mode=artlist&maxrecords=50&format=json&sort=DateDesc";
 
+// GDELT's DOC API is keyless with no authenticated tier, and a 429 can reflect an
+// IP-level block lasting up to ~15 min (shared Railway egress IP, not our own request
+// rate — we only issue one request per 15-min cron cycle). A flat 30s retry often lands
+// inside that same block window and wastes the attempt. Back off 60s, then 120s (+jitter)
+// per GDELT's own documented guidance, then give up — the next cron tick 15 min later is
+// past a typical block window, so failing fast here beats retrying past its usefulness.
+const GDELT_MAX_RETRIES = 2;
+const GDELT_BACKOFF_BASE_MS = 60_000;
+
+async function fetchGdeltWithBackoff() {
+  let lastErr: any;
+  for (let attempt = 0; attempt <= GDELT_MAX_RETRIES; attempt++) {
+    try {
+      return await axios.get(GDELT_API_URL, { timeout: 25_000 });
+    } catch (e: any) {
+      lastErr = e;
+      if (e.response?.status !== 429 || attempt === GDELT_MAX_RETRIES) throw e;
+      const delayMs = GDELT_BACKOFF_BASE_MS * 2 ** attempt + Math.random() * 10_000;
+      console.warn(
+        `[GDELT] Rate limited (429), retry ${attempt + 1}/${GDELT_MAX_RETRIES} in ${Math.round(delayMs / 1000)}s...`,
+      );
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
 export async function runGdeltCollectorOnce() {
   const supabase = getSupabaseAdmin();
 
   let res: any;
   try {
-    res = await axios.get(GDELT_API_URL, { timeout: 25_000 });
+    res = await fetchGdeltWithBackoff();
   } catch (e: any) {
-    const status = e.response?.status;
-    if (status === 429) {
-      console.warn("[GDELT] Rate limited (429), retrying in 30s...");
-      await new Promise((r) => setTimeout(r, 30_000));
-      try {
-        res = await axios.get(GDELT_API_URL, { timeout: 25_000 });
-      } catch (retryErr: any) {
-        console.error("[GDELT] Retry failed:", retryErr.message);
-        return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: retryErr.message };
-      }
-    } else {
-      console.error("[GDELT] Fetch failed:", e.message);
-      return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
-    }
+    console.error("[GDELT] Fetch failed after retries:", e.message);
+    return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
   }
 
   const articles: GdeltArticle[] = res.data?.articles ?? [];
