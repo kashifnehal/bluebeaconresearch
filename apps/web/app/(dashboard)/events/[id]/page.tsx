@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
 import {
   Clock,
   Database,
@@ -383,9 +384,11 @@ export default function EventDetailPage() {
                         Full Analyst Briefing
                       </div>
                       {signal.aiAnalysis ? (
-                        <p className="text-base text-text-secondary leading-relaxed whitespace-pre-line">
-                          {signal.aiAnalysis}
-                        </p>
+                        <div className="text-base text-text-secondary leading-relaxed [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_p+p]:mt-4">
+                          <ReactMarkdown allowedElements={["p", "strong", "em", "ul", "ol", "li"]}>
+                            {signal.aiAnalysis}
+                          </ReactMarkdown>
+                        </div>
                       ) : (
                         <div
                           className="p-8 rounded-lg bg-surface/20 border border-dashed text-center"
