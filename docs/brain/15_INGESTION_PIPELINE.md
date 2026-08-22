@@ -66,7 +66,7 @@ Railway workers (startup + every 15 min)
 
 ### 2.2 GNews Collector (`gnews-collector.ts`)
 
-**Auth:** `GNEWS_API_KEY` / `NEWS_API_KEY`  
+**Auth:** `GNEWS_API_KEY`  
 **API:** `https://gnews.io/api/v4/search`  
 **Free tier limit:** ~100 requests/day → **1 query per run** (~96/day at 15-min intervals)  
 **Max articles per run:** 10  

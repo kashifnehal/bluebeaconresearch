@@ -97,7 +97,7 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
 
 ## Security & Cost Follow-Up: Hardcoded Key + Shadow Ingestion Path (2026-08-16)
 
-- **Hardcoded GNews key removed from source** — was a live-key fallback literal in `auto-ingest.ts`. **Founder action still required**: rotate the key at gnews.io, it's still in git history.
+- **Hardcoded GNews key removed from source** — was a live-key fallback literal in `auto-ingest.ts`. **Resolved 2026-08-22**: key rotated at gnews.io, old value dead. Env var also standardized to `GNEWS_API_KEY` everywhere (was split across `NEWS_API_KEY`/`GNEWS_API_KEY`); `apps/backend/src/env.ts` now keeps `NEWS_API_KEY` only as a legacy fallback.
 - **`auto-ingest.ts` deleted** — a second, independent ingestion path triggered from page loads on Vercel, separate from and undermining the Railway workers cron interval control added in v0.17.0. No documented rationale found for keeping it; workers are confirmed operational, so removed rather than hardened.
 - **`/api/prices`, `/api/prices/history`, `/api/backtesting`** now rate-limited (previously had zero limit, unlike every other route) — verified live, 429s kick in correctly after 60 req/min.
 

@@ -23,7 +23,7 @@ async function fetchGnewsArticles(query: string, token: string) {
 
 export async function runGnewsCollectorOnce() {
   const env = getEnv();
-  if (!env.NEWS_API_KEY) return { error: "NEWS_API_KEY missing" };
+  if (!env.GNEWS_API_KEY) return { error: "GNEWS_API_KEY missing" };
 
   const supabase = getSupabaseAdmin();
 
@@ -31,7 +31,7 @@ export async function runGnewsCollectorOnce() {
   const allArticles: any[] = [];
   for (const query of GNEWS_QUERIES) {
     try {
-      const articles = await fetchGnewsArticles(query, env.NEWS_API_KEY);
+      const articles = await fetchGnewsArticles(query, env.GNEWS_API_KEY);
       allArticles.push(...articles);
     } catch (e: any) {
       // If we hit GNews rate limit (402), fall back to single query mode

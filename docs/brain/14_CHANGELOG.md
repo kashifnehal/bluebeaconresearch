@@ -8,6 +8,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.28.1 — GNews Key Rotated, Env Var Standardized (2026-08-22)
+
+- **GNews API key rotated at gnews.io**, closing the founder action item open since the 2026-08-16 hardcoded-key incident (see below) — the old key, exposed in git history, is dead.
+- **Env var standardized on `GNEWS_API_KEY`** everywhere (code, `turbo.json`, `README.md`, all `.env`/`.env.example`/`.env.local` files) — previously split inconsistently between `NEWS_API_KEY` and `GNEWS_API_KEY` across the repo and Vercel, which had also let the two local `.env.local` files (root and `apps/web`) drift to two different key values, one of them invalid. `apps/backend/src/env.ts`'s `getEnv()` fallback direction flipped: `GNEWS_API_KEY` is now canonical, with `NEWS_API_KEY` kept only as a legacy fallback for anything not yet updated.
+
 ### v0.28.0 — Escalation Re-Alerts, Phase-1 Launch QA, Sonnet Temperature Bug Found & Fixed (2026-08-19)
 
 - **Scope note**: covers commit `4421205` (escalation re-alerts, Prompt J.6) plus two uncommitted-at-time-of-writing changes from the same day: a live Phase-1 launch-readiness QA pass, and the Sonnet `temperature`-parameter fix that QA pass surfaced.

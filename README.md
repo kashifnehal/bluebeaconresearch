@@ -60,7 +60,7 @@ Security is critical. **Never commit actual API keys to Git.** The repository us
 
    # --- EXTERNAL APIs ---
    ANTHROPIC_API_KEY=your-claude-key
-   NEWS_API_KEY=your-newsapi-key
+   GNEWS_API_KEY=your-gnews-key
    ALPHA_VANTAGE_API_KEY=your-alphavantage-key
 
    # --- FEATURE FLAGS ---

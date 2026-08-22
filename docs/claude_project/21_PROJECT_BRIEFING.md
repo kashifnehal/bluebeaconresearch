@@ -196,8 +196,7 @@ UPSTASH_REDIS_REST_TOKEN=<token>
 ANTHROPIC_API_KEY=<anthropic_key>
 
 # News sources
-NEWS_API_KEY=<gnews_key>
-GNEWS_API_KEY=<gnews_key>   ← alias fallback in env.ts
+GNEWS_API_KEY=<gnews_key>   ← canonical name as of 2026-08-22 (NEWS_API_KEY retired, legacy fallback only)
 
 # Market data (Yahoo Finance used — Alpha Vantage key kept but unused)
 ALPHA_VANTAGE_API_KEY=<key>

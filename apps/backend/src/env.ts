@@ -39,7 +39,7 @@ const envSchema = z.object({
   ALPHA_VANTAGE_API_KEY: z.string().optional(),
   ACLED_EMAIL: z.string().optional(),
   ACLED_PASSWORD: z.string().optional(),
-  NEWS_API_KEY: z.string().optional(),
+  GNEWS_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -50,9 +50,9 @@ export function getEnv(): Env {
     process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   }
 
-  // Fallback for NEWS_API_KEY if GNEWS_API_KEY is set
-  if (!process.env.NEWS_API_KEY && process.env.GNEWS_API_KEY) {
-    process.env.NEWS_API_KEY = process.env.GNEWS_API_KEY;
+  // Fallback for GNEWS_API_KEY if legacy NEWS_API_KEY is still set somewhere
+  if (!process.env.GNEWS_API_KEY && process.env.NEWS_API_KEY) {
+    process.env.GNEWS_API_KEY = process.env.NEWS_API_KEY;
   }
 
   // Fallback for ACLED_EMAIL if ACLED_API_EMAIL is set

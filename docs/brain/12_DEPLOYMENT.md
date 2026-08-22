@@ -42,7 +42,7 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
 ### External Ingestion APIs
 
 - `ALPHA_VANTAGE_API_KEY`: Financial commodity market data provider.
-- `NEWS_API_KEY` / `GNEWS_API_KEY`: Global news article collectors.
+- `GNEWS_API_KEY`: Global news article collector.
 - `ACLED_API_KEY` / `ACLED_API_EMAIL`: Verified military engagement data feed.
 
 ### Alert Channels & Geospatial
