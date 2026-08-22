@@ -57,6 +57,10 @@ export default function AlertsPage() {
 
   const createAlertRule = useMutation({
     mutationFn: async () => {
+      if (modalMinSeverity < 1 || modalMinSeverity > 10) {
+        throw new Error("Severity must be between 1 and 10");
+      }
+
       const supabase = getSupabaseBrowserClient();
       if (!supabase) throw new Error("Supabase client not available");
       const { data: { user } } = await supabase.auth.getUser();
@@ -71,7 +75,12 @@ export default function AlertsPage() {
         is_active: true,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23514") {
+          throw new Error("Please check your alert rule settings and try again");
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
       track("alert_rule_created", { source: "alerts_page", region: modalRegion, minSeverity: modalMinSeverity });
