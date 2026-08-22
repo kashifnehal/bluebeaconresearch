@@ -9,7 +9,7 @@ export const metadata = {
 const SYSTEMS = [
   { name: "Intelligence Feed", status: "Operational", detail: "REST API & WebSocket live data feed" },
   { name: "Alert Delivery", status: "Operational", detail: "Telegram, Webhook & Multi-channel Dispatcher" },
-  { name: "Global Map", status: "Operational", detail: "Mapbox GL Spatial Engine & Incident Markers" },
+  { name: "Global Map", status: "Operational", detail: "MapLibre GL Spatial Engine & Incident Markers" },
   { name: "Data Pipeline", status: "Operational", detail: "GDELT, ACLED, GNews & Price Sync Collector Workers" },
 ];
 
