@@ -8,6 +8,14 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.28.2 — QA-Batch UI Fixes: Markdown Rendering, Error Leak, Status Copy (2026-08-22)
+
+- **Backtesting Region/Commodity dropdowns re-verified already fixed** — no code change. `backtesting/page.tsx` has used `<select>` sourced from `REGIONS`/`COMMODITIES` (`@blue-beacon-research/shared`) since a March 2026 refactor; the QA doc describing free-text fields was stale. Real gap found instead: `COMMODITIES` has `CORN` where `01_PRODUCT.md` §2.13 wants `COPPER`, and `REGIONS` is missing "Global" — left open, see `08_CURRENT_STATUS.md` known-issues table (shared constant also used by `watchlist/WatchlistClient.tsx`).
+- **`4146e48`** — Full Analyst Briefing (`events/[id]/page.tsx`) now renders `signal.aiAnalysis` through `react-markdown` (new dep) instead of a raw `whitespace-pre-line` string; `allowedElements` limited to paragraphs/bold/italic/lists, no `rehype-raw`, so LLM-sourced text can never inject raw HTML.
+- **`58fde68`** — `alerts/page.tsx` alert-rule creation no longer leaks raw Postgres errors: confirmed the live `alert_rules_min_severity_check` constraint via direct query (`BETWEEN 1 AND 10`), added a client-side pre-check plus a `23514`-code fallback that swaps any check-constraint violation for a generic toast message. The identical raw-error-to-toast pattern also exists in `events/[id]/page.tsx`'s alert-creation catch block — not fixed, flagged as a follow-up.
+- **`0ed90c0`** — `/status` corrected from "Mapbox GL" to "MapLibre GL" in the Global Map subsystem detail (stack has been MapLibre since the map migration; copy was stale). While there, confirmed every status on that page (including "100% UPTIME") is a hardcoded constant with no real health check — informational only, matches the already-deferred `claude/32_SERVICE_HEALTH_DASHBOARD_SPEC.md` scope.
+- **Live verification gap, noted for future sessions**: `/alerts` and `/events/[id]` are behind auth middleware; this session's sandbox blocked both a direct `auth.users` confirmation write and an Admin-API `generate_link` call (the technique the 2026-08-19 Phase-1 QA pass used successfully) when trying to confirm a throwaway signup for live screenshots. The unconfirmed test row was created and deleted twice, no residue. The markdown and error-handling fixes above are verified by code review + a clean `tsc --noEmit` and targeted lint diff only, not a live screenshot — worth a real pass with actual credentials or an unblocked Admin-API call.
+
 ### v0.28.1 — GNews Key Rotated, Env Var Standardized (2026-08-22)
 
 - **GNews API key rotated at gnews.io**, closing the founder action item open since the 2026-08-16 hardcoded-key incident (see below) — the old key, exposed in git history, is dead.

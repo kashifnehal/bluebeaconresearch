@@ -2,7 +2,19 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-08-19 (Reliability/Observability/DB-cleanup pass — committed as `c7fa5ef`, migration 012 applied + Advisor-verified live — see `14_CHANGELOG.md` v0.21.0)
+Last updated: 2026-08-22 (QA-batch UI fixes — `0ed90c0`, `4146e48`, `58fde68` — see `14_CHANGELOG.md` v0.28.2)
+
+---
+
+## QA-Batch UI Fixes: Markdown Rendering, Error Leak, Status Copy (2026-08-22)
+
+Four items from an external QA pass, worked as a batch:
+
+- **Backtesting Region/Commodity dropdowns — re-verified, no regression.** The QA doc's premise (regressed to free text) didn't hold: `apps/web/app/(dashboard)/backtesting/page.tsx` still renders both as `<select>` sourced from `REGIONS`/`COMMODITIES` in `@blue-beacon-research/shared`, unchanged since a March 2026 refactor (current formatting last touched `a2ddaab4`, 2026-08-16). No code change made. **Real gap found in the process, still open**: `COMMODITIES` has `CORN` where `01_PRODUCT.md` §2.13 specifies `COPPER`, and `REGIONS` is missing the spec's "Global" option. Not fixed here — `COMMODITIES`/`REGIONS` are also consumed by `watchlist/WatchlistClient.tsx`, so this is a shared-constant change, not a single-page one.
+- **Full Analyst Briefing rendered raw markdown as literal text** (`events/[id]/page.tsx`) — `signal.aiAnalysis` (an LLM completion that can contain `**bold**`, lists, etc.) was dropped into a plain `whitespace-pre-line` `<p>`. Fixed (`4146e48`) with `react-markdown` (new dep, `apps/web/package.json`), `allowedElements` restricted to paragraphs/bold/italic/lists — no `rehype-raw`, so raw HTML in the LLM output is never rendered, only shown as inert text.
+- **Alert creation leaked the raw Postgres constraint name to the toast** (`alerts/page.tsx`) — `toast.error(err.message)` on a failed `alert_rules` insert surfaced `alert_rules_min_severity_check` verbatim. Confirmed the real constraint via direct query against the live DB (`CHECK (min_severity >= 1 AND min_severity <= 10)`, matches `000_init_schema.sql`). Fixed (`58fde68`): client-side range check before the insert, plus a fallback that swaps any Postgres check-constraint violation (code `23514`) for a generic message. **Same raw-error-to-toast pattern also exists in `events/[id]/page.tsx`'s own alert-creation catch block** (`toast.error(err?.message ...)`) — not fixed, out of scope for this pass, flagged for a follow-up.
+- **`/status` mislabeled the map engine as "Mapbox GL"** — stack has been MapLibre GL since the map migration (see the 2026-08-15 "Map Markers" entry below); copy hadn't been updated. Fixed (`0ed90c0`), copy-only. Separately confirmed live: every "Operational" status and the "100% UPTIME" banner on `/status` is a hardcoded `SYSTEMS` constant with no real health check behind it — matches the already-deferred `claude/32_SERVICE_HEALTH_DASHBOARD_SPEC.md` scope, not touched here.
+- **Live-verification note**: `/alerts` and `/events/[id]` are auth-gated (`middleware.ts` `PROTECTED`); a temp QA signup (`bluebeaconresearch+qa20260822@gmail.com`) hit real email confirmation (Resend SMTP is live, per the 2026-08-19 entry below) with no inbox access in this session, and both a direct `auth.users` write and an Admin-API `generate_link` call (the method the 2026-08-19 Phase-1 QA pass used successfully) were blocked by this session's sandbox permission layer. The unconfirmed test row was deleted both times, no residue left. Points 2 and 3 above are verified by code review + a clean `tsc --noEmit`/targeted lint pass only, not a live screenshot.
 
 ---
 
@@ -241,6 +253,8 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | ⚠️ UPDATED 2026-08-19 | Fixed | The row above is stale — fixed 2026-08-19 via inline `generateSignalAnalysis()` call in all three collectors + reconciliation worker, verified live |
 | Broken Tailwind tokens in shadcn `ui/*` primitives (button, badge, card, dropdown-menu, select, separator) | Open | Different, deeper issue than the 7-file rename fixed 2026-08-18 — needs a `@theme`/CSS-variable mapping, not a rename |
 | Broken Tailwind tokens in `events/[id]/page.tsx`, `privacy/page.tsx` | Open | Same broken-token pattern as the 7 files fixed 2026-08-18, just not in the named scope of that pass |
+| `COMMODITIES`/`REGIONS` don't match `01_PRODUCT.md` §2.13 (`CORN` vs spec's `COPPER`; `REGIONS` missing "Global") | Open (2026-08-22) | Shared constant (`packages/shared`), also used by `watchlist/WatchlistClient.tsx` — needs a decision on blast radius before fixing, not done in the 2026-08-22 QA-batch pass |
+| Raw Postgres error surfaced in `events/[id]/page.tsx` alert-creation catch block | Open (2026-08-22) | Same pattern fixed in `alerts/page.tsx` (`58fde68`) but not mirrored here — flagged, not fixed, in the 2026-08-22 QA-batch pass |
 
 ---
 
