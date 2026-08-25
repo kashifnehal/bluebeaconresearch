@@ -343,6 +343,8 @@ Sections:
 - Alert toggle: if alertEnabled, creates alert rule on API
 - Mini spark chart: last 30 data points (Recharts AreaChart, 80px height, no axes)
 
+> ⚠️ UPDATED 2026-08-25 — No separate `CommodityPriceCard.tsx` component exists; the card markup lives inline in `apps/web/app/(dashboard)/watchlist/WatchlistClient.tsx`, without the range bar, risk badge, or alert-toggle props described above (pre-existing spec/reality gap, not touched this session). What *did* change this session: cards are now clickable — not previously speced anywhere — navigating to a new `apps/web/app/(dashboard)/watchlist/[symbol]/page.tsx` route with a real 90-day price chart and a correlated-signals timeline with factual price-move stats. See `01_PRODUCT.md` §2.11 and `docs/brain/14_CHANGELOG.md` v0.28.4.
+
 ---
 
 ## 6. SETTINGS COMPONENTS

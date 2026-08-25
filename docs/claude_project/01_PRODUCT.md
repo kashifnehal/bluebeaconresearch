@@ -445,6 +445,10 @@ Restore when first paying customer asks to subscribe.
 
 **Current status:** Completely broken — shows skeleton loading forever due to Alpha Vantage quota exhaustion.
 
+> ⚠️ UPDATED 2026-08-25 — This whole section is stale against the current implementation (`apps/web/app/(dashboard)/watchlist/WatchlistClient.tsx`), not just the "Current status" line: prices come from Yahoo Finance via `commodity_prices` (Alpha Vantage was already replaced), the sparkline is real recent-price history (not the planned 30-point Recharts AreaChart — it's a plain bar sparkline from `/api/prices/history`), and there's no risk-level badge or 7-day high/low bar built. Left as a known gap between spec and reality rather than rewritten wholesale.
+>
+> One gap that **was** closed this session: commodity cards are now clickable, navigating to a new drill-down route (`/watchlist/[symbol]`) not originally speced here — a real 90-day price chart plus a timeline of correlated signals (via `commodity_impacts`), each annotated with a factual, time-windowed price-move stat. No buy/sell or predictive language, per the product's hard no-recommendations rule. See `08_CURRENT_STATUS.md` and `14_CHANGELOG.md` v0.28.4 for detail.
+
 ---
 
 ### 2.12 /alerts (Alert & Signal Manager)

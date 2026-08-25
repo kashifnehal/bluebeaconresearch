@@ -2,9 +2,19 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-08-25 (QA-batch investigation pass — `b0783ab`, `3c2378c`, `bb8335c` — see `14_CHANGELOG.md` v0.28.3)
+Last updated: 2026-08-25 (Watchlist commodity drill-down feature — `c80c908` — see `14_CHANGELOG.md` v0.28.4)
 
 ---
+
+## Watchlist Commodity Drill-Down: Cards Now Clickable, Price/Event Correlation View (2026-08-25)
+
+- **Watchlist cards were inert** — the per-commodity `<div>` had no `onClick`/`<Link>`, only the small "×" remove button was interactive. Highest-ROI open item from the latest QA audit: news-to-price correlation is BBR's core differentiator and had no entry point on the page a paying trader actually checks daily.
+- **Fixed**: cards in `WatchlistClient.tsx` now navigate to a new route, `apps/web/app/(dashboard)/watchlist/[symbol]/page.tsx`, on click (remove button still works — stops event propagation instead of navigating). New page shows:
+  - A real price chart (recharts, already a dependency, not newly added) over the last 90 days, from `/api/prices/history`, which now accepts an optional `?days=` param for a date-range window (`.gte("fetched_at", cutoff)`) — omitting the param preserves the original last-12-snapshot behavior the sparkline still relies on, so the sparkline was not touched behaviorally, only its response shape (`points` went from `number[]` to `{price, fetchedAt}[]`, updated in both call sites).
+  - A timeline of real signals whose `commodity_impacts` include the symbol, reusing the existing `.contains("commodity_impacts", [{asset: commodity}])` filter already in `/api/signals` (no new backend endpoint written). That route's `window` param gained a generic `"<N>d"` regex case alongside the existing `24h`/`7d`/`active` values, so the timeline can match the chart's 90-day range.
+  - A strictly factual, backward-looking price-move stat per correlated signal ("Price moved X% in the Nh following this signal, $A → $B") — computed client-side from real fetched price points, never predictive/buy-sell framing. Honestly reports "not enough time has passed yet" or "not enough price history" instead of guessing when data is sparse (per the project's no-fabricated-data and no-predictions rules).
+- **Verified live via Playwright** (see `14_CHANGELOG.md` v0.28.4): clicked WTI Crude from `/watchlist` → `/watchlist/USOIL` rendered a real 90-day chart with dashed reference lines at real signal timestamps, a correlated-signals list with real computed price-move stats, click-through from a correlated signal to `/events/[id]` worked, and removing a different card's "×" stayed on `/watchlist` without navigating.
+- **Not done in this pass** (reasonable to leave open per the task's own scope note): no day-range toggle (fixed 90-day window only); the correlated-signals list is capped at the existing hardcoded `.limit(20)` in `/api/signals`, unchanged from the main feed's behavior; price-move stats resolve to the same nearest-hour bucket for events fired close together, which is a real artifact of hourly price-snapshot granularity, not a bug — flagged in case tighter time resolution is ever wanted.
 
 ## QA-Batch Investigation Pass: Relevance Filter, Map Tab, Notification Status (2026-08-25)
 
