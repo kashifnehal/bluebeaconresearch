@@ -257,6 +257,14 @@ Restore when first paying customer asks to subscribe.
   - "Mark all read" button
   - "Manage alert rules →" footer link
   - CURRENT STATUS: NOT WORKING
+  > ⚠️ UPDATED 2026-08-25 — this "NOT WORKING" status is stale; the panel is built and
+  > functional (`NotificationPanel.tsx`), live-verified. One real gap this spec didn't
+  > anticipate was fixed in `3c2378c`: a "delivered" item without a real delivery
+  > (`alerts_sent.status` = `queued`/`failed`) rendered identically to a real delivered
+  > alert with the same "View →" link. Items now show an amber "Not Delivered" / red
+  > "Delivery Failed" badge + explanation instead when status isn't `delivered` — an
+  > intentional extension beyond this literal spec, not a contradiction of it. See
+  > `docs/brain/08_CURRENT_STATUS.md`'s 2026-08-25 entry.
 - ? Help icon:
   - SHOULD: open centered modal with 5 help sections
   - Sections: Reading signals, Setting up Telegram, Using the map, Backtesting, Contact support

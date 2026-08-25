@@ -126,14 +126,26 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 
 All news collectors share one filter module.
 
+> ⚠️ UPDATED 2026-08-25 — this whole section describes the pre-`b0783ab` filter. Two real
+> bugs were found and fixed that day (P0 QA finding: 95%-confidence irrelevant content in
+> the Intelligence Feed): `shouldExclude` used plain substring matching, so the `nfl`
+> hard-exclude was silently matching inside "inflation"/"conflict"/"influence" — dropping
+> some of the most important words for this product with zero trace, since filtered items
+> were never logged. And several `matchesKeywords` entries were too generic/substring-prone
+> (`dow` matched any word containing "down"; `russell` matched the name "Russell T Davies";
+> `business`/`economic`/`economy`/`financial`/`finance`/`corporate` matched routine local
+> news). See `08_CURRENT_STATUS.md`'s 2026-08-25 entry and `14_CHANGELOG.md` v0.28.3 for the
+> full before/after evidence. The step-by-step mechanics below (hard-exclude → tier-based
+> include → keyword match) are still accurate; only the specific keyword examples are stale.
+
 ### Step 1 — Hard exclude (`shouldExclude`)
 
-Drop if title+summary contains:
+Drop if title+summary contains (word-boundary match as of `b0783ab`, not substring):
 
 - **Sports:** football, soccer, nfl, nba, cricket, tennis, golf, olympics…
 - **Entertainment:** celebrity, music, movie, award, oscar…
 - **Lifestyle:** fashion, recipe, cooking, horoscope
-- **False-positive phrases:** star wars, war movie, tug-of-war, oil painting
+- **False-positive phrases:** star wars, war movie, tug-of-war, oil painting, farmers market, dollar tree, military fitness, net worth, trade deadline…
 - **Historical years:** 1970–2005 in headline (archive retrospectives)
 
 ### Step 2 — Tier-based include
@@ -145,11 +157,11 @@ Drop if title+summary contains:
 
 ### Step 3 — Keyword match (`matchesKeywords`)
 
-**Word-boundary tokens:** war, oil, gas, fed, sec, ipo, etf, gdp, cpi, gold, opec, bank, deal…
+**Word-boundary tokens:** war, oil, gas, fed, sec, ipo, etf, gdp, cpi, gold, corn, opec, bomb, coup, riot…
 
-**Geopolitical phrases:** conflict, missile, sanction, invasion, military, iran, russia, ukraine, taiwan, nato, nuclear, pipeline, hormuz, tanker, red sea…
+**Geopolitical phrases:** conflict, missile, sanction, invasion, military, iran, russia, ukraine, taiwan, nato, nuclear, pipeline, hormuz, tanker, red sea, trade deal, peace deal, nuclear deal, arms deal…
 
-**Market/finance phrases (v0.14 expanded):** stock, market, trading, nasdaq, dow, s&p, futures, earnings, inflation, recession, interest rate, federal reserve, bond, yield, treasury, forex, dollar, bitcoin, crypto, merger, acquisition, bankruptcy, investor, dividend, ipo, volatility, selloff, rally, semiconductor, banking, mortgage, economy, financial, business, corporate…
+**Market/finance phrases:** stock, market, trading, nasdaq, dow jones, s&p, futures, stock options, earnings, inflation, recession, interest rate, federal reserve, world bank, bond, yield, treasury, forex, dollar, bitcoin, crypto, merger, acquisition, bankruptcy, investor, dividend, ipo, volatility, selloff, semiconductor, banking, mortgage…
 
 Full lists: `apps/backend/src/lib/relevance-filter.ts`
 
