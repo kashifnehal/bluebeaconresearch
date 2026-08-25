@@ -7,10 +7,19 @@ import type { Signal } from "@blue-beacon-research/shared";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Simple in-memory cache for the last successful signals payload.
-// This is process-local but sufficient for degraded-mode fallback when
-// upstream rate-limiter or DB calls fail.
-let _cachedSignals: { payload: any; timestamp: number } | null = null;
+// Simple in-memory cache for the last successful signals payload, keyed by the
+// request's query string. This is process-local but sufficient for
+// degraded-mode fallback when upstream rate-limiter or DB calls fail.
+// Keyed per query string (not a single global entry) so that filtered
+// requests (severity/region/window/search) don't get served the previous
+// unfiltered request's cached payload within the TTL window — that bug
+// made the map's filters silently no-op whenever a fresh request landed
+// inside another request's cache window.
+const _cachedSignalsByKey = new Map<
+  string,
+  { payload: any; timestamp: number }
+>();
+const MAX_CACHE_ENTRIES = 200;
 
 type SignalRow = {
   id: string;
@@ -41,15 +50,15 @@ export async function GET(req: NextRequest) {
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
       req.headers.get("x-real-ip") ??
       "unknown";
-    // Short-circuit: if we have a very recent cached payload, return it
-    // immediately to avoid calling the rate-limit service on every poll.
+    const cacheKey = new URL(req.url).search;
+    const cached = _cachedSignalsByKey.get(cacheKey);
+    // Short-circuit: if we have a very recent cached payload for this exact
+    // query, return it immediately to avoid calling the rate-limit service
+    // on every poll.
     const CACHE_TTL_MS = 60_000; // 1 minute
-    if (
-      _cachedSignals &&
-      Date.now() - _cachedSignals.timestamp <= CACHE_TTL_MS
-    ) {
+    if (cached && Date.now() - cached.timestamp <= CACHE_TTL_MS) {
       return NextResponse.json(
-        _cachedSignals.payload,
+        cached.payload,
         { status: 200, headers: { "x-signals-feed-status": "cached" } },
       );
     }
@@ -59,16 +68,14 @@ export async function GET(req: NextRequest) {
       rl = await rateLimitOrPass(`signals:${ip}`);
       if (!rl.success) {
         // Upstash reports the client is rate-limited — serve cached payload if available
-        if (_cachedSignals) {
+        if (cached) {
           console.warn("[signals] rate limited — serving cached payload");
           return NextResponse.json(
             {
-              ..._cachedSignals.payload,
+              ...cached.payload,
               fallback: true,
               fallbackReason: "rate-limit",
-              fallbackLastUpdated: new Date(
-                _cachedSignals.timestamp,
-              ).toISOString(),
+              fallbackLastUpdated: new Date(cached.timestamp).toISOString(),
             },
             { status: 200, headers: { "x-signals-feed-status": "degraded" } },
           );
@@ -91,18 +98,16 @@ export async function GET(req: NextRequest) {
         err?.message ?? err,
       );
       // If the rate-limit check itself fails (Upstash down/quota), return cached payload when possible
-      if (_cachedSignals) {
+      if (cached) {
         console.warn(
           "[signals] rate-limit check error — serving cached payload",
         );
         return NextResponse.json(
           {
-            ..._cachedSignals.payload,
+            ...cached.payload,
             fallback: true,
             fallbackReason: "ratelimit-check-failed",
-            fallbackLastUpdated: new Date(
-              _cachedSignals.timestamp,
-            ).toISOString(),
+            fallbackLastUpdated: new Date(cached.timestamp).toISOString(),
           },
           { status: 200, headers: { "x-signals-feed-status": "degraded" } },
         );
@@ -207,16 +212,14 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error("[signals] DB error:", error?.message ?? error);
-      if (_cachedSignals) {
+      if (cached) {
         console.warn("[signals] DB error — serving cached payload");
         return NextResponse.json(
           {
-            ..._cachedSignals.payload,
+            ...cached.payload,
             fallback: true,
             fallbackReason: "db-error",
-            fallbackLastUpdated: new Date(
-              _cachedSignals.timestamp,
-            ).toISOString(),
+            fallbackLastUpdated: new Date(cached.timestamp).toISOString(),
           },
           { status: 200, headers: { "x-signals-feed-status": "degraded" } },
         );
@@ -298,9 +301,12 @@ export async function GET(req: NextRequest) {
       total: deduped.length,
     };
 
-    // Update in-memory cache of last successful payload
+    // Update in-memory cache of last successful payload for this query
     try {
-      _cachedSignals = { payload, timestamp: Date.now() };
+      if (_cachedSignalsByKey.size >= MAX_CACHE_ENTRIES) {
+        _cachedSignalsByKey.clear();
+      }
+      _cachedSignalsByKey.set(cacheKey, { payload, timestamp: Date.now() });
     } catch (e) {
       // ignore cache write failures
     }
@@ -308,16 +314,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(payload);
   } catch (err: any) {
     console.error("[signals] unexpected handler error:", err?.stack ?? err);
-    if (_cachedSignals) {
+    const cacheKey = new URL(req.url).search;
+    const cached = _cachedSignalsByKey.get(cacheKey);
+    if (cached) {
       console.warn(
         "[signals] unexpected handler error — serving cached payload",
       );
       return NextResponse.json(
         {
-          ..._cachedSignals.payload,
+          ...cached.payload,
           fallback: true,
           fallbackReason: "handler-exception",
-          fallbackLastUpdated: new Date(_cachedSignals.timestamp).toISOString(),
+          fallbackLastUpdated: new Date(cached.timestamp).toISOString(),
         },
         { status: 200, headers: { "x-signals-feed-status": "degraded" } },
       );
