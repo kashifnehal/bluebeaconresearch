@@ -267,7 +267,7 @@ export class ClaudeService {
         .join("")
         .trim();
     } catch {
-      return `Geopolitical Signal Briefing: High-priority event detected in region ${_signal.region ?? "Global"}. Market volatility expected across impacted commodity benchmarks (${(_signal.commodityImpacts as any[])?.map((c) => c.asset).join(", ") || "Energy/Metals"}). Traders should monitor strategic chokepoints and policy responses.`;
+      return `Geopolitical Signal Briefing: High-priority event detected in region ${_signal.region ?? "Global"}. Market volatility expected across impacted commodity benchmarks (${(_signal.commodity_impacts as any[])?.map((c) => c.asset).join(", ") || "Energy/Metals"}). Traders should monitor strategic chokepoints and policy responses.`;
     }
   }
 }

@@ -23,6 +23,42 @@ function runTest(name: string, fn: () => void | Promise<void>) {
 
 async function main() {
   runTest(
+    "generateAnalysis fallback should read commodity_impacts (snake_case), not commodityImpacts",
+    async () => {
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-fallback";
+      try {
+        const fallbackService = new ClaudeService();
+        // Force the catch-block fallback path deterministically instead of relying on a real API failure.
+        (fallbackService as unknown as { client: unknown }).client = {
+          messages: {
+            create: async () => {
+              throw new Error("forced failure for fallback test");
+            },
+          },
+        };
+
+        const briefing = await fallbackService.generateAnalysis(
+          {
+            region: "Middle East",
+            commodity_impacts: [
+              { asset: "USOIL", direction: "up", confidence: 0.8 },
+              { asset: "UKOIL", direction: "up", confidence: 0.7 },
+            ],
+          },
+          { contextNotes: [] },
+        );
+
+        assert.ok(
+          briefing.includes("USOIL") && briefing.includes("UKOIL"),
+          `Expected fallback briefing to list real commodity impacts, got: ${briefing}`,
+        );
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
     "unrelated company event should return no commodity impact",
     async () => {
       const classification = await service.classifyEvent({
