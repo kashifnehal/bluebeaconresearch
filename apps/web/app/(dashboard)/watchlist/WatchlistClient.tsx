@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { COMMODITIES } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
@@ -23,13 +23,13 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
     queryKey: ["price-history", symbol],
     queryFn: async () => {
       const res = await fetch(`/api/prices/history?symbol=${encodeURIComponent(symbol)}`);
-      const json = (await res.json()) as { points: number[] };
+      const json = (await res.json()) as { points: { price: number; fetchedAt: string }[] };
       return json.points ?? [];
     },
     staleTime: 60_000,
   });
 
-  const points = data ?? [];
+  const points = (data ?? []).map((p) => p.price);
 
   if (isLoading) {
     return (
@@ -78,6 +78,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 }
 
 export function WatchlistClient() {
+  const router = useRouter();
   const params = useSearchParams();
   const preselect = params.get("symbol");
   const [watch, setWatch] = useState<string[]>(() =>
@@ -181,7 +182,16 @@ export function WatchlistClient() {
             return (
               <div
                 key={sym}
-                className="bg-surface-container/40 border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors"
+                role="button"
+                tabIndex={0}
+                onClick={() => router.push(`/watchlist/${encodeURIComponent(sym)}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(`/watchlist/${encodeURIComponent(sym)}`);
+                  }
+                }}
+                className="bg-surface-container/40 border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors cursor-pointer"
               >
                 {/* Top section (darker) */}
                 <div className="p-6 bg-black/40">
@@ -195,7 +205,10 @@ export function WatchlistClient() {
                       </h3>
                     </div>
                     <button
-                      onClick={() => handleRemove(sym)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemove(sym);
+                      }}
                       className="text-on-surface-variant hover:text-error transition-colors p-1"
                     >
                       <span className="material-symbols-outlined text-lg">

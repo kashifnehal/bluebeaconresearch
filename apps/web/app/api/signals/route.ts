@@ -157,12 +157,21 @@ export async function GET(req: NextRequest) {
       Date.now() - 7 * 24 * 60 * 60 * 1000,
     ).toISOString();
 
+    // Generic "<N>d" windows (e.g. "90d") beyond the built-in 24h/7d shortcuts —
+    // used by the watchlist commodity drill-down to match its price-chart range.
+    const genericDaysMatch = window?.match(/^(\d+)d$/);
+
     if (window === "active") {
       query = query.eq("is_active", true);
     } else if (window === "7d") {
       query = query.gte("event_date", sevenDaysAgo);
     } else if (window === "24h") {
       query = query.gte("event_date", twentyFourHoursAgo);
+    } else if (genericDaysMatch) {
+      const cutoff = new Date(
+        Date.now() - Number(genericDaysMatch[1]) * 24 * 60 * 60 * 1000,
+      ).toISOString();
+      query = query.gte("event_date", cutoff);
     } else {
       // Default and "latest" behavior: preserve fresh intelligence while keeping
       // ongoing active/developing events visible beyond 24h.
