@@ -102,7 +102,7 @@ export default function DashboardPage() {
       style={{ backgroundColor: "#0e0e0e" }}
     >
       {/* ── Center: Intelligence Feed (Main Canvas) ────────────────────────────────── */}
-      <main
+      <div
         className="flex-1 overflow-y-auto"
         style={{ padding: "32px", maxWidth: "1440px", margin: "0 auto" }}
       >
@@ -613,7 +613,7 @@ export default function DashboardPage() {
             </section>
           </>
         )}
-      </main>
+      </div>
 
       {/* ── Right: Market & AI Sidebar ────────────────────────── */}
       <aside

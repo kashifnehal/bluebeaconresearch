@@ -99,7 +99,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <main className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
+    <div className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
       <div className="max-w-[1440px] mx-auto">
         <div className="mb-8">
           <h1 className="font-headline font-extrabold text-4xl tracking-tighter mb-2 text-on-surface text-white">
@@ -168,10 +168,11 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="space-y-2 opacity-60">
-                      <label className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
+                      <label htmlFor="settings-email" className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
                         Email Address
                       </label>
                       <input
+                        id="settings-email"
                         className="w-full bg-surface-container-lowest border-b border-outline-variant p-3 font-mono text-sm cursor-not-allowed text-on-surface-variant outline-none"
                         disabled
                         type="email"
@@ -451,6 +452,6 @@ export default function SettingsPage() {
           <span>SESSION_ID: 88F9-AX21</span>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }

@@ -95,7 +95,7 @@ export default function AlertsPage() {
   });
 
   return (
-    <main className="ml-[256px] mr-[260px] mt-16 p-8 min-h-screen bg-surface-container-lowest text-on-surface">
+    <div className="ml-[256px] mr-[260px] mt-16 p-8 min-h-screen bg-surface-container-lowest text-on-surface">
       {/* Header Section */}
       <section className="flex justify-between items-end mb-8">
         <div>
@@ -242,7 +242,7 @@ export default function AlertsPage() {
               <h3 className="label text-xs font-bold tracking-widest text-on-surface/60 uppercase">Geospatial Intelligence Stream</h3>
               <span className="mono text-[10px] text-primary">LIVE INGESTION</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Geospatial intelligence stream table">
               <table className="w-full">
                 <tbody className="divide-y divide-outline-variant/10">
                   {tableSignals.length > 0 ? (
@@ -338,6 +338,6 @@ export default function AlertsPage() {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

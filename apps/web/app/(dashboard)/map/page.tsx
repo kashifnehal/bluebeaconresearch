@@ -622,7 +622,7 @@ export default function MapPage() {
   }, [tensionHistorySignals]);
 
   return (
-    <main className="relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
+    <div className="relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
       <div className="absolute inset-0">
         <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />
@@ -816,10 +816,11 @@ export default function MapPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="label text-[10px] text-on-surface-variant">
+            <label htmlFor="map-filter-min-severity" className="label text-[10px] text-on-surface-variant">
               Min Severity
             </label>
             <select
+              id="map-filter-min-severity"
               value={minSeverity}
               onChange={(e) => setMinSeverity(Number(e.target.value))}
               className={`ml-2 ${SELECT_CLASSES}`}
@@ -833,10 +834,11 @@ export default function MapPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="label text-[10px] text-on-surface-variant">
+            <label htmlFor="map-filter-category" className="label text-[10px] text-on-surface-variant">
               Category
             </label>
             <select
+              id="map-filter-category"
               value={selectedCategory ?? ""}
               onChange={(e) => setSelectedCategory(e.target.value || null)}
               className={`ml-2 ${SELECT_CLASSES}`}
@@ -853,10 +855,11 @@ export default function MapPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="label text-[10px] text-on-surface-variant">
+            <label htmlFor="map-filter-region" className="label text-[10px] text-on-surface-variant">
               Region
             </label>
             <select
+              id="map-filter-region"
               value={selectedRegion ?? ""}
               onChange={(e) => setSelectedRegion(e.target.value || null)}
               className={`ml-2 ${SELECT_CLASSES}`}
@@ -987,6 +990,6 @@ export default function MapPage() {
           <span className="material-symbols-outlined text-[16px]">chevron_left</span>
         </button>
       )}
-    </main>
+    </div>
   );
 }

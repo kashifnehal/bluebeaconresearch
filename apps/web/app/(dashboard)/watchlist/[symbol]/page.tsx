@@ -120,7 +120,7 @@ export default function WatchlistSymbolPage() {
     : null;
 
   return (
-    <main className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
+    <div className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
       <div className="max-w-[1440px] mx-auto">
         {/* Breadcrumb */}
         <button
@@ -278,6 +278,6 @@ export default function WatchlistSymbolPage() {
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

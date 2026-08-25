@@ -111,7 +111,7 @@ export default function BacktestingPage() {
   const results = run.data;
 
   return (
-    <main className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
+    <div className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
       <div className="max-w-[1440px] mx-auto">
         {/* Header */}
         <div className="mb-10">
@@ -229,10 +229,11 @@ export default function BacktestingPage() {
                 />
               </div>
               <div className="w-[180px]">
-                <label className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
+                <label htmlFor="backtest-filter-region" className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
                   Region
                 </label>
                 <select
+                  id="backtest-filter-region"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
                   className={`w-full ${SELECT_CLASSES}`}
@@ -249,10 +250,11 @@ export default function BacktestingPage() {
                 </select>
               </div>
               <div className="w-[180px]">
-                <label className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
+                <label htmlFor="backtest-filter-commodity" className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
                   Commodity
                 </label>
                 <select
+                  id="backtest-filter-commodity"
                   value={commodity}
                   onChange={(e) => setCommodity(e.target.value)}
                   className={`w-full ${SELECT_CLASSES}`}
@@ -489,6 +491,6 @@ export default function BacktestingPage() {
           <span>DATA INTEGRITY: 100% Verified</span>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
