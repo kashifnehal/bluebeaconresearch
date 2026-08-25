@@ -1,20 +1,29 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { getSystemChecks, type CheckStatus } from "@/lib/status-checks";
 
 export const metadata = {
   title: "System Status | Blue Beacon Research",
   description: "Real-time infrastructure operational status for Blue Beacon Research.",
 };
 
-const SYSTEMS = [
-  { name: "Intelligence Feed", status: "Operational", detail: "REST API & WebSocket live data feed" },
-  { name: "Alert Delivery", status: "Operational", detail: "Telegram, Webhook & Multi-channel Dispatcher" },
-  { name: "Global Map", status: "Operational", detail: "MapLibre GL Spatial Engine & Incident Markers" },
-  { name: "Data Pipeline", status: "Operational", detail: "GDELT, ACLED, GNews & Price Sync Collector Workers" },
-];
+// Real checks run per request (not a cached/prerendered page) — see lib/status-checks.ts.
+export const dynamic = "force-dynamic";
 
-export default function StatusPage() {
+function statusColor(status: CheckStatus) {
+  if (status === "Operational") return "#4edea3";
+  if (status === "Degraded") return "#f5a623";
+  return "#8a8a8a";
+}
+
+export default async function StatusPage() {
   const currentTime = new Date().toUTCString();
+  const systems = await getSystemChecks();
+
+  const operationalCount = systems.filter((s) => s.status === "Operational").length;
+  const allOperational = operationalCount === systems.length;
+  const uptimePct = Math.round((operationalCount / systems.length) * 100);
+  const bannerColor = allOperational ? "#4edea3" : "#f5a623";
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -44,18 +53,23 @@ export default function StatusPage() {
         {/* Banner */}
         <div className="p-8 bg-[#131313] border border-[#3c4a42] rounded-lg mb-12 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-4 h-4 rounded-full bg-[#4edea3] animate-pulse" />
+            <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: bannerColor }} />
             <div>
               <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                All Systems Operational
+                {allOperational ? "All Systems Operational" : "Partial System Disruption"}
               </h1>
               <p className="text-xs text-[#86948a] mt-1 font-mono">
-                All production microservices are running within normal parameters.
+                {allOperational
+                  ? "All production microservices are running within normal parameters."
+                  : "One or more subsystems are degraded or reporting an unknown state — see below."}
               </p>
             </div>
           </div>
-          <span className="text-xs font-mono text-[#4edea3] px-3 py-1 bg-[#4edea3]/10 border border-[#4edea3]/20 rounded-sm">
-            100% UPTIME
+          <span
+            className="text-xs font-mono px-3 py-1 border rounded-sm"
+            style={{ color: bannerColor, backgroundColor: `${bannerColor}1a`, borderColor: `${bannerColor}33` }}
+          >
+            {uptimePct}% OPERATIONAL
           </span>
         </div>
 
@@ -66,7 +80,7 @@ export default function StatusPage() {
           </h2>
 
           <div className="divide-y divide-[#2a2a2a] border border-[#3c4a42] bg-[#131313] rounded-lg">
-            {SYSTEMS.map((sys) => (
+            {systems.map((sys) => (
               <div key={sys.name} className="p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
                 <div>
                   <h3 className="font-bold text-sm text-[#e5e2e1]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -76,8 +90,11 @@ export default function StatusPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#4edea3]" />
-                  <span className="text-xs font-bold text-[#4edea3] uppercase tracking-wider font-mono">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: statusColor(sys.status) }} />
+                  <span
+                    className="text-xs font-bold uppercase tracking-wider font-mono"
+                    style={{ color: statusColor(sys.status) }}
+                  >
                     {sys.status}
                   </span>
                 </div>
