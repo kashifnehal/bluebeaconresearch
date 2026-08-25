@@ -80,6 +80,14 @@ Content:
 
 On open: marks all alerts as read (via API), resets unread_count badge.
 
+> ⚠️ UPDATED 2026-08-25 — the "View →" link is now conditional, not universal. If an
+> item's `alerts_sent.status` isn't `delivered` (i.e. `queued` — no delivery channel
+> connected — or `failed`), it shows an amber "Not Delivered" / red "Delivery Failed"
+> badge and a one-line explanation instead of the "View →" link, and the row dims
+> slightly (`opacity-70`). Fixed in `3c2378c` because a queued/failed alert previously
+> rendered identically to a real delivered one, silently masking dispatch failures. See
+> `docs/brain/08_CURRENT_STATUS.md`'s 2026-08-25 entry.
+
 ---
 
 ### HelpModal (apps/web/components/HelpModal.tsx)
