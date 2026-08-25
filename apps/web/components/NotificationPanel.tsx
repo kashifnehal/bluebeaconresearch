@@ -13,6 +13,7 @@ type AlertItem = {
   signal_id: string;
   created_at: string;
   is_read?: boolean;
+  status?: "queued" | "delivered" | "failed";
   signals?: {
     id: string;
     title: string;
@@ -128,6 +129,10 @@ export function NotificationPanel() {
               const severity = item.signals?.severity ?? 5;
               const signalId = item.signals?.id || item.signal_id || item.id;
               const isHigh = severity >= 8;
+              // Missing/undefined status defensively renders as "delivered" (undelivered
+              // rows have never existed pre-fix, so there's no legacy data to misrender).
+              const status = item.status ?? "delivered";
+              const notDelivered = status === "queued" || status === "failed";
 
               return (
                 <div
@@ -138,11 +143,14 @@ export function NotificationPanel() {
                   }}
                   className={`p-4 cursor-pointer transition-colors hover:bg-[#1f1f1f] flex gap-3 items-start ${
                     !isRead ? "bg-[#18231d]" : "bg-transparent"
-                  }`}
+                  } ${notDelivered ? "opacity-70" : ""}`}
                 >
                   <div
                     className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0"
-                    style={{ backgroundColor: isHigh ? "#ee7d77" : "#4edea3" }}
+                    style={{
+                      backgroundColor:
+                        status === "failed" ? "#ee7d77" : status === "queued" ? "#e0a84e" : isHigh ? "#ee7d77" : "#4edea3",
+                    }}
                   />
 
                   <div className="flex-1 min-w-0">
@@ -150,17 +158,41 @@ export function NotificationPanel() {
                       <span className="text-[10px] font-mono uppercase text-[#86948a]">
                         {safeFormatDistanceToNow(item.created_at)} ago
                       </span>
-                      <span
-                        className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[#4edea3] hover:underline"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                      >
-                        View <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>arrow_forward</span>
-                      </span>
+                      {status === "failed" ? (
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wider text-[#ee7d77]"
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        >
+                          Delivery Failed
+                        </span>
+                      ) : status === "queued" ? (
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wider text-[#e0a84e]"
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        >
+                          Not Delivered
+                        </span>
+                      ) : (
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[#4edea3] hover:underline"
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        >
+                          View <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>arrow_forward</span>
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-xs font-medium text-[#e5e2e1] line-clamp-2 leading-snug">
                       {title}
                     </p>
+
+                    {notDelivered && (
+                      <p className="text-[10px] text-[#86948a] mt-1">
+                        {status === "failed"
+                          ? "This alert fired but delivery failed."
+                          : "This alert fired but no delivery channel is connected."}
+                      </p>
+                    )}
                   </div>
                 </div>
               );
