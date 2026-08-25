@@ -152,7 +152,8 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
 - **Fake Tension Index Number Removed**: "Global Tension Index" was showing a hardcoded 74.8/▲2.4 instead of the real computed score.
 - **Watchlist Dead Globe Shell Removed**; unsupported `EURUSD`/`USDRUB` removed from the addable commodity list (were permanently stuck at flat 0.00%).
 - **Backtesting Date Realism**: Mock results no longer show real-looking calendar dates for fabricated events — relabeled "Sample Case #N". Demo-mode disclaimer confirmed correct and unchanged.
-- **Open**: Watchlist sparkline bars still use `Math.random()` per render (fabricated), not yet fixed — flagged for a future pass.
+- **Open** (as of this session): Watchlist sparkline bars use `Math.random()` per render (fabricated).
+> ⚠️ CORRECTED 2026-08-25 — This was fixed in a later pass (see the 2026-08-15 "Auth Flow, GDELT Language Filter & Dropdown Consistency Fixes" section above, and `apps/web/app/(dashboard)/watchlist/WatchlistClient.tsx` lines 16-30): `PriceSparkline` now fetches real recent price history from `/api/prices/history`. The line above is left as a record of what this session found, not current status — do not treat it as still open.
 - **Verification caveat**: No browser/Playwright tool was available this session; fixes verified via build + direct API calls, not visual walkthrough.
 
 ## Recent Event Detail Page Rebuild & Alert Fix (2026-08-15)
