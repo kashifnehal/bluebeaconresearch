@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow, SELECT_CLASSES } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -84,6 +85,7 @@ export default function MapPage() {
   const liveItems = geolocatedSignals.slice(0, 6);
 
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [tensionInfoOpen, setTensionInfoOpen] = useState(false);
   const [streamCollapsed, setStreamCollapsed] = useState(false);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
 
@@ -550,6 +552,75 @@ export default function MapPage() {
     };
   }, [liveSignals]);
 
+  // Tension Index trend sparkline (last 24h) — a separate, real-data-only fetch, not a
+  // refactor of tensionMetrics above. Uses its own chronologically-sorted signal fetch
+  // (existing /api/signals?window=24h, now with an optional ?limit= override so a 24h
+  // window isn't starved by the feed's default severity-sorted cap of 20) bucketed into
+  // 3h windows. scoreSignalBucket() intentionally duplicates the scoring formula from
+  // tensionMetrics rather than sharing code with it, so that block stays untouched.
+  const TENSION_HISTORY_BUCKETS = 8;
+  const TENSION_HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+  const { data: tensionHistorySignals } = useQuery({
+    queryKey: ["tension-history-signals"],
+    queryFn: async () => {
+      const res = await fetch("/api/signals?window=24h&sort=newest&limit=100");
+      if (!res.ok) return [] as Signal[];
+      const json = (await res.json()) as { signals?: Signal[] };
+      return json.signals ?? [];
+    },
+    staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
+  });
+
+  function scoreSignalBucket(bucket: Signal[]): number | null {
+    if (bucket.length === 0) return null;
+    let cyber = 0;
+    let kinetic = 0;
+    let diplomatic = 0;
+    for (const s of bucket) {
+      const t = (s.eventType || "").toLowerCase();
+      const title = (s.title || "").toLowerCase();
+      if (/cyber|hack|drone|tech|ai|digital|network|telecom|satellite/i.test(t + " " + title)) {
+        cyber += 1;
+      } else if (/military|navy|troops|strike|attack|missile|war|ship|tanker|border|conflict|weapon|defense/i.test(t + " " + title)) {
+        kinetic += 1;
+      } else if (/sanction|diplom|bank|trade|market|tariff|opec|bond|fund|asset|deal|negotiation|talks|economy/i.test(t + " " + title)) {
+        diplomatic += 1;
+      } else {
+        kinetic += 1;
+      }
+    }
+    return Math.min(99, Math.round(50 + (kinetic * 3 + cyber * 2 + diplomatic) * 1.5));
+  }
+
+  const tensionHistory = useMemo(() => {
+    const rows = tensionHistorySignals ?? [];
+    const bucketMs = TENSION_HISTORY_WINDOW_MS / TENSION_HISTORY_BUCKETS;
+    const bucketHours = bucketMs / 3_600_000;
+    const buckets: Signal[][] = Array.from({ length: TENSION_HISTORY_BUCKETS }, () => []);
+    const now = Date.now();
+
+    for (const s of rows) {
+      const t = new Date(s.eventDate ?? s.createdAt).getTime();
+      const age = now - t;
+      if (!Number.isFinite(t) || age < 0 || age > TENSION_HISTORY_WINDOW_MS) continue;
+      const idx = Math.min(TENSION_HISTORY_BUCKETS - 1, Math.floor(age / bucketMs));
+      buckets[idx].push(s); // idx 0 = most recent bucket
+    }
+
+    // Reverse so index 0 is oldest — renders left (oldest) to right (most recent).
+    return [...buckets].reverse().map((bucket, i) => {
+      const idxFromNow = TENSION_HISTORY_BUCKETS - 1 - i;
+      const hoursAgoLo = Math.round(idxFromNow * bucketHours);
+      const hoursAgoHi = Math.round((idxFromNow + 1) * bucketHours);
+      return {
+        score: scoreSignalBucket(bucket),
+        label: `${hoursAgoLo}–${hoursAgoHi}h ago`,
+      };
+    });
+  }, [tensionHistorySignals]);
+
   return (
     <main className="relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
       <div className="absolute inset-0">
@@ -613,8 +684,33 @@ export default function MapPage() {
         </button>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <div className="label text-[10px] tracking-[0.2em] text-on-surface-variant mb-1 uppercase">
-              Global Tension Index
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="label text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
+                Global Tension Index
+              </div>
+              <div className="relative group">
+                <button
+                  type="button"
+                  onClick={() => setTensionInfoOpen((v) => !v)}
+                  aria-label="About the Global Tension Index"
+                  className="flex items-center justify-center w-3.5 h-3.5 rounded-full text-on-surface-variant/60 hover:text-primary transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[13px] leading-none">info</span>
+                </button>
+                {/* Hover is pure CSS (group-hover) so it can never fight the click toggle's
+                    React state — clicking to pin it open no longer gets immediately
+                    undone by the hover that necessarily precedes a real click. */}
+                <div
+                  role="tooltip"
+                  className={`absolute left-0 top-full mt-2 w-56 z-30 p-3 rounded-lg bg-surface-container-high border border-outline-variant/40 shadow-xl text-[10px] leading-relaxed text-on-surface-variant normal-case tracking-normal transition-opacity ${
+                    tensionInfoOpen
+                      ? "opacity-100 pointer-events-auto"
+                      : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
+                  }`}
+                >
+                  Composite score derived from regional conflict density, kinetic strikes, and maritime disruption metrics.
+                </div>
+              </div>
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-mono text-4xl font-bold text-on-surface">
@@ -624,6 +720,23 @@ export default function MapPage() {
                 from {tensionMetrics.sampleSize} active signal{tensionMetrics.sampleSize === 1 ? "" : "s"}
               </span>
             </div>
+            {tensionHistory.some((b) => b.score != null) && (
+              <div className="mt-2">
+                <div className="flex items-end gap-[3px] h-6" aria-label="Tension index trend, last 24 hours">
+                  {tensionHistory.map((b, i) => (
+                    <div
+                      key={i}
+                      title={b.score != null ? `${b.label}: ${b.score}` : `${b.label}: not enough data`}
+                      className={`flex-1 rounded-sm ${b.score != null ? "bg-primary/50" : "bg-surface-container-high"}`}
+                      style={{ height: b.score != null ? `${Math.max(12, (b.score / 99) * 100)}%` : "15%" }}
+                    />
+                  ))}
+                </div>
+                <p className="font-mono text-[8px] text-on-surface-variant/50 mt-1 uppercase tracking-wider">
+                  Last 24h trend
+                </p>
+              </div>
+            )}
           </div>
           <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/20">
             <span className="material-symbols-outlined text-primary">

@@ -133,6 +133,14 @@ export async function GET(req: NextRequest) {
     const sort = url.searchParams.get("sort") ?? "severity";
     const window =
       url.searchParams.get("window") ?? url.searchParams.get("range");
+    // Optional row-count override (e.g. the map's tension-index sparkline needs more
+    // than the default 20 to bucket a 24h window) — capped, and defaults to the
+    // original hardcoded 20 so every existing caller that omits it is unaffected.
+    const limitParam = Number(url.searchParams.get("limit"));
+    const rowLimit =
+      Number.isFinite(limitParam) && limitParam > 0
+        ? Math.min(100, Math.floor(limitParam))
+        : 20;
 
     let query = supabase
       .from("signals")
@@ -195,7 +203,7 @@ export async function GET(req: NextRequest) {
               .order("severity", { ascending: false })
               .order("created_at", { ascending: false });
 
-    const { data, error } = await query.limit(20);
+    const { data, error } = await query.limit(rowLimit);
 
     if (error) {
       console.error("[signals] DB error:", error?.message ?? error);
