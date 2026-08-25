@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { AcledService } from "../services/acled.service.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
+import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 
 const claude = new ClaudeService();
 
@@ -66,26 +67,42 @@ export async function runAcledCollectorOnce() {
         event_date: eventDate,
       });
 
-      const { error: sigErr } = await supabase.from("signals").insert({
-        raw_event_ids: [rawEventId],
-        title,
-        summary: classification.summary,
-        severity: classification.severity,
-        confidence: classification.confidence,
-        event_type: e.event_type ?? "acled",
-        country: formatCountryName(e.country ?? null),
-        region: classification.region,
-        lat: parseFloat(e.latitude) || null,
-        lng: parseFloat(e.longitude) || null,
-        sources_count: 1,
-        commodity_impacts: classification.commodityImpacts,
-        is_breaking: classification.isBreaking,
-        is_active: true,
-        event_date: eventDate,
-      });
+      const { data: sigInsert, error: sigErr } = await supabase
+        .from("signals")
+        .insert({
+          raw_event_ids: [rawEventId],
+          title,
+          summary: classification.summary,
+          severity: classification.severity,
+          confidence: classification.confidence,
+          event_type: e.event_type ?? "acled",
+          country: formatCountryName(e.country ?? null),
+          region: classification.region,
+          lat: parseFloat(e.latitude) || null,
+          lng: parseFloat(e.longitude) || null,
+          sources_count: 1,
+          commodity_impacts: classification.commodityImpacts,
+          is_breaking: classification.isBreaking,
+          is_active: true,
+          event_date: eventDate,
+        })
+        .select("id")
+        .maybeSingle();
 
-      if (!sigErr) signals += 1;
-      else console.error("[ACLED] Signal insert error:", sigErr.message);
+      if (!sigErr && sigInsert?.id) {
+        signals += 1;
+        // Every other collector (GDELT/GNews/RSS/reconciliation) dispatches alerts
+        // right after a signal insert — this one silently didn't, so ACLED-sourced
+        // signals could never trigger an alert regardless of matching rules.
+        try {
+          const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
+          console.log(`[ACLED] alert-dispatch for signal ${sigInsert.id}:`, dispatchResult);
+        } catch (e2) {
+          console.error(`[ACLED] alert-dispatch failed for signal ${sigInsert.id}:`, e2 instanceof Error ? e2.message : e2);
+        }
+      } else if (sigErr) {
+        console.error("[ACLED] Signal insert error:", sigErr.message);
+      }
     } catch (err: any) {
       console.error(
         "[ACLED] Classification/signal insert failed:",
