@@ -603,7 +603,7 @@ Background: amber-subtle, text-warning. Cannot be missed.
 
 ---
 
-### 2.15 /status (static page — needs build)
+### 2.15 /status — now automated (was: static page — needs build)
 
 **Purpose:** Public system status page for trust
 
@@ -613,6 +613,8 @@ Background: amber-subtle, text-warning. Cannot be missed.
 - Status for each: green Operational / amber Degraded / red Outage
 - "Last updated: [timestamp]"
 - Initially all hardcoded green. Later: automate via /v1/health/pipeline endpoint.
+
+> ⚠️ UPDATED 2026-08-25 — The "Later: automate" step happened. All 4 checks listed above are now real (`apps/web/lib/status-checks.ts`), each degrading to amber "Degraded" or a distinct grey "Unknown" (a status/UI distinction this spec didn't originally call for, added so a check that itself failed — timeout, bad query — never gets silently reported as green) instead of staying hardcoded green. Implemented as direct DB/Redis checks inside apps/web rather than a dedicated `/v1/health/pipeline` backend endpoint — apps/web has no existing pattern of calling apps/backend directly, so a new cross-service endpoint would have been a bigger, riskier change than this page needed. "Last updated" is now a genuine per-request timestamp — the page was also, separately, discovered to be statically prerendered at build time until this fix (`export const dynamic = "force-dynamic"` was missing), so even that one honest-looking element wasn't actually live before. See `docs/brain/08_CURRENT_STATUS.md` and `14_CHANGELOG.md` v0.28.5.
 
 ---
 

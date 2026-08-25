@@ -327,6 +327,8 @@ Calculation (from API /v1/signals?period=24h):
 - Diplomatic %: all other / total × 100
 - Bull/Neutral/Bear: aggregated commodity_impacts directions
 
+> ⚠️ UPDATED 2026-08-25 — No separate `GlobalTensionIndex.tsx` component exists; this lives inline in `apps/web/app/(dashboard)/map/page.tsx` (the `tensionMetrics` useMemo + its JSX panel), computed client-side from the already-fetched `liveSignals` via title/eventType regex matching — not a call to `/v1/signals?period=24h`. There's no "LIVE" badge or "ACTIVE SENTIMENT" Bull/Neutral/Bear row in the current build (pre-existing spec/reality gaps, not touched this session). What *did* change this session: an info icon (methodology tooltip, matching `HelpModal.tsx`'s wording) and a real last-24h trend sparkline were added next to the score — see `docs/brain/14_CHANGELOG.md` v0.28.5.
+
 ---
 
 ## 5. WATCHLIST COMPONENTS
