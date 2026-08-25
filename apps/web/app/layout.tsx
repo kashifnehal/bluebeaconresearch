@@ -24,9 +24,9 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
           rel="stylesheet"
         />
-        {/* Material Symbols Outlined – variable font */}
+        {/* Material Symbols Outlined – only opsz 24 / wght 400 / GRAD 0 are used anywhere in the app; FILL varies 0..1 for filled-icon states. Requesting the full axis ranges pulled a ~3.9MB font file. */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
           rel="stylesheet"
         />
         <style>{`
