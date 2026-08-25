@@ -385,7 +385,10 @@ export default function EventDetailPage() {
                       </div>
                       {signal.aiAnalysis ? (
                         <div className="text-base text-text-secondary leading-relaxed [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_p+p]:mt-4">
-                          <ReactMarkdown allowedElements={["p", "strong", "em", "ul", "ol", "li"]}>
+                          <ReactMarkdown
+                            allowedElements={["p", "strong", "em", "ul", "ol", "li"]}
+                            unwrapDisallowed
+                          >
                             {signal.aiAnalysis}
                           </ReactMarkdown>
                         </div>
