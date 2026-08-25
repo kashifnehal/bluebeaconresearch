@@ -71,7 +71,6 @@ export default async function Home(props: {
       <header className="fixed top-0 left-0 right-0 h-16 glass z-50 px-8 flex items-center justify-between border-b border-outline-variant/10">
         <div className="flex items-center gap-2">
           <Logo className="h-8" />
-          <span className="text-xl font-extrabold tracking-tighter uppercase font-headline text-white">Blue Beacon Research</span>
         </div>
         <nav className="hidden md:flex items-center gap-10">
           <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#features">Tactical Modules</Link>
