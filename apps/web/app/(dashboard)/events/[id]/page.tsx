@@ -119,6 +119,10 @@ export default function EventDetailPage() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Authentication required");
 
+      if (modalMinSeverity < 1 || modalMinSeverity > 10) {
+        throw new Error("Severity must be between 1 and 10");
+      }
+
       const { error } = await supabase.from("alert_rules").insert({
         user_id: user.id,
         name: generateAlertRuleName(modalRegion, modalMinSeverity, signal.eventType),
@@ -127,7 +131,12 @@ export default function EventDetailPage() {
         channels: modalChannels,
         is_active: true,
       });
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23514") {
+          throw new Error("Please check your alert rule settings and try again");
+        }
+        throw error;
+      }
       track("alert_rule_created", { source: "event_detail", region: modalRegion, minSeverity: modalMinSeverity });
       toast.success("Alert Rule Activated", {
         description: `Alerts set for ${modalRegion} (Severity >= ${modalMinSeverity})`,
