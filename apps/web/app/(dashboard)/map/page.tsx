@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import type { Signal } from "@blue-beacon-research/shared";
+import { SEVERITY_CONFIG, COMMODITIES } from "@blue-beacon-research/shared";
+import type { Signal, CommodityImpact } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow, SELECT_CLASSES } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -18,6 +19,55 @@ import {
 } from "@/lib/map-config";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { getSignalCoordinates } from "@/lib/geo-coords";
+
+// Severity badge convention shared with components/signals/SeverityBadge.tsx (score
+// >=7 uses the SEVERITY_CONFIG label/color tiers; below that there's no defined tier,
+// so this falls back to a muted "Low" badge using the same neutral palette the rest
+// of the map page already uses for de-emphasized text/panels).
+function getSeverityVisual(score: number): { label: string; color: string; bgColor: string } {
+  if (score >= 10) return SEVERITY_CONFIG[10];
+  if (score >= 9) return SEVERITY_CONFIG[9];
+  if (score >= 8) return SEVERITY_CONFIG[8];
+  if (score >= 7) return SEVERITY_CONFIG[7];
+  return { label: "Low", color: "#86948a", bgColor: "#201f1f" };
+}
+
+type PopupSignal = {
+  id: string;
+  title: string;
+  severity: number;
+  commodityImpacts?: CommodityImpact[] | null;
+};
+
+// Shared by both popup call sites (feed-select flyto and unclustered-point click) —
+// previously each built its own near-identical HTML string inline. Kept as a plain
+// HTML-string builder (not a React component) since a MapLibre Popup hosts raw HTML
+// via setHTML(), not a React tree. Minimal by design: headline + severity + at most
+// one commodity-impact line + the drill-down link — this is an entry point into the
+// full analysis, not the analysis itself.
+function buildSignalPopupHTML(signal: PopupSignal): string {
+  const visual = getSeverityVisual(signal.severity);
+  const topImpact = [...(signal.commodityImpacts ?? [])].sort(
+    (a, b) => (b.confidence ?? 0) - (a.confidence ?? 0),
+  )[0];
+  const impactAsset = topImpact
+    ? COMMODITIES.find((c) => c.symbol === topImpact.asset)?.label ?? topImpact.asset
+    : null;
+  const impactDirection = topImpact
+    ? topImpact.direction.charAt(0).toUpperCase() + topImpact.direction.slice(1)
+    : null;
+
+  return `<div style="font-family: Inter, sans-serif; color: #e5e2e1; width: 240px;">
+    <div style="font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 8px;">${signal.title}</div>
+    <span style="display:inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 3px; background:${visual.bgColor}; color:${visual.color};">${signal.severity} · ${visual.label.toUpperCase()}</span>
+    ${
+      impactAsset
+        ? `<div style="margin-top:8px; font-size: 11px; color:#bbcac0;"><span style="color:#4edea3; font-weight:700;">${impactAsset}:</span> ${impactDirection}</div>`
+        : ""
+    }
+    <div style="margin-top:10px; padding-top: 8px; border-top: 1px solid #2a2a2a; text-align:right;"><a href="/events/${signal.id}" style="color:#4edea3;font-weight:700;font-size:10px;letter-spacing:0.05em;text-decoration:none;">VIEW EVENT →</a></div>
+  </div>`;
+}
 
 export default function MapPage() {
   const router = useRouter();
@@ -113,6 +163,11 @@ export default function MapPage() {
           eventType: s.eventType,
           eventDate: s.eventDate ?? s.createdAt,
           summary: s.summary,
+          // GeoJSON sources stringify non-primitive property values internally anyway
+          // (MapLibre can't carry arrays/objects through its vector-tile encoding) —
+          // stringifying explicitly here makes that behavior visible and intentional
+          // rather than relying on it implicitly.
+          commodityImpacts: JSON.stringify(s.commodityImpacts ?? []),
         },
       };
     });
@@ -140,12 +195,7 @@ export default function MapPage() {
       zoom: Math.max(map.getZoom(), 5),
     });
 
-    const html = `<div style="font-family: Inter, sans-serif; color: #e5e2e1; width: 260px;">
-      <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">${signal.title}</div>
-      <div style="font-size: 10px; color: #bbcaca; margin-bottom: 6px;">${signal.country ?? "Global"}</div>
-      <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)}</div>
-      <div style="margin-top:8px; text-align:right;"><a href="/events/${signal.id}" style="color:#4edea3;font-weight:700;text-decoration:none">VIEW EVENT</a></div>
-    </div>`;
+    const html = buildSignalPopupHTML(signal);
 
     const popup = new maplib.Popup({ offset: 12, closeButton: false })
       .setLngLat([lng, lat])
@@ -401,18 +451,18 @@ export default function MapPage() {
               const props = feat.properties || {};
               const sev = Number(props.severity) || 0;
               const title = props.title ?? "";
-              const country = props.country ?? "Global";
-              const eventDate =
-                props.eventDate ?? props.createdAt ?? new Date().toISOString();
-              const summary = props.summary ?? "";
-              const html = `<div style="font-family: Inter, sans-serif; color: #e5e2e1; width: 260px;">
-                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #86948a; margin-bottom: 6px;">${sev >= 8 ? "Critical Event" : "Active Signal"}</div>
-                <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px;">${title}</div>
-                <div style="font-size: 10px; color: #bbcaca; margin-bottom: 6px;">${country}</div>
-                <div style="font-size: 10px; color: #4edea3; font-weight: 700;">${safeFormatDistanceToNow(eventDate)}</div>
-                <div style="margin-top:8px; font-size:12px;">${summary ? (summary.length > 180 ? summary.slice(0, 177) + "..." : summary) : ""}</div>
-                <div style="margin-top:8px; text-align:right;"><a href="/events/${props.id}" style="color:#4edea3;font-weight:700;text-decoration:none">VIEW EVENT</a></div>
-              </div>`;
+              let commodityImpacts: CommodityImpact[] = [];
+              try {
+                commodityImpacts = JSON.parse(props.commodityImpacts || "[]");
+              } catch {
+                commodityImpacts = [];
+              }
+              const html = buildSignalPopupHTML({
+                id: props.id,
+                title,
+                severity: sev,
+                commodityImpacts,
+              });
 
               // Remove existing popup
               if (popupRef.current) {
