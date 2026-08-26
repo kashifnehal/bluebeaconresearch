@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUIStore } from "@/store/useUIStore";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { HelpModal } from "@/components/HelpModal";
+import { CommandPalette } from "@/components/CommandPalette";
 import { getSupabaseBrowserClient, signOutAndRedirect } from "@/lib/supabase";
 
 export function TopBar() {
@@ -341,6 +342,9 @@ export function TopBar() {
 
       {/* Centered Help Modal */}
       <HelpModal />
+
+      {/* Global Cmd+K / Ctrl+K search */}
+      <CommandPalette />
     </>
   );
 }
