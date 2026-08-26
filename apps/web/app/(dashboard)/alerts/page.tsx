@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow, generateAlertRuleName } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,37 +11,121 @@ import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 
+type AlertRule = {
+  id: string;
+  name: string;
+  regions: string[];
+  commodities: string[];
+  min_severity: number;
+  channels: string[];
+  is_active: boolean;
+  last_triggered_at: string | null;
+  created_at: string;
+};
+
+type DeliveryStatus = "queued" | "delivered" | "failed";
+
+type MatchedSignal = {
+  id: string;
+  title: string;
+  severity: number;
+  eventDate?: string | null;
+  matchedAt: string;
+  deliveries: { channel: string | null; status: DeliveryStatus }[];
+};
+
+type AlertSentRow = {
+  id: string;
+  rule_id: string | null;
+  signal_id: string;
+  channel: string | null;
+  status: DeliveryStatus;
+  created_at: string;
+  signals?: {
+    id: string;
+    title: string;
+    severity: number;
+    event_date?: string | null;
+  } | null;
+};
+
+function worstDeliveryStatus(deliveries: { status: DeliveryStatus }[]): DeliveryStatus {
+  if (deliveries.some((d) => d.status === "failed")) return "failed";
+  if (deliveries.some((d) => d.status === "queued")) return "queued";
+  return "delivered";
+}
+
 export default function AlertsPage() {
   const router = useRouter();
-  const [filter, setFilter] = useState<"all" | "high" | "medium" | "low">("all");
+  const queryClient = useQueryClient();
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [modalRegion, setModalRegion] = useState("middle-east");
   const [modalMinSeverity, setModalMinSeverity] = useState(7);
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
   const [modalEventType, setModalEventType] = useState<string | undefined>(undefined);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["signals", "feed"],
+  const { data: rulesData, isLoading: rulesLoading, isError: rulesError } = useQuery({
+    queryKey: ["alert-rules"],
     queryFn: async () => {
-      const res = await fetch("/api/signals?sort=severity");
-      if (!res.ok) throw new Error("Failed to fetch signals");
-      return (await res.json()) as { signals: Signal[] };
+      const res = await fetch("/api/alert-rules");
+      if (!res.ok) throw new Error("Failed to fetch alert rules");
+      return (await res.json()) as { rules: AlertRule[] };
     },
     refetchInterval: 30_000,
   });
 
-  const signals = data?.signals ?? [];
+  const { data: alertsData, isLoading: alertsLoading } = useQuery({
+    queryKey: ["alerts", "recent", "for-rules"],
+    queryFn: async () => {
+      const res = await fetch("/api/alerts/recent?limit=100");
+      if (!res.ok) throw new Error("Failed to fetch recent alerts");
+      return (await res.json()) as { alerts: AlertSentRow[] };
+    },
+    refetchInterval: 30_000,
+  });
 
-  const filteredSignals = useMemo(() => {
-    if (filter === "all") return signals;
-    if (filter === "high") return signals.filter((s) => s.severity >= 8);
-    if (filter === "medium") return signals.filter((s) => s.severity >= 4 && s.severity < 8);
-    return signals.filter((s) => s.severity < 4);
-  }, [signals, filter]);
+  const rules = rulesData?.rules ?? [];
+  const isLoading = rulesLoading || alertsLoading;
 
-  const featuredSignal = signals.find((s) => s.severity >= 8) || signals[0];
-  const secondarySignal = signals.find((s) => s.id !== featuredSignal?.id) || signals[1];
-  const tableSignals = filteredSignals.slice(0, 8);
+  // Real alerts_sent rows only, grouped per rule then per signal (a signal can have
+  // one alerts_sent row per delivery channel) — this is what "matched" a rule actually
+  // means: a dispatch attempt the backend already made, per the matching logic in
+  // apps/backend/src/workers/alert-dispatcher.ts lines 48-57. Nothing here re-derives
+  // or guesses matches client-side.
+  const matchesByRule = useMemo(() => {
+    const alertRows = alertsData?.alerts ?? [];
+    const perRule = new Map<string, Map<string, MatchedSignal>>();
+    for (const row of alertRows) {
+      if (!row.rule_id || !row.signals) continue;
+      let bySignal = perRule.get(row.rule_id);
+      if (!bySignal) {
+        bySignal = new Map();
+        perRule.set(row.rule_id, bySignal);
+      }
+      const existing = bySignal.get(row.signal_id);
+      if (existing) {
+        existing.deliveries.push({ channel: row.channel, status: row.status });
+        if (row.created_at > existing.matchedAt) existing.matchedAt = row.created_at;
+      } else {
+        bySignal.set(row.signal_id, {
+          id: row.signals.id,
+          title: row.signals.title,
+          severity: row.signals.severity,
+          eventDate: row.signals.event_date,
+          matchedAt: row.created_at,
+          deliveries: [{ channel: row.channel, status: row.status }],
+        });
+      }
+    }
+    const result = new Map<string, MatchedSignal[]>();
+    for (const [ruleId, bySignal] of perRule) {
+      result.set(
+        ruleId,
+        Array.from(bySignal.values()).sort((a, b) => (a.matchedAt < b.matchedAt ? 1 : -1)),
+      );
+    }
+    return result;
+  }, [alertsData]);
 
   const openSetAlertModal = (signal?: Signal) => {
     if (signal) {
@@ -49,6 +133,8 @@ export default function AlertsPage() {
       setModalMinSeverity(Math.max(1, signal.severity - 1));
       setModalEventType(signal.eventType);
     } else {
+      setModalRegion("middle-east");
+      setModalMinSeverity(7);
       setModalEventType(undefined);
     }
     setModalChannels(["telegram"]);
@@ -88,6 +174,7 @@ export default function AlertsPage() {
         description: `Alerts set for ${modalRegion} (Severity >= ${modalMinSeverity})`,
       });
       setAlertModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["alert-rules"] });
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to create alert rule");
@@ -100,10 +187,10 @@ export default function AlertsPage() {
       <section className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Alert Rules & Signals</h1>
-          <p className="text-on-surface/60 mt-2 font-body font-medium">Real-time global signal monitoring and automated risk thresholds.</p>
+          <p className="text-on-surface/60 mt-2 font-body font-medium">What you asked to be told about — your rules, and the signals that actually matched them.</p>
         </div>
         <div className="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant/10">
-          <button className="px-6 py-2 bg-primary text-black text-xs label font-bold rounded-md uppercase tracking-wider">All Signals</button>
+          <button onClick={() => router.push("/dashboard")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer">Feed</button>
           <button onClick={() => router.push("/watchlist")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer">Watchlist</button>
           <button onClick={() => router.push("/backtesting")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer">Lab</button>
         </div>
@@ -111,182 +198,156 @@ export default function AlertsPage() {
 
       <IngestionStatusBanner />
 
-      {/* Filters Bar */}
+      {/* Rules Header + New Rule Action */}
       <section className="flex justify-between items-center py-4 border-y border-outline-variant/20 mb-8">
-        <div className="flex items-center gap-6">
-          <span className="label text-[10px] tracking-widest text-on-surface/40 font-bold uppercase">Severity Filter:</span>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setFilter("all")}
-              className={`px-3 py-1 text-[10px] label font-bold rounded-sm uppercase transition-all cursor-pointer ${filter === 'all' ? 'bg-primary text-black' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-bright'}`}
-            >GLOBAL</button>
-            <button 
-              onClick={() => setFilter("high")}
-              className={`px-3 py-1 text-[10px] label font-bold rounded-sm uppercase transition-all cursor-pointer ${filter === 'high' ? 'bg-error-container text-on-error-container' : 'bg-error-container/20 text-error-container hover:bg-error-container/40'}`}
-            >HIGH (8+)</button>
-            <button 
-              onClick={() => setFilter("medium")}
-              className={`px-3 py-1 text-[10px] label font-bold rounded-sm uppercase transition-all cursor-pointer ${filter === 'medium' ? 'bg-[#ffb340]/40 text-[#ffb340]' : 'bg-[#ffb340]/10 text-[#ffb340] hover:bg-[#ffb340]/20'}`}
-            >MEDIUM (4-7)</button>
-            <button 
-              onClick={() => setFilter("low")}
-              className={`px-3 py-1 text-[10px] label font-bold rounded-sm uppercase transition-all cursor-pointer ${filter === 'low' ? 'bg-primary/40 text-primary' : 'bg-primary/10 text-primary hover:bg-primary/20'}`}
-            >LOW (&lt;4)</button>
-          </div>
-        </div>
+        <span className="label text-[10px] tracking-widest text-on-surface/40 font-bold uppercase">
+          {rules.length > 0 ? `${rules.length} Alert Rule${rules.length === 1 ? "" : "s"}` : "No Alert Rules Yet"}
+        </span>
+        <button
+          onClick={() => openSetAlertModal()}
+          className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer"
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+        >
+          + New Alert Rule
+        </button>
       </section>
 
-      {/* Continuous Skeleton Loaders on API Fetch / Error */}
-      {isLoading || isError ? (
-        <div className="grid grid-cols-12 gap-6 pb-24">
-          <div className="col-span-8">
-            <Skeleton className="h-96 w-full bg-surface-container" />
+      {isLoading || rulesError ? (
+        <div className="space-y-6 pb-24">
+          <Skeleton className="h-48 w-full bg-surface-container" />
+          <Skeleton className="h-48 w-full bg-surface-container" />
+          <Skeleton className="h-48 w-full bg-surface-container" />
+        </div>
+      ) : rules.length === 0 ? (
+        <div className="bg-surface-container rounded-lg border border-outline-variant/10 shadow-xl p-12 text-center flex flex-col items-center gap-4 pb-24">
+          <span className="material-symbols-outlined text-4xl text-on-surface/20">notifications_off</span>
+          <div>
+            <h3 className="text-lg font-bold font-headline text-on-surface mb-1">No alert rules configured</h3>
+            <p className="text-xs text-on-surface/60 max-w-md">
+              Create a rule to get notified when signals match a region, commodity, or severity threshold you care about.
+            </p>
           </div>
-          <div className="col-span-4">
-            <Skeleton className="h-96 w-full bg-surface-container" />
-          </div>
-          <div className="col-span-12">
-            <Skeleton className="h-64 w-full bg-surface-container" />
-          </div>
+          <button
+            onClick={() => openSetAlertModal()}
+            className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Set Up Your First Rule
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-12 gap-6 pb-24">
-          {/* Featured Card (8-col) */}
-          {featuredSignal ? (
-            <div 
-              onClick={() => router.push(`/events/${featuredSignal.id}`)}
-              className="col-span-8 bg-surface-container rounded-lg overflow-hidden flex flex-col relative border border-outline-variant/10 shadow-xl group cursor-pointer"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-error"></div>
-              <div className="p-8 flex-1">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-on-error-container/10 rounded-full flex items-center justify-center border border-on-error-container/20">
-                      <span className="material-symbols-outlined text-error" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+        <div className="space-y-6 pb-24">
+          {rules.map((rule) => {
+            const matches = (matchesByRule.get(rule.id) ?? []).slice(0, 5);
+            const regions = rule.regions?.length ? rule.regions : null;
+            const commodities = rule.commodities?.length ? rule.commodities : null;
+            const channels = rule.channels?.length ? rule.channels : ["telegram"];
+
+            return (
+              <div
+                key={rule.id}
+                className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl"
+              >
+                <div className="p-6 flex justify-between items-start gap-6 border-b border-outline-variant/10 bg-surface-container-high/30">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-lg font-bold font-headline text-on-surface truncate">{rule.name}</h3>
+                      <span
+                        className={`px-2 py-0.5 text-[9px] label font-bold uppercase tracking-widest rounded-sm border shrink-0 ${
+                          rule.is_active
+                            ? "bg-primary/10 border-primary/50 text-primary"
+                            : "bg-surface-variant border-outline-variant/30 text-on-surface/40"
+                        }`}
+                      >
+                        {rule.is_active ? "Active" : "Paused"}
+                      </span>
                     </div>
-                    <div>
-                      <span className="label text-[10px] text-error font-bold tracking-[0.2em] uppercase">Critical Intelligence Event</span>
-                      <h2 className="text-2xl font-bold font-headline mt-1 text-on-surface line-clamp-1 group-hover:text-primary transition-colors">{featuredSignal.title}</h2>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Region:</span>
+                        {regions ? (
+                          regions.map((r) => (
+                            <span key={r} className="mono text-[10px] text-on-surface font-bold uppercase">{r}</span>
+                          ))
+                        ) : (
+                          <span className="mono text-[10px] text-on-surface/60 uppercase">All regions</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Commodity:</span>
+                        {commodities ? (
+                          commodities.map((c) => (
+                            <span key={c} className="mono text-[10px] text-on-surface font-bold uppercase">{c}</span>
+                          ))
+                        ) : (
+                          <span className="mono text-[10px] text-on-surface/60 uppercase">All commodities</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Threshold:</span>
+                        <span className="mono text-[10px] text-primary font-bold">SEVERITY {rule.min_severity}+</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Channels:</span>
+                        <span className="mono text-[10px] text-on-surface font-bold uppercase">{channels.join(" · ")}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="mono text-[10px] text-on-surface/40 uppercase tracking-widest font-bold">
-                      {safeFormatDistanceToNow(featuredSignal.eventDate ?? featuredSignal.createdAt)} ago
-                    </div>
-                    <div className="mono text-sm text-error font-bold mt-1">
-                      SEVERITY {featuredSignal.severity}.0
-                    </div>
+                  <div className="text-right shrink-0">
+                    <span className="label text-[9px] text-on-surface/40 uppercase font-bold block">Last Triggered</span>
+                    <span className="mono text-xs text-on-surface/70 font-bold">
+                      {rule.last_triggered_at ? `${safeFormatDistanceToNow(rule.last_triggered_at)} ago` : "Never"}
+                    </span>
                   </div>
                 </div>
 
-                <p className="text-sm font-body text-on-surface/80 leading-relaxed mb-6 font-medium">
-                  {featuredSignal.summary}
-                </p>
-
-                <div className="bg-surface-container-high/80 border border-outline-variant/20 p-4 rounded flex justify-between items-center mb-6">
-                  <div>
-                    <span className="label text-[9px] text-on-surface/40 uppercase font-bold block">Country Node</span>
-                    <span className="mono text-xs font-bold text-on-surface uppercase">{featuredSignal.country}</span>
-                  </div>
-                  <div>
-                    <span className="label text-[9px] text-on-surface/40 uppercase font-bold block">Signal Confidence</span>
-                    <span className="mono text-xs font-bold text-primary">{Math.round(featuredSignal.confidence * 100)}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* TASK 5 — Fixed Button: Renamed + Green Accent Style */}
-              <div className="bg-surface-container-high/50 p-4 border-t border-outline-variant/10 flex justify-between items-center">
-                <p className="text-xs font-body text-on-surface/60 font-medium italic">Automated sentinel monitoring active for this event class.</p>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openSetAlertModal(featuredSignal);
-                  }}
-                  className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                >
-                  Set Alert for This Signal
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {/* Secondary Card (4-col) */}
-          {secondarySignal ? (
-            <div 
-              onClick={() => router.push(`/events/${secondarySignal.id}`)}
-              className="col-span-4 bg-surface-container rounded-lg p-6 border border-outline-variant/10 shadow-xl flex flex-col relative overflow-hidden group cursor-pointer"
-            >
-              <div className="absolute top-0 left-0 w-full h-1 bg-primary/40"></div>
-              <div className="flex justify-between items-center mb-6">
-                <span className="px-2 py-0.5 bg-primary/10 text-primary text-[9px] label font-bold tracking-[0.2em] rounded-sm uppercase border border-primary/20">Escalating</span>
-                <span className="mono text-[10px] text-on-surface/40 font-bold">#SIG-{secondarySignal.id.slice(-4).toUpperCase()}</span>
-              </div>
-              <h3 className="text-lg font-bold font-headline leading-tight mb-4 text-on-surface group-hover:text-primary transition-colors">
-                {secondarySignal.title}
-              </h3>
-              <p className="text-xs text-on-surface/70 line-clamp-3 mb-6 font-medium">
-                {secondarySignal.summary}
-              </p>
-              <div className="mt-auto pt-6 border-t border-outline-variant/10 flex justify-between items-center">
-                <span className="mono text-[10px] text-primary font-bold">{Math.round(secondarySignal.confidence * 100)}% CONFIDENCE</span>
-                <span className="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">arrow_forward</span>
-              </div>
-            </div>
-          ) : null}
-
-          {/* TASK 7 — Geospatial Intelligence Stream Table (Clickable Rows) */}
-          <div className="col-span-12 bg-surface-container rounded-lg overflow-hidden flex flex-col border border-outline-variant/10 shadow-xl mt-4">
-            <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container/30">
-              <h3 className="label text-xs font-bold tracking-widest text-on-surface/60 uppercase">Geospatial Intelligence Stream</h3>
-              <span className="mono text-[10px] text-primary">LIVE INGESTION</span>
-            </div>
-            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Geospatial intelligence stream table">
-              <table className="w-full">
-                <tbody className="divide-y divide-outline-variant/10">
-                  {tableSignals.length > 0 ? (
-                    tableSignals.map((signal) => {
-                      const isHigh = signal.severity >= 8;
-                      const isMedium = signal.severity >= 4 && signal.severity < 8;
-                      
-                      return (
-                        <tr 
-                          key={signal.id} 
-                          onClick={() => router.push(`/events/${signal.id}`)}
-                          className="hover:bg-surface-bright/20 transition-all group cursor-pointer border-l-2 border-transparent hover:border-primary"
-                        >
-                          <td className="px-6 py-4 w-4">
-                            <div className={`w-2 h-2 rounded-full ${isHigh ? 'bg-error pulse-red' : (isMedium ? 'bg-[#ffb340]' : 'bg-primary')}`}></div>
-                          </td>
-                          <td className="px-2 py-4 mono text-[10px] text-on-surface/40 whitespace-nowrap font-bold">
-                            {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)} ago
-                          </td>
-                          <td className="px-6 py-4 font-headline text-sm font-bold text-on-surface line-clamp-1 group-hover:text-primary transition-colors">
-                            {signal.title}
-                          </td>
-                          <td className="px-4 py-4 text-right">
-                            <span className={`px-2 py-0.5 border text-[8px] label font-bold uppercase tracking-widest rounded-sm ${isHigh ? 'bg-error-container/20 border-error/50 text-error' : (isMedium ? 'bg-[#ffb340]/10 border-[#ffb340]/50 text-[#ffb340]' : 'bg-primary/10 border-primary/50 text-primary')}`}>
-                              {isHigh ? 'CRITICAL' : (isMedium ? 'HIGH' : 'NOTICE')}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <span className="material-symbols-outlined text-on-surface/20 group-hover:text-primary group-hover:translate-x-1 transition-all text-sm">chevron_right</span>
-                          </td>
-                        </tr>
-                      );
-                    })
+                <div className="p-4">
+                  <span className="label text-[9px] tracking-widest text-on-surface/40 font-bold uppercase block mb-2 px-2">
+                    Recent Matches
+                  </span>
+                  {matches.length === 0 ? (
+                    <p className="text-xs text-on-surface/50 px-2 py-3 italic">No signals have matched this rule yet.</p>
                   ) : (
-                    <tr>
-                      <td colSpan={5} className="p-12 text-center opacity-40">
-                        <span className="label text-[10px] tracking-widest uppercase font-bold">No active signals found</span>
-                      </td>
-                    </tr>
+                    <div className="divide-y divide-outline-variant/10">
+                      {matches.map((m) => {
+                        const isHigh = m.severity >= 8;
+                        const status = worstDeliveryStatus(m.deliveries);
+                        return (
+                          <div
+                            key={m.id}
+                            onClick={() => router.push(`/events/${m.id}`)}
+                            className="flex items-center gap-4 px-2 py-3 hover:bg-surface-bright/20 transition-all group cursor-pointer"
+                          >
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${isHigh ? "bg-error" : "bg-primary"}`}></div>
+                            <span className="mono text-[10px] text-on-surface/40 font-bold whitespace-nowrap w-20 shrink-0">
+                              {safeFormatDistanceToNow(m.matchedAt)} ago
+                            </span>
+                            <span className="flex-1 min-w-0 text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors">
+                              {m.title}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm border shrink-0 ${
+                                status === "failed"
+                                  ? "bg-error-container/20 border-error/50 text-error"
+                                  : status === "queued"
+                                    ? "bg-[#ffb340]/10 border-[#ffb340]/50 text-[#ffb340]"
+                                    : "bg-primary/10 border-primary/50 text-primary"
+                              }`}
+                            >
+                              {status === "failed" ? "Delivery Failed" : status === "queued" ? "Not Delivered" : "Delivered"}
+                            </span>
+                            <span className="material-symbols-outlined text-on-surface/20 group-hover:text-primary group-hover:translate-x-1 transition-all text-sm shrink-0">
+                              chevron_right
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
