@@ -45,7 +45,7 @@ const EVENT_STEPS: Step[] = [
   {
     target: '[data-tour="sidebar-nav"]',
     content:
-      "Track specific commodities on Watchlist, see global risk concentration on the Map, and test how past events like this one moved markets in Backtesting.",
+      "On Watchlist, click into any commodity to see its price charted against the events that moved it. You can also see global risk concentration on the Map, and test how past events like this one moved markets in Backtesting.",
     placement: "right",
   },
 ];
