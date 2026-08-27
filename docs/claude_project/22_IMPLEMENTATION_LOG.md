@@ -288,3 +288,18 @@ TELEGRAM_BOT_TOKEN=            # required when bot is active
 ```
 
 > ⚠️ UPDATED 2026-08-19 — the project ref above (`jzomoxsbnssnibshecui`) is an old/wrong project; the real `.env.local` and current status docs agree on `evavcgfmemwryggdkjmx.supabase.co` (same correction already made in `21_PROJECT_BRIEFING.md`). Note this same file's earlier session-log block above (Aug-05) actually had the correct ref — this later "cumulative" listing regressed to the wrong one.
+
+---
+
+### 🕒 2026-08-27 — CTO verification pass: Telegram audit, geocoding gap, commodity_impacts bug, Sonnet briefing visibility
+
+#### 1. Task Summary
+A round of CTO-directed checks, each live-verified rather than taken on faith from prior docs (two of the four original task premises turned out to be stale/inverted on inspection). Full technical detail lives in `docs/brain/14_CHANGELOG.md` v0.30.0 and `docs/brain/08_CURRENT_STATUS.md` §5 — this entry is a pointer, not a duplicate.
+
+#### 2. Outcomes
+1. **Telegram delivery path** — audited read-only, no fix applied. Backend wiring is correct; the frontend has no working "Connect Telegram" UI (the `connect-code` endpoint is called by nothing), and onboarding's `@username` field writes a value Telegram's API can't message. Needs a real UI fix before `TELEGRAM_BOT_TOKEN` alone would help.
+2. **Watchlist/Backtesting/Settings UX (Select All, sparkline authenticity, dropdown styling)** — all 3 confirmed live-working via Playwright + a throwaway test account. No code changed.
+3. **Signal-generation dormant-queue claim** — confirmed already fixed 2026-08-18 (docs were stale, not the code); doc corrected, live evidence gathered (133/554 severity≥7 signals with real `ai_analysis`).
+4. **Geocoding** — original premise (RSS missing it) was inverted; RSS already had it, GDELT/GNews didn't. Fixed and live-verified (`155bb5a`).
+5. **`commodity_impacts` empty on all live signals** — root-caused to a case-sensitive ticker-allowlist bug in Haiku classification (`6fcaeb8`); 41 of ~1,869 empty historical signals backfilled (scope narrowed to actual bug-victims, not blanket re-classification); two unrelated bugs surfaced as a byproduct (map time-window buttons, `/api/signals?commodity=` JSON error) — not fixed, flagged for a separate pass.
+6. **Sonnet briefing ~25% fallback rate** — added error logging + bounded retry (`03b538f`); historical root cause could not be determined retroactively since no error logs existed before this fix.
