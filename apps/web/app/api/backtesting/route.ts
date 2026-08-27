@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { rateLimitOrPass } from "@/lib/ratelimit";
+import { apiError } from "@/lib/api-response";
 
 const schema = z.object({
   eventType: z.string().min(1),
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
   try {
     const rl = await rateLimitOrPass(`backtesting:${ip}`);
     if (!rl.success) {
-      return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+      return apiError(429, "rate_limited");
     }
   } catch (err) {
     console.warn("⚠️ [API Backtesting] Rate limit check failed, continuing:", err);
@@ -92,10 +93,7 @@ export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid body", issues: parsed.error.issues },
-      { status: 400 },
-    );
+    return apiError(400, "invalid_body", parsed.error.issues.map((i) => i.message).join("; "));
   }
 
   const key = cacheKey(parsed.data);

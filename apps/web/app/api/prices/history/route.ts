@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { rateLimitOrPass } from "@/lib/ratelimit";
+import { apiError } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const symbol = url.searchParams.get("symbol");
   if (!symbol) {
-    return NextResponse.json({ error: "missing_symbol" }, { status: 400 });
+    return apiError(400, "missing_symbol");
   }
   // `days` opts into a date-range window (used by the watchlist drill-down chart);
   // omitting it preserves the original "last N snapshots" behavior the sparkline relies on.
@@ -29,7 +30,14 @@ export async function GET(req: NextRequest) {
   try {
     const rl = await rateLimitOrPass(`prices-history:${ip}`);
     if (!rl.success) {
-      return NextResponse.json({ points: [] }, { status: 429 });
+      // Same hybrid shape as /api/prices' 429 — keeps `points: []` so existing
+      // consumers (`json.points ?? []`) keep working, while adding the standard
+      // `error` object so a rate-limited response is no longer indistinguishable
+      // from a symbol that genuinely has no price history. See lib/api-response.ts.
+      return NextResponse.json(
+        { points: [], error: { code: "rate_limited", message: "rate_limited" } },
+        { status: 429 },
+      );
     }
   } catch (err) {
     console.warn("⚠️ [API Prices History] Rate limit check failed, continuing:", err);

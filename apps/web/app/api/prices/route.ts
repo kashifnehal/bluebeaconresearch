@@ -52,7 +52,16 @@ export async function GET(req: NextRequest) {
           headers: { "x-prices-cache-status": "stale-rate-limited" },
         });
       }
-      return NextResponse.json({ prices: [] }, { status: 429 });
+      // Rate-limited with no cached payload to serve. This deliberately keeps the
+      // `prices: []` key AND adds the standard `error` object, rather than returning
+      // the bare apiError() shape — see the "hybrid" note in lib/api-response.ts.
+      // Dropping `prices` would crash watchlist/[symbol]/page.tsx, which reads
+      // `pricesData?.prices.find(...)` with a non-optional `.prices`. Before this,
+      // a 429 was indistinguishable from a genuine "no prices available" response.
+      return NextResponse.json(
+        { prices: [], error: { code: "rate_limited", message: "rate_limited" } },
+        { status: 429 },
+      );
     }
   } catch (err) {
     console.warn("⚠️ [API Prices] Rate limit check failed, continuing:", err);

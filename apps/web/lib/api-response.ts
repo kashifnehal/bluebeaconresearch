@@ -12,6 +12,17 @@ import { NextResponse } from "next/server";
 // that is a deliberate, different, already-working contract that useSignalFeed.ts
 // depends on by field name; collapsing it into this shape would be a breaking change
 // for no benefit, not a cleanup.
+// SECOND DOCUMENTED EXCEPTION (2026-08-27): /api/prices and /api/prices/history
+// return a *hybrid* shape on 429 — the normal data key (`prices: []` / `points: []`)
+// AND this `error` object side by side — instead of the bare shape below. Reason: both
+// routes previously returned an empty data array with no error field at all, so a
+// rate-limited response was indistinguishable from "there is genuinely no data",
+// which is the same class of bug the reliability pass fixed elsewhere. Switching them
+// to the bare apiError() shape would have dropped the data key and crashed
+// watchlist/[symbol]/page.tsx, which reads `pricesData?.prices.find(...)` with a
+// non-optional `.prices`. Keeping both keys fixes the ambiguity without a breaking
+// change. Prefer plain apiError() for new routes; this hybrid exists only where an
+// established consumer contract already depends on the data key being present.
 export function apiError(status: number, code: string, message?: string) {
   return NextResponse.json({ error: { code, message: message ?? code } }, { status });
 }
