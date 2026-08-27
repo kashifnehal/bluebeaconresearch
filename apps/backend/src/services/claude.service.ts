@@ -295,6 +295,27 @@ export class ClaudeService {
     return normalized;
   }
 
+  // Small number of retries with exponential backoff, only for errors that are
+  // plausibly transient (429 rate limit, 5xx/529 overloaded, network/timeout).
+  // 400s (malformed request, invalid model, etc.) and 401/403 (auth/credit) are not
+  // retried since retrying an identical request won't change the outcome.
+  private static readonly RETRYABLE_STATUS_CODES = new Set([408, 409, 429, 500, 502, 503, 529]);
+  private static readonly MAX_BRIEFING_RETRIES = 2;
+
+  private isRetryableAnthropicError(err: any): boolean {
+    const status = err?.status ?? err?.response?.status;
+    if (typeof status === "number") {
+      return ClaudeService.RETRYABLE_STATUS_CODES.has(status);
+    }
+    // No HTTP status at all usually means a connection/timeout failure (APIConnectionError
+    // in the Anthropic SDK) rather than a well-formed rejection — treat as retryable.
+    return true;
+  }
+
+  private async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   async generateAnalysis(
     _signal: Record<string, unknown>,
     _context: { contextNotes: string[] },
@@ -303,24 +324,46 @@ export class ClaudeService {
     if (!client)
       return "AI intelligence briefing generated via Blue Beacon heuristic analysis engine.";
 
-    try {
-      const system =
-        "You are a senior geopolitical intelligence analyst for a commodities trading firm. You write precise, actionable intelligence briefings.";
-      const user = `Write a 5-8 sentence intelligence briefing for the following event.\n\n${JSON.stringify(_signal).slice(0, 6000)}`;
+    const system =
+      "You are a senior geopolitical intelligence analyst for a commodities trading firm. You write precise, actionable intelligence briefings.";
+    const user = `Write a 5-8 sentence intelligence briefing for the following event.\n\n${JSON.stringify(_signal).slice(0, 6000)}`;
 
-      const msg = await client.messages.create({
-        model: "claude-sonnet-5",
-        max_tokens: 800,
-        system,
-        messages: [{ role: "user", content: user }],
-      });
+    for (let attempt = 0; attempt <= ClaudeService.MAX_BRIEFING_RETRIES; attempt++) {
+      try {
+        const msg = await client.messages.create({
+          model: "claude-sonnet-5",
+          max_tokens: 800,
+          system,
+          messages: [{ role: "user", content: user }],
+        });
 
-      return msg.content
-        .map((c) => (c.type === "text" ? c.text : ""))
-        .join("")
-        .trim();
-    } catch {
-      return `Geopolitical Signal Briefing: High-priority event detected in region ${_signal.region ?? "Global"}. Market volatility expected across impacted commodity benchmarks (${(_signal.commodity_impacts as any[])?.map((c) => c.asset).join(", ") || "Energy/Metals"}). Traders should monitor strategic chokepoints and policy responses.`;
+        return msg.content
+          .map((c) => (c.type === "text" ? c.text : ""))
+          .join("")
+          .trim();
+      } catch (err: any) {
+        const status = err?.status ?? err?.response?.status ?? "unknown";
+        const errType = err?.name ?? err?.constructor?.name ?? "Error";
+        const retryable = this.isRetryableAnthropicError(err);
+        const willRetry = retryable && attempt < ClaudeService.MAX_BRIEFING_RETRIES;
+
+        console.warn(
+          `⚠️ [Claude Briefing Generation] API error (status=${status}, type=${errType}, attempt=${attempt + 1}/${ClaudeService.MAX_BRIEFING_RETRIES + 1}): ${err?.message}. ` +
+            (willRetry
+              ? "Retrying with backoff."
+              : "Falling back to template briefing."),
+        );
+
+        if (!willRetry) {
+          return `Geopolitical Signal Briefing: High-priority event detected in region ${_signal.region ?? "Global"}. Market volatility expected across impacted commodity benchmarks (${(_signal.commodity_impacts as any[])?.map((c) => c.asset).join(", ") || "Energy/Metals"}). Traders should monitor strategic chokepoints and policy responses.`;
+        }
+
+        // Exponential backoff: 500ms, 1000ms, ...
+        await this.sleep(500 * Math.pow(2, attempt));
+      }
     }
+
+    // Unreachable, but keeps TypeScript's control-flow analysis happy.
+    return `Geopolitical Signal Briefing: High-priority event detected in region ${_signal.region ?? "Global"}. Market volatility expected across impacted commodity benchmarks (${(_signal.commodity_impacts as any[])?.map((c) => c.asset).join(", ") || "Energy/Metals"}). Traders should monitor strategic chokepoints and policy responses.`;
   }
 }
