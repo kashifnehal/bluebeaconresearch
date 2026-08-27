@@ -20,20 +20,51 @@ This is exactly the same failure shape as the alert-pipeline bug fixed 2026-08-1
 
 **Note on token scope**: this PAT is account-wide (not scoped to just this project) per Supabase's current PAT design — worth knowing if the account has other projects.
 
-**Going forward, every schema change should be:**
+> ## ⚠️ UPDATED 2026-08-27 — `db push` is further away than this file implied. Read this before running it.
+>
+> Two things were re-checked this pass, and one of them is new and load-bearing.
+>
+> **1. The permission failure still reproduces, verbatim.** `npx supabase migration list --linked`, run with `SUPABASE_ACCESS_TOKEN` exported from `apps/web/.env.local`, still fails at the "Initialising login role..." step:
+>
+> ```
+> LegacyDbConfigLoginRoleStatusError: unexpected login role status 400:
+> Failed to create login role: ERROR: 42501: permission denied to alter role
+> DETAIL: Only roles with the CREATEROLE attribute and the ADMIN option on
+> role "cli_login_postgres" may alter this role.
+> ```
+>
+> So the ❌ line above is current, not stale. The CLI binary itself is fine (`npx supabase --version` → `2.116.0`; it is not on `PATH`, use `npx`).
+>
+> **2. NEW: the live migration-history table does not know about any of the 13 committed migrations.** Queried directly (this path works, unlike the CLI): `supabase_migrations.schema_migrations` on the live project contains **exactly one row** — `20260817220713 consolidate_user_channels_rls` — which was applied through the Management API, not the CLI. All 13 files in `supabase/migrations/` (`000_init_schema.sql` … `012_reliability_indexes_and_cleanup.sql`) are absent from it, because every one of them was hand-applied in the SQL editor.
+>
+> **Why that matters:** `supabase db push` decides what to run by diffing local filenames against that table. It would therefore consider all 13 migrations pending and try to replay them from scratch against a database that already has every object they create. They are **not** fully idempotent — `001_rls_policies.sql` alone has 37 DDL statements with only 23 carrying an `if not exists` / `if exists` / `or replace` guard — so the push would error partway through, possibly after having already executed some statements. **Do not run `supabase db push` against this project until the history table is baselined.**
+>
+> **What baselining would take** (`supabase migration repair --status applied <version>` for each of 000–012, marking them applied without re-running them) **requires the very same direct-Postgres connection that is currently failing.** So the permission error is the blocker for both, and fixing it is step one either way.
+>
+> **This is a decision point, deliberately left unresolved here rather than actioned:** baselining rewrites production migration history, and the two plausible routes (grant the CLI's `cli_login_postgres` role the permissions it wants, vs. connect with `--db-url` and the database password, which is not present in this repo's env files) both need founder access and a judgment call about which is acceptable. Nothing was repaired, pushed, or otherwise applied to the live database this pass.
+>
+> **A note on file naming, if the CLI path is ever adopted:** the committed files use a `000_`–`012_` sequential prefix, while the CLI's own convention (and the one existing history row) is a `YYYYMMDDHHMMSS` timestamp. The CLI parses the leading digits as the version, so the sequential names do sort and function — but they sort *before* every timestamped migration forever. Worth settling deliberately rather than discovering later.
+
+**Going forward, every schema change should be** — noting that step 2's CLI path is currently blocked, see the box above:
 ```bash
 # 1. Write the migration as a new numbered file in supabase/migrations/
-#    (e.g. 012_whatever.sql — follow the existing 000-011 numbering)
+#    (e.g. 013_whatever.sql — follow the existing 000-012 numbering)
 
-# 2. Push it to the live project
-npx supabase db push
+# 2. Apply it to the live project.
+#    TODAY: paste it into the Supabase SQL editor by hand. This is still the only
+#    working path — `npx supabase db push` is blocked on both the login-role
+#    permission error and the un-baselined history table described above.
+#    ONCE UNBLOCKED: npx supabase db push
 
-# 3. Verify it actually applied — don't trust the push command's exit code alone,
-#    the 008 incident happened with a migration that *looked* fine
-npx supabase db diff --linked   # should show no drift between migrations/ and live schema
+# 3. Verify it actually applied — never trust the apply step's exit code alone,
+#    the 008 incident happened with a migration that *looked* fine.
+#    `npx supabase db diff --linked` is the intended check but is blocked by the
+#    same permission error, so verify against the live DB directly instead:
+#    query information_schema / pg_indexes / pg_policies for the specific object
+#    the migration was supposed to create, and run the checklist below.
 ```
 
-If `supabase db push` isn't set up yet (link step above still pending), migrations continue to go through the Supabase SQL editor manually — but the verification step below is mandatory regardless of which path was used to apply them.
+Until the CLI path is unblocked, migrations continue to go through the Supabase SQL editor manually — and the verification step below is mandatory regardless of which path was used to apply them. It is the only thing standing between this project and another 008.
 
 ## Standing verification checklist (mandatory after every migration, either path)
 
