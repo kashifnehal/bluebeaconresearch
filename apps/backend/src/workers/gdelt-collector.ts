@@ -6,6 +6,7 @@ import { isRelevantEvent } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
+import { resolveGeoCoords } from "../lib/geo-resolver.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -139,6 +140,12 @@ export async function runGdeltCollectorOnce() {
         event_date: eventDate,
       });
 
+      const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
+        title,
+        country,
+        classification.region
+      );
+
       const mergeResult = await insertOrMergeSignal({
         supabase,
         collectorLabel: "GDELT",
@@ -148,8 +155,8 @@ export async function runGdeltCollectorOnce() {
         eventType: "news",
         eventDate,
         country: formatCountryName(country),
-        lat: null,
-        lng: null,
+        lat: resolvedLat,
+        lng: resolvedLng,
       });
 
       // Dispatch + briefing generation inline — bypass the queue for both, same as

@@ -7,6 +7,7 @@ import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
+import { resolveGeoCoords } from "../lib/geo-resolver.js";
 
 const claude = new ClaudeService();
 
@@ -110,6 +111,12 @@ export async function runGnewsCollectorOnce() {
         event_date: rawEventPayload.event_date,
       });
 
+      const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
+        rawEventPayload.title,
+        rawEventPayload.country,
+        classification.region
+      );
+
       const mergeResult = await insertOrMergeSignal({
         supabase,
         collectorLabel: "GNews",
@@ -119,8 +126,8 @@ export async function runGnewsCollectorOnce() {
         eventType: rawEventPayload.event_type,
         eventDate: rawEventPayload.event_date,  // article publish time shown in UI
         country: formatCountryName(null),
-        lat: null,
-        lng: null,
+        lat: resolvedLat,
+        lng: resolvedLng,
       });
 
       // Dispatch + briefing generation inline — bypass the queue for both, same as
