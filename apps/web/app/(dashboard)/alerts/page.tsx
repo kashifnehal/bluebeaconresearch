@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
+import { logFunnelEventOnce } from "@/lib/funnel-events";
 
 type AlertRule = {
   id: string;
@@ -170,6 +171,7 @@ export default function AlertsPage() {
     },
     onSuccess: () => {
       track("alert_rule_created", { source: "alerts_page", region: modalRegion, minSeverity: modalMinSeverity });
+      logFunnelEventOnce("first_alert_rule_created", { source: "alerts_page" });
       toast.success("Alert Rule Activated", {
         description: `Alerts set for ${modalRegion} (Severity >= ${modalMinSeverity})`,
       });

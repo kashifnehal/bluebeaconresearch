@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { isProjectReady } from "@/lib/flags";
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body className="min-h-full" style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }} suppressHydrationWarning>
         <Providers>{children}</Providers>
         {!isProjectReady && <AccessLimitedModalWrapper />}
+        <Analytics />
       </body>
     </html>
   );

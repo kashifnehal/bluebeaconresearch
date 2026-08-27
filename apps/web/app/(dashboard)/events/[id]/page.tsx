@@ -29,6 +29,7 @@ import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } fro
 import { getSignalCoordinates } from "@/lib/geo-coords";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
+import { logFunnelEventOnce } from "@/lib/funnel-events";
 
 function eventTypeLabel(eventType?: string | null): string {
   if (!eventType) return "this event";
@@ -71,6 +72,13 @@ export default function EventDetailPage() {
   // itself from this event, no client-side "is this the first" tracking needed.
   useEffect(() => {
     if (signal) track("signal_viewed", { signalId: signal.id, severity: signal.severity });
+  }, [signal?.id]);
+
+  // first_signal_viewed — Vercel Analytics + `events` table, deduped server-side to
+  // fire only once per user (see /api/events). Safe to call on every view; not
+  // gated client-side the way the PostHog event above is left ungated.
+  useEffect(() => {
+    if (signal) logFunnelEventOnce("first_signal_viewed", { signalId: signal.id });
   }, [signal?.id]);
 
   if (isLoading) {
@@ -138,6 +146,7 @@ export default function EventDetailPage() {
         throw error;
       }
       track("alert_rule_created", { source: "event_detail", region: modalRegion, minSeverity: modalMinSeverity });
+      logFunnelEventOnce("first_alert_rule_created", { source: "event_detail" });
       toast.success("Alert Rule Activated", {
         description: `Alerts set for ${modalRegion} (Severity >= ${modalMinSeverity})`,
       });

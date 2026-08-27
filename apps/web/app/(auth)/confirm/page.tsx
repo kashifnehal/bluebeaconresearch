@@ -9,6 +9,7 @@ import { Logo } from "@/components/Logo";
 import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { fetchMyProfile, resolvePostAuthRedirect } from "@/lib/profile";
+import { logFunnelEventOnce } from "@/lib/funnel-events";
 
 // Receiving end of the signup confirmation email link (emailRedirectTo in
 // signup/page.tsx's signUp() call points here). Same implicit-flow-in-the-hash
@@ -53,6 +54,12 @@ function ConfirmForm() {
         setStatus("invalid");
         return;
       }
+
+      // The session is now bridged into the shared cookie-based client, so the
+      // fire-and-forget POST inside this call carries a valid session cookie and
+      // /api/events can resolve the user server-side -- this is the primary
+      // signup-completion point for the standard email-confirmation-on flow.
+      logFunnelEventOnce("signup_completed", { source: "email_confirm" });
 
       const profile = await fetchMyProfile();
       window.location.href = resolvePostAuthRedirect(profile);

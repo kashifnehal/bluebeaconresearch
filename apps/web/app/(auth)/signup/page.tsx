@@ -13,6 +13,7 @@ import { signupSchema } from "@/lib/validators";
 import type { PlanTier } from "@blue-beacon-research/shared";
 import { isProjectReady } from "@/lib/flags";
 import { track } from "@/lib/analytics";
+import { trackFunnelEvent, logFunnelEventOnce } from "@/lib/funnel-events";
 
 type FormValues = z.infer<typeof signupSchema>;
 
@@ -96,6 +97,7 @@ function SignupForm() {
         return;
       }
       track("signup_started");
+      trackFunnelEvent("signup_started");
       // Uses the shared implicit-flow email-auth client, not the shared PKCE client --
       // the confirmation email link is opened in whatever browser/device/app the user
       // has Gmail in, not necessarily this one. Must match confirm/page.tsx. See
@@ -143,6 +145,17 @@ function SignupForm() {
         return;
       }
 
+      // Session established immediately (email confirmation off, or an
+      // already-confirmed account). NOTE: signUp() here used the implicit-flow
+      // email-auth client (see comment above), which persists to its own storage,
+      // not the shared cookie-based client's cookies -- so /api/events (which reads
+      // the session from cookies) will see no session and 401 in this specific
+      // branch until a page load bridges it, same as confirm/page.tsx does for the
+      // email-confirmation path. logFunnelEventOnce() still fires Vercel Analytics
+      // regardless and fails silently on the Supabase write, so nothing breaks; the
+      // events-table row for this edge case is a known gap, not fixed here since
+      // bridging the session would mean touching existing auth logic.
+      logFunnelEventOnce("signup_completed", { source: "signup_direct_session" });
       // window.location.href (not router.push) is required here per the existing
       // SSR-cookie-attachment decision in 10_DECISIONS.md.
       window.location.href = isProjectReady ? "/onboarding" : "/?joined=1";
