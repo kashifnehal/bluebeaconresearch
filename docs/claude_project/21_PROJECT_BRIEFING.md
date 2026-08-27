@@ -218,12 +218,11 @@ ACLED_PASSWORD=              ← ADD THIS
 NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>   ← REQUIRED — add to Vercel or /api/signals unreliable
-NEXT_PUBLIC_MAPBOX_TOKEN=<mapbox_token>
 PROJECT_READY=true
 NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
 ```
 
-> ⚠️ UPDATED 2026-08-19 — `NEXT_PUBLIC_MAPBOX_TOKEN` is stale (same Mapbox→MapLibre issue already corrected above at the tech-stack table): the map uses `maplibre-gl` + OpenStreetMap tiles and does not require a Mapbox token.
+> ⚠️ UPDATED 2026-08-27 — `NEXT_PUBLIC_MAPBOX_TOKEN` was flagged as stale here on 2026-08-19 but the line itself was never actually removed from the env block above (two sessions of "note it, don't fix it"). Removed now: the map uses `maplibre-gl` + OpenStreetMap tiles and has never required a Mapbox token — nothing reads this env var anywhere in the codebase.
 
 ---
 
