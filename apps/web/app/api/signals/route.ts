@@ -153,7 +153,14 @@ export async function GET(req: NextRequest) {
     if (severity) query = query.gte("severity", Number(severity));
     if (region) query = query.eq("region", region);
     if (commodity)
-      query = query.contains("commodity_impacts", [{ asset: commodity }]);
+      // supabase-js's .contains() mis-serializes a raw array-of-objects value for a
+      // jsonb column (produces `[{...` PostgREST can't parse: "invalid input syntax
+      // for type json" / Postgres code 22P02) — pre-stringifying the containment
+      // value is what actually works, confirmed against the live DB.
+      query = query.contains(
+        "commodity_impacts",
+        JSON.stringify([{ asset: commodity }]),
+      );
 
     // Server-side free-text search if query provided (A1 — search bar Enter key)
     if (searchQ && searchQ.length >= 3) {
@@ -180,6 +187,10 @@ export async function GET(req: NextRequest) {
       query = query.gte("event_date", sevenDaysAgo);
     } else if (window === "24h") {
       query = query.gte("event_date", twentyFourHoursAgo);
+    } else if (window === "all") {
+      // Explicit "show everything" — no date restriction at all. Distinct from
+      // omitting `window` entirely (the `else` branch below), which callers that
+      // don't pass a window param rely on for the existing 24h+active default.
     } else if (genericDaysMatch) {
       const cutoff = new Date(
         Date.now() - Number(genericDaysMatch[1]) * 24 * 60 * 60 * 1000,

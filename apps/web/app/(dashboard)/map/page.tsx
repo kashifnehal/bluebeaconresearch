@@ -536,6 +536,7 @@ export default function MapPage() {
         if (selectedRegion) params.set("region", selectedRegion);
         if (timeWindow === "24h") params.set("window", "24h");
         if (timeWindow === "7d") params.set("window", "7d");
+        if (timeWindow === "all") params.set("window", "all");
 
         const res = await fetch(`/api/signals?${params.toString()}`);
         if (!res.ok) return;
