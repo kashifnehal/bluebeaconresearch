@@ -28,6 +28,53 @@ export class ClaudeService {
     "USDRUB",
   ]);
 
+  // Claude (asked in plain English to classify "financial market impact") reliably
+  // returns human-readable asset names ("Crude Oil", "Wheat", "Natural Gas", "Gold")
+  // rather than the exact ticker symbols in ALLOWED_COMMODITY_ASSETS, even though the
+  // prompt shows the field as a free-form `string`. Confirmed live 2026-08-27: a
+  // real claude-haiku-4-5-20251001 call for a Black Sea grain/oil disruption event
+  // returned assets ["Wheat","Corn","Barley","Crude Oil","Shipping Costs"] — none of
+  // which case-sensitively match the ticker allowlist, so sanitizeCommodityImpacts
+  // silently zeroed the array out on every real-Claude classification. This alias map
+  // normalizes the common natural-language names (and case variants) Claude actually
+  // returns onto the canonical tickers before the allowlist filter runs. Names with no
+  // canonical ticker in our allowlist (e.g. "Barley", "Shipping Costs") intentionally
+  // still drop — that's the same scope restriction the allowlist already enforces, not
+  // a new gap.
+  private static readonly COMMODITY_ASSET_ALIASES: Record<string, string> = {
+    OIL: "USOIL",
+    "CRUDE OIL": "USOIL",
+    CRUDE: "USOIL",
+    WTI: "USOIL",
+    "WTI CRUDE": "USOIL",
+    "US OIL": "USOIL",
+    BRENT: "UKOIL",
+    "BRENT CRUDE": "UKOIL",
+    "BRENT OIL": "UKOIL",
+    "UK OIL": "UKOIL",
+    "NATURAL GAS": "NGAS",
+    "NAT GAS": "NGAS",
+    NG: "NGAS",
+    LNG: "NGAS",
+    GAS: "NGAS",
+    GOLD: "XAUUSD",
+    "XAU/USD": "XAUUSD",
+    XAU: "XAUUSD",
+    MAIZE: "CORN",
+    EURO: "EURUSD",
+    "EUR/USD": "EURUSD",
+    RUBLE: "USDRUB",
+    "RUSSIAN RUBLE": "USDRUB",
+    "USD/RUB": "USDRUB",
+  };
+
+  private normalizeCommodityAsset(asset: string): string | null {
+    const upper = String(asset ?? "").trim().toUpperCase();
+    if (ClaudeService.ALLOWED_COMMODITY_ASSETS.has(upper)) return upper;
+    const aliased = ClaudeService.COMMODITY_ASSET_ALIASES[upper];
+    return aliased ?? null;
+  }
+
   private getClient() {
     if (this.client) return this.client;
     const env = getEnv();
@@ -56,7 +103,7 @@ export class ClaudeService {
           `{\n` +
           `  "severity": integer between 1 and 10,\n` +
           `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
-          `  "commodityImpacts": [{ "asset": string, "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+          `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN"|"EURUSD"|"USDRUB" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "isBreaking": boolean,\n` +
           `  "summary": string (max 120 chars),\n` +
           `  "region": string\n` +
@@ -237,9 +284,15 @@ export class ClaudeService {
       confidence: number;
     }>,
   ) {
-    return impacts.filter((impact) =>
-      ClaudeService.ALLOWED_COMMODITY_ASSETS.has(impact.asset),
-    );
+    const normalized: typeof impacts = [];
+    const seen = new Set<string>();
+    for (const impact of impacts) {
+      const asset = this.normalizeCommodityAsset(impact?.asset);
+      if (!asset || seen.has(asset)) continue;
+      seen.add(asset);
+      normalized.push({ ...impact, asset });
+    }
+    return normalized;
   }
 
   async generateAnalysis(
