@@ -141,7 +141,7 @@ Audited all Railway environment variables required by `apps/backend/src/env.ts`,
 
 ```env
 # 1. Server Configuration
-PORT=8888
+PORT=3001
 NODE_ENV=production
 
 # 2. Database & Auth (Supabase)
@@ -164,7 +164,7 @@ REDIS_URL=rediss://default:<upstash_token>@cute-javelin-200660.upstash.io:6379  
 NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
 ```
 
-> ⚠️ UPDATED 2026-08-19 — `PORT=8888` here is wrong; the actual backend port default (per `apps/backend/src/env.ts` and `docs/brain/10_DECISIONS.md`) is 3001. This session log's instruction to set `PORT=8888` was itself a mistake, not just a later-superseded value.
+> ⚠️ CORRECTED 2026-08-27 — this block previously read `PORT=8888`, which was wrong, and carried only an annotation saying so. Fixed in place to `PORT=3001`, the actual backend default (`apps/backend/src/env.ts` line 24: `PORT: z.coerce.number().int().positive().default(3001)`; also `docs/brain/10_DECISIONS.md`). Historical note: this session log's original instruction to set `PORT=8888` was itself a mistake, not a later-superseded value — see also `docs/claude_project/09_BACKLOG.md` M23, kept as-is since that file is an explicitly historical record.
 
 ---
 
@@ -271,8 +271,8 @@ Audited all 20 steps of the Google OAuth workflow across Google Cloud Console, S
 ```env
 NODE_ENV=production
 PROJECT_READY=true
-SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
-NEXT_PUBLIC_SUPABASE_URL=https://jzomoxsbnssnibshecui.supabase.co
+SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
 REDIS_URL=redis://default:<token>@cute-javelin-200660.upstash.io:6379
@@ -287,7 +287,7 @@ API_URL=https://bluebeaconresearch.com
 TELEGRAM_BOT_TOKEN=            # required when bot is active
 ```
 
-> ⚠️ UPDATED 2026-08-19 — the project ref above (`jzomoxsbnssnibshecui`) is an old/wrong project; the real `.env.local` and current status docs agree on `evavcgfmemwryggdkjmx.supabase.co` (same correction already made in `21_PROJECT_BRIEFING.md`). Note this same file's earlier session-log block above (Aug-05) actually had the correct ref — this later "cumulative" listing regressed to the wrong one.
+> ⚠️ CORRECTED 2026-08-27 — the env block above previously listed `jzomoxsbnssnibshecui.supabase.co`, an old/wrong project ref, and carried only an annotation saying so. The block itself is now fixed in place to `evavcgfmemwryggdkjmx.supabase.co`, matching the real `.env.local`, `supabase/.temp/project-ref`, and the current status docs (same correction already made in `21_PROJECT_BRIEFING.md`). Historical note: this same file's earlier session-log block above (Aug-05) always had the correct ref — it was this later "cumulative" listing that had regressed.
 
 ---
 
