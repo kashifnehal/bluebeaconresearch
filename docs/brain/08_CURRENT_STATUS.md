@@ -2,7 +2,19 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-08-25 (P0 Upstash verification attempted but blocked — needs a human; commodity_impacts fallback fix, leaked-password-protection settled, map-filter cache bug, landing page perf, dashboard accessibility — `8f14dc4`, `e9ceb8c`, `53524cb`, `5967419`, `1d872b9` — see `14_CHANGELOG.md` v0.29.0)
+Last updated: 2026-08-27 (CTO reliability pass re-audit — `042c249`, `b4f4259`, `7a7bc6a`, `67b6804`, `9e7be09` — see `14_CHANGELOG.md` v0.31.0)
+
+---
+
+## CTO Reliability Pass Re-Audit — Mostly Already Built (2026-08-27)
+
+A dedicated 7-part re-audit of the v0.21.0 reliability ground. **Parts 1, 2 (the workflow), and all six sub-items of Part 4 were verified genuinely done in code** — not merely claimed. Five of Part 5's six sub-items were verified applied to the *live* database (policies, indexes, unique index), not just present as migration files. Full detail in `14_CHANGELOG.md` v0.31.0. Three things are worth carrying forward as open items:
+
+- **Deploys are not gated on CI.** `.github/workflows/ci.yml` correctly runs `pnpm type-check` across `web`/`backend`/`shared` on every push and PR, but there is no `vercel.json`, and both Railway configs build straight from the branch — so a red CI run does not stop a deploy. Closing this is a GitHub branch-protection setting plus Vercel's "wait for CI", i.e. founder dashboard actions, not a repo change. Related: root `nixpacks.toml` sets `CI = "false"` and installs with `--no-frozen-lockfile` on Railway; left alone as deploy config, flagged for a deliberate decision.
+- **`supabase db push` is unsafe to run today — do not run it.** The live `supabase_migrations.schema_migrations` table has exactly one row; none of the 13 committed migrations are recorded, because all were hand-applied via the SQL editor. `db push` would try to replay all 13 against a database that already has every object, and they are not fully idempotent. Baselining with `migration repair` requires the same direct-Postgres connection that still fails with `permission denied to alter role cli_login_postgres`. See `16_MIGRATION_CHECKLIST.md` for the full diagnosis and the two candidate routes.
+- **`04_DATABASE.md` §2 had drifted materially from the live schema** and has been regenerated from `information_schema`. The most misleading entry was `alert_rules.channels` documented as defaulting to `'{telegram}'` when it actually defaults to `'{email}'`; nine tables were also missing entirely. If any other doc copied those values, they are wrong too.
+
+Two smaller findings recorded but deliberately not fixed (both would change behavior outside the pass's scope): `gnews-collector.ts` still writes `source: "newsapi"`, so GNews and RSS rows are indistinguishable despite migration 008 adding a `gnews` value for exactly that purpose — changing it would alter the `UNIQUE(source, external_id)` dedup key. And `reconciliation.ts` inserts recovered signals with hardcoded `lat: null, lng: null`, skipping the geo-resolver the collectors now call.
 
 ---
 
