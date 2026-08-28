@@ -9,7 +9,24 @@ import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
 
 const claude = new ClaudeService();
-const parser = new Parser({ timeout: 20_000 });
+
+// Present as a normal browser and accept the usual feed content-types. rss-parser's
+// default `User-Agent: rss-parser` is increasingly 403'd / bot-challenged by major
+// publishers (BBC, Guardian, Al Jazeera, NYT, NPR, …). Investigation 2026-08-28
+// (#63): from ~Aug 12, every feed except DW World stopped yielding rows in
+// production while all feed URLs stayed reachable and valid from an ordinary IP —
+// the per-feed failures were swallowed as a warn-level log and never surfaced.
+// This is the low-risk first mitigation; if the block turns out to be purely on
+// the Railway egress IP it won't be enough on its own (see the collector report).
+const parser = new Parser({
+  timeout: 20_000,
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    Accept:
+      "application/rss+xml, application/atom+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.5",
+  },
+});
 
 /** Max article age — 4h window per product requirement for market-moving news */
 const MAX_ARTICLE_AGE_MS = 4 * 60 * 60 * 1000;
@@ -24,7 +41,12 @@ const RSS_FEEDS: RssFeed[] = [
   { url: "https://www.france24.com/en/rss", label: "France24", tier: "world" },
   { url: "https://rss.dw.com/rdf/rss-en-world", label: "DW World", tier: "world" },
   { url: "https://www.theguardian.com/world/rss", label: "Guardian World", tier: "world" },
-  { url: "https://news.un.org/feed/subscribe/en/news/all/rss.xml", label: "UN News", tier: "world" },
+  // UN News (https://news.un.org/feed/subscribe/en/news/all/rss.xml) removed
+  // 2026-08-28 (#63): it always responds with gzip-encoded bytes even when the
+  // client doesn't negotiate compression, which rss-parser's HTTP client doesn't
+  // decode — so parseURL() throws "Non-whitespace before first tag" on every run,
+  // from every IP. It contributed 1 row in its entire lifetime. Re-add only with
+  // a manual fetch + decompress path if UN coverage is wanted back.
   // ── Finance / markets (lighter filter — only hard-exclude sports/celebrity) ──
   { url: "https://feeds.bbci.co.uk/news/business/rss.xml", label: "BBC Business", tier: "finance" },
   { url: "https://www.theguardian.com/business/rss", label: "Guardian Business", tier: "finance" },
@@ -40,9 +62,14 @@ export async function runRssCollectorOnce() {
 
   const allItems: { title: string; summary: string; url: string; pubDate: string; label: string; tier: FeedTier }[] = [];
 
+  let feedsOk = 0;
+  let feedsFailed = 0;
+  const failedFeeds: string[] = [];
+
   for (const feed of RSS_FEEDS) {
     try {
       const parsed = await parser.parseURL(feed.url);
+      feedsOk++;
       for (const item of parsed.items ?? []) {
         if (!item.link || !item.title) continue;
         const pubDate = item.isoDate || item.pubDate
@@ -62,8 +89,19 @@ export async function runRssCollectorOnce() {
       }
       await new Promise((r) => setTimeout(r, 200));
     } catch (e: any) {
-      console.warn(`[RSS] Feed "${feed.label}" failed:`, e.message);
+      feedsFailed++;
+      failedFeeds.push(feed.label);
+      // error, not warn: a feed failing every cycle is a real degradation that
+      // stayed invisible for weeks (#63). feedsFailed is also returned below so
+      // pipeline:last_run / the ingestion-status endpoint reflect it.
+      console.error(`[RSS] Feed "${feed.label}" failed (${feed.url}):`, e.message);
     }
+  }
+
+  if (feedsFailed > 0) {
+    console.error(
+      `[RSS] ${feedsFailed}/${RSS_FEEDS.length} feeds failed this cycle: ${failedFeeds.join(", ")}`,
+    );
   }
 
   const seen = new Set<string>();
@@ -185,5 +223,5 @@ export async function runRssCollectorOnce() {
     }
   }
 
-  return { fetched, inserted, duplicates, filtered, signals };
+  return { fetched, inserted, duplicates, filtered, signals, feedsOk, feedsFailed };
 }

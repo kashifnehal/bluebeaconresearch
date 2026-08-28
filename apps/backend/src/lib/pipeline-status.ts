@@ -9,6 +9,11 @@ export type CollectorResult = {
   updated?: number;
   ok?: boolean;
   error?: string;
+  // RSS collector only: how many of the configured feeds parsed vs. threw this
+  // cycle. Surfaced so a slow accumulation of dead feeds is visible in
+  // pipeline:last_run instead of only in Railway logs (#63).
+  feedsOk?: number;
+  feedsFailed?: number;
 };
 
 export type PipelineRunStatus = {
