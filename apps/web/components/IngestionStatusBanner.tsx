@@ -59,9 +59,9 @@ export function IngestionStatusBanner() {
 
       {nextFetch && (
         <span>
-          Next run ~{" "}
+          {nextFetch.getTime() < Date.now() ? "Next run overdue by ~" : "Next run in ~"}
           <strong style={{ color: "#e5e2e1" }}>
-            {safeFormatDistanceToNow(nextFetch, { addSuffix: true })}
+            {safeFormatDistanceToNow(nextFetch)}
           </strong>
         </span>
       )}
