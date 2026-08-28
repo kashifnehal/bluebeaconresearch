@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   ResponsiveContainer,
   LineChart,
@@ -16,6 +16,7 @@ import {
 import { COMMODITIES } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { CommodityChip } from "@/components/signals/CommodityChip";
+import { Pagination } from "@/components/ui/Pagination";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 
 type Price = {
@@ -28,6 +29,9 @@ type Price = {
 type PricePoint = { price: number; fetchedAt: string };
 
 const HISTORY_DAYS = 90;
+// Correlated-signals list page size. 20 matches what /api/signals returned by
+// default before pagination, so page 1 of this list is byte-identical to today.
+const SIGNALS_PAGE_SIZE = 20;
 
 function findAtOrBefore(points: PricePoint[], iso: string): PricePoint | null {
   const t = new Date(iso).getTime();
@@ -98,17 +102,37 @@ export default function WatchlistSymbolPage() {
   });
   const points = historyPoints ?? [];
 
-  const { data: signalsData, isLoading: signalsLoading } = useQuery({
-    queryKey: ["commodity-signals", symbol],
+  const [signalsPage, setSignalsPage] = useState(1);
+  // Different commodity → back to page 1. React's documented "adjust state when a
+  // prop changes during render" pattern (store the last-seen symbol in state),
+  // which avoids both an effect round-trip and a ref write during render.
+  const [trackedSymbol, setTrackedSymbol] = useState(symbol);
+  if (trackedSymbol !== symbol) {
+    setTrackedSymbol(symbol);
+    setSignalsPage(1);
+  }
+
+  const {
+    data: signalsData,
+    isLoading: signalsLoading,
+    isPlaceholderData: signalsIsPlaceholder,
+  } = useQuery({
+    queryKey: ["commodity-signals", symbol, signalsPage],
     queryFn: async () => {
       const res = await fetch(
-        `/api/signals?commodity=${encodeURIComponent(symbol)}&window=${HISTORY_DAYS}d&sort=newest`,
+        `/api/signals?commodity=${encodeURIComponent(symbol)}&window=${HISTORY_DAYS}d&sort=newest&limit=${SIGNALS_PAGE_SIZE}&page=${signalsPage}`,
       );
-      const json = (await res.json()) as { signals: Signal[] };
-      return json.signals ?? [];
+      const json = (await res.json()) as { signals?: Signal[]; total?: number };
+      return { signals: json.signals ?? [], total: json.total ?? 0 };
     },
+    placeholderData: keepPreviousData,
   });
-  const events = signalsData ?? [];
+  const events = signalsData?.signals ?? [];
+  const signalsTotal = signalsData?.total ?? 0;
+  const signalsPageCount = Math.max(
+    1,
+    Math.ceil(signalsTotal / SIGNALS_PAGE_SIZE),
+  );
 
   const chartData = useMemo(
     () => points.map((p) => ({ t: new Date(p.fetchedAt).getTime(), price: p.price })),
@@ -238,7 +262,7 @@ export default function WatchlistSymbolPage() {
             <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
               Loading signals…
             </p>
-          ) : events.length === 0 ? (
+          ) : events.length === 0 && signalsPage === 1 ? (
             <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
               No signals flagged {symbol} impact in the last {HISTORY_DAYS} days
             </p>
@@ -276,6 +300,12 @@ export default function WatchlistSymbolPage() {
               })}
             </div>
           )}
+          <Pagination
+            page={signalsPage}
+            pageCount={signalsPageCount}
+            onPageChange={setSignalsPage}
+            disabled={signalsIsPlaceholder}
+          />
         </div>
       </div>
     </div>

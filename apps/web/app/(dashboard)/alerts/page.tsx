@@ -8,6 +8,7 @@ import { safeFormatDistanceToNow, generateAlertRuleName } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
+import { Pagination } from "@/components/ui/Pagination";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce } from "@/lib/funnel-events";
@@ -25,6 +26,10 @@ type AlertRule = {
 };
 
 type DeliveryStatus = "queued" | "delivered" | "failed";
+
+// Matched-signals shown per rule at once. 5 matches the list's prior fixed
+// `.slice(0, 5)`, so page 1 of each rule renders exactly as it did before.
+const MATCHES_PER_PAGE = 5;
 
 type MatchedSignal = {
   id: string;
@@ -64,6 +69,9 @@ export default function AlertsPage() {
   const [modalMinSeverity, setModalMinSeverity] = useState(7);
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
   const [modalEventType, setModalEventType] = useState<string | undefined>(undefined);
+  // Per-rule page index for the "Recent Matches" list (client-side — paginates
+  // the already-fetched, already-grouped matches for that rule).
+  const [matchPageByRule, setMatchPageByRule] = useState<Record<string, number>>({});
 
   const { data: rulesData, isLoading: rulesLoading, isError: rulesError } = useQuery({
     queryKey: ["alert-rules"],
@@ -240,7 +248,16 @@ export default function AlertsPage() {
       ) : (
         <div className="space-y-6 pb-24">
           {rules.map((rule) => {
-            const matches = (matchesByRule.get(rule.id) ?? []).slice(0, 5);
+            const allMatches = matchesByRule.get(rule.id) ?? [];
+            const matchPage = matchPageByRule[rule.id] ?? 1;
+            const matchPageCount = Math.max(
+              1,
+              Math.ceil(allMatches.length / MATCHES_PER_PAGE),
+            );
+            const matches = allMatches.slice(
+              (matchPage - 1) * MATCHES_PER_PAGE,
+              matchPage * MATCHES_PER_PAGE,
+            );
             const regions = rule.regions?.length ? rule.regions : null;
             const commodities = rule.commodities?.length ? rule.commodities : null;
             const channels = rule.channels?.length ? rule.channels : ["telegram"];
@@ -346,6 +363,13 @@ export default function AlertsPage() {
                       })}
                     </div>
                   )}
+                  <Pagination
+                    page={matchPage}
+                    pageCount={matchPageCount}
+                    onPageChange={(p) =>
+                      setMatchPageByRule((prev) => ({ ...prev, [rule.id]: p }))
+                    }
+                  />
                 </div>
               </div>
             );

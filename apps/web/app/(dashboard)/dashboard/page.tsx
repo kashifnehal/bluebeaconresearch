@@ -6,15 +6,30 @@ import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { liveSignals, isLoading, isError, fallback, fallbackReason, fallbackLastUpdated } =
-    useSignalFeed({ enabled: true });
+  const {
+    liveSignals,
+    isLoading,
+    isError,
+    fallback,
+    fallbackReason,
+    fallbackLastUpdated,
+    total,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useSignalFeed({ enabled: true });
   const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
   const [filter, setFilter] = useState<"all" | "high">("all");
+  // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
+  // list's prior fixed size, so the first render is unchanged); "Load more" adds
+  // 10 and pulls the next API page once the current pages are exhausted.
+  const [streamCount, setStreamCount] = useState(10);
 
   // Compute top hotzones from liveSignals
   const topHotzones = useMemo(() => {
@@ -60,7 +75,18 @@ export default function DashboardPage() {
     filteredSignals.find((s) => s.severity >= 8) || filteredSignals[0];
   const secondaryA = filteredSignals[1];
   const secondaryB = filteredSignals[2];
-  const streamList = filteredSignals.slice(0, 10);
+  const streamList = filteredSignals.slice(0, streamCount);
+
+  // A client severity/search filter makes the API's raw `total` an over-count for
+  // this view, so only surface the "X of Y" number on the unfiltered stream.
+  const streamFilterActive = filter !== "all" || searchQuery.trim().length > 0;
+  const canLoadMoreStream = streamCount < filteredSignals.length || hasNextPage;
+  const handleLoadMoreStream = () => {
+    setStreamCount((c) => c + 10);
+    if (streamCount + 10 >= filteredSignals.length && hasNextPage) {
+      void fetchNextPage();
+    }
+  };
 
   // First-time tour: only fires once real signal data (and a featured card
   // to anchor steps 2-4 to) has actually loaded, and only for users who
@@ -610,6 +636,16 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+              {streamList.length > 0 && (
+                <LoadMoreButton
+                  hasMore={canLoadMoreStream}
+                  isLoading={isFetchingNextPage}
+                  onClick={handleLoadMoreStream}
+                  loadedCount={streamList.length}
+                  totalCount={streamFilterActive ? null : total}
+                  endLabel="End of signal stream"
+                />
+              )}
             </section>
           </>
         )}

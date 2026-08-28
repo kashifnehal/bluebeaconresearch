@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useUIStore } from "@/store/useUIStore";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Signal } from "@blue-beacon-research/shared";
 
@@ -17,22 +17,35 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
 
   const { searchSubmitted } = useUIStore();
 
-  const { data, isLoading, isError } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["signals", "feed", searchSubmitted ?? ""],
-    queryFn: async () => {
-      const url =
+    initialPageParam: "1",
+    queryFn: async ({ pageParam }) => {
+      const base =
         searchSubmitted && searchSubmitted.trim().length >= 3
           ? `/api/signals?search=${encodeURIComponent(searchSubmitted.trim())}`
           : "/api/signals?sort=severity";
-      const res = await fetch(url);
+      const res = await fetch(`${base}&page=${pageParam}`);
       if (!res.ok) throw new Error("Failed to fetch signals");
       return (await res.json()) as {
         signals?: Signal[];
+        nextCursor?: string | null;
+        total?: number;
         fallback?: boolean;
         fallbackReason?: string;
         fallbackLastUpdated?: string;
       };
     },
+    // `nextCursor` is an opaque page token from /api/signals ("2", "3", …) or
+    // null at the end. Returning undefined tells react-query there's no next page.
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled,
     // Step 3 stopgap: Fallback polling interval 90s ±10s random jitter to avoid synchronized bursts
     refetchInterval: () => {
@@ -42,10 +55,18 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     },
   });
 
-  const fetchedSignals = data?.signals ?? [];
-  const fallback = data?.fallback ?? false;
-  const fallbackReason = data?.fallbackReason ?? null;
-  const fallbackLastUpdated = data?.fallbackLastUpdated ?? null;
+  const pages = data?.pages ?? [];
+  const fetchedSignals = useMemo(
+    () => pages.flatMap((p) => p.signals ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data?.pages],
+  );
+  // Feed-level fallback / total come from the first page — the degraded-mode
+  // contract is per-request and page 1 is the one that always loads.
+  const fallback = pages[0]?.fallback ?? false;
+  const fallbackReason = pages[0]?.fallbackReason ?? null;
+  const fallbackLastUpdated = pages[0]?.fallbackLastUpdated ?? null;
+  const total = pages[0]?.total ?? null;
 
   const supportsSSE = useMemo(
     () => typeof window !== "undefined" && "EventSource" in window,
@@ -128,5 +149,9 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     fallback,
     fallbackReason,
     fallbackLastUpdated,
+    total,
+    fetchNextPage,
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
   };
 }

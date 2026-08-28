@@ -10,6 +10,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import {
   BASEMAP_TILE_URL,
   BASEMAP_TILE_URLS,
@@ -83,6 +84,9 @@ export default function MapPage() {
     fallback,
     fallbackReason,
     fallbackLastUpdated,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useSignalFeed();
   const signals = liveSignals ?? [];
   // Server-side filtered results (severity/region/window) — proper React state, not a ref,
@@ -132,7 +136,19 @@ export default function MapPage() {
   geolocatedSignalsRef.current = geolocatedSignals;
   // Stream list now shares the exact same filtered set as the map markers —
   // previously it always showed the unfiltered feed regardless of active filters.
-  const liveItems = geolocatedSignals.slice(0, 6);
+  // Starts at 6 (its prior fixed size); "Load more" reveals 6 more and pulls the
+  // next API page once the loaded feed is exhausted. Only the sidebar list grows
+  // — the map markers keep rendering the full `geolocatedSignals` set as before.
+  const [sidebarCount, setSidebarCount] = useState(6);
+  const liveItems = geolocatedSignals.slice(0, sidebarCount);
+  const canLoadMoreSidebar =
+    sidebarCount < geolocatedSignals.length || hasNextPage;
+  const handleLoadMoreSidebar = () => {
+    setSidebarCount((c) => c + 6);
+    if (sidebarCount + 6 >= geolocatedSignals.length && hasNextPage) {
+      void fetchNextPage();
+    }
+  };
 
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [tensionInfoOpen, setTensionInfoOpen] = useState(false);
@@ -1018,6 +1034,15 @@ export default function MapPage() {
                 No live stream data
               </span>
             </div>
+          )}
+          {!isLoading && !isError && (
+            <LoadMoreButton
+              hasMore={canLoadMoreSidebar}
+              isLoading={isFetchingNextPage}
+              onClick={handleLoadMoreSidebar}
+              loadedCount={liveItems.length}
+              endLabel="End of live stream"
+            />
           )}
         </div>
 

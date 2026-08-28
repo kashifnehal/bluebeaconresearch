@@ -147,6 +147,17 @@ export async function GET(req: NextRequest) {
         ? Math.min(100, Math.floor(limitParam))
         : 20;
 
+    // Page-based pagination (additive — every existing caller omits `page`, so
+    // `page` defaults to 1 and `.range(0, rowLimit-1)` returns the exact same
+    // rows in the exact same order the previous `.limit(rowLimit)` did). The
+    // response already carried a `nextCursor` field (hardcoded null) and a
+    // `total`; those are now populated for real so the frontend can page.
+    const pageParam = Number(url.searchParams.get("page"));
+    const page =
+      Number.isFinite(pageParam) && pageParam >= 1 ? Math.floor(pageParam) : 1;
+    const rangeFrom = (page - 1) * rowLimit;
+    const rangeTo = rangeFrom + rowLimit - 1;
+
     let query = supabase
       .from("signals")
       .select("*, event_date", { count: "exact" });
@@ -219,7 +230,19 @@ export async function GET(req: NextRequest) {
               .order("severity", { ascending: false })
               .order("created_at", { ascending: false });
 
-    const { data, error } = await query.limit(rowLimit);
+    const { data, error, count } = await query.range(rangeFrom, rangeTo);
+
+    // A page request past the last row (PostgREST "range not satisfiable",
+    // code PGRST103) is a normal end-of-list condition, not a failure — return
+    // a clean empty page rather than tripping the degraded-mode fallback. The
+    // UI's pagination controls stop before this, so it's purely defensive.
+    if (error && (error as { code?: string }).code === "PGRST103") {
+      return NextResponse.json({
+        signals: [],
+        nextCursor: null,
+        total: typeof count === "number" ? count : rangeFrom,
+      });
+    }
 
     if (error) {
       console.error("[signals] DB error:", error?.message ?? error);
@@ -306,10 +329,18 @@ export async function GET(req: NextRequest) {
 
     const deduped = dedupeSignalsByTitle(signals);
 
+    // `hasMore` / `total` are computed from the raw DB rows (pre-title-dedupe) and
+    // the exact row count, so paging never stalls just because one page happened
+    // to collapse several same-headline signals. Cross-page headline dupes are
+    // still possible (dedupe is per-page) but the client keys the merged feed by
+    // signal id, so they don't render twice.
+    const total = count ?? rangeFrom + rows.length;
+    const hasMore = rangeFrom + rows.length < total;
+
     const payload = {
       signals: deduped,
-      nextCursor: null,
-      total: deduped.length,
+      nextCursor: hasMore ? String(page + 1) : null,
+      total,
     };
 
     // Update in-memory cache of last successful payload for this query
