@@ -65,14 +65,20 @@ function LoginForm() {
   }, []);
 
 
-  // Redirect already-logged-in users away from /login
+  // Redirect already-logged-in users away from /login.
+  // Skip this when we arrived here carrying an ?error= — middleware bounces
+  // logged-in users to /login?error=... when its auth check times out (auth
+  // backend degraded), and getSession() below reads the still-valid session
+  // from local storage with no network call, so auto-redirecting straight back
+  // to /dashboard would just loop against the same failing middleware check.
   useEffect(() => {
+    if (urlError) return;
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) router.replace("/dashboard");
     });
-  }, [router]);
+  }, [router, urlError]);
 
   async function onSubmit(values: FormValues) {
     setError(null);

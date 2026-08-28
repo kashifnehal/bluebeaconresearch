@@ -14,7 +14,15 @@ const GATED_ALLOWED = [
   "/reset-password",
 ];
 
-// Routes that require authentication (only relevant if isProjectReady is true)
+// Page routes that require an authenticated session.
+//
+// NOTE: /api/* is deliberately NOT listed here. Every API route authenticates
+// independently — user-scoped routes via getRouteSupabaseClients() (lib/
+// supabase-server.ts), and the handful of public ones (/api/prices,
+// /api/prices/history, /api/backtesting, /api/ingestion/status) are explicit
+// public-data endpoints that are still rate-limited. Middleware must not run an
+// auth check for them: doing so put the entire API surface behind the auth
+// backend's latency (see incident note below).
 const PROTECTED = [
   "/dashboard",
   "/events",
@@ -24,6 +32,20 @@ const PROTECTED = [
   "/settings",
   "/onboarding",
 ];
+
+// Incident-response hardening (2026-08-28): a degraded Supabase auth gateway made
+// every supabase.auth.getUser() call stall for minutes. Because middleware ran
+// that call on *every* request (matcher below covers all non-asset paths), the
+// whole site — marketing pages, /login, /signup, /api/* — returned 504
+// GATEWAY_TIMEOUT, not just the dashboard.
+//
+// Two changes contain that blast radius:
+//   1. Only call getUser() for PROTECTED page routes. Everything else returns
+//      immediately without touching Supabase.
+//   2. Bound the getUser() call to AUTH_CHECK_TIMEOUT_MS. On timeout — or any
+//      auth error, or missing env — fail CLOSED: redirect to /login exactly like
+//      an unauthenticated request. A protected route never falls open.
+const AUTH_CHECK_TIMEOUT_MS = 3000;
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -49,6 +71,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Normal flow when project IS ready ────────────────────────────────────
+  const isProtected = PROTECTED.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+
+  // Public routes (marketing pages, /login, /signup, /auth/*, /api/*, status,
+  // legal, …) never need a session check here. Skip Supabase entirely so
+  // auth-backend latency cannot affect them.
+  if (!isProtected) {
+    return NextResponse.next();
+  }
+
   const response = NextResponse.next();
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -56,36 +89,58 @@ export async function middleware(request: NextRequest) {
 
   if (!supabaseUrl || !supabaseKey) {
     if (process.env.NODE_ENV === "production") {
-      console.warn("⚠️ Middleware: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. Skipping auth check.");
+      console.warn(
+        "⚠️ Middleware: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY — failing closed on protected route.",
+      );
     }
-    return response;
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
-          });
-        },
+  // Abort the underlying auth HTTP request if it exceeds the budget, so this
+  // never rides the platform's ~25s function timeout to a 504.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AUTH_CHECK_TIMEOUT_MS);
+
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (cookiesToSet) => {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
       },
     },
-  );
+    global: {
+      fetch: (input, init) =>
+        fetch(input, { ...init, signal: controller.signal }),
+    },
+  });
 
-  // getUser() validates the JWT server-side against Supabase on every request,
-  // ensuring expired or revoked tokens are rejected in production.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getUser() validates the JWT server-side against Supabase, so expired or
+  // revoked tokens are rejected in production.
+  let user = null;
+  let timedOut = false;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    user = data.user;
+  } catch {
+    // AbortError (auth backend too slow) or a genuine "no session" error — a
+    // protected route with no verified user either way.
+    timedOut = controller.signal.aborted;
+  } finally {
+    clearTimeout(timer);
+  }
 
-  const isProtected = PROTECTED.some((p) => pathname.startsWith(p));
-
-  if (isProtected && !user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!user) {
+    const loginUrl = new URL("/login", request.url);
+    if (timedOut) {
+      loginUrl.searchParams.set(
+        "error",
+        "Authentication is temporarily unavailable. Please try again in a moment.",
+      );
+    }
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;
