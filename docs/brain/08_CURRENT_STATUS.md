@@ -2,7 +2,17 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-08-27 (CTO reliability pass re-audit — `042c249`, `b4f4259`, `7a7bc6a`, `67b6804`, `9e7be09` — see `14_CHANGELOG.md` v0.31.0)
+Last updated: 2026-08-28 (3 live map-page bugs from a production screenshot — `36b522a` — see `14_CHANGELOG.md` v0.32.0)
+
+---
+
+## 3 Live Map-Page Bugs From a Production Screenshot (2026-08-28)
+
+All three confirmed live (dev server + throwaway Supabase account) and fixed in `36b522a`. Full detail in `14_CHANGELOG.md` v0.32.0.
+
+- **Map tiles were showing CARTO's "API KEY REQUIRED" watermark** — confirmed by curling `basemaps.cartocdn.com` directly with the app entirely out of the loop: CARTO deprecated anonymous access to this raster CDN account-wide (this project never had a CARTO key configured, so it wasn't an expired-key or usage-cap issue). Switched `apps/web/lib/map-config.ts` to Esri's free, keyless `World_Dark_Gray_Base` tiles.
+- **Signal popup had a white background** — `maplibre-gl.css`'s hardcoded default was winning over a `globals.css` override because Next/Turbopack loads the maplibre-gl CSS chunk *after* globals.css's regardless of `@import` order in source. Fixed with `!important` on the popup override in `globals.css`, using the app's existing `#131313`/`#3c4a42` dark tokens.
+- **"Ingestion Delayed" banner's "Next run ~X ago" copy is accurate, not mislabeled** — real `raw_events` gaps of ~60min against a stated 15min cron, and a live 99min gap at check time. Reworded to "overdue by ~X" in `IngestionStatusBanner.tsx` so the (already correct) data reads clearly. **Not fixed, flagged for a decision:** RSS produced zero rows in the last 24h (GDELT/GNews are the only sources landing), and the real ~60min cadence looks consistent with GNews's free-tier daily quota exhausting mid-day — needs either a paid GNews tier, a wider cron interval, or accepting the degraded cadence.
 
 ---
 
