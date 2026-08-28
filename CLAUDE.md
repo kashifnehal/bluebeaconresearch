@@ -29,6 +29,17 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 - **Scope discipline.** A UI-only task previously scope-crept into adding unrelated Redis/Terraform/load-test infrastructure and had to be reverted (see `docs/brain/14_CHANGELOG.md` v0.13.0). Stay inside the files a task actually names; if something looks like it needs infra work outside that scope, stop and ask rather than building it.
 - **Never commit secrets.** `docs/brain/CLAUDE_CONTEXT.md` previously had live API keys (Anthropic, Supabase service role, Upstash) committed in plaintext — this has been cleaned up and pushed, but treat it as a hard rule going forward: credentials belong in `.env.local` / platform env vars only, never in a doc.
 
+## Session efficiency (token discipline — do not re-litigate)
+
+Verification rigor stays high — this is a real company, not a toy repo. What's restricted below is *reaching for the expensive tool by default* when a cheaper one gives equal confidence. (Founder decision, 2026-08-28.)
+
+- **Playwright / full live-browser verification only when the user explicitly asks for it, or the task is itself about a visual/rendering/UI-interaction bug** (e.g. "this renders with the wrong color," "the tiles show a watermark," "clicking X does nothing"). For everything else — data correctness, backend logic, API behavior, whether a fix actually changed what's stored — verify with a direct Supabase query or a direct API/curl call instead. Spinning up a dev server and driving a browser is the most expensive verification path available; don't default to it.
+- **Reuse the standing test account instead of creating a throwaway one.** A confirmed, working production test account already exists — check memory for `reference-test-account` (the actual credentials are intentionally kept out of this repo, never in a doc or `.env.example`, per "Never commit secrets" above). Only create+delete a fresh throwaway account via the Supabase admin API when a task is specifically testing the signup/account-creation flow itself.
+- **Don't read a full large `docs/brain/*.md` file just to append one section.** Grep for the insertion anchor (the latest `## v0.NN.0` heading, or the `Last updated:` line) and edit around it directly.
+- **Don't spawn a subagent for work the current session can just do directly.** A fresh subagent pays a real cold-start cost to re-derive context (project background, file locations, prior findings in this conversation) that the current session already has loaded. Reserve `Agent`/background-agent spawns for genuinely large, independently parallelizable chunks of work.
+- **When live-browser verification is genuinely warranted, don't trial-and-error it.** Inspect the actual DOM/layer/element structure once up front (e.g. query what the map's rendered layers/sources are) rather than guessing pixel coordinates or selectors repeatedly across several screenshot round-trips.
+- **Batch investigative queries.** Decide what evidence would actually settle the question first, then run the minimum number of precise DB/API/grep calls to get it, rather than exploring iteratively in many small steps.
+
 ## Current known-open items (check `docs/brain/08_CURRENT_STATUS.md` for the live version)
 
 - Anthropic API credit — restore real Claude classification (heuristic fallback currently covering).
