@@ -25,7 +25,11 @@ export function Sidebar() {
   }
 
   return (
-    <aside
+    // Plain <div>, not <aside>: this is chrome wrapping the primary <nav> (which is
+    // its own landmark), not tangential content. As an <aside> it registered a
+    // second unlabeled `complementary` landmark, which collided with the map page's
+    // own <aside> (axe `landmark-unique`, /map).
+    <div
       className="fixed left-0 top-0 h-full flex flex-col z-50"
       style={{
         width: "256px",
@@ -135,6 +139,6 @@ export function Sidebar() {
           Logout
         </button>
       </div>
-    </aside>
+    </div>
   );
 }

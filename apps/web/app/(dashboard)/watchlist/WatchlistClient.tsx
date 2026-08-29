@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { COMMODITIES } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
@@ -33,7 +34,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 
   if (isLoading) {
     return (
-      <p className="text-[9px] font-mono text-on-surface-variant/50 uppercase tracking-[0.2em] text-center">
+      <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center">
         Loading history…
       </p>
     );
@@ -41,7 +42,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 
   if (points.length < 2) {
     return (
-      <p className="text-[9px] font-mono text-on-surface-variant/50 uppercase tracking-[0.2em] text-center leading-relaxed">
+      <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
         Not enough price history yet for a trend view
       </p>
     );
@@ -78,7 +79,6 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 }
 
 export function WatchlistClient() {
-  const router = useRouter();
   const params = useSearchParams();
   const preselect = params.get("symbol");
   const [watch, setWatch] = useState<string[]>(() =>
@@ -180,42 +180,41 @@ export function WatchlistClient() {
             const pct = p ? (p.change_pct_24h ?? p.changePct24h ?? 0) : 0;
             const isUp = pct >= 0;
 
+            const label = meta?.label || sym;
             return (
+              // No interactive wrapper: a full-bleed <Link> is the navigation
+              // target and the remove <button> is a CSS-positioned sibling, not a
+              // child — so no interactive element is nested in another (axe
+              // `nested-interactive`). stopPropagation is deliberately not used.
               <div
                 key={sym}
-                role="button"
-                tabIndex={0}
-                onClick={() => router.push(`/watchlist/${encodeURIComponent(sym)}`)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    router.push(`/watchlist/${encodeURIComponent(sym)}`);
-                  }
-                }}
-                className="bg-surface-container/40 border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors cursor-pointer"
+                className="relative bg-surface-container/40 border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors"
               >
-                {/* Top section (darker) */}
-                <div className="p-6 bg-black/40">
+                <Link
+                  href={`/watchlist/${encodeURIComponent(sym)}`}
+                  aria-label={`Open ${label} drill-down`}
+                  className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-container-lowest"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemove(sym)}
+                  aria-label={`Remove ${label} from watchlist`}
+                  className="absolute right-4 top-4 z-20 text-on-surface-variant hover:text-error transition-colors p-1"
+                >
+                  <span className="material-symbols-outlined text-lg">close</span>
+                </button>
+                {/* Top section (darker). pointer-events-none lets clicks fall
+                    through to the full-card <Link> underneath. */}
+                <div className="p-6 bg-black/40 relative z-10 pointer-events-none">
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <span className="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[9px] text-on-surface-variant tracking-widest mb-2 inline-block uppercase">
                         {meta?.category ?? "MARKET"}
                       </span>
-                      <h3 className="text-xl font-headline font-bold text-on-surface">
-                        {meta?.label || sym}
-                      </h3>
+                      <h2 className="text-xl font-headline font-bold text-on-surface">
+                        {label}
+                      </h2>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemove(sym);
-                      }}
-                      className="text-on-surface-variant hover:text-error transition-colors p-1"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        close
-                      </span>
-                    </button>
                   </div>
                   <div className="flex items-baseline gap-4">
                     <span className="font-mono text-3xl font-bold text-on-surface tracking-tighter">
@@ -237,7 +236,7 @@ export function WatchlistClient() {
                   </div>
                 </div>
                 {/* Bottom section (Sparkline) */}
-                <div className="p-6 bg-surface-container/20 relative min-h-[140px] flex flex-col justify-end">
+                <div className="p-6 bg-surface-container/20 relative z-10 pointer-events-none min-h-[140px] flex flex-col justify-end">
                   <PriceSparkline symbol={sym} isUp={isUp} />
                 </div>
               </div>
@@ -256,9 +255,9 @@ export function WatchlistClient() {
                     insights
                   </span>
                 </div>
-                <h4 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
+                <h3 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
                   Market Signal Forecast
-                </h4>
+                </h3>
               </div>
               <p className="text-sm font-body leading-relaxed text-on-surface/80 mb-6 italic border-l-2 border-outline-variant/20 pl-4 font-medium">
                 Predictions have been removed from this view. To avoid
@@ -278,9 +277,9 @@ export function WatchlistClient() {
                     update
                   </span>
                 </div>
-                <h4 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
+                <h3 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
                   Watchlist Sync
-                </h4>
+                </h3>
               </div>
               <div className="flex items-end justify-between">
                 <div>

@@ -193,9 +193,9 @@ export default function WatchlistSymbolPage() {
 
         {/* Price chart */}
         <div className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-6 mb-8">
-          <h4 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-6">
+          <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-6">
             Price History — Last {HISTORY_DAYS} Days
-          </h4>
+          </h2>
           {historyLoading ? (
             <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
               Loading price history…
@@ -248,16 +248,16 @@ export default function WatchlistSymbolPage() {
               </ResponsiveContainer>
             </div>
           )}
-          <p className="text-[9px] font-mono text-on-surface-variant/50 uppercase tracking-widest text-center mt-4">
+          <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
             Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation.
           </p>
         </div>
 
         {/* Correlated events timeline */}
         <div className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-6 mb-10">
-          <h4 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-6">
+          <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-6">
             Correlated Signals — Last {HISTORY_DAYS} Days
-          </h4>
+          </h2>
           {signalsLoading ? (
             <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
               Loading signals…

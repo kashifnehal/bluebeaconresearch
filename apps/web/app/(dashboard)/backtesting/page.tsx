@@ -133,9 +133,9 @@ export default function BacktestingPage() {
         <div className="grid grid-cols-12 gap-8 mb-12">
           {/* Left Column: Popular Backtests */}
           <section className="col-span-12 lg:col-span-5 space-y-4">
-            <h3 className="font-label text-[#4EDEA3] text-[10px] font-black tracking-[0.2em] uppercase">
+            <h2 className="font-label text-[#4EDEA3] text-[10px] font-black tracking-[0.2em] uppercase">
               Popular Simulations
-            </h3>
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {POPULAR.map((p) => (
                 <div
@@ -195,9 +195,9 @@ export default function BacktestingPage() {
                     Active Historical Engine
                   </span>
                 </div>
-                <h4 className="text-2xl font-bold font-mono text-on-surface">
+                <h2 className="text-2xl font-bold font-mono text-on-surface">
                   GENESIS-X_V4
-                </h4>
+                </h2>
                 <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-widest mt-1">
                   Processing 15 years of geo-political volatility markers
                 </p>
@@ -209,12 +209,12 @@ export default function BacktestingPage() {
         {/* Custom Backtest Form */}
         <section className="mb-12">
           <div className="bg-surface-container/60 p-8 border-l-4 border-primary rounded-r-xl shadow-2xl backdrop-blur-sm">
-            <h3 className="font-label text-[10px] font-black text-on-surface-variant mb-8 flex items-center gap-2 tracking-[0.3em] uppercase">
+            <h2 className="font-label text-[10px] font-black text-on-surface-variant mb-8 flex items-center gap-2 tracking-[0.3em] uppercase">
               <span className="material-symbols-outlined text-sm">
                 settings_input_component
               </span>{" "}
               Configure Simulation Parameters
-            </h3>
+            </h2>
             <div className="flex flex-wrap items-end gap-8">
               <div className="flex-1 min-w-[240px]">
                 <label className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
@@ -374,9 +374,9 @@ export default function BacktestingPage() {
                   >
                     history
                   </span>
-                  <h4 className="font-label text-xs font-bold text-on-surface tracking-widest uppercase">
+                  <h3 className="font-label text-xs font-bold text-on-surface tracking-widest uppercase">
                     Historical Event Trace
-                  </h4>
+                  </h3>
                 </div>
                 <button
                   onClick={() => {

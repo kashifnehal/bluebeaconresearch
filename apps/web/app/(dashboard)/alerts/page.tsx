@@ -210,7 +210,7 @@ export default function AlertsPage() {
 
       {/* Rules Header + New Rule Action */}
       <section className="flex justify-between items-center py-4 border-y border-outline-variant/20 mb-8">
-        <span className="label text-[10px] tracking-widest text-on-surface/40 font-bold uppercase">
+        <span className="label text-[10px] tracking-widest text-outline font-bold uppercase">
           {rules.length > 0 ? `${rules.length} Alert Rule${rules.length === 1 ? "" : "s"}` : "No Alert Rules Yet"}
         </span>
         <button
@@ -275,7 +275,7 @@ export default function AlertsPage() {
                         className={`px-2 py-0.5 text-[9px] label font-bold uppercase tracking-widest rounded-sm border shrink-0 ${
                           rule.is_active
                             ? "bg-primary/10 border-primary/50 text-primary"
-                            : "bg-surface-variant border-outline-variant/30 text-on-surface/40"
+                            : "bg-surface-variant border-outline-variant/30 text-on-surface-variant"
                         }`}
                       >
                         {rule.is_active ? "Active" : "Paused"}
@@ -283,7 +283,7 @@ export default function AlertsPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Region:</span>
+                        <span className="label text-[9px] text-outline uppercase font-bold">Region:</span>
                         {regions ? (
                           regions.map((r) => (
                             <span key={r} className="mono text-[10px] text-on-surface font-bold uppercase">{r}</span>
@@ -293,7 +293,7 @@ export default function AlertsPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Commodity:</span>
+                        <span className="label text-[9px] text-outline uppercase font-bold">Commodity:</span>
                         {commodities ? (
                           commodities.map((c) => (
                             <span key={c} className="mono text-[10px] text-on-surface font-bold uppercase">{c}</span>
@@ -303,17 +303,17 @@ export default function AlertsPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Threshold:</span>
+                        <span className="label text-[9px] text-outline uppercase font-bold">Threshold:</span>
                         <span className="mono text-[10px] text-primary font-bold">SEVERITY {rule.min_severity}+</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="label text-[9px] text-on-surface/40 uppercase font-bold">Channels:</span>
+                        <span className="label text-[9px] text-outline uppercase font-bold">Channels:</span>
                         <span className="mono text-[10px] text-on-surface font-bold uppercase">{channels.join(" · ")}</span>
                       </div>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="label text-[9px] text-on-surface/40 uppercase font-bold block">Last Triggered</span>
+                    <span className="label text-[9px] text-outline uppercase font-bold block">Last Triggered</span>
                     <span className="mono text-xs text-on-surface/70 font-bold">
                       {rule.last_triggered_at ? `${safeFormatDistanceToNow(rule.last_triggered_at)} ago` : "Never"}
                     </span>
@@ -321,7 +321,7 @@ export default function AlertsPage() {
                 </div>
 
                 <div className="p-4">
-                  <span className="label text-[9px] tracking-widest text-on-surface/40 font-bold uppercase block mb-2 px-2">
+                  <span className="label text-[9px] tracking-widest text-outline font-bold uppercase block mb-2 px-2">
                     Recent Matches
                   </span>
                   {matches.length === 0 ? (
@@ -338,7 +338,7 @@ export default function AlertsPage() {
                             className="flex items-center gap-4 px-2 py-3 hover:bg-surface-bright/20 transition-all group cursor-pointer"
                           >
                             <div className={`w-2 h-2 rounded-full shrink-0 ${isHigh ? "bg-error" : "bg-primary"}`}></div>
-                            <span className="mono text-[10px] text-on-surface/40 font-bold whitespace-nowrap w-20 shrink-0">
+                            <span className="mono text-[10px] text-outline font-bold whitespace-nowrap w-20 shrink-0">
                               {safeFormatDistanceToNow(m.matchedAt)} ago
                             </span>
                             <span className="flex-1 min-w-0 text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors">

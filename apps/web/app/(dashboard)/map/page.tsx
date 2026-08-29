@@ -690,6 +690,9 @@ export default function MapPage() {
 
   return (
     <div className="relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
+      {/* Visually hidden — the page is a full-bleed map with no visible title slot,
+          but it still needs a level-one heading (axe `page-has-heading-one`, /map). */}
+      <h1 className="sr-only">Global tension map</h1>
       <div className="absolute inset-0">
         <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />
@@ -955,7 +958,7 @@ export default function MapPage() {
       )}
 
       {!streamCollapsed && (
-      <aside className="absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex flex-col">
+      <aside aria-label="Live intelligence stream" className="absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex flex-col">
         <button
           onClick={() => setStreamCollapsed(true)}
           className="absolute -left-3 top-6 w-6 h-6 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors"

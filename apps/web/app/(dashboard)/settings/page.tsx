@@ -119,7 +119,7 @@ export default function SettingsPage() {
               className={`pb-4 font-label text-xs tracking-widest transition-colors uppercase font-bold ${
                 activeTab === tab
                   ? "text-primary border-b-2 border-primary"
-                  : "text-on-surface/40 hover:text-on-surface"
+                  : "text-outline hover:text-on-surface"
               }`}
             >
               {tab}
@@ -178,7 +178,7 @@ export default function SettingsPage() {
                         type="email"
                         value={profile?.email || ""}
                       />
-                      <p className="font-mono text-[10px] text-on-surface-variant/50 flex items-center gap-1 mt-1">
+                      <p className="font-mono text-[10px] text-on-surface-variant flex items-center gap-1 mt-1">
                         <span className="material-symbols-outlined text-xs">
                           lock
                         </span>{" "}
@@ -318,7 +318,7 @@ export default function SettingsPage() {
                       ? "security"
                       : "database"}
                 </span>
-                <h2 className="font-headline text-lg font-bold text-on-surface-variant/40">
+                <h2 className="font-headline text-lg font-bold text-on-surface-variant">
                   {activeTab}
                 </h2>
               </div>
@@ -444,8 +444,13 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
+      {/* Footer — purely decorative terminal chrome (no real data). Hidden from
+          assistive tech per 07_DESIGN_SYSTEM.md §12, which also resolves the
+          low-contrast axe finding on these cosmetic strings. */}
+      <footer
+        aria-hidden="true"
+        className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold"
+      >
         <div>ACCESS_POINT: BB-ALPHA-09</div>
         <div className="flex gap-8">
           <span>ENCRYPTION: AES-256</span>
