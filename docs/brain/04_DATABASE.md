@@ -113,7 +113,7 @@ Ingested news articles and incident logs before classification.
 - `slack_webhook_url` (`text`, nullable)
 - `slack_connected_at` (`timestamptz`, nullable)
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
-- **RLS**: exactly one policy, `user_channels_all_own` (`ALL`) — consolidated from 4 overlapping policies by `012_reliability_indexes_and_cleanup.sql`; verified live 2026-08-27
+- **RLS**: exactly one policy, `user_channels_all_own` (`ALL`) — consolidated from 4 overlapping policies by `20260817220713_consolidate_user_channels_rls.sql`; verified live 2026-08-27
 
 ### Table 7: `alerts_sent`
 One row per alert actually dispatched. Written by `alert-dispatcher.ts`.
@@ -223,7 +223,7 @@ CREATE INDEX idx_commodity_prices_symbol ON public.commodity_prices (symbol, fet
 CREATE INDEX idx_alerts_sent_user ON public.alerts_sent (user_id, created_at DESC);
 CREATE INDEX idx_raw_events_dedup ON public.raw_events (external_id, source);
 
--- Added 2026-08-18 (012_reliability_indexes_and_cleanup.sql) — ownership columns that
+-- Added 2026-08-18 (20260817220714_reliability_indexes_parts_2_4.sql) — ownership columns that
 -- are both application-filtered and RLS-checked on every row had no supporting index:
 CREATE INDEX idx_alert_rules_user_id ON public.alert_rules (user_id);
 CREATE INDEX idx_api_keys_user_id ON public.api_keys (user_id);
@@ -261,7 +261,7 @@ CREATE UNIQUE INDEX idx_signals_raw_event_ids_unique ON public.signals (raw_even
 10. **`009_signals_event_date.sql`**: Added `event_date` index for publish-time ordering.
 11. **`010_add_product_tour_flag.sql`**: `profiles.product_tour_completed` column.
 12. **`011_rls_remediation.sql`**: Enabled RLS on 7 previously-exposed tables; hardened `handle_new_user()`.
-13. **`012_reliability_indexes_and_cleanup.sql`** (2026-08-18): Consolidated `user_channels`' 4 overlapping RLS policies into 1; added the 6 indexes above; see full rationale in the migration file itself and `16_MIGRATION_CHECKLIST.md`. **Applied to the live DB 2026-08-19 (founder, via SQL editor) and verified two independent ways**: (1) Security Advisor via the Management API (`SUPABASE_ACCESS_TOKEN`, project linked 2026-08-19) confirms the `user_channels` "Multiple Permissive Policies" warning is gone, nothing new appeared; (2) Performance Advisor shows all 6 new indexes as `unused_index` findings (expected/benign for brand-new indexes — proves they exist, Postgres just hasn't recorded read traffic against them yet). Also live-tested the unique constraint directly: a duplicate `raw_event_ids` insert correctly threw `duplicate key value violates unique constraint "idx_signals_raw_event_ids_unique"`.
+13. **`20260817220713_consolidate_user_channels_rls.sql`** / **`20260817220714_reliability_indexes_parts_2_4.sql`** (2026-08-18): Consolidated `user_channels`' 4 overlapping RLS policies into 1; added the 6 indexes above; see full rationale in the migration file itself and `16_MIGRATION_CHECKLIST.md`. **Applied to the live DB 2026-08-19 (founder, via SQL editor) and verified two independent ways**: (1) Security Advisor via the Management API (`SUPABASE_ACCESS_TOKEN`, project linked 2026-08-19) confirms the `user_channels` "Multiple Permissive Policies" warning is gone, nothing new appeared; (2) Performance Advisor shows all 6 new indexes as `unused_index` findings (expected/benign for brand-new indexes — proves they exist, Postgres just hasn't recorded read traffic against them yet). Also live-tested the unique constraint directly: a duplicate `raw_event_ids` insert correctly threw `duplicate key value violates unique constraint "idx_signals_raw_event_ids_unique"`.
 
 ## 5. Data Retention & Archival — planned, not yet built
 

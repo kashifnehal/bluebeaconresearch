@@ -261,7 +261,7 @@ curl -X POST "https://api.telegram.org/botYOUR_TOKEN/setWebhook?url=https://api.
 008 (event_date index)     — index on event_date for feed performance
 ```
 
-> ⚠️ UPDATED 2026-08-19 — this list is stale; `supabase/migrations/` now goes through 012: `009_signals_event_date.sql`, `010_add_product_tour_flag.sql`, `011_rls_remediation.sql`, and `012_reliability_indexes_and_cleanup.sql` (applied to the live DB 2026-08-19, verified via Supabase Advisors) have since landed. Also, `production_schema.sql` (mentioned as a possible schema reference elsewhere in the docs) was deleted 2026-08-19 for only describing 4 of 17 real tables — `supabase/migrations/*.sql` is now the only accurate schema source.
+> ⚠️ UPDATED 2026-08-19 — this list is stale; `supabase/migrations/` now goes through 012: `009_signals_event_date.sql`, `010_add_product_tour_flag.sql`, `011_rls_remediation.sql`, and `20260817220713_consolidate_user_channels_rls.sql` / `20260817220714_reliability_indexes_parts_2_4.sql` (applied to the live DB 2026-08-19, verified via Supabase Advisors) have since landed. Also, `production_schema.sql` (mentioned as a possible schema reference elsewhere in the docs) was deleted 2026-08-19 for only describing 4 of 17 real tables — `supabase/migrations/*.sql` is now the only accurate schema source.
 
 **user_channels table** (actual structure — differs from earlier docs):
 ```sql

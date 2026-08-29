@@ -230,7 +230,7 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
   | **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
   | **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
   | **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date index) |
-  > ⚠️ UPDATED 2026-08-19 — Stale count. Migrations now run 000–012; `012_reliability_indexes_and_cleanup.sql` was applied to the live DB 2026-08-19 and Advisor-verified (see top-of-file summary and `04_DATABASE.md` §4).
+  > ⚠️ UPDATED 2026-08-19 — Stale count. Migrations now run 000–012; `20260817220713_consolidate_user_channels_rls.sql` / `20260817220714_reliability_indexes_parts_2_4.sql` were applied to the live DB 2026-08-19 and Advisor-verified (see top-of-file summary and `04_DATABASE.md` §4).
   | **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
   | **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
   | **RSS Real-Time Collector** | ⚠️ Partial | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404 |

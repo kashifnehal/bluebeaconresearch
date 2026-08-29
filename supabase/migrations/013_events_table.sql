@@ -32,7 +32,7 @@ create index if not exists idx_events_user_id_event_type
 -- near-simultaneous requests both pass the "does a row already exist" check before
 -- either inserts) is possible but very unlikely for these three specifically —
 -- these partial unique indexes are the DB-level backstop, same reasoning as
--- idx_signals_raw_event_ids_unique in 012_reliability_indexes_and_cleanup.sql. The
+-- idx_signals_raw_event_ids_unique in 20260817220714_reliability_indexes_parts_2_4.sql. The
 -- app's insert path treats the resulting 23505 unique-violation as an expected
 -- "already logged" outcome, not an error.
 create unique index if not exists idx_events_signup_completed_once
