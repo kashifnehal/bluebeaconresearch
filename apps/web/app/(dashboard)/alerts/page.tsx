@@ -232,7 +232,7 @@ export default function AlertsPage() {
         <div className="bg-surface-container rounded-lg border border-outline-variant/10 shadow-xl p-12 text-center flex flex-col items-center gap-4 pb-24">
           <span className="material-symbols-outlined text-4xl text-on-surface/20">notifications_off</span>
           <div>
-            <h3 className="text-lg font-bold font-headline text-on-surface mb-1">No alert rules configured</h3>
+            <h2 className="text-lg font-bold font-headline text-on-surface mb-1">No alert rules configured</h2>
             <p className="text-xs text-on-surface/60 max-w-md">
               Create a rule to get notified when signals match a region, commodity, or severity threshold you care about.
             </p>

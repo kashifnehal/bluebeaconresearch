@@ -167,7 +167,7 @@ export default function SettingsPage() {
                         placeholder="Alex Chen"
                       />
                     </div>
-                    <div className="space-y-2 opacity-60">
+                    <div className="space-y-2 opacity-80">
                       <label htmlFor="settings-email" className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
                         Email Address
                       </label>
@@ -449,7 +449,7 @@ export default function SettingsPage() {
           low-contrast axe finding on these cosmetic strings. */}
       <footer
         aria-hidden="true"
-        className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold"
+        className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-outline uppercase tracking-[0.2em] font-bold"
       >
         <div>ACCESS_POINT: BB-ALPHA-09</div>
         <div className="flex gap-8">

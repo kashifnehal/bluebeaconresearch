@@ -25,11 +25,12 @@ export function Sidebar() {
   }
 
   return (
-    // Plain <div>, not <aside>: this is chrome wrapping the primary <nav> (which is
-    // its own landmark), not tangential content. As an <aside> it registered a
-    // second unlabeled `complementary` landmark, which collided with the map page's
-    // own <aside> (axe `landmark-unique`, /map).
-    <div
+    // Labelled <aside> so it's distinguishable from the map page's own <aside>
+    // ("Live intelligence stream") — axe `landmark-unique`, /map. Keeping it a
+    // landmark (vs. a bare <div>) is what keeps the logo/help/logout content
+    // inside a landmark region (axe `region`).
+    <aside
+      aria-label="Primary navigation"
       className="fixed left-0 top-0 h-full flex flex-col z-50"
       style={{
         width: "256px",
@@ -139,6 +140,6 @@ export function Sidebar() {
           Logout
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
