@@ -68,7 +68,7 @@ Security is critical. **Never commit actual API keys to Git.** The repository us
    ```
 
 ### 3. Database Initialization
-Ensure your Supabase project has the correct tables. If deploying to a fresh database, apply every file in `supabase/migrations/` **in order** (`000_init_schema.sql` through the highest-numbered file) via the Supabase SQL Editor, or via `npx supabase db push` once the project is linked (`npx supabase link --project-ref <ref>` — see `docs/brain/16_MIGRATION_CHECKLIST.md`). There used to be a `supabase/production_schema.sql` "one-shot" schema file here — it was deleted 2026-08-18 because it only described 4 of the 17 real tables and had gone stale enough to actively mislead a fresh deploy; the numbered migrations are the only accurate schema source now.
+Ensure your Supabase project has the correct tables. If deploying to a fresh database, apply every file in `supabase/migrations/` **in order** (they use Supabase's `<timestamp>_<name>.sql` convention; sort ascending — `20260101000000_init_schema.sql` is first) via the Supabase SQL Editor, or via `npx supabase db push` once the project is linked (`npx supabase link --project-ref <ref>` — see `docs/brain/16_MIGRATION_CHECKLIST.md`). There used to be a `supabase/production_schema.sql` "one-shot" schema file here — it was deleted 2026-08-18 because it only described 4 of the 17 real tables and had gone stale enough to actively mislead a fresh deploy; the numbered migrations are the only accurate schema source now.
 
 ### 4. Installation & Execution
 Install dependencies and run the entire stack simultaneously:
