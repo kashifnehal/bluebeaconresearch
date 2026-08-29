@@ -12,9 +12,10 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 
 ## Doc-precedence rule (there are two doc trees — this matters)
 
-- `docs/brain/` = technical state, actively maintained, most trustworthy for "is X actually built / working right now."
-- `docs/claude_project/` = business/product/planning content from prior strategy discussions — most trustworthy for "why are we building this," positioning, competitors, roadmap reasoning.
-- If the two disagree on a *technical* fact, trust `docs/brain/` (more recently synced) over `docs/claude_project/`, and flag the conflict instead of silently picking one.
+- **`docs/claude_project/` is the canonical documentation tree.** It is the authoritative source for everything — vision, positioning, competitors, roadmap, product/business decisions, architecture, API, database, and status. When onboarding or resolving "what is true," start here. `21_PROJECT_BRIEFING.md` is the canonical entry point.
+- **`docs/brain/` is a technical-detail annex, not a competing source of truth.** It is still actively maintained and, for several topics, carries deeper implementation detail and more recent session-by-session notes than its `docs/claude_project/` counterpart — notably `08_CURRENT_STATUS.md`, `10_DECISIONS.md` (ADRs 008–010 on the rate limiter, implicit-flow auth clients, and cross-source signal merge live only here), `14_CHANGELOG.md` (runs to the latest version; the `claude_project/` copy lags), `15_INGESTION_PIPELINE.md`, and `16_MIGRATION_CHECKLIST.md`. Use it to fill in detail; it *supplements* `docs/claude_project/`, it does not override it.
+- If the two appear to disagree on a *technical* fact, don't assume either — run `git log -1 --format=%cd -- <path>` on both files and trust the more recently updated one, and flag the conflict instead of silently picking one.
+- The two trees were kept separate rather than consolidated (see #55, resolved 2026-08-30): a real merge would have lost content that no inline note could capture, so the fix was to declare precedence here instead.
 - Don't take a doc's self-reported status ("✅ 100% Operational") as ground truth without a reason to believe it — this codebase has a history of docs claiming things work that screenshots/testing showed were broken. Verify before relying on a claim, especially for UI/interactive elements.
 
 ## Standing rules (do not re-litigate)
