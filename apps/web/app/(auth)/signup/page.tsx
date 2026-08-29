@@ -149,12 +149,21 @@ function SignupForm() {
       // already-confirmed account). NOTE: signUp() here used the implicit-flow
       // email-auth client (see comment above), which persists to its own storage,
       // not the shared cookie-based client's cookies -- so /api/events (which reads
-      // the session from cookies) will see no session and 401 in this specific
-      // branch until a page load bridges it, same as confirm/page.tsx does for the
-      // email-confirmation path. logFunnelEventOnce() still fires Vercel Analytics
-      // regardless and fails silently on the Supabase write, so nothing breaks; the
-      // events-table row for this edge case is a known gap, not fixed here since
-      // bridging the session would mean touching existing auth logic.
+      // the session from cookies) would see no session and 401 in this specific
+      // branch until a page load bridged it. Fixed as of today (2026-08-30): we
+      // now bridge the implicit-flow session into the shared cookie-based client
+      // here, matching confirm/page.tsx's bridgeAndRedirect() pattern, so the
+      // logFunnelEventOnce() POST below carries a valid session cookie and the
+      // events-table row for this edge case actually lands.
+      if (data.session) {
+        const sharedClient = getSupabaseBrowserClient();
+        if (sharedClient) {
+          await sharedClient.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+        }
+      }
       logFunnelEventOnce("signup_completed", { source: "signup_direct_session" });
       // window.location.href (not router.push) is required here per the existing
       // SSR-cookie-attachment decision in 10_DECISIONS.md.
