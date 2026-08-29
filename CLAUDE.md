@@ -43,6 +43,20 @@ Verification rigor stays high — this is a real company, not a toy repo. What's
 - **One dev server, reused, rate-limiter off.** When a local run is needed: check `lsof -ti:3000` once; if it's up, reuse it. Start it with `RATE_LIMIT_SAFE_MODE=true` in `apps/web/.env.local` (not as a shell prefix — Turbo doesn't forward ad-hoc env vars) so verification spends **zero** Upstash quota. Never fire parallel `curl` bursts at the dev server — it's single-threaded and each blocked upstream call stacks latency. Don't `pkill`/restart it repeatedly to chase env changes; edit `.env.local`, restart **once**, move on.
 - **A dead/quota-exhausted paid service is a report line, not a debugging project.** If Upstash/Supabase/Anthropic return quota or auth errors, note it once and continue on the code's existing graceful-degradation path. Never hammer a metered service to "confirm" it's down. Transient network failures to `*.supabase.co` are usually just flakiness — retry once, don't conclude the environment is broken.
 
+### Context bloat — the biggest token sink (founder feedback, 2026-08-29)
+
+A usage review showed **93% of spend happened at >150k context** and **~11% came purely from Playwright MCP results sitting in context**. Everything above is about *tool choice*; this is about *not carrying dead weight*.
+
+- **One session ≠ one week of work.** If the conversation already contains one or more *completed, unrelated* task batches and a new pasted prompt/"CTO TASK" arrives, **stop before starting it** and tell the user: "This session already covers `<X>`; that's unrelated — recommend `/clear` first, the stale context is what's expensive." Then wait. Do not silently carry the auth-outage saga into an accessibility task. Mid-batch, if a single task balloons, suggest `/compact` at the next clean checkpoint.
+- **MCP / browser tool results are permanent for the session.** Every inline return from `browser_snapshot`, `browser_evaluate`, `browser_run_code_unsafe`, `browser_network_request`, and Supabase `execute_sql` stays in context to the end. Treat each as a bill you keep paying.
+  - Never return a full `browser_snapshot` accessibility tree or a full DOM dump. Use the tool's `filename:` param to write large snapshots to disk, or have `browser_evaluate` return only derived values — counts, ids, booleans, `≤200`-char samples.
+  - Never dump a full API response body (`browser_network_request` response-body, or `fetch().then(r=>r.json())` in an eval). Return `status` + row count + one trimmed field.
+  - `browser_run_code_unsafe` echoes your entire `code` string back in the result. Keep snippets short, or load them from a file via `filename:`.
+- **Verification is one pass, not a loop.** Baseline scan of *all* target pages in a single script returning a compact `{page: [finding…]}` summary → apply every fix → **one** post-deploy re-scan. Never interleave scan → fix → scan → fix per item; that multiplies the most expensive kind of result.
+- **Don't re-read a file you've already read this session** (the harness tracks file state; Edit/Write would have errored if stale). Re-read only after an external change.
+- **Cap investigation at ~5 DB/API/grep calls per question.** Write down the evidence that would settle it, get exactly that, stop. (Reinforces "Batch investigative queries" above with a number.)
+- **Keep commit messages tight** — 3–6 lines. They're echoed on commit and re-read from `git log` later.
+
 ## Current known-open items (check `docs/brain/08_CURRENT_STATUS.md` for the live version)
 
 - Anthropic API credit — restore real Claude classification (heuristic fallback currently covering).
