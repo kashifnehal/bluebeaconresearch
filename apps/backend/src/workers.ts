@@ -13,8 +13,50 @@ import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
-import { buildPipelineStatus, recordPipelineRun } from "./lib/pipeline-status.js";
+import {
+  buildPipelineStatus,
+  recordPipelineRun,
+  markCollectorsAlerted,
+  type PipelineRunStatus,
+} from "./lib/pipeline-status.js";
 import { getLastKnownRedisUsage } from "./clients/redis.js";
+
+// Consecutive-failed-run thresholds before a collector going silent pages someone.
+// GDELT: ~1h (its own code already retries within a run, so this is repeated
+// whole-run failure). GNews: ~2h — wider because free-tier quota gaps (#64) are
+// expected and shouldn't page. RSS: 2 runs with >50% of feeds failing — the check
+// that would have caught #63 (13/14 feeds dead) on day one instead of 16 days in.
+const COLLECTOR_ALERT_THRESHOLDS: Record<string, number> = {
+  gdelt: 4,
+  gnews: 8,
+  rss: 2,
+};
+
+/**
+ * Fires one Sentry alert per collector per threshold-crossing (dedup via the
+ * persisted `alerted` flag, which recordPipelineRun clears on recovery). Returns
+ * the collector keys that just alerted so the caller can persist that.
+ */
+function evaluateCollectorHealth(status: PipelineRunStatus): string[] {
+  const consecutiveFailures = status.consecutiveFailures ?? {};
+  const alerted = status.alerted ?? {};
+  const newlyAlerted: string[] = [];
+
+  for (const [key, threshold] of Object.entries(COLLECTOR_ALERT_THRESHOLDS)) {
+    const count = consecutiveFailures[key] ?? 0;
+    if (count < threshold || alerted[key]) continue;
+
+    const lastError = status.collectors[key as keyof PipelineRunStatus["collectors"]]?.error ?? "(no error string captured)";
+    const lastSuccess = status.lastSuccessAt?.[key] ?? "not within the retained window";
+    const msg =
+      `[ingestion] collector "${key}" has failed ${count} consecutive run(s) ` +
+      `(alert threshold ${threshold}). Last successful run: ${lastSuccess}. Last error: ${lastError}`;
+    console.error(msg);
+    Sentry.captureMessage(msg, "error");
+    newlyAlerted.push(key);
+  }
+  return newlyAlerted;
+}
 
 function isWorkersEntrypoint() {
   const entry = process.argv[1] ?? "";
@@ -52,7 +94,13 @@ async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
     prices: prices.status === "fulfilled" ? prices.value : { error: String(prices.reason) },
   };
 
-  await recordPipelineRun(buildPipelineStatus(collectors));
+  const recorded = await recordPipelineRun(buildPipelineStatus(collectors));
+  try {
+    const newlyAlerted = evaluateCollectorHealth(recorded);
+    if (newlyAlerted.length > 0) await markCollectorsAlerted(newlyAlerted);
+  } catch (e) {
+    console.error("[workers] collector-health alerting failed:", e instanceof Error ? e.message : e);
+  }
   return collectors;
 }
 

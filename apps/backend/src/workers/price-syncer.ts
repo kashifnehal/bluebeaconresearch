@@ -75,5 +75,5 @@ export async function runPriceSyncOnce() {
     }
   }
 
-  return { ok: true as const, updated: results.length };
+  return { ok: results.length > 0, updated: results.length };
 }

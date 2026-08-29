@@ -24,26 +24,36 @@ async function fetchGnewsArticles(query: string, token: string) {
 
 export async function runGnewsCollectorOnce() {
   const env = getEnv();
-  if (!env.GNEWS_API_KEY) return { error: "GNEWS_API_KEY missing" };
+  if (!env.GNEWS_API_KEY) return { ok: false, error: "GNEWS_API_KEY missing" };
 
   const supabase = getSupabaseAdmin();
 
   // Run all queries (parallel would hit rate limits; run sequentially with 300ms gap)
   const allArticles: any[] = [];
+  let fetchError: string | undefined;
   for (const query of GNEWS_QUERIES) {
     try {
       const articles = await fetchGnewsArticles(query, env.GNEWS_API_KEY);
       allArticles.push(...articles);
     } catch (e: any) {
-      // If we hit GNews rate limit (402), fall back to single query mode
+      // Quota exhaustion (402/429) is expected on the free tier (#64) — still record
+      // it so the health counter climbs; workers.ts just uses a wider alert threshold
+      // for GNews so a normal quota gap doesn't page anyone.
       if (e.response?.status === 402 || e.response?.status === 429) {
         console.warn("[GNews] Rate limit hit, skipping additional queries");
+        fetchError = `quota/rate limit (HTTP ${e.response.status})`;
         break;
       }
       console.warn(`[GNews] Query "${query}" failed:`, e.message);
+      fetchError = e.message;
     }
     // Small gap to be respectful of rate limits
     await new Promise((r) => setTimeout(r, 300));
+  }
+
+  // A run that fetched nothing and hit an error is a failed run for health tracking.
+  if (allArticles.length === 0 && fetchError) {
+    return { ok: false, fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: fetchError };
   }
 
   // Deduplicate by URL before processing
@@ -87,7 +97,7 @@ export async function runGnewsCollectorOnce() {
       lng: null,
       event_type: "news",
       event_date: a.publishedAt ?? new Date().toISOString(),  // article publish time
-      raw_data: a,
+      raw_data: { ...a, freshness: "cached" },  // GNews free tier surfaces articles with up to ~12h lag (ADR 007)
     };
 
     const insert = await supabase.from("raw_events").insert(rawEventPayload).select("id").maybeSingle();
@@ -128,6 +138,7 @@ export async function runGnewsCollectorOnce() {
         country: formatCountryName(null),
         lat: resolvedLat,
         lng: resolvedLng,
+        freshness: "cached",
       });
 
       // Dispatch + briefing generation inline — bypass the queue for both, same as
@@ -161,5 +172,5 @@ export async function runGnewsCollectorOnce() {
     }
   }
 
-  return { fetched, inserted, duplicates, filtered, signals };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals };
 }

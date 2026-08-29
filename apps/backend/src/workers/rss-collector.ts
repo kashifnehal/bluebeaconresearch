@@ -146,7 +146,7 @@ export async function runRssCollectorOnce() {
       lng: null,
       event_type: "news",
       event_date: item.pubDate,
-      raw_data: { url: item.url, source: item.label, tier: item.tier },
+      raw_data: { url: item.url, source: item.label, tier: item.tier, freshness: "realtime" },
     };
 
     const insert = await supabase
@@ -190,6 +190,7 @@ export async function runRssCollectorOnce() {
         country: formatCountryName(null),
         lat: resolvedLat,
         lng: resolvedLng,
+        freshness: "realtime",
       });
 
       // Dispatch + briefing generation inline — bypass the queue for both, same as
@@ -223,5 +224,13 @@ export async function runRssCollectorOnce() {
     }
   }
 
-  return { fetched, inserted, duplicates, filtered, signals, feedsOk, feedsFailed };
+  // A run is "ok" only if at most half the configured feeds threw. 2 consecutive
+  // not-ok runs is what workers.ts alerts on — the check that would have caught the
+  // original #63 incident (13/14 feeds dead) on day one instead of 16 days later.
+  const feedsAttempted = feedsOk + feedsFailed;
+  const ok = feedsAttempted > 0 && feedsFailed / feedsAttempted <= 0.5;
+  const error =
+    feedsFailed > 0 ? `${feedsFailed}/${feedsAttempted} feeds failed: ${failedFeeds.join(", ")}` : undefined;
+
+  return { ok, error, fetched, inserted, duplicates, filtered, signals, feedsOk, feedsFailed };
 }

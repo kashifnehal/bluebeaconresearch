@@ -43,7 +43,13 @@ async function fetchGdeltWithBackoff() {
   let lastErr: any;
   for (let attempt = 0; attempt <= GDELT_MAX_RETRIES; attempt++) {
     try {
-      return await axios.get(GDELT_API_URL, { timeout: 25_000 });
+      // 40s (was 25s): Railway logs 2026-08-28 showed `timeout of 25000ms exceeded`
+      // + intermittent ECONNRESET every cycle for 5+ hours against api.gdeltproject.org.
+      // Bumped to separate "borderline slow" from "actually down" — GDELT's keyless
+      // DOC API has no SLA and their team has acknowledged infra outages before. This
+      // is the only GDELT-specific change; visibility (pipeline-status health +
+      // workers.ts Sentry alert) is the real fix if it stays down.
+      return await axios.get(GDELT_API_URL, { timeout: 40_000 });
     } catch (e: any) {
       lastErr = e;
       if (e.response?.status !== 429 || attempt === GDELT_MAX_RETRIES) throw e;
@@ -65,7 +71,7 @@ export async function runGdeltCollectorOnce() {
     res = await fetchGdeltWithBackoff();
   } catch (e: any) {
     console.error("[GDELT] Fetch failed after retries:", e.message);
-    return { fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
+    return { ok: false, fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
   }
 
   const articles: GdeltArticle[] = res.data?.articles ?? [];
@@ -157,6 +163,7 @@ export async function runGdeltCollectorOnce() {
         country: formatCountryName(country),
         lat: resolvedLat,
         lng: resolvedLng,
+        freshness: "realtime",
       });
 
       // Dispatch + briefing generation inline — bypass the queue for both, same as
@@ -190,5 +197,5 @@ export async function runGdeltCollectorOnce() {
     }
   }
 
-  return { fetched, inserted, duplicates, filtered, signals };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals };
 }

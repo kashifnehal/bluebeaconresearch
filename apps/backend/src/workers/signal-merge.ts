@@ -84,6 +84,8 @@ type CandidateSignal = {
 
 type MergeOutcome = "new" | "duplicate" | "escalation";
 
+export type SourceFreshness = "realtime" | "cached";
+
 export type InsertOrMergeParams = {
   supabase: SupabaseAdmin;
   collectorLabel: string;
@@ -95,6 +97,12 @@ export type InsertOrMergeParams = {
   country: string;
   lat: number | null;
   lng: number | null;
+  // "realtime" = RSS/GDELT (near-live); "cached" = GNews free tier, which surfaces
+  // articles with up to ~12h lag (ADR 007). Only a realtime source may push a
+  // merged signal's event_date forward — a cached source must never make an
+  // already-tracked story look freshly-breaking. Defaults to "cached" (the
+  // conservative choice: never advances a timestamp) if a caller omits it.
+  freshness?: SourceFreshness;
 };
 
 export type InsertOrMergeResult = {
@@ -178,6 +186,7 @@ async function findMergeCandidate(
  */
 export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<InsertOrMergeResult> {
   const { supabase, collectorLabel, rawEventId, classification, title, eventType, eventDate, country, lat, lng } = params;
+  const freshness: SourceFreshness = params.freshness ?? "cached";
 
   const match = await findMergeCandidate(supabase, classification, country, eventDate);
 
@@ -218,6 +227,20 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
     : [...existingRawEventIds, rawEventId];
   const newSourcesCount = (match.sources_count ?? 1) + 1;
 
+  // Task 4 (ADR 007 enforcement): the merged signal's event_date only moves forward
+  // when this contribution is from a realtime source (RSS/GDELT). A cached source
+  // (GNews, ~12h surfacing lag) reporting a "newer" publish time must not make an
+  // already-tracked story jump forward and read as freshly-breaking.
+  const incomingIsNewer = new Date(eventDate).getTime() > new Date(match.event_date).getTime();
+  const advanceEventDate = freshness === "realtime" && incomingIsNewer;
+  const eventDatePatch = advanceEventDate ? { event_date: eventDate } : {};
+  if (incomingIsNewer && !advanceEventDate) {
+    console.log(
+      `[${collectorLabel}] [SIGNAL-MERGE] keeping signal=${match.id} event_date ${match.event_date} — ` +
+        `incoming ${eventDate} is newer but source is cached, not advancing`,
+    );
+  }
+
   if (classification.severity <= match.severity) {
     const { error: upErr } = await supabase
       .from("signals")
@@ -225,6 +248,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
         raw_event_ids: newRawEventIds,
         sources_count: newSourcesCount,
         updated_at: new Date().toISOString(),
+        ...eventDatePatch,
       })
       .eq("id", match.id);
 
@@ -249,6 +273,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
       raw_event_ids: newRawEventIds,
       sources_count: newSourcesCount,
       updated_at: new Date().toISOString(),
+      ...eventDatePatch,
     })
     .eq("id", match.id);
 
