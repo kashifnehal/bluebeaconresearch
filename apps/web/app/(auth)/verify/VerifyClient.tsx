@@ -24,6 +24,85 @@ export function VerifyClient() {
     return () => clearTimeout(t);
   }, [sent]);
 
+  // Cross-device confirmation auto-detect. The confirmation link is routinely
+  // opened on a different device (phone Gmail) than the one sitting on this
+  // screen. That other device gets authenticated by confirm/page.tsx's bridging —
+  // never this one — so once we learn confirmation happened, this device can only
+  // be sent to /login (it has no session of its own), never /dashboard.
+  //
+  // Polls /api/auth/confirmation-status every 7s while mounted AND the tab is
+  // visible (Page Visibility API), resuming promptly on visibilitychange. Gives
+  // up after 10 minutes; the "Resend email" button remains the fallback. A failed
+  // poll fails silently and just retries on the next interval — polling must never
+  // surface an error or break the page (same principle as lib/funnel-events.ts).
+  useEffect(() => {
+    if (!email) return;
+
+    const POLL_MS = 7000;
+    const MAX_MS = 10 * 60 * 1000;
+    const startedAt = Date.now();
+    let stopped = false;
+    let inFlight = false;
+    let lastPollAt = 0;
+
+    async function poll() {
+      if (stopped || inFlight || document.visibilityState !== "visible") return;
+      inFlight = true;
+      lastPollAt = Date.now();
+      try {
+        const res = await fetch("/api/auth/confirmation-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { confirmed?: boolean };
+          if (data.confirmed && !stopped) {
+            stopped = true;
+            teardown();
+            // window.location.href (not router.push) — SSR-cookie-attachment rule
+            // in 10_DECISIONS.md that every redirect in this auth flow follows.
+            window.location.href = "/login?confirmed=1";
+          }
+        }
+        // A non-OK response (rate-limited, upstream error) is ignored — the next
+        // interval just tries again.
+      } catch {
+        // Failed poll — fail silently, retry next interval.
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    const interval = setInterval(() => {
+      if (Date.now() - startedAt >= MAX_MS) {
+        stopped = true;
+        teardown();
+        return;
+      }
+      void poll();
+    }, POLL_MS);
+
+    function onVisibility() {
+      // setInterval never fires early, so gating the event-triggered poll on the
+      // 7s floor is all that's needed to never poll faster than every 7 seconds.
+      if (document.visibilityState === "visible" && Date.now() - lastPollAt >= POLL_MS) {
+        void poll();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+
+    function teardown() {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    }
+
+    return () => {
+      stopped = true;
+      teardown();
+    };
+  }, [email]);
+
   // Supabase's default shared SMTP has a low email-send rate limit (confirmed live:
   // 429 "email rate limit exceeded" on repeated signup/resend attempts). A visible
   // cooldown stops a user (or repeated testing) from hammering the resend button

@@ -48,6 +48,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
+  const justConfirmed = searchParams.get("confirmed") === "1";
   const prefillEmail = searchParams.get("email") ?? "";
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -362,6 +363,22 @@ function LoginForm() {
 
         {/* Form */}
         <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {/* Email confirmed on another device (cross-device auto-detect from /verify) */}
+          {justConfirmed && !error && !urlError && (
+            <div
+              style={{
+                padding: "12px",
+                backgroundColor: "rgba(78,222,163,0.08)",
+                border: `1px solid ${C.outlineVariant}`,
+                borderRadius: "4px",
+              }}
+            >
+              <p style={{ color: C.onSurface, fontFamily: "'Space Grotesk', sans-serif", fontSize: "13px", textAlign: "center" }}>
+                Your email is confirmed — sign in to continue.
+              </p>
+            </div>
+          )}
+
           {/* Email */}
           <div>
             <label htmlFor="email" style={labelStyle}>Email</label>
