@@ -10,6 +10,12 @@ type IngestionStatusResponse = {
     totals: { inserted: number; signals: number; fetched: number };
   } | null;
   cronIntervalMinutes: number;
+  // degraded = the pipeline:last_run health feed itself is unavailable (Redis
+  // down/quota) and the timestamp below is only inferred from the newest
+  // raw_events row — per-collector health is unknown. Distinct from "ingestion
+  // delayed", which is a real, known lag.
+  degraded?: boolean;
+  reason?: string | null;
 };
 
 export function IngestionStatusBanner() {
@@ -26,27 +32,29 @@ export function IngestionStatusBanner() {
   const status = data?.status;
   if (!status?.lastFetchedAt) return null;
 
+  const degraded = data?.degraded ?? false;
   const lastFetched = new Date(status.lastFetchedAt);
   const nextFetch = status.nextFetchEstimate ? new Date(status.nextFetchEstimate) : null;
   const isStale = Date.now() - lastFetched.getTime() > 20 * 60 * 1000;
+  const notHealthy = isStale || degraded;
 
   return (
     <div
       className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded border px-4 py-2.5 text-[11px] tracking-wide"
       style={{
         fontFamily: "'Space Grotesk', sans-serif",
-        backgroundColor: isStale ? "#2a1f1f" : "#1a2420",
-        borderColor: isStale ? "#6b3030" : "#3c4a42",
-        color: isStale ? "#f0a0a0" : "#bbcac0",
+        backgroundColor: notHealthy ? "#2a1f1f" : "#1a2420",
+        borderColor: notHealthy ? "#6b3030" : "#3c4a42",
+        color: notHealthy ? "#f0a0a0" : "#bbcac0",
       }}
     >
       <span className="flex items-center gap-2">
         <span
           className="inline-block h-2 w-2 rounded-full"
-          style={{ backgroundColor: isStale ? "#ef4444" : "#4edea3" }}
+          style={{ backgroundColor: notHealthy ? "#ef4444" : "#4edea3" }}
         />
-        <span className="font-bold uppercase" style={{ color: isStale ? "#f0a0a0" : "#4edea3" }}>
-          {isStale ? "Ingestion delayed" : "Live ingestion"}
+        <span className="font-bold uppercase" style={{ color: notHealthy ? "#f0a0a0" : "#4edea3" }}>
+          {degraded ? "Ingestion status unavailable" : isStale ? "Ingestion delayed" : "Live ingestion"}
         </span>
       </span>
 
@@ -57,12 +65,18 @@ export function IngestionStatusBanner() {
         </strong>
       </span>
 
-      {nextFetch && (
+      {nextFetch && !degraded && (
         <span>
           {nextFetch.getTime() < Date.now() ? "Next run overdue by ~" : "Next run in ~"}
           <strong style={{ color: "#e5e2e1" }}>
             {safeFormatDistanceToNow(nextFetch)}
           </strong>
+        </span>
+      )}
+
+      {degraded && (
+        <span style={{ opacity: 0.9 }}>
+          {data?.reason ?? "Per-collector health is temporarily unavailable."}
         </span>
       )}
 

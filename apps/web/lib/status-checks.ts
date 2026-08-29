@@ -99,6 +99,7 @@ async function checkDataPipeline(): Promise<SystemCheck> {
   // `pipeline:last_run`, falling back to the newest `raw_events` row) instead of
   // adding a second instrumentation path.
   let lastFetchedAt: string | null = null;
+  let usedFallback = false;
 
   const redis = getUpstashRedis();
   if (redis) {
@@ -114,6 +115,7 @@ async function checkDataPipeline(): Promise<SystemCheck> {
   }
 
   if (!lastFetchedAt) {
+    usedFallback = true;
     const supabase = getAdminSupabase();
     if (supabase) {
       try {
@@ -131,7 +133,18 @@ async function checkDataPipeline(): Promise<SystemCheck> {
   if (!lastFetchedAt) return { name: "Data Pipeline", status: "Unknown", detail };
 
   const ageMs = Date.now() - new Date(lastFetchedAt).getTime();
-  return { name: "Data Pipeline", status: ageMs <= FRESHNESS_CUTOFF_MS ? "Operational" : "Degraded", detail };
+  const fresh = ageMs <= FRESHNESS_CUTOFF_MS;
+  // When the pipeline:last_run health feed itself is missing, we're inferring
+  // freshness from raw_events alone and can't see per-collector state — never
+  // report a clean "Operational" off that.
+  if (usedFallback) {
+    return {
+      name: "Data Pipeline",
+      status: "Degraded",
+      detail: `${detail} — health feed unavailable, freshness inferred from raw_events only`,
+    };
+  }
+  return { name: "Data Pipeline", status: fresh ? "Operational" : "Degraded", detail };
 }
 
 export async function getSystemChecks(): Promise<SystemCheck[]> {
