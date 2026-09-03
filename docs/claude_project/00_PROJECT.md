@@ -96,28 +96,30 @@ These were explicitly discussed and rejected or deferred:
 - Currently cobbling together information from Twitter, CNBC, WhatsApp groups
 - Pain point: finds out about overnight geopolitical events AFTER markets have already moved
 - Willingness to pay: $49–$199/month
-- Size of market: 2.5M+ active retail derivatives traders globally
+- Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
 
 **Tier 2: Small Investment Teams / Independent Analysts**
 - 2–10 person shops: boutique hedge funds, family offices, independent research shops
 - Have Bloomberg for data but need faster geopolitical context
 - Pain point: manually monitoring geopolitical developments is a full-time job
 - Willingness to pay: $199–$499/month per seat
-- Size of market: ~800K globally
+- Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
 
 **Tier 3: Import/Export SMBs**
 - Businesses importing commodities with direct price exposure: food importers, fuel distributors, textile manufacturers using cotton/synthetic inputs
 - Currently have NO early warning system for supply chain geopolitical risk
 - Pain point: found out about Black Sea grain disruption from their supplier, not before
 - Willingness to pay: $49–$199/month
-- Size of market: 800K+ with direct commodity exposure
+- Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
 
 **Tier 4: Quant/Algo Traders (API Tier)**
 - Building automated trading systems that need structured geopolitical signal data
 - Need JSON API with webhook delivery
 - Want signal taxonomy that maps to commodity instrument codes
 - Willingness to pay: $499/month for API access
-- Size of market: ~50K globally
+- Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
+
+> **Market-size note (2026-08-30):** The per-tier population figures previously stated in this section ("2.5M+", "~800K", "800K+", "~50K") were not traceable to any regulator, exchange body, or trade-association count and have been removed rather than replaced with a new estimate. Do not reintroduce a precise figure until one can be cited to a checkable source. See internal research on user segments and market scope, and ADR 012 (`docs/brain/10_DECISIONS.md`) / D16 (`docs/claude_project/10_DECISIONS.md`).
 
 ### Secondary Users (Free Tier, Convert Later)
 - Financial journalists needing market context

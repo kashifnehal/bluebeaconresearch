@@ -367,7 +367,7 @@
 **Context:** Original idea was targeted at Indian commodity traders (MCX, NSE) as a specific initial market.
 
 **Why India-specific was rejected:**
-- India has 2.5M+ active commodity traders — large TAM
+- India has a large retail commodity-trader base — sizeable TAM (the "2.5M+" figure once cited here was not independently sourced; see D16)
 - BUT: global positioning is more prestigious and credible for a geopolitical intelligence platform
 - Geopolitical intelligence is inherently global — restricting to India makes the product feel parochial
 - Competitors (Bloomberg, Stratfor) are global — being "the Bloomberg for India" is weaker positioning than "the affordable Bloomberg for the world"
@@ -426,3 +426,47 @@
 - Every feature added must serve the "personalized commodity trading intelligence" use case
 - Never add features that WorldMonitor already does well (raw feed breadth, country risk scores, webcams)
 - BBR's moat is: geopolitical event → specific commodity impact → personalized alert → before markets open
+
+---
+
+## D15: Validation-Before-Build Discipline
+
+**Decision:** No further engineering phase beyond current in-flight work starts without a real-world validation checkpoint first — real user interviews, a real (even manual) paywall test, and/or a distribution test in a community the target user already lives in.
+
+**Context:** Desk research (competitor analysis, market sizing, persona modelling) had accumulated faster than any real-world contact with the people the product is for. The unsourced-TAM-figure incident (see D16) is a concrete example of what goes uncaught without it.
+
+**Rationale:**
+- Cost asymmetry: a validation checkpoint costs days; a wrong build bet costs weeks.
+- Desk research informs *what* to test — it does not substitute for testing.
+- Applies to *new* phases, not to finishing work already underway.
+
+**Cross-tree mapping:** Recorded as **ADR 011** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D16: No Unsourced Precision in Market-Sizing or User-Population Claims
+
+**Decision:** No market-sizing or user-population number is used in external-facing material unless it traces to a named, checkable source, or is presented as an explicit range with the uncertainty stated. Where no real number exists, say so rather than estimating a precise-looking one.
+
+**Context:** `00_PROJECT.md` and `02_BUSINESS.md` carried per-segment buyer-population figures ("2.5M+ active retail derivatives traders", "800K import/export SMBs", "50K quant/algo builders") and TAM figures derived from them. Independent research (2026-08-30) could not trace three of the four to any named, checkable source. The figures were removed — not replaced with a new estimate — in the pass that recorded this decision.
+
+**Rationale:**
+- Presenting fabricated precision to an investor is a worse outcome than admitting the number isn't known.
+- Low-effort, fixable discipline — the cost is a sentence of honesty, not a research programme.
+- Consistent with the standing "never fabricate data in the UI" rule, extended to strategy docs.
+
+**Cross-tree mapping:** Recorded as **ADR 012** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D17: Forex/Equity Asset-Class Expansion — Evaluation Status, Not Commitment
+
+**Decision:** Forex and equity swing/day-trader expansion is a scoped, prompt-ready, evaluation-stage initiative — **not an approved roadmap commitment**. It is gated behind the D15 validation checkpoint (real conversations with real forex/equity traders specifically) before any schema or product work begins. Crypto expansion is not being reconsidered (remains out of scope per `09_BACKLOG.md`).
+
+**Context:** Extending BBR's signal schema and product surface to forex/equity traders has been discussed as a way to widen the addressable market; the schema extension is architecturally cheap if bundled with already-planned personalization work.
+
+**Rationale:**
+- Cheap to build if bundled with planned personalization work, but not validated enough to build blind.
+- Keeping it explicitly "evaluation-stage" prevents it drifting into roadmap docs as a commitment.
+
+**Cross-tree mapping:** Recorded as **ADR 013** in `docs/brain/10_DECISIONS.md`.

@@ -214,7 +214,68 @@ The new step (`apps/backend/src/workers/signal-merge.ts`, `insertOrMergeSignal()
 
 ---
 
-## 11. Architectural Assumptions & Future Risks
+## 11. ADR 011: Validation-Before-Build Discipline
+
+### Context
+
+Desk research (competitor analysis, market sizing, persona modelling) had been accumulating faster than any real-world contact with the people the product is for. The unsourced-TAM-figure incident corrected in the same pass that added this ADR (see ADR 012) is a concrete example of the failure mode: a precise-looking number circulated through the canonical doc tree for weeks because nobody had a checkable source and nobody had talked to the segment it described.
+
+### Decision
+
+No further engineering phase beyond current in-flight work starts without a real-world validation checkpoint first — real user interviews, a real (even manual) paywall test, and/or a distribution test in a community the target user already lives in. Desk research informs *what* to test; it does not substitute for testing.
+
+### Rationale
+
+- **Cost asymmetry**: a validation checkpoint costs days; a wrong build bet costs weeks.
+- **The failure mode is already on the record**: ADR 012 exists because a market claim went unchallenged for lack of any real-world contact — validation-before-build is the general form of that fix.
+- **Scope**: applies to *new* phases, not to finishing work already underway.
+
+---
+
+## 12. ADR 012: No Unsourced Precision in Market-Sizing or User-Population Claims
+
+### Context
+
+`docs/claude_project/00_PROJECT.md` and `02_BUSINESS.md` carried per-segment buyer-population figures ("2.5M+ active retail derivatives traders", "800K import/export SMBs", "50K quant/algo builders") and TAM figures derived from them. Independent research (2026-08-30) could not trace three of the four to any named, checkable source — no regulator, exchange body, or trade association publishes a global count for these segments.
+
+### Decision
+
+No market-sizing or user-population number is used in external-facing material unless it traces to a named, checkable source, or is presented as an explicit range with the uncertainty stated. Where no real number exists, say so rather than estimating a precise-looking one. The figures above were removed — not replaced with a new estimate — in the same pass that recorded this ADR.
+
+### Rationale
+
+- Presenting fabricated precision to an investor is a worse outcome than admitting the number isn't known.
+- This is low-effort, fixable discipline — the cost is a sentence of honesty, not a research programme.
+- Consistent with the project's standing "never fabricate data in the UI" rule, extended to strategy docs.
+
+### Cross-tree mapping
+
+Recorded as **D16** in `docs/claude_project/10_DECISIONS.md` (that file uses `D#` numbering; this file uses `ADR 0##`). Same decision.
+
+---
+
+## 13. ADR 013: Forex/Equity Asset-Class Expansion — Evaluation Status, Not Commitment
+
+### Context
+
+Extending BBR's signal schema and product surface to forex and equity swing/day-traders has been discussed as a way to widen the addressable market. The schema extension is architecturally cheap if bundled with already-planned personalization work.
+
+### Decision
+
+Forex and equity swing/day-trader expansion is a scoped, prompt-ready, evaluation-stage initiative — **not an approved roadmap commitment**. It is gated behind the ADR 011 validation checkpoint (real conversations with real forex/equity traders specifically) before any schema or product work begins. Crypto expansion is not being reconsidered (remains out of scope per `09_BACKLOG.md`).
+
+### Rationale
+
+- The schema extension is cheap if bundled with planned personalization work, but not validated enough to build blind.
+- Keeping it explicitly "evaluation-stage" prevents it drifting into roadmap docs as a commitment — the framing error ADR 012 addresses for market size, applied to roadmap.
+
+### Cross-tree mapping
+
+Recorded as **D17** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 14. Architectural Assumptions & Future Risks
 
 1. **Third-Party API & RSS Feed Availability**: System relies on GNews, GDELT, RSS endpoints, Yahoo Finance uptime.
 2. **Anthropic API Credits**: Production requires Anthropic credits. Heuristic fallback covers outages but quality is lower.

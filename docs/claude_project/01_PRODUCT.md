@@ -710,7 +710,7 @@ Background: amber-subtle, text-warning. Cannot be missed.
 ## 4. REMOVED FEATURES (AND WHY)
 
 ### 4.1 India-Specific Positioning
-**Originally:** BBR was to be marketed specifically at Indian commodity traders (2.5M+ on MCX/NSE).
+**Originally:** BBR was to be marketed specifically at Indian commodity traders (the "2.5M+ on MCX/NSE" figure cited at the time was not independently sourced — see ADR 012 / D16).
 **Removed:** Global positioning adopted instead. India remains a strong market but limiting to India reduces total addressable market and makes the product seem parochial.
 **Lesson:** India-first launch is still valid as a go-to-market strategy, but the product itself must be global.
 

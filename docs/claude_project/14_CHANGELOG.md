@@ -14,7 +14,7 @@
 
 **Original name:** GeoSignal (later renamed Blue Beacon Research)
 
-**Why India-first was discussed:** India has 2.5M+ active commodity derivatives traders. Large, underserved market. WhatsApp penetration is near-universal.
+**Why India-first was discussed:** India has a large, underserved retail commodity-derivatives trader base (the "2.5M+" figure cited at the time was not independently sourced — see ADR 012 / D16). WhatsApp penetration is near-universal.
 
 ---
 

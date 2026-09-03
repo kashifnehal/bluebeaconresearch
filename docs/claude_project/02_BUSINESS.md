@@ -167,9 +167,11 @@ Annual variants for each (20% discount):
 - No competitor has built a self-serve, sub-$500/month geopolitical intelligence product for traders
 
 **Immediate addressable markets:**
-- 2.5M+ active retail derivatives traders globally (at $49/month each = $1.47B TAM)
-- 800K import/export SMBs with commodity exposure (at $99/month = $950M TAM)
-- 50K quant/algo builders (at $499/month = $299M TAM)
+- Active retail derivatives traders globally (target price $49/month)
+- Import/export SMBs with commodity exposure (target price $99/month)
+- Quant/algo builders (target price $499/month)
+
+Population size for these segments is not independently sourced as of 2026-08-30 — no regulator, exchange body, or trade association publishes a global count for them. The per-segment headcounts and derived TAM figures previously stated here ("2.5M+", "800K", "50K", "$1.47B TAM", etc.) could not be traced to a checkable source and have been removed; do not reintroduce a precise figure (or a TAM derived from one) until one is found and can be cited. See internal research on user segments and market scope, and ADR 012 (`docs/brain/10_DECISIONS.md`) / D16 (`docs/claude_project/10_DECISIONS.md`).
 
 ---
 
