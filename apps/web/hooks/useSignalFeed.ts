@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { useUIStore } from "@/store/useUIStore";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import type { Signal } from "@blue-beacon-research/shared";
 
 type Options = {
@@ -11,10 +10,6 @@ type Options = {
 };
 
 export function useSignalFeed({ enabled = true }: Options = {}) {
-  const [realtimeSignals, setRealtimeSignals] = useState<Signal[]>([]);
-  const retryRef = useRef(0);
-  const esRef = useRef<EventSource | null>(null);
-
   const { searchSubmitted } = useUIStore();
 
   const {
@@ -47,7 +42,15 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     // null at the end. Returning undefined tells react-query there's no next page.
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled,
-    // Step 3 stopgap: Fallback polling interval 90s ±10s random jitter to avoid synchronized bursts
+    // Sole source of "live" updates as of 2026-09-03 (was previously a fallback
+    // alongside an SSE connection — see git history / project memory
+    // project_vercel_fluid_sse_leak.md for why the SSE path was removed: an
+    // EventSource held open for up to 15 minutes per tab, auto-reconnecting for as
+    // long as the dashboard/map stayed open, is exactly what Vercel Fluid Compute
+    // bills "Provisioned Memory" GB-Hrs for — full connection lifetime, not just
+    // active work. 90s±10s jitter avoids synchronized bursts across concurrent
+    // clients; it was already the fallback path so this is a delay-only change
+    // (new signals now surface within ~90s instead of near-instantly), not new code.
     refetchInterval: () => {
       const base = 90_000;
       const jitter = Math.floor(Math.random() * 20_000) - 10_000; // ±10s
@@ -56,7 +59,7 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
   });
 
   const pages = data?.pages ?? [];
-  const fetchedSignals = useMemo(
+  const liveSignals = useMemo(
     () => pages.flatMap((p) => p.signals ?? []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data?.pages],
@@ -67,80 +70,6 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
   const fallbackReason = pages[0]?.fallbackReason ?? null;
   const fallbackLastUpdated = pages[0]?.fallbackLastUpdated ?? null;
   const total = pages[0]?.total ?? null;
-
-  const supportsSSE = useMemo(
-    () => typeof window !== "undefined" && "EventSource" in window,
-    [],
-  );
-
-  useEffect(() => {
-    if (!enabled) return;
-    if (!supportsSSE) return;
-
-    let cancelled = false;
-
-    const connect = () => {
-      if (cancelled) return;
-      esRef.current?.close();
-
-      console.log("[sse] Opening EventSource stream...");
-      const es = new EventSource("/api/events/stream");
-      esRef.current = es;
-
-      es.onopen = () => {
-        retryRef.current = 0;
-        console.log("[sse] EventSource stream connected & active");
-      };
-
-      es.onmessage = (evt) => {
-        try {
-          const signal = JSON.parse(evt.data) as Signal;
-          console.log("[sse] Received realtime signal:", signal.title);
-          setRealtimeSignals((prev) => [signal, ...prev]);
-          if (signal.severity >= 8)
-            toast(signal.title, { description: signal.summary });
-        } catch {
-          // ignore malformed SSE frames
-        }
-      };
-
-      es.onerror = (err) => {
-        es.close();
-        retryRef.current += 1;
-
-        // Step 2 exponential backoff: 1s -> 2s -> 4s -> 8s -> 16s -> capped at 30s
-        const backoff = Math.min(
-          30_000,
-          1000 * 2 ** Math.min(5, retryRef.current),
-        );
-        console.warn(
-          `[sse] Stream error (attempt ${retryRef.current}). Reconnecting in ${backoff / 1000}s...`,
-          err,
-        );
-        setTimeout(connect, backoff);
-      };
-    };
-
-    connect();
-    return () => {
-      cancelled = true;
-      esRef.current?.close();
-    };
-  }, [enabled, supportsSSE]);
-
-  const liveSignals = useMemo(() => {
-    // Combine realtime SSE signals with initial fetched signals, deduplicating by ID
-    const map = new Map<string, Signal>();
-    for (const s of realtimeSignals) {
-      map.set(s.id, s);
-    }
-    for (const s of fetchedSignals) {
-      if (!map.has(s.id)) {
-        map.set(s.id, s);
-      }
-    }
-    return Array.from(map.values());
-  }, [realtimeSignals, fetchedSignals]);
 
   return {
     liveSignals,
