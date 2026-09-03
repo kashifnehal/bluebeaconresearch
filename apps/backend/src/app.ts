@@ -17,6 +17,7 @@ import { pricesRoutes } from "./routes/prices.js";
 import { eventsRoutes } from "./routes/events.js";
 import { telegramRoutes } from "./routes/telegram.js";
 import { backtestingRoutes } from "./routes/backtesting.js";
+import { adminRoutes } from "./routes/admin.js";
 
 export function buildApp() {
   const env = getEnv();
@@ -73,6 +74,7 @@ export function buildApp() {
   app.register(eventsRoutes, { prefix: "/v1/events" });
   app.register(telegramRoutes, { prefix: "/v1/telegram" });
   app.register(backtestingRoutes, { prefix: "/v1/backtesting" });
+  app.register(adminRoutes, { prefix: "/v1/admin" });
 
   return app;
 }

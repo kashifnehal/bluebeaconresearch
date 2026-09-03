@@ -10,8 +10,10 @@ import { track as trackVercelAnalytics } from "@vercel/analytics";
 // Both are fire-and-forget: a failure here must never block or fail the actual
 // user action (signup, viewing a signal, creating an alert rule).
 //
-// Exactly four event types are instrumented anywhere in the app:
-//   signup_started, signup_completed, first_signal_viewed, first_alert_rule_created.
+// Funnel event types (fire-once per user): signup_started, signup_completed,
+// first_signal_viewed, first_alert_rule_created.
+// Recurring usage event types (see logUsageEvent below): dashboard_viewed,
+// watchlist_viewed, signal_detail_opened, alert_rule_created.
 
 type FunnelMetadata = Record<string, unknown>;
 
@@ -69,6 +71,59 @@ export function logFunnelEventOnce(eventType: string, metadata?: FunnelMetadata)
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ eventType, metadata, once: true }),
+      keepalive: true,
+    }).catch(() => {
+      // Fire-and-forget — see module doc comment.
+    });
+  } catch {
+    // Instrumentation must never throw into the caller's control flow.
+  }
+}
+
+// Recurring usage events (2026-09-04) — persisted to Vercel Analytics + the
+// `events` table on every call, with NO server-side once-per-user dedup (unlike
+// logFunnelEventOnce). These power the DAU/WAU and per-event-type usage counts on
+// the founder-internal /admin/metrics page:
+//   dashboard_viewed, watchlist_viewed, signal_detail_opened, alert_rule_created.
+// An in-module guard collapses repeat fires within a single page-session (React
+// strict-mode double-mount, re-renders, client-side nav back to the same view) —
+// keyed by event type + an optional entity id in metadata (`id` or `signalId`) so
+// e.g. opening two different signals still records two signal_detail_opened rows,
+// but re-rendering one signal's page does not.
+const usageEventsFiredThisSession = new Set<string>();
+
+/**
+ * @param dedupe  How to collapse repeat fires within this page-session:
+ *   - `"type"` (default): at most one row per event type per page load — for
+ *     "viewed" events (dashboard_viewed, watchlist_viewed).
+ *   - `"entity"`: one row per event type + `metadata.id`/`metadata.signalId` —
+ *     for per-entity views (signal_detail_opened) where distinct entities should
+ *     each count but a re-render of one should not.
+ *   - `false`: always send — for discrete actions (alert_rule_created) where
+ *     every occurrence is a real event. Still guards the synchronous
+ *     strict-mode double-invoke via a short-lived key.
+ */
+export function logUsageEvent(
+  eventType: string,
+  metadata?: FunnelMetadata,
+  dedupe: "type" | "entity" | false = "type",
+): void {
+  safeTrackVercel(eventType, metadata);
+  if (dedupe === false) {
+    const k = `${eventType}|${Date.now()}`;
+    if (usageEventsFiredThisSession.has(k)) return;
+    usageEventsFiredThisSession.add(k);
+  } else {
+    const entityId = dedupe === "entity" && metadata ? (metadata.id ?? metadata.signalId) : undefined;
+    const key = `${eventType}|${entityId == null ? "" : String(entityId)}`;
+    if (usageEventsFiredThisSession.has(key)) return;
+    usageEventsFiredThisSession.add(key);
+  }
+  try {
+    fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventType, metadata }),
       keepalive: true,
     }).catch(() => {
       // Fire-and-forget — see module doc comment.

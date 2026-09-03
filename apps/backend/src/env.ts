@@ -25,6 +25,10 @@ const envSchema = z.object({
 
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
 
+  // Comma-separated allowlist of email addresses permitted to call the
+  // founder-internal GET /v1/admin/* routes. Unset => nobody is admin (fail closed).
+  ADMIN_EMAILS: z.string().optional(),
+
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
 

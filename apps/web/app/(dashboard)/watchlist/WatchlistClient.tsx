@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { COMMODITIES } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
+import { logUsageEvent } from "@/lib/funnel-events";
 
 type Price = {
   symbol: string;
@@ -85,6 +86,12 @@ export function WatchlistClient() {
     preselect ? [preselect] : ["USOIL", "XAUUSD"],
   );
   const [addSymbol, setAddSymbol] = useState<string>("SELECT COMMODITY");
+
+  // watchlist_viewed — recurring usage event (once per page-session), feeds
+  // DAU/WAU and 7-day usage counts on /admin/metrics.
+  useEffect(() => {
+    logUsageEvent("watchlist_viewed");
+  }, []);
 
   const { data, refetch, dataUpdatedAt } = useQuery({
     queryKey: ["prices"],

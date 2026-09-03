@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
+import { logUsageEvent } from "@/lib/funnel-events";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -111,6 +112,12 @@ export default function DashboardPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, featured?.id]);
+
+  // dashboard_viewed — recurring usage event (once per page-session), feeds
+  // DAU/WAU and 7-day usage counts on /admin/metrics.
+  useEffect(() => {
+    logUsageEvent("dashboard_viewed");
+  }, []);
 
   // Keep the tour's target event id in sync with the featured card while
   // the dashboard phase of the tour is active (covers both first-run and

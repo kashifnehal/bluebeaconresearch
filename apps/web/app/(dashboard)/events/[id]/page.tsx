@@ -29,7 +29,7 @@ import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } fro
 import { getSignalCoordinates } from "@/lib/geo-coords";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
-import { logFunnelEventOnce } from "@/lib/funnel-events";
+import { logFunnelEventOnce, logUsageEvent } from "@/lib/funnel-events";
 
 function eventTypeLabel(eventType?: string | null): string {
   if (!eventType) return "this event";
@@ -79,6 +79,12 @@ export default function EventDetailPage() {
   // gated client-side the way the PostHog event above is left ungated.
   useEffect(() => {
     if (signal) logFunnelEventOnce("first_signal_viewed", { signalId: signal.id });
+  }, [signal?.id]);
+
+  // signal_detail_opened — recurring usage event (one row per distinct signal per
+  // page-session), feeds DAU/WAU and 7-day usage counts on /admin/metrics.
+  useEffect(() => {
+    if (signal) logUsageEvent("signal_detail_opened", { signalId: signal.id }, "entity");
   }, [signal?.id]);
 
   if (isLoading) {
@@ -147,6 +153,7 @@ export default function EventDetailPage() {
       }
       track("alert_rule_created", { source: "event_detail", region: modalRegion, minSeverity: modalMinSeverity });
       logFunnelEventOnce("first_alert_rule_created", { source: "event_detail" });
+      logUsageEvent("alert_rule_created", { source: "event_detail" }, false);
       toast.success("Alert Rule Activated", {
         description: `Alerts set for ${modalRegion} (Severity >= ${modalMinSeverity})`,
       });
