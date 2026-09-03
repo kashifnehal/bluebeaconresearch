@@ -91,10 +91,10 @@ export function HelpModal() {
               2. Setting Up Telegram Alerts
             </h3>
             <ol className="list-decimal list-inside space-y-1.5 text-xs text-[#bbcac0] leading-relaxed">
-              <li>Open Telegram and search for <strong className="text-white">@BlueBeaconBot</strong>.</li>
-              <li>Send the <code className="bg-[#1f1f1f] px-1.5 py-0.5 rounded text-[#4edea3] font-mono">/start</code> command to generate your 6-digit verification code.</li>
-              <li>Navigate to the <strong className="text-white">Alerts page</strong> in this terminal.</li>
-              <li>Enter your verification code under <strong className="text-white">Telegram Integration</strong> to connect your channel.</li>
+              <li>Go to <strong className="text-white">Settings → Notifications</strong> in this terminal and click <strong className="text-white">Connect Telegram</strong> to generate a code.</li>
+              <li>Open Telegram and search for <strong className="text-white">@BlueBeaconResearchBot</strong>.</li>
+              <li>Send <code className="bg-[#1f1f1f] px-1.5 py-0.5 rounded text-[#4edea3] font-mono">/connect &lt;code&gt;</code> to the bot, using the code from step 1.</li>
+              <li>The Settings page confirms the link automatically once the bot receives it.</li>
             </ol>
           </div>
 

@@ -26,6 +26,12 @@ export function registerAuth(app: FastifyInstance) {
     // Allow health/docs/root without auth
     if (req.url === "/" || req.url.startsWith("/health") || req.url.startsWith("/docs")) return;
 
+    // Telegram's webhook callback (routes/telegram.ts) carries no JWT/API key and
+    // never will — Telegram itself is the caller, not one of our users. Exempting
+    // by exact prefix, not by shape, so this doesn't accidentally widen to other
+    // /v1/telegram/* routes (connect-code stays authenticated below).
+    if (req.url.startsWith("/v1/telegram/webhook")) return;
+
     const supabase = getSupabaseAdmin();
 
     const authHeader = req.headers.authorization;

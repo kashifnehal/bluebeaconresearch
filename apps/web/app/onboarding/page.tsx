@@ -11,7 +11,6 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [useCase, setUseCase] = useState("trader");
-  const [telegram, setTelegram] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Pre-fill name from OAuth metadata; redirect to /dashboard if already onboarded
@@ -68,15 +67,6 @@ export default function OnboardingPage() {
           use_case: useCase,
           theme: "dark",
         });
-
-        if (telegram.trim().length) {
-          const cleanTelegram = telegram.startsWith("@") ? telegram : `@${telegram}`;
-          await supabase.from("user_channels").upsert({
-            user_id: user.id,
-            telegram_chat_id: cleanTelegram,
-            updated_at: new Date().toISOString(),
-          });
-        }
       }
 
       toast.success("Profile initialized successfully");
@@ -265,54 +255,21 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* Telegram field */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <label
-                htmlFor="telegram"
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontSize: "11px",
-                  color: "#bbcac0",
-                }}
-              >
-                TELEGRAM CHAT ID
-              </label>
-              <input
-                id="telegram"
-                name="telegram"
-                type="text"
-                placeholder="@yourusername"
-                value={telegram}
-                onChange={(e) => setTelegram(e.target.value)}
-                style={{
-                  width: "100%",
-                  backgroundColor: "#0e0e0e",
-                  border: "none",
-                  borderBottom: "1px solid #3c4a42",
-                  color: "#e5e2e1",
-                  padding: "12px 0",
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: "14px",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  transition: "border-color 0.2s",
-                }}
-                onFocus={(e) => { e.target.style.borderBottomColor = "#4edea3"; }}
-                onBlur={(e) => { e.target.style.borderBottomColor = "#3c4a42"; }}
-              />
-              <p
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: "10px",
-                  color: "#86948a",
-                  fontStyle: "italic",
-                }}
-              >
-                System requires valid ID for real-time tactical alerts.
-              </p>
-            </div>
+            {/* Telegram notice — the real connect flow (generate a code, send
+                "/connect <code>" to @BlueBeaconResearchBot) needs an async round trip
+                to Telegram, which doesn't fit a single-input onboarding field. Point to
+                Settings instead of collecting a raw handle here, which never produced a
+                usable chat ID (see apps/web/components/TelegramConnect.tsx). */}
+            <p
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: "10px",
+                color: "#86948a",
+                fontStyle: "italic",
+              }}
+            >
+              Tactical alerts via Telegram can be connected afterward from Settings → Notifications.
+            </p>
 
             {/* Submit */}
             <div style={{ paddingTop: "24px" }}>
