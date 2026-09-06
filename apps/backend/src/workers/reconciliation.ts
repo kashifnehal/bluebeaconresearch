@@ -14,13 +14,25 @@ const claude = new ClaudeService();
 const RECONCILE_THRESHOLD_MINUTES = 30;
 const BATCH_LIMIT = 200;
 
+// Some orphans never recover — a raw_event whose title/summary Claude simply can't
+// classify, or a row referencing content that's since 404'd. Re-attempting these
+// every 30 min forever burns Claude API calls for nothing. Past this age we log the
+// row once (as it crosses the line) and permanently skip it. The cron runs every
+// 30 min, so a one-interval-wide window catches each newly-stale row exactly once.
+const ORPHAN_MAX_AGE_HOURS = 8;
+
 export async function reconcileOrphanedRawEventsOnce() {
   const supabase = getSupabaseAdmin();
-  const cutoff = new Date(Date.now() - RECONCILE_THRESHOLD_MINUTES * 60_000).toISOString();
+  const now = Date.now();
+  const cutoff = new Date(now - RECONCILE_THRESHOLD_MINUTES * 60_000).toISOString();
+  const staleCutoff = new Date(now - ORPHAN_MAX_AGE_HOURS * 3_600_000).toISOString();
+  const justCrossedCutoff = new Date(
+    now - ORPHAN_MAX_AGE_HOURS * 3_600_000 - RECONCILE_THRESHOLD_MINUTES * 60_000,
+  ).toISOString();
 
   const { data: candidates, error: candErr } = await supabase
     .from("raw_events")
-    .select("id, title, summary, country, event_type, event_date")
+    .select("id, title, summary, country, event_type, event_date, created_at")
     .lt("created_at", cutoff)
     .order("created_at", { ascending: false })
     .limit(BATCH_LIMIT);
@@ -48,9 +60,23 @@ export async function reconcileOrphanedRawEventsOnce() {
   const coveredIds = new Set<string>(
     (matchedSignals ?? []).flatMap((s) => (s.raw_event_ids as string[]) ?? []),
   );
-  const orphans = candidates.filter((c) => !coveredIds.has(c.id));
+  const allOrphans = candidates.filter((c) => !coveredIds.has(c.id));
 
-  if (orphans.length === 0) return { checked: candidates.length, orphaned: 0, recovered: 0 };
+  // Split off rows past the age limit — these are permanently stuck, not worth
+  // another Claude call. Log only the ones that crossed the line in the last cron
+  // interval so each stale row is reported exactly once, then never retried.
+  const orphans = allOrphans.filter((c) => (c.created_at as string) >= staleCutoff);
+  const stale = allOrphans.filter((c) => (c.created_at as string) < staleCutoff);
+  const newlyStale = stale.filter((c) => (c.created_at as string) >= justCrossedCutoff);
+  if (newlyStale.length > 0) {
+    console.warn(
+      `[Reconciliation] ${newlyStale.length} raw_events passed the ${ORPHAN_MAX_AGE_HOURS}h age limit still orphaned — logging once and permanently skipping: ${newlyStale.map((c) => c.id).join(", ")}`,
+    );
+  }
+
+  if (orphans.length === 0) {
+    return { checked: candidates.length, orphaned: 0, recovered: 0, skippedStale: stale.length };
+  }
 
   console.warn(`[Reconciliation] Found ${orphans.length} orphaned raw_events (insert succeeded, signal never created) — re-attempting classification`);
 
@@ -116,5 +142,5 @@ export async function reconcileOrphanedRawEventsOnce() {
     }
   }
 
-  return { checked: candidates.length, orphaned: orphans.length, recovered };
+  return { checked: candidates.length, orphaned: orphans.length, recovered, skippedStale: stale.length };
 }
