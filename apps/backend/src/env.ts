@@ -40,6 +40,7 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
 
   TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   ACLED_EMAIL: z.string().optional(),
   ACLED_PASSWORD: z.string().optional(),
   GNEWS_API_KEY: z.string().optional(),

@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 
 import { getRedis } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { getEnv } from "../env.js";
 import { requireUser } from "../middleware/auth.middleware.js";
 
 function randomCode() {
@@ -22,6 +23,14 @@ export async function telegramRoutes(app: FastifyInstance) {
 
   // Telegram webhook (no auth): handles /start and /connect <code>
   app.post("/webhook", async (req, reply) => {
+    const env = getEnv();
+    if (env.TELEGRAM_WEBHOOK_SECRET) {
+      const provided = req.headers["x-telegram-bot-api-secret-token"];
+      if (provided !== env.TELEGRAM_WEBHOOK_SECRET) {
+        return reply.status(401).send({ error: "invalid secret token" });
+      }
+    }
+
     const update = req.body as any;
     const msg = update?.message;
     const text: string = msg?.text ?? "";
