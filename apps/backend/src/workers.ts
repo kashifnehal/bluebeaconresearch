@@ -22,14 +22,23 @@ import {
 import { getLastKnownRedisUsage } from "./clients/redis.js";
 
 // Consecutive-failed-run thresholds before a collector going silent pages someone.
-// GDELT: ~1h (its own code already retries within a run, so this is repeated
-// whole-run failure). GNews: ~2h — wider because free-tier quota gaps (#64) are
-// expected and shouldn't page. RSS: 2 runs with >50% of feeds failing — the check
-// that would have caught #63 (13/14 feeds dead) on day one instead of 16 days in.
+// GDELT: 8 runs (~4h at */30). A single GDELT 429 is an expected IP-level block on
+// the shared Railway egress and clears on its own within a cycle or two; only a
+// genuinely stuck feed (hours of continuous failure) is worth a page, and it's
+// filed as a warning, not an error (see severity below). GNews: ~2h — wider because
+// free-tier quota gaps (#64) are expected and shouldn't page. RSS: 2 runs with >50%
+// of feeds failing — the check that would have caught #63 (13/14 feeds dead) on day
+// one instead of 16 days in.
 const COLLECTOR_ALERT_THRESHOLDS: Record<string, number> = {
-  gdelt: 4,
+  gdelt: 8,
   gnews: 8,
   rss: 2,
+};
+
+// GDELT failure is routinely an upstream IP block, not our bug — file it below
+// "error" so it doesn't page. The other collectors going silent is a real regression.
+const COLLECTOR_ALERT_SEVERITY: Record<string, Sentry.SeverityLevel> = {
+  gdelt: "warning",
 };
 
 /**
@@ -52,7 +61,7 @@ function evaluateCollectorHealth(status: PipelineRunStatus): string[] {
       `[ingestion] collector "${key}" has failed ${count} consecutive run(s) ` +
       `(alert threshold ${threshold}). Last successful run: ${lastSuccess}. Last error: ${lastError}`;
     console.error(msg);
-    Sentry.captureMessage(msg, "error");
+    Sentry.captureMessage(msg, COLLECTOR_ALERT_SEVERITY[key] ?? "error");
     newlyAlerted.push(key);
   }
   return newlyAlerted;

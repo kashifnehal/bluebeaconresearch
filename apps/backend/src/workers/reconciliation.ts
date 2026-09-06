@@ -19,7 +19,7 @@ const BATCH_LIMIT = 200;
 // every 30 min forever burns Claude API calls for nothing. Past this age we log the
 // row once (as it crosses the line) and permanently skip it. The cron runs every
 // 30 min, so a one-interval-wide window catches each newly-stale row exactly once.
-const ORPHAN_MAX_AGE_HOURS = 8;
+const ORPHAN_MAX_AGE_HOURS = 12;
 
 export async function reconcileOrphanedRawEventsOnce() {
   const supabase = getSupabaseAdmin();
