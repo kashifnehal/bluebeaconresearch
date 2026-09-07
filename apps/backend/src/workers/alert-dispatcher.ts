@@ -13,6 +13,78 @@ const expoPush = new ExpoPushService();
 
 export type EscalationAlertContext = { oldSeverity: number; newSeverity: number };
 
+// One-line trust/differentiation statement carried on every delivery, shortened for a
+// chat message. Approved framing: docs/claude_project/00_PROJECT.md §7, 20_RISKS.md
+// ("Disclaimer on every signal card, every email, every alert delivery").
+const TRUST_LINE =
+  "Blue Beacon surfaces signals for your own analysis — informational only, not financial advice or a buy/sell call.";
+
+const DIRECTION_ARROW: Record<string, string> = { up: "↑", down: "↓", volatile: "↕", neutral: "→" };
+
+/**
+ * Lead prose of the analyst briefing, stripped of markdown, capped for a chat message.
+ * Skips leading heading lines (all-caps banners, "#" headers, short label lines) so the
+ * "why it matters" section opens on an actual sentence, not "INTELLIGENCE BRIEFING —".
+ */
+function firstParagraph(text: string, cap = 420): string {
+  const plain = text.replace(/[*_`>]/g, "").replace(/\r/g, "").trim();
+  const paras = plain
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/^#+\s*/gm, "").replace(/\n/g, " ").trim())
+    .filter(Boolean);
+  const isHeading = (p: string) =>
+    p.length < 60 || (p === p.toUpperCase() && /[A-Z]/.test(p)) || !/[.!?]/.test(p);
+  const lead = paras.find((p) => !isHeading(p)) ?? paras[0] ?? plain;
+  return lead.length > cap ? `${lead.slice(0, cap - 1).trimEnd()}…` : lead;
+}
+
+/**
+ * Structured alert body shared by the in-app Alerts card (#82) and every chat channel:
+ * Event → Why it matters → Which instruments → Alert threshold, then the source link(s)
+ * and the trust line. Same information, same order as the web card — only the formatting
+ * differs for the medium.
+ */
+export function buildAlertBody(
+  signal: any,
+  rule: { name?: string | null; min_severity?: number | null },
+  sourceUrls: string[],
+): string {
+  const impacts = Array.isArray(signal.commodity_impacts) ? signal.commodity_impacts : [];
+  const instruments = impacts.length
+    ? impacts
+        .map((c: any) => `${c.asset} ${DIRECTION_ARROW[c.direction as string] ?? "→"}`)
+        .join("  ·  ")
+    : "No specific instruments were flagged for this event.";
+
+  const why = signal.ai_analysis
+    ? firstParagraph(String(signal.ai_analysis))
+    : `${signal.summary ?? "No summary available."}\n(Deeper analyst commentary wasn't available for this signal.)`;
+
+  const threshold =
+    `Sent because it cleared "${rule.name ?? "your alert rule"}" — severity ${rule.min_severity ?? "?"}+.`;
+
+  const lines = [
+    `EVENT`,
+    signal.title,
+    ``,
+    `WHY IT MATTERS`,
+    why,
+    ``,
+    `WHICH INSTRUMENTS`,
+    instruments,
+    ``,
+    `ALERT THRESHOLD`,
+    threshold,
+  ];
+
+  if (sourceUrls.length) {
+    lines.push(``, `SOURCE${sourceUrls.length > 1 ? "S" : ""}`, ...sourceUrls);
+  }
+
+  lines.push(``, TRUST_LINE);
+  return lines.join("\n");
+}
+
 /**
  * Matches a freshly-inserted (or escalated) signal against active alert_rules and
  * dispatches to each matched rule's configured channels. Called directly (inline, no
@@ -22,13 +94,16 @@ export type EscalationAlertContext = { oldSeverity: number; newSeverity: number 
  * per-rule lookups (prefs, channels, push tokens, webhook endpoints) instead of
  * querying once per rule/channel.
  *
- * `escalation`, when passed, is the ONLY thing that changes: the outgoing Telegram/
- * Slack text and push title get a distinct "UPDATED: severity X -> Y" framing instead
- * of the default new-signal wording, so a re-alert is never confusable with a
- * first-time alert. Every other part of this function (rule matching, batching,
- * alerts_sent/webhook_deliveries writes, channel iteration) is untouched and shared —
- * this is the same send path, not a parallel one. Omitting the argument (every
- * existing call site) preserves the exact original template byte-for-byte.
+ * `escalation`, when passed, changes the outgoing Telegram/Slack prefix and push title
+ * to a distinct "UPDATED: severity X -> Y" framing instead of the default new-signal
+ * wording, so a re-alert is never confusable with a first-time alert. Every other part
+ * of this function (rule matching, batching, alerts_sent/webhook_deliveries writes,
+ * channel iteration) is untouched and shared — this is the same send path, not a
+ * parallel one.
+ *
+ * #82: the Telegram/Slack body is now the same four-section structure as the in-app
+ * Alerts card — Event → Why it matters → Which instruments → Alert threshold — plus the
+ * source link(s) and a one-line trust/differentiation statement. See buildAlertBody().
  */
 export async function dispatchAlertsForSignal(signalId: string, escalation?: EscalationAlertContext) {
   const { data: signal, error } = await supabase.from("signals").select("*").eq("id", signalId).maybeSingle();
@@ -40,6 +115,17 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     .eq("is_active", true)
     .lte("min_severity", signal.severity);
   if (rulesErr) return { attempted: 0, delivered: 0 };
+
+  // Source article(s) the signal was built from — already linked through the pipeline
+  // via signals.raw_event_ids → raw_events.raw_data.url. Surfaced in every delivery.
+  const rawEventIds: string[] = Array.isArray(signal.raw_event_ids) ? signal.raw_event_ids : [];
+  const { data: rawEventRows } = rawEventIds.length
+    ? await supabase.from("raw_events").select("raw_data").in("id", rawEventIds)
+    : { data: [] as Array<{ raw_data?: { url?: string } }> };
+  const sourceUrls = (rawEventRows ?? [])
+    .map((r) => r?.raw_data?.url)
+    .filter((u): u is string => typeof u === "string" && u.length > 0)
+    .slice(0, 3);
 
   const commodityAssets = Array.isArray(signal.commodity_impacts)
     ? (signal.commodity_impacts as Array<{ asset?: string }>).map((c) => c.asset).filter(Boolean)
@@ -114,6 +200,11 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     const channelsRow = channelsByUser.get(rule.user_id);
     const channels: string[] = Array.isArray(rule.channels) ? rule.channels : ["telegram"];
 
+    // Four-section body — identical structure/order to the in-app Alerts card (#82).
+    const alertBody = buildAlertBody(signal, rule, sourceUrls);
+    const telegramText = `${messagePrefix}\n\n${alertBody}`;
+    const slackText = `${slackMessagePrefix}\n\n${alertBody}`;
+
     for (const channel of channels) {
       attempted += 1;
       let status: "queued" | "delivered" | "failed" = "queued";
@@ -125,7 +216,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
           } else {
             const result = await telegram.sendMessage(
               channelsRow.telegram_chat_id,
-              `${messagePrefix} — ${signal.title}\n\n${signal.summary}`,
+              telegramText,
             );
             status = result.ok ? "delivered" : "failed";
           }
@@ -135,7 +226,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
           } else {
             await axios.post(
               channelsRow.slack_webhook_url,
-              { text: `${slackMessagePrefix} — ${signal.title}\n${signal.summary}` },
+              { text: slackText },
               { timeout: 10_000 },
             );
             status = "delivered";
