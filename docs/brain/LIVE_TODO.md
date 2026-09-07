@@ -18,6 +18,29 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #81 Personalization core (user_preferences extended, onboarding capture, feed
   filter) — 517f796, e4bcaf6, 817fdee
 - #89 Watchlist preference-aware defaults — 598678e
+- #82 Alerts rework + trust/differentiation — c0698fc (in-app card: Event → Why
+  it matters → Which instruments → Alert threshold; prominent "alert only above
+  this threshold" control; per-card "Built from" source links; one-time
+  not-financial-advice line) + a269547 (same four-section reframe in the
+  Telegram/Slack template). Verified 2026-09-07: Playwright screenshot of the
+  reworked card against the test account + 3 real Telegram messages from a live
+  dispatchAlertsForSignal() run (all delivered:1), identical structure in both,
+  ai_analysis-present and ai_analysis-null branches both exercised. Threshold
+  control DB round-trip confirmed (6→8).
+- #83 Personalized daily digest — bc8f4e0 + 57516b0 (from-address). Migration
+  adds user_preferences.digest_enabled (default true). digest-sender.ts selects
+  each onboarded, digest-enabled user's own top-5 signals from the last 24h
+  matched to their watched commodities/regions (no global fallback), same
+  four-section email framing + trust line, scheduled via node-cron (DIGEST_CRON,
+  default 06:00 UTC). Settings → Notifications opt-out toggle wired to
+  digest_enabled (true→false→true round-trip confirmed). Verified 2026-09-07:
+  SQL check — with test user prefs regions=[africa]/commodities=[CORN,WHEAT] the
+  digest pulled 5 signals ALL matching CORN/WHEAT, only 1 of which was in the
+  unfiltered global top-5 (Iran-dominated) → genuinely personalized. One real
+  digest email delivered to romantannison@gmail.com via the existing Resend
+  account (id e06df2b3-ea1d-410d-ac01-019fbbb678dc, status delivered).
+  REMAINING PROD STEP: add RESEND_API_KEY to the Railway `workers` service — the
+  cron is inert without it (logs + no-ops, by design).
 
 ## Decisions confirmed 2026-09-07
 1. Forex gate — softened, forex only, not equity. Desk-research-validated (see
@@ -40,8 +63,9 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
    strategy, not on live interviews or a payment test.
 
 ## Priority queue (updated 2026-09-07)
-- Next: #82 (Alerts rework + trust/differentiation copy), #83 (personalized
-  digest, no longer gated), #86 (economic calendar)
+- #82 and #83 closed 2026-09-07 (see "Closed, verified"). One prod follow-up:
+  RESEND_API_KEY on the Railway `workers` service for the digest cron.
+- Next: #86 (economic calendar)
 - Then: #87 (forex taxonomy expansion, forex only — gate cleared)
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
 - Independent, no dependency: WhatsApp Business API approval (lead-time only)
