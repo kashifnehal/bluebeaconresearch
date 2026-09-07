@@ -470,3 +470,20 @@
 - Keeping it explicitly "evaluation-stage" prevents it drifting into roadmap docs as a commitment.
 
 **Cross-tree mapping:** Recorded as **ADR 013** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D18: No Features Requiring Government Permission or Difficult Third-Party Platform Approval
+
+**Decision:** BBR does not build features that require government permission or a difficult third-party platform approval process (Meta Business Verification, Google sensitive-scope OAuth, TikTok/Pinterest API audits, etc.). BBR is a global company deliberately avoiding regulatory/legal entanglement. Additionally: BBR never collects or stores payment information directly — only through a hosted processor (Stripe Checkout / Payment Links); and BBR never gives financial or trading advice. Confirmed 2026-09-07.
+
+**Context:** Several proposed channels/features (WhatsApp alerts, the Social Auto-Poster spec) put a third party's slow, opaque approval queue — Meta Business Verification (1–2+ week turnaround, sometimes stuck for weeks with no response), TikTok Content Posting API audits, Pinterest Standard Access — on BBR's critical path, with their own rejection/restriction risks.
+
+**Direct consequence — #85 (WhatsApp alert channel) is KILLED, not paused:** #85 required Meta Business Verification, exactly the gate this decision rules out. It is killed, not deferred. Full planning/cost/risk context is preserved in `docs/brain/LIVE_TODO.md` so it can be resumed later without re-researching. Independently, WhatsApp was already the weakest-evidenced of BBR's three candidate notification channels for its Western-trader-weighted audience (Telegram/Discord dominate; WhatsApp's edge only showed in India-specific data, and BBR is not pursuing India as a distinct go-to-market) — a lower-confidence bet that also fails the new gate. The Social Auto-Poster spec (docs 34–37) and #93 (richfeed) fall under the same policy and are not picked up by BBR going forward; richfeed is separately confirmed as the founder's own India-focused project, outside BBR engineering scope.
+
+**Rationale:**
+- Keeps a third party's queue and legal-review posture off BBR's critical path.
+- Avoids the accidental-restriction / audit-rejection risk classes entirely.
+- Consistent with the standing "no buy/sell recommendations" and global-positioning rules.
+
+**Cross-tree mapping:** Recorded as **ADR 014** in `docs/brain/10_DECISIONS.md`.

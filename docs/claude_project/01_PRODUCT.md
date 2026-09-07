@@ -717,7 +717,7 @@ Background: amber-subtle, text-warning. Cannot be missed.
 
 ### 4.2 WhatsApp Alerts
 **Discussed:** WhatsApp Business API for Indian market (500M+ users).
-**Deferred:** WhatsApp API has significant friction (requires business verification, per-conversation charges, approval process). Launch with Telegram first. Add WhatsApp in V2 if Indian market adoption proves strong.
+**KILLED 2026-09-07 (#85), not deferred:** WhatsApp requires Meta Business Verification — the "difficult third-party approval" category BBR now avoids by standing policy (D18 / ADR 014). Independently, it was the weakest-evidenced of BBR's three notification channels for its Western-trader-weighted audience (Telegram/Discord dominate; WhatsApp's edge was India-specific, and BBR is not pursuing India as a distinct go-to-market). Full planning/cost/risk context preserved in `docs/brain/LIVE_TODO.md` (§ "Killed 2026-09-07") for a possible later resume.
 
 ### 4.3 Portfolio Management
 **Discussed:** Track user positions and calculate P&L impact of signals.

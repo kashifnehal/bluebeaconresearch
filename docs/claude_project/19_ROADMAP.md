@@ -102,7 +102,7 @@ Product (new features):
 - [ ] API console UI (currently placeholder)
 - [ ] Historical signal archive (40-year backtesting)
 - [ ] Country-specific signal feeds (user selects watched regions)
-- [ ] WhatsApp Business alerts (India market expansion)
+- ~~WhatsApp Business alerts (India market expansion)~~ — **KILLED 2026-09-07 (#85), not paused.** Requires Meta Business Verification (difficult third-party approval — ruled out by D18 / ADR 014); also the weakest-evidenced notification channel for BBR's Western-trader-weighted audience, and BBR isn't pursuing India as a distinct GTM. Full context preserved in `docs/brain/LIVE_TODO.md` (§ "Killed 2026-09-07").
 
 Marketing:
 - [ ] Press outreach: TechCrunch, Hacker News, financial trade publications

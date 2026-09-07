@@ -98,7 +98,7 @@
 | Technical analysis (RSI, MACD) | Not a TA platform, different product |
 | Crypto tracking | Crowded market, different audience |
 | Portfolio management / P&L tracking | Requires broker integration, securities licensing risk |
-| WhatsApp alerts | API friction, approval process, cost per message |
+| WhatsApp alerts (#85) | **KILLED 2026-09-07, not paused.** Required Meta Business Verification — the "difficult third-party approval" category BBR now avoids by standing policy (D18 / ADR 014). Independently, it was the weakest-evidenced of BBR's three notification channels for its Western-trader-weighted audience (Telegram/Discord dominate; WhatsApp's edge was India-specific, and BBR isn't pursuing India as a distinct GTM). Full planning/cost/risk context preserved in `docs/brain/LIVE_TODO.md` (§ "Killed 2026-09-07") for a later resume. |
 | Buy/sell recommendations | Legal liability, breaks positioning as intelligence platform |
 | Social/community features | Out of scope for V1 |
 | Public market data resale | Licensing complexity |

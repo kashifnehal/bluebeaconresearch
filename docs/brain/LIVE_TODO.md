@@ -12,8 +12,14 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #80 Unsourced TAM figures fixed — 57a16b1
 - #88 Telegram webhook secret-token hardening — 3dd675b
 - #100 Vercel API_URL misconfiguration — fixed 2026-09-06
-- #93 richfeed clarified — founder's own social pipeline; open low-priority
-  follow-up: confirm overlap with the Social Auto-Poster spec
+- #93 richfeed — FULLY RESOLVED 2026-09-07. Founder confirmed richfeed is his
+  own separate, India-focused social-distribution project, not part of BBR's
+  engineering scope. The Social Auto-Poster spec (docs 34–37 references) itself
+  will not be picked up by BBR going forward — both because it's now a separate
+  founder-owned project and because its own blockers (Meta Advanced Access,
+  TikTok Content Posting API audit, Pinterest Standard Access) fall under the new
+  permission-avoidance policy (ADR 014 / D18). No further BBR engineering
+  follow-up on either.
 - #94 Cost/waste "do now" batch — 59ccf2b, all 7 items closed
 - #81 Personalization core (user_preferences extended, onboarding capture, feed
   filter) — 517f796, e4bcaf6, 817fdee
@@ -103,9 +109,41 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   No follow-ups outstanding.
 - Next: #87 (forex taxonomy expansion, forex only — gate cleared)
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
-- Independent, no dependency: WhatsApp Business API approval (lead-time only)
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)
+
+## Killed 2026-09-07
+
+### #85 WhatsApp alert channel — KILLED 2026-09-07, not paused.
+
+**What was planned:** direct Meta Cloud API integration (not a BSP, to avoid
+per-message markup and lock-in). Required: Meta Business Portfolio + Business
+Verification (business registration/address docs submitted for Meta review,
+reported 1–2+ week turnaround, sometimes stuck for weeks with no response), a
+dedicated phone number never used on personal WhatsApp, and a pre-approved
+utility-category message template before messaging any real user. Cost: ~₹0.136
+per alert outside a 24-hour session window (free within it) — roughly $16 per
+10,000 alerts. Recommended gating: Pro tier ($199+) only, given the per-message
+cost. Linking flow was designed to mirror Telegram's `/connect <code>` pattern —
+user messages BBR's number first, opening a 24-hr window and establishing real
+opt-in, never a cold broadcast. Known risks flagged at the time: template
+rejections for vague copy, Business Verification stalling with no response,
+accidental number restriction from messaging non-consenting numbers.
+
+**Why killed:** (1) Business Verification is exactly the "difficult permission"
+category BBR now avoids by standing policy — see ADR 014 in
+`docs/brain/10_DECISIONS.md` (D18 in `docs/claude_project/10_DECISIONS.md`).
+(2) Independently, WhatsApp was already the weakest-evidenced of the three
+notification channels for BBR's researched (Western-trader-weighted) audience —
+Telegram/Discord dominate there; WhatsApp's edge only showed in India-specific
+data, and BBR separately decided not to pursue India as a distinct go-to-market
+push. Not a strong bet sacrificed for policy — a lower-confidence bet that also
+fails the new gate.
+
+**To resume later:** the draft message template, the DB schema (channel columns
+mirroring `user_channels`' existing Telegram pattern), and the full cost/risk
+research still exist and can be rebuilt into a fresh, self-contained prompt —
+don't need to re-research the Meta requirements from zero.
 
 ## Known open technical item — RESOLVED 2026-09-07
 Playwright MCP's browser profile had locked twice in this environment (orphaned

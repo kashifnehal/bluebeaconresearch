@@ -277,7 +277,29 @@ Recorded as **D17** in `docs/claude_project/10_DECISIONS.md`.
 
 ---
 
-## 14. Architectural Assumptions & Future Risks
+## 14. ADR 014: No Features Requiring Government Permission or Difficult Third-Party Platform Approval
+
+### Context
+
+Several proposed channels and features depend on a slow, opaque external approval process before BBR can ship or even test them — Meta Business Verification (business-registration docs submitted for Meta review, 1–2+ week turnaround, sometimes stuck for weeks with no response), Google sensitive-scope OAuth review, TikTok Content Posting API audits, Pinterest Standard Access, and the like. These gates put a third party's queue and legal-review posture on BBR's critical path, and carry their own rejection/restriction risks.
+
+### Decision
+
+BBR does not build features that require government permission or a difficult third-party platform approval process (Meta Business Verification, Google sensitive-scope OAuth, TikTok/Pinterest API audits, etc.). BBR is a global company deliberately avoiding regulatory/legal entanglement. Additionally: BBR never collects or stores payment information directly — only through a hosted processor (Stripe Checkout / Payment Links); and BBR never gives financial or trading advice. Confirmed 2026-09-07.
+
+### Direct consequence — #85 (WhatsApp alert channel) is KILLED, not paused
+
+#85 (WhatsApp alerts via the Meta Cloud API) required Meta Business Verification, which is exactly the "difficult permission" category this decision rules out. It is **killed**, not deferred — see `docs/brain/LIVE_TODO.md` for the preserved planning/cost/risk context so it can be resumed later without re-researching from scratch. Independently, WhatsApp was already the weakest-evidenced of BBR's three candidate notification channels for its researched (Western-trader-weighted) audience — Telegram/Discord dominate there; WhatsApp's edge only showed in India-specific data, and BBR separately decided not to pursue India as a distinct go-to-market push. It is a lower-confidence bet that also fails the new gate, not a strong bet sacrificed to policy.
+
+The Social Auto-Poster spec (docs 34–37 references) and #93 (richfeed) fall under the same policy: their blockers (Meta Advanced Access, TikTok Content Posting API audit, Pinterest Standard Access) are all difficult-approval gates. Combined with the founder's confirmation that richfeed is his own separate India-focused social-distribution project (not BBR engineering scope), neither is picked up by BBR going forward.
+
+### Cross-tree mapping
+
+Recorded as **D18** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 15. Architectural Assumptions & Future Risks
 
 1. **Third-Party API & RSS Feed Availability**: System relies on GNews, GDELT, RSS endpoints, Yahoo Finance uptime.
 2. **Anthropic API Credits**: Production requires Anthropic credits. Heuristic fallback covers outages but quality is lower.
