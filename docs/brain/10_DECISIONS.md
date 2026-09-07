@@ -229,6 +229,7 @@ No further engineering phase beyond current in-flight work starts without a real
 - **Cost asymmetry**: a validation checkpoint costs days; a wrong build bet costs weeks.
 - **The failure mode is already on the record**: ADR 012 exists because a market claim went unchallenged for lack of any real-world contact — validation-before-build is the general form of that fix.
 - **Scope**: applies to *new* phases, not to finishing work already underway.
+> ⚠️ UPDATED 2026-09-07 — Checkpoint CLEARED. Closed via desk research (Perplexity/Grok transcripts reviewed directly, plus independent web verification) rather than the live interviews or manual paywall test this ADR originally called for: #77 (10-15 live interviews) retired as scoped; #78 (manual Stripe test) deprioritized behind real free-tier traction rather than run now; #91 (distribution test) substituted with independent research, no personal outreach; #92 (concierge digest test) dropped as a pre-build gate, with the digest now built and correctable against real post-launch usage instead. Cleared on desk research plus a founder-confirmed free-first launch strategy (no payment method added until real free-tier traction is observed) — not on the validation methods originally specified above. See `docs/brain/LIVE_TODO.md` for the full decision log.
 
 ---
 
@@ -272,6 +273,7 @@ Forex and equity swing/day-trader expansion is a scoped, prompt-ready, evaluatio
 ### Cross-tree mapping
 
 Recorded as **D17** in `docs/claude_project/10_DECISIONS.md`.
+> ⚠️ UPDATED 2026-09-07 — Forex gate confirmed SOFTENED: forex only, not equity. Based on desk research (Perplexity/Grok transcripts plus an independently-verified live ForexFactory thread), not customer interviews. The ADR 011 validation checkpoint was cleared via desk research generally (see that ADR's amendment); this decision applies that clearance specifically to forex. Schema/product work for forex may now proceed (#87, forex taxonomy expansion). Equity swing/day-trader expansion remains evaluation-stage and gated as before — no comparable desk-research signal has been produced for that segment specifically. Crypto remains out of scope, unchanged.
 
 ---
 
