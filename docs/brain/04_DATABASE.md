@@ -160,6 +160,10 @@ Per-user feed and notification settings, distinct from `profiles` (account/billi
 - `email_frequency` (`text`, NOT NULL, default `'immediate'`, check: `immediate`, `hourly`, `daily`)
 - `use_case` (`text`, nullable) — added by `006_onboarding_schema_fix.sql`
 - `updated_at` (`timestamptz`, NOT NULL, default `now()`)
+- `forex_pairs` / `equity_tickers` (`text[]`, NOT NULL, default `'{}'`) — added by `20260907004803_user_preferences_personalization.sql`; **reserved/unused** (forex gating #87, equity stays separately gated)
+- `onboarding_completed_at` (`timestamptz`, nullable) — added by `20260907004803`; set when the 2-step `/onboarding` wizard captures followed commodities/regions (#81). Backfilled from `profiles.onboarding_completed` for pre-existing users.
+- `created_at` (`timestamptz`, NOT NULL, default `now()`) — added by `20260907004803`
+- `digest_enabled` (`boolean`, NOT NULL, default `true`) — added by `20260907021500_user_preferences_digest_enabled.sql`; opt-out for the once-daily personalized digest (#83), toggled from Settings → Notifications
 
 ### Table 12: `watchlist_entries`
 - `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL)

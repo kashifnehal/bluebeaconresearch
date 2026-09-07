@@ -2,7 +2,19 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-08-28 (3 live map-page bugs from a production screenshot — `36b522a` — see `14_CHANGELOG.md` v0.32.0)
+Last updated: 2026-09-07 (personalization #81/#89, Alerts four-section rework #82, personalized daily digest #83 — see `14_CHANGELOG.md` v0.34.0 and `LIVE_TODO.md`)
+
+---
+
+## Personalization, Alerts Rework, Daily Digest (2026-09-07)
+
+Full detail in `14_CHANGELOG.md` v0.34.0. Summary of what's now built:
+
+- **#81 Personalization core** — `user_preferences` extended (additive migration `20260907004803`): `onboarding_completed_at`, `created_at`, reserved `forex_pairs`/`equity_tickers`. `/onboarding` is a 2-step wizard capturing followed commodities/regions. `/api/signals?personalized=true` (default OFF) narrows the feed; personalized payloads are never cached. Dashboard "My Feed / Full Feed" toggle.
+- **#89 Watchlist preference-awareness** — `/watchlist` seeds defaults from `user_preferences.commodities`; "My Commodities / Show All" toggle; "You follow this" drill-down chip.
+- **#82 Alerts rework** — `/alerts` cards and the Telegram/Slack template both restructured to **Event → Why it matters → Which instruments → Alert threshold**, with per-card "Built from" source links and a one-time not-financial-advice line. `ai_analysis`-null falls back to the summary with a plain note (no fabrication). `alert_rules.min_severity` surfaced as an inline "alert only above this threshold" control. `/api/alerts/recent` enriched with `ai_analysis` + `commodity_impacts` + source URLs. Verified: Playwright card screenshot + 3 live Telegram dispatches.
+- **#83 Personalized daily digest** — migration `20260907021500` adds `user_preferences.digest_enabled` (default true). `apps/backend/src/workers/digest-sender.ts` sends each onboarded, digest-enabled user their own top-5 signals from the last 24h matched to their commodities/regions (no global fallback), same four-section framing. `EmailService` uses the existing Resend account; `node-cron` in `workers.ts` (`DIGEST_CRON`, default 06:00 UTC). Settings → Notifications opt-out toggle. Verified: SQL personalization check + one delivered Resend email.
+  - **OPEN**: `RESEND_API_KEY` not yet on the Railway `workers` service — digest cron is inert (logs + no-ops) until it's added. Could not provision in-session (classifier-blocked).
 
 ---
 
@@ -310,6 +322,7 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | Security Advisor — no CRITICAL findings, one real actionable WARN | Checked 2026-08-19 | Leaked-password protection disabled (Auth) — cheap fix, not yet done. OTP-expiry WARN is the expected result of the deliberate 24h extension (Bug E, already documented). Three "RLS enabled, no policy" INFOs on `backtest_cache`/`raw_events`/`sanctions_entities` are correct-by-design (service-role-only tables) |
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
+| `RESEND_API_KEY` on Railway `workers`  | Open (2026-09-07) | Required for the #83 daily-digest cron to actually send — `EmailService` no-ops without it. Same Resend account that backs Auth SMTP; make a key in the Resend dashboard. Optional: `DIGEST_FROM_EMAIL`, `DIGEST_CRON`. |
 | Alert dispatch never triggered (any channel) | Fixed (2026-08-18, `97b7c4b`) | Was a wiring gap upstream of credentials, not a config problem — see v0.20.0 in `14_CHANGELOG.md` |
 | Telegram alerts not working            | Open (narrowed) | Wiring fixed 2026-08-18; blocker now is only `TELEGRAM_BOT_TOKEN` not set in Railway |
 | Password reset dead-end route          | Fixed (2026-08-18, `97b7c4b`) | `/reset-password` built and live-verified end-to-end |
@@ -386,4 +399,12 @@ GNEWS_API_KEY=<gnews token>
 ANTHROPIC_API_KEY=<optional — heuristic fallback works without credits>
 ACLED_EMAIL=<optional>
 ACLED_PASSWORD=<optional>
+```
+
+### Digest email (Railway workers) — #83
+
+```
+RESEND_API_KEY=<REQUIRED for the daily digest to send; same Resend account as Auth SMTP>
+DIGEST_FROM_EMAIL=digest@send.bluebeaconresearch.com   ← optional; this is the default
+DIGEST_CRON=0 6 * * *                                   ← optional; this is the default (06:00 UTC)
 ```

@@ -210,10 +210,9 @@ Restore when first paying customer asks to subscribe.
 - "Skip for now" link below
 
 **Missing from current onboarding (planned, not built):**
-- Region selection (Middle East / Eastern Europe / Africa / Asia-Pacific / Americas / Global)
-- Commodity preferences (WTI / Brent / Gold / Wheat / NatGas / etc.)
-- Minimum severity threshold slider (7/8/9/10)
-- Alert frequency (immediate / hourly digest / daily 06:00 UTC)
+- ~~Region selection~~ / ~~Commodity preferences~~ — **built 2026-09-07 (#81)**: `/onboarding` step 2 captures followed regions + commodities into `user_preferences`, sets `onboarding_completed_at`.
+- Minimum severity threshold slider (7/8/9/10) — not in onboarding, but editable per alert rule on `/alerts` (#82)
+- Alert frequency (immediate / hourly digest / daily 06:00 UTC) — the **daily digest is built (#83)**, opt-out toggle in Settings → Notifications; per-frequency selection in onboarding is still not built
 - Quiet hours toggle + start/end time
 
 **On complete:**
@@ -456,6 +455,8 @@ Restore when first paying customer asks to subscribe.
 **Purpose:** (1) Manage alert delivery rules, (2) Browse all signals with filtering.
 
 **IMPORTANT NOTE:** This page has drift — it was designed as an alert manager but has evolved to show signal detail as primary content. The "DEPLOY COUNTERMEASURES" button needs immediate removal/rename. This page needs UX clarification.
+
+> ⚠️ UPDATED 2026-09-07 (#82) — Much of the "as built" layout below is now stale. `/alerts` shows the user's alert **rules**, each with its matched signals rendered as four labelled sections — **Event → Why it matters → Which instruments → Alert threshold** — plus a per-card link back to the source article(s) and a one-time "informational only, not financial advice, never a buy/sell recommendation" line. Each rule surfaces its severity threshold as a prominent inline "alert only above this threshold" control. When the analyst briefing isn't available the "why it matters" section shows the plain event summary with an honest note (no fabricated rationale). The Telegram/Slack alert message uses the identical four-section structure. Full detail: `docs/brain/14_CHANGELOG.md` v0.34.0.
 
 **Current layout (as built):**
 - Featured signal detail at top (most critical signal)

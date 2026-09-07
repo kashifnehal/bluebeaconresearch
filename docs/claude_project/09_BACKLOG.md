@@ -70,7 +70,7 @@
 |---|------|--------|-----|
 | C1 | Real backtesting with GDELT historical + Alpha Vantage paid | 2 weeks | Current mock data is misleading |
 | C2 | Stripe billing integration (full, not stubbed) | 3 days | Revenue enabler |
-| C3 | Email alerts via Resend | 1 day | Currently only Telegram works |
+| ~~C3~~ | ~~Email alerts via Resend~~ | — | **Done 2026-09-07 (#83)** — personalized daily digest worker (`digest-sender.ts`) via the existing Resend account, four-section framing, Settings opt-out toggle. One prod step left: set `RESEND_API_KEY` on the Railway `workers` service. See `14_CHANGELOG.md` PHASE 8. |
 | C4 | Populate settings Appearance tab (theme toggle) | 1 day | User preference |
 | C5 | Populate settings Data tab (export, delete account) | 2 days | GDPR compliance, user trust |
 | C6 | Saved signals feature (bookmark icon) | 1 day | User engagement |

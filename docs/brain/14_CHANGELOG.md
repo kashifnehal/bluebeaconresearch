@@ -8,6 +8,39 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.34.0 — Personalization core (#81/#89), Alerts four-section rework (#82), Personalized daily digest (#83) (2026-09-07)
+
+Commits on `main`: `517f796`, `e4bcaf6`, `817fdee` (#81) · `598678e` (#89) · `c0698fc`, `a269547` (#82) · `bc8f4e0`, `57516b0` (#83) · `8645668` (docs).
+
+**#81 — Personalization core.** `user_preferences` **already existed** (init schema): `unique(user_id)` FK→profiles, `commodities`/`regions` `text[]`, `min_severity int default 7`, plus `timezone`/`theme`/`quiet_*`/`email_frequency`/`use_case`, RLS on with per-user policies. Migration `20260907004803_user_preferences_personalization` is **additive only**: `forex_pairs`, `equity_tickers` (reserved/unused), `onboarding_completed_at`, `created_at`; backfilled `onboarding_completed_at` from `profiles.onboarding_completed`.
+- `/onboarding` is now a 2-step wizard; step 2 captures followed commodities/regions from the shared `COMMODITIES`/`REGIONS` constants → upserts `user_preferences`, sets `onboarding_completed_at`. "Skip for now" completes with empty arrays.
+- `/api/signals?personalized=true` (default **OFF**) narrows the feed via one `.or()` combining `region.eq.<id>`, `region.ilike.*<label>*` (signals.region is free text, not canonical ids), and `commodity_impacts.cs.[{"asset":"SYM"}]`. Personalized payloads are **never** written to the process response cache (keyed by query string only → would leak across users). Dashboard shows a "My Feed / Full Feed" toggle only when the user has saved preferences.
+- Shared hook `apps/web/hooks/useMyPreferences.ts` reads prefs under RLS.
+
+**#89 — Watchlist preference-awareness.** `/watchlist` seeds its default list from `user_preferences.commodities` (was hardcoded `["USOIL","XAUUSD"]`; the list is local React state, not persisted to `watchlist_entries`); "My Commodities / Show All" toggle; drill-down shows a "You follow this" chip. The per-symbol correlation view (`watchlist/[symbol]/page.tsx`) already existed.
+
+**#82 — Alerts page + Telegram template reframe.**
+- `/api/alerts/recent` now joins `ai_analysis`, `commodity_impacts`, and the source article link (`signals.raw_event_ids` → `raw_events.raw_data.url`, one batched lookup) onto each matched signal.
+- Each matched signal on `/alerts` renders four labelled sections: **Event → Why it matters → Which instruments → Alert threshold**. "Why it matters" shows `ai_analysis`; when null it shows the event `summary` with a plain "deeper analysis wasn't available" note — **no fabricated analysis**.
+- `alert_rules.min_severity` (confirmed pre-existing, not a new field) surfaced as a prominent inline **"Alert only above this threshold"** control per rule (direct `supabase.from("alert_rules").update(...)` from the client, same pattern as rule insert).
+- Persistent per-card **"Built from"** source links; a one-time not-financial-advice / no-buy-sell line on the first card only (approved wording — `docs/claude_project/00_PROJECT.md §7`, `20_RISKS.md`).
+- `dispatchAlertsForSignal()` (`apps/backend/src/workers/alert-dispatcher.ts`) rebuilds the Telegram **and** Slack body into the same four sections + source link(s) + a shortened trust line. New exported helper `buildAlertBody()`; `firstParagraph()` skips heading lines so "why it matters" opens on a real sentence. Escalation prefix path unchanged.
+- Verified: Playwright screenshot of the reworked card against the standing test account; **3 real Telegram messages from a live dispatch** (all `delivered:1`), both `ai_analysis`-present and `-null` branches; threshold control DB round-trip (6→8).
+
+**#83 — Personalized daily digest.**
+- Migration `20260907021500_user_preferences_digest_enabled` adds `digest_enabled boolean not null default true` (opt-out).
+- New worker `apps/backend/src/workers/digest-sender.ts` — `runDigestOnce()`: for every user with `onboarding_completed_at` set and `digest_enabled = true`, selects **their own** top-5 `is_active` signals from the last 24h matched to their commodities/regions (**same `.or()` approach as the #81 feed filter — no global fallback**), ranked by severity. Email uses the same Event → Why → Instruments → Threshold framing + "Built from" links + trust line + opt-out footer. `selectDigestSignalsForUser` / `renderDigestEmail` exported for testing.
+- New `apps/backend/src/services/email.service.ts` (`EmailService`) wraps the `resend` npm package against the **existing** Resend account (verified sender domain `send.bluebeaconresearch.com`) — not a new provider. **Inert without `RESEND_API_KEY`** (`send()` returns `{sent:false, reason:"no_api_key"}`; the worker logs and no-ops).
+- Scheduled from `workers.ts` via `node-cron` (`DIGEST_CRON`, default `0 6 * * *`), same mechanism as the collectors. New env: `RESEND_API_KEY`, `DIGEST_FROM_EMAIL` (default `digest@send.bluebeaconresearch.com`), `DIGEST_CRON`.
+- Settings → Notifications: real **"Daily Digest"** opt-out toggle wired to `digest_enabled` (loads on mount, saves on change; true→false→true round-trip confirmed).
+- Verified: SQL personalization check — with test-user prefs `regions=[africa]`, `commodities=[CORN,WHEAT]` the digest pulled 5 signals **all** matching CORN/WHEAT, only 1 of which is in the unfiltered global top-5 (Iran/oil-dominated) → genuinely personalized. **One real digest email delivered** to `romantannison@gmail.com` via the real Resend account (id `e06df2b3-ea1d-410d-ac01-019fbbb678dc`, status `delivered`).
+
+**Restrictions honored:** no billing/payment code; `alert_rules.min_severity` default (8) untouched; no new email provider; stayed within the files each part named.
+
+**Open prod step:** `RESEND_API_KEY` must be set on the Railway `workers` service (project `blue beacon research`, service id `2f119503-172c-4a5a-a1fa-b504f0b462ce`) or the digest cron is inert. Could not provision it in-session — Resend `create-api-key` and Railway variable read/write are blocked by the auto-mode classifier; founder to add it.
+
+**Test artifacts left in place:** a test alert rule `#82 VERIFY — all regions, sev 6+` + its `alerts_sent` rows on `romantannison`'s account (so the live `/alerts` page is viewable) — safe to delete. The test user's `user_preferences.commodities`/`regions` were reset to empty afterward.
+
 ### v0.33.0 — CTO Reliability/Observability/DB-Cleanup task: third-pass verification, nothing new open (2026-08-28)
 
 The 7-part reliability task was re-issued a third time ("status-check first, then fix what's actually still open"). **Full state re-verified against current code — every part was already delivered across v0.21.0 (2026-08-18) and the v0.31.0 re-audit (2026-08-27, commits `042c249` `b4f4259` `7a7bc6a` `67b6804` `9e7be09`). No new code was needed; no commit for the reliability parts themselves.** This entry is the consolidated status so the task isn't re-opened a fourth time on a missing report.

@@ -104,6 +104,13 @@ Ingested news articles and military incident logs before AI processing.
 ### Table 7: `api_keys` & Table 8: `webhook_endpoints`
 Institutional developer API credentials and webhook subscription URLs.
 
+### Table 9: `user_preferences` (see `docs/brain/04_DATABASE.md` Table 11 for the full, live column list)
+Per-user feed/notification settings (`unique(user_id)`). `regions` / `commodities` `text[]`, `min_severity int default 7`, `timezone`, `theme`, `quiet_start`/`quiet_end`, `email_frequency`, `use_case`.
+- **Added 2026-09-07 (#81)**: `onboarding_completed_at timestamptz`, `created_at timestamptz`, reserved `forex_pairs`/`equity_tickers text[]`.
+- **Added 2026-09-07 (#83)**: `digest_enabled boolean NOT NULL default true` — opt-out for the daily digest, toggled from Settings → Notifications.
+
+> This tree's DB doc lists only the core tables; `docs/brain/04_DATABASE.md` is regenerated from `information_schema` and is authoritative for the full schema.
+
 ---
 
 ## 3. Indexes & Performance Optimization

@@ -122,6 +122,14 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 
 ---
 
+### 2.6 Digest Sender (`digest-sender.ts`) — #83, added 2026-09-07
+
+**Not part of the ingestion cycle.** Its own `node-cron` schedule in `workers.ts` — `DIGEST_CRON`, default `0 6 * * *` (06:00 UTC), once daily.
+**Auth:** `RESEND_API_KEY` (same Resend account as Auth SMTP; **not yet set in production** — worker logs and no-ops without it).
+**Logic:** `runDigestOnce()` → every `user_preferences` row with `onboarding_completed_at` set and `digest_enabled = true` → per user, the top 5 `is_active` signals from the last 24h whose `region`/`commodity_impacts` overlap that user's saved `regions`/`commodities` (same `.or()` matching as `/api/signals?personalized=true`), ranked by severity. No global fallback — a user with no saved preferences gets nothing. Email body: Event → Why it matters → Which instruments → Alert threshold + "Built from" source links + not-financial-advice line, via `EmailService` (`resend` npm package).
+
+---
+
 ## 3. Relevance Filter (`lib/relevance-filter.ts`)
 
 All news collectors share one filter module.

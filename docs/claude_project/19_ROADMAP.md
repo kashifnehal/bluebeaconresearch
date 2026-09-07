@@ -43,10 +43,10 @@ Product:
 - [ ] Economic Calendar page (/calendar) with Trading Economics API
 - [ ] Price-at-signal display on signal cards
 - [ ] Central bank rates widget on watchlist
-- [ ] Morning brief automated (07:45 UTC Telegram + email)
+- [x] Morning brief automated — **#83, done 2026-09-07**: personalized daily digest email (06:00 UTC, `node-cron`), each user's own preference-matched top-5. Telegram alerts are per-signal, not a scheduled brief. Prod step left: `RESEND_API_KEY` on Railway workers.
 - [ ] Public Telegram channel (@BlueBeaconResearch) with delayed free signals
 - [ ] /accuracy public page with live track record
-- [ ] Settings Notifications tab built
+- [x] Settings Notifications tab built — Telegram connect + Daily Digest opt-out toggle (#83) live
 - [ ] Settings Security tab (change password, sessions)
 - [ ] Guardian API as second news source
 - [ ] Outcome tracker worker (fills outcome_direction for accuracy)
@@ -70,7 +70,7 @@ Product:
 - [ ] Stripe billing implemented (checkout, webhook, portal)
 - [ ] Plan enforcement middleware active (free tier delay enforced)
 - [ ] Referral program ("1 month free per invite")
-- [ ] Email alerts via Resend
+- [x] Email alerts via Resend — **done 2026-09-07 (#83)**: daily digest via the existing Resend account; `RESEND_API_KEY` still to be set on Railway workers
 - [ ] PostHog analytics (understand where users drop off)
 - [ ] Sentry error monitoring
 
