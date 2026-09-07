@@ -48,9 +48,16 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)
 
-## Known open technical item
-Playwright MCP's browser profile has locked twice in this environment, blocking
-the mandated visual-verification step both times. Fixed 2026-09-07 by
-re-registering with --isolated (see project's MCP config). Until confirmed
-working, fall back to direct SQL/API verification for data correctness, but
-flag explicitly whenever UI rendering itself wasn't visually confirmed.
+## Known open technical item — RESOLVED 2026-09-07
+Playwright MCP's browser profile had locked twice in this environment (orphaned
+`ms-playwright-mcp/mcp-chrome-*` Chrome processes from a prior session holding
+the profile's singleton lock), blocking the mandated visual-verification step
+both times. Fixed by re-registering the server with `--isolated` (`claude mcp
+remove playwright` / `claude mcp add playwright npx '@playwright/mcp@latest' --
+--isolated`) and killing the orphaned processes so the live session could pick
+up a clean profile. Confirmed working: full Playwright walkthrough of #81/#89
+completed same day (fresh signup → onboarding steps 1-2 → SQL-confirmed
+user_preferences row → dashboard "My Feed" toggle narrows 2622→816 and reverts
+→ watchlist "My Commodities"/"Show All" toggle → drill-down "You follow this"
+chip). Direct SQL/API verification remains the default per token-discipline
+policy; Playwright is for visual/rendering/interaction checks specifically.
