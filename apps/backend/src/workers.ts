@@ -13,6 +13,7 @@ import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
+import { runDigestOnce } from "./workers/digest-sender.js";
 import {
   buildPipelineStatus,
   recordPipelineRun,
@@ -188,6 +189,21 @@ async function main() {
       }
     } catch (e) {
       app.log.error({ err: e }, "reconciliation failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // #83 — personalized daily digest. Once a day (DIGEST_CRON, default 06:00 UTC, ahead
+  // of the European cash open), using the same node-cron mechanism as the collectors.
+  const digestCron =
+    process.env.DIGEST_CRON && cron.validate(process.env.DIGEST_CRON) ? process.env.DIGEST_CRON : "0 6 * * *";
+  app.log.info({ schedule: digestCron }, "workers: digest cron schedule");
+  cron.schedule(digestCron, async () => {
+    try {
+      const res = await runDigestOnce();
+      app.log.info({ res }, "digest-sender complete");
+    } catch (e) {
+      app.log.error({ err: e }, "digest-sender failed");
       Sentry.captureException(e);
     }
   });

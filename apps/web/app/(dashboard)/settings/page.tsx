@@ -31,6 +31,9 @@ export default function SettingsPage() {
   const [notifPush, setNotifPush] = useState(false);
   const [password, setPassword] = useState("");
   const [retentionDays, setRetentionDays] = useState(90);
+  // #83 — real, persisted preference: the once-daily personalized digest.
+  const [digestEnabled, setDigestEnabled] = useState(true);
+  const [digestSaving, setDigestSaving] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
@@ -53,6 +56,15 @@ export default function SettingsPage() {
         .select("*")
         .eq("id", user.id)
         .single();
+
+      const { data: prefs } = await supabase
+        .from("user_preferences")
+        .select("digest_enabled")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (prefs && typeof prefs.digest_enabled === "boolean") {
+        setDigestEnabled(prefs.digest_enabled);
+      }
 
       if (data) {
         setProfile({
@@ -97,6 +109,31 @@ export default function SettingsPage() {
       });
     }
     setSaving(false);
+  };
+
+  const toggleDigest = async (next: boolean) => {
+    if (!profile) return;
+    const prev = digestEnabled;
+    setDigestEnabled(next);
+    setDigestSaving(true);
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setDigestEnabled(prev);
+      setDigestSaving(false);
+      toast.error("System Failure: Supabase link not established");
+      return;
+    }
+    const { error } = await supabase
+      .from("user_preferences")
+      .update({ digest_enabled: next })
+      .eq("user_id", profile.id);
+    setDigestSaving(false);
+    if (error) {
+      setDigestEnabled(prev);
+      toast.error(`Update Failed: ${error.message}`);
+    } else {
+      toast.success(next ? "Daily digest on" : "Daily digest off");
+    }
   };
 
   return (
@@ -331,10 +368,30 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-label text-[10px] font-bold uppercase">
+                          Daily Digest
+                        </p>
+                        <p className="text-[10px] text-on-surface-variant max-w-md">
+                          Once a day, your top signals from the last 24 hours — filtered to the
+                          regions and commodities you follow, ranked by severity. Informational
+                          only, not financial advice.
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        aria-label="Daily digest email"
+                        checked={digestEnabled}
+                        disabled={digestSaving}
+                        onChange={(e) => toggleDigest(e.target.checked)}
+                      />
+                    </div>
+                    <div className="border-t border-outline-variant/20 my-2" />
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-label text-[10px] font-bold uppercase">
                           Email Alerts
                         </p>
                         <p className="text-[10px] text-on-surface-variant">
-                          Receive daily summaries and urgent alerts via email
+                          Receive urgent alerts via email
                         </p>
                       </div>
                       <input

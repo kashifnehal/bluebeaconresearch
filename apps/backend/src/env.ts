@@ -44,6 +44,14 @@ const envSchema = z.object({
   ACLED_EMAIL: z.string().optional(),
   ACLED_PASSWORD: z.string().optional(),
   GNEWS_API_KEY: z.string().optional(),
+
+  // Resend API key for the #83 daily digest. Same Resend account that already backs
+  // Supabase Auth's custom SMTP (verified sender domain send.bluebeaconresearch.com) —
+  // this is app-level API access to that same account, not a new provider. Unset =>
+  // the digest worker logs and no-ops instead of sending.
+  RESEND_API_KEY: z.string().optional(),
+  DIGEST_FROM_EMAIL: z.string().optional(),
+  DIGEST_CRON: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
