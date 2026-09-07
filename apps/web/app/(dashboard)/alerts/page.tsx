@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ReactMarkdown from "react-markdown";
 import type { Signal } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow, generateAlertRuleName } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CommodityChip } from "@/components/signals/CommodityChip";
 import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Pagination } from "@/components/ui/Pagination";
@@ -31,12 +33,24 @@ type DeliveryStatus = "queued" | "delivered" | "failed";
 // `.slice(0, 5)`, so page 1 of each rule renders exactly as it did before.
 const MATCHES_PER_PAGE = 5;
 
+// The one compliance line BBR shows on every signal surface — approved wording from
+// docs/claude_project/00_PROJECT.md §7 / 20_RISKS.md / 21_PROJECT_BRIEFING.md.
+const DISCLAIMER =
+  "Blue Beacon Research surfaces geopolitical signals for your own analysis. Intelligence for informational purposes only — not financial advice, and never a buy or sell recommendation.";
+
+type MatchSource = { title: string; url: string | null; sourceLabel: string | null };
+
 type MatchedSignal = {
   id: string;
   title: string;
   severity: number;
+  summary: string | null;
+  aiAnalysis: string | null;
+  commodityImpacts: Signal["commodityImpacts"];
+  isBreaking: boolean;
   eventDate?: string | null;
   matchedAt: string;
+  sources: MatchSource[];
   deliveries: { channel: string | null; status: DeliveryStatus }[];
 };
 
@@ -51,7 +65,12 @@ type AlertSentRow = {
     id: string;
     title: string;
     severity: number;
+    summary?: string | null;
+    ai_analysis?: string | null;
+    commodity_impacts?: Signal["commodityImpacts"] | null;
+    is_breaking?: boolean | null;
     event_date?: string | null;
+    sources?: MatchSource[];
   } | null;
 };
 
@@ -59,6 +78,29 @@ function worstDeliveryStatus(deliveries: { status: DeliveryStatus }[]): Delivery
   if (deliveries.some((d) => d.status === "failed")) return "failed";
   if (deliveries.some((d) => d.status === "queued")) return "queued";
   return "delivered";
+}
+
+/** One labelled block of an alert card — Event / Why it matters / Which instruments / Threshold. */
+function CardSection({
+  step,
+  label,
+  children,
+}: {
+  step: number;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="px-4 py-3 border-t border-outline-variant/10 first:border-t-0">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="w-4 h-4 shrink-0 rounded-sm bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center mono">
+          {step}
+        </span>
+        <span className="label text-[9px] tracking-widest text-outline font-bold uppercase">{label}</span>
+      </div>
+      <div className="pl-6">{children}</div>
+    </div>
+  );
 }
 
 export default function AlertsPage() {
@@ -72,6 +114,9 @@ export default function AlertsPage() {
   // Per-rule page index for the "Recent Matches" list (client-side — paginates
   // the already-fetched, already-grouped matches for that rule).
   const [matchPageByRule, setMatchPageByRule] = useState<Record<string, number>>({});
+  // Local echo of the threshold control so the number input stays responsive while
+  // the save round-trips.
+  const [thresholdDraft, setThresholdDraft] = useState<Record<string, number>>({});
 
   const { data: rulesData, isLoading: rulesLoading, isError: rulesError } = useQuery({
     queryKey: ["alert-rules"],
@@ -96,11 +141,30 @@ export default function AlertsPage() {
   const rules = rulesData?.rules ?? [];
   const isLoading = rulesLoading || alertsLoading;
 
+  const updateThreshold = useMutation({
+    mutationFn: async ({ ruleId, minSeverity }: { ruleId: string; minSeverity: number }) => {
+      if (minSeverity < 1 || minSeverity > 10) throw new Error("Severity must be between 1 and 10");
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) throw new Error("Supabase client not available");
+      const { error } = await supabase
+        .from("alert_rules")
+        .update({ min_severity: minSeverity })
+        .eq("id", ruleId);
+      if (error) throw error;
+    },
+    onSuccess: (_d, { minSeverity }) => {
+      track("alert_rule_threshold_changed", { minSeverity });
+      toast.success("Threshold updated", { description: `Now alerting only at severity ${minSeverity}+` });
+      queryClient.invalidateQueries({ queryKey: ["alert-rules"] });
+    },
+    onError: (err: any) => toast.error(err?.message || "Failed to update threshold"),
+  });
+
   // Real alerts_sent rows only, grouped per rule then per signal (a signal can have
   // one alerts_sent row per delivery channel) — this is what "matched" a rule actually
   // means: a dispatch attempt the backend already made, per the matching logic in
-  // apps/backend/src/workers/alert-dispatcher.ts lines 48-57. Nothing here re-derives
-  // or guesses matches client-side.
+  // apps/backend/src/workers/alert-dispatcher.ts. Nothing here re-derives or guesses
+  // matches client-side.
   const matchesByRule = useMemo(() => {
     const alertRows = alertsData?.alerts ?? [];
     const perRule = new Map<string, Map<string, MatchedSignal>>();
@@ -120,8 +184,13 @@ export default function AlertsPage() {
           id: row.signals.id,
           title: row.signals.title,
           severity: row.signals.severity,
+          summary: row.signals.summary ?? null,
+          aiAnalysis: row.signals.ai_analysis ?? null,
+          commodityImpacts: row.signals.commodity_impacts ?? [],
+          isBreaking: Boolean(row.signals.is_breaking),
           eventDate: row.signals.event_date,
           matchedAt: row.created_at,
+          sources: row.signals.sources ?? [],
           deliveries: [{ channel: row.channel, status: row.status }],
         });
       }
@@ -135,6 +204,16 @@ export default function AlertsPage() {
     }
     return result;
   }, [alertsData]);
+
+  // The disclaimer is shown once on the page — attached to the first matched-signal
+  // card that actually renders (first rule, in list order, that has ≥1 match).
+  const disclaimerAnchor = useMemo(() => {
+    for (const rule of rules) {
+      const m = matchesByRule.get(rule.id);
+      if (m && m.length > 0) return { ruleId: rule.id, signalId: m[0].id };
+    }
+    return null;
+  }, [rules, matchesByRule]);
 
   const openSetAlertModal = (signal?: Signal) => {
     if (signal) {
@@ -262,6 +341,7 @@ export default function AlertsPage() {
             const regions = rule.regions?.length ? rule.regions : null;
             const commodities = rule.commodities?.length ? rule.commodities : null;
             const channels = rule.channels?.length ? rule.channels : ["telegram"];
+            const threshold = thresholdDraft[rule.id] ?? rule.min_severity;
 
             return (
               <div
@@ -304,10 +384,6 @@ export default function AlertsPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="label text-[9px] text-outline uppercase font-bold">Threshold:</span>
-                        <span className="mono text-[10px] text-primary font-bold">SEVERITY {rule.min_severity}+</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
                         <span className="label text-[9px] text-outline uppercase font-bold">Channels:</span>
                         <span className="mono text-[10px] text-on-surface font-bold uppercase">{channels.join(" · ")}</span>
                       </div>
@@ -321,44 +397,179 @@ export default function AlertsPage() {
                   </div>
                 </div>
 
+                {/* Alert threshold control — surfaced prominently, not buried in the "new rule" modal */}
+                <div className="px-6 py-4 bg-primary/[0.04] border-b border-outline-variant/10 flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <span className="label text-[10px] tracking-widest text-primary font-bold uppercase block">
+                      Alert only above this threshold
+                    </span>
+                    <span className="text-[11px] text-on-surface/60">
+                      This rule notifies you only when a matching signal reaches at least this severity (1–10).
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={threshold}
+                      onChange={(e) =>
+                        setThresholdDraft((p) => ({ ...p, [rule.id]: Number(e.target.value) }))
+                      }
+                      className="w-16 bg-surface-container-lowest border border-outline-variant/40 p-2 text-sm text-on-surface rounded font-mono text-center focus:border-primary focus:outline-none"
+                    />
+                    <button
+                      disabled={updateThreshold.isPending || threshold === rule.min_severity}
+                      onClick={() => updateThreshold.mutate({ ruleId: rule.id, minSeverity: threshold })}
+                      className="px-4 py-2 bg-primary text-black text-[10px] font-bold uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
+                    >
+                      {threshold === rule.min_severity ? `Severity ${rule.min_severity}+` : "Save"}
+                    </button>
+                  </div>
+                </div>
+
                 <div className="p-4">
-                  <span className="label text-[9px] tracking-widest text-outline font-bold uppercase block mb-2 px-2">
+                  <span className="label text-[9px] tracking-widest text-outline font-bold uppercase block mb-3 px-2">
                     Recent Matches
                   </span>
                   {matches.length === 0 ? (
                     <p className="text-xs text-on-surface/50 px-2 py-3 italic">No signals have matched this rule yet.</p>
                   ) : (
-                    <div className="divide-y divide-outline-variant/10">
+                    <div className="space-y-4">
                       {matches.map((m) => {
-                        const isHigh = m.severity >= 8;
                         const status = worstDeliveryStatus(m.deliveries);
+                        const showDisclaimer =
+                          disclaimerAnchor?.ruleId === rule.id && disclaimerAnchor?.signalId === m.id;
                         return (
-                          <div
-                            key={m.id}
-                            onClick={() => router.push(`/events/${m.id}`)}
-                            className="flex items-center gap-4 px-2 py-3 hover:bg-surface-bright/20 transition-all group cursor-pointer"
-                          >
-                            <div className={`w-2 h-2 rounded-full shrink-0 ${isHigh ? "bg-error" : "bg-primary"}`}></div>
-                            <span className="mono text-[10px] text-outline font-bold whitespace-nowrap w-20 shrink-0">
-                              {safeFormatDistanceToNow(m.matchedAt)} ago
-                            </span>
-                            <span className="flex-1 min-w-0 text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors">
-                              {m.title}
-                            </span>
-                            <span
-                              className={`px-2 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm border shrink-0 ${
-                                status === "failed"
-                                  ? "bg-error-container/20 border-error/50 text-error"
-                                  : status === "queued"
-                                    ? "bg-[#ffb340]/10 border-[#ffb340]/50 text-[#ffb340]"
-                                    : "bg-primary/10 border-primary/50 text-primary"
-                              }`}
-                            >
-                              {status === "failed" ? "Delivery Failed" : status === "queued" ? "Not Delivered" : "Delivered"}
-                            </span>
-                            <span className="material-symbols-outlined text-on-surface/20 group-hover:text-primary group-hover:translate-x-1 transition-all text-sm shrink-0">
-                              chevron_right
-                            </span>
+                          <div key={m.id}>
+                            <div className="rounded-lg border border-outline-variant/15 bg-surface-container-low overflow-hidden">
+                              {/* ── 1. EVENT ── */}
+                              <CardSection step={1} label="Event">
+                                <button
+                                  onClick={() => router.push(`/events/${m.id}`)}
+                                  className="text-left w-full group"
+                                >
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {m.isBreaking && (
+                                      <span className="px-1.5 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm bg-error/15 text-error border border-error/40">
+                                        Breaking
+                                      </span>
+                                    )}
+                                    <span className="px-1.5 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm bg-surface-variant text-on-surface-variant border border-outline-variant/30">
+                                      Severity {m.severity}
+                                    </span>
+                                    <span className="mono text-[10px] text-outline font-bold">
+                                      {safeFormatDistanceToNow(m.matchedAt)} ago
+                                    </span>
+                                    <span
+                                      className={`ml-auto px-2 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm border ${
+                                        status === "failed"
+                                          ? "bg-error-container/20 border-error/50 text-error"
+                                          : status === "queued"
+                                            ? "bg-[#ffb340]/10 border-[#ffb340]/50 text-[#ffb340]"
+                                            : "bg-primary/10 border-primary/50 text-primary"
+                                      }`}
+                                    >
+                                      {status === "failed" ? "Delivery Failed" : status === "queued" ? "Not Delivered" : "Delivered"}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1.5 text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+                                    {m.title}
+                                  </p>
+                                </button>
+                              </CardSection>
+
+                              {/* ── 2. WHY IT MATTERS ── */}
+                              <CardSection step={2} label="Why it matters">
+                                {m.aiAnalysis ? (
+                                  <div className="text-[13px] text-on-surface/80 leading-relaxed [&_ul]:list-disc [&_ul]:pl-5 [&_p+p]:mt-2">
+                                    <ReactMarkdown
+                                      allowedElements={["p", "strong", "em", "ul", "ol", "li"]}
+                                      unwrapDisallowed
+                                    >
+                                      {m.aiAnalysis}
+                                    </ReactMarkdown>
+                                  </div>
+                                ) : m.summary ? (
+                                  <div>
+                                    <p className="text-[13px] text-on-surface/80 leading-relaxed">{m.summary}</p>
+                                    <p className="mt-1.5 text-[10px] text-on-surface/45 italic">
+                                      Deeper analyst commentary wasn&apos;t available for this signal — showing the
+                                      event summary instead.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="text-[11px] text-on-surface/45 italic">
+                                    No summary available for this signal yet.
+                                  </p>
+                                )}
+                              </CardSection>
+
+                              {/* ── 3. WHICH INSTRUMENTS ── */}
+                              <CardSection step={3} label="Which instruments">
+                                {m.commodityImpacts.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {m.commodityImpacts.map((c) => (
+                                      <CommodityChip
+                                        key={c.asset}
+                                        asset={c.asset}
+                                        direction={c.direction}
+                                        confidence={c.confidence}
+                                        size="md"
+                                      />
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-[11px] text-on-surface/45 italic">
+                                    No specific instruments were flagged for this event.
+                                  </p>
+                                )}
+                              </CardSection>
+
+                              {/* ── 4. ALERT THRESHOLD ── */}
+                              <CardSection step={4} label="Alert threshold">
+                                <p className="text-[12px] text-on-surface/70">
+                                  Delivered because it cleared{" "}
+                                  <span className="font-bold text-on-surface">{rule.name}</span>&apos;s threshold —
+                                  severity{" "}
+                                  <span className="mono font-bold text-primary">{rule.min_severity}+</span>. Raise the
+                                  threshold above to hear about fewer, higher-severity events.
+                                </p>
+                              </CardSection>
+
+                              {/* ── Persistent trust element: source link(s) ── */}
+                              {m.sources.length > 0 && (
+                                <div className="px-4 py-2.5 border-t border-outline-variant/10 bg-surface-container/40 flex items-start gap-2 flex-wrap">
+                                  <span className="label text-[9px] tracking-widest text-outline font-bold uppercase mt-0.5">
+                                    Built from
+                                  </span>
+                                  <div className="flex flex-col gap-1">
+                                    {m.sources.map((s, i) => (
+                                      <a
+                                        key={i}
+                                        href={s.url ?? "#"}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
+                                      >
+                                        <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                                        <span className="truncate max-w-[420px]">
+                                          {s.sourceLabel ? `${s.sourceLabel} — ` : ""}
+                                          {s.title}
+                                        </span>
+                                      </a>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Disclaimer — once per page, attached to the first card */}
+                            {showDisclaimer && (
+                              <p className="mt-2 px-1 text-[10px] leading-relaxed text-on-surface/45">
+                                {DISCLAIMER}
+                              </p>
+                            )}
                           </div>
                         );
                       })}
