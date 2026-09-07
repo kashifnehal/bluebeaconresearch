@@ -8,7 +8,7 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.35.0 — Economic calendar (#86); #83's RESEND_API_KEY resolved (2026-09-07)
+### v0.35.0 — Economic calendar (#86); #83 digest prod cron path end-to-end confirmed (2026-09-07)
 
 Commit on `main`: `30cf1f2`.
 
@@ -22,7 +22,7 @@ Commit on `main`: `30cf1f2`.
 - Verified live via Playwright against the standing test account: real dates render; "This Week" correctly isolated just the Sept 10 ECB decision (today, at verification time, was Monday Sept 7) with every other event correctly falling into "Upcoming"; the countdown was read twice, 13 seconds apart (`3d 09h 44m 04s` → `3d 09h 43m 51s`), confirming it computes against and ticks with the real clock rather than being static. Zero console errors, no hydration warnings.
 - Restrictions honored: no paid API, no new external credential, no fabricated Forecast/Previous/Actual, no billing code touched.
 
-**#83 follow-up — `RESEND_API_KEY` resolved.** Founder added the variable to the Railway `workers` service and redeployed. Confirmed via Railway deploy logs for the resulting deployment (`cfcce75c`, status `SUCCESS`): `"workers: digest cron schedule"` logged at boot with `schedule: "0 6 * * *"`. Resend's own API-key list still shows only the pre-existing `bbr-supabase-smtp` key — the same key is being reused for the digest's HTTP calls, which is fine (a Resend API key isn't SMTP-restricted). **Not yet independently confirmed**: an actual send from the deployed worker using the new key — that only happens at the next 06:00 UTC cron run, or via a manual `runDigestOnce()` trigger; check Resend's Logs tab (`POST /emails` from production) to close this out fully.
+**#83 follow-up — `RESEND_API_KEY` resolved.** Founder added the variable to the Railway `workers` service and redeployed. Confirmed via Railway deploy logs for the resulting deployment (`cfcce75c`, status `SUCCESS`): `"workers: digest cron schedule"` logged at boot with `schedule: "0 6 * * *"`. Resend's own API-key list still shows only the pre-existing `bbr-supabase-smtp` key — the same key is being reused for the digest's HTTP calls, which is fine (a Resend API key isn't SMTP-restricted). **Production cron path fully end-to-end confirmed (2026-09-07, same day)** — a one-off verification with no code change: test account `romantannison` given `user_preferences.regions = ['middle-east']`; `DIGEST_CRON` on the `workers` service temporarily set to `15 3 * * *`; the deployed worker's own `cron.schedule` callback fired `runDigestOnce()` at 03:15:08 UTC → log `[digest] sent to romantannison@gmail.com (5 signals) id=ffc24290-8ad1-4338-ac15-9c24707f60a1` followed by `digest-sender complete`. Resend confirms email `ffc24290-8ad1-4338-ac15-9c24707f60a1`: from `digest@send.bluebeaconresearch.com`, SES message-id, **status delivered**, created 03:15:02 UTC — a new id distinct from the earlier manual test send `e06df2b3-ea1d-410d-ac01-019fbbb678dc`. All 5 signals were Middle East, matching the test account's region pref (personalization path confirmed through the deployed worker). `DIGEST_CRON` reset to `0 6 * * *` afterwards (redeploy `43d4d3fc`); `romantannison`'s region pref left in place so the daily 06:00 UTC cron keeps exercising a real recipient. No temporary endpoint or debug route was created (the existing `DIGEST_CRON` env var was the trigger), so nothing to remove.
 
 ### v0.34.0 — Personalization core (#81/#89), Alerts four-section rework (#82), Personalized daily digest (#83) (2026-09-07)
 
@@ -53,7 +53,7 @@ Commits on `main`: `517f796`, `e4bcaf6`, `817fdee` (#81) · `598678e` (#89) · `
 
 **Restrictions honored:** no billing/payment code; `alert_rules.min_severity` default (8) untouched; no new email provider; stayed within the files each part named.
 
-**Open prod step:** `RESEND_API_KEY` must be set on the Railway `workers` service (project `blue beacon research`, service id `2f119503-172c-4a5a-a1fa-b504f0b462ce`) or the digest cron is inert. Could not provision it in-session — Resend `create-api-key` and Railway variable read/write are blocked by the auto-mode classifier; founder to add it.
+**Open prod step:** ~~`RESEND_API_KEY` must be set on the Railway `workers` service or the digest cron is inert.~~ **RESOLVED + verified end-to-end 2026-09-07** — see v0.35.0 above: key is on the `workers` service (id `2f119503-172c-4a5a-a1fa-b504f0b462ce`) and a one-off prod run of the deployed worker's own digest cron delivered a real email (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`).
 
 **Test artifacts left in place:** a test alert rule `#82 VERIFY — all regions, sev 6+` + its `alerts_sent` rows on `romantannison`'s account (so the live `/alerts` page is viewable) — safe to delete. The test user's `user_preferences.commodities`/`regions` were reset to empty afterward.
 

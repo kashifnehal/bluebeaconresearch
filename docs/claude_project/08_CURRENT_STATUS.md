@@ -6,7 +6,7 @@
 >
 > ⚠️ UPDATED 2026-09-07 — Personalization (#81), watchlist preference-awareness (#89), the Alerts four-section reframe + Telegram template (#82), and the personalized daily digest (#83) all shipped. `user_preferences` gained `onboarding_completed_at`/`created_at`/`digest_enabled` (+ reserved forex/equity columns). New backend worker `digest-sender.ts` on a daily `node-cron`. Full detail: `docs/brain/14_CHANGELOG.md` v0.34.0, `docs/claude_project/14_CHANGELOG.md` PHASE 8, `docs/brain/LIVE_TODO.md`.
 >
-> ⚠️ UPDATED 2026-09-07 (later same day) — The economic calendar (#86) also shipped: new `/calendar` page on a static, manually-curated data file (deliberate v1, not a live paid API). Separately, `RESEND_API_KEY` is **no longer an open item** — the founder set it on the Railway `workers` service and redeployed; confirmed live via deploy logs. Full detail: `docs/brain/14_CHANGELOG.md` v0.35.0.
+> ⚠️ UPDATED 2026-09-07 (later same day) — The economic calendar (#86) also shipped: new `/calendar` page on a static, manually-curated data file (deliberate v1, not a live paid API). Separately, the #83 digest **production cron path is now fully end-to-end confirmed** (not just "key is live"): a one-off prod verification (no code change) temporarily pointed `DIGEST_CRON` at a near-term time and the deployed `workers` service's own cron callback ran `runDigestOnce()`, delivering a real personalized email via the Railway `RESEND_API_KEY` (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, status delivered, distinct from the earlier manual test send). `DIGEST_CRON` was reset to `0 6 * * *`. Full detail: `docs/brain/14_CHANGELOG.md` v0.35.0, `docs/brain/LIVE_TODO.md` (#83).
 
 Last updated: 2026-08-12
 

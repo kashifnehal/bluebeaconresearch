@@ -39,16 +39,22 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   unfiltered global top-5 (Iran-dominated) → genuinely personalized. One real
   digest email delivered to romantannison@gmail.com via the existing Resend
   account (id e06df2b3-ea1d-410d-ac01-019fbbb678dc, status delivered).
-  REMAINING PROD STEP — RESOLVED 2026-09-07: founder added `RESEND_API_KEY` to
-  the Railway `workers` service and redeployed (deployment `cfcce75c`, SUCCESS).
-  Confirmed via Railway deploy logs: `"workers: digest cron schedule"` fired at
-  boot with `schedule: "0 6 * * *"`, so the worker is live with the cron active.
-  Not yet confirmed: an actual send from the deployed worker with the new key
-  (that only happens at the next 06:00 UTC run, or via a manual trigger) — check
-  Resend's Logs tab after the next run, or trigger `runDigestOnce()` manually,
-  to see a real `POST /emails` from production. Resend still shows only the one
-  pre-existing API key (`bbr-supabase-smtp`), so the same key is being reused
-  for the digest's HTTP calls — that's fine, Resend keys aren't SMTP-only.
+  PROD CRON PATH — FULLY END-TO-END CONFIRMED 2026-09-07: founder added
+  `RESEND_API_KEY` to the Railway `workers` service; then a one-off prod
+  verification ran the real cron path (no code change): test account
+  romantannison given `user_preferences.regions = ['middle-east']`, `DIGEST_CRON`
+  on the `workers` service temporarily set to `15 3 * * *`, the deployed worker's
+  own `cron.schedule` callback fired `runDigestOnce()` at 03:15:08 UTC →
+  `[digest] sent to romantannison@gmail.com (5 signals) id=ffc24290-8ad1-4338-ac15-9c24707f60a1`,
+  `digest-sender complete`. Resend confirms email `ffc24290-8ad1-4338-ac15-9c24707f60a1`
+  (from `digest@send.bluebeaconresearch.com`, SES message-id, **status delivered**,
+  created 03:15:02 UTC) — a new, distinct id from the earlier manual test send
+  `e06df2b3-ea1d-410d-ac01-019fbbb678dc`. All 5 signals were Middle East, matching
+  the test account's region pref → personalization path confirmed through the
+  deployed worker. `DIGEST_CRON` reset to `0 6 * * *` afterwards; romantannison's
+  region pref left in place (founder's own test account — keeps the daily cron
+  exercising a real recipient). Resend still shows only the one pre-existing API
+  key — same key reused for the digest's HTTP calls, which is fine.
 - #86 Economic calendar — 30cf1f2. New `/calendar` page (this week + upcoming
   tables, 🔴/🟡/🟢 impact indicators, live countdown to the next high-impact
   event) backed by a **static, manually-curated** `apps/web/data/economic-calendar.json`
@@ -90,9 +96,11 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
    strategy, not on live interviews or a payment test.
 
 ## Priority queue (updated 2026-09-07)
-- #82, #83, and #86 closed 2026-09-07 (see "Closed, verified"). #83's
-  RESEND_API_KEY prod follow-up is resolved (key added + redeployed by
-  founder); only the first-actual-send confirmation is still pending.
+- #82, #83, and #86 closed 2026-09-07 (see "Closed, verified"). #83's prod
+  cron path is now **fully end-to-end confirmed** — a one-off prod run of the
+  deployed worker's own digest cron delivered a real email via the Railway
+  `RESEND_API_KEY` (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, delivered).
+  No follow-ups outstanding.
 - Next: #87 (forex taxonomy expansion, forex only — gate cleared)
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
 - Independent, no dependency: WhatsApp Business API approval (lead-time only)

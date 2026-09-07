@@ -2,7 +2,7 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-07 (economic calendar #86, RESEND_API_KEY resolved for #83 — see `14_CHANGELOG.md` v0.35.0)
+Last updated: 2026-09-07 (economic calendar #86; #83 digest prod cron path fully end-to-end confirmed — see `14_CHANGELOG.md` v0.35.0)
 
 ---
 
@@ -10,7 +10,7 @@ Last updated: 2026-09-07 (economic calendar #86, RESEND_API_KEY resolved for #83
 
 New `/calendar` page (#86) — This Week / Upcoming tables, live countdown to the next high-impact event, 🔴/🟡/🟢 impact indicators. Backed by a **static, manually-curated** `apps/web/data/economic-calendar.json` — a deliberate v1 choice (no new paid API/vendor before real usage justifies it), not a gap. 10 events (Sept 10 → Oct 30, 2026: ECB x2, FOMC x2, BOJ x2, US NFP, US CPI, US GDP Q3 advance, OPEC Monthly Oil Market Report), dates sourced from each institution's own published schedule, not guessed — no OPEC+ ministerial production-quota date has been published for this window, so only the confirmed report date is listed. Forecast/Previous/Actual are `null` → render as "—", never fabricated. Full detail: `14_CHANGELOG.md` v0.35.0.
 
-**#83's RESEND_API_KEY item is resolved** — founder added it to the Railway `workers` service and redeployed (deployment `cfcce75c`, SUCCESS); confirmed live via deploy logs. First actual send from production not yet independently confirmed.
+**#83's digest production cron path is fully end-to-end confirmed** — `RESEND_API_KEY` is on the Railway `workers` service, and a one-off prod verification ran the deployed worker's own digest cron, delivering a real email via the Railway key (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, delivered). Nothing outstanding.
 
 ---
 
@@ -22,7 +22,7 @@ Full detail in `14_CHANGELOG.md` v0.34.0. Summary of what's now built:
 - **#89 Watchlist preference-awareness** — `/watchlist` seeds defaults from `user_preferences.commodities`; "My Commodities / Show All" toggle; "You follow this" drill-down chip.
 - **#82 Alerts rework** — `/alerts` cards and the Telegram/Slack template both restructured to **Event → Why it matters → Which instruments → Alert threshold**, with per-card "Built from" source links and a one-time not-financial-advice line. `ai_analysis`-null falls back to the summary with a plain note (no fabrication). `alert_rules.min_severity` surfaced as an inline "alert only above this threshold" control. `/api/alerts/recent` enriched with `ai_analysis` + `commodity_impacts` + source URLs. Verified: Playwright card screenshot + 3 live Telegram dispatches.
 - **#83 Personalized daily digest** — migration `20260907021500` adds `user_preferences.digest_enabled` (default true). `apps/backend/src/workers/digest-sender.ts` sends each onboarded, digest-enabled user their own top-5 signals from the last 24h matched to their commodities/regions (no global fallback), same four-section framing. `EmailService` uses the existing Resend account; `node-cron` in `workers.ts` (`DIGEST_CRON`, default 06:00 UTC). Settings → Notifications opt-out toggle. Verified: SQL personalization check + one delivered Resend email.
-  - **OPEN**: `RESEND_API_KEY` not yet on the Railway `workers` service — digest cron is inert (logs + no-ops) until it's added. Could not provision in-session (classifier-blocked).
+  - **PROD CRON PATH FULLY END-TO-END CONFIRMED (2026-09-07)**: `RESEND_API_KEY` is on the Railway `workers` service, and a one-off prod verification (no code change) ran the real path — test account given a `middle-east` region pref, `DIGEST_CRON` briefly set to `15 3 * * *`, the deployed worker's own cron callback fired `runDigestOnce()` → `[digest] sent to romantannison@gmail.com (5 signals) id=ffc24290-8ad1-4338-ac15-9c24707f60a1`. Resend confirms that email **delivered** (from `digest@send.bluebeaconresearch.com`, created 03:15:02 UTC), a new id distinct from the earlier manual test send `e06df2b3-ea1d-410d-ac01-019fbbb678dc`. `DIGEST_CRON` reset to `0 6 * * *`.
 
 ---
 
@@ -330,7 +330,7 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | Security Advisor — no CRITICAL findings, one real actionable WARN | Checked 2026-08-19 | Leaked-password protection disabled (Auth) — cheap fix, not yet done. OTP-expiry WARN is the expected result of the deliberate 24h extension (Bug E, already documented). Three "RLS enabled, no policy" INFOs on `backtest_cache`/`raw_events`/`sanctions_entities` are correct-by-design (service-role-only tables) |
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
-| `RESEND_API_KEY` on Railway `workers`  | Resolved (2026-09-07) | Founder added it and redeployed (Railway deployment `cfcce75c`, SUCCESS) — confirmed live via deploy logs (`"workers: digest cron schedule"` fired at boot). First actual production send not yet independently confirmed (only happens at the next 06:00 UTC run or a manual trigger) — check Resend's Logs tab after. |
+| `RESEND_API_KEY` on Railway `workers` / digest prod cron path | Resolved + end-to-end confirmed (2026-09-07) | Key is on the service; a one-off prod verification ran the deployed worker's own digest cron (`DIGEST_CRON` briefly set to `15 3 * * *`, then reset to `0 6 * * *`), delivering a real email via the Railway key — Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, status delivered, distinct from the earlier manual test send. |
 | Alert dispatch never triggered (any channel) | Fixed (2026-08-18, `97b7c4b`) | Was a wiring gap upstream of credentials, not a config problem — see v0.20.0 in `14_CHANGELOG.md` |
 | Telegram alerts not working            | Open (narrowed) | Wiring fixed 2026-08-18; blocker now is only `TELEGRAM_BOT_TOKEN` not set in Railway |
 | Password reset dead-end route          | Fixed (2026-08-18, `97b7c4b`) | `/reset-password` built and live-verified end-to-end |
