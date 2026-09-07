@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { COMMODITIES } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
+import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { logUsageEvent } from "@/lib/funnel-events";
 
 type Price = {
@@ -87,6 +88,36 @@ export function WatchlistClient() {
   );
   const [addSymbol, setAddSymbol] = useState<string>("SELECT COMMODITY");
 
+  // Preference-aware default (#89): when the user has told us which commodities
+  // they follow, seed the watchlist with those instead of the generic
+  // USOIL/XAUUSD default — unless they arrived via ?symbol= or have already
+  // changed the list themselves. One click flips between the two views; nothing
+  // is ever hidden (every commodity stays addable from the dropdown).
+  const { data: myPrefs } = useMyPreferences();
+  const prefCommodities = useMemo(
+    () =>
+      (myPrefs?.commodities ?? []).filter((s) =>
+        COMMODITIES.some((c) => c.symbol === s),
+      ),
+    [myPrefs?.commodities],
+  );
+  const allSymbols = useMemo(() => COMMODITIES.map((c) => c.symbol), []);
+  const touchedRef = useRef(false);
+  const [seededFromPrefs, setSeededFromPrefs] = useState(false);
+
+  useEffect(() => {
+    if (preselect || touchedRef.current || seededFromPrefs) return;
+    if (prefCommodities.length > 0) {
+      setWatch(prefCommodities);
+      setSeededFromPrefs(true);
+    }
+  }, [prefCommodities, preselect, seededFromPrefs]);
+
+  const showingMyCommodities =
+    prefCommodities.length > 0 &&
+    watch.length === prefCommodities.length &&
+    prefCommodities.every((s) => watch.includes(s));
+
   // watchlist_viewed — recurring usage event (once per page-session), feeds
   // DAU/WAU and 7-day usage counts on /admin/metrics.
   useEffect(() => {
@@ -115,6 +146,7 @@ export function WatchlistClient() {
 
   const handleAdd = () => {
     if (addSymbol === "SELECT COMMODITY") return;
+    touchedRef.current = true;
     if (addSymbol === "__ALL__") {
       setWatch((p) => [...new Set([...p, ...available.map((c) => c.symbol)])]);
     } else {
@@ -124,6 +156,7 @@ export function WatchlistClient() {
   };
 
   const handleRemove = (sym: string) => {
+    touchedRef.current = true;
     setWatch((w) => w.filter((x) => x !== sym));
   };
 
@@ -142,6 +175,43 @@ export function WatchlistClient() {
             <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">
               Commodity Watchlist
             </h1>
+            {prefCommodities.length > 0 && (
+              <div className="mt-4 flex items-center gap-2">
+                <span className="font-label text-[10px] text-on-surface-variant tracking-widest uppercase">
+                  View
+                </span>
+                <button
+                  onClick={() => {
+                    touchedRef.current = true;
+                    setWatch(prefCommodities);
+                  }}
+                  aria-pressed={showingMyCommodities}
+                  className="px-3 py-1 rounded-sm font-label text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                  style={{
+                    backgroundColor: showingMyCommodities ? "#4edea3" : "transparent",
+                    color: showingMyCommodities ? "#003824" : "#bbcac0",
+                    borderColor: showingMyCommodities ? "#4edea3" : "#3c4a42",
+                  }}
+                >
+                  My Commodities
+                </button>
+                <button
+                  onClick={() => {
+                    touchedRef.current = true;
+                    setWatch(allSymbols);
+                  }}
+                  aria-pressed={!showingMyCommodities}
+                  className="px-3 py-1 rounded-sm font-label text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                  style={{
+                    backgroundColor: !showingMyCommodities ? "#4edea3" : "transparent",
+                    color: !showingMyCommodities ? "#003824" : "#bbcac0",
+                    borderColor: !showingMyCommodities ? "#4edea3" : "#3c4a42",
+                  }}
+                >
+                  Show All
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <div className="relative">

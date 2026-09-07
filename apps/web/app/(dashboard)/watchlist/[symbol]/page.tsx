@@ -17,6 +17,7 @@ import { COMMODITIES } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { Pagination } from "@/components/ui/Pagination";
+import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 
 type Price = {
@@ -78,6 +79,8 @@ export default function WatchlistSymbolPage() {
   const router = useRouter();
   const symbol = decodeURIComponent(params.symbol || "").toUpperCase();
   const meta = COMMODITIES.find((c) => c.symbol === symbol);
+  const { data: myPrefs } = useMyPreferences();
+  const isFollowed = Boolean(myPrefs?.commodities.includes(symbol));
 
   const { data: pricesData } = useQuery({
     queryKey: ["prices"],
@@ -165,6 +168,15 @@ export default function WatchlistSymbolPage() {
               <p className="font-label text-xs text-primary tracking-[0.3em] uppercase">
                 {meta?.category ?? "Market"} · Drill-Down
               </p>
+              {isFollowed && (
+                <span
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-sm font-label text-[9px] font-bold tracking-widest uppercase border border-primary/50 bg-primary/10 text-primary"
+                  title="One of the commodities you follow"
+                >
+                  <span className="material-symbols-outlined text-[12px]">star</span>
+                  You follow this
+                </span>
+              )}
             </div>
             <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">
               {meta?.label || symbol}
