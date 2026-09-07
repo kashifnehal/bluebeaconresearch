@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 import { getEnv } from "../env.js";
 
-const DEFAULT_FROM = "Blue Beacon Research <alerts@send.bluebeaconresearch.com>";
+const DEFAULT_FROM = "Blue Beacon Research <digest@send.bluebeaconresearch.com>";
 
 /**
  * Thin wrapper over the Resend account that already backs BBR's transactional mail
