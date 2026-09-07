@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
+import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
@@ -13,6 +14,10 @@ import { logUsageEvent } from "@/lib/funnel-events";
 
 export default function DashboardPage() {
   const router = useRouter();
+  // "My Feed" (#81) — opt-in narrowing to the commodities/regions the user follows.
+  // Default OFF: existing users see the exact same full feed until they turn it on.
+  const [personalized, setPersonalized] = useState(false);
+  const { data: myPrefs } = useMyPreferences();
   const {
     liveSignals,
     isLoading,
@@ -21,12 +26,14 @@ export default function DashboardPage() {
     fallbackReason,
     fallbackLastUpdated,
     total,
+    personalizedApplied,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSignalFeed({ enabled: true });
+  } = useSignalFeed({ enabled: true, personalized });
   const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
   const [filter, setFilter] = useState<"all" | "high">("all");
+  const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
   // list's prior fixed size, so the first render is unchanged); "Load more" adds
   // 10 and pulls the next API page once the current pages are exhausted.
@@ -172,7 +179,7 @@ export default function DashboardPage() {
         )}
 
         {/* Filter Pills */}
-        <div className="flex gap-3 mb-8">
+        <div className="flex flex-wrap gap-3 mb-8 items-center">
           <button
             onClick={() => setFilter("all")}
             className="px-4 py-1.5 text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
@@ -197,7 +204,50 @@ export default function DashboardPage() {
           >
             HIGH RISK
           </button>
+
+          {/* My Feed toggle (#81) — narrows to what the user follows. Only shown
+              once the user has saved preferences; sits alongside the full feed,
+              never replaces it. */}
+          {showMyFeedToggle && (
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() => setPersonalized((v) => !v)}
+                aria-pressed={personalized}
+                className="px-4 py-1.5 text-[11px] font-bold tracking-widest border transition-colors cursor-pointer flex items-center gap-2"
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  backgroundColor: personalized ? "#4edea3" : "#201f1f",
+                  color: personalized ? "#005f40" : "#bbcac0",
+                  borderColor: personalized ? "#4edea3" : "#3c4a42",
+                }}
+              >
+                <span
+                  className="material-symbols-outlined text-[14px]"
+                  style={{ fontVariationSettings: personalized ? "'FILL' 1" : undefined }}
+                >
+                  {personalized ? "person" : "public"}
+                </span>
+                {personalized ? "MY FEED" : "FULL FEED"}
+              </button>
+            </div>
+          )}
         </div>
+
+        {personalized && personalizedApplied && (
+          <p
+            className="-mt-4 mb-8 text-[11px]"
+            style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
+          >
+            Showing signals matching the commodities and regions you follow.{" "}
+            <button
+              onClick={() => setPersonalized(false)}
+              className="underline cursor-pointer"
+              style={{ color: "#4edea3" }}
+            >
+              Show the full feed
+            </button>
+          </p>
+        )}
 
         {/* ── Continuous Skeleton Loader on API Load / Error / No Data ────────────────────────── */}
         {isLoading || isError || liveSignals.length === 0 ? (

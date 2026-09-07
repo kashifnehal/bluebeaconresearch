@@ -7,9 +7,14 @@ import type { Signal } from "@blue-beacon-research/shared";
 
 type Options = {
   enabled?: boolean;
+  /** Opt into the personalized "My Feed" narrowing (#81). Default false. */
+  personalized?: boolean;
 };
 
-export function useSignalFeed({ enabled = true }: Options = {}) {
+export function useSignalFeed({
+  enabled = true,
+  personalized = false,
+}: Options = {}) {
   const { searchSubmitted } = useUIStore();
 
   const {
@@ -20,14 +25,15 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["signals", "feed", searchSubmitted ?? ""],
+    queryKey: ["signals", "feed", searchSubmitted ?? "", personalized],
     initialPageParam: "1",
     queryFn: async ({ pageParam }) => {
       const base =
         searchSubmitted && searchSubmitted.trim().length >= 3
           ? `/api/signals?search=${encodeURIComponent(searchSubmitted.trim())}`
           : "/api/signals?sort=severity";
-      const res = await fetch(`${base}&page=${pageParam}`);
+      const suffix = personalized ? "&personalized=true" : "";
+      const res = await fetch(`${base}${suffix}&page=${pageParam}`);
       if (!res.ok) throw new Error("Failed to fetch signals");
       return (await res.json()) as {
         signals?: Signal[];
@@ -36,6 +42,7 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
         fallback?: boolean;
         fallbackReason?: string;
         fallbackLastUpdated?: string;
+        personalized?: boolean;
       };
     },
     // `nextCursor` is an opaque page token from /api/signals ("2", "3", …) or
@@ -70,6 +77,10 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
   const fallbackReason = pages[0]?.fallbackReason ?? null;
   const fallbackLastUpdated = pages[0]?.fallbackLastUpdated ?? null;
   const total = pages[0]?.total ?? null;
+  // True only when the server actually narrowed the feed (opted in AND has
+  // saved preferences). Lets the UI distinguish "My Feed on" from "My Feed on
+  // but you haven't picked anything yet".
+  const personalizedApplied = pages[0]?.personalized ?? false;
 
   return {
     liveSignals,
@@ -79,6 +90,7 @@ export function useSignalFeed({ enabled = true }: Options = {}) {
     fallbackReason,
     fallbackLastUpdated,
     total,
+    personalizedApplied,
     fetchNextPage,
     hasNextPage: !!hasNextPage,
     isFetchingNextPage,

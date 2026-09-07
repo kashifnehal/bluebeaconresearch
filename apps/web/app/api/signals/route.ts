@@ -2,10 +2,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 import { dedupeSignalsByTitle } from "@/lib/dedupe-signals";
+import { REGIONS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+// Canonical region id → display label, for the personalized-feed filter. signals.region
+// is not normalized to the canonical ids (it holds free text like "Middle East" or
+// "Middle East / Global"), so we match on both the id and a loose label substring.
+const REGION_LABEL = new Map<string, string>(
+  REGIONS.map((r) => [r.id, r.label] as const),
+);
 
 // Simple in-memory cache for the last successful signals payload, keyed by the
 // request's query string. This is process-local but sufficient for
@@ -51,7 +59,14 @@ export async function GET(req: NextRequest) {
       req.headers.get("x-real-ip") ??
       "unknown";
     const cacheKey = new URL(req.url).search;
-    const cached = _cachedSignalsByKey.get(cacheKey);
+    // Personalized ("My Feed") results are per-user. The process-local cache is
+    // keyed only by query string, not identity, so personalized requests must
+    // never read from or write to it — otherwise user B could be served user A's
+    // narrowed feed.
+    const personalizedParam =
+      req.nextUrl.searchParams.get("personalized") === "true";
+    const skipCache = personalizedParam;
+    const cached = skipCache ? undefined : _cachedSignalsByKey.get(cacheKey);
     // Short-circuit: if we have a very recent cached payload for this exact
     // query, return it immediately to avoid calling the rate-limit service
     // on every poll.
@@ -123,7 +138,7 @@ export async function GET(req: NextRequest) {
     // Require authenticated session for dashboard data (matches RLS policy).
     // In local development we allow unauthenticated reads when `NEXT_PUBLIC_PROJECT_READY` is set
     // so the dev dashboard can show signals without a logged-in session.
-    const { supabase, user } = clients;
+    const { supabase, supabaseAuth, user } = clients;
 
     // Enforce authentication only in production; allow unauthenticated reads in local/dev.
     if (!user && process.env.NODE_ENV === "production") {
@@ -172,6 +187,45 @@ export async function GET(req: NextRequest) {
         "commodity_impacts",
         JSON.stringify([{ asset: commodity }]),
       );
+
+    // Personalized "My Feed" (#81) — opt-in via ?personalized=true, default OFF.
+    // Narrows the feed to signals overlapping the user's saved commodities/regions.
+    // With no user or no saved preferences it's a no-op: the full feed is returned
+    // unchanged, so this can never silently hide signals from an existing user who
+    // hasn't opted in.
+    let personalizedApplied = false;
+    if (personalizedParam && user) {
+      const { data: prefs } = await supabaseAuth
+        .from("user_preferences")
+        .select("commodities, regions")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const prefCommodities: string[] = Array.isArray(prefs?.commodities)
+        ? (prefs!.commodities as string[])
+        : [];
+      const prefRegions: string[] = Array.isArray(prefs?.regions)
+        ? (prefs!.regions as string[])
+        : [];
+
+      const orParts: string[] = [];
+      for (const rid of prefRegions) {
+        orParts.push(`region.eq.${rid}`);
+        const label = REGION_LABEL.get(rid);
+        if (label) orParts.push(`region.ilike.*${label}*`);
+      }
+      for (const sym of prefCommodities) {
+        // `sym` originates from our own COMMODITIES constant on write; the guard
+        // keeps the value free of characters that are reserved inside .or().
+        if (/^[A-Z0-9]+$/.test(sym)) {
+          orParts.push(`commodity_impacts.cs.[{"asset":"${sym}"}]`);
+        }
+      }
+
+      if (orParts.length > 0) {
+        query = query.or(orParts.join(","));
+        personalizedApplied = true;
+      }
+    }
 
     // Server-side free-text search if query provided (A1 — search bar Enter key)
     if (searchQ && searchQ.length >= 3) {
@@ -341,16 +395,22 @@ export async function GET(req: NextRequest) {
       signals: deduped,
       nextCursor: hasMore ? String(page + 1) : null,
       total,
+      // Whether the "My Feed" narrowing was actually applied (false when the
+      // caller opted in but has no saved preferences yet).
+      personalized: personalizedApplied,
     };
 
-    // Update in-memory cache of last successful payload for this query
-    try {
-      if (_cachedSignalsByKey.size >= MAX_CACHE_ENTRIES) {
-        _cachedSignalsByKey.clear();
+    // Update in-memory cache of last successful payload for this query.
+    // Personalized payloads are per-user and never cached (see `skipCache`).
+    if (!skipCache) {
+      try {
+        if (_cachedSignalsByKey.size >= MAX_CACHE_ENTRIES) {
+          _cachedSignalsByKey.clear();
+        }
+        _cachedSignalsByKey.set(cacheKey, { payload, timestamp: Date.now() });
+      } catch (e) {
+        // ignore cache write failures
       }
-      _cachedSignalsByKey.set(cacheKey, { payload, timestamp: Date.now() });
-    } catch (e) {
-      // ignore cache write failures
     }
 
     return NextResponse.json(payload);
