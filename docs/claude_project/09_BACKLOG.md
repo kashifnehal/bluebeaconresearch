@@ -45,7 +45,7 @@
 
 | # | Item | Effort | Why |
 |---|------|--------|-----|
-| S1 | Economic Calendar page (/calendar) | 3 days | Biggest competitive gap vs all rivals |
+| ~~S1~~ | ~~Economic Calendar page (/calendar)~~ | — | **Done 2026-09-07 (#86)** — This Week/Upcoming tables, live countdown, 🔴/🟡/🟢 impact indicators, backed by a static manually-curated JSON (deliberate v1, not a live paid API). See `14_CHANGELOG.md`. |
 | S2 | Price-at-signal display on signal cards | 1 day | Stocknews.ai killer feature, proves value |
 | S3 | Central bank rates widget on /watchlist | 2 hr | InvestingLive feature traders love |
 | S4 | Morning brief worker (07:45 UTC weekdays) | 1 day | Retention driver, daily habit |

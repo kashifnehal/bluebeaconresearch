@@ -8,6 +8,22 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.35.0 — Economic calendar (#86); #83's RESEND_API_KEY resolved (2026-09-07)
+
+Commit on `main`: `30cf1f2`.
+
+**#86 — Economic calendar page.** New `/calendar` (sidebar nav added between Alerts and Watchlist):
+- **This Week** and **Upcoming** tables: Date, Time (UTC), Country, Event (links to the institution's own published schedule), Impact, Forecast, Previous, Actual. "This week" is computed as Monday 00:00 UTC → the following Monday, against the real client clock (guarded against SSR/hydration mismatch — the countdown and week-split render a placeholder until mount, then resolve from `new Date()`).
+- A persistent, prominent **live countdown** to the next `impact:"high"` event, ticking every second.
+- Impact shown as 🔴 high / 🟡 medium / 🟢 low, each with an accessible `aria-label` (not emoji-only).
+- **Data source: static, manually-curated `apps/web/data/economic-calendar.json`** — a deliberate v1 choice per the task's own restriction (no new paid API/vendor credential before real usage justifies the cost), not a corner cut. 10 events spanning 2026-09-10 → 2026-10-30 (~7.5 weeks — extended slightly past the nominal 4-6 to avoid bisecting the next FOMC/BOJ/ECB/GDP cluster): ECB Governing Council (Sept 10, Oct 29), FOMC (Sept 16, Oct 28), BOJ Monetary Policy Statement (Sept 18, Oct 30), US Employment Situation/NFP (Oct 2), US CPI (Oct 14), US GDP Q3 2026 Advance Estimate (Oct 29), OPEC Monthly Oil Market Report (Oct 13). Every date came from the institution's own published calendar (federalreserve.gov, ecb.europa.eu, boj.or.jp, bls.gov, bea.gov) fetched live during this session — none guessed. **No OPEC+ ministerial production-quota meeting date has been published yet for this window** (only the confirmed Monthly Report date exists), so that's what's listed rather than inventing a plausible one.
+- `forecast`/`previous`/`actual` are `null` in the JSON by design — the UI renders `null` as "—"; there is no live data feed behind them yet and none is fabricated.
+- Swapping to a live provider later (e.g. Trading Economics, as originally scoped in `docs/claude_project/19_ROADMAP.md`) is a change to this one JSON file / a fetch call, not a rebuild — the page's rendering logic is provider-agnostic.
+- Verified live via Playwright against the standing test account: real dates render; "This Week" correctly isolated just the Sept 10 ECB decision (today, at verification time, was Monday Sept 7) with every other event correctly falling into "Upcoming"; the countdown was read twice, 13 seconds apart (`3d 09h 44m 04s` → `3d 09h 43m 51s`), confirming it computes against and ticks with the real clock rather than being static. Zero console errors, no hydration warnings.
+- Restrictions honored: no paid API, no new external credential, no fabricated Forecast/Previous/Actual, no billing code touched.
+
+**#83 follow-up — `RESEND_API_KEY` resolved.** Founder added the variable to the Railway `workers` service and redeployed. Confirmed via Railway deploy logs for the resulting deployment (`cfcce75c`, status `SUCCESS`): `"workers: digest cron schedule"` logged at boot with `schedule: "0 6 * * *"`. Resend's own API-key list still shows only the pre-existing `bbr-supabase-smtp` key — the same key is being reused for the digest's HTTP calls, which is fine (a Resend API key isn't SMTP-restricted). **Not yet independently confirmed**: an actual send from the deployed worker using the new key — that only happens at the next 06:00 UTC cron run, or via a manual `runDigestOnce()` trigger; check Resend's Logs tab (`POST /emails` from production) to close this out fully.
+
 ### v0.34.0 — Personalization core (#81/#89), Alerts four-section rework (#82), Personalized daily digest (#83) (2026-09-07)
 
 Commits on `main`: `517f796`, `e4bcaf6`, `817fdee` (#81) · `598678e` (#89) · `c0698fc`, `a269547` (#82) · `bc8f4e0`, `57516b0` (#83) · `8645668` (docs).

@@ -4,7 +4,9 @@
 >
 > ⚠️ UPDATED 2026-08-27 — Several fixes landed this session (GDELT/GNews ingestion-time geocoding, `commodity_impacts` classification bug + partial backfill, Sonnet briefing error logging/retry, signal-generation dormant-queue doc correction) plus a Telegram connect-flow gap found (not yet fixed). Per this doc's own policy, full detail lives in `docs/brain/08_CURRENT_STATUS.md` §5 and `docs/brain/14_CHANGELOG.md` v0.30.0 — not duplicated here.
 >
-> ⚠️ UPDATED 2026-09-07 — Personalization (#81), watchlist preference-awareness (#89), the Alerts four-section reframe + Telegram template (#82), and the personalized daily digest (#83) all shipped. `user_preferences` gained `onboarding_completed_at`/`created_at`/`digest_enabled` (+ reserved forex/equity columns). New backend worker `digest-sender.ts` on a daily `node-cron`. Full detail: `docs/brain/14_CHANGELOG.md` v0.34.0, `docs/claude_project/14_CHANGELOG.md` PHASE 8, `docs/brain/LIVE_TODO.md`. **New open item:** `RESEND_API_KEY` must be set on the Railway `workers` service or the digest cron no-ops.
+> ⚠️ UPDATED 2026-09-07 — Personalization (#81), watchlist preference-awareness (#89), the Alerts four-section reframe + Telegram template (#82), and the personalized daily digest (#83) all shipped. `user_preferences` gained `onboarding_completed_at`/`created_at`/`digest_enabled` (+ reserved forex/equity columns). New backend worker `digest-sender.ts` on a daily `node-cron`. Full detail: `docs/brain/14_CHANGELOG.md` v0.34.0, `docs/claude_project/14_CHANGELOG.md` PHASE 8, `docs/brain/LIVE_TODO.md`.
+>
+> ⚠️ UPDATED 2026-09-07 (later same day) — The economic calendar (#86) also shipped: new `/calendar` page on a static, manually-curated data file (deliberate v1, not a live paid API). Separately, `RESEND_API_KEY` is **no longer an open item** — the founder set it on the Railway `workers` service and redeployed; confirmed live via deploy logs. Full detail: `docs/brain/14_CHANGELOG.md` v0.35.0.
 
 Last updated: 2026-08-12
 

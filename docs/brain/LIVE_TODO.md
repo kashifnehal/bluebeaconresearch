@@ -39,8 +39,35 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   unfiltered global top-5 (Iran-dominated) → genuinely personalized. One real
   digest email delivered to romantannison@gmail.com via the existing Resend
   account (id e06df2b3-ea1d-410d-ac01-019fbbb678dc, status delivered).
-  REMAINING PROD STEP: add RESEND_API_KEY to the Railway `workers` service — the
-  cron is inert without it (logs + no-ops, by design).
+  REMAINING PROD STEP — RESOLVED 2026-09-07: founder added `RESEND_API_KEY` to
+  the Railway `workers` service and redeployed (deployment `cfcce75c`, SUCCESS).
+  Confirmed via Railway deploy logs: `"workers: digest cron schedule"` fired at
+  boot with `schedule: "0 6 * * *"`, so the worker is live with the cron active.
+  Not yet confirmed: an actual send from the deployed worker with the new key
+  (that only happens at the next 06:00 UTC run, or via a manual trigger) — check
+  Resend's Logs tab after the next run, or trigger `runDigestOnce()` manually,
+  to see a real `POST /emails` from production. Resend still shows only the one
+  pre-existing API key (`bbr-supabase-smtp`), so the same key is being reused
+  for the digest's HTTP calls — that's fine, Resend keys aren't SMTP-only.
+- #86 Economic calendar — 30cf1f2. New `/calendar` page (this week + upcoming
+  tables, 🔴/🟡/🟢 impact indicators, live countdown to the next high-impact
+  event) backed by a **static, manually-curated** `apps/web/data/economic-calendar.json`
+  — a deliberate v1 choice, not a gap: no new paid API/vendor credential before
+  there's real usage to justify it. Dates pulled from each institution's own
+  published schedule as of 2026-09-07 (federalreserve.gov, ecb.europa.eu,
+  boj.or.jp, bls.gov, bea.gov, opec.org) — 10 events, Sept 10 → Oct 30 2026 (ECB
+  x2, FOMC x2, BOJ x2, US NFP, US CPI, US GDP Q3 advance, OPEC Monthly Oil
+  Market Report). Window runs ~7.5 weeks, slightly past the nominal 4-6 to avoid
+  cutting the next FOMC/BOJ/ECB/GDP cluster in half. No OPEC+ ministerial
+  production-quota meeting date has been published yet for this window, so only
+  the confirmed Monthly Report date is listed — not guessed. Forecast/Previous/
+  Actual are `null` → rendered as "—", never fabricated. Swapping to a live
+  provider (e.g. Trading Economics) later is a data-source change to one JSON
+  file, not a rebuild. Verified live via Playwright: real dates render, "This
+  Week" correctly isolates just the Sept 10 ECB decision (today is Mon Sept 7),
+  everything else falls into "Upcoming", and the countdown ticks down correctly
+  against the real system clock (confirmed two reads 13s apart: 3d 09h 44m 04s
+  → 3d 09h 43m 51s).
 
 ## Decisions confirmed 2026-09-07
 1. Forex gate — softened, forex only, not equity. Desk-research-validated (see
@@ -63,10 +90,10 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
    strategy, not on live interviews or a payment test.
 
 ## Priority queue (updated 2026-09-07)
-- #82 and #83 closed 2026-09-07 (see "Closed, verified"). One prod follow-up:
-  RESEND_API_KEY on the Railway `workers` service for the digest cron.
-- Next: #86 (economic calendar)
-- Then: #87 (forex taxonomy expansion, forex only — gate cleared)
+- #82, #83, and #86 closed 2026-09-07 (see "Closed, verified"). #83's
+  RESEND_API_KEY prod follow-up is resolved (key added + redeployed by
+  founder); only the first-actual-send confirmation is still pending.
+- Next: #87 (forex taxonomy expansion, forex only — gate cleared)
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
 - Independent, no dependency: WhatsApp Business API approval (lead-time only)
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —

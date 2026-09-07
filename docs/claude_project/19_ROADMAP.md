@@ -40,7 +40,7 @@ Success metric: 10 users → at least 3 receiving real Telegram alerts for real 
 **Goal: 50 active users, first revenue conversation**
 
 Product:
-- [ ] Economic Calendar page (/calendar) with Trading Economics API
+- [x] Economic Calendar page (/calendar) — **done 2026-09-07 (#86)**, static/manually-curated data source as a deliberate v1 choice rather than the paid Trading Economics API named here; that stays the noted upgrade path if the static list proves insufficient
 - [ ] Price-at-signal display on signal cards
 - [ ] Central bank rates widget on watchlist
 - [x] Morning brief automated — **#83, done 2026-09-07**: personalized daily digest email (06:00 UTC, `node-cron`), each user's own preference-matched top-5. Telegram alerts are per-signal, not a scheduled brief. Prod step left: `RESEND_API_KEY` on Railway workers.

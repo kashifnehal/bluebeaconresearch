@@ -2,7 +2,15 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-07 (personalization #81/#89, Alerts four-section rework #82, personalized daily digest #83 — see `14_CHANGELOG.md` v0.34.0 and `LIVE_TODO.md`)
+Last updated: 2026-09-07 (economic calendar #86, RESEND_API_KEY resolved for #83 — see `14_CHANGELOG.md` v0.35.0)
+
+---
+
+## Economic Calendar (2026-09-07)
+
+New `/calendar` page (#86) — This Week / Upcoming tables, live countdown to the next high-impact event, 🔴/🟡/🟢 impact indicators. Backed by a **static, manually-curated** `apps/web/data/economic-calendar.json` — a deliberate v1 choice (no new paid API/vendor before real usage justifies it), not a gap. 10 events (Sept 10 → Oct 30, 2026: ECB x2, FOMC x2, BOJ x2, US NFP, US CPI, US GDP Q3 advance, OPEC Monthly Oil Market Report), dates sourced from each institution's own published schedule, not guessed — no OPEC+ ministerial production-quota date has been published for this window, so only the confirmed report date is listed. Forecast/Previous/Actual are `null` → render as "—", never fabricated. Full detail: `14_CHANGELOG.md` v0.35.0.
+
+**#83's RESEND_API_KEY item is resolved** — founder added it to the Railway `workers` service and redeployed (deployment `cfcce75c`, SUCCESS); confirmed live via deploy logs. First actual send from production not yet independently confirmed.
 
 ---
 
@@ -322,7 +330,7 @@ Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New 
 | Security Advisor — no CRITICAL findings, one real actionable WARN | Checked 2026-08-19 | Leaked-password protection disabled (Auth) — cheap fix, not yet done. OTP-expiry WARN is the expected result of the deliberate 24h extension (Bug E, already documented). Three "RLS enabled, no policy" INFOs on `backtest_cache`/`raw_events`/`sanctions_entities` are correct-by-design (service-role-only tables) |
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
-| `RESEND_API_KEY` on Railway `workers`  | Open (2026-09-07) | Required for the #83 daily-digest cron to actually send — `EmailService` no-ops without it. Same Resend account that backs Auth SMTP; make a key in the Resend dashboard. Optional: `DIGEST_FROM_EMAIL`, `DIGEST_CRON`. |
+| `RESEND_API_KEY` on Railway `workers`  | Resolved (2026-09-07) | Founder added it and redeployed (Railway deployment `cfcce75c`, SUCCESS) — confirmed live via deploy logs (`"workers: digest cron schedule"` fired at boot). First actual production send not yet independently confirmed (only happens at the next 06:00 UTC run or a manual trigger) — check Resend's Logs tab after. |
 | Alert dispatch never triggered (any channel) | Fixed (2026-08-18, `97b7c4b`) | Was a wiring gap upstream of credentials, not a config problem — see v0.20.0 in `14_CHANGELOG.md` |
 | Telegram alerts not working            | Open (narrowed) | Wiring fixed 2026-08-18; blocker now is only `TELEGRAM_BOT_TOKEN` not set in Railway |
 | Password reset dead-end route          | Fixed (2026-08-18, `97b7c4b`) | `/reset-password` built and live-verified end-to-end |
