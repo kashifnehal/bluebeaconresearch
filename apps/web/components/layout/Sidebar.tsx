@@ -11,6 +11,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "INTELLIGENCE FEED", icon: "rss_feed" },
   { href: "/map", label: "GLOBAL MAP", icon: "public" },
   { href: "/alerts", label: "ALERTS", icon: "notifications_active", showBadge: true },
+  { href: "/calendar", label: "CALENDAR", icon: "calendar_month" },
   { href: "/watchlist", label: "WATCHLIST", icon: "visibility" },
   { href: "/backtesting", label: "BACKTESTING", icon: "history" },
   { href: "/settings", label: "SETTINGS", icon: "settings" },
