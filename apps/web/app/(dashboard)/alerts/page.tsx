@@ -14,7 +14,7 @@ import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Pagination } from "@/components/ui/Pagination";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { track } from "@/lib/analytics";
-import { logFunnelEventOnce, logUsageEvent } from "@/lib/funnel-events";
+import { logFunnelEventOnce, logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 
 type AlertRule = {
   id: string;
@@ -48,6 +48,7 @@ type MatchedSignal = {
   severity: number;
   summary: string | null;
   aiAnalysis: string | null;
+  region: string | null;
   commodityImpacts: Signal["commodityImpacts"];
   currencyPairImpacts: Signal["commodityImpacts"];
   isBreaking: boolean;
@@ -70,6 +71,7 @@ type AlertSentRow = {
     severity: number;
     summary?: string | null;
     ai_analysis?: string | null;
+    region?: string | null;
     commodity_impacts?: Signal["commodityImpacts"] | null;
     currency_pair_impacts?: Signal["commodityImpacts"] | null;
     is_breaking?: boolean | null;
@@ -194,6 +196,7 @@ export default function AlertsPage() {
           severity: row.signals.severity,
           summary: row.signals.summary ?? null,
           aiAnalysis: row.signals.ai_analysis ?? null,
+          region: row.signals.region ?? null,
           commodityImpacts: row.signals.commodity_impacts ?? [],
           currencyPairImpacts: row.signals.currency_pair_impacts ?? [],
           isBreaking: Boolean(row.signals.is_breaking),
@@ -468,7 +471,19 @@ export default function AlertsPage() {
                               {/* ── 1. EVENT ── */}
                               <CardSection step={1} label="Event">
                                 <button
-                                  onClick={() => router.push(`/events/${m.id}`)}
+                                  onClick={() => {
+                                    logUsageEvent(
+                                      "signal_viewed",
+                                      signalEventMetadata({
+                                        id: m.id,
+                                        region: m.region,
+                                        commodityImpacts: m.commodityImpacts,
+                                        currencyPairImpacts: m.currencyPairImpacts,
+                                      }),
+                                      false,
+                                    );
+                                    router.push(`/events/${m.id}`);
+                                  }}
                                   className="text-left w-full group"
                                 >
                                   <div className="flex items-center gap-2 flex-wrap">
@@ -572,6 +587,18 @@ export default function AlertsPage() {
                                         href={s.url ?? "#"}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        onClick={() =>
+                                          logUsageEvent(
+                                            "signal_source_clicked",
+                                            signalEventMetadata({
+                                              id: m.id,
+                                              region: m.region,
+                                              commodityImpacts: m.commodityImpacts,
+                                              currencyPairImpacts: m.currencyPairImpacts,
+                                            }),
+                                            false,
+                                          )
+                                        }
                                         className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
                                       >
                                         <span className="material-symbols-outlined text-[13px]">open_in_new</span>

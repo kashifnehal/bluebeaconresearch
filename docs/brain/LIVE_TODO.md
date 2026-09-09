@@ -268,6 +268,32 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)
 
+## Behavioral event instrumentation — Phase 0 landed 2026-09-09 (not gated, not urgent)
+
+Passive logging only, no scoring/ranking/UI change. Research doc
+`docs/claude_project/64_*`. Three new recurring `event_type` values now write to
+`public.events` via the existing `logUsageEvent` path in
+`apps/web/lib/funnel-events.ts` (no migration — `public.events` has no event_type
+constraint; NOT fire-once, no partial unique index):
+
+- `signal_viewed` — a feed card (dashboard featured / secondary / stream row) or
+  an Alerts-page match card is opened. metadata `{ signal_id, commodities[],
+  regions[], forex_pairs[] }` (`regions` is a 1-element array — a signal has one
+  region — for shape-uniformity with alert_rules). Fired via `dedupe: false`, so
+  every open is a row.
+- `signal_source_clicked` — the Alerts-page "Built from" (#82) source link is
+  clicked. Same metadata shape. `dedupe: false`.
+- `watchlist_symbol_viewed` — `/watchlist/[symbol]` drill-down mount. metadata
+  `{ symbol, is_forex }`. `dedupe: "entity"` on `symbol` (collapses strict-mode
+  double-mount / re-render; distinct symbols each count).
+
+Nothing reads these yet. Data has been accumulating since **2026-09-09**. A
+future Stage 2 ranking/personalization thread should treat this as the
+engagement history to build on. Note: an unrelated PostHog `track("signal_viewed",
+…)` with a different `{signalId, severity}` shape already fires from the
+`/events/[id]` detail page — different destination (PostHog, currently dormant:
+`NEXT_PUBLIC_POSTHOG_KEY` unset), different trigger point; don't conflate them.
+
 ## Killed 2026-09-07
 
 ### #85 WhatsApp alert channel — KILLED 2026-09-07, not paused.

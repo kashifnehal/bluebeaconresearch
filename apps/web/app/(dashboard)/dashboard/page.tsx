@@ -10,7 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
-import { logUsageEvent } from "@/lib/funnel-events";
+import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
+import type { Signal } from "@blue-beacon-research/shared";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -32,6 +33,13 @@ export default function DashboardPage() {
     isFetchingNextPage,
   } = useSignalFeed({ enabled: true, personalized });
   const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
+
+  // signal_viewed — behavioral instrumentation (research doc claude/64). Fires on
+  // every open of a feed card, then routes through to the detail page as before.
+  const openSignal = (signal: Pick<Signal, "id" | "region" | "commodityImpacts" | "currencyPairImpacts">) => {
+    logUsageEvent("signal_viewed", signalEventMetadata(signal), false);
+    router.push(`/events/${signal.id}`);
+  };
   const [filter, setFilter] = useState<"all" | "high">("all");
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
@@ -285,7 +293,7 @@ export default function DashboardPage() {
             {/* ── Featured Critical Card ────────────────────────────────── */}
             {featured ? (
               <section
-                onClick={() => router.push(`/events/${featured.id}`)}
+                onClick={() => openSignal(featured)}
                 className="mb-10 relative overflow-hidden cursor-pointer group transition-all"
                 style={{
                   backgroundColor: "#131313",
@@ -402,7 +410,7 @@ export default function DashboardPage() {
                       data-tour="analyze-impact"
                       onClick={(e) => {
                         e.stopPropagation();
-                        router.push(`/events/${featured.id}`);
+                        openSignal(featured);
                       }}
                       className="font-bold text-xs tracking-widest px-8 py-3 transition-all active:scale-95 duration-75 shrink-0"
                       style={{
@@ -425,7 +433,7 @@ export default function DashboardPage() {
                 {/* Card A */}
                 {secondaryA && (
                   <article
-                    onClick={() => router.push(`/events/${secondaryA.id}`)}
+                    onClick={() => openSignal(secondaryA)}
                     className="group cursor-pointer transition-colors"
                     style={{
                       backgroundColor: "#131313",
@@ -504,7 +512,7 @@ export default function DashboardPage() {
                 {/* Card B */}
                 {secondaryB && (
                   <article
-                    onClick={() => router.push(`/events/${secondaryB.id}`)}
+                    onClick={() => openSignal(secondaryB)}
                     className="group cursor-pointer transition-colors"
                     style={{
                       backgroundColor: "#131313",
@@ -618,7 +626,7 @@ export default function DashboardPage() {
                   streamList.map((item) => (
                     <div
                       key={item.id}
-                      onClick={() => router.push(`/events/${item.id}`)}
+                      onClick={() => openSignal(item)}
                       className="px-6 py-4 flex items-center gap-6 cursor-pointer group transition-colors"
                       style={{ backgroundColor: "transparent" }}
                       onMouseEnter={(e) => {

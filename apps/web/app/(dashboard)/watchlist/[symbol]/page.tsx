@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
@@ -19,6 +19,7 @@ import { CommodityChip } from "@/components/signals/CommodityChip";
 import { Pagination } from "@/components/ui/Pagination";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { safeFormatDistanceToNow } from "@/lib/utils";
+import { logUsageEvent } from "@/lib/funnel-events";
 
 type Price = {
   symbol: string;
@@ -144,6 +145,14 @@ export default function WatchlistSymbolPage() {
     1,
     Math.ceil(signalsTotal / SIGNALS_PAGE_SIZE),
   );
+
+  // watchlist_symbol_viewed — behavioral instrumentation (research doc claude/64).
+  // One row per distinct symbol per page-session; entity-deduped on `symbol` so a
+  // strict-mode double-mount or a re-render doesn't double-log, but navigating
+  // between two drill-downs still records both.
+  useEffect(() => {
+    logUsageEvent("watchlist_symbol_viewed", { symbol, is_forex: isForex }, "entity");
+  }, [symbol, isForex]);
 
   const chartData = useMemo(
     () => points.map((p) => ({ t: new Date(p.fetchedAt).getTime(), price: p.price })),

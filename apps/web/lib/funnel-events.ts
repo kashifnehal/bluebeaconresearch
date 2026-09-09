@@ -14,8 +14,34 @@ import { track as trackVercelAnalytics } from "@vercel/analytics";
 // first_signal_viewed, first_alert_rule_created.
 // Recurring usage event types (see logUsageEvent below): dashboard_viewed,
 // watchlist_viewed, signal_detail_opened, alert_rule_created.
+// Behavioral-instrumentation event types (research doc docs/claude_project/64,
+// added 2026-09-09 — also recurring, also via logUsageEvent, NOT fire-once):
+// signal_viewed (feed / Alerts card opened), signal_source_clicked ("Built from"
+// source link), watchlist_symbol_viewed (/watchlist/[symbol] drill-down load).
+// Nothing reads these yet — they exist so a future Stage 2 ranking thread has
+// engagement history to work from.
 
 type FunnelMetadata = Record<string, unknown>;
+
+/**
+ * Shared metadata shape for signal_viewed / signal_source_clicked. Pass the signal
+ * object as the feed / Alerts page already has it — `regions` is a one-element array
+ * (a signal has a single region) purely so the persisted shape stays uniform with
+ * alert_rules' plural region/commodity/forex arrays.
+ */
+export function signalEventMetadata(signal: {
+  id: string;
+  region?: string | null;
+  commodityImpacts?: { asset: string }[] | null;
+  currencyPairImpacts?: { asset: string }[] | null;
+}): FunnelMetadata {
+  return {
+    signal_id: signal.id,
+    commodities: (signal.commodityImpacts ?? []).map((c) => c.asset),
+    regions: signal.region ? [signal.region] : [],
+    forex_pairs: (signal.currencyPairImpacts ?? []).map((c) => c.asset),
+  };
+}
 
 function toVercelProperties(
   metadata?: FunnelMetadata,
@@ -84,12 +110,13 @@ export function logFunnelEventOnce(eventType: string, metadata?: FunnelMetadata)
 // `events` table on every call, with NO server-side once-per-user dedup (unlike
 // logFunnelEventOnce). These power the DAU/WAU and per-event-type usage counts on
 // the founder-internal /admin/metrics page:
-//   dashboard_viewed, watchlist_viewed, signal_detail_opened, alert_rule_created.
+//   dashboard_viewed, watchlist_viewed, signal_detail_opened, alert_rule_created,
+//   watchlist_symbol_viewed.
 // An in-module guard collapses repeat fires within a single page-session (React
 // strict-mode double-mount, re-renders, client-side nav back to the same view) —
-// keyed by event type + an optional entity id in metadata (`id` or `signalId`) so
-// e.g. opening two different signals still records two signal_detail_opened rows,
-// but re-rendering one signal's page does not.
+// keyed by event type + an optional entity id in metadata (`id`, `signalId`,
+// `signal_id` or `symbol`) so e.g. opening two different signals still records two
+// signal_detail_opened rows, but re-rendering one signal's page does not.
 const usageEventsFiredThisSession = new Set<string>();
 
 /**
@@ -114,7 +141,10 @@ export function logUsageEvent(
     if (usageEventsFiredThisSession.has(k)) return;
     usageEventsFiredThisSession.add(k);
   } else {
-    const entityId = dedupe === "entity" && metadata ? (metadata.id ?? metadata.signalId) : undefined;
+    const entityId =
+      dedupe === "entity" && metadata
+        ? (metadata.id ?? metadata.signalId ?? metadata.signal_id ?? metadata.symbol)
+        : undefined;
     const key = `${eventType}|${entityId == null ? "" : String(entityId)}`;
     if (usageEventsFiredThisSession.has(key)) return;
     usageEventsFiredThisSession.add(key);
