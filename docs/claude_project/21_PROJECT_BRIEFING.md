@@ -123,6 +123,8 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 **What it is:** Geopolitical intelligence → structured market signals → Telegram alerts before markets open. 1/40th the cost of Bloomberg.
 
 **Who it's for:** Commodity traders (oil, gold, wheat futures), import/export SMBs, boutique fund analysts, quant/algo builders.
+- **Forex traders — shipped.** Currency-pair signals, personalization, and alert/digest matching for the 6 majors (EUR/USD, GBP/USD, USD/JPY, USD/CHF, USD/RUB, USD/CNY) are live end-to-end (#87, all 3 phases, 2026-09-09).
+- **Equity swing/day-traders — under evaluation.** Still gated behind its own validation checkpoint; no schema or product work started (see ADR 013 / D17).
 
 **Legal position:** Intelligence platform — NOT financial advice. Every signal: "Intelligence for informational purposes only. Not financial advice."
 
