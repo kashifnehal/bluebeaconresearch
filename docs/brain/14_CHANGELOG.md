@@ -8,6 +8,32 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.36.1 — Forex taxonomy #87 phase 1B: close the live-ingestion gap (2026-09-09)
+
+Commit on `main`: `abb2004`. Backend-only. Closes the gap flagged in v0.36.0:
+phase 1 only wired the dormant `ai-classifier.ts`, so no production signal
+carried `currency_pair_impacts`.
+
+- `currency_pair_impacts: classification.currencyPairImpacts ?? []` added to the
+  three real signal-creation inserts — `signal-merge.ts` `insertOrMergeSignal()`
+  (live rss/gnews/gdelt path, ADR 006), `reconciliation.ts` (orphan recovery),
+  `acled-collector.ts`. All three classify through `ClaudeService.classifyEvent()`
+  and type `classification` as `ClassificationResult` (which gained the field in
+  phase 1) — no local narrower type, no `any`. `ai-classifier.ts` left as-is.
+- ADR 010 merge semantics preserved: `insertOrMergeSignal()` writes impacts once,
+  at row creation; its duplicate and escalation branches never rewrite
+  `commodity_impacts`, so `currency_pair_impacts` is left untouched there too
+  (exact parity — noted with an inline comment).
+- Verified: a real EU/US-sanctions-on-Russia classification pushed through the
+  live `insertOrMergeSignal()` new-signal branch stored a `signals` row with
+  `currency_pair_impacts = [{USDRUB…},{EURUSD…}]` alongside unchanged
+  `commodity_impacts`; the row is selected by the same PostgREST `cs`
+  (jsonb `@>`) operator production commodity matching uses — `cs [{"asset":"USDRUB"}]`
+  hits, `cs [{"asset":"USDCNY"}]` correctly does not. `pnpm test` + `pnpm type-check`
+  pass, commodity behavior unchanged.
+- Both `reconciliation.ts` and `acled-collector.ts` confirmed to classify via
+  `claude.classifyEvent()` — no separate legacy classification path.
+
 ### v0.36.0 — Forex pair taxonomy #87 phase 1 of 3: schema + classifier + price sync (2026-09-09)
 
 Commit on `main`: `a15e2fd`. Backend-only (no `apps/web`). Cleared by ADR 013's

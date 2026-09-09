@@ -110,14 +110,33 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
     neutral text → `[]`); (4) `runPriceSyncOnce()` wrote real non-null prices
     for all 6 forex symbols (EURUSD 1.163, GBPUSD 1.354, USDJPY 153.46,
     USDCHF 0.809, USDRUB 85.69, USDCNY 6.71).
-  - ⚠️ **Follow-up for phase 3:** `ai-classifier.ts` is a **dormant path** (its
-    own comment says nothing enqueues onto its queue). The live signal-creation
-    paths — `signal-merge.ts` (`insertOrMergeSignal`, used by rss/gnews/gdelt),
-    `reconciliation.ts`, `acled-collector.ts` — still only write
-    `commodity_impacts`. Phase 1 was scoped to `ai-classifier.ts` per the task;
-    wiring `currency_pair_impacts` into `insertOrMergeSignal` + the other live
-    inserts must happen in phase 3 (or a small follow-up) or the column stays
-    empty in production.
+  - ~~⚠️ Follow-up for phase 3: only the dormant `ai-classifier.ts` was wired;
+    the live signal-creation paths still only write `commodity_impacts`.~~
+    **CLOSED by phase 1B (commit abb2004), 2026-09-09.**
+
+- #87 Forex pair taxonomy — **phase 1B (close the live-ingestion gap) CLOSED,
+  verified 2026-09-09**, commit `abb2004`. Backend-only.
+  - Added `currency_pair_impacts: classification.currencyPairImpacts ?? []` to
+    the three real signal-creation inserts: `signal-merge.ts` `insertOrMergeSignal()`
+    (the live rss/gnews/gdelt path per ADR 006), `reconciliation.ts`
+    (orphan-recovery), `acled-collector.ts`. All three classify via
+    `ClaudeService.classifyEvent()` → `classification` is `ClassificationResult`
+    (already has `currencyPairImpacts` from phase 1); no narrower local type, no
+    `any`. `ai-classifier.ts` untouched (already correct, still dormant).
+  - Merge semantics (ADR 010): `insertOrMergeSignal()` writes impacts **once**,
+    at signal creation — the duplicate and escalation branches never rewrite
+    `commodity_impacts`, so `currency_pair_impacts` is left alone there too
+    (exact parity; documented with a comment in the file).
+  - Verified: a real Russia-sanctions classification pushed through the live
+    `insertOrMergeSignal()` new-signal branch → stored `signals` row has
+    `currency_pair_impacts` = `[{USDRUB…},{EURUSD…}]` **and** unchanged
+    `commodity_impacts`; the row is matched by the same PostgREST `cs`
+    (jsonb-contains) operator production commodity matching uses
+    (`cs [{"asset":"USDRUB"}]` → hit; `cs [{"asset":"USDCNY"}]` → correctly no
+    hit). `pnpm test` (backend) + `pnpm type-check` pass — commodity behavior
+    unchanged.
+  - Still pending: phase 2 (onboarding/watchlist UI), phase 3
+    (alert_rules/dispatcher/digest forex matching + a real forex Telegram alert).
 
 ## Decisions confirmed 2026-09-07
 1. Forex gate — softened, forex only, not equity. Desk-research-validated (see
@@ -145,8 +164,9 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   deployed worker's own digest cron delivered a real email via the Railway
   `RESEND_API_KEY` (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, delivered).
   No follow-ups outstanding.
-- #87 forex taxonomy: phase 1 of 3 (schema + classifier + price sync) closed
-  2026-09-09, commit a15e2fd — see "Closed, verified". Next: phase 2
+- #87 forex taxonomy: phase 1 (schema + classifier + price sync, a15e2fd) and
+  phase 1B (live-ingestion gap closed, `abb2004`) both closed 2026-09-09 — see
+  "Closed, verified". Next: phase 2
   (onboarding/watchlist UI), then phase 3 (alert_rules/dispatcher/digest +
   wiring currency_pair_impacts into the live signal-merge insert path).
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
