@@ -1,25 +1,31 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { COMMODITIES, REGIONS } from "@blue-beacon-research/shared";
+import { COMMODITIES, FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export type MyPreferences = {
   commodities: string[];
+  forexPairs: string[];
   regions: string[];
   onboardingCompletedAt: string | null;
-  /** True when the user has told us at least one commodity or region to follow. */
+  /**
+   * True when the user has told us at least one commodity, currency pair, or
+   * region to follow.
+   */
   hasPreferences: boolean;
 };
 
 const EMPTY: MyPreferences = {
   commodities: [],
+  forexPairs: [],
   regions: [],
   onboardingCompletedAt: null,
   hasPreferences: false,
 };
 
 const KNOWN_COMMODITIES = new Set<string>(COMMODITIES.map((c) => c.symbol));
+const KNOWN_FOREX_PAIRS = new Set<string>(FOREX_PAIRS.map((f) => f.symbol));
 const KNOWN_REGIONS = new Set<string>(REGIONS.map((r) => r.id));
 
 /**
@@ -42,12 +48,15 @@ export function useMyPreferences() {
 
       const { data } = await supabase
         .from("user_preferences")
-        .select("commodities, regions, onboarding_completed_at")
+        .select("commodities, forex_pairs, regions, onboarding_completed_at")
         .eq("user_id", user.id)
         .maybeSingle();
 
       const commodities = ((data?.commodities as string[] | null) ?? []).filter((s) =>
         KNOWN_COMMODITIES.has(s),
+      );
+      const forexPairs = ((data?.forex_pairs as string[] | null) ?? []).filter((s) =>
+        KNOWN_FOREX_PAIRS.has(s),
       );
       const regions = ((data?.regions as string[] | null) ?? []).filter((s) =>
         KNOWN_REGIONS.has(s),
@@ -55,10 +64,12 @@ export function useMyPreferences() {
 
       return {
         commodities,
+        forexPairs,
         regions,
         onboardingCompletedAt:
           (data?.onboarding_completed_at as string | null) ?? null,
-        hasPreferences: commodities.length > 0 || regions.length > 0,
+        hasPreferences:
+          commodities.length > 0 || forexPairs.length > 0 || regions.length > 0,
       };
     },
     staleTime: 5 * 60_000,

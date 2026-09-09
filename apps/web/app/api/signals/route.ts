@@ -43,6 +43,7 @@ type SignalRow = {
   lng: number | null;
   sources_count: number | null;
   commodity_impacts: Signal["commodityImpacts"] | null;
+  currency_pair_impacts: Signal["currencyPairImpacts"] | null;
   sanctions_matches: Signal["sanctionsMatches"] | null;
   is_breaking: boolean | null;
   is_active: boolean | null;
@@ -197,7 +198,7 @@ export async function GET(req: NextRequest) {
     if (personalizedParam && user) {
       const { data: prefs } = await supabaseAuth
         .from("user_preferences")
-        .select("commodities, regions")
+        .select("commodities, regions, forex_pairs")
         .eq("user_id", user.id)
         .maybeSingle();
       const prefCommodities: string[] = Array.isArray(prefs?.commodities)
@@ -205,6 +206,9 @@ export async function GET(req: NextRequest) {
         : [];
       const prefRegions: string[] = Array.isArray(prefs?.regions)
         ? (prefs!.regions as string[])
+        : [];
+      const prefForexPairs: string[] = Array.isArray(prefs?.forex_pairs)
+        ? (prefs!.forex_pairs as string[])
         : [];
 
       const orParts: string[] = [];
@@ -218,6 +222,14 @@ export async function GET(req: NextRequest) {
         // keeps the value free of characters that are reserved inside .or().
         if (/^[A-Z0-9]+$/.test(sym)) {
           orParts.push(`commodity_impacts.cs.[{"asset":"${sym}"}]`);
+        }
+      }
+      // Forex pairs (#87) — identical jsonb-containment check against
+      // currency_pair_impacts, folded into the same single OR filter. `sym`
+      // comes from our own FOREX_PAIRS constant on write; same char guard.
+      for (const sym of prefForexPairs) {
+        if (/^[A-Z0-9]+$/.test(sym)) {
+          orParts.push(`currency_pair_impacts.cs.[{"asset":"${sym}"}]`);
         }
       }
 
@@ -372,6 +384,7 @@ export async function GET(req: NextRequest) {
         lng: r.lng ?? undefined,
         sourcesCount: r.sources_count ?? 1,
         commodityImpacts: r.commodity_impacts ?? [],
+        currencyPairImpacts: r.currency_pair_impacts ?? [],
         sanctionsMatches: r.sanctions_matches ?? undefined,
         isBreaking: r.is_breaking ?? false,
         isActive: r.is_active ?? true,

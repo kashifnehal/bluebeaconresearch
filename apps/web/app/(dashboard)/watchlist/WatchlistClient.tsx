@@ -4,10 +4,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { COMMODITIES } from "@blue-beacon-research/shared";
+import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { logUsageEvent } from "@/lib/funnel-events";
+
+// Commodities + forex pairs (#87) share one watchlist. The forex entries carry
+// the same {symbol,label,unit,category} shape, so meta lookups, the add-asset
+// dropdown, and the "Show All" set all work off this combined list unchanged.
+const WATCHLIST_ASSETS = [...COMMODITIES, ...FOREX_PAIRS];
 
 type Price = {
   symbol: string;
@@ -88,35 +93,36 @@ export function WatchlistClient() {
   );
   const [addSymbol, setAddSymbol] = useState<string>("SELECT COMMODITY");
 
-  // Preference-aware default (#89): when the user has told us which commodities
-  // they follow, seed the watchlist with those instead of the generic
-  // USOIL/XAUUSD default — unless they arrived via ?symbol= or have already
-  // changed the list themselves. One click flips between the two views; nothing
-  // is ever hidden (every commodity stays addable from the dropdown).
+  // Preference-aware default (#89, extended for forex in #87): when the user has
+  // told us which commodities and/or currency pairs they follow, seed the
+  // watchlist with those instead of the generic USOIL/XAUUSD default — unless
+  // they arrived via ?symbol= or have already changed the list themselves. One
+  // click flips between the two views; nothing is ever hidden (every asset stays
+  // addable from the dropdown).
   const { data: myPrefs } = useMyPreferences();
-  const prefCommodities = useMemo(
+  const prefSymbols = useMemo(
     () =>
-      (myPrefs?.commodities ?? []).filter((s) =>
-        COMMODITIES.some((c) => c.symbol === s),
+      [...(myPrefs?.commodities ?? []), ...(myPrefs?.forexPairs ?? [])].filter(
+        (s) => WATCHLIST_ASSETS.some((a) => a.symbol === s),
       ),
-    [myPrefs?.commodities],
+    [myPrefs?.commodities, myPrefs?.forexPairs],
   );
-  const allSymbols = useMemo(() => COMMODITIES.map((c) => c.symbol), []);
+  const allSymbols = useMemo(() => WATCHLIST_ASSETS.map((a) => a.symbol), []);
   const touchedRef = useRef(false);
   const [seededFromPrefs, setSeededFromPrefs] = useState(false);
 
   useEffect(() => {
     if (preselect || touchedRef.current || seededFromPrefs) return;
-    if (prefCommodities.length > 0) {
-      setWatch(prefCommodities);
+    if (prefSymbols.length > 0) {
+      setWatch(prefSymbols);
       setSeededFromPrefs(true);
     }
-  }, [prefCommodities, preselect, seededFromPrefs]);
+  }, [prefSymbols, preselect, seededFromPrefs]);
 
   const showingMyCommodities =
-    prefCommodities.length > 0 &&
-    watch.length === prefCommodities.length &&
-    prefCommodities.every((s) => watch.includes(s));
+    prefSymbols.length > 0 &&
+    watch.length === prefSymbols.length &&
+    prefSymbols.every((s) => watch.includes(s));
 
   // watchlist_viewed — recurring usage event (once per page-session), feeds
   // DAU/WAU and 7-day usage counts on /admin/metrics.
@@ -142,7 +148,7 @@ export function WatchlistClient() {
     return map;
   }, [data?.prices]);
 
-  const available = COMMODITIES.filter((c) => !watch.includes(c.symbol));
+  const available = WATCHLIST_ASSETS.filter((c) => !watch.includes(c.symbol));
 
   const handleAdd = () => {
     if (addSymbol === "SELECT COMMODITY") return;
@@ -175,7 +181,7 @@ export function WatchlistClient() {
             <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">
               Commodity Watchlist
             </h1>
-            {prefCommodities.length > 0 && (
+            {prefSymbols.length > 0 && (
               <div className="mt-4 flex items-center gap-2">
                 <span className="font-label text-[10px] text-on-surface-variant tracking-widest uppercase">
                   View
@@ -183,7 +189,7 @@ export function WatchlistClient() {
                 <button
                   onClick={() => {
                     touchedRef.current = true;
-                    setWatch(prefCommodities);
+                    setWatch(prefSymbols);
                   }}
                   aria-pressed={showingMyCommodities}
                   className="px-3 py-1 rounded-sm font-label text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
@@ -252,7 +258,7 @@ export function WatchlistClient() {
         {/* Commodity Cards Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {watch.map((sym) => {
-            const meta = COMMODITIES.find((c) => c.symbol === sym);
+            const meta = WATCHLIST_ASSETS.find((c) => c.symbol === sym);
             const p = priceBySymbol.get(sym);
             const pct = p ? (p.change_pct_24h ?? p.changePct24h ?? 0) : 0;
             const isUp = pct >= 0;

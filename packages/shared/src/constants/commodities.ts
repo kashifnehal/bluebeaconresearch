@@ -21,6 +21,22 @@ export const COMMODITIES = [
   // ingests FX pairs from Yahoo Finance.
 ] as const;
 
+// Forex pairs (#87). The same six the classifier emits
+// (claude.service.ts ALLOWED_FOREX_PAIRS) and the price-syncer worker syncs
+// (price-syncer.ts FOREX_SYMBOLS). `symbol` matches both
+// signals.currency_pair_impacts[].asset and the commodity_prices.symbol the
+// price-syncer writes; `label` is the slash-formatted display form. `unit` /
+// `category` mirror the COMMODITIES shape so the two lists can be spread into
+// one array on the watchlist without widening every meta lookup.
+export const FOREX_PAIRS = [
+  { symbol: "EURUSD", label: "EUR/USD", unit: "rate", category: "forex" },
+  { symbol: "GBPUSD", label: "GBP/USD", unit: "rate", category: "forex" },
+  { symbol: "USDJPY", label: "USD/JPY", unit: "rate", category: "forex" },
+  { symbol: "USDCHF", label: "USD/CHF", unit: "rate", category: "forex" },
+  { symbol: "USDRUB", label: "USD/RUB", unit: "rate", category: "forex" },
+  { symbol: "USDCNY", label: "USD/CNY", unit: "rate", category: "forex" },
+] as const;
+
 export const REGIONS = [
   { id: "middle-east", label: "Middle East", emoji: "🌍" },
   { id: "eastern-europe", label: "Eastern Europe", emoji: "🌍" },

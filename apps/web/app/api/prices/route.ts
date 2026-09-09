@@ -14,7 +14,14 @@ type CommodityPriceRow = {
   fetched_at: string;
 };
 
-const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "NGAS", "WHEAT", "COPPER", "XAGUSD", "CORN"] as const;
+// Tier-2 (Redis fallback) symbol list. Tier 1 (the commodity_prices table query
+// below) already returns every symbol the price-syncer writes, forex included;
+// this list only bounds which symbols the Redis fallback re-hydrates, so the six
+// forex pairs (#87) are appended here to keep the fallback path in parity.
+const SYMBOLS = [
+  "USOIL", "UKOIL", "XAUUSD", "NGAS", "WHEAT", "COPPER", "XAGUSD", "CORN",
+  "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDRUB", "USDCNY",
+] as const;
 
 // Step 3: Server-side in-memory cache for /api/prices (60s TTL)
 let _cachedPrices: { payload: { prices: CommodityPriceRow[] }; timestamp: number } | null = null;

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { COMMODITIES, REGIONS } from "@blue-beacon-research/shared";
+import { COMMODITIES, FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
 import { ArrowRight, Terminal } from "lucide-react";
 import Image from "next/image";
 
@@ -17,6 +17,7 @@ export default function OnboardingPage() {
   // alert configuration. These seed user_preferences.commodities / .regions, which
   // the feed's "My Feed" toggle and the watchlist default read from.
   const [commodities, setCommodities] = useState<string[]>([]);
+  const [forexPairs, setForexPairs] = useState<string[]>([]);
   const [regions, setRegions] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -80,16 +81,29 @@ export default function OnboardingPage() {
           onboarding_completed: true,
         });
 
-        await supabase.from("user_preferences").upsert({
-          user_id: user.id,
-          use_case: useCase,
-          theme: "dark",
-          // Empty arrays when skipped — the feed/watchlist just fall back to the
-          // full view, exactly as they do for any user who hasn't set preferences.
-          commodities: withPreferences ? commodities : [],
-          regions: withPreferences ? regions : [],
-          onboarding_completed_at: new Date().toISOString(),
-        });
+        // onConflict: "user_id" — user_preferences' PK is `id`, with a separate
+        // UNIQUE on user_id. Without naming that constraint the upsert tries a
+        // plain INSERT and 409s for any user who already has a row (re-run
+        // onboarding, or touched Settings first), silently dropping the captured
+        // preferences. The error is now surfaced rather than swallowed.
+        const { error: prefsError } = await supabase
+          .from("user_preferences")
+          .upsert(
+            {
+              user_id: user.id,
+              use_case: useCase,
+              theme: "dark",
+              // Empty arrays when skipped — the feed/watchlist just fall back to
+              // the full view, exactly as they do for any user who hasn't set
+              // preferences.
+              commodities: withPreferences ? commodities : [],
+              forex_pairs: withPreferences ? forexPairs : [],
+              regions: withPreferences ? regions : [],
+              onboarding_completed_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id" },
+          );
+        if (prefsError) throw prefsError;
       }
 
       toast.success("Profile initialized successfully");
@@ -212,7 +226,7 @@ export default function OnboardingPage() {
             <p style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}>
               {step === 1
                 ? "Tell us how you'll use Blue Beacon Research"
-                : "Pick the commodities and regions you follow so we can show you what matters to you. You can change this anytime in Settings."}
+                : "Pick the commodities, currency pairs, and regions you follow so we can show you what matters to you. You can change this anytime in Settings."}
             </p>
             <div
               style={{
@@ -390,6 +404,33 @@ export default function OnboardingPage() {
                       style={chipStyle(commodities.includes(c.symbol))}
                     >
                       {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <label
+                  style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    fontSize: "11px",
+                    color: "#bbcac0",
+                  }}
+                >
+                  CURRENCY PAIRS YOU FOLLOW
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {FOREX_PAIRS.map((f) => (
+                    <button
+                      key={f.symbol}
+                      type="button"
+                      aria-pressed={forexPairs.includes(f.symbol)}
+                      onClick={() => toggle(forexPairs, setForexPairs, f.symbol)}
+                      style={chipStyle(forexPairs.includes(f.symbol))}
+                    >
+                      {f.label}
                     </button>
                   ))}
                 </div>

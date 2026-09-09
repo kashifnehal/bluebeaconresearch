@@ -28,6 +28,10 @@ export interface Signal {
   lng?: number;
   sourcesCount: number;
   commodityImpacts: CommodityImpact[];
+  // Forex-pair impacts (#87) — same {asset,direction,confidence} shape as
+  // commodityImpacts, sourced from signals.currency_pair_impacts. Optional so
+  // existing Signal constructors that predate the forex taxonomy stay valid.
+  currencyPairImpacts?: CommodityImpact[];
   sanctionsMatches?: { actor: string; list: string }[];
   isBreaking: boolean;
   isActive: boolean;
