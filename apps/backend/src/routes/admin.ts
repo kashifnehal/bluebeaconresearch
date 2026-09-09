@@ -54,4 +54,68 @@ export async function adminRoutes(app: FastifyInstance) {
 
     return reply.send({ data });
   });
+
+  // GET /v1/admin/service-health — #42 Phase 1 backing data for /admin/service-status.
+  //   ?service=<name>  -> most recent 50 rows for that one service (the "Load data" click)
+  //   (no param)       -> one summary row per distinct service (last status + 24h count)
+  // Reads via the service-role client (service_health_events is RLS-on / no-policy),
+  // so this works regardless of whether SUPABASE_SERVICE_ROLE_KEY is set on Vercel.
+  app.get("/service-health", async (req, reply) => {
+    const email = await assertAdmin(req, reply);
+    if (!email) return;
+
+    const supabase = getSupabaseAdmin();
+    const service = (req.query as { service?: string })?.service?.trim();
+
+    if (service) {
+      const { data, error } = await supabase
+        .from("service_health_events")
+        .select("service, status, detail, latency_ms, created_at")
+        .eq("service", service)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        req.log.error({ err: error }, "service_health_events query failed");
+        return reply.status(500).send({ error: "Query failed" });
+      }
+      return reply.send({ data: { service, events: data ?? [] } });
+    }
+
+    // Summary: last 1000 rows is plenty to derive per-service latest status + a
+    // rough recent-volume count without a SQL function.
+    const { data, error } = await supabase
+      .from("service_health_events")
+      .select("service, status, detail, created_at")
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (error) {
+      req.log.error({ err: error }, "service_health_events summary query failed");
+      return reply.status(500).send({ error: "Query failed" });
+    }
+
+    const dayAgo = Date.now() - 24 * 3_600_000;
+    const byService = new Map<
+      string,
+      { service: string; last_status: string; last_at: string; last_detail: string | null; count_24h: number }
+    >();
+    for (const row of data ?? []) {
+      const existing = byService.get(row.service);
+      const inWindow = new Date(row.created_at).getTime() >= dayAgo;
+      if (!existing) {
+        byService.set(row.service, {
+          service: row.service,
+          last_status: row.status,
+          last_at: row.created_at,
+          last_detail: row.detail ?? null,
+          count_24h: inWindow ? 1 : 0,
+        });
+      } else if (inWindow) {
+        existing.count_24h += 1;
+      }
+    }
+
+    return reply.send({
+      data: { services: [...byService.values()].sort((a, b) => a.service.localeCompare(b.service)) },
+    });
+  });
 }

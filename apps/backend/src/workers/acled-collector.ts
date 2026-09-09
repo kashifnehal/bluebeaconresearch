@@ -3,6 +3,7 @@ import { AcledService } from "../services/acled.service.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
+import { recordServiceHealth } from "../lib/service-health.js";
 
 const claude = new ClaudeService();
 
@@ -10,7 +11,26 @@ export async function runAcledCollectorOnce() {
   const supabase = getSupabaseAdmin();
   const acled = new AcledService();
 
-  const events = await acled.fetchRecentEvents();
+  const fetchStartedAt = Date.now();
+  let events: Awaited<ReturnType<AcledService["fetchRecentEvents"]>>;
+  try {
+    events = await acled.fetchRecentEvents();
+    await recordServiceHealth(
+      "acled",
+      "ok",
+      `fetched ${events.length} event(s)`,
+      Date.now() - fetchStartedAt,
+    );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    // "ACLED credentials missing" is an intentional not-configured state, not a
+    // failure — workers.ts already treats it as debug-level. Everything else is a
+    // real fetch failure worth a health row.
+    if (!msg.includes("ACLED credentials missing")) {
+      await recordServiceHealth("acled", "error", msg, Date.now() - fetchStartedAt);
+    }
+    throw e;
+  }
 
   let fetched = events.length;
   let inserted = 0;

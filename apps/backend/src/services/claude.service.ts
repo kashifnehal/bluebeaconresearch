@@ -439,7 +439,26 @@ export class ClaudeService {
 
     const system =
       "You are a senior geopolitical intelligence analyst for a commodities trading firm. You write precise, actionable intelligence briefings.";
-    const user = `Write a 5-8 sentence intelligence briefing for the following event.\n\n${JSON.stringify(_signal).slice(0, 6000)}`;
+
+    // Trim the Sonnet payload (#95 item 1b). The old code stringified the entire
+    // `signals` row (select *) and capped it at 6000 chars — shipping id, event_date,
+    // created_at, updated_at, raw_event_ids, lat/lng, is_active, is_breaking,
+    // confidence, sources_count etc. on every briefing call for no benefit: the prompt
+    // template references none of them by name, and the only fields the fallback path
+    // below touches are `region` and `commodity_impacts`. Keep the substantive
+    // analytical fields only (the task's title/summary/region/commodities/severity,
+    // plus `country` and `currency_pair_impacts` — both first-class analytical inputs
+    // for a geopolitical briefing, neither an id/timestamp/internal field).
+    const briefingInput = {
+      title: _signal.title,
+      summary: _signal.summary,
+      region: _signal.region,
+      country: _signal.country,
+      severity: _signal.severity,
+      commodity_impacts: _signal.commodity_impacts,
+      currency_pair_impacts: _signal.currency_pair_impacts,
+    };
+    const user = `Write a 5-8 sentence intelligence briefing for the following event.\n\n${JSON.stringify(briefingInput)}`;
 
     for (let attempt = 0; attempt <= ClaudeService.MAX_BRIEFING_RETRIES; attempt++) {
       try {

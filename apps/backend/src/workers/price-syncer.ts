@@ -1,6 +1,7 @@
 import YahooFinance from "yahoo-finance2";
 import { getRedis, recordRedisError } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { recordServiceHealth } from "../lib/service-health.js";
 
 const COMMODITY_SYMBOLS = {
   USOIL: "CL=F",   // WTI Crude Oil futures
@@ -46,6 +47,9 @@ export async function runPriceSyncOnce() {
     ...COMMODITY_SYMBOLS,
     ...FOREX_SYMBOLS,
   };
+  const totalSymbols = Object.keys(allSymbols).length;
+  let symbolFailures = 0;
+  const syncStartedAt = Date.now();
 
   for (const [symbol, yahooSymbol] of Object.entries(allSymbols)) {
     try {
@@ -81,17 +85,41 @@ export async function runPriceSyncOnce() {
         }
       }
     } catch (err: any) {
+      symbolFailures += 1;
       console.error(`[PRICE SYNC] Failed for ${symbol}:`, err?.message ?? err);
     }
   }
 
+  let insertError: string | undefined;
   if (results.length > 0) {
     const { error } = await supabase.from("commodity_prices").insert(results);
     if (error) {
+      insertError = error.message;
       console.error("[PRICE SYNC] Supabase insert error:", error.message);
     } else {
       console.log(`[PRICE SYNC] Updated ${results.length} commodity prices via Yahoo Finance`);
     }
+  }
+
+  // #42 — one health row per run for the Yahoo Finance price-sync job.
+  const latencyMs = Date.now() - syncStartedAt;
+  if (results.length === 0) {
+    await recordServiceHealth(
+      "yahoo_finance",
+      "error",
+      `no quotes returned (${symbolFailures}/${totalSymbols} symbols failed)`,
+      latencyMs,
+    );
+  } else if (insertError) {
+    await recordServiceHealth("yahoo_finance", "error", `db insert failed: ${insertError}`, latencyMs);
+  } else {
+    await recordServiceHealth(
+      "yahoo_finance",
+      "ok",
+      `updated ${results.length}/${totalSymbols} symbols` +
+        (symbolFailures > 0 ? ` (${symbolFailures} symbol fetch failure(s))` : ""),
+      latencyMs,
+    );
   }
 
   return { ok: results.length > 0, updated: results.length };

@@ -7,6 +7,8 @@ import { isRelevantEvent, type FeedTier } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
+import { tryTitlePreFilterSkip } from "./title-prefilter.js";
+import { recordServiceHealth } from "../lib/service-health.js";
 
 const claude = new ClaudeService();
 
@@ -67,9 +69,17 @@ export async function runRssCollectorOnce() {
   const failedFeeds: string[] = [];
 
   for (const feed of RSS_FEEDS) {
+    const feedStartedAt = Date.now();
     try {
       const parsed = await parser.parseURL(feed.url);
       feedsOk++;
+      // #42 — one health row per feed per run, labelled rss:<feed-name>.
+      await recordServiceHealth(
+        `rss:${feed.label}`,
+        "ok",
+        `${parsed.items?.length ?? 0} item(s)`,
+        Date.now() - feedStartedAt,
+      );
       for (const item of parsed.items ?? []) {
         if (!item.link || !item.title) continue;
         const pubDate = item.isoDate || item.pubDate
@@ -95,6 +105,12 @@ export async function runRssCollectorOnce() {
       // stayed invisible for weeks (#63). feedsFailed is also returned below so
       // pipeline:last_run / the ingestion-status endpoint reflect it.
       console.error(`[RSS] Feed "${feed.label}" failed (${feed.url}):`, e.message);
+      await recordServiceHealth(
+        `rss:${feed.label}`,
+        "error",
+        e.message,
+        Date.now() - feedStartedAt,
+      );
     }
   }
 
@@ -116,6 +132,7 @@ export async function runRssCollectorOnce() {
   let duplicates = 0;
   let filtered = 0;
   let signals = 0;
+  let prefiltered = 0;
 
   for (const item of items) {
     if (!isRelevantEvent(item.title, item.summary, item.tier)) {
@@ -162,6 +179,21 @@ export async function runRssCollectorOnce() {
     inserted++;
 
     const rawEventId = insert.data.id as string;
+
+    // Pre-classification near-duplicate skip (#95 item 1a) — see title-prefilter.ts.
+    // GNews and RSS both write source='newsapi', so this also catches an article
+    // cross-posted between the two feeds within the window.
+    const pre = await tryTitlePreFilterSkip({
+      supabase,
+      collectorLabel: "RSS",
+      rawEventId,
+      source: rawEventPayload.source,
+      title: rawEventPayload.title,
+    });
+    if (pre.skipped) {
+      prefiltered++;
+      continue;
+    }
 
     try {
       const classification = await claude.classifyEvent({
@@ -232,5 +264,5 @@ export async function runRssCollectorOnce() {
   const error =
     feedsFailed > 0 ? `${feedsFailed}/${feedsAttempted} feeds failed: ${failedFeeds.join(", ")}` : undefined;
 
-  return { ok, error, fetched, inserted, duplicates, filtered, signals, feedsOk, feedsFailed };
+  return { ok, error, fetched, inserted, duplicates, filtered, signals, prefiltered, feedsOk, feedsFailed };
 }

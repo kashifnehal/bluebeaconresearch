@@ -7,6 +7,8 @@ import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
+import { tryTitlePreFilterSkip } from "./title-prefilter.js";
+import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 
 const claude = new ClaudeService();
@@ -31,6 +33,8 @@ export async function runGnewsCollectorOnce() {
   // Run all queries (parallel would hit rate limits; run sequentially with 300ms gap)
   const allArticles: any[] = [];
   let fetchError: string | undefined;
+  let rateLimited = false;
+  const fetchStartedAt = Date.now();
   for (const query of GNEWS_QUERIES) {
     try {
       const articles = await fetchGnewsArticles(query, env.GNEWS_API_KEY);
@@ -42,6 +46,7 @@ export async function runGnewsCollectorOnce() {
       if (e.response?.status === 402 || e.response?.status === 429) {
         console.warn("[GNews] Rate limit hit, skipping additional queries");
         fetchError = `quota/rate limit (HTTP ${e.response.status})`;
+        rateLimited = true;
         break;
       }
       console.warn(`[GNews] Query "${query}" failed:`, e.message);
@@ -51,10 +56,25 @@ export async function runGnewsCollectorOnce() {
     await new Promise((r) => setTimeout(r, 300));
   }
 
+  const fetchLatencyMs = Date.now() - fetchStartedAt;
+
   // A run that fetched nothing and hit an error is a failed run for health tracking.
   if (allArticles.length === 0 && fetchError) {
+    await recordServiceHealth(
+      "gnews",
+      rateLimited ? "rate_limited" : "error",
+      fetchError,
+      fetchLatencyMs,
+    );
     return { ok: false, fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: fetchError };
   }
+
+  await recordServiceHealth(
+    "gnews",
+    "ok",
+    `fetched ${allArticles.length} article(s)`,
+    fetchLatencyMs,
+  );
 
   // Deduplicate by URL before processing
   const seen = new Set<string>();
@@ -69,6 +89,7 @@ export async function runGnewsCollectorOnce() {
   let duplicates = 0;
   let filtered = 0;
   let signals = 0;
+  let prefiltered = 0;
 
   for (const a of articles) {
     const externalId = a.url ? `gnews-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
@@ -109,6 +130,22 @@ export async function runGnewsCollectorOnce() {
     inserted += 1;
 
     const rawEventId = insert.data.id as string;
+
+    // Pre-classification near-duplicate skip (#95 item 1a). Only fires on an exact
+    // normalized-title match to a raw_event from the same source classified in the
+    // last 45 min — the literal same-article-refetched case. Links into the existing
+    // signal and skips the Haiku call entirely.
+    const pre = await tryTitlePreFilterSkip({
+      supabase,
+      collectorLabel: "GNews",
+      rawEventId,
+      source: rawEventPayload.source,
+      title: rawEventPayload.title,
+    });
+    if (pre.skipped) {
+      prefiltered += 1;
+      continue;
+    }
 
     // Classify and write signal directly — reliable even when Redis/BullMQ is unavailable
     try {
@@ -172,5 +209,5 @@ export async function runGnewsCollectorOnce() {
     }
   }
 
-  return { ok: true, fetched, inserted, duplicates, filtered, signals };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered };
 }

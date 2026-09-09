@@ -392,7 +392,7 @@ The frontend NEVER receives null prices — there is always a value to display.
 **Worker:** sanctions-syncer.ts
 **Cron:** Daily at 04:00 UTC (`0 4 * * *`)
 **Sources:**
-- OFAC SDN XML: https://sanctionslistservice.ofac.treas.gov/api/publicationdata/OFAC_SDN_XML.zip
+- OFAC SDN XML: https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML (302-redirects to a signed S3 URL serving the raw XML; the older `/api/publicationdata/OFAC_SDN_XML.zip` path 404s — verified 2026-09-09, live code uses the `PublicationPreview/exports` path)
 - EU Consolidated List: https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList_1_1.zip
 - UN Consolidated List: https://scsanctions.un.org/resources/xml/en/consolidated.xml
 

@@ -6,6 +6,8 @@ import { isRelevantEvent } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
+import { tryTitlePreFilterSkip } from "./title-prefilter.js";
+import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 
 // Re-export for backward compatibility
@@ -67,10 +69,19 @@ export async function runGdeltCollectorOnce() {
   const supabase = getSupabaseAdmin();
 
   let res: any;
+  const fetchStartedAt = Date.now();
   try {
     res = await fetchGdeltWithBackoff();
+    await recordServiceHealth("gdelt", "ok", undefined, Date.now() - fetchStartedAt);
   } catch (e: any) {
     console.error("[GDELT] Fetch failed after retries:", e.message);
+    const status = e?.response?.status;
+    await recordServiceHealth(
+      "gdelt",
+      status === 429 ? "rate_limited" : "error",
+      e.message,
+      Date.now() - fetchStartedAt,
+    );
     return { ok: false, fetched: 0, inserted: 0, duplicates: 0, filtered: 0, signals: 0, error: e.message };
   }
 
@@ -81,6 +92,7 @@ export async function runGdeltCollectorOnce() {
   let duplicates = 0;
   let filtered = 0;
   let signals = 0;
+  let prefiltered = 0;
 
   for (const a of articles) {
     const externalId = a.url ? `gdelt-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
@@ -136,6 +148,19 @@ export async function runGdeltCollectorOnce() {
     inserted += 1;
 
     const rawEventId = insert.data.id as string;
+
+    // Pre-classification near-duplicate skip (#95 item 1a) — see title-prefilter.ts.
+    const pre = await tryTitlePreFilterSkip({
+      supabase,
+      collectorLabel: "GDELT",
+      rawEventId,
+      source: "gdelt",
+      title,
+    });
+    if (pre.skipped) {
+      prefiltered += 1;
+      continue;
+    }
 
     try {
       const classification = await claude.classifyEvent({
@@ -197,5 +222,5 @@ export async function runGdeltCollectorOnce() {
     }
   }
 
-  return { ok: true, fetched, inserted, duplicates, filtered, signals };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered };
 }

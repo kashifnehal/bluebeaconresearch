@@ -13,6 +13,7 @@ import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
+import { runRetentionJobsOnce } from "./workers/retention.js";
 import { runDigestOnce } from "./workers/digest-sender.js";
 import {
   buildPipelineStatus,
@@ -204,6 +205,19 @@ async function main() {
       app.log.info({ res }, "digest-sender complete");
     } catch (e) {
       app.log.error({ err: e }, "digest-sender failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // #67 data retention — weekly, Sunday 03:00 UTC (ahead of the 04:00 sanctions
+  // sync). commodity_prices >90d deleted outright; raw_events >180d deleted only
+  // when a signal already references them. signals are never touched.
+  cron.schedule("0 3 * * 0", async () => {
+    try {
+      const res = await runRetentionJobsOnce();
+      app.log.info({ res }, "retention-jobs complete");
+    } catch (e) {
+      app.log.error({ err: e }, "retention-jobs failed");
       Sentry.captureException(e);
     }
   });
