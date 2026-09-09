@@ -2,7 +2,32 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-07 (economic calendar #86; #83 digest prod cron path fully end-to-end confirmed — see `14_CHANGELOG.md` v0.35.0)
+Last updated: 2026-09-09 (cost/waste batch + Service Health Dashboard P1 #42 + retention jobs #67 — see `14_CHANGELOG.md` v0.37.0)
+
+---
+
+## Cost/waste batch, Service Health Dashboard P1, retention jobs (2026-09-09)
+
+Commit `5f1ee16`. See `14_CHANGELOG.md` v0.37.0 for the full breakdown.
+
+- **Title pre-filter** (`workers/title-prefilter.ts`) — skips Haiku classification on
+  an exact same-source normalized-title re-fetch within 45 min; links into the
+  existing signal. Wired into gnews/gdelt/rss. Logs `[PRE-FILTER:skipped]`.
+- **Sonnet briefing payload trimmed** to title/summary/region/country/severity/
+  commodity_impacts/currency_pair_impacts (was the whole `signals` row).
+- **`service_health_events`** table (migration `20260909135317`, RLS on / no policy)
+  + `lib/service-health.ts` `recordServiceHealth()` wired into gnews/gdelt/acled/
+  rss(per-feed)/yahoo_finance. `GET /v1/admin/service-health`. New founder page
+  `/admin/service-status` (click-to-load only, no polling/charts — Phase 1).
+- **Retention** (`workers/retention.ts`, weekly Sun 03:00 UTC): commodity_prices
+  >90d deleted; raw_events >180d deleted only when a signal references them;
+  signals untouched. Day-one: 0 / 0 rows (tables hold ~30d of history).
+- **Anthropic credit is live** — confirmed by real Haiku + Sonnet calls this
+  session. The "restore Anthropic credit / heuristic fallback covering" open item
+  below is **stale**.
+- **#53 backfill NOT run** (estimate only): 2,019 signals with empty
+  `commodity_impacts`; ~$2.68 total via `claude-haiku-4-5` ($1.34 batched). Needs an
+  explicit go-ahead.
 
 ---
 

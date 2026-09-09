@@ -8,6 +8,80 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.37.0 — Cost/waste batch, Service Health Dashboard P1 (#42), retention jobs (#67) (2026-09-09)
+
+Commit on `main`: `5f1ee16`. Backend + one new `apps/web` admin page + one migration
+(`20260909135317_service_health_events`).
+
+**Part 1 — cost/waste (#95)**
+- **1a title pre-filter** — `apps/backend/src/workers/title-prefilter.ts`. Skips the
+  Haiku `classifyEvent` call only when a new `raw_events` row is an EXACT
+  normalized-title match (case/space/punct folded) to a row from the *same
+  `source` bucket* classified in the last **45 min** (3 collector cycles). Links the
+  new row into the existing signal via the same `raw_event_ids` append +
+  `sources_count++` that `signal-merge.ts`'s duplicate branch uses — no second merge
+  path. Logs `[PRE-FILTER:skipped]`. Wired into gnews/gdelt/rss (each returns a new
+  `prefiltered` count). Deliberately narrower than the title-similarity idea
+  `signal-merge.ts` rejected: exact-match only, no severity freeze risk beyond what
+  the duplicate branch already accepts. Verified against prod DB: exact-same-source
+  skips+links, similar wording does NOT, cross-source (gdelt↔newsapi) does NOT.
+- **1b Sonnet payload trim** — `claude.service.ts` `generateAnalysis()` now sends
+  `{title, summary, region, country, severity, commodity_impacts,
+  currency_pair_impacts}` instead of `JSON.stringify(<entire signals row>).slice(0,
+  6000)`. Dropped: id, event_date, created_at/updated_at, raw_event_ids, lat/lng,
+  is_active, is_breaking, confidence, sources_count, ai_analysis. Prompt template
+  referenced none by name; the fallback still reads `_signal.region` /
+  `_signal.commodity_impacts` off the untrimmed arg. Verified with a real
+  `claude-sonnet-5` call — briefing quality unchanged, all fields present.
+- **1c OFAC** — already shipped before this batch. URL
+  `https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.XML`
+  (302→signed S3, raw XML) + 500-row chunked upsert both already in
+  `sanctions-syncer.ts`. Verified live: 19,345 rows synced. The doc's target
+  `/api/publicationdata/OFAC_SDN_XML.zip` **404s** — `16_DATA_PIPELINE.md` §6
+  corrected.
+
+**Part 2 — Service Health Dashboard, Phase 1 (#42)**
+- Migration `service_health_events` (`service`, `status`, `detail?`, `latency_ms?`,
+  `created_at`) — RLS **on, no policy** (fail-closed; service-role writes/reads only).
+  Index `(service, created_at desc)`.
+- `apps/backend/src/lib/service-health.ts` → `recordServiceHealth(service, status,
+  detail?, latencyMs?)`. Wrapped in its own try/catch, log-and-swallow — never
+  throws/blocks the caller.
+- Call sites (one per success + per failure): `gnews`, `gdelt` (`rate_limited` on
+  429), `acled`, `rss:<feed-label>` (per feed, 13 feeds), `yahoo_finance` (price
+  sync). No AI/Infra/Alerts call sites yet — Phase 2.
+- `GET /v1/admin/service-health` (`routes/admin.ts`, same `assertAdmin` allowlist as
+  `/metrics`): `?service=<name>` → 50 most-recent rows; no param → one summary row
+  per distinct service.
+- `apps/web/app/admin/service-status/` — server component, redirects non-admins
+  (`ADMIN_EMAILS` allowlist via `isAdminEmail`) to `/dashboard`. Grouped top-level
+  tabs (Data Sources / AI / Infra / Alerts), per-service sub-tab, RSS feed dropdown.
+  **Zero auto-fetch** — every load is a `"Load data"` click → server action →
+  backend route. No polling, no interval, no charts (Phase 2).
+- Verified: one real collector cycle wrote 16 rows (incl. `gdelt`/`rate_limited`,
+  `yahoo_finance`/`ok`, 13× `rss:*`/`ok` with item counts + latency); admin route
+  returns them with a real test-account bearer token; unauthenticated hit on the
+  page → `307 → /dashboard`.
+
+**Part 3 — retention (#67, also #95 item 1d)**
+- `apps/backend/src/workers/retention.ts`:
+  `runCommodityPricesRetentionOnce()` (delete `fetched_at` > 90d),
+  `runRawEventsRetentionOnce()` (delete `created_at` > 180d **only** where a
+  `signals` row already `.overlaps` its id in `raw_event_ids`; un-classified orphans
+  left for `reconciliation.ts`). `signals` never touched.
+- Weekly `cron.schedule("0 3 * * 0", …)` in `workers.ts`, row-count logged each run.
+- **Day-one dry run (prod): 0 and 0** — both tables only hold ~30 days of history
+  (collection started ~2026-08-10; no prior pruning). Ran both jobs live: deleted
+  0 / 0, matching.
+
+**Not done (by design):** #53 `commodity_impacts` backfill — estimate only.
+**2,019** signals have `commodity_impacts = '[]'` (backlog cited ~1,827; drifted
+up). Measured via `count_tokens`: avg **329** input tok/row + ~200 output →
+`claude-haiku-4-5` **$0.00133/row → ~$2.68** total (**~$1.34** via Batch API). Even
+at 3× that it's < $9. Anthropic credit is live (confirmed this session by real
+Haiku + Sonnet calls — the "restore Anthropic credit" open item is stale). Backfill
+NOT run — needs an explicit dollar-amount go-ahead.
+
 ### v0.36.4 — Forex pair taxonomy #87 phase 4: watchlist drill-down forex support (2026-09-09)
 
 Commit on `main`: `accd468`. `apps/web` only, no migration. Closes the
