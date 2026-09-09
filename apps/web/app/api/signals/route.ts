@@ -151,6 +151,10 @@ export async function GET(req: NextRequest) {
     const severity = url.searchParams.get("severity");
     const region = url.searchParams.get("region");
     const commodity = url.searchParams.get("commodity");
+    // Forex-pair equivalent of `commodity` (#87). Deliberately a separate param:
+    // `commodity` means commodity_impacts everywhere else in the codebase and
+    // must keep that meaning. `forexPair` filters currency_pair_impacts instead.
+    const forexPair = url.searchParams.get("forexPair");
     const sort = url.searchParams.get("sort") ?? "severity";
     const window =
       url.searchParams.get("window") ?? url.searchParams.get("range");
@@ -187,6 +191,13 @@ export async function GET(req: NextRequest) {
       query = query.contains(
         "commodity_impacts",
         JSON.stringify([{ asset: commodity }]),
+      );
+    if (forexPair)
+      // Same jsonb-containment workaround as the commodity branch above, against
+      // the currency_pair_impacts column (#87 watchlist forex drill-down).
+      query = query.contains(
+        "currency_pair_impacts",
+        JSON.stringify([{ asset: forexPair }]),
       );
 
     // Personalized "My Feed" (#81) — opt-in via ?personalized=true, default OFF.

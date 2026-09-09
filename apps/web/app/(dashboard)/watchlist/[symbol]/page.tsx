@@ -13,7 +13,7 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
-import { COMMODITIES } from "@blue-beacon-research/shared";
+import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { Pagination } from "@/components/ui/Pagination";
@@ -78,9 +78,17 @@ export default function WatchlistSymbolPage() {
   const params = useParams<{ symbol: string }>();
   const router = useRouter();
   const symbol = decodeURIComponent(params.symbol || "").toUpperCase();
-  const meta = COMMODITIES.find((c) => c.symbol === symbol);
+  // Resolve the symbol against commodities first, then forex pairs (#87) — a
+  // followed forex pair (e.g. EURUSD) otherwise falls through to its raw code
+  // and never matches signals, since forex impacts live in a separate column.
+  const forexMeta = FOREX_PAIRS.find((f) => f.symbol === symbol);
+  const meta = COMMODITIES.find((c) => c.symbol === symbol) ?? forexMeta;
+  const isForex = Boolean(forexMeta);
   const { data: myPrefs } = useMyPreferences();
-  const isFollowed = Boolean(myPrefs?.commodities.includes(symbol));
+  const isFollowed = Boolean(
+    myPrefs?.commodities.includes(symbol) ||
+      myPrefs?.forexPairs.includes(symbol),
+  );
 
   const { data: pricesData } = useQuery({
     queryKey: ["prices"],
@@ -123,7 +131,7 @@ export default function WatchlistSymbolPage() {
     queryKey: ["commodity-signals", symbol, signalsPage],
     queryFn: async () => {
       const res = await fetch(
-        `/api/signals?commodity=${encodeURIComponent(symbol)}&window=${HISTORY_DAYS}d&sort=newest&limit=${SIGNALS_PAGE_SIZE}&page=${signalsPage}`,
+        `/api/signals?${isForex ? "forexPair" : "commodity"}=${encodeURIComponent(symbol)}&window=${HISTORY_DAYS}d&sort=newest&limit=${SIGNALS_PAGE_SIZE}&page=${signalsPage}`,
       );
       const json = (await res.json()) as { signals?: Signal[]; total?: number };
       return { signals: json.signals ?? [], total: json.total ?? 0 };
@@ -171,7 +179,7 @@ export default function WatchlistSymbolPage() {
               {isFollowed && (
                 <span
                   className="flex items-center gap-1 px-2 py-0.5 rounded-sm font-label text-[9px] font-bold tracking-widest uppercase border border-primary/50 bg-primary/10 text-primary"
-                  title="One of the commodities you follow"
+                  title="One of the assets you follow"
                 >
                   <span className="material-symbols-outlined text-[12px]">star</span>
                   You follow this
@@ -281,7 +289,9 @@ export default function WatchlistSymbolPage() {
           ) : (
             <div className="space-y-3">
               {events.map((ev) => {
-                const impact = ev.commodityImpacts.find((c) => c.asset === symbol);
+                const impact = isForex
+                  ? ev.currencyPairImpacts?.find((c) => c.asset === symbol)
+                  : ev.commodityImpacts.find((c) => c.asset === symbol);
                 const move = computeEventPriceMove(points, ev.eventDate ?? ev.createdAt);
                 return (
                   <button
