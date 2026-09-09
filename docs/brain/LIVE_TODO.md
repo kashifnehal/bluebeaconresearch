@@ -138,6 +138,41 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   - Still pending: phase 2 (onboarding/watchlist UI), phase 3
     (alert_rules/dispatcher/digest forex matching + a real forex Telegram alert).
 
+- #87 Forex pair taxonomy — **phase 2 of 3 (onboarding, feed filter, watchlist)
+  CLOSED, verified 2026-09-09**, commit `55df380`. `apps/web` +
+  `packages/shared` only. Wires the until-now-unused
+  `user_preferences.forex_pairs` column into the existing #81/#89 mechanisms —
+  no new onboarding path, no new feed-filter param, no separate watchlist toggle.
+  - `packages/shared`: new `FOREX_PAIRS` constant (the same 6 the classifier
+    emits — EURUSD/GBPUSD/USDJPY/USDCHF/USDRUB/USDCNY — slash-formatted labels,
+    `unit`/`category` mirroring `COMMODITIES`); `Signal` gains optional
+    `currencyPairImpacts?: CommodityImpact[]`.
+  - `/onboarding` step 2: a "Currency pairs you follow" chip list reusing the
+    same `chipStyle()`/`toggle()` helpers; `forex_pairs` added to the
+    `user_preferences` upsert. **Fixed in passing:** that upsert lacked
+    `onConflict: "user_id"` (PK is `id`, UNIQUE on `user_id`), so it 409'd and
+    silently dropped *all* captured prefs for any user who already had a row;
+    now names the constraint and throws on error instead of swallowing it.
+  - `/api/signals?personalized=true`: the same `orParts` OR filter now also
+    appends `currency_pair_impacts.cs.[{"asset":"<SYM>"}]` per preferred pair
+    (one combined OR); `currencyPairImpacts` added to the row→`Signal` mapping.
+  - `/watchlist`: `useMyPreferences()` returns `forexPairs`; the
+    "My Commodities"↔"Show All" default seeds from `commodities ∪ forex_pairs`;
+    all asset lookups run off `[...COMMODITIES, ...FOREX_PAIRS]`. `/api/prices`
+    Tier-2 fallback `SYMBOLS` widened with the 6 pairs (Tier 1 already returned
+    them).
+  - Verified (Playwright + SQL): real onboarding wrote
+    `forex_pairs=["EURUSD","USDCHF"]`; `?personalized=true&window=all` with only
+    those two prefs returned exactly the one signal with a matching
+    `currency_pair_impacts` and `?personalized=false` restored the full feed;
+    `/watchlist` seeded EUR/USD + USD/CHF cards with live prices and the toggle
+    round-tripped (13 assets under "Show All").
+  - Known limitation, out of scope: `/watchlist/[symbol]` drill-down still keys
+    off `COMMODITIES`/`?commodity=` — a forex card links to a degraded drill-down
+    (raw label, no matched signals). Candidate for phase 3.
+  - Still pending: phase 3 (alert_rules/dispatcher/digest forex matching + a real
+    forex Telegram alert).
+
 ## Decisions confirmed 2026-09-07
 1. Forex gate — softened, forex only, not equity. Desk-research-validated (see
    ADR amendment below).
@@ -164,11 +199,11 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   deployed worker's own digest cron delivered a real email via the Railway
   `RESEND_API_KEY` (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, delivered).
   No follow-ups outstanding.
-- #87 forex taxonomy: phase 1 (schema + classifier + price sync, a15e2fd) and
-  phase 1B (live-ingestion gap closed, `abb2004`) both closed 2026-09-09 — see
-  "Closed, verified". Next: phase 2
-  (onboarding/watchlist UI), then phase 3 (alert_rules/dispatcher/digest +
-  wiring currency_pair_impacts into the live signal-merge insert path).
+- #87 forex taxonomy: phase 1 (schema + classifier + price sync, `a15e2fd`),
+  phase 1B (live-ingestion gap closed, `abb2004`), and phase 2 (onboarding /
+  feed filter / watchlist, `55df380`) all closed 2026-09-09 — see "Closed,
+  verified". Next: phase 3 (alert_rules/dispatcher/digest forex matching + a real
+  forex Telegram alert).
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)

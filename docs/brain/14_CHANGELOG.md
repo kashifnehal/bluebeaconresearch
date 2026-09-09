@@ -34,6 +34,57 @@ carried `currency_pair_impacts`.
 - Both `reconciliation.ts` and `acled-collector.ts` confirmed to classify via
   `claude.classifyEvent()` — no separate legacy classification path.
 
+### v0.36.2 — Forex pair taxonomy #87 phase 2 of 3: onboarding, feed filter, watchlist (2026-09-09)
+
+Commit on `main`: `55df380`. `apps/web` + `packages/shared` only. Wires the
+already-existing (until now unused) `user_preferences.forex_pairs` column into
+the exact mechanisms #81/#89 built for commodities — no second onboarding path,
+no second feed-filter param, no separate watchlist toggle.
+
+- **`packages/shared`** — new `FOREX_PAIRS` constant (EURUSD|GBPUSD|USDJPY|
+  USDCHF|USDRUB|USDCNY, slash-formatted labels, `unit`/`category` mirroring the
+  `COMMODITIES` shape). `Signal` gains an optional `currencyPairImpacts?:
+  CommodityImpact[]` (same `{asset,direction,confidence}` shape).
+- **`/onboarding` step 2** — a "Currency pairs you follow" chip list using the
+  same `chipStyle()`/`toggle()` helpers as the commodities list; `forex_pairs`
+  added to the `user_preferences` upsert next to `commodities`/`regions`. Copy
+  extended to "commodities, currency pairs, and regions" — no "signals"/"alerts"
+  wording. **Bug fixed in passing:** the onboarding upsert lacked
+  `onConflict: "user_id"` (the table's PK is `id`, with a separate UNIQUE on
+  `user_id`), so for any user who already had a `user_preferences` row it 409'd
+  and silently dropped every captured preference — commodities and regions
+  included, not just the new forex field. Now names the constraint and surfaces
+  the error instead of swallowing it.
+- **`/api/signals?personalized=true`** — the same `orParts` OR filter now also
+  appends `currency_pair_impacts.cs.[{"asset":"<SYM>"}]` for each of the user's
+  `forex_pairs` (one combined OR, not a second query); `forex_pairs` added to the
+  prefs select. `currencyPairImpacts: r.currency_pair_impacts ?? []` added to the
+  row→`Signal` mapping so the frontend receives it (base query is `select("*")`,
+  already returns the column).
+- **`WatchlistClient.tsx`** — `useMyPreferences()` now also returns `forexPairs`
+  (filtered against `FOREX_PAIRS`, folded into `hasPreferences`). The
+  preference-aware default / "My Commodities"↔"Show All" toggle now seeds from
+  `commodities ∪ forex_pairs`; meta lookups, the add-asset dropdown and the
+  "Show All" set run off a combined `[...COMMODITIES, ...FOREX_PAIRS]` list.
+- **`/api/prices`** — the Tier-2 (Redis fallback) `SYMBOLS` allow-list widened
+  with the 6 forex pairs; Tier 1 (the `commodity_prices` table query) already
+  returned every symbol the price-syncer writes, so forex prices show on the
+  watchlist with no schema change.
+- **Verified (Playwright + SQL):** (1) real login → `/onboarding` → pick EUR/USD
+  + USD/CHF → `user_preferences.forex_pairs = ["EURUSD","USDCHF"]` in the DB;
+  (2) with only those two forex prefs set (no commodity/region prefs),
+  `?personalized=true&window=all` returned exactly the one signal carrying a
+  matching `currency_pair_impacts` (id `4b96add1…`, EURUSD/USDJPY/USDCHF) and
+  `?personalized=false` restored the full 2718-signal feed; `currencyPairImpacts`
+  present in both payloads. (3) `/watchlist` seeded EUR/USD + USD/CHF cards with
+  live prices (1.16 / 0.81, matching `commodity_prices`), "My Commodities" ⇄
+  "Show All" (13 assets: 7 commodities + 6 forex) toggled and reverted cleanly.
+- **Not touched:** the per-symbol drill-down `/watchlist/[symbol]` still resolves
+  `meta` and its signals query against `COMMODITIES`/`?commodity=` only — a forex
+  card links to a degraded drill-down (raw symbol label, no matched signals).
+  Out of scope for phase 2; candidate for phase 3 or a follow-up.
+- **Phase 3** (alert_rules / dispatcher / digest forex matching) not started.
+
 ### v0.36.0 — Forex pair taxonomy #87 phase 1 of 3: schema + classifier + price sync (2026-09-09)
 
 Commit on `main`: `a15e2fd`. Backend-only (no `apps/web`). Cleared by ADR 013's
