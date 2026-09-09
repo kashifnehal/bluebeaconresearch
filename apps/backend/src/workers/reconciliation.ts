@@ -107,6 +107,7 @@ export async function reconcileOrphanedRawEventsOnce() {
           lng: null,
           sources_count: 1,
           commodity_impacts: classification.commodityImpacts,
+          currency_pair_impacts: classification.currencyPairImpacts ?? [],
           is_breaking: classification.isBreaking,
           is_active: true,
           event_date: raw.event_date,

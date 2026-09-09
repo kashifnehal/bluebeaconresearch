@@ -206,6 +206,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
         lng,
         sources_count: 1,
         commodity_impacts: classification.commodityImpacts,
+        currency_pair_impacts: classification.currencyPairImpacts ?? [],
         is_breaking: classification.isBreaking,
         is_active: true,
         event_date: eventDate,
@@ -241,6 +242,11 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
     );
   }
 
+  // Both merge branches below (duplicate and escalation) deliberately leave the
+  // existing signal's commodity_impacts / currency_pair_impacts untouched — impacts
+  // are written once, from the first classification that created the row, and a
+  // later cross-source article folded in never rewrites them. currency_pair_impacts
+  // follows the exact same rule commodity_impacts always has (#87 phase 1B).
   if (classification.severity <= match.severity) {
     const { error: upErr } = await supabase
       .from("signals")

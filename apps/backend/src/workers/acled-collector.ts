@@ -82,6 +82,7 @@ export async function runAcledCollectorOnce() {
           lng: parseFloat(e.longitude) || null,
           sources_count: 1,
           commodity_impacts: classification.commodityImpacts,
+          currency_pair_impacts: classification.currencyPairImpacts ?? [],
           is_breaking: classification.isBreaking,
           is_active: true,
           event_date: eventDate,
