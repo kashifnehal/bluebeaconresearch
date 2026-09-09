@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabaseAuth
     .from("alerts_sent")
     .select(
-      "*, signals(id, title, severity, summary, ai_analysis, commodity_impacts, is_breaking, updated_at, country, region, event_type, event_date, confidence, raw_event_ids)",
+      "*, signals(id, title, severity, summary, ai_analysis, commodity_impacts, currency_pair_impacts, is_breaking, updated_at, country, region, event_type, event_date, confidence, raw_event_ids)",
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })

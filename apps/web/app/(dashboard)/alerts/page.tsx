@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import type { Signal } from "@blue-beacon-research/shared";
+import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow, generateAlertRuleName } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommodityChip } from "@/components/signals/CommodityChip";
@@ -20,6 +21,7 @@ type AlertRule = {
   name: string;
   regions: string[];
   commodities: string[];
+  forex_pairs: string[];
   min_severity: number;
   channels: string[];
   is_active: boolean;
@@ -47,6 +49,7 @@ type MatchedSignal = {
   summary: string | null;
   aiAnalysis: string | null;
   commodityImpacts: Signal["commodityImpacts"];
+  currencyPairImpacts: Signal["commodityImpacts"];
   isBreaking: boolean;
   eventDate?: string | null;
   matchedAt: string;
@@ -68,6 +71,7 @@ type AlertSentRow = {
     summary?: string | null;
     ai_analysis?: string | null;
     commodity_impacts?: Signal["commodityImpacts"] | null;
+    currency_pair_impacts?: Signal["commodityImpacts"] | null;
     is_breaking?: boolean | null;
     event_date?: string | null;
     sources?: MatchSource[];
@@ -111,6 +115,10 @@ export default function AlertsPage() {
   const [modalMinSeverity, setModalMinSeverity] = useState(7);
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
   const [modalEventType, setModalEventType] = useState<string | undefined>(undefined);
+  // Forex pairs this rule follows — matched against signal.currency_pair_impacts by
+  // the backend dispatcher, OR'd with commodities (#87 phase 3). Empty = not filtered
+  // on forex.
+  const [modalForexPairs, setModalForexPairs] = useState<string[]>([]);
   // Per-rule page index for the "Recent Matches" list (client-side — paginates
   // the already-fetched, already-grouped matches for that rule).
   const [matchPageByRule, setMatchPageByRule] = useState<Record<string, number>>({});
@@ -187,6 +195,7 @@ export default function AlertsPage() {
           summary: row.signals.summary ?? null,
           aiAnalysis: row.signals.ai_analysis ?? null,
           commodityImpacts: row.signals.commodity_impacts ?? [],
+          currencyPairImpacts: row.signals.currency_pair_impacts ?? [],
           isBreaking: Boolean(row.signals.is_breaking),
           eventDate: row.signals.event_date,
           matchedAt: row.created_at,
@@ -226,6 +235,7 @@ export default function AlertsPage() {
       setModalEventType(undefined);
     }
     setModalChannels(["telegram"]);
+    setModalForexPairs([]);
     setAlertModalOpen(true);
   };
 
@@ -244,6 +254,7 @@ export default function AlertsPage() {
         user_id: user.id,
         name: generateAlertRuleName(modalRegion, modalMinSeverity, modalEventType),
         regions: [modalRegion],
+        forex_pairs: modalForexPairs,
         min_severity: modalMinSeverity,
         channels: modalChannels,
         is_active: true,
@@ -340,6 +351,7 @@ export default function AlertsPage() {
             );
             const regions = rule.regions?.length ? rule.regions : null;
             const commodities = rule.commodities?.length ? rule.commodities : null;
+            const forexPairs = rule.forex_pairs?.length ? rule.forex_pairs : null;
             const channels = rule.channels?.length ? rule.channels : ["telegram"];
             const threshold = thresholdDraft[rule.id] ?? rule.min_severity;
 
@@ -381,6 +393,16 @@ export default function AlertsPage() {
                           ))
                         ) : (
                           <span className="mono text-[10px] text-on-surface/60 uppercase">All commodities</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="label text-[9px] text-outline uppercase font-bold">Forex:</span>
+                        {forexPairs ? (
+                          forexPairs.map((f) => (
+                            <span key={f} className="mono text-[10px] text-on-surface font-bold uppercase">{f}</span>
+                          ))
+                        ) : (
+                          <span className="mono text-[10px] text-on-surface/60 uppercase">All pairs</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -507,9 +529,9 @@ export default function AlertsPage() {
 
                               {/* ── 3. WHICH INSTRUMENTS ── */}
                               <CardSection step={3} label="Which instruments">
-                                {m.commodityImpacts.length > 0 ? (
+                                {m.commodityImpacts.length + m.currencyPairImpacts.length > 0 ? (
                                   <div className="flex flex-wrap gap-2">
-                                    {m.commodityImpacts.map((c) => (
+                                    {[...m.commodityImpacts, ...m.currencyPairImpacts].map((c) => (
                                       <CommodityChip
                                         key={c.asset}
                                         asset={c.asset}
@@ -617,6 +639,41 @@ export default function AlertsPage() {
                 onChange={(e) => setModalMinSeverity(Number(e.target.value))}
                 className="w-full bg-[#0e0e0e] border border-[#3c4a42] p-2 text-xs text-white rounded font-mono"
               />
+            </div>
+
+            <div>
+              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+                Forex Pairs (optional)
+              </label>
+              <p className="text-[10px] text-[#6b7674] mb-2">
+                Leave empty to match on region alone. Any pair selected here also triggers this rule.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {FOREX_PAIRS.map((f) => {
+                  const active = modalForexPairs.includes(f.symbol);
+                  return (
+                    <button
+                      key={f.symbol}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() =>
+                        setModalForexPairs((prev) =>
+                          prev.includes(f.symbol)
+                            ? prev.filter((s) => s !== f.symbol)
+                            : [...prev, f.symbol],
+                        )
+                      }
+                      className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
+                        active
+                          ? "bg-[#4edea3] text-[#003824] border-[#4edea3]"
+                          : "bg-[#0e0e0e] text-[#86948a] border-[#3c4a42] hover:text-white"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-[#2a2a2a]">

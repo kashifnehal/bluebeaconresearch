@@ -28,6 +28,7 @@ type PrefRow = {
   user_id: string;
   commodities: string[] | null;
   regions: string[] | null;
+  forex_pairs: string[] | null;
   min_severity: number | null;
 };
 
@@ -39,6 +40,7 @@ type SignalRow = {
   severity: number;
   region: string | null;
   commodity_impacts: Array<{ asset?: string; direction?: string }> | null;
+  currency_pair_impacts: Array<{ asset?: string; direction?: string }> | null;
   raw_event_ids: string[] | null;
   event_date: string | null;
   created_at: string;
@@ -68,7 +70,8 @@ function esc(s: string): string {
 export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalRow[]> {
   const regions = Array.isArray(pref.regions) ? pref.regions : [];
   const commodities = Array.isArray(pref.commodities) ? pref.commodities : [];
-  if (regions.length === 0 && commodities.length === 0) return [];
+  const forexPairs = Array.isArray(pref.forex_pairs) ? pref.forex_pairs : [];
+  if (regions.length === 0 && commodities.length === 0 && forexPairs.length === 0) return [];
 
   const orParts: string[] = [];
   for (const rid of regions) {
@@ -79,13 +82,18 @@ export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalR
   for (const sym of commodities) {
     if (/^[A-Z0-9]+$/.test(sym)) orParts.push(`commodity_impacts.cs.[{"asset":"${sym}"}]`);
   }
+  // Forex pairs fold into the same combined OR, matched against
+  // currency_pair_impacts with the same jsonb-containment operator (#87 phase 3).
+  for (const sym of forexPairs) {
+    if (/^[A-Z0-9]+$/.test(sym)) orParts.push(`currency_pair_impacts.cs.[{"asset":"${sym}"}]`);
+  }
   if (orParts.length === 0) return [];
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from("signals")
     .select(
-      "id, title, summary, ai_analysis, severity, region, commodity_impacts, raw_event_ids, event_date, created_at",
+      "id, title, summary, ai_analysis, severity, region, commodity_impacts, currency_pair_impacts, raw_event_ids, event_date, created_at",
     )
     .eq("is_active", true)
     .gte("created_at", since)
@@ -106,6 +114,10 @@ function whichWatchMatched(signal: SignalRow, pref: PrefRow): string {
   const impacts = Array.isArray(signal.commodity_impacts) ? signal.commodity_impacts : [];
   for (const sym of pref.commodities ?? []) {
     if (impacts.some((c) => c.asset === sym)) hits.push(sym);
+  }
+  const fxImpacts = Array.isArray(signal.currency_pair_impacts) ? signal.currency_pair_impacts : [];
+  for (const sym of pref.forex_pairs ?? []) {
+    if (fxImpacts.some((c) => c.asset === sym)) hits.push(sym);
   }
   for (const rid of pref.regions ?? []) {
     const label = REGION_LABEL[rid];
@@ -139,7 +151,10 @@ async function sourceUrlsFor(signals: SignalRow[]): Promise<Map<string, string[]
 
 function renderText(signals: SignalRow[], pref: PrefRow, sources: Map<string, string[]>): string {
   const blocks = signals.map((s, i) => {
-    const impacts = Array.isArray(s.commodity_impacts) ? s.commodity_impacts : [];
+    const impacts = [
+      ...(Array.isArray(s.commodity_impacts) ? s.commodity_impacts : []),
+      ...(Array.isArray(s.currency_pair_impacts) ? s.currency_pair_impacts : []),
+    ];
     const instruments = impacts.length
       ? impacts.map((c) => `${c.asset} ${DIRECTION_ARROW[c.direction ?? "neutral"] ?? "→"}`).join("  ·  ")
       : "No specific instruments were flagged.";
@@ -157,7 +172,7 @@ function renderText(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
   });
   return [
     `Your Blue Beacon digest — top ${signals.length} from the last 24 hours, ranked by severity,`,
-    `filtered to the regions and commodities you follow.`,
+    `filtered to the regions, commodities, and forex pairs you follow.`,
     ``,
     blocks.join("\n\n"),
     ``,
@@ -176,7 +191,10 @@ function renderHtml(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
 
   const cards = signals
     .map((s) => {
-      const impacts = Array.isArray(s.commodity_impacts) ? s.commodity_impacts : [];
+      const impacts = [
+        ...(Array.isArray(s.commodity_impacts) ? s.commodity_impacts : []),
+        ...(Array.isArray(s.currency_pair_impacts) ? s.currency_pair_impacts : []),
+      ];
       const instruments = impacts.length
         ? impacts
             .map(
@@ -210,7 +228,7 @@ function renderHtml(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
   return `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#ffffff;">
     <div style="font:800 20px/1.2 -apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;">Your Blue Beacon digest</div>
     <div style="font:400 13px/1.5 -apple-system,sans-serif;color:#6b7280;margin:4px 0 20px;">
-      Top ${signals.length} from the last 24 hours, ranked by severity, filtered to the regions and commodities you follow.
+      Top ${signals.length} from the last 24 hours, ranked by severity, filtered to the regions, commodities, and forex pairs you follow.
     </div>
     ${cards}
     <div style="font:400 11px/1.5 -apple-system,sans-serif;color:#9ca3af;border-top:1px solid #eee;padding-top:12px;">
@@ -264,7 +282,7 @@ export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: bo
 
   let query = supabase
     .from("user_preferences")
-    .select("user_id, commodities, regions, min_severity")
+    .select("user_id, commodities, regions, forex_pairs, min_severity")
     .not("onboarding_completed_at", "is", null)
     .eq("digest_enabled", true);
   if (opts?.onlyUserIds?.length) query = query.in("user_id", opts.onlyUserIds);

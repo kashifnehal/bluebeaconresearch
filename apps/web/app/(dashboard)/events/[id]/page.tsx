@@ -22,6 +22,7 @@ import { EventLocationMap } from "@/components/signals/EventLocationMap";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import type { Signal } from "@blue-beacon-research/shared";
+import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
@@ -67,6 +68,7 @@ export default function EventDetailPage() {
     Math.max(1, (signal?.severity || 7) - 1),
   );
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
+  const [modalForexPairs, setModalForexPairs] = useState<string[]>([]);
 
   // Minimum funnel step: "first signal viewed" — PostHog computes first-occurrence
   // itself from this event, no client-side "is this the first" tracking needed.
@@ -141,6 +143,7 @@ export default function EventDetailPage() {
         user_id: user.id,
         name: generateAlertRuleName(modalRegion, modalMinSeverity, signal.eventType),
         regions: [modalRegion],
+        forex_pairs: modalForexPairs,
         min_severity: modalMinSeverity,
         channels: modalChannels,
         is_active: true,
@@ -340,7 +343,10 @@ export default function EventDetailPage() {
               <div className="flex flex-col gap-2">
                 <Button
                   data-tour="set-alert"
-                  onClick={() => setAlertModalOpen(true)}
+                  onClick={() => {
+                    setModalForexPairs([]);
+                    setAlertModalOpen(true);
+                  }}
                   className="h-11 bg-accent text-bg-app text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
                   <Zap size={14} className="mr-2" /> CREATE SEVERE ALERT
@@ -604,6 +610,41 @@ export default function EventDetailPage() {
                 onChange={(e) => setModalMinSeverity(Number(e.target.value))}
                 className="w-full bg-[#0e0e0e] border border-[#3c4a42] p-2 text-xs text-white rounded font-mono"
               />
+            </div>
+
+            <div>
+              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+                Forex Pairs (optional)
+              </label>
+              <p className="text-[10px] text-[#6b7674] mb-2">
+                Leave empty to match on region alone. Any pair selected here also triggers this rule.
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {FOREX_PAIRS.map((f) => {
+                  const active = modalForexPairs.includes(f.symbol);
+                  return (
+                    <button
+                      key={f.symbol}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() =>
+                        setModalForexPairs((prev) =>
+                          prev.includes(f.symbol)
+                            ? prev.filter((s) => s !== f.symbol)
+                            : [...prev, f.symbol],
+                        )
+                      }
+                      className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
+                        active
+                          ? "bg-[#4edea3] text-[#003824] border-[#4edea3]"
+                          : "bg-[#0e0e0e] text-[#86948a] border-[#3c4a42] hover:text-white"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-[#2a2a2a]">

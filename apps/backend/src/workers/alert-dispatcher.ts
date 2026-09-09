@@ -49,7 +49,10 @@ export function buildAlertBody(
   rule: { name?: string | null; min_severity?: number | null },
   sourceUrls: string[],
 ): string {
-  const impacts = Array.isArray(signal.commodity_impacts) ? signal.commodity_impacts : [];
+  const impacts = [
+    ...(Array.isArray(signal.commodity_impacts) ? signal.commodity_impacts : []),
+    ...(Array.isArray(signal.currency_pair_impacts) ? signal.currency_pair_impacts : []),
+  ];
   const instruments = impacts.length
     ? impacts
         .map((c: any) => `${c.asset} ${DIRECTION_ARROW[c.direction as string] ?? "→"}`)
@@ -130,14 +133,25 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
   const commodityAssets = Array.isArray(signal.commodity_impacts)
     ? (signal.commodity_impacts as Array<{ asset?: string }>).map((c) => c.asset).filter(Boolean)
     : [];
+  const forexAssets = Array.isArray(signal.currency_pair_impacts)
+    ? (signal.currency_pair_impacts as Array<{ asset?: string }>).map((c) => c.asset).filter(Boolean)
+    : [];
 
   const matchedRules = (rules ?? []).filter((rule) => {
     if (Array.isArray(rule.regions) && rule.regions.length) {
       if (!rule.regions.includes(signal.region)) return false;
     }
-    if (Array.isArray(rule.commodities) && rule.commodities.length) {
-      const ok = commodityAssets.some((a) => rule.commodities.includes(a));
-      if (!ok) return false;
+    // Instrument filter: commodities and forex_pairs are OR'd against each other,
+    // mirroring the same OR-of-arrays logic used for regions/commodities. A rule
+    // with both set matches if the signal overlaps EITHER list; a rule with
+    // neither set is not instrument-filtered at all.
+    const hasCommodityFilter = Array.isArray(rule.commodities) && rule.commodities.length > 0;
+    const hasForexFilter = Array.isArray(rule.forex_pairs) && rule.forex_pairs.length > 0;
+    if (hasCommodityFilter || hasForexFilter) {
+      const commodityOk =
+        hasCommodityFilter && commodityAssets.some((a) => rule.commodities.includes(a));
+      const forexOk = hasForexFilter && forexAssets.some((a) => rule.forex_pairs.includes(a));
+      if (!commodityOk && !forexOk) return false;
     }
     return true;
   });
