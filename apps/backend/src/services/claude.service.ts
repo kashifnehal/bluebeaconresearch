@@ -9,6 +9,11 @@ export type ClassificationResult = {
     direction: "up" | "down" | "volatile" | "neutral";
     confidence: number;
   }>;
+  currencyPairImpacts: Array<{
+    asset: string;
+    direction: "up" | "down" | "volatile" | "neutral";
+    confidence: number;
+  }>;
   isBreaking: boolean;
   summary: string;
   region: string;
@@ -24,8 +29,19 @@ export class ClaudeService {
     "XAUUSD",
     "WHEAT",
     "CORN",
+  ]);
+
+  // Forex pairs (#87). Kept as its own allowlist rather than folded into
+  // ALLOWED_COMMODITY_ASSETS — EURUSD/USDRUB used to live in that set (a
+  // mislabeling: they're currency pairs, not commodities) and now write into
+  // signals.currency_pair_impacts via sanitizeForexImpacts() instead.
+  private static readonly ALLOWED_FOREX_PAIRS = new Set([
     "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "USDCHF",
     "USDRUB",
+    "USDCNY",
   ]);
 
   // Claude (asked in plain English to classify "financial market impact") reliably
@@ -61,17 +77,52 @@ export class ClaudeService {
     "XAU/USD": "XAUUSD",
     XAU: "XAUUSD",
     MAIZE: "CORN",
-    EURO: "EURUSD",
-    "EUR/USD": "EURUSD",
-    RUBLE: "USDRUB",
-    "RUSSIAN RUBLE": "USDRUB",
-    "USD/RUB": "USDRUB",
   };
 
   private normalizeCommodityAsset(asset: string): string | null {
     const upper = String(asset ?? "").trim().toUpperCase();
     if (ClaudeService.ALLOWED_COMMODITY_ASSETS.has(upper)) return upper;
     const aliased = ClaudeService.COMMODITY_ASSET_ALIASES[upper];
+    return aliased ?? null;
+  }
+
+  // Same reasoning as COMMODITY_ASSET_ALIASES above: Claude, asked in plain English
+  // about "currency market impact", returns human-readable names ("Russian Ruble",
+  // "the yuan", "sterling") and slashed pair notation ("EUR/USD") far more often
+  // than the canonical no-slash tickers in ALLOWED_FOREX_PAIRS. This map normalizes
+  // the common natural-language names and case/slash variants onto the canonical
+  // pair before the allowlist filter runs in sanitizeForexImpacts(). Anything with
+  // no canonical pair in our allowlist still drops — same scope restriction the
+  // allowlist already enforces, not a new gap.
+  private static readonly FOREX_PAIR_ALIASES: Record<string, string> = {
+    EURO: "EURUSD",
+    "EUR/USD": "EURUSD",
+    POUND: "GBPUSD",
+    "BRITISH POUND": "GBPUSD",
+    STERLING: "GBPUSD",
+    "POUND STERLING": "GBPUSD",
+    "GBP/USD": "GBPUSD",
+    YEN: "USDJPY",
+    "JAPANESE YEN": "USDJPY",
+    "USD/JPY": "USDJPY",
+    FRANC: "USDCHF",
+    "SWISS FRANC": "USDCHF",
+    "USD/CHF": "USDCHF",
+    RUBLE: "USDRUB",
+    ROUBLE: "USDRUB",
+    "RUSSIAN RUBLE": "USDRUB",
+    "USD/RUB": "USDRUB",
+    YUAN: "USDCNY",
+    RENMINBI: "USDCNY",
+    RMB: "USDCNY",
+    "CHINESE YUAN": "USDCNY",
+    "USD/CNY": "USDCNY",
+  };
+
+  private normalizeForexPair(asset: string): string | null {
+    const upper = String(asset ?? "").trim().toUpperCase();
+    if (ClaudeService.ALLOWED_FOREX_PAIRS.has(upper)) return upper;
+    const aliased = ClaudeService.FOREX_PAIR_ALIASES[upper];
     return aliased ?? null;
   }
 
@@ -103,7 +154,8 @@ export class ClaudeService {
           `{\n` +
           `  "severity": integer between 1 and 10,\n` +
           `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
-          `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN"|"EURUSD"|"USDRUB" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+          `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+          `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "isBreaking": boolean,\n` +
           `  "summary": string (max 120 chars),\n` +
           `  "region": string\n` +
@@ -131,6 +183,9 @@ export class ClaudeService {
         const parsed = JSON.parse(raw) as ClassificationResult;
         parsed.commodityImpacts = this.sanitizeCommodityImpacts(
           parsed.commodityImpacts ?? [],
+        );
+        parsed.currencyPairImpacts = this.sanitizeForexImpacts(
+          parsed.currencyPairImpacts ?? [],
         );
         return parsed;
       } catch (err: any) {
@@ -253,6 +308,45 @@ export class ClaudeService {
       });
     }
 
+    // Currency-pair (forex) impacts — evidence-only, same discipline as the
+    // commodity signals above: push an impact only when a regex actually fires,
+    // never unconditionally. Only USDRUB and USDCNY have a confident non-AI
+    // textual trigger. EURUSD/GBPUSD/USDJPY/USDCHF are left AI-only: there's no
+    // regex for Fed/ECB/BOJ/SNB events that wouldn't misfire on incidental
+    // mentions, so inventing a weak one here would be worse than omitting it.
+    const currencyPairImpacts: Array<{
+      asset: string;
+      direction: "up" | "down" | "volatile" | "neutral";
+      confidence: number;
+    }> = [];
+
+    const rubleSignal =
+      /\b(?:russia|russian|moscow|kremlin|ruble|rouble)\b/i.test(text) &&
+      /\b(?:sanction|embargo|swift|asset freeze|frozen assets?|price cap|oil cap|export ban|central bank|default)\b/i.test(
+        text,
+      );
+    const yuanSignal =
+      /\b(?:china|chinese|beijing|yuan|renminbi|pboc)\b/i.test(text) &&
+      /\b(?:tariff|trade war|sanction|export control|decoupl|taiwan)\b/i.test(
+        text,
+      );
+
+    if (rubleSignal) {
+      currencyPairImpacts.push({
+        asset: "USDRUB",
+        direction: "volatile",
+        confidence: 0.8,
+      });
+    }
+
+    if (yuanSignal) {
+      currencyPairImpacts.push({
+        asset: "USDCNY",
+        direction: "volatile",
+        confidence: 0.75,
+      });
+    }
+
     const isBreaking =
       severity >= 8 || /breaking|urgent|just in|alert/i.test(text);
 
@@ -271,6 +365,7 @@ export class ClaudeService {
       severity,
       confidence: parseFloat(dynamicConfidence.toFixed(2)),
       commodityImpacts: this.sanitizeCommodityImpacts(commodityImpacts),
+      currencyPairImpacts: this.sanitizeForexImpacts(currencyPairImpacts),
       isBreaking,
       summary: title.slice(0, 120),
       region,
@@ -288,6 +383,24 @@ export class ClaudeService {
     const seen = new Set<string>();
     for (const impact of impacts) {
       const asset = this.normalizeCommodityAsset(impact?.asset);
+      if (!asset || seen.has(asset)) continue;
+      seen.add(asset);
+      normalized.push({ ...impact, asset });
+    }
+    return normalized;
+  }
+
+  private sanitizeForexImpacts(
+    impacts: Array<{
+      asset: string;
+      direction: "up" | "down" | "volatile" | "neutral";
+      confidence: number;
+    }>,
+  ) {
+    const normalized: typeof impacts = [];
+    const seen = new Set<string>();
+    for (const impact of impacts) {
+      const asset = this.normalizeForexPair(impact?.asset);
       if (!asset || seen.has(asset)) continue;
       seen.add(asset);
       normalized.push({ ...impact, asset });

@@ -17,6 +17,13 @@ const classificationSchema = z.object({
       confidence: z.number().min(0).max(1),
     }),
   ),
+  currencyPairImpacts: z.array(
+    z.object({
+      asset: z.string().min(1),
+      direction: z.enum(["up", "down", "volatile", "neutral"]),
+      confidence: z.number().min(0).max(1),
+    }),
+  ),
   isBreaking: z.boolean(),
   summary: z.string().min(1).max(140),
   region: z.string().min(1),
@@ -93,6 +100,7 @@ export function startAiClassifierWorker() {
         lng: rawEvent.lng,
         sources_count: 1,
         commodity_impacts: r.commodityImpacts,
+        currency_pair_impacts: r.currencyPairImpacts,
         is_breaking: r.isBreaking,
         is_active: true,
       }).select("id").maybeSingle();

@@ -13,6 +13,20 @@ const COMMODITY_SYMBOLS = {
   CORN: "ZC=F",    // Corn futures
 } as const;
 
+// Forex pairs (#87). Yahoo Finance forex ticker format is "<PAIR>=X". All six
+// verified against a real yf.quote() call on 2026-09-09 — USDRUB=X and USDCNY=X
+// (the less-common pairs) both returned live regularMarketPrice values.
+// Written into the same commodity_prices table as COMMODITY_SYMBOLS (the table is
+// a generic symbol/price time-series despite the name).
+const FOREX_SYMBOLS = {
+  EURUSD: "EURUSD=X",
+  GBPUSD: "GBPUSD=X",
+  USDJPY: "USDJPY=X",
+  USDCHF: "USDCHF=X",
+  USDRUB: "USDRUB=X",
+  USDCNY: "USDCNY=X",
+} as const;
+
 export async function runPriceSyncOnce() {
   const supabase = getSupabaseAdmin();
   const redis = getRedis();
@@ -28,7 +42,12 @@ export async function runPriceSyncOnce() {
     fetched_at: string;
   }> = [];
 
-  for (const [symbol, yahooSymbol] of Object.entries(COMMODITY_SYMBOLS)) {
+  const allSymbols: Record<string, string> = {
+    ...COMMODITY_SYMBOLS,
+    ...FOREX_SYMBOLS,
+  };
+
+  for (const [symbol, yahooSymbol] of Object.entries(allSymbols)) {
     try {
       const quote: any = await yf.quote(yahooSymbol);
       if (quote && typeof quote.regularMarketPrice === "number") {
