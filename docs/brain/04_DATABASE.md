@@ -65,6 +65,7 @@ Stores LLM-synthesized geopolitical intelligence and asset impact data.
 - `lat` / `lng` (`double precision`, nullable)
 - `sources_count` (`int`, NOT NULL, default `1`)
 - `commodity_impacts` (`jsonb`, NOT NULL, default `'[]'::jsonb`) — array of `{asset, ...}`; `asset` holds ticker symbols (`USOIL`, `UKOIL`, `XAUUSD`, `NGAS`, `WHEAT`, `CORN`, …), not display names
+- `currency_pair_impacts` (`jsonb`, NOT NULL, default `'[]'::jsonb`) — array of `{asset, direction, confidence}`, mirroring `commodity_impacts`; `asset` is one of `EURUSD`|`GBPUSD`|`USDJPY`|`USDCHF`|`USDRUB`|`USDCNY`. Added by `20260909035949_forex_pair_impacts.sql` (#87 phase 1, `a15e2fd`, 2026-09-09). Written by the live signal-creation paths since phase 1B (`abb2004`, 2026-09-09). No GIN index yet — the personalized-feed filter matches it with `@>` (`.cs.[{"asset":"…"}]`), fine at current table size; add a `jsonb_path_ops` GIN index alongside `idx_signals_commodity_impacts` if forex filtering becomes hot. Historical `commodity_impacts` rows that pre-date this and contain `EURUSD`/`USDRUB` were **not** backfilled.
 - `sanctions_matches` (`jsonb`, NOT NULL, default `'[]'::jsonb`)
 - `shipping_proximity` (`jsonb`, nullable)
 - `is_breaking` (`boolean`, NOT NULL, default `false`)
@@ -160,7 +161,8 @@ Per-user feed and notification settings, distinct from `profiles` (account/billi
 - `email_frequency` (`text`, NOT NULL, default `'immediate'`, check: `immediate`, `hourly`, `daily`)
 - `use_case` (`text`, nullable) — added by `006_onboarding_schema_fix.sql`
 - `updated_at` (`timestamptz`, NOT NULL, default `now()`)
-- `forex_pairs` / `equity_tickers` (`text[]`, NOT NULL, default `'{}'`) — added by `20260907004803_user_preferences_personalization.sql`; **reserved/unused** (forex gating #87, equity stays separately gated)
+- `forex_pairs` (`text[]`, NOT NULL, default `'{}'`) — added by `20260907004803_user_preferences_personalization.sql`. **Live since #87 phase 2** (`55df380`, 2026-09-09): captured in `/onboarding` step 2, read by `/api/signals?personalized=true` (matched against `signals.currency_pair_impacts`) and the `/watchlist` "My Commodities / Show All" default. Values are the 6 `FOREX_PAIRS` symbols (`EURUSD`…`USDCNY`).
+- `equity_tickers` (`text[]`, NOT NULL, default `'{}'`) — added by the same migration; **still reserved/unused** (equity stays separately gated, ADR 013).
 - `onboarding_completed_at` (`timestamptz`, nullable) — added by `20260907004803`; set when the 2-step `/onboarding` wizard captures followed commodities/regions (#81). Backfilled from `profiles.onboarding_completed` for pre-existing users.
 - `created_at` (`timestamptz`, NOT NULL, default `now()`) — added by `20260907004803`
 - `digest_enabled` (`boolean`, NOT NULL, default `true`) — added by `20260907021500_user_preferences_digest_enabled.sql`; opt-out for the once-daily personalized digest (#83), toggled from Settings → Notifications

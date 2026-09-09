@@ -274,6 +274,7 @@ Forex and equity swing/day-trader expansion is a scoped, prompt-ready, evaluatio
 
 Recorded as **D17** in `docs/claude_project/10_DECISIONS.md`.
 > ⚠️ UPDATED 2026-09-07 — Forex gate confirmed SOFTENED: forex only, not equity. Based on desk research (Perplexity/Grok transcripts plus an independently-verified live ForexFactory thread), not customer interviews. The ADR 011 validation checkpoint was cleared via desk research generally (see that ADR's amendment); this decision applies that clearance specifically to forex. Schema/product work for forex may now proceed (#87, forex taxonomy expansion). Equity swing/day-trader expansion remains evaluation-stage and gated as before — no comparable desk-research signal has been produced for that segment specifically. Crypto remains out of scope, unchanged.
+> ⚠️ UPDATED 2026-09-09 — #87 forex taxonomy now partially shipped: **phase 1** (schema `signals.currency_pair_impacts` + classifier + forex price sync, `a15e2fd`), **phase 1B** (wired into the live signal-creation paths, `abb2004`), and **phase 2** (`user_preferences.forex_pairs` into onboarding + `/api/signals?personalized=true` + `/watchlist`, `55df380`) are all done and verified. Phase 3 (alert_rules/dispatcher/digest forex matching) not started. Equity still gated — unchanged. Full record: `14_CHANGELOG.md` v0.36.0–v0.36.2, `LIVE_TODO.md` (#87).
 
 ---
 

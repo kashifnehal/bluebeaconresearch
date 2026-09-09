@@ -13,7 +13,7 @@ Railway workers (startup + every 15 min)
   ├── RSS Collector      (14 feeds — world + finance)
   ├── GNews Collector    (1 API query, free tier)
   ├── GDELT Collector    (1 API query, global news index)
-  ├── Price Syncer       (Yahoo Finance — 8 commodities)
+  ├── Price Syncer       (Yahoo Finance — 8 commodities + 6 forex pairs)
   └── ACLED Collector    (optional — requires credentials)
         ↓
   relevance-filter.ts    (exclude spam → match keywords OR finance-tier pass-through)
@@ -116,9 +116,9 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 ### 2.5 Price Syncer (`price-syncer.ts`)
 
 **Source:** Yahoo Finance (`yahoo-finance2`)  
-**Symbols:** WTI, Brent, Gold, NatGas, Wheat, Copper, Silver, Corn  
+**Symbols:** 8 commodities (WTI, Brent, Gold, NatGas, Wheat, Copper, Silver, Corn) + **6 forex pairs** (EURUSD, GBPUSD, USDJPY, USDCHF, USDRUB, USDCNY — Yahoo `<PAIR>=X` tickers) — the forex set added by #87 phase 1 (`a15e2fd`, 2026-09-09), synced in the same loop.  
 **Interval:** Every 15 min (bundled in ingestion cycle)  
-**Storage:** `commodity_prices` table + Redis `prices:{SYMBOL}` (900s TTL)
+**Storage:** `commodity_prices` table (a generic symbol/price time-series despite the name) + Redis `prices:{SYMBOL}` (900s TTL)
 
 ---
 
@@ -191,6 +191,7 @@ After passing the filter and dedup check:
    - `severity` 1–10
    - `confidence` 0.55–0.90 (dynamic)
    - `commodity_impacts` JSON (USOIL, XAUUSD, etc.)
+   - `currency_pair_impacts` JSON (EURUSD…USDCNY) — same `{asset,direction,confidence}` shape, from `ClassificationResult.currencyPairImpacts`. Added by #87 phase 1 (`a15e2fd`) to the schema/classifier and by phase 1B (`abb2004`, 2026-09-09) to the live inserts below — `signal-merge.ts` `insertOrMergeSignal()`, `reconciliation.ts`, `acled-collector.ts`. Heuristic fallback only emits USDRUB (Russia+sanctions) / USDCNY (China+tariff/Taiwan); the other 4 pairs are AI-only on that path. ADR 010 merge semantics: written once at row creation, never rewritten on a duplicate/escalation merge (parity with `commodity_impacts`).
    - **`event_date`** = article publish time (from RSS `pubDate`, GNews `publishedAt`, GDELT `seendate`)
 
 > ⚠️ UPDATED 2026-08-19 — Step 3 is no longer an unconditional insert in the 3 live collectors (`rss-collector.ts`, `gnews-collector.ts`, `gdelt-collector.ts`). After classification returns, `insertOrMergeSignal()` (`apps/backend/src/workers/signal-merge.ts`) checks recent same-region signals for a plausible cross-source match on the classified summary. No match → inserts exactly as described above. A match with lower/equal severity → merges into the existing signal instead (`raw_event_ids` grows, `sources_count` increments, no new row, Sonnet briefing reused not regenerated). A match with higher severity → treated as an escalation: updates the existing signal's `severity` and regenerates its briefing rather than creating a second row. **Classification itself is never skipped** — this only changes what happens to an already-classified result. Full design and thresholds: `10_DECISIONS.md` ADR 010; `14_CHANGELOG.md` v0.27.0. Not wired into `reconciliation.ts`'s orphan-recovery insert path — that one is unchanged.

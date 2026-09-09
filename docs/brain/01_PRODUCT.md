@@ -42,6 +42,7 @@ This document defines every user-facing page and view across the Web Terminal (`
 - **User Journey**: Post-signup redirect → Select Plan (`Analyst`/`Pro`) → Connect Telegram Chat ID → Set default commodities → Transition to `/dashboard`.
 - **Navigation**: Redirects to `/dashboard` upon wizard completion.
 - **Implementation Status**: **Fully Functional**.
+> ⚠️ UPDATED 2026-09-09 — the live wizard is 2 steps: (1) name + use-case; (2) preference capture — "commodities / currency pairs / regions you follow", framed as "so we can show you what matters to you", not alert config. Telegram/plan selection are **not** in onboarding (Telegram is done later from Settings). Step 2 writes `user_preferences.commodities` / `.regions` (#81) and `.forex_pairs` (#87 phase 2, `55df380`, 2026-09-09 — the "currency pairs" chip list, the 6 `FOREX_PAIRS`). That commit also fixed the step-2 upsert's missing `onConflict: "user_id"`, which had been silently dropping all captured preferences for any user who already had a `user_preferences` row. The `POST /api/users/onboarding` line below is stale — the wizard upserts to Supabase directly from the client.
 - **Missing Features**: none remaining here — corrected 2026-08-19: this line previously listed "Interactive onboarding walkthrough overlay for terminal features" as missing, but it shipped 2026-08-16 (a 6-step `react-joyride` tour covering the dashboard + featured event detail page, with a "Replay product tour" option in the Help modal — see `08_CURRENT_STATUS.md`) and was live-verified again 2026-08-19 via a fresh throwaway signup driven through Playwright: all 6 steps fired correctly, completion persisted across a reload. This doc and the 2026-08-18 architecture audit (which separately listed it as "not started") were both stale relative to `08_CURRENT_STATUS.md`, which was correct — same "update the outlier doc" resolution used for the Supabase-ref and port-number conflicts.
 
 ---
@@ -108,6 +109,7 @@ This document defines every user-facing page and view across the Web Terminal (`
 - **User Journey**: User monitors watchlist → Clicks asset card (`USOIL`) → Feed filters to only show events impacting Crude Oil.
 - **Navigation**: Accessible from primary sidebar navigation.
 - **Implementation Status**: **Fully Functional**.
+> ⚠️ UPDATED 2026-09-09 — the grid now genuinely covers both asset classes: 7 commodities + the 6 `FOREX_PAIRS` (EURUSD…USDCNY), from `[...COMMODITIES, ...FOREX_PAIRS]`. The #89 "My Commodities / Show All" default seeds from the user's saved `commodities ∪ forex_pairs` (#87 phase 2, `55df380`). Forex prices come through `/api/prices` (price-syncer syncs them since #87 phase 1). The `[symbol]` drill-down still keys off commodities only — a forex card links to a degraded drill-down; candidate for phase 3.
 - **Missing Features**: TradingView embedded chart modal.
 
 ---

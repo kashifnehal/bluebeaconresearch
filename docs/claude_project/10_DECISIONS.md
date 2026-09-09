@@ -471,6 +471,9 @@
 
 **Cross-tree mapping:** Recorded as **ADR 013** in `docs/brain/10_DECISIONS.md`.
 
+> ⚠️ UPDATED 2026-09-07 — Forex gate **SOFTENED: forex only, not equity**, on desk research (Perplexity/Grok transcripts + an independently-verified live ForexFactory thread), not customer interviews. Forex schema/product work (#87) may proceed; equity stays evaluation-stage and gated.
+> ⚠️ UPDATED 2026-09-09 — #87 forex taxonomy partially shipped & verified: **phase 1** (schema `signals.currency_pair_impacts` + classifier + forex price sync, `a15e2fd`), **phase 1B** (live signal-creation paths, `abb2004`), **phase 2** (`user_preferences.forex_pairs` → onboarding + `/api/signals?personalized=true` + `/watchlist`, `55df380`). Phase 3 (alerts/dispatcher/digest forex matching) not started. Equity unchanged. Detail: `docs/brain/14_CHANGELOG.md` v0.36.0–v0.36.2, `docs/claude_project/14_CHANGELOG.md` PHASE 9.
+
 ---
 
 ## D18: No Features Requiring Government Permission or Difficult Third-Party Platform Approval

@@ -60,6 +60,7 @@ Stores LLM-synthesized military/geopolitical intelligence and asset impact data.
 - `lat` / `lng` (`double precision`, nullable)
 - `sources_count` (`int`, NOT NULL, default `1`)
 - `commodity_impacts` (`jsonb`, NOT NULL, default `'[]'::jsonb`)
+- `currency_pair_impacts` (`jsonb`, NOT NULL, default `'[]'::jsonb`) — forex-pair impacts `{asset,direction,confidence}`, `asset` ∈ EURUSD|GBPUSD|USDJPY|USDCHF|USDRUB|USDCNY. Added by `20260909035949_forex_pair_impacts.sql` (#87 phase 1, `a15e2fd`, 2026-09-09); populated by the live signal paths since phase 1B (`abb2004`).
 - `sanctions_matches` (`jsonb`, NOT NULL, default `'[]'::jsonb`)
 - `is_breaking` (`boolean`, NOT NULL, default `false`)
 - `is_active` (`boolean`, NOT NULL, default `true`)
@@ -106,8 +107,9 @@ Institutional developer API credentials and webhook subscription URLs.
 
 ### Table 9: `user_preferences` (see `docs/brain/04_DATABASE.md` Table 11 for the full, live column list)
 Per-user feed/notification settings (`unique(user_id)`). `regions` / `commodities` `text[]`, `min_severity int default 7`, `timezone`, `theme`, `quiet_start`/`quiet_end`, `email_frequency`, `use_case`.
-- **Added 2026-09-07 (#81)**: `onboarding_completed_at timestamptz`, `created_at timestamptz`, reserved `forex_pairs`/`equity_tickers text[]`.
+- **Added 2026-09-07 (#81)**: `onboarding_completed_at timestamptz`, `created_at timestamptz`, `forex_pairs`/`equity_tickers text[]`.
 - **Added 2026-09-07 (#83)**: `digest_enabled boolean NOT NULL default true` — opt-out for the daily digest, toggled from Settings → Notifications.
+- **`forex_pairs` went live 2026-09-09 (#87 phase 2, `55df380`)** — captured in `/onboarding`, read by `/api/signals?personalized=true` (matched vs `signals.currency_pair_impacts`) and the `/watchlist` default. `equity_tickers` stays reserved/unused (ADR 013).
 
 > This tree's DB doc lists only the core tables; `docs/brain/04_DATABASE.md` is regenerated from `information_schema` and is authoritative for the full schema.
 

@@ -26,6 +26,17 @@ Full detail in `14_CHANGELOG.md` v0.34.0. Summary of what's now built:
 
 ---
 
+## Forex Pair Taxonomy #87 (2026-09-09)
+
+Phases 1, 1B, 2 of 3 done & verified. Live tracker: `LIVE_TODO.md` (#87). Full technical record: `14_CHANGELOG.md` v0.36.0 / v0.36.1 / v0.36.2.
+
+- **Phase 1 (`a15e2fd`)** — additive `signals.currency_pair_impacts jsonb` (migration `20260909035949_forex_pair_impacts.sql`); `claude.service.ts` `ALLOWED_FOREX_PAIRS` + alias map + `sanitizeForexImpacts()` + prompt/`ClassificationResult` field; `EURUSD`/`USDRUB` removed from `ALLOWED_COMMODITY_ASSETS` (no backfill); `price-syncer.ts` syncs 6 `<PAIR>=X` forex tickers into `commodity_prices`.
+- **Phase 1B (`abb2004`)** — `currency_pair_impacts` wired into the three live signal-creation inserts (`signal-merge.ts` `insertOrMergeSignal()`, `reconciliation.ts`, `acled-collector.ts`); ADR 010 merge semantics preserved.
+- **Phase 2 (`55df380`)** — `user_preferences.forex_pairs` wired into the existing #81/#89 mechanisms: new shared `FOREX_PAIRS` constant; `/onboarding` step 2 "Currency pairs you follow" chip list; `/api/signals?personalized=true` matches `currency_pair_impacts` per saved pair (one combined OR) and returns `currencyPairImpacts`; `/watchlist` "My Commodities / Show All" default seeds from `commodities ∪ forex_pairs`, `/api/prices` fallback list widened. **Also fixed:** the onboarding `user_preferences` upsert lacked `onConflict: "user_id"` — it 409'd and silently dropped *all* captured prefs for any user who already had a row.
+- **Not done:** phase 3 (alert_rules / dispatcher / digest forex matching + a real forex Telegram alert). Known limitation: `/watchlist/[symbol]` drill-down still commodity-only.
+
+---
+
 ## 3 Live Map-Page Bugs From a Production Screenshot (2026-08-28)
 
 All three confirmed live (dev server + throwaway Supabase account) and fixed in `36b522a`. Full detail in `14_CHANGELOG.md` v0.32.0.

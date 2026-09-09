@@ -34,6 +34,8 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
     - `active` → currently active signals regardless of publish age.
   - `limit` (`number`, default `50`, max `100`).
   - `offset` (`number`, default `0`).
+  - `page` (`number`, default `1`): page-based pagination; response carries a real `nextCursor` (`String(page+1)` or `null`) and `total`.
+  - `personalized` (`"true"`, optional, default **off**) — #81 "My Feed". When the caller is authenticated **and** has saved preferences, narrows the feed to signals overlapping their saved `regions`, `commodities`, **or `forex_pairs`** (the last added by #87 phase 2, `55df380`, 2026-09-09 — matched against `signals.currency_pair_impacts` with the same jsonb-`@>` containment used for `commodity_impacts`, folded into one combined `OR`). No user or no saved prefs → no-op, full feed returned. Personalized payloads are **never** written to the per-query process cache. Response adds `personalized` (boolean — whether the narrowing was actually applied).
 - **Response `200 OK`**:
   ```json
   {
@@ -51,6 +53,9 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
         "lng": 43.3,
         "commodity_impacts": [
           { "asset": "USOIL", "direction": "up", "confidence": 0.85 }
+        ],
+        "currencyPairImpacts": [
+          { "asset": "USDRUB", "direction": "up", "confidence": 0.72 }
         ],
         "is_breaking": true,
         "created_at": "2026-08-04T12:00:00Z",
@@ -140,7 +145,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 #### `GET /api/prices`
 
-- **Description**: Returns latest cached 24h commodity prices ticker (`USOIL`, `GOLD`, `NG`, `COPPER`, `WHEAT`).
+- **Description**: Returns latest cached 24h prices for the symbols the price-syncer worker writes into `commodity_prices` — 8 commodities (`USOIL`, `UKOIL`, `XAUUSD`, `NGAS`, `WHEAT`, `COPPER`, `XAGUSD`, `CORN`) **and, since #87 phase 1, 6 forex pairs** (`EURUSD`, `GBPUSD`, `USDJPY`, `USDCHF`, `USDRUB`, `USDCNY`). Tier 1 (the `commodity_prices` query) returns every symbol present; the Tier-2 Redis fallback allow-list was widened to include the forex pairs in #87 phase 2 (`55df380`, 2026-09-09).
 - **Auth**: None (Public/Cached).
 
 ---

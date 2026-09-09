@@ -211,6 +211,7 @@ Restore when first paying customer asks to subscribe.
 
 **Missing from current onboarding (planned, not built):**
 - ~~Region selection~~ / ~~Commodity preferences~~ — **built 2026-09-07 (#81)**: `/onboarding` step 2 captures followed regions + commodities into `user_preferences`, sets `onboarding_completed_at`.
+- ~~Currency-pair preferences~~ — **built 2026-09-09 (#87 phase 2, `55df380`)**: step 2 also has a "Currency pairs you follow" chip list (the 6 `FOREX_PAIRS`) writing `user_preferences.forex_pairs`, read by `/api/signals?personalized=true` and `/watchlist`. Same commit fixed the step-2 upsert's missing `onConflict: "user_id"` (it had been 409'ing and silently dropping all captured prefs for users who already had a `user_preferences` row).
 - Minimum severity threshold slider (7/8/9/10) — not in onboarding, but editable per alert rule on `/alerts` (#82)
 - Alert frequency (immediate / hourly digest / daily 06:00 UTC) — the **daily digest is built (#83)**, opt-out toggle in Settings → Notifications; per-frequency selection in onboarding is still not built
 - Quiet hours toggle + start/end time
@@ -447,6 +448,8 @@ Restore when first paying customer asks to subscribe.
 > ⚠️ UPDATED 2026-08-25 — This whole section is stale against the current implementation (`apps/web/app/(dashboard)/watchlist/WatchlistClient.tsx`), not just the "Current status" line: prices come from Yahoo Finance via `commodity_prices` (Alpha Vantage was already replaced), the sparkline is real recent-price history (not the planned 30-point Recharts AreaChart — it's a plain bar sparkline from `/api/prices/history`), and there's no risk-level badge or 7-day high/low bar built. Left as a known gap between spec and reality rather than rewritten wholesale.
 >
 > One gap that **was** closed this session: commodity cards are now clickable, navigating to a new drill-down route (`/watchlist/[symbol]`) not originally speced here — a real 90-day price chart plus a timeline of correlated signals (via `commodity_impacts`), each annotated with a factual, time-windowed price-move stat. No buy/sell or predictive language, per the product's hard no-recommendations rule. See `08_CURRENT_STATUS.md` and `14_CHANGELOG.md` v0.28.4 for detail.
+>
+> ⚠️ UPDATED 2026-09-09 (#87 phase 2, `55df380`) — the watchlist now also covers the 6 forex pairs (EURUSD…USDCNY): asset list is `[...COMMODITIES, ...FOREX_PAIRS]`, prices already flow through `commodity_prices` (price-syncer syncs the `<PAIR>=X` tickers since #87 phase 1), and the #89 "My Commodities / Show All" default seeds from the user's saved `commodities ∪ forex_pairs`. The `[symbol]` drill-down was **not** widened — it still resolves against `COMMODITIES`/`?commodity=` only, so a forex card there is degraded (raw label, no matched signals); candidate for phase 3. `14_CHANGELOG.md` PHASE 9 / `docs/brain/14_CHANGELOG.md` v0.36.2.
 
 ---
 
