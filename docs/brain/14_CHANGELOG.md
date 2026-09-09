@@ -8,6 +8,50 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.36.0 — Forex pair taxonomy #87 phase 1 of 3: schema + classifier + price sync (2026-09-09)
+
+Commit on `main`: `a15e2fd`. Backend-only (no `apps/web`). Cleared by ADR 013's
+forex-only softening; equity stays gated.
+
+- **Migration `20260909035949_forex_pair_impacts.sql`** — additive
+  `signals.currency_pair_impacts jsonb not null default '[]'`. `commodity_impacts`,
+  `sanctions_matches`, everything else untouched. Historical `commodity_impacts`
+  rows containing EURUSD/USDRUB are **not** backfilled.
+- **`claude.service.ts`** — new `ALLOWED_FOREX_PAIRS`
+  (EURUSD|GBPUSD|USDJPY|USDCHF|USDRUB|USDCNY). `EURUSD`/`USDRUB` **removed** from
+  `ALLOWED_COMMODITY_ASSETS` (they were never commodities — a pre-existing
+  mislabel); the other 6 commodity entries are unchanged. New
+  `FOREX_PAIR_ALIASES` (EUR/USD, ruble/rouble/USD/RUB, yuan/renminbi/RMB/USD/CNY,
+  pound/sterling/GBP/USD, yen/USD/JPY, franc/USD/CHF), `normalizeForexPair()`,
+  `sanitizeForexImpacts()` — all mirroring the commodity equivalents.
+  `ClassificationResult` + the Claude prompt JSON schema gain `currencyPairImpacts`.
+  `sanitizeForexImpacts()` runs alongside `sanitizeCommodityImpacts()`.
+- **Heuristic fallback** — evidence-only, same discipline as the commodity regexes:
+  USDRUB pushed only when a Russia term **and** a sanctions/SWIFT/asset-freeze/
+  price-cap term both fire; USDCNY only on China + tariff/trade-war/export-control/
+  Taiwan. EURUSD/GBPUSD/USDJPY/USDCHF are left **AI-only** on the heuristic path —
+  no confident non-AI regex for Fed/ECB/BOJ/SNB events that wouldn't misfire.
+- **`ai-classifier.ts`** — `currencyPairImpacts` in the zod schema; inserted into
+  `signals.currency_pair_impacts`.
+- **`price-syncer.ts`** — new `FOREX_SYMBOLS` map (`<PAIR>=X` Yahoo format), synced
+  in the same loop into the same `commodity_prices` table. All 6 tickers verified
+  against a real `yf.quote()` call, incl. the less-common `USDRUB=X` / `USDCNY=X`.
+- **Verified** (per project standard, not "looks right"): (1) `information_schema`
+  shows `signals.currency_pair_impacts` jsonb NOT NULL default `[]`; (2) a real
+  Claude classification of an EU/US-sanctions-on-Russia event returned USDRUB in
+  `currencyPairImpacts` and **not** in `commodityImpacts`, and a real `signals`
+  insert with that payload succeeded; (3) `heuristicClassify()` on Russia/sanctions
+  text returned a USDRUB entry (China/tariff text → USDCNY; neutral text → `[]`);
+  (4) `runPriceSyncOnce()` wrote real non-null prices for all 6 forex symbols.
+- **Known gap for phase 3:** only the **dormant** `ai-classifier.ts` insert path
+  was wired (per the phase-1 task scope). The live signal-creation paths —
+  `signal-merge.ts` `insertOrMergeSignal` (rss/gnews/gdelt), `reconciliation.ts`,
+  `acled-collector.ts` — still write `commodity_impacts` only. Phase 3 (or a
+  follow-up) must wire `currency_pair_impacts` into those inserts or the column
+  stays empty in production.
+- Phases 2 (onboarding/watchlist UI, wiring `user_preferences.forex_pairs`) and 3
+  (alert_rules/dispatcher/digest) are separate prompts, not started.
+
 ### v0.35.0 — Economic calendar (#86); #83 digest prod cron path end-to-end confirmed (2026-09-07)
 
 Commit on `main`: `30cf1f2`.

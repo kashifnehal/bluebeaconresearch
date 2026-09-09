@@ -81,6 +81,44 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   against the real system clock (confirmed two reads 13s apart: 3d 09h 44m 04s
   → 3d 09h 43m 51s).
 
+- #87 Forex pair taxonomy — **phase 1 of 3 (schema + classifier + price sync)
+  CLOSED, verified 2026-09-09**, commit a15e2fd. Backend-only, no apps/web changes.
+  - Migration `20260909035949_forex_pair_impacts.sql`: additive
+    `signals.currency_pair_impacts jsonb not null default '[]'`. Nothing else
+    touched; historical `commodity_impacts` rows with EURUSD/USDRUB left as-is.
+  - `claude.service.ts`: new `ALLOWED_FOREX_PAIRS`
+    (EURUSD|GBPUSD|USDJPY|USDCHF|USDRUB|USDCNY); EURUSD/USDRUB **removed** from
+    `ALLOWED_COMMODITY_ASSETS` (the pre-existing mislabeling — other 6 commodity
+    entries untouched); new `FOREX_PAIR_ALIASES` + `normalizeForexPair()` +
+    `sanitizeForexImpacts()` mirroring the commodity equivalents; Claude prompt
+    schema gains a `currencyPairImpacts` field; `ClassificationResult` gains
+    `currencyPairImpacts`. Heuristic fallback: evidence-only USDRUB (Russia +
+    sanctions/SWIFT/asset-freeze/price-cap regex) and USDCNY (China +
+    tariff/trade-war/export-control/Taiwan regex); EURUSD/GBPUSD/USDJPY/USDCHF
+    left **AI-only** on the heuristic path — no confident non-AI regex for
+    Fed/ECB/BOJ/SNB events that wouldn't misfire.
+  - `ai-classifier.ts`: `currencyPairImpacts` added to the zod schema and
+    inserted into `signals.currency_pair_impacts`.
+  - `price-syncer.ts`: new `FOREX_SYMBOLS` map (`<PAIR>=X` Yahoo format), synced
+    in the same loop into the same `commodity_prices` table. All 6 tickers —
+    incl. USDRUB=X / USDCNY=X — verified against a real `yf.quote()` call.
+  - Verified: (1) information_schema shows the new column; (2) a real Claude
+    classification of an EU/US-sanctions-on-Russia event returned USDRUB in
+    `currencyPairImpacts` and **not** in `commodityImpacts`, and a real
+    `signals` insert accepted it; (3) forcing `heuristicClassify()` on
+    Russia/sanctions text returned a USDRUB entry (China/tariff text → USDCNY;
+    neutral text → `[]`); (4) `runPriceSyncOnce()` wrote real non-null prices
+    for all 6 forex symbols (EURUSD 1.163, GBPUSD 1.354, USDJPY 153.46,
+    USDCHF 0.809, USDRUB 85.69, USDCNY 6.71).
+  - ⚠️ **Follow-up for phase 3:** `ai-classifier.ts` is a **dormant path** (its
+    own comment says nothing enqueues onto its queue). The live signal-creation
+    paths — `signal-merge.ts` (`insertOrMergeSignal`, used by rss/gnews/gdelt),
+    `reconciliation.ts`, `acled-collector.ts` — still only write
+    `commodity_impacts`. Phase 1 was scoped to `ai-classifier.ts` per the task;
+    wiring `currency_pair_impacts` into `insertOrMergeSignal` + the other live
+    inserts must happen in phase 3 (or a small follow-up) or the column stays
+    empty in production.
+
 ## Decisions confirmed 2026-09-07
 1. Forex gate — softened, forex only, not equity. Desk-research-validated (see
    ADR amendment below).
@@ -107,7 +145,10 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   deployed worker's own digest cron delivered a real email via the Railway
   `RESEND_API_KEY` (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, delivered).
   No follow-ups outstanding.
-- Next: #87 (forex taxonomy expansion, forex only — gate cleared)
+- #87 forex taxonomy: phase 1 of 3 (schema + classifier + price sync) closed
+  2026-09-09, commit a15e2fd — see "Closed, verified". Next: phase 2
+  (onboarding/watchlist UI), then phase 3 (alert_rules/dispatcher/digest +
+  wiring currency_pair_impacts into the live signal-merge insert path).
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)
