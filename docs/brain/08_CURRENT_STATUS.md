@@ -28,12 +28,13 @@ Full detail in `14_CHANGELOG.md` v0.34.0. Summary of what's now built:
 
 ## Forex Pair Taxonomy #87 (2026-09-09)
 
-Phases 1, 1B, 2 of 3 done & verified. Live tracker: `LIVE_TODO.md` (#87). Full technical record: `14_CHANGELOG.md` v0.36.0 / v0.36.1 / v0.36.2.
+All 3 phases done & verified. Live tracker: `LIVE_TODO.md` (#87). Full technical record: `14_CHANGELOG.md` v0.36.0 / v0.36.1 / v0.36.2 / v0.36.3.
 
 - **Phase 1 (`a15e2fd`)** — additive `signals.currency_pair_impacts jsonb` (migration `20260909035949_forex_pair_impacts.sql`); `claude.service.ts` `ALLOWED_FOREX_PAIRS` + alias map + `sanitizeForexImpacts()` + prompt/`ClassificationResult` field; `EURUSD`/`USDRUB` removed from `ALLOWED_COMMODITY_ASSETS` (no backfill); `price-syncer.ts` syncs 6 `<PAIR>=X` forex tickers into `commodity_prices`.
 - **Phase 1B (`abb2004`)** — `currency_pair_impacts` wired into the three live signal-creation inserts (`signal-merge.ts` `insertOrMergeSignal()`, `reconciliation.ts`, `acled-collector.ts`); ADR 010 merge semantics preserved.
 - **Phase 2 (`55df380`)** — `user_preferences.forex_pairs` wired into the existing #81/#89 mechanisms: new shared `FOREX_PAIRS` constant; `/onboarding` step 2 "Currency pairs you follow" chip list; `/api/signals?personalized=true` matches `currency_pair_impacts` per saved pair (one combined OR) and returns `currencyPairImpacts`; `/watchlist` "My Commodities / Show All" default seeds from `commodities ∪ forex_pairs`, `/api/prices` fallback list widened. **Also fixed:** the onboarding `user_preferences` upsert lacked `onConflict: "user_id"` — it 409'd and silently dropped *all* captured prefs for any user who already had a row.
-- **Not done:** phase 3 (alert_rules / dispatcher / digest forex matching + a real forex Telegram alert). Known limitation: `/watchlist/[symbol]` drill-down still commodity-only.
+- **Phase 3 (`a102e68`)** — additive `alert_rules.forex_pairs text[]` (migration `20260909044602_alert_rules_forex_pairs.sql`, `min_severity` default untouched). Dispatcher matches a rule when its `forex_pairs` overlap `signal.currency_pair_impacts`, OR'd with the commodity match; `buildAlertBody()` "Which instruments" lists forex pairs alongside commodities on every channel. `digest-sender.ts` folds `pref.forex_pairs` into the same combined containment `OR`, credits forex hits in the "matched" reason, and its copy now says "regions, commodities, and forex pairs you follow". `/alerts` + `/events/[id]` create-rule modal gained a 6-pair multi-select; rule cards show a "Forex:" line; the Alerts "Which instruments" card renders `currencyPairImpacts`. Verified per doc 53's standard: a real Telegram message from a forex-only rule (regions/commodities empty) on a live EURUSD signal showed `EURUSD ↓ · USDJPY ↑ · USDCHF ↑`; a forex-only digest preference selected exactly that signal; Playwright round-tripped the modal multi-select through the DB. (Real email send not exercised locally — no `RESEND_API_KEY` locally; it is set on Railway workers.)
+- **Known limitation:** `/watchlist/[symbol]` drill-down still commodity-only.
 
 ---
 

@@ -332,6 +332,8 @@ Returns last 10 alerts sent to the user (for notification bell panel). Auth requ
 
 > ⚠️ UPDATED 2026-09-07 (#82) — the **Next.js web route** `GET /api/alerts/recent` (distinct from this Fastify endpoint; used by `/alerts` and the notification panel) now embeds more of the joined signal on each row: `ai_analysis`, `commodity_impacts`, `is_breaking`, plus a `sources[]` array (`{title, url, sourceLabel}`) resolved from `signals.raw_event_ids → raw_events.raw_data.url`. `?limit=` accepted up to 200. This powers the four-section alert card.
 
+> ⚠️ UPDATED 2026-09-09 (#87 phase 3, `a102e68`) — `alert_rules` gained a `forex_pairs text[]` column mirroring `commodities`. The alert dispatcher matches a rule when its `forex_pairs` overlap a signal's `currency_pair_impacts`, OR'd with the commodity match; the daily digest folds `user_preferences.forex_pairs` into the same single containment OR. `GET /api/alerts/recent` now also joins `currency_pair_impacts`; the create-rule modal on `/alerts` and each event page carries a 6-pair forex multi-select. No `equity_tickers` — equity stays gated (ADR 013 / D17).
+
 #### GET /v1/alerts/accuracy
 Returns 30-day signal accuracy stats. Auth required.
 

@@ -173,6 +173,44 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   - Still pending: phase 3 (alert_rules/dispatcher/digest forex matching + a real
     forex Telegram alert).
 
+- #87 Forex pair taxonomy — **phase 3 of 3 (alert rules, dispatcher, digest)
+  CLOSED, verified 2026-09-09**, commit `a102e68`. `apps/backend` + `apps/web` +
+  one additive migration. Wires `forex_pairs` through the alert path the same way
+  `commodities` already runs.
+  - Migration `20260909044602_alert_rules_forex_pairs.sql`: additive
+    `alert_rules.forex_pairs text[] not null default '{}'`, mirroring
+    `alert_rules.commodities`. `min_severity` default untouched. Remote recorded
+    the migration under the MCP's own timestamp `20260909044602`; local filename
+    renamed to match (no slot mismatch).
+  - `alert-dispatcher.ts`: instrument filter is now an OR of `commodities` and
+    `forex_pairs` (a rule matches if the signal's `commodity_impacts` OR
+    `currency_pair_impacts` overlap; a rule with neither list is still not
+    instrument-filtered). `buildAlertBody()` "Which instruments" concatenates
+    `currency_pair_impacts` after `commodity_impacts` — Telegram/Slack/in-app.
+  - `digest-sender.ts`: `pref.forex_pairs` folds into the same combined
+    containment `OR`; `currency_pair_impacts` added to the signal select +
+    `SignalRow`; `whichWatchMatched()` credits forex hits; the "only forex_pairs
+    set" case no longer early-returns; copy → "the regions, commodities, and
+    forex pairs you follow"; `runDigestOnce()` prefs select gained `forex_pairs`.
+  - `apps/web`: create-rule modal on `/alerts` + `/events/[id]` gained a 6-pair
+    multi-select (persists `forex_pairs`); rule cards show a "Forex:" line;
+    Alerts "Which instruments" renders `currencyPairImpacts`; `/api/alerts/recent`
+    joins `currency_pair_impacts`.
+  - Verified per doc 53's delivery standard: a forex-only rule (`regions=[]`,
+    `commodities=[]`, `forex_pairs=["EURUSD"]`, sev 8) dispatched against live
+    signal `4b96add1…` → `{attempted:1, delivered:1}`, one `alerts_sent` row, a
+    **real Telegram message** with "WHICH INSTRUMENTS: … · EURUSD ↓ · USDJPY ↑ ·
+    USDCHF ↑"; the two pre-existing rules were paused for the run (both
+    reactivated, test rule deleted). `selectDigestSignalsForUser` with only
+    `forex_pairs=["EURUSD"]` selected exactly that signal; `renderDigestEmail`
+    text + HTML contain "forex pairs" and "EURUSD". Playwright: Alerts card
+    renders EURUSD/USDJPY/USDCHF chips; modal multi-select round-tripped
+    `["EURUSD","USDJPY"]` through the DB. (Real email send not exercised from
+    local — no `RESEND_API_KEY` locally; set on Railway workers.)
+  - No `equity_tickers` / `ticker_impacts` — equity stays gated (ADR 013 / D17).
+  - #87 now fully shipped — all 3 phases done. Carried-forward limitation:
+    `/watchlist/[symbol]` drill-down still commodity-only.
+
 ## Decisions confirmed 2026-09-07
 1. Forex gate — softened, forex only, not equity. Desk-research-validated (see
    ADR amendment below).
@@ -199,11 +237,10 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   deployed worker's own digest cron delivered a real email via the Railway
   `RESEND_API_KEY` (Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, delivered).
   No follow-ups outstanding.
-- #87 forex taxonomy: phase 1 (schema + classifier + price sync, `a15e2fd`),
-  phase 1B (live-ingestion gap closed, `abb2004`), and phase 2 (onboarding /
-  feed filter / watchlist, `55df380`) all closed 2026-09-09 — see "Closed,
-  verified". Next: phase 3 (alert_rules/dispatcher/digest forex matching + a real
-  forex Telegram alert).
+- #87 forex taxonomy: **fully shipped 2026-09-09** — phase 1 (`a15e2fd`), phase
+  1B (`abb2004`), phase 2 (`55df380`), phase 3 (alert_rules/dispatcher/digest
+  forex matching + Alerts UI, `a102e68` — real forex-only Telegram alert
+  verified). All closed — see "Closed, verified". Equity still gated.
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)

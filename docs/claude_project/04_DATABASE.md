@@ -91,6 +91,7 @@ Ingested news articles and military incident logs before AI processing.
 - `user_id` (`uuid`, FK `profiles.id` ON DELETE CASCADE)
 - `name` (`text`, NOT NULL)
 - `regions` / `commodities` (`text[]`)
+- `forex_pairs` (`text[]`, default `'{}'`) — added 2026-09-09 (#87 phase 3, `a102e68`, migration `20260909044602`). Mirrors `commodities`; dispatcher matches it against `signals.currency_pair_impacts`, OR'd with the commodity match.
 - `min_severity` (`int`, default `8`)
 - `channels` (`text[]`, default `'{telegram}'`)
 - `is_active` (`boolean`, default `true`)

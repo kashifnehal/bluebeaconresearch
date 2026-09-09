@@ -83,7 +83,62 @@ no second feed-filter param, no separate watchlist toggle.
   `meta` and its signals query against `COMMODITIES`/`?commodity=` only — a forex
   card links to a degraded drill-down (raw symbol label, no matched signals).
   Out of scope for phase 2; candidate for phase 3 or a follow-up.
-- **Phase 3** (alert_rules / dispatcher / digest forex matching) not started.
+- **Phase 3** (alert_rules / dispatcher / digest forex matching) — see v0.36.3.
+
+### v0.36.3 — Forex pair taxonomy #87 phase 3 of 3: alert rules, dispatcher, digest (2026-09-09)
+
+Commit on `main`: `a102e68`. `apps/backend` + `apps/web` + one additive migration.
+Wires `forex_pairs` through the alert path the exact way `commodities` already
+runs — no new match pass, no new delivery path.
+
+- **Migration `20260909044602_alert_rules_forex_pairs.sql`** — additive
+  `alert_rules.forex_pairs text[] not null default '{}'`, mirroring
+  `alert_rules.commodities`. `min_severity`'s conservative default is untouched
+  (alert-fatigue discipline, doc 53). Applied to remote; the MCP recorded it
+  under its own timestamp `20260909044602`, and the local filename was renamed
+  to match (no slot mismatch — same handling as phase 1's
+  `20260909035949`, cf. [[project-migration-012-slot-mismatch]]).
+- **`alert-dispatcher.ts`** — the instrument filter now treats `commodities` and
+  `forex_pairs` as an OR of arrays: a rule with either (or both) set matches when
+  the signal's `commodity_impacts` *or* `currency_pair_impacts` overlap the
+  corresponding list; a rule with neither is not instrument-filtered (unchanged).
+  Region filtering unchanged. `buildAlertBody()`'s "Which instruments" section now
+  concatenates `currency_pair_impacts` after `commodity_impacts` (same
+  `ASSET ↓` formatting), so every channel (Telegram/Slack/in-app) shows forex
+  pairs. Base rule query is `select("*")` — `forex_pairs` returned already.
+- **`digest-sender.ts`** — `pref.forex_pairs` folds into the same combined `OR`
+  (`currency_pair_impacts.cs.[{"asset":"SYM"}]`, one query, same jsonb-`@>` as
+  commodities); `currency_pair_impacts` added to the signal select and
+  `SignalRow`; `whichWatchMatched()` also credits forex hits; the digest select
+  no longer early-returns when only `forex_pairs` is set. User-facing copy
+  (text + HTML) changed from "the regions and commodities you follow" to "the
+  regions, commodities, and forex pairs you follow". `runDigestOnce()` prefs
+  select gained `forex_pairs`.
+- **`apps/web`** — the create-rule modal on both `/alerts` and `/events/[id]`
+  gained a 6-button forex-pairs multi-select (same `FOREX_PAIRS`, same toggle
+  pattern as the onboarding chips); `forex_pairs` written on insert. Rule cards
+  show a "Forex:" line ("All pairs" when empty). The "Which instruments" card
+  section renders `currencyPairImpacts` alongside `commodityImpacts` (same
+  `CommodityChip`). `/api/alerts/recent` joins `currency_pair_impacts`; the
+  page's `MatchedSignal` / row mapping carry it.
+- **Verified (real delivery + Playwright + SQL), per doc 53's standard:**
+  (1) a forex-only rule (`regions=[]`, `commodities=[]`,
+  `forex_pairs=["EURUSD"]`, sev 8) dispatched against the live EURUSD signal
+  `4b96add1…` → `{attempted:1, delivered:1}`, one `alerts_sent` row, a real
+  Telegram message whose "WHICH INSTRUMENTS" line reads
+  `… · EURUSD ↓ · USDJPY ↑ · USDCHF ↑`. The two pre-existing rules were paused
+  for the run so the forex rule was provably the only match; both reactivated,
+  test rule deleted afterwards. (2) `selectDigestSignalsForUser` with only
+  `forex_pairs=["EURUSD"]` (no region/commodity prefs) selected exactly that
+  signal; `renderDigestEmail` text + HTML contain "forex pairs" and "EURUSD".
+  (3) Playwright: the `/alerts` "Which instruments" card renders EURUSD/USDJPY/
+  USDCHF chips; the modal multi-select (EUR/USD + USD/JPY) round-tripped to
+  `alert_rules.forex_pairs = ["EURUSD","USDJPY"]` and back onto the rule card.
+  Real email transmission itself was not exercised from local (no
+  `RESEND_API_KEY` locally — it is set on the Railway workers service; digest
+  selection + rendering is what phase 3 changed and both are verified).
+- **No `equity_tickers` / `ticker_impacts` anywhere** — equity stays gated
+  (ADR 013 / D17).
 
 ### v0.36.0 — Forex pair taxonomy #87 phase 1 of 3: schema + classifier + price sync (2026-09-09)
 

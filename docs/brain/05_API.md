@@ -107,6 +107,19 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 - **Description**: Deletes an alert rule by ID.
 
+> ⚠️ UPDATED 2026-09-09 (#87 phase 3, `a102e68`) — `alert_rules` gained a
+> `forex_pairs text[]` column (mirrors `commodities`). The alert dispatcher
+> (`apps/backend/src/workers/alert-dispatcher.ts`) matches a rule when its
+> `forex_pairs` overlap a signal's `currency_pair_impacts`, **OR'd** with the
+> commodity match (a rule with neither list set is not instrument-filtered). The
+> daily digest (`digest-sender.ts`) folds `user_preferences.forex_pairs` into the
+> same single containment `OR` against `currency_pair_impacts`. The Next.js web
+> route `GET /api/alert-rules` and `GET /api/alerts/recent` (the latter now joins
+> `currency_pair_impacts`) both return the new field. Alert-rule creation is a
+> direct RLS-scoped Supabase insert from `/alerts` and each event page — the
+> create-rule modal there carries a 6-pair forex multi-select. No
+> `equity_tickers` — equity stays gated (ADR 013 / D17).
+
 ---
 
 ### 2.3 Backtesting Suite Endpoint
