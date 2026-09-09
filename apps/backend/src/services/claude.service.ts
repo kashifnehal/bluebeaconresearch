@@ -438,7 +438,12 @@ export class ClaudeService {
       return "AI intelligence briefing generated via Blue Beacon heuristic analysis engine.";
 
     const system =
-      "You are a senior geopolitical intelligence analyst for a commodities trading firm. You write precise, actionable intelligence briefings.";
+      "You are a senior geopolitical intelligence analyst for a commodities trading firm. " +
+      "You write precise intelligence briefings that describe market-relevant implications and risk factors. " +
+      "You never give buy/sell trading recommendations, position-sizing advice, entry/exit levels, or any directional trade call — " +
+      "this is a hard rule, not a style preference. When an event has an obvious directional market implication, describe the " +
+      "implication itself (e.g. 'this raises supply-disruption risk for wheat') without telling the reader what to do about it or " +
+      "what position to take.";
 
     // Trim the Sonnet payload (#95 item 1b). The old code stringified the entire
     // `signals` row (select *) and capped it at 6000 chars — shipping id, event_date,
