@@ -167,9 +167,9 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
     `currency_pair_impacts` and `?personalized=false` restored the full feed;
     `/watchlist` seeded EUR/USD + USD/CHF cards with live prices and the toggle
     round-tripped (13 assets under "Show All").
-  - Known limitation, out of scope: `/watchlist/[symbol]` drill-down still keys
+  - ~~Known limitation, out of scope: `/watchlist/[symbol]` drill-down still keys
     off `COMMODITIES`/`?commodity=` — a forex card links to a degraded drill-down
-    (raw label, no matched signals). Candidate for phase 3.
+    (raw label, no matched signals).~~ **CLOSED in the phase-4 follow-up below.**
   - Still pending: phase 3 (alert_rules/dispatcher/digest forex matching + a real
     forex Telegram alert).
 
@@ -208,8 +208,30 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
     `["EURUSD","USDJPY"]` through the DB. (Real email send not exercised from
     local — no `RESEND_API_KEY` locally; set on Railway workers.)
   - No `equity_tickers` / `ticker_impacts` — equity stays gated (ADR 013 / D17).
-  - #87 now fully shipped — all 3 phases done. Carried-forward limitation:
-    `/watchlist/[symbol]` drill-down still commodity-only.
+  - #87 now fully shipped — all 3 phases done. ~~Carried-forward limitation:
+    `/watchlist/[symbol]` drill-down still commodity-only.~~ **Closed in phase 4.**
+
+- #87 Forex pair taxonomy — **phase 4 (watchlist drill-down forex support)
+  CLOSED, verified 2026-09-09**, commit `accd468`. `apps/web` only, no
+  migration. Closes the phase-2/3 carried-forward limitation: a followed forex
+  pair now opens a working `/watchlist/[symbol]` drill-down instead of a
+  degraded one (raw code, zero matched signals).
+  - `/watchlist/[symbol]/page.tsx`: resolves `meta` against `COMMODITIES` then
+    `FOREX_PAIRS` (so `EURUSD` shows "EUR/USD"); `isForex` flag; `isFollowed`
+    now ORs `myPrefs.forexPairs.includes(symbol)`; the correlated-signals fetch
+    sends `?forexPair=` instead of `?commodity=` for a forex symbol; the
+    client-side impact lookup reads `ev.currencyPairImpacts` for a forex symbol.
+  - `app/api/signals/route.ts`: new **separate** `?forexPair=` query param — a
+    `.contains("currency_pair_impacts", JSON.stringify([{asset}]))` filter, the
+    exact mirror of the existing `?commodity=` branch. `?commodity=` is
+    untouched and still means `commodity_impacts` everywhere.
+  - No `equity_tickers` / `ticker_impacts` — equity stays gated.
+  - Verified (Playwright + SQL, per #87's standard): `/watchlist/EURUSD` renders
+    "EUR/USD", "forex · Drill-Down", and lists test signal `4b96add1…` with an
+    `EURUSD ↓` chip (its `currency_pair_impacts`); "You follow this" shows when
+    `forex_pairs` contains `EURUSD`. `/watchlist/USOIL` unchanged ("WTI Crude",
+    same commodity signals). API: `?forexPair=EURUSD&window=90d` → 1 signal;
+    `?commodity=USOIL` → 429 (unchanged); `?forexPair=USOIL` → 0.
 
 ## Decisions confirmed 2026-09-07
 1. Forex gate — softened, forex only, not equity. Desk-research-validated (see
@@ -240,7 +262,8 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #87 forex taxonomy: **fully shipped 2026-09-09** — phase 1 (`a15e2fd`), phase
   1B (`abb2004`), phase 2 (`55df380`), phase 3 (alert_rules/dispatcher/digest
   forex matching + Alerts UI, `a102e68` — real forex-only Telegram alert
-  verified). All closed — see "Closed, verified". Equity still gated.
+  verified), phase 4 (watchlist drill-down forex support, `accd468`). All
+  closed — see "Closed, verified". Equity still gated.
 - Gated on real free-tier traction, no fixed date: #84 (full billing), #78
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)

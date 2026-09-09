@@ -109,7 +109,7 @@ This document defines every user-facing page and view across the Web Terminal (`
 - **User Journey**: User monitors watchlist → Clicks asset card (`USOIL`) → Feed filters to only show events impacting Crude Oil.
 - **Navigation**: Accessible from primary sidebar navigation.
 - **Implementation Status**: **Fully Functional**.
-> ⚠️ UPDATED 2026-09-09 — the grid now genuinely covers both asset classes: 7 commodities + the 6 `FOREX_PAIRS` (EURUSD…USDCNY), from `[...COMMODITIES, ...FOREX_PAIRS]`. The #89 "My Commodities / Show All" default seeds from the user's saved `commodities ∪ forex_pairs` (#87 phase 2, `55df380`). Forex prices come through `/api/prices` (price-syncer syncs them since #87 phase 1). The `[symbol]` drill-down still keys off commodities only — a forex card links to a degraded drill-down; candidate for phase 3.
+> ⚠️ UPDATED 2026-09-09 — the grid now genuinely covers both asset classes: 7 commodities + the 6 `FOREX_PAIRS` (EURUSD…USDCNY), from `[...COMMODITIES, ...FOREX_PAIRS]`. The #89 "My Commodities / Show All" default seeds from the user's saved `commodities ∪ forex_pairs` (#87 phase 2, `55df380`). Forex prices come through `/api/prices` (price-syncer syncs them since #87 phase 1). The `[symbol]` drill-down still keys off commodities only — a forex card links to a degraded drill-down; candidate for phase 3. **UPDATE 2026-09-09 (#87 phase 4, `accd468`):** closed — the `[symbol]` drill-down now resolves `FOREX_PAIRS` (real label + "You follow this") and fetches its correlated signals via a new `/api/signals?forexPair=` param that mirrors `?commodity=` against `currency_pair_impacts`.
 - **Missing Features**: TradingView embedded chart modal.
 
 ---

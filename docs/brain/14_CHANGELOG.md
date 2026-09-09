@@ -8,6 +8,46 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.36.4 — Forex pair taxonomy #87 phase 4: watchlist drill-down forex support (2026-09-09)
+
+Commit on `main`: `accd468`. `apps/web` only, no migration. Closes the
+limitation carried forward from phases 2 and 3: a followed forex pair opened a
+degraded `/watchlist/[symbol]` drill-down (raw code instead of a label, zero
+matched signals, no "You follow this").
+
+- `apps/web/app/(dashboard)/watchlist/[symbol]/page.tsx`:
+  - imports `FOREX_PAIRS` alongside `COMMODITIES`; `forexMeta = FOREX_PAIRS.find(...)`,
+    `meta = COMMODITIES.find(...) ?? forexMeta`, `isForex = Boolean(forexMeta)` —
+    so `EURUSD` resolves to label "EUR/USD" and category "forex".
+  - `isFollowed` now `myPrefs?.commodities.includes(symbol) || myPrefs?.forexPairs.includes(symbol)`
+    (`forexPairs` is the field `useMyPreferences()` already returned since phase 2).
+  - the correlated-signals fetch sends `?forexPair=${symbol}` when `isForex`, else
+    `?commodity=${symbol}` — never both.
+  - the per-signal impact chip lookup reads `ev.currencyPairImpacts?.find(...)` for
+    a forex symbol, mirroring the existing `ev.commodityImpacts.find(...)`.
+  - the "You follow this" tooltip copy generalised "commodities" → "assets".
+- `apps/web/app/api/signals/route.ts`: new **separate** `forexPair` query param
+  (`url.searchParams.get("forexPair")`). When present, adds
+  `query.contains("currency_pair_impacts", JSON.stringify([{ asset: forexPair }]))`
+  — byte-identical pattern to the `commodity` branch (same pre-stringify jsonb
+  workaround). `commodity` is untouched and keeps meaning `commodity_impacts`
+  everywhere else in the codebase.
+- No `equity_tickers` / `ticker_impacts` — equity stays gated (ADR 013 / D17).
+- Verified (Playwright + SQL, per #87's phase standard):
+  - SQL: test signal `4b96add1…` still carries
+    `currency_pair_impacts = [{EURUSD ↓},{USDJPY ↑},{USDCHF ↑}]`, `event_date`
+    2026-09-09 (inside the 90d window).
+  - API (dev server, `RATE_LIMIT_SAFE_MODE`): `?forexPair=EURUSD&window=90d` →
+    `total:1` (the tanker signal); `?commodity=USOIL&window=90d` → `total:429`
+    (unchanged); `?forexPair=USOIL` → `total:0` (no cross-match).
+  - Playwright: `/watchlist/EURUSD` renders `<h1>` "EUR/USD", "forex · Drill-Down",
+    and one correlated signal with an `EURUSD ↓` chip; `/watchlist/USOIL` renders
+    "WTI Crude", "energy · Drill-Down", USOIL signals unchanged. "You follow this"
+    badge confirmed with `user_preferences.forex_pairs = ["EURUSD"]`.
+- `pnpm --filter web tsc --noEmit` clean; the ESLint findings on both touched
+  files are all pre-existing (`no-explicit-any` in `route.ts`, the `points`
+  exhaustive-deps warning in `page.tsx`).
+
 ### v0.36.1 — Forex taxonomy #87 phase 1B: close the live-ingestion gap (2026-09-09)
 
 Commit on `main`: `abb2004`. Backend-only. Closes the gap flagged in v0.36.0:
