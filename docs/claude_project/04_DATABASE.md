@@ -116,6 +116,8 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 
 > ⚠️ UPDATED 2026-09-11 (#111, `dcdc877`) — new table `signal_chat_messages` (id, signal_id → signals, user_id → profiles, role user|assistant, content, created_at; index on `(signal_id, user_id, created_at)`; RLS select/insert own rows). Applied live via `20260911180000_signal_chat_messages.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 13b.
 
+> ⚠️ UPDATED 2026-09-11 (#121 backend half) — new table `signal_outcomes` (id, signal_id → signals, asset, predicted_direction, predicted_confidence, price_at_event, price_at_checkpoint, checkpoint_hours, actual_pct_change, actual_direction, is_directionally_correct, computed_at; unique `(signal_id, asset)`; index on `signal_id`; RLS public read, service-role write only). Applied live via `20260911190000_signal_outcomes.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 18.
+
 ---
 
 ## 3. Indexes & Performance Optimization

@@ -295,3 +295,12 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 
 - One-time `apps/backend/src/scripts/backfill-commodity-impacts.ts` (not a cron) reuses `ClaudeService.classifyEvent()` (Haiku) and writes only `commodity_impacts`.
 - Before: 767 filled / 2,057 empty. After: 1,634 filled / 1,195 empty. 201 remaining because Anthropic credit exhausted mid-run (not written; re-run after credit restore).
+
+## PHASE 15 — #121 BACKEND HALF: SIGNAL_OUTCOMES + OUTCOME-TRACKER WORKER (2026-09-11)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.49.0.
+
+- New table `signal_outcomes` (migration `20260911190000_signal_outcomes.sql`) + daily worker `apps/backend/src/workers/outcome-tracker.ts` (cron `0 5 * * *`) permanently record predicted-vs-actual commodity direction 48h after each signal's `event_date`, so a future `/accuracy` page reads stored results instead of live-recomputing against the 90-day-retained `commodity_prices` table. Public read, service-role write only.
+- Backfilled to 2,965 rows against production (1,586 signals, 298 pairs skipped for missing price data, 0 errors).
+- Caught and fixed a real bug before committing: legacy pre-#87 `EURUSD`/`USDRUB` `commodity_impacts` entries have no forex price history before 2026-09-09, so an unbounded closest-price search was clamping to a distant point and fabricating false "flat" outcomes (349 of a first-pass 3,263 rows). Fixed with a 24h max-distance guard; data wiped and re-run clean.
+- Frontend `/accuracy` page itself is still open — not part of this half.

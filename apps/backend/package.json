@@ -16,7 +16,8 @@
     "type-check": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"(lint handled at repo root)\"",
     "test": "tsx src/services/claude.service.test.ts",
-    "backfill:commodity-impacts": "tsx src/scripts/backfill-commodity-impacts.ts"
+    "backfill:commodity-impacts": "tsx src/scripts/backfill-commodity-impacts.ts",
+    "outcome-tracker:once": "tsx src/scripts/run-outcome-tracker-once.ts"
   },
   "keywords": [],
   "author": "",

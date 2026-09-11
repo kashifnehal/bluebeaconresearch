@@ -15,6 +15,7 @@ import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
 import { runRetentionJobsOnce } from "./workers/retention.js";
 import { runDigestOnce } from "./workers/digest-sender.js";
+import { runOutcomeTrackerOnce } from "./workers/outcome-tracker.js";
 import {
   buildPipelineStatus,
   recordPipelineRun,
@@ -218,6 +219,20 @@ async function main() {
       app.log.info({ res }, "retention-jobs complete");
     } catch (e) {
       app.log.error({ err: e }, "retention-jobs failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // #121 outcome tracker — daily, 05:00 UTC (after retention/sanctions so the
+  // commodity_prices series it reads is settled for the day). Writes permanent
+  // signal_outcomes rows for signals that just crossed the 48h checkpoint;
+  // signals/commodity_prices are never modified.
+  cron.schedule("0 5 * * *", async () => {
+    try {
+      const res = await runOutcomeTrackerOnce();
+      app.log.info({ res }, "outcome-tracker complete");
+    } catch (e) {
+      app.log.error({ err: e }, "outcome-tracker failed");
       Sentry.captureException(e);
     }
   });

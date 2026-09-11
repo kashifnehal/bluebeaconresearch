@@ -27,6 +27,8 @@
 > ⚠️ UPDATED 2026-09-11 (docs hygiene) — remaining markdown citations of an unused Supabase project ref were purged. Live project remains `evavcgfmemwryggdkjmx`. No code/config contained the unused ref. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.45.0. This tree: PHASE 13.
 
 > ⚠️ UPDATED 2026-09-11 (#53) — historical `commodity_impacts` backfill ran via one-time `classifyEvent()` script. Before 767 filled / 2,057 empty; after 1,634 filled / 1,195 empty. 201 rows left because Anthropic credit exhausted (live pipeline back on heuristic fallback until restored). Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.48.0. This tree: PHASE 14.
+>
+> ⚠️ UPDATED 2026-09-11 (#121 backend half) — new table `signal_outcomes` (public read, service-role write) + daily worker `outcome-tracker.ts` permanently record predicted-vs-actual commodity direction 48h after each signal, backing a future `/accuracy` page without live-recomputing against the 90-day-retained `commodity_prices` table. Backfilled to 2,965 rows against production; caught and fixed a bug where legacy pre-#87 EURUSD/USDRUB commodity_impacts entries (no forex price history before 2026-09-09) were clamping to a distant price and fabricating false "flat" outcomes. Frontend `/accuracy` page still open. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.49.0. This tree: PHASE 15.
 
 Last updated: 2026-09-11
 

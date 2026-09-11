@@ -79,6 +79,7 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 
 - `20260911063000_user_preferences_watchlist.sql` — #107 watchlist persist (`watchlist_symbols`, `watchlist_suggested`).
 - `20260911180000_signal_chat_messages.sql` — #111 (`dcdc877`). Table `signal_chat_messages` + index `(signal_id, user_id, created_at)` + RLS select/insert own rows. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` the same day (verified by inserting/selecting real chat turns, then deleting the test rows).
+- `20260911190000_signal_outcomes.sql` — #121 backend half. Table `signal_outcomes` + index on `signal_id` + RLS public-read policy (`to anon, authenticated using (true)`, no write policy). Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration`; Security Advisor re-checked after (table does not appear in the `rls_enabled_no_policy` findings, confirming the read policy took). Verified by running the worker end-to-end and manually checking 3 written rows against `commodity_prices` by hand (see `LIVE_TODO.md`).
 
 ## Cross-references
 

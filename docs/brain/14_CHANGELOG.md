@@ -8,6 +8,41 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.49.0 — #121 backend half: signal_outcomes + outcome-tracker worker (2026-09-11)
+
+New table `signal_outcomes` (`20260911190000_signal_outcomes.sql`, applied live) and
+daily worker `apps/backend/src/workers/outcome-tracker.ts` (cron `0 5 * * *`,
+registered in `workers.ts` next to retention/sanctions). Exists so the future
+`/accuracy` page reads stored results instead of live-recomputing against
+`commodity_prices`, which only retains 90 days.
+
+**Discovery:** `commodity_impacts` asset strings match `commodity_prices.symbol`
+exactly (USOIL/UKOIL/NGAS/XAUUSD/WHEAT/CORN, plus legacy pre-#87 EURUSD/USDRUB) —
+no symbol-naming mismatch. But EURUSD/USDRUB forex price history only starts
+2026-09-09, so old (August) signals carrying those legacy commodity-labeled entries
+have no real price data near their `event_date`.
+
+**Bug found and fixed during verification:** the first implementation always used
+the nearest available price point with no distance limit, so those legacy
+August-dated EURUSD/USDRUB pairs silently clamped both `price_at_event` and
+`price_at_checkpoint` to the single earliest forex price (weeks later), writing a
+fabricated 0%/"flat" outcome — 349 such rows out of a first-pass 3,263. Fixed by
+capping the closest-point search at 24h (real observed `commodity_prices` sync
+gaps top out around 18h13m); those pairs now skip and log instead of writing. Data
+was wiped and the worker re-run clean.
+
+**Production backfill (`pnpm --filter backend outcome-tracker:once`):** before 0
+rows, after **2,965 rows** — 1,586 signals processed, 298 pairs skipped (229
+EURUSD + 69 USDRUB, all missing-price-data), 0 insert errors. 1,124 correct / 1,266
+incorrect / 575 unscored (volatile/neutral predictions, correctly left NULL).
+
+**Manual verification (3 real rows, checked against `commodity_prices` by hand):**
+`de0cd7de-…` USOIL 84.95→84.4 (-0.647%, down, predicted up → false); `1a6ad900-…`
+XAUUSD 4430→4437.3 (+0.1648%, flat, predicted up → false); `fd4d0428-…` USOIL
+82.4→82.68 (+0.3398%, flat, predicted up → false). All three price points
+independently confirmed as the true nearest `commodity_prices` rows to
+`event_date`/`event_date+48h` by direct timestamp comparison.
+
 ### v0.48.0 — #53 commodity_impacts historical backfill (2026-09-11)
 
 One-time script `apps/backend/src/scripts/backfill-commodity-impacts.ts` (not a

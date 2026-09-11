@@ -221,6 +221,16 @@ Service-role only (RLS enabled, no policy — correct by design).
 - `total_events` (`int`, nullable) / `accuracy_pct` / `avg_move_pct` (`double precision`, nullable)
 - `computed_at` (`timestamptz`, NOT NULL, default `now()`) / `expires_at` (`timestamptz`, NOT NULL)
 
+### Table 18: `signal_outcomes` (#121 backend half, migration `20260911190000_signal_outcomes.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-11)
+Permanent, never-live-recomputed outcome record — one row per (signal, asset) pair, written once by `outcome-tracker.ts` and never rewritten. Public read (backs a public `/accuracy` page — aggregate/factual, not personal data); service-role write only, same "RLS enabled + no anon/authenticated write policy" pattern as `service_health_events`.
+- `id` (`uuid`, PK) / `signal_id` (`uuid`, NOT NULL, FK → `signals.id` ON DELETE CASCADE) / `asset` (`text`, NOT NULL)
+- `predicted_direction` (`text`, NOT NULL, check in `up`/`down`/`volatile`/`neutral` — copied verbatim from that signal's `commodity_impacts[].direction`, never re-derived)
+- `predicted_confidence` (`numeric`, nullable) / `price_at_event` (`numeric`, NOT NULL) / `price_at_checkpoint` (`numeric`, NOT NULL) / `checkpoint_hours` (`int`, NOT NULL, default `48`)
+- `actual_pct_change` (`numeric`, NOT NULL) / `actual_direction` (`text`, NOT NULL, check in `up`/`down`/`flat`; `flat` if `abs(actual_pct_change) < 0.5`)
+- `is_directionally_correct` (`boolean`, nullable — **NULL for `volatile`/`neutral` predictions**, only `up`/`down` predictions are scored true/false)
+- `computed_at` (`timestamptz`, NOT NULL, default `now()`); **UNIQUE** `(signal_id, asset)`; index on `signal_id`.
+- Populated by looking up the `commodity_prices` row closest to `event_date` and the row closest to `event_date + checkpoint_hours` for that asset symbol (binary search over that asset's full price series, loaded once per worker run — not one query per pair). If the closest available point is more than 24h from its target (the largest real `commodity_prices` sync gap observed is ~18h13m), the pair is skipped rather than written with a fabricated/clamped price — this matters concretely for the legacy pre-#87 `EURUSD`/`USDRUB` entries some old `commodity_impacts` rows still carry, since those forex symbols only have price history from 2026-09-09 onward.
+
 **Known drift corrected 2026-08-27** — the previous version of this section stated these, all of which were wrong against the live DB:
 - `alert_rules.channels` default was documented as `'{telegram}'`; it is actually `'{email}'`. This is the most misleading of the set, since it describes what a newly created rule does by default.
 - `profiles` was missing `product_tour_completed`; `signals` was missing both `event_date` and `shipping_proximity`; `alert_rules` was missing `frequency`, `created_at`, `updated_at`, and `last_triggered_at`.

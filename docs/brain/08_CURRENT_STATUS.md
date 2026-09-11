@@ -2,9 +2,23 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (#53 commodity_impacts backfill ran — see `14_CHANGELOG.md` v0.48.0)
+Last updated: 2026-09-11 (#121 backend half — signal_outcomes + outcome-tracker worker — see `14_CHANGELOG.md` v0.49.0)
 
 ---
+
+## #121 backend half — signal_outcomes + outcome-tracker worker (2026-09-11)
+
+`apps/backend`. Full record: `14_CHANGELOG.md` v0.49.0, `LIVE_TODO.md`.
+
+New table `signal_outcomes` (public read, service-role write) + daily worker
+`outcome-tracker.ts` that permanently records predicted-vs-actual commodity
+direction 48h after each signal's `event_date`, so a future `/accuracy` page can
+read stored results instead of live-recomputing against the 90-day-retained
+`commodity_prices` table. Backfilled to 2,965 rows against production. Caught and
+fixed a real bug pre-commit: legacy pre-#87 `EURUSD`/`USDRUB` commodity_impacts
+entries have no forex price history before 2026-09-09, so without a max-distance
+guard the worker was clamping to a distant price point and fabricating false "flat"
+outcomes — now skipped and logged instead. Frontend `/accuracy` page is still open.
 
 ## AI signal chat — feature complete (2026-09-11)
 
