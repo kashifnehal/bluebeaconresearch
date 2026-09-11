@@ -75,6 +75,11 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 3. **Update `docs/brain/14_CHANGELOG.md` and `08_CURRENT_STATUS.md` only after step 1 confirms it's live** — not when the migration file is written, not when the push command exits 0. The 008 incident's changelog entry claimed success before verification; that's the exact mistake to not repeat.
 4. **If the environment applying the migration has no CLI link and no DB access** (the common case for an unattended agent session in this project), the migration file should still be written and committed, but the changelog entry must say "written, not yet applied — needs founder to run via SQL editor or `supabase db push`" rather than claiming it's live. Flag it, don't assume it.
 
+## Applied since this file was written (append-only)
+
+- `20260911063000_user_preferences_watchlist.sql` — #107 watchlist persist (`watchlist_symbols`, `watchlist_suggested`).
+- `20260911180000_signal_chat_messages.sql` — #111 (`dcdc877`). Table `signal_chat_messages` + index `(signal_id, user_id, created_at)` + RLS select/insert own rows. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` the same day (verified by inserting/selecting real chat turns, then deleting the test rows).
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.

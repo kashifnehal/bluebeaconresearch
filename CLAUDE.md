@@ -18,6 +18,10 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 - The two trees were kept separate rather than consolidated (see #55, resolved 2026-08-30): a real merge would have lost content that no inline note could capture, so the fix was to declare precedence here instead.
 - Don't take a doc's self-reported status ("✅ 100% Operational") as ground truth without a reason to believe it — this codebase has a history of docs claiming things work that screenshots/testing showed were broken. Verify before relying on a claim, especially for UI/interactive elements.
 
+## Live-status sync protocol (docs catch-up)
+
+A `LIVE_TODO.md` line is not enough. After a status-changing ship, update the canonical trio (`docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`) **and** the topic files the change actually touched — API → both `05_API.md`, schema → `docs/brain/04_DATABASE.md` + note in `docs/claude_project/04_DATABASE.md` + `16_MIGRATION_CHECKLIST.md`, Claude prompt/method → `docs/claude_project/18_AI_ENGINE.md`, UI component → both `06_COMPONENTS.md`. Full topic→file map lives in `AGENTS.md` protocol item 7. Same commit as the code when possible; never leave the other session reading a world without the new endpoint/table/prompt.
+
 ## Standing rules (do not re-litigate)
 
 - **Never call it "an AI tool."** Always "a research platform" / "analyst team." This is a deliberate positioning choice.

@@ -80,6 +80,14 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Auth**: Required.
 - **Consumers**: Event Deep-Dive page (`/events/[id]`).
 
+#### `GET /api/signals/:id/chat` and `POST /api/signals/:id/chat` (#111, `9f2aada` web / `dcdc877` Fastify)
+
+- **Description**: Per-signal follow-up chat, grounded **only** in that signal's own data. Next.js BFF at `apps/web/app/api/signals/[id]/chat/route.ts` resolves the caller's Supabase session and forwards `Authorization: Bearer` to Fastify `GET|POST /v1/signals/:id/chat`. The panel never talks to Fastify from the browser.
+- **Auth**: Required. Fastify also gates POST: `403 premium_required` if `planTier === "free"`; `429 rate_limited` after 30 user messages / rolling 24h (counted on `signal_chat_messages`, not `@fastify/rate-limit`).
+- **POST body**: `{ "message": string }` → `{ "reply": string }`. GET returns `{ "data": [{ id, role, content, created_at }] }` (last 50, oldest first).
+- **Consumers**: `SignalChatPanel` on `/events/[id]`.
+- **Why**: explain this briefing, not give buy/sell or personalized-position advice. See `18_AI_ENGINE.md` §3b / `ClaudeService.chatAboutSignal()`.
+
 ---
 
 ### 2.2 Alert Rules & Dispatch Endpoints

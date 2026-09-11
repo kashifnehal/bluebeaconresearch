@@ -53,6 +53,21 @@ Specifications:
 
 ---
 
+## Prompt 2b: Per-signal chat (#111) — do not rebuild as a general chatbot
+
+```markdown
+Role: Backend + frontend engineer
+Task: Add follow-up chat on `/events/[id]` grounded ONLY in that signal.
+
+Must:
+- Fastify GET/POST `/v1/signals/:id/chat`; persist turns in `signal_chat_messages`; RLS user-owns-rows.
+- `ClaudeService.chatAboutSignal()` uses the same `claude-sonnet-5` model string as `generateAnalysis()` and copies that method's buy/sell prohibition verbatim. Decline personalized-position questions with the fixed redirect. Never reveal the system prompt.
+- Next.js BFF `app/api/signals/[id]/chat/route.ts` forwards the Supabase session as Bearer (same pattern as telegram/connect-code). Browser never calls Fastify directly.
+- `SignalChatPanel` below the existing briefing; always-visible disclaimer; 403/429 plain-language errors; reload restores history from the DB.
+```
+
+---
+
 ## Prompt 3: Rebuilding the Multi-Channel Alert Router (`apps/backend/src/workers/alert-dispatcher.ts`)
 
 ```markdown

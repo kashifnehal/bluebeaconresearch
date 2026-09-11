@@ -182,6 +182,17 @@ Per-user feed and notification settings, distinct from `profiles` (account/billi
 - `note` (`text`, nullable) / `created_at` (`timestamptz`, NOT NULL, default `now()`)
 - **Unique Constraint**: `UNIQUE(user_id, signal_id)`
 
+### Table 13b: `signal_chat_messages` (#111, migration `20260911180000_signal_chat_messages.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-11, `dcdc877`)
+Per-user, per-signal chat turns. Grounded only in that signal — see `ClaudeService.chatAboutSignal()`.
+- `id` (`uuid`, PK, default `gen_random_uuid()`)
+- `signal_id` (`uuid`, NOT NULL, FK `signals.id` ON DELETE CASCADE)
+- `user_id` (`uuid`, NOT NULL, FK `profiles.id` ON DELETE CASCADE)
+- `role` (`text`, NOT NULL, check: `'user'` | `'assistant'`)
+- `content` (`text`, NOT NULL)
+- `created_at` (`timestamptz`, NOT NULL, default `now()`)
+- **Index**: `(signal_id, user_id, created_at)`
+- **RLS**: same user-owns-their-rows convention as `alert_rules` / `watchlist_entries` / `saved_signals` — `select`/`insert` where `user_id = auth.uid()`. Fastify writes via the service-role client (bypasses RLS); the policies exist so a user-scoped key cannot read someone else's chat.
+
 ### Table 14: `subscriptions`
 - `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL)
 - `stripe_subscription_id` (`text`, nullable, **UNIQUE**) / `stripe_price_id` (`text`, nullable)

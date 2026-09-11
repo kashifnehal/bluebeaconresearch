@@ -2,6 +2,8 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
+> ⚠️ UPDATED 2026-09-11 — live Claude prompts for classification, briefing (#120), and per-signal chat (#111 `chatAboutSignal`) live in `claude.service.ts`. Spec + what/why/how for chat is `docs/claude_project/18_AI_ENGINE.md` §3b. This file is reusable IDE/marketing prompts, not the runtime prompt source of truth.
+
 **Classification: Internal — CTO Level**
 **Includes:** Cursor/Antigravity IDE prompts, Claude AI signal prompts, marketing prompts
 

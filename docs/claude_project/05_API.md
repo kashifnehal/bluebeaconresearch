@@ -198,6 +198,27 @@ Returns single signal with full detail. Auth required.
 
 ---
 
+#### GET /v1/signals/:id/chat  (#111, `dcdc877`)
+Returns this user's last 50 chat turns for this signal, oldest first. Auth required (`requireUser`). Rows live in `signal_chat_messages` (RLS: user owns their rows; the Fastify route uses the service-role client).
+
+**Response 200:** `{ "data": [{ "id", "role": "user"|"assistant", "content", "created_at" }] }`
+
+---
+
+#### POST /v1/signals/:id/chat  (#111, `dcdc877`)
+Sends one follow-up question about **this signal only**. Auth required. Body: `{ "message": string }` (1–2000 chars).
+
+Gates (in order):
+- `planTier === "free"` → `403 { "error": "premium_required" }` (today every user defaults to `pro`, so this passes; the check is already correct for when billing tiers exist)
+- 30 user-role messages / rolling 24h, counted from `signal_chat_messages` (no extra rate-limit library) → `429 { "error": "rate_limited" }`
+- Missing signal → `404 { "error": "Not found" }`
+
+Then: insert user row → `ClaudeService.chatAboutSignal()` (`claude-sonnet-5`, last 10 prior turns, grounded only in this signal's title/summary/`ai_analysis`/impacts/severity/confidence/sources_count/event_date) → insert assistant row → `{ "reply": string }`.
+
+**Why this shape:** the event-page chat must never become general market advice. Same buy/sell prohibition as `generateAnalysis()` (#120), plus an explicit refusal of personalized-position questions ("I hold 200 barrels…"). Web UI never calls Fastify directly — see §6 `signals/[id]/chat/route.ts`.
+
+---
+
 #### GET /v1/signals/stream (SSE)
 Server-Sent Events stream of new signals. Auth required. Analyst+ plan.
 
@@ -598,6 +619,10 @@ These are Next.js API routes, not the Fastify backend. They act as a thin proxy/
 ```
 apps/web/app/api/
 ├── signals/route.ts          → proxies GET /v1/signals
+├── signals/[id]/route.ts     → event-detail payload (reads Supabase directly)
+├── signals/[id]/chat/route.ts → #111 BFF: GET+POST, forwards the caller's Supabase
+│                                session as Bearer to Fastify `/v1/signals/:id/chat`
+│                                (same auth-forwarding pattern as telegram/connect-code)
 ├── events/stream/route.ts    → SSE handler (polls Supabase directly)
 ├── prices/route.ts           → proxies GET /v1/prices
 ├── alerts/route.ts           → proxies /v1/alerts/*

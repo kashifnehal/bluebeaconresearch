@@ -76,6 +76,17 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Props**: `{ symbol: string; impact: 'BULLISH' | 'BEARISH' | 'VOLATILE' }`
 - **Styling**: Pill tag with directional arrow icon (`TrendingUp` green, `TrendingDown` red).
 
+### 3.4 `SignalQuickView.tsx` (#122)
+- **Purpose**: Desktop-only right-half slide-over preview of a feed row.
+- **Parent**: Intelligence Feed stream.
+
+### 3.5 `SignalChatPanel.tsx` (#111, `9f2aada`)
+- **Purpose**: Follow-up questions about **this** signal only, on the event detail page.
+- **Props**: `{ signalId: string }`
+- **Parent**: `(dashboard)/events/[id]/page.tsx` — mounted below Full Analyst Briefing / Impact Breakdown (those sections untouched).
+- **How**: GET `/api/signals/:id/chat` on mount (empty state: "Ask a question about this signal to get started"); POST on send with optimistic user bubble + rollback on failure. Loading spinner reuses #108's `progress_activity` + `animate-spin`. Always-visible disclaimer under the input (not a tooltip). Plain-language copy for `403 premium_required` / `429 rate_limited`.
+- **Why**: explain the briefing, never buy/sell or personalized-position advice. History is server-backed (`signal_chat_messages`); a page reload must restore the conversation.
+
 ---
 
 ## 4. Primitives & UI Component Suite (`apps/web/components/ui`)

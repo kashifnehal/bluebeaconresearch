@@ -114,6 +114,8 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 
 > This tree's DB doc lists only the core tables; `docs/brain/04_DATABASE.md` is regenerated from `information_schema` and is authoritative for the full schema.
 
+> ⚠️ UPDATED 2026-09-11 (#111, `dcdc877`) — new table `signal_chat_messages` (id, signal_id → signals, user_id → profiles, role user|assistant, content, created_at; index on `(signal_id, user_id, created_at)`; RLS select/insert own rows). Applied live via `20260911180000_signal_chat_messages.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 13b.
+
 ---
 
 ## 3. Indexes & Performance Optimization
