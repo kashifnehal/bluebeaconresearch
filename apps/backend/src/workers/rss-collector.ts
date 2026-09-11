@@ -35,6 +35,8 @@ const MAX_ARTICLE_AGE_MS = 4 * 60 * 60 * 1000;
 
 type RssFeed = { url: string; label: string; tier: FeedTier };
 
+/** Coverage line (#126) reads `CONFIGURED_RSS_FEED_COUNT` from packages/shared —
+ *  keep that constant equal to this array's length when adding/removing feeds. */
 const RSS_FEEDS: RssFeed[] = [
   // ── World / geopolitical ──
   { url: "https://feeds.bbci.co.uk/news/world/rss.xml", label: "BBC World", tier: "world" },
@@ -58,6 +60,8 @@ const RSS_FEEDS: RssFeed[] = [
   { url: "https://www.investing.com/rss/news.rss", label: "Investing.com", tier: "finance" },
   { url: "https://oilprice.com/rss/main", label: "OilPrice", tier: "finance" },
 ];
+
+export const RSS_FEED_COUNT = RSS_FEEDS.length;
 
 export async function runRssCollectorOnce() {
   const supabase = getSupabaseAdmin();
@@ -116,7 +120,7 @@ export async function runRssCollectorOnce() {
 
   if (feedsFailed > 0) {
     console.error(
-      `[RSS] ${feedsFailed}/${RSS_FEEDS.length} feeds failed this cycle: ${failedFeeds.join(", ")}`,
+      `[RSS] ${feedsFailed}/${RSS_FEED_COUNT} feeds failed this cycle: ${failedFeeds.join(", ")}`,
     );
   }
 

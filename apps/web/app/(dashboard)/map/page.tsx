@@ -12,6 +12,7 @@ import { MapSignalPopup } from "@/components/map/MapSignalPopup";
 import { FilterBar } from "@/components/signals/FilterBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
+import { FreshTag } from "@/components/signals/FreshTag";
 import {
   BASEMAP_TILE_URL,
   BASEMAP_TILE_URLS,
@@ -938,6 +939,10 @@ export default function MapPage() {
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)}{" "}
                       ago
                     </span>
+                    <FreshTag
+                      createdAt={signal.createdAt}
+                      className="font-mono text-[9px] text-primary"
+                    />
                   </div>
                   <p className="text-[11px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2 group-hover:text-primary transition-colors">
                     {signal.title}

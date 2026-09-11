@@ -6,9 +6,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function compactRelative(formatted: string): string {
+  return formatted
+    .replace(/\s+seconds?( ago)?$/i, "s$1")
+    .replace(/\s+minutes?( ago)?$/i, "m$1")
+    .replace(/\s+hours?( ago)?$/i, "h$1")
+    .replace(/\s+days?( ago)?$/i, "d$1")
+    .replace(/\s+months?( ago)?$/i, "mo$1")
+    .replace(/\s+years?( ago)?$/i, "y$1");
+}
+
 export function safeFormatDistanceToNow(
   dateInput: any,
-  options?: { addSuffix?: boolean },
+  options?: { addSuffix?: boolean; compact?: boolean },
 ): string {
   if (!dateInput) return "recently";
   try {
@@ -19,7 +29,9 @@ export function safeFormatDistanceToNow(
     if (!(d instanceof Date) || isNaN(d.getTime())) {
       return "recently";
     }
-    return formatDistanceToNowStrict(d, options);
+    const { compact, addSuffix } = options ?? {};
+    const formatted = formatDistanceToNowStrict(d, { addSuffix });
+    return compact ? compactRelative(formatted) : formatted;
   } catch {
     return "recently";
   }

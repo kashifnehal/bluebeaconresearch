@@ -4,6 +4,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { CommodityChip } from "@/components/signals/CommodityChip";
+import { FreshTag } from "@/components/signals/FreshTag";
 
 export function MapSignalPopup({
   signal,
@@ -72,6 +73,7 @@ export function MapSignalPopup({
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 font-mono text-[10px] text-on-surface-variant uppercase tracking-wider">
+          <FreshTag createdAt={signal.createdAt} className="text-primary normal-case tracking-normal" />
           <span>{timeAgo} ago</span>
           <span>
             {signal.sourcesCount ?? 1} source

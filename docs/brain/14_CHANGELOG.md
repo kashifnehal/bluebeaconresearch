@@ -8,6 +8,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.43.0 — Freshness tags, coverage line, calendar filters (#126 #127) (2026-09-11)
+
+- **#126 Trust/freshness** — Signal cards (Intelligence Feed + map popup/list) show a `Fresh Xm` tag from that row's `created_at` via the existing `safeFormatDistanceToNow` helper (compact units). Feed header coverage line is live-queried: distinct `raw_events` outlet values (`raw_data.source` string / `raw_data.source.name` / `raw_data.domain`) on signals from the last 24h, plus `CONFIGURED_RSS_FEED_COUNT` (13, matching `RSS_FEEDS.length` in `rss-collector.ts`) and the configured GNews + GDELT + ACLED ingest paths. No estimated numbers.
+- **#127 Calendar filters (half)** — `/calendar` gains importance / country / category / timezone (UTC vs local) controls. Times in `economic-calendar.json` are already UTC (`HH:MM` + `Z`); local only converts for display. FilterBar itself was not reused (its value shape is commodity/region/severity/window); selects reuse `SELECT_CLASSES` and the timezone toggle reuses the FilterBar button-group look. Map chokepoint/pipeline layers still gated.
+
 ### v0.42.0 — Signal quick-view slide-over (#122 #123) (2026-09-11)
 
 - **#122 Quick-view panel** — Intelligence Feed stream rows (`chevron_right` → `/events/[id]`) gain a desktop-only preview icon. It opens a right-half slide-over with title, severity, confidence, commodity impacts, and a short excerpt of `aiAnalysis` from the existing `/api/signals` payload. Overlay click and X close it. Discoverability is a new Joyride dashboard step (`data-tour="quick-view"`), not a new DB flag — the tour already persists completion on `profiles.product_tour_completed`.

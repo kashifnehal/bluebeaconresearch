@@ -2,9 +2,16 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (signal quick-view slide-over — see `14_CHANGELOG.md` v0.42.0)
+Last updated: 2026-09-11 (freshness tags + calendar filters — see `14_CHANGELOG.md` v0.43.0)
 
 ---
+
+## Freshness tags + calendar filters (2026-09-11)
+
+`apps/web` (+ `RSS_FEED_COUNT` export on the RSS collector). Full record: `14_CHANGELOG.md` v0.43.0, `LIVE_TODO.md`.
+
+- **#126** — `Fresh Xm` on feed/map signal cards from `created_at`. Coverage line on the Intelligence Feed queries distinct last-24h outlets and states the configured 13 RSS feeds + GNews + GDELT + ACLED.
+- **#127 calendar half** — importance / country / category / timezone filters on `/calendar`. Map layers still gated.
 
 ## Signal quick-view slide-over (2026-09-11)
 

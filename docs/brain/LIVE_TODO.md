@@ -4,6 +4,8 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
+- #126 Trust/freshness signals — shipped 2026-09-11. `Fresh Xm` tag on feed cards (featured / secondary / stream), `SignalCard`, map popup, and map list, from `signals.created_at` via existing `safeFormatDistanceToNow` (compact). Coverage line on Intelligence Feed: live distinct outlets last 24h + 13 configured RSS feeds (`RSS_FEEDS.length`) + GNews/GDELT/ACLED. Outlet field is `raw_events.raw_data.source` (RSS string / GNews `.name`) or `raw_data.domain` (GDELT); `signals` has no source/outlet column. Same-session check: `/api/signals/source-stats` returned `sourcesLast24h: 41, rssFeedCount: 13`; matching Supabase SQL on `evavcgfmemwryggdkjmx` returned `distinct_outlets: 41` (39 signals in the window).
+- #127 Economic calendar filters (calendar half) — shipped 2026-09-11. Importance / country / category / timezone on `/calendar`. Did not mount `FilterBar` (feed-shaped value); reused `SELECT_CLASSES` + FilterBar-style timezone buttons. JSON times are UTC; local is display-only conversion. Filter helper vs JSON: 10 events → United States 5, medium 1, Monetary policy 6, low 0. Map chokepoint/pipeline layers still gated.
 - #122 Quick-view slide-over — shipped 2026-09-11. Intelligence Feed stream rows get a desktop-only preview icon before the existing `>`. Click opens a right-half slide-over (title, severity, confidence, commodity impacts, short `aiAnalysis` excerpt from `/api/signals`; no new API fields). Closes on overlay click or X. Discoverability: added a Joyride step targeting the new icon (reuses `product_tour_completed`, no new column) — smaller than a one-time tooltip + migration. Playwright on romantannison: panel matched the El Niño row (severity 7, 85% confidence, WHEAT/CORN/NGAS/USOIL impacts, briefing excerpt); overlay and X both close it.
 - #123 New tab only on quick-view "View full details" — shipped 2026-09-11 with #122. Feed row, Map popup, and Alerts signal-stream links left same-tab. The panel's "View full details" is a real `<a target="_blank" rel="noopener noreferrer">`. Playwright: row click stayed one tab at `/events/{id}`; the panel link opened a new already-logged-in event tab while the original stayed on `/dashboard`.
 - #119 Onboarding GIF/video step — shipped 2026-09-11. Welcome modal before the existing 6 Joyride steps (`WelcomeTourStep`, `tourPhase: "welcome"`). Placeholder `/onboarding/welcome-demo.gif` (`<img>` for gif, looping muted autoplay `<video>` for mp4). Caption "See how it works"; "Got it, show me around" advances into the tour; "Skip tour" still persists `product_tour_completed`. Type-check only for the UI (no Playwright in `apps/web`). Real GIF still needs recording.
@@ -315,11 +317,10 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   closed 2026-09-11 (see "Closed, verified").
 - #125 Trader-role saved views (Oil Desk/Grain Desk/Metals Desk) — closed 2026-09-11 (see
   "Closed, verified").
-- #126 Trust/freshness signals (coverage footer + "Fresh Xm" tag) — scoped, pairs with
-  #115/#121.
+- #126 Trust/freshness signals (coverage footer + "Fresh Xm" tag) — closed 2026-09-11 (see "Closed, verified").
 - #127 Economic calendar filters (importance/country/category/timezone) on the existing
-  /calendar page (#86) + chokepoint/pipeline map layers — calendar half ready to scope; map
-  layers gated on a real data-vendor cost check.
+  /calendar page (#86) — calendar half closed 2026-09-11 (see "Closed, verified"). Map
+  chokepoint/pipeline layers still gated on a real data-vendor cost check.
 - #128 Human-review trust layer — Stage 1 is a founder action (stand up the real review
   process); Stages 2-3 become a normal prompt once Stage 1 is real. Do not add "human-
   reviewed" language to the product before Stage 1 is real.

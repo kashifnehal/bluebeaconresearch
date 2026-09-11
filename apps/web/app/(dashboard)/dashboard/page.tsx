@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { FilterBar } from "@/components/signals/FilterBar";
 import { SignalQuickView } from "@/components/signals/SignalQuickView";
+import { FreshTag } from "@/components/signals/FreshTag";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
@@ -63,6 +64,24 @@ export default function DashboardPage() {
   // 10 and pulls the next API page once the current pages are exhausted.
   const [streamCount, setStreamCount] = useState(10);
   const [quickViewSignal, setQuickViewSignal] = useState<Signal | null>(null);
+  const [coverageLine, setCoverageLine] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/signals/source-stats")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { sourcesLast24h?: number; rssFeedCount?: number } | null) => {
+        if (cancelled || !d) return;
+        if (typeof d.sourcesLast24h !== "number" || typeof d.rssFeedCount !== "number") return;
+        setCoverageLine(
+          `Last 24h: signals from ${d.sourcesLast24h} sources across ${d.rssFeedCount} RSS feeds + GNews + GDELT + ACLED.`,
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const applyDesk = (id: DeskPresetId) => {
     const preset = DESK_PRESETS[id];
@@ -197,6 +216,15 @@ export default function DashboardPage() {
           >
             Real-time global signal monitoring
           </p>
+          {coverageLine ? (
+            <p
+              data-testid="coverage-line"
+              className="text-[11px] mt-2"
+              style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
+            >
+              {coverageLine}
+            </p>
+          ) : null}
         </div>
 
         <IngestionStatusBanner />
@@ -380,18 +408,28 @@ export default function DashboardPage() {
                         ID: {featured.id.slice(0, 8).toUpperCase()}
                       </span>
                     </div>
-                    <span
-                      className="text-[10px] uppercase tracking-widest"
-                      style={{
-                        fontFamily: "'JetBrains Mono', monospace",
-                        color: "#86948a",
-                      }}
-                    >
-                      {safeFormatDistanceToNow(
-                        featured.eventDate ?? featured.createdAt,
-                      ).toUpperCase()}{" "}
-                      AGO
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="text-[10px] uppercase tracking-widest"
+                        style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          color: "#86948a",
+                        }}
+                      >
+                        {safeFormatDistanceToNow(
+                          featured.eventDate ?? featured.createdAt,
+                        ).toUpperCase()}{" "}
+                        AGO
+                      </span>
+                      <FreshTag
+                        createdAt={featured.createdAt}
+                        className="text-[10px]"
+                        style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          color: "#4edea3",
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <div className="flex flex-col lg:flex-row gap-8 items-end">
@@ -500,12 +538,22 @@ export default function DashboardPage() {
                           color: "#86948a",
                         }}
                       >
-                        <span>
-                          {safeFormatDistanceToNow(
-                            secondaryA.eventDate ?? secondaryA.createdAt,
-                          ).toUpperCase()}{" "}
-                          AGO
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span>
+                            {safeFormatDistanceToNow(
+                              secondaryA.eventDate ?? secondaryA.createdAt,
+                            ).toUpperCase()}{" "}
+                            AGO
+                          </span>
+                          <FreshTag
+                            createdAt={secondaryA.createdAt}
+                            className="text-[10px]"
+                            style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              color: "#4edea3",
+                            }}
+                          />
+                        </div>
                         <span className="text-[#4edea3] font-bold">
                           {secondaryA.country}
                         </span>
@@ -579,12 +627,22 @@ export default function DashboardPage() {
                           color: "#86948a",
                         }}
                       >
-                        <span>
-                          {safeFormatDistanceToNow(
-                            secondaryB.eventDate ?? secondaryB.createdAt,
-                          ).toUpperCase()}{" "}
-                          AGO
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span>
+                            {safeFormatDistanceToNow(
+                              secondaryB.eventDate ?? secondaryB.createdAt,
+                            ).toUpperCase()}{" "}
+                            AGO
+                          </span>
+                          <FreshTag
+                            createdAt={secondaryB.createdAt}
+                            className="text-[10px]"
+                            style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              color: "#4edea3",
+                            }}
+                          />
+                        </div>
                         <span className="text-[#4edea3] font-bold">
                           {secondaryB.country}
                         </span>
@@ -700,6 +758,14 @@ export default function DashboardPage() {
                       >
                         {safeFormatDistanceToNow(item.eventDate ?? item.createdAt)}
                       </div>
+                      <FreshTag
+                        createdAt={item.createdAt}
+                        className="text-[11px] shrink-0"
+                        style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          color: "#4edea3",
+                        }}
+                      />
                       <div
                         className="flex-1 font-semibold transition-colors group-hover:text-[#4edea3]"
                         style={{

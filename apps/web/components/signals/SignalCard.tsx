@@ -6,6 +6,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 
 import { SeverityBadge } from "./SeverityBadge";
 import { CommodityChip } from "./CommodityChip";
+import { FreshTag } from "./FreshTag";
 
 export function SignalCard({
   signal,
@@ -41,6 +42,7 @@ export function SignalCard({
           </span>
         </div>
         <div className="flex items-center gap-2 text-outline text-xs">
+          <FreshTag createdAt={signal.createdAt} className="text-primary font-mono" />
           <span>{timeAgo}</span>
           <span>{signal.sourcesCount} sources</span>
           {variant === "feed" ? (
