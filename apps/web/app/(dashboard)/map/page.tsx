@@ -544,6 +544,9 @@ export default function MapPage() {
         if (symbols.length > 0) params.set("commodity", symbols.join(","));
         if (filters.window) params.set("window", filters.window);
         else params.set("window", "all");
+        // Default /api/signals page is 20; All / This month need the real matching
+        // set, not the first page. API rowLimit is capped at 500.
+        params.set("limit", "500");
 
         const res = await fetch(`/api/signals?${params.toString()}`);
         if (!res.ok) return;

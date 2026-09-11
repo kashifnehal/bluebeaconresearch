@@ -159,13 +159,13 @@ export async function GET(req: NextRequest) {
     const sort = url.searchParams.get("sort") ?? "severity";
     const window =
       url.searchParams.get("window") ?? url.searchParams.get("range");
-    // Optional row-count override (e.g. the map's tension-index sparkline needs more
-    // than the default 20 to bucket a 24h window) — capped, and defaults to the
-    // original hardcoded 20 so every existing caller that omits it is unaffected.
+    // Optional row-count override (e.g. the map's filter fetch and tension-index
+    // sparkline need more than the default 20). Capped at 500 (map "All" / "This
+    // month"); callers that omit `limit` still get the original 20.
     const limitParam = Number(url.searchParams.get("limit"));
     const rowLimit =
       Number.isFinite(limitParam) && limitParam > 0
-        ? Math.min(100, Math.floor(limitParam))
+        ? Math.min(500, Math.floor(limitParam))
         : 20;
 
     // Page-based pagination (additive — every existing caller omits `page`, so
