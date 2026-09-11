@@ -4,6 +4,7 @@ import { rateLimitOrPass } from "@/lib/ratelimit";
 import { dedupeSignalsByTitle } from "@/lib/dedupe-signals";
 import { REGIONS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
+import { expandRegionVariants } from "@/lib/signal-filters";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -182,23 +183,31 @@ export async function GET(req: NextRequest) {
       .from("signals")
       .select("*, event_date", { count: "exact" });
     if (severity) query = query.gte("severity", Number(severity));
-    if (region) query = query.eq("region", region);
-    if (commodity)
-      // supabase-js's .contains() mis-serializes a raw array-of-objects value for a
-      // jsonb column (produces `[{...` PostgREST can't parse: "invalid input syntax
-      // for type json" / Postgres code 22P02) — pre-stringifying the containment
-      // value is what actually works, confirmed against the live DB.
-      query = query.contains(
-        "commodity_impacts",
-        JSON.stringify([{ asset: commodity }]),
-      );
-    if (forexPair)
-      // Same jsonb-containment workaround as the commodity branch above, against
-      // the currency_pair_impacts column (#87 watchlist forex drill-down).
-      query = query.contains(
-        "currency_pair_impacts",
-        JSON.stringify([{ asset: forexPair }]),
-      );
+    if (region) {
+      const variants = expandRegionVariants(region);
+      query =
+        variants.length > 1
+          ? query.in("region", variants)
+          : query.eq("region", region);
+    }
+    // Commodity may be a single symbol or a comma-separated desk preset
+    // (USOIL,UKOIL,NGAS). FX symbols also live on currency_pair_impacts, so
+    // every asset is OR'd against both jsonb columns.
+    const assetSymbols = [
+      ...new Set(
+        [commodity, forexPair]
+          .flatMap((raw) => (raw ? raw.split(",") : []))
+          .map((s) => s.trim())
+          .filter((s) => /^[A-Z0-9]+$/.test(s)),
+      ),
+    ];
+    if (assetSymbols.length > 0) {
+      const parts = assetSymbols.flatMap((sym) => [
+        `commodity_impacts.cs.[{"asset":"${sym}"}]`,
+        `currency_pair_impacts.cs.[{"asset":"${sym}"}]`,
+      ]);
+      query = query.or(parts.join(","));
+    }
 
     // Personalized "My Feed" (#81) — opt-in via ?personalized=true, default OFF.
     // Narrows the feed to signals overlapping the user's saved commodities/regions.
@@ -264,8 +273,11 @@ export async function GET(req: NextRequest) {
     const sevenDaysAgo = new Date(
       Date.now() - 7 * 24 * 60 * 60 * 1000,
     ).toISOString();
+    const thirtyDaysAgo = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
 
-    // Generic "<N>d" windows (e.g. "90d") beyond the built-in 24h/7d shortcuts —
+    // Generic "<N>d" windows (e.g. "90d") beyond the built-in 24h/7d/30d shortcuts —
     // used by the watchlist commodity drill-down to match its price-chart range.
     const genericDaysMatch = window?.match(/^(\d+)d$/);
 
@@ -273,6 +285,8 @@ export async function GET(req: NextRequest) {
       query = query.eq("is_active", true);
     } else if (window === "7d") {
       query = query.gte("event_date", sevenDaysAgo);
+    } else if (window === "30d") {
+      query = query.gte("event_date", thirtyDaysAgo);
     } else if (window === "24h") {
       query = query.gte("event_date", twentyFourHoursAgo);
     } else if (window === "all") {

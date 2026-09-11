@@ -307,9 +307,16 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #123 Event pages in a new tab — scope narrowed after UX research to just the quick-view
   panel's "View full details" link; founder decision still open on final scope.
 - #124 Feed filter bar (Commodity/Region/Severity/Time range) + shared FilterBar component —
-  scoped, ready to prompt.
-- #125 Trader-role saved views (Oil Desk/Grain Desk/Metals Desk) — scoped, sequence after
-  #124.
+  shipped 2026-09-11, NOT independently verified in the UI. Playwright could not log in to
+  `/dashboard` (redirected to `/login`; no standing-account password in this environment).
+  Do not treat as Closed, verified. API-level checks on the local `/api/signals` path did
+  pass: unfiltered total 2819 → USOIL 476; `region=middle-east` and `region=Middle East`
+  both returned 184; `window=30d` returned 2626 (between 7d=368 and all=2819). Map page
+  Playwright: FilterBar rendered, "This month" fired `/api/signals?...window=30d`.
+- #125 Trader-role saved views (Oil Desk/Grain Desk/Metals Desk) — shipped with #124 on the
+  feed page only, NOT independently verified in the UI (same login blocker). API: Oil Desk
+  combo `commodity=USOIL,UKOIL,NGAS&region=middle-east` = 184, identical to the Title-Case
+  region variant; Grain `WHEAT,CORN` = 86; Metals `XAUUSD` = 256.
 - #126 Trust/freshness signals (coverage footer + "Fresh Xm" tag) — scoped, pairs with
   #115/#121.
 - #127 Economic calendar filters (importance/country/category/timezone) on the existing

@@ -8,9 +8,17 @@ import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
+import { FilterBar } from "@/components/signals/FilterBar";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
+import {
+  DEFAULT_FILTERS,
+  DESK_PRESETS,
+  deskMatchesFilters,
+  type DeskPresetId,
+  type FilterBarValue,
+} from "@/lib/signal-filters";
 import type { Signal } from "@blue-beacon-research/shared";
 
 export default function DashboardPage() {
@@ -18,6 +26,7 @@ export default function DashboardPage() {
   // "My Feed" (#81) — opt-in narrowing to the commodities/regions the user follows.
   // Default OFF: existing users see the exact same full feed until they turn it on.
   const [personalized, setPersonalized] = useState(false);
+  const [filters, setFilters] = useState<FilterBarValue>(DEFAULT_FILTERS);
   const { data: myPrefs } = useMyPreferences();
   const {
     liveSignals,
@@ -31,7 +40,14 @@ export default function DashboardPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSignalFeed({ enabled: true, personalized });
+  } = useSignalFeed({
+    enabled: true,
+    personalized,
+    commodity: filters.commodity,
+    region: filters.region,
+    minSeverity: filters.minSeverity,
+    window: filters.window,
+  });
   const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
 
   // signal_viewed — behavioral instrumentation (research doc claude/64). Fires on
@@ -40,12 +56,26 @@ export default function DashboardPage() {
     logUsageEvent("signal_viewed", signalEventMetadata(signal), false);
     router.push(`/events/${signal.id}`);
   };
-  const [filter, setFilter] = useState<"all" | "high">("all");
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
   // list's prior fixed size, so the first render is unchanged); "Load more" adds
   // 10 and pulls the next API page once the current pages are exhausted.
   const [streamCount, setStreamCount] = useState(10);
+
+  const applyDesk = (id: DeskPresetId) => {
+    const preset = DESK_PRESETS[id];
+    setFilters((prev) => ({
+      ...prev,
+      commodity: preset.commodity,
+      region: preset.region,
+    }));
+    setStreamCount(10);
+  };
+
+  const handleFiltersChange = (next: FilterBarValue) => {
+    setFilters(next);
+    setStreamCount(10);
+  };
 
   // Compute top hotzones from liveSignals
   const topHotzones = useMemo(() => {
@@ -66,26 +96,18 @@ export default function DashboardPage() {
     return arr.slice(0, 3);
   }, [liveSignals]);
 
-  // Filter by severity pill
-  const filteredBySeverity = useMemo(() => {
-    if (filter === "high") {
-      return liveSignals.filter((s) => s.severity >= 8);
-    }
-    return liveSignals;
-  }, [liveSignals, filter]);
-
-  // Filter by search query
+  // Client-side search only — commodity/region/severity/window are server-side.
   const filteredSignals = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return filteredBySeverity;
-    return filteredBySeverity.filter(
+    if (!q) return liveSignals;
+    return liveSignals.filter(
       (s) =>
         s.title.toLowerCase().includes(q) ||
         s.country?.toLowerCase().includes(q) ||
         s.eventType?.toLowerCase().includes(q) ||
         s.summary?.toLowerCase().includes(q),
     );
-  }, [filteredBySeverity, searchQuery]);
+  }, [liveSignals, searchQuery]);
 
   const featured =
     filteredSignals.find((s) => s.severity >= 8) || filteredSignals[0];
@@ -93,9 +115,14 @@ export default function DashboardPage() {
   const secondaryB = filteredSignals[2];
   const streamList = filteredSignals.slice(0, streamCount);
 
-  // A client severity/search filter makes the API's raw `total` an over-count for
-  // this view, so only surface the "X of Y" number on the unfiltered stream.
-  const streamFilterActive = filter !== "all" || searchQuery.trim().length > 0;
+  // A client search filter makes the API's raw `total` an over-count for this
+  // view, so only surface the "X of Y" number when search isn't narrowing locally.
+  const streamFilterActive = searchQuery.trim().length > 0;
+  const filtersActive =
+    filters.commodity != null ||
+    filters.region != null ||
+    filters.minSeverity > 1 ||
+    filters.window != null;
   const canLoadMoreStream = streamCount < filteredSignals.length || hasNextPage;
   const handleLoadMoreStream = () => {
     setStreamCount((c) => c + 10);
@@ -186,38 +213,29 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Filter Pills */}
-        <div className="flex flex-wrap gap-3 mb-8 items-center">
-          <button
-            onClick={() => setFilter("all")}
-            className="px-4 py-1.5 text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              backgroundColor: filter === "all" ? "#4edea3" : "#201f1f",
-              color: filter === "all" ? "#005f40" : "#bbcac0",
-              borderColor: filter === "all" ? "#4edea3" : "#3c4a42",
-            }}
-          >
-            ALL SIGNALS
-          </button>
-          <button
-            onClick={() => setFilter("high")}
-            className="px-4 py-1.5 text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              backgroundColor: filter === "high" ? "#4edea3" : "#201f1f",
-              color: filter === "high" ? "#005f40" : "#bbcac0",
-              borderColor: filter === "high" ? "#4edea3" : "#3c4a42",
-            }}
-          >
-            HIGH RISK
-          </button>
+        {/* Filter bar + trader-role desks (#124 / #125). My Feed stays a separate control. */}
+        <div className="flex flex-wrap gap-3 mb-4 items-end">
+          <FilterBar
+            value={filters}
+            onChange={handleFiltersChange}
+            extraRegions={liveSignals.map((s) => s.region)}
+          />
+          {typeof total === "number" && !isLoading && (
+            <span
+              data-testid="feed-total"
+              data-feed-total={total}
+              className="text-[11px] pb-1"
+              style={{
+                color: "#86948a",
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              {total} signal{total === 1 ? "" : "s"}
+            </span>
+          )}
 
-          {/* My Feed toggle (#81) — narrows to what the user follows. Only shown
-              once the user has saved preferences; sits alongside the full feed,
-              never replaces it. */}
           {showMyFeedToggle && (
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2 pb-0.5">
               <button
                 onClick={() => setPersonalized((v) => !v)}
                 aria-pressed={personalized}
@@ -240,6 +258,30 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+        <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Saved views">
+          {(Object.keys(DESK_PRESETS) as DeskPresetId[]).map((id) => {
+            const preset = DESK_PRESETS[id];
+            const selected = deskMatchesFilters(id, filters);
+            return (
+              <button
+                key={id}
+                type="button"
+                data-testid={`desk-${id}`}
+                aria-pressed={selected}
+                onClick={() => applyDesk(id)}
+                className="px-3 py-1.5 text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  backgroundColor: selected ? "#4edea3" : "#201f1f",
+                  color: selected ? "#005f40" : "#bbcac0",
+                  borderColor: selected ? "#4edea3" : "#3c4a42",
+                }}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
 
         {personalized && personalizedApplied && (
           <p
@@ -258,7 +300,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── Continuous Skeleton Loader on API Load / Error / No Data ────────────────────────── */}
-        {isLoading || isError || liveSignals.length === 0 ? (
+        {isLoading || isError || (liveSignals.length === 0 && !filtersActive) ? (
           <div className="space-y-8">
             {/* Featured Card Skeleton */}
             <div className="p-8 bg-[#131313] border border-[#3c4a42] space-y-4">
@@ -605,6 +647,7 @@ export default function DashboardPage() {
                     color: "#86948a",
                     fontFamily: "'Space Grotesk', sans-serif",
                   }}
+                  data-feed-total={total ?? undefined}
                 >
                   Recent Signal Stream
                 </h4>

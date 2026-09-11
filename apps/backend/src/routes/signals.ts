@@ -10,12 +10,29 @@ const querySchema = z.object({
   severity: z.coerce.number().int().min(1).max(10).optional(),
   region: z.string().min(1).optional(),
   commodity: z.string().min(1).optional(),
-  window: z.enum(["latest", "24h", "7d", "active"]).optional(),
+  window: z.enum(["latest", "24h", "7d", "30d", "active"]).optional(),
   cursor: z.string().min(1).optional(),
   sort: z.enum(["severity", "newest"]).default("severity"),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+/** Casing/hyphen variants so "Middle East" matches "middle-east" and vice versa. */
+function expandRegionVariants(selected: string): string[] {
+  const raw = selected.trim();
+  const key = raw
+    .toLowerCase()
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ");
+  if (!key) return [];
+  const hyphen = key.replace(/ /g, "-");
+  const titleSpace = key.replace(/\b\w/g, (c) => c.toUpperCase());
+  const titleHyphen = hyphen
+    .split("-")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join("-");
+  return [...new Set([raw, key, hyphen, titleSpace, titleHyphen].filter(Boolean))];
+}
 
 export async function signalsRoutes(app: FastifyInstance) {
   app.get("/", async (req, reply) => {
@@ -39,9 +56,27 @@ export async function signalsRoutes(app: FastifyInstance) {
     let query = supabase.from("signals").select("*", { count: "exact" });
 
     if (severity) query = query.gte("severity", severity);
-    if (region) query = query.eq("region", region);
-    if (commodity)
-      query = query.contains("commodity_impacts", [{ asset: commodity }]);
+    if (region) {
+      const variants = expandRegionVariants(region);
+      query =
+        variants.length > 1
+          ? query.in("region", variants)
+          : query.eq("region", region);
+    }
+    if (commodity) {
+      const symbols = commodity
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => /^[A-Z0-9]+$/.test(s));
+      if (symbols.length === 1) {
+        query = query.contains("commodity_impacts", [{ asset: symbols[0] }]);
+      } else if (symbols.length > 1) {
+        const parts = symbols.map(
+          (sym) => `commodity_impacts.cs.[{"asset":"${sym}"}]`,
+        );
+        query = query.or(parts.join(","));
+      }
+    }
 
     const twentyFourHoursAgo = new Date(
       Date.now() - 24 * 60 * 60 * 1000,
@@ -49,11 +84,16 @@ export async function signalsRoutes(app: FastifyInstance) {
     const sevenDaysAgo = new Date(
       Date.now() - 7 * 24 * 60 * 60 * 1000,
     ).toISOString();
+    const thirtyDaysAgo = new Date(
+      Date.now() - 30 * 24 * 60 * 60 * 1000,
+    ).toISOString();
 
     if (window === "active") {
       query = query.eq("is_active", true);
     } else if (window === "7d") {
       query = query.gte("event_date", sevenDaysAgo);
+    } else if (window === "30d") {
+      query = query.gte("event_date", thirtyDaysAgo);
     } else if (window === "24h") {
       query = query.gte("event_date", twentyFourHoursAgo);
     } else {

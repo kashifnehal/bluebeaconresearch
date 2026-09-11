@@ -2,18 +2,30 @@
 
 import { useMemo } from "react";
 import { useUIStore } from "@/store/useUIStore";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
+import {
+  symbolsForCommodityFilter,
+  type FeedWindow,
+} from "@/lib/signal-filters";
 
 type Options = {
   enabled?: boolean;
   /** Opt into the personalized "My Feed" narrowing (#81). Default false. */
   personalized?: boolean;
+  commodity?: string | null;
+  region?: string | null;
+  minSeverity?: number;
+  window?: FeedWindow | null;
 };
 
 export function useSignalFeed({
   enabled = true,
   personalized = false,
+  commodity = null,
+  region = null,
+  minSeverity = 1,
+  window = null,
 }: Options = {}) {
   const { searchSubmitted } = useUIStore();
 
@@ -25,15 +37,33 @@ export function useSignalFeed({
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["signals", "feed", searchSubmitted ?? "", personalized],
+    queryKey: [
+      "signals",
+      "feed",
+      searchSubmitted ?? "",
+      personalized,
+      commodity ?? "",
+      region ?? "",
+      minSeverity,
+      window ?? "",
+    ],
     initialPageParam: "1",
     queryFn: async ({ pageParam }) => {
-      const base =
-        searchSubmitted && searchSubmitted.trim().length >= 3
-          ? `/api/signals?search=${encodeURIComponent(searchSubmitted.trim())}`
-          : "/api/signals?sort=severity";
-      const suffix = personalized ? "&personalized=true" : "";
-      const res = await fetch(`${base}${suffix}&page=${pageParam}`);
+      const params = new URLSearchParams();
+      if (searchSubmitted && searchSubmitted.trim().length >= 3) {
+        params.set("search", searchSubmitted.trim());
+      } else {
+        params.set("sort", "severity");
+      }
+      if (personalized) params.set("personalized", "true");
+      const symbols = symbolsForCommodityFilter(commodity);
+      if (symbols.length > 0) params.set("commodity", symbols.join(","));
+      if (region) params.set("region", region);
+      if (minSeverity > 1) params.set("severity", String(minSeverity));
+      if (window) params.set("window", window);
+      params.set("page", String(pageParam));
+
+      const res = await fetch(`/api/signals?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch signals");
       return (await res.json()) as {
         signals?: Signal[];
@@ -49,6 +79,7 @@ export function useSignalFeed({
     // null at the end. Returning undefined tells react-query there's no next page.
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled,
+    placeholderData: keepPreviousData,
     // Sole source of "live" updates as of 2026-09-03 (was previously a fallback
     // alongside an SSE connection — see git history / project memory
     // project_vercel_fluid_sse_leak.md for why the SSE path was removed: an

@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import type { Signal, CommodityImpact } from "@blue-beacon-research/shared";
-import { safeFormatDistanceToNow, SELECT_CLASSES } from "@/lib/utils";
+import { safeFormatDistanceToNow } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { MapSignalPopup } from "@/components/map/MapSignalPopup";
+import { FilterBar } from "@/components/signals/FilterBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import {
@@ -20,6 +21,13 @@ import {
 } from "@/lib/map-config";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { getSignalCoordinates } from "@/lib/geo-coords";
+import {
+  DEFAULT_FILTERS,
+  regionsMatch,
+  signalMatchesCommodity,
+  symbolsForCommodityFilter,
+  type FilterBarValue,
+} from "@/lib/signal-filters";
 
 function signalFromMapProps(props: Record<string, unknown>): Signal | null {
   const id = typeof props.id === "string" ? props.id : "";
@@ -56,6 +64,7 @@ export default function MapPage() {
     setMounted(true);
   }, []);
 
+  const [filters, setFilters] = useState<FilterBarValue>(DEFAULT_FILTERS);
   const {
     liveSignals,
     isLoading,
@@ -66,22 +75,23 @@ export default function MapPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSignalFeed();
+  } = useSignalFeed({
+    commodity: filters.commodity,
+    region: filters.region,
+    minSeverity: filters.minSeverity,
+    window: filters.window,
+  });
   const signals = liveSignals ?? [];
   // Server-side filtered results (severity/region/window) — proper React state, not a ref,
   // so it reliably triggers recomputation. Previously this was a ref that the map source was
   // poked with directly, out of band from React state, which raced with the SSE-driven
   // `geolocatedSignals` recompute and meant filter changes often didn't stick on the map.
   const [serverFilteredSignals, setServerFilteredSignals] = useState<Signal[]>([]);
-  const [timeWindow, setTimeWindow] = useState<"24h" | "7d" | "all">("all");
-  const [minSeverity, setMinSeverity] = useState<number>(1);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
-  // Server-side filtering only narrows by severity/region/window (the params /api/signals
-  // actually supports). Merge those results with the live feed so the pool always includes
-  // anything newer than the last server fetch, then apply the full filter set (including
-  // category, which has no server param and is always client-side) below.
+  // Server-side filtering narrows by severity/region/window/commodity (the params
+  // /api/signals actually supports). Merge those results with the live feed so the
+  // pool always includes anything newer than the last server fetch, then apply the
+  // full filter set client-side (including normalized region matching).
   const filterPool = useMemo(() => {
     const map = new Map<string, Signal>();
     for (const s of serverFilteredSignals) map.set(s.id, s);
@@ -90,6 +100,9 @@ export default function MapPage() {
   }, [serverFilteredSignals, signals]);
 
   const geolocatedSignals = useMemo(() => {
+    const minSeverity = filters.minSeverity;
+    const selectedRegion = filters.region;
+    const timeWindow = filters.window;
     return filterPool
       .map((s) => {
         const [lng, lat] = getSignalCoordinates(s);
@@ -98,9 +111,13 @@ export default function MapPage() {
       .filter(
         (signal) =>
           signal.severity >= minSeverity &&
-          (selectedCategory ? signal.eventType === selectedCategory : true) &&
-          (selectedRegion ? signal.region === selectedRegion : true) &&
-          (timeWindow === "all"
+          signalMatchesCommodity(
+            signal.commodityImpacts,
+            signal.currencyPairImpacts,
+            filters.commodity,
+          ) &&
+          (selectedRegion ? regionsMatch(signal.region, selectedRegion) : true) &&
+          (timeWindow == null
             ? true
             : timeWindow === "24h"
               ? new Date(signal.eventDate ?? signal.createdAt) >=
@@ -108,9 +125,12 @@ export default function MapPage() {
               : timeWindow === "7d"
                 ? new Date(signal.eventDate ?? signal.createdAt) >=
                   new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-                : true),
+                : timeWindow === "30d"
+                  ? new Date(signal.eventDate ?? signal.createdAt) >=
+                    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+                  : true),
       );
-  }, [filterPool, minSeverity, selectedCategory, selectedRegion, timeWindow]);
+  }, [filterPool, filters]);
   const geolocatedSignalsRef = useRef<Signal[]>([]);
   geolocatedSignalsRef.current = geolocatedSignals;
   // Stream list now shares the exact same filtered set as the map markers —
@@ -517,12 +537,13 @@ export default function MapPage() {
       try {
         const params = new URLSearchParams();
         params.set("sort", "severity");
-        if (minSeverity && minSeverity > 1)
-          params.set("severity", String(minSeverity));
-        if (selectedRegion) params.set("region", selectedRegion);
-        if (timeWindow === "24h") params.set("window", "24h");
-        if (timeWindow === "7d") params.set("window", "7d");
-        if (timeWindow === "all") params.set("window", "all");
+        if (filters.minSeverity > 1)
+          params.set("severity", String(filters.minSeverity));
+        if (filters.region) params.set("region", filters.region);
+        const symbols = symbolsForCommodityFilter(filters.commodity);
+        if (symbols.length > 0) params.set("commodity", symbols.join(","));
+        if (filters.window) params.set("window", filters.window);
+        else params.set("window", "all");
 
         const res = await fetch(`/api/signals?${params.toString()}`);
         if (!res.ok) return;
@@ -538,7 +559,7 @@ export default function MapPage() {
     return () => {
       cancelled = true;
     };
-  }, [timeWindow, minSeverity, selectedCategory, selectedRegion]);
+  }, [filters]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -836,92 +857,16 @@ export default function MapPage() {
             </div>
           </div>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3" data-filtered-count={geolocatedSignals.length}>
           <div className="label text-[10px] tracking-[0.2em] text-on-surface-variant mb-2 uppercase">
             Filters
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTimeWindow("24h")}
-                className={`px-2 py-1 rounded ${timeWindow === "24h" ? "bg-primary text-on-primary" : "bg-surface-container/20"}`}
-              >
-                24H
-              </button>
-              <button
-                onClick={() => setTimeWindow("7d")}
-                className={`px-2 py-1 rounded ${timeWindow === "7d" ? "bg-primary text-on-primary" : "bg-surface-container/20"}`}
-              >
-                7D
-              </button>
-              <button
-                onClick={() => setTimeWindow("all")}
-                className={`px-2 py-1 rounded ${timeWindow === "all" ? "bg-primary text-on-primary" : "bg-surface-container/20"}`}
-              >
-                All
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label htmlFor="map-filter-min-severity" className="label text-[10px] text-on-surface-variant">
-              Min Severity
-            </label>
-            <select
-              id="map-filter-min-severity"
-              value={minSeverity}
-              onChange={(e) => setMinSeverity(Number(e.target.value))}
-              className={`ml-2 ${SELECT_CLASSES}`}
-            >
-              {[...Array(10)].map((_, i) => (
-                <option key={i} value={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label htmlFor="map-filter-category" className="label text-[10px] text-on-surface-variant">
-              Category
-            </label>
-            <select
-              id="map-filter-category"
-              value={selectedCategory ?? ""}
-              onChange={(e) => setSelectedCategory(e.target.value || null)}
-              className={`ml-2 ${SELECT_CLASSES}`}
-            >
-              <option value="">All</option>
-              {Array.from(
-                new Set(signals.map((s) => s.eventType).filter(Boolean)),
-              ).map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label htmlFor="map-filter-region" className="label text-[10px] text-on-surface-variant">
-              Region
-            </label>
-            <select
-              id="map-filter-region"
-              value={selectedRegion ?? ""}
-              onChange={(e) => setSelectedRegion(e.target.value || null)}
-              className={`ml-2 ${SELECT_CLASSES}`}
-            >
-              <option value="">All</option>
-              {Array.from(
-                new Set(signals.map((s) => s.region).filter(Boolean)),
-              ).map((r) => (
-                <option key={r as string} value={r as string}>
-                  {r as string}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterBar
+            layout="stack"
+            value={filters}
+            onChange={setFilters}
+            extraRegions={signals.map((s) => s.region)}
+          />
         </div>
       </section>
       )}
