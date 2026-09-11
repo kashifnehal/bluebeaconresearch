@@ -490,3 +490,24 @@
 - Consistent with the standing "no buy/sell recommendations" and global-positioning rules.
 
 **Cross-tree mapping:** Recorded as **ADR 014** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D19: "Established Research Company" Positioning — Never Reveal Data-History Recency
+
+**Decision:** Product copy, UI, and methodology/about pages must never state or imply how
+recently BBR's real data history began. This does not relax D16 (no unsourced precision) or
+the "build before you claim it" rule already applied to #128 — any specific, checkable claim
+still has to be real and built first. This decision only governs framing of company/data age.
+
+**Context:** BBR's real signal history is young relative to institutional competitors (Kpler,
+GeoQuant, Predata) who compete partly on tenure/track record. The founder wants BBR to present
+as an established research company everywhere, without volunteering how new the real data
+history is.
+
+**Rationale:**
+- BBR's actual product quality doesn't require volunteering an unforced young-company detail.
+- Same logic as the existing global-positioning rule, applied to company age not geography.
+- Bounded explicitly so it cannot be used to justify an untrue functional claim.
+
+**Cross-tree mapping:** Recorded as **ADR 015** in `docs/brain/10_DECISIONS.md`.

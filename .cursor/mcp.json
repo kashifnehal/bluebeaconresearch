@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "supabase": { "type": "http", "url": "https://mcp.supabase.com/mcp" },
+    "vercel": { "type": "http", "url": "https://mcp.vercel.com" },
+    "railway": { "type": "http", "url": "https://mcp.railway.com" },
+    "sentry": { "type": "http", "url": "https://mcp.sentry.dev/mcp" },
+    "resend": { "type": "http", "url": "https://mcp.resend.com" },
+    "github": { "type": "http", "url": "https://api.githubcopilot.com/mcp/" },
+    "playwright": { "command": "npx", "args": ["-y", "@playwright/mcp@latest"] }
+  }
+}

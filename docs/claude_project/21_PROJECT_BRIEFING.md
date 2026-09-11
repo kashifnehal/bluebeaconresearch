@@ -115,6 +115,7 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 12. **Stripe fully stubbed** — All users = 'pro'. Implement only when first person asks to pay.
 13. **Global positioning, not India-specific** — Bigger TAM, better brand
 14. **"Research firm", not "AI tool"** — Never call it "an AI tool." Always "AI-powered research platform with analyst team"
+15. **"Established research company" — never reveal data-history recency** — Product copy, UI, and methodology/about pages must never state or imply how recently BBR's real data history began (D19 / ADR 015). Framing rule only — does not relax "no unsourced precision" or "build it before you claim it."
 
 ---
 
@@ -311,6 +312,7 @@ Every tool traders use daily has CPI/NFP/Fed decision calendar. BBR has none. Ad
 - Never add features competing with WorldMonitor on breadth (more data feeds, data layers)
 - Never make buy/sell recommendations in signal copy or UI
 - Never call it "an AI tool" — always "a research platform"
+- Never state or imply how recently BBR's real data history began (D19 / ADR 015)
 - Never remove the terminal aesthetic (dark design, Node/Encryption cosmetic elements) — intentional brand
 - Never use `router.push` after auth actions — use `window.location.href` for SSR cookie attachment
 - Never use `redis://` — always `rediss://` (TLS required by Upstash/ioredis)

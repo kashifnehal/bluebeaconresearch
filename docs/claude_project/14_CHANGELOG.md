@@ -226,3 +226,14 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - **Phase 3 verification (real delivery + Playwright + SQL, per the alerts/digest standard).** A forex-only rule (no regions, no commodities, `forex_pairs=["EURUSD"]`) dispatched against a live EURUSD signal produced a real Telegram message whose "Which instruments" line showed `EURUSD ↓ · USDJPY ↑ · USDCHF ↑`, with the two pre-existing rules paused so the forex rule was provably the sole match. A forex-only digest preference selected exactly that signal and rendered "forex pairs" + "EURUSD" into both text and HTML. Playwright confirmed the Alerts card renders currency-pair chips and the new modal multi-select round-tripped `["EURUSD","USDJPY"]` through the DB.
 - ~~**Known limitation carried forward:** the `/watchlist/[symbol]` drill-down still keys off `COMMODITIES`/`?commodity=` only, so a forex card links to a degraded drill-down.~~ **Closed in phase 4, below.**
 - **Phase 4 — watchlist drill-down forex support (`accd468`, `apps/web` only, no migration).** Closes the phase-2/3 carried-forward limitation. `/watchlist/[symbol]/page.tsx` resolves the symbol against `COMMODITIES` then `FOREX_PAIRS` (so `EURUSD` renders "EUR/USD"), ORs `forexPairs` into the "You follow this" check, and — for a forex symbol — fetches correlated signals with a **new, separate** `?forexPair=` query param and reads `currencyPairImpacts` for the per-signal impact chip. `/api/signals` gained that `?forexPair=` param: a `currency_pair_impacts` jsonb-containment filter that exactly mirrors the existing `?commodity=` branch. `?commodity=` keeps its `commodity_impacts`-only meaning everywhere. No `ticker_impacts` — equity stays gated. Verified with Playwright + SQL: `/watchlist/EURUSD` shows "EUR/USD" and lists the real EURUSD signal with a currency-pair chip; `/watchlist/USOIL` behaves exactly as before; `?forexPair=EURUSD` returns the matching signal while `?forexPair=USOIL` returns none. Full technical record: `docs/brain/14_CHANGELOG.md` v0.36.4.
+
+---
+
+## PHASE 10 — DOCS SYNC: COWORK RESEARCH #104–#128, D19, CURSOR PRO SETUP (2026-09-11)
+
+> Narrative summary for this tree. Full technical record: `docs/brain/14_CHANGELOG.md` v0.38.0 and `docs/brain/LIVE_TODO.md`. Docs-only; no application code.
+
+- **D19 / ADR 015** — "Established research company" positioning: never state or imply how recently BBR's real data history began. Framing rule only; does not relax D16 or "build it before you claim it" (#128).
+- **LIVE_TODO** — #104–#128 recorded as plans/research only. None marked done. #129 left unmarked until a follow-up Closed, verified line can carry this commit's SHA.
+- **Cursor Pro setup** — repo-root `AGENTS.md` and `.cursor/mcp.json`. Live Supabase project ref confirmed as `evavcgfmemwryggdkjmx`; `jzomoxsbnssnibshecui` treated as stale.
+- **Briefing** — standing decision #15 + matching "never do" line.

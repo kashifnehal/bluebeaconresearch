@@ -268,6 +268,56 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Parked: #90 (individual-stock-idea feature), #96 (Railway service merge —
   decided against)
 
+## Priority queue update — 2026-09-10/11, founder idea batches + competitor research
+(All items below are PLANS/RESEARCH ONLY, nothing here is built — do not mark any as done.)
+- #104 Vercel Hobby→Pro upgrade — ready now, $20/mo, no gate.
+- #105 Map click-modal UI fix (text overflow + info density + close control) — ready-to-run
+  prompt exists in the Cowork Project (doc 67).
+- #106 5-year historical commodity charts — scoped, on-demand Yahoo Finance fetch recommended
+  to avoid conflicting with the #67 retention job.
+- #107 Watchlist default-populated cards + one-click add — ready-to-run prompt exists, soft
+  default labeling required (not a silent pre-fill).
+- #108 Backtesting Lab auto-apply filters + loading state — ready-to-run prompt exists, needs
+  a debounce + race-condition guard.
+- #109 Printable architecture/flowchart doc — scoped, own session.
+- #110 Named-analyst content section — parked, gated on real evidence of demand.
+- #111 AI chat on event page (premium) — scoped, RAG-grounded, same buy/sell-refusal
+  discipline as the Sonnet briefing prompt (#103); sequence after the go-live checklist.
+- #112 Push-notification connect UX — scoped; "dismissed" state must be server-side, not
+  browser-only.
+- #113 www/apex domain redirect — ready now, free, Vercel dashboard only.
+- #114 Business continuity + legal registration — checklist ready; founder to pick a
+  jurisdiction and register.
+- #115 Signal-quality live-data audit — ready-to-run, read-only verification prompt exists.
+- #116 "Authentication is temporarily unavailable" error — root cause unconfirmed; a
+  diagnostic-first prompt exists, no guess-and-fix.
+- #117 Global marketing/ads compliance — researched, no blocker found; action folded into
+  #102.
+- #118 Premium news/AI tier — step 1 (GNews Essential) no gate; steps 2-3 gated on real
+  revenue.
+- #119 Onboarding GIF/video step — ready-to-run prompt for the UI plumbing; the GIF itself
+  still needs recording.
+- #120 Plain-language AI-writing rewrite (generateAnalysis() system prompt) — ready-to-run
+  prompt exists; must preserve hedging language (likely/may/could).
+- #121 Real /accuracy page + outcome-tracker worker — spec'd, full build recommendation
+  exists; gated on real signal history being long enough to be honest.
+- #122 Quick-view slide-over panel — ready-to-run prompt exists; needs a discoverability
+  nudge.
+- #123 Event pages in a new tab — scope narrowed after UX research to just the quick-view
+  panel's "View full details" link; founder decision still open on final scope.
+- #124 Feed filter bar (Commodity/Region/Severity/Time range) + shared FilterBar component —
+  scoped, ready to prompt.
+- #125 Trader-role saved views (Oil Desk/Grain Desk/Metals Desk) — scoped, sequence after
+  #124.
+- #126 Trust/freshness signals (coverage footer + "Fresh Xm" tag) — scoped, pairs with
+  #115/#121.
+- #127 Economic calendar filters (importance/country/category/timezone) on the existing
+  /calendar page (#86) + chokepoint/pipeline map layers — calendar half ready to scope; map
+  layers gated on a real data-vendor cost check.
+- #128 Human-review trust layer — Stage 1 is a founder action (stand up the real review
+  process); Stages 2-3 become a normal prompt once Stage 1 is real. Do not add "human-
+  reviewed" language to the product before Stage 1 is real.
+
 ## Behavioral event instrumentation — Phase 0 landed 2026-09-09 (not gated, not urgent)
 
 Passive logging only, no scoring/ranking/UI change. Research doc

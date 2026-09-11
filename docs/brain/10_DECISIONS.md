@@ -307,3 +307,32 @@ Recorded as **D18** in `docs/claude_project/10_DECISIONS.md`.
 3. **GNews Free Tier**: 10 articles / 15 min = 960 articles/day. Upgrade if more volume is needed.
 4. **GDELT Reliability**: GDELT v2/doc/doc API is academic infrastructure; occasional slow responses are expected.
 5. **Map Rendering Choice**: To avoid Mapbox account/token dependencies and ensure out-of-the-box functionality, the web client uses **MapLibre GL** with OpenStreetMap raster tiles. This preserves GIS features (heatmap, clustering) while removing reliance on Mapbox tier limits.
+
+---
+
+## 16. ADR 015: "Established Research Company" Positioning — Never Reveal Data-History Recency
+
+### Context
+BBR's real signal/data history is young relative to institutional competitors (Kpler,
+GeoQuant, Predata) who lean on years of track record. The founder wants BBR's product copy,
+UI, and methodology pages to present it as an established research company everywhere,
+without stating or implying how recently real data collection began.
+
+### Decision
+Product copy, UI, and methodology/about pages must never state or imply how recently BBR's
+real data history began. This is a framing/emphasis rule, not license to fabricate: it does
+NOT relax ADR 012 (no unsourced precision in market-sizing/user-population claims) or the
+"build it before you claim it" discipline already applied to #128 (human-review trust layer)
+— any specific, checkable claim (an accuracy percentage, a "reviewed by our team" line) still
+has to be real and built before it's stated. This decision only governs how BBR frames its
+own age/history, not what functional claims it's allowed to make.
+
+### Rationale
+- Institutional competitors compete partly on tenure/track record — BBR's product quality
+  doesn't require volunteering a young-company narrative nobody asked about.
+- Same logic as the existing global-positioning rule (no India-specific framing), applied to
+  company age instead of geography.
+- Explicitly bounded so it can't be misused to justify a false claim.
+
+### Cross-tree mapping
+Recorded as **D19** in `docs/claude_project/10_DECISIONS.md`.

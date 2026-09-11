@@ -8,6 +8,15 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.38.0 — Docs sync: Cowork research #104–#128, ADR 015/D19, Cursor Pro setup (2026-09-11)
+
+Docs-only. No application code.
+
+- **ADR 015 / D19** — "Established research company" positioning: never state or imply how recently BBR's real data history began. Framing rule only; does not relax ADR 012 / D16 or "build it before you claim it" (#128). Recorded in both `10_DECISIONS.md` trees.
+- **LIVE_TODO** — priority-queue lines for #104–#128 (plans/research only; none marked done). #129 left unmarked until a follow-up Closed, verified line can carry this commit's SHA.
+- **Cursor Pro setup** — repo-root `AGENTS.md` (Claude.md-based, plus live-status sync protocol + confirmed Supabase project ref `evavcgfmemwryggdkjmx`) and `.cursor/mcp.json` (Supabase, Vercel, Railway, Sentry, Resend, GitHub, Playwright).
+- **Briefing** — standing decision #15 and a matching "never do" line in `21_PROJECT_BRIEFING.md`.
+
 ### v0.37.0 — Cost/waste batch, Service Health Dashboard P1 (#42), retention jobs (#67) (2026-09-09)
 
 Commit on `main`: `5f1ee16`. Backend + one new `apps/web` admin page + one migration
