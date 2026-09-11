@@ -336,3 +336,49 @@ own age/history, not what functional claims it's allowed to make.
 
 ### Cross-tree mapping
 Recorded as **D19** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 17. ADR 016: Heuristic Classifier Severity Hard-Capped at 6
+
+### Context
+Direct production investigation 2026-09-12 (live query against `evavcgfmemwryggdkjmx`)
+confirmed `ClaudeService.heuristicClassify()` — the keyword-regex fallback used whenever a
+real Claude classification call fails or is unavailable — was assigning severities 7/8/9 on
+bare keyword matches with no judgment about actual relevance. Two confirmed real false
+positives: signal `37e6c146-4189-4b96-be45-ad01ccaea016` ("Public comment open on
+environment study for proposed $1.1B military radar sites in Oregon", an unrelated local
+infrastructure story) scored severity 8 purely on the word "military"; signal
+`5e3b9c09-99ad-4959-88e2-dcc90c2bb629` ("9/11 in the Navy: I went to war, but never got off
+the boat", a personal memoir) scored severity 9 purely on the word "war". Both carry
+confidence 0.76 — a value only the heuristic path's `dynamicConfidence` formula can produce,
+confirming these are heuristic, not real Claude, outputs. `AGENTS.md`'s known-open-items list
+already flags Anthropic API credit as low, meaning the heuristic path is currently covering a
+meaningful share of live traffic, not a rare edge case.
+
+### Decision
+`heuristicClassify()`'s severity output is hard-capped at 6 (`severity = Math.min(severity, 6)`,
+applied after the existing keyword-tier logic). Severity 7, 8, and 9 (the tiers that drive
+`is_breaking`, cross the re-alert threshold in `signal-merge.ts`, and read as "urgent" in the
+UI) can now only ever come from a real, successful Claude classification. A new
+`signals.classification_method` column (`'claude'` | `'heuristic'`, migration
+`20260912000000_signals_classification_method.sql`) records which path produced each row
+going forward, so this can be audited and so the frontend can eventually show an
+"auto-classified, unverified" indicator on heuristic rows. Historical rows are backfilled
+best-effort by a separate `classification_method_inferred` boolean (confidence-pattern
+match only — not an authoritative record of the original classification).
+
+### Rationale
+- A bare keyword hit is not evidence of a real high-severity geopolitical/market event — the
+  two examples above are not edge cases, they're the predictable failure mode of any
+  keyword-only classifier once it's asked to also assign a severity, not just detect topic.
+- The heuristic path already exists as a documented degrade-not-block decision (ADR 005); this
+  does not reverse that decision, it bounds its ceiling so a keyword-only guess can't produce
+  the same "urgent/breaking" signal quality a real Claude read is expected to provide.
+- Distinguishing `classification_method` going forward (rather than only capping severity)
+  makes the degradation visible and auditable instead of silent — the exact gap this session
+  also closed for Claude/Anthropic health via `service_health_events` (see `AGENTS.md`
+  known-open-items and `08_CURRENT_STATUS.md`).
+
+### Cross-tree mapping
+Recorded as **D20** in `docs/claude_project/10_DECISIONS.md`.

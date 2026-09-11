@@ -2,9 +2,54 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (#121 fully shipped — GET /v1/accuracy + public /accuracy page — see `14_CHANGELOG.md` v0.50.0)
+Last updated: 2026-09-12 (heuristic-severity cap + classification_method flag + AI health logging — see `14_CHANGELOG.md` v0.51.0)
 
 ---
+
+## Classification trust/reliability fixes — heuristic severity cap, classification_method, AI health logging, chat error handling (2026-09-12)
+
+`apps/backend` only. Full record: `14_CHANGELOG.md` v0.51.0, `LIVE_TODO.md`, `10_DECISIONS.md` ADR 016.
+
+Direct production investigation (live SQL against `evavcgfmemwryggdkjmx`) found
+`ClaudeService.heuristicClassify()` assigning severity 7–9 on bare keyword
+matches with no relevance judgment — confirmed real false positives: signal
+`37e6c146-4189-4b96-be45-ad01ccaea016` (Oregon military-radar-site permitting
+story) scored 8 on "military"; signal `5e3b9c09-99ad-4959-88e2-dcc90c2bb629` (a
+personal Navy memoir) scored 9 on "war". Both confirmed heuristic (not real
+Claude) via confidence 0.76 matching the heuristic formula's exact output set.
+Fixes shipped:
+1. **Heuristic severity hard-capped at 6** (`Math.min(severity, 6)`) — 7/8/9 can
+   now only come from a real, successful Claude classification.
+2. **New `signals.classification_method` column** (`'claude'`|`'heuristic'`,
+   migration `20260912000000_signals_classification_method.sql`), set by
+   `classifyEvent()` based on which path actually produced the result, and
+   surfaced in `/v1/signals`, `/v1/signals/latest`, and `/v1/signals/:id`
+   responses. Historical rows best-effort backfilled via a separate
+   `classification_method_inferred` flag (confidence-pattern match only): 1,722
+   rows marked `heuristic`/inferred, 1,124 left `NULL` (unknown) rather than
+   guessed. Isolated `isRelevantEvent()` pre-filter (`lib/relevance-filter.ts`)
+   was confirmed to gate entry into `classifyEvent()` uniformly for both the
+   real-Claude and heuristic paths — it is not a contributor to this specific
+   bug, no change made there.
+3. **Claude/Anthropic API health now logged** to `service_health_events`
+   (`recordServiceHealth("anthropic", ...)`) from both `classifyEvent()` and
+   `chatAboutSignal()` — closing the gap where only ingestion sources
+   (gdelt/gnews/acled/rss/yahoo_finance) had health tracking and Claude/Anthropic
+   itself had none.
+4. **`POST /v1/signals/:id/chat` now wraps `chatAboutSignal()` in try/catch** —
+   previously had none at all. Any unexpected error now returns
+   `503 { "error": "ai_temporarily_unavailable" }` instead of a generic 500.
+
+**Verified live** (see `LIVE_TODO.md` for full query output): ran a real
+`ingest:once` cycle against production (`evavcgfmemwryggdkjmx`) with this new code
+— 5 new real signals written, all correctly `classification_method: 'heuristic'`
+(Anthropic returned live `400 credit balance too low` on every call, confirming
+AGENTS.md's known-open credit item is still current — a real-Claude-success case
+could **not** be produced/verified in this environment for that reason), all
+severity ≤ 6 (5, the pre-cap default — none happened to hit the 6-keyword tier
+this run). 5 new `anthropic`/`error` rows confirmed in `service_health_events`
+with real request IDs and latencies. Backfill grouping counts also confirmed by
+direct SQL post-migration.
 
 ## #121 frontend half — GET /v1/accuracy + public /accuracy page (2026-09-11)
 

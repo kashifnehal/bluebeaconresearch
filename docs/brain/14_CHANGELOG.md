@@ -8,6 +8,77 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.51.0 — Classification trust/reliability fixes (2026-09-12)
+
+Direct production investigation (live SQL against `evavcgfmemwryggdkjmx`) found
+`ClaudeService.heuristicClassify()` — the keyword-regex fallback used whenever a real
+Claude classification fails or is unavailable — assigning severity 7/8/9 on bare keyword
+matches with no relevance judgment. Two confirmed real false positives, both with
+confidence 0.76 (a value only the heuristic path's `dynamicConfidence` formula can
+produce, confirming they're heuristic not real-Claude outputs): signal
+`37e6c146-4189-4b96-be45-ad01ccaea016` ("Public comment open on environment study for
+proposed $1.1B military radar sites in Oregon", unrelated local infrastructure story)
+scored severity 8 on the bare word "military"; signal
+`5e3b9c09-99ad-4959-88e2-dcc90c2bb629` ("9/11 in the Navy: I went to war, but never got
+off the boat", a personal memoir) scored severity 9 on the bare word "war". Four fixes,
+`apps/backend` only:
+
+1. **Heuristic severity hard-capped at 6** in `heuristicClassify()`
+   (`severity = Math.min(severity, 6)`, applied after the existing keyword-tier ladder) —
+   severity 7/8/9 can now only ever come from a real, successful Claude classification.
+   Code comment cites both example signal IDs above for future reference.
+2. **New `signals.classification_method` column** (`'claude'`|`'heuristic'`, migration
+   `20260912000000_signals_classification_method.sql`, indexed). Added to
+   `ClassificationResult` and set explicitly on both branches of `classifyEvent()` — the
+   Claude-success branch sets `'claude'` right before returning; `heuristicClassify()`
+   itself sets `'heuristic'`. Written by every live signal-creation path:
+   `insertOrMergeSignal()` (rss/gnews/gdelt), `acled-collector.ts`, `reconciliation.ts`,
+   and the dormant `ai-classifier.ts` BullMQ worker (read from the pre-zod-parse `result`
+   object, not the parsed `r`, since the zod schema doesn't declare the field and would
+   silently strip it). Surfaced in `GET /v1/signals` (via `select("*")`), `GET
+   /v1/signals/latest` (added to its explicit column list), and `GET /v1/signals/:id`
+   (`select("*")`) — frontend work to render an "auto-classified, unverified" badge is
+   out of scope for this change. New `classification_method_inferred` boolean
+   distinguishes the accurate going-forward flag (`false`, set at classification time)
+   from the one-time historical backfill (`true`) — the backfill UPDATE, run in the same
+   migration, matches rows whose `confidence` is exactly one of the six 2-decimal values
+   `heuristicClassify()`'s `dynamicConfidence` formula can produce (0.55/0.62/0.69/0.76/
+   0.83/0.90) and marks them `'heuristic'`; everything else is left `NULL` (unknown)
+   rather than guessed as `'claude'`. Result on `evavcgfmemwryggdkjmx`: 1,722 rows
+   backfilled `'heuristic'`, 1,124 left `NULL`.
+3. **`isRelevantEvent()` pre-filter investigated and confirmed not implicated**: it's
+   called once per collector, before `classifyEvent()`, identically regardless of
+   whether Claude or the heuristic fallback ends up producing the classification — it
+   gates entry into `classifyEvent()` uniformly, it does not run "only before real Claude
+   classification" as one hypothesis suggested. No change made to `relevance-filter.ts`.
+4. **Claude/Anthropic API health now logged to `service_health_events`** via
+   `recordServiceHealth("anthropic", ...)`, called from both `classifyEvent()` (on real
+   Claude success/error) and `chatAboutSignal()` (on success/no-client/final failure
+   after retries) — closes a real observability gap: only ingestion sources
+   (gdelt/gnews/acled/rss/yahoo_finance) had health rows before this; Claude/Anthropic
+   had none despite being the component `AGENTS.md` already flags as degraded
+   (low credit, heuristic fallback covering).
+5. **`POST /v1/signals/:id/chat` now wraps `chatAboutSignal()` in try/catch** — the
+   handler previously called it with no error handling at all. Any unexpected error now
+   returns `503 { "error": "ai_temporarily_unavailable" }` instead of falling through to
+   a generic 500, so the frontend (separate task) can render a specific, honest message.
+
+Recorded as ADR 016 / D20 in `10_DECISIONS.md` (both trees). Type-check + existing
+`claude.service.test.ts` suite both pass unchanged. **Verified live**: ran a real
+`pnpm --filter backend exec tsx src/scripts/ingest-once.ts` cycle against production
+(`evavcgfmemwryggdkjmx`) with this new code before committing — GDELT/GNews/RSS
+fetched 122 articles, wrote 5 new real signals. All 5 correctly wrote
+`classification_method: 'heuristic'` / `classification_method_inferred: false`
+(Anthropic returned a live `400 credit balance too low` on every one of the 5
+`classifyEvent()` calls — same known credit exhaustion `AGENTS.md` already flags,
+confirmed still current; a real-Claude-success case could not be produced in this
+environment for that reason, only the heuristic-fallback path was verifiable live).
+All 5 signals landed at severity 5 (the pre-cap default; none happened to hit the
+6-tier keywords this run) — none above the new cap. 5 new `anthropic`/`error` rows
+confirmed in `service_health_events`, each with a real Anthropic `request_id` and
+measured `latency_ms` (326–496ms). Backfill grouping counts confirmed by direct SQL
+post-migration: 1,722 `heuristic`/inferred, 1,124 `NULL`, 0 unexpected values.
+
 ### v0.50.0 — #121 frontend half: GET /v1/accuracy + public /accuracy page (2026-09-11)
 
 New public (no-auth) `apps/backend/src/routes/accuracy.routes.ts` (`GET /v1/accuracy`,

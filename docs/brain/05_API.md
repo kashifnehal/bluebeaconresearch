@@ -57,6 +57,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
         "currencyPairImpacts": [
           { "asset": "USDRUB", "direction": "up", "confidence": 0.72 }
         ],
+        "classification_method": "claude",
         "is_breaking": true,
         "created_at": "2026-08-04T12:00:00Z",
         "updated_at": "2026-08-04T12:15:00Z",
@@ -70,6 +71,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
   }
   ```
 > ⚠️ UPDATED 2026-08-19 — Two caveats on the `ai_analysis` field above: (1) Anthropic API credit is currently exhausted, so a heuristic classifier fallback is generating this content, not live Claude; (2) for severity ≥7 signals specifically, this field was found completely unpopulated (0 of 423 signals, ever) due to a dormant-BullMQ-queue wiring bug, fixed 2026-08-19 by wiring `generateSignalAnalysis()` inline into the collectors and reconciliation worker.
+> ⚠️ UPDATED 2026-09-12 — new field `classification_method` (`"claude"` | `"heuristic"` | `null` for pre-existing unbackfilled rows) reflects which caveat above actually applied to this specific row. As of this date, heuristic-path severity is hard-capped at 6 — a `"heuristic"` row will never show severity > 6. See `10_DECISIONS.md` ADR 016 and migration `20260912000000_signals_classification_method.sql`.
 - **Consumers**: Next.js Dashboard, MapLibre Map (OpenStreetMap tiles), Mobile Client.
 
 **Notes**: In degraded or rate-limited scenarios `/api/signals` may return the last-known payload with additional non-breaking fields: `fallback` (boolean), `fallbackReason` (string), and `fallbackLastUpdated` (ISO timestamp). The server also sets header `x-signals-feed-status: degraded` when serving cached/fallback data.
@@ -83,7 +85,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 #### `GET /api/signals/:id/chat` and `POST /api/signals/:id/chat` (#111, `9f2aada` web / `dcdc877` Fastify)
 
 - **Description**: Per-signal follow-up chat, grounded **only** in that signal's own data. Next.js BFF at `apps/web/app/api/signals/[id]/chat/route.ts` resolves the caller's Supabase session and forwards `Authorization: Bearer` to Fastify `GET|POST /v1/signals/:id/chat`. The panel never talks to Fastify from the browser.
-- **Auth**: Required. Fastify also gates POST: `403 premium_required` if `planTier === "free"`; `429 rate_limited` after 30 user messages / rolling 24h (counted on `signal_chat_messages`, not `@fastify/rate-limit`).
+- **Auth**: Required. Fastify also gates POST: `403 premium_required` if `planTier === "free"`; `429 rate_limited` after 30 user messages / rolling 24h (counted on `signal_chat_messages`, not `@fastify/rate-limit`); `503 { "error": "ai_temporarily_unavailable" }` if `chatAboutSignal()` throws unexpectedly (added 2026-09-12 — the POST handler previously had no try/catch around this call at all, so an unexpected exception would have produced a generic 500 instead of a specific, honest error the frontend can render).
 - **POST body**: `{ "message": string }` → `{ "reply": string }`. GET returns `{ "data": [{ id, role, content, created_at }] }` (last 50, oldest first).
 - **Consumers**: `SignalChatPanel` on `/events/[id]`.
 - **Why**: explain this briefing, not give buy/sell or personalized-position advice. See `18_AI_ENGINE.md` §3b / `ClaudeService.chatAboutSignal()`.

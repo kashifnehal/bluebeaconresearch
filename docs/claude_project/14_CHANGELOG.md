@@ -313,3 +313,14 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - New public `/accuracy` page — no login required, matches the existing `/status`-style dark terminal aesthetic — renders all of the above together plus a permanent, non-dismissible past-performance disclaimer and the plain-language date range. Deliberately has no "top signals"/"best calls" highlight list anywhere, per a hard product rule.
 - Found and fixed a real latent bug while verifying: Supabase `.in()` filters with real UUIDs throw past ~400 items (a URL-length limit, not flakiness) — this had also silently broken part of last session's `outcome-tracker.ts` backfill. Both now chunk at 200.
 - Verified against production: overall and per-asset (USOIL) numbers hand-checked against direct SQL and matched exactly; real rendered page screenshotted with real, non-placeholder numbers.
+
+## PHASE 17 — CLASSIFICATION TRUST/RELIABILITY FIXES (2026-09-12)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.51.0. Decision record: `10_DECISIONS.md` ADR 016 / D20.
+
+- Direct production investigation found `ClaudeService.heuristicClassify()` assigning severity 8/9 on bare keyword matches with no relevance judgment. Two confirmed real false positives (both confidence 0.76, matching only the heuristic formula's output set): an Oregon military-radar-site permitting story scored 8 on "military"; a personal Navy memoir scored 9 on "war".
+- Heuristic severity now hard-capped at 6 — severity 7/8/9 can only come from a real, successful Claude classification going forward.
+- New `signals.classification_method` column (`claude`|`heuristic`) set by `classifyEvent()` at write time, written by every live signal-creation path, and surfaced in the signals API responses. Historical rows best-effort backfilled via a separate `classification_method_inferred` flag (confidence-pattern match, not an authoritative reclassification): 1,722 marked `heuristic`, 1,124 left unknown.
+- `isRelevantEvent()` pre-filter investigated and confirmed to run uniformly before `classifyEvent()` regardless of which path classifies the event — not implicated in this bug, no change made.
+- Claude/Anthropic API calls now logged to `service_health_events` — previously only ingestion sources had health tracking.
+- `POST /v1/signals/:id/chat` now wraps `chatAboutSignal()` in try/catch, returning `503 ai_temporarily_unavailable` instead of a generic 500 on an unexpected error.

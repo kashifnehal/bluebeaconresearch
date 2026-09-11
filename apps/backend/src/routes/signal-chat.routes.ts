@@ -119,7 +119,19 @@ export async function signalChatRoutes(app: FastifyInstance) {
     });
     if (insertUserError) return reply.status(500).send({ error: "Query failed" });
 
-    const reply_text = await claudeService.chatAboutSignal(signal, priorMessages, message);
+    let reply_text: string;
+    try {
+      reply_text = await claudeService.chatAboutSignal(signal, priorMessages, message);
+    } catch (err) {
+      // chatAboutSignal() itself already catches and degrades on known Anthropic API
+      // errors (returns a fallback string) — this catch is the backstop for anything
+      // that still throws (e.g. an unexpected SDK exception), so the route never 500s
+      // with a generic message here. 503, not 500: this is a dependency being
+      // unavailable, not a bug in this request, and the frontend can show a specific,
+      // honest "AI is temporarily unavailable" message instead of a vague "try again."
+      req.log?.error?.({ err }, "[signal-chat] chatAboutSignal threw unexpectedly");
+      return reply.status(503).send({ error: "ai_temporarily_unavailable" });
+    }
 
     const { error: insertAssistantError } = await supabase.from("signal_chat_messages").insert({
       signal_id: signalId,

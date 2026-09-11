@@ -106,6 +106,7 @@ export async function runAcledCollectorOnce() {
           is_breaking: classification.isBreaking,
           is_active: true,
           event_date: eventDate,
+          classification_method: classification.classificationMethod,
         })
         .select("id")
         .maybeSingle();

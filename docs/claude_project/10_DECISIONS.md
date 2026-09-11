@@ -511,3 +511,31 @@ history is.
 - Bounded explicitly so it cannot be used to justify an untrue functional claim.
 
 **Cross-tree mapping:** Recorded as **ADR 015** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D20: Heuristic Classifier Severity Hard-Capped at 6
+
+**Decision:** `ClaudeService.heuristicClassify()`'s severity output is hard-capped at 6 —
+severity 7/8/9 can now only come from a real, successful Claude classification. A new
+`signals.classification_method` column (`claude`|`heuristic`) records which path produced
+each row going forward; historical rows get a separate, clearly-marked best-effort
+`classification_method_inferred` backfill, not an authoritative reclassification.
+
+**Context:** Direct production investigation 2026-09-12 found the heuristic keyword-fallback
+classifier assigning severity 8/9 on bare keyword matches with no relevance judgment — real
+examples: an Oregon military-radar-site permitting story scored 8 on the word "military"; a
+personal Navy memoir scored 9 on the word "war". Both confirmed heuristic (not Claude) via
+their confidence value matching the heuristic formula's output set exactly. Low Anthropic
+credit (already an open item) means this path currently covers meaningful live traffic.
+
+**Rationale:**
+- A keyword hit alone is not evidence of a real high-severity event — this is the predictable
+  failure mode of a keyword-only classifier, not a rare edge case.
+- Does not reverse D-level acceptance of the heuristic fallback existing at all (see ADR 005
+  in `docs/brain/10_DECISIONS.md`) — only bounds its ceiling so it can't produce the same
+  "urgent/breaking" signal quality a real Claude read implies.
+- Makes the degradation auditable (`classification_method`) instead of silent, same spirit as
+  this session's other fix: Claude/Anthropic health now logged to `service_health_events`.
+
+**Cross-tree mapping:** Recorded as **ADR 016** in `docs/brain/10_DECISIONS.md`.

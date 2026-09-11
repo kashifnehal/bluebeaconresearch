@@ -143,7 +143,7 @@ export async function signalsRoutes(app: FastifyInstance) {
     const { data, error } = await supabase
       .from("signals")
       .select(
-        "id,title,summary,severity,confidence,created_at,is_breaking,sources_count,commodity_impacts,region,country,event_type",
+        "id,title,summary,severity,confidence,created_at,is_breaking,sources_count,commodity_impacts,region,country,event_type,classification_method",
       )
       .eq("is_active", true)
       .order("created_at", { ascending: false })

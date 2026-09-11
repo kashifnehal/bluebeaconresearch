@@ -149,6 +149,7 @@ Returns paginated signal feed. Auth required.
         { "asset": "USOIL", "direction": "up", "confidence": 0.84 },
         { "asset": "UKOIL", "direction": "up", "confidence": 0.81 }
       ],
+      "classification_method": "claude",
       "price_at_signal": { "USOIL": 84.20, "capturedAt": "2026-02-28T03:42:00Z" },
       "sanctions_matches": [],
       "shipping_proximity": {
@@ -214,6 +215,8 @@ Gates (in order):
 - Missing signal → `404 { "error": "Not found" }`
 
 Then: insert user row → `ClaudeService.chatAboutSignal()` (`claude-sonnet-5`, last 10 prior turns, grounded only in this signal's title/summary/`ai_analysis`/impacts/severity/confidence/sources_count/event_date) → insert assistant row → `{ "reply": string }`.
+
+**⚠️ UPDATED 2026-09-12** — the `chatAboutSignal()` call is now wrapped in try/catch (it previously had none). Any unexpected error → `503 { "error": "ai_temporarily_unavailable" }` instead of a generic 500, so the frontend can show a specific, honest message.
 
 **Why this shape:** the event-page chat must never become general market advice. Same buy/sell prohibition as `generateAnalysis()` (#120), plus an explicit refusal of personalized-position questions ("I hold 200 barrels…"). Web UI never calls Fastify directly — see §6 `signals/[id]/chat/route.ts`.
 

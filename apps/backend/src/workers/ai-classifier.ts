@@ -103,6 +103,10 @@ export function startAiClassifierWorker() {
         currency_pair_impacts: r.currencyPairImpacts,
         is_breaking: r.isBreaking,
         is_active: true,
+        // classification_method comes from the pre-zod-parse `result`, not `r`
+        // (parsed.data) — the zod schema above doesn't declare this field, so
+        // safeParse would silently strip it from `r`.
+        classification_method: result.classificationMethod,
       }).select("id").maybeSingle();
 
       if (insert.error || !insert.data?.id) throw new Error("Failed to insert signal");

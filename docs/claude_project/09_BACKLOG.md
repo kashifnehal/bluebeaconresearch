@@ -35,6 +35,12 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#111~~ | ~~AI chat on event page (premium)~~ | — | **Fully done 2026-09-11 (backend `dcdc877` + frontend).** `POST/GET /v1/signals/:id/chat`, `ClaudeService.chatAboutSignal()` (same `claude-sonnet-5` model + buy/sell-refusal language as #120's `generateAnalysis()`, plus a personalized-position-advice refusal), `signal_chat_messages` table + RLS. Frontend `SignalChatPanel` on the event page, wired via same-origin `/api/signals/:id/chat` proxy routes. Playwright-verified end-to-end incl. reload-persistence. See `LIVE_TODO.md`. |
 | ~~#53~~ | ~~Backfill missing `commodity_impacts` on historical signals~~ | — | **Ran 2026-09-11** — 767→1,634 filled via `classifyEvent()`; 201 left because Anthropic credit exhausted. See `LIVE_TODO.md`. |
 
+### Shipped 2026-09-12
+
+| # | Item | Effort | Why |
+|---|------|--------|-----|
+| — | Heuristic-classifier severity cap + `classification_method` flag + AI health logging + chat error handling | — | **Done 2026-09-12** (partial follow-through on #115's signal-quality audit direction) — direct production investigation found the keyword-only heuristic fallback classifier assigning severity 8/9 on bare keyword matches (real examples: an Oregon military-radar-site permitting story scored 8 on "military", a personal Navy memoir scored 9 on "war"). Severity now hard-capped at 6 on that path; new `signals.classification_method` column records `claude` vs `heuristic` going forward (historical rows best-effort backfilled); Claude/Anthropic calls now logged to `service_health_events`; signal-chat POST route now has error handling (`503 ai_temporarily_unavailable` instead of a generic 500). See `LIVE_TODO.md`, ADR 016/D20. |
+
 ### Still open
 
 | # | Item | Notes |
@@ -45,7 +51,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #112 | Push-notification connect UX | Scoped; dismissed state must be server-side. |
 | #113 | www/apex domain redirect | Ready now, free, Vercel dashboard only. [founder-led] |
 | #114 | Business continuity + legal registration | Checklist ready; founder picks jurisdiction. [founder-led] |
-| #115 | Signal-quality live-data audit | Ready-to-run, read-only verification prompt exists. |
+| #115 | Signal-quality live-data audit | Ready-to-run, read-only verification prompt exists. Partial follow-through 2026-09-12 — see "Shipped 2026-09-12" above (heuristic severity cap + `classification_method`); broader audit itself not re-run. |
 | #117 | Global marketing/ads compliance | Researched, no blocker; action folded into #102. |
 | #118 | Premium news/AI tier | Step 1 (GNews Essential) no gate; steps 2–3 gated on real revenue. |
 | #121 | Real /accuracy page + outcome-tracker worker | ~~**Fully shipped 2026-09-11**~~ — `signal_outcomes` table + daily `outcome-tracker.ts` worker (backfilled to 2,965 rows) + public `GET /v1/accuracy` aggregation endpoint + public `/accuracy` page (per-asset breakdown, permanent disclaimer, no "top signals" list). #53 backfill ran 2026-09-11 (filled 767→1,634 `commodity_impacts`); 201 rows still empty because Anthropic credit exhausted mid-run. |

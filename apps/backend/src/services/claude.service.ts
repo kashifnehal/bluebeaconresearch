@@ -1,5 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import { getEnv } from "../env.js";
+import { recordServiceHealth } from "../lib/service-health.js";
 
 export type ClassificationResult = {
   severity: number;
@@ -17,6 +18,14 @@ export type ClassificationResult = {
   isBreaking: boolean;
   summary: string;
   region: string;
+  // Which path actually produced this result — 'claude' only when a real Anthropic
+  // API call succeeded and parsed cleanly, 'heuristic' whenever classifyEvent() fell
+  // back to heuristicClassify() (no client, API error, or bad JSON). Callers write
+  // this straight into signals.classification_method (see migration
+  // 20260912000000_signals_classification_method.sql) so the frontend can eventually
+  // show an "auto-classified, unverified" indicator instead of presenting a
+  // keyword-guess as equally authoritative to a real Claude read.
+  classificationMethod: "claude" | "heuristic";
 };
 
 export class ClaudeService {
@@ -140,6 +149,7 @@ export class ClaudeService {
     const client = this.getClient();
     const title = String(rawEvent.title ?? "New geopolitical event");
     const summaryText = String(rawEvent.summary ?? "");
+    const callStartedAt = Date.now();
 
     if (client) {
       try {
@@ -187,10 +197,23 @@ export class ClaudeService {
         parsed.currencyPairImpacts = this.sanitizeForexImpacts(
           parsed.currencyPairImpacts ?? [],
         );
+        parsed.classificationMethod = "claude";
+        await recordServiceHealth(
+          "anthropic",
+          "ok",
+          "classifyEvent",
+          Date.now() - callStartedAt,
+        );
         return parsed;
       } catch (err: any) {
         console.warn(
           `⚠️ [Claude AI Classifier] API error (${err.message}). Using intelligent heuristic fallback classifier.`,
+        );
+        await recordServiceHealth(
+          "anthropic",
+          err?.status === 429 ? "rate_limited" : "error",
+          `classifyEvent: ${err?.message ?? "unknown error"}`,
+          Date.now() - callStartedAt,
         );
       }
     }
@@ -226,6 +249,26 @@ export class ClaudeService {
     } else if (/tension|talks|negotiation|diplomat|election/i.test(text)) {
       severity = 6;
     }
+
+    // Safety cap (2026-09-12): keyword-only matching produced real false-positive
+    // high-severity signals in production. Two confirmed examples, found via direct
+    // Supabase query this session (title/severity/confidence quoted from live
+    // `signals` rows, both with confidence 0.76 — a value only this function's
+    // dynamicConfidence formula below can produce, confirming these were heuristic,
+    // not real Claude, classifications):
+    //   - id 37e6c146-4189-4b96-be45-ad01ccaea016: "Public comment open on
+    //     environment study for proposed $1.1B military radar sites in Oregon" —
+    //     an unrelated local infrastructure/permitting story — scored severity 8
+    //     purely because "military" matched the sanction/embargo/military/opec tier.
+    //   - id 5e3b9c09-99ad-4959-88e2-dcc90c2bb629: "9/11 in the Navy: I went to war,
+    //     but never got off the boat" — a personal memoir — scored severity 9 purely
+    //     because "war" matched the war/invasion/nuclear tier.
+    // A bare keyword hit is not evidence a story is actually a high-severity
+    // geopolitical/market event. Severity 7-9 should only ever come from a real,
+    // successful Claude classification (see the client-success branch of
+    // classifyEvent() above, which sets classificationMethod: "claude" and is never
+    // subject to this cap) — never from this keyword-only fallback path.
+    severity = Math.min(severity, 6);
 
     // Region Detection
     let region = "global";
@@ -369,6 +412,7 @@ export class ClaudeService {
       isBreaking,
       summary: title.slice(0, 120),
       region,
+      classificationMethod: "heuristic",
     };
   }
 
@@ -520,8 +564,14 @@ export class ClaudeService {
     userMessage: string,
   ): Promise<string> {
     const client = this.getClient();
-    if (!client)
+    if (!client) {
+      await recordServiceHealth(
+        "anthropic",
+        "error",
+        "chatAboutSignal: no ANTHROPIC_API_KEY configured",
+      );
       return "AI chat is temporarily unavailable — Blue Beacon's analysis engine is running in heuristic-only mode right now. Please try again shortly.";
+    }
 
     // Column names confirmed against the live `signals` schema — there is no
     // `sources` array column, only `sources_count`; the briefing text lives in
@@ -578,6 +628,7 @@ export class ClaudeService {
       { role: "user", content: userMessage },
     ];
 
+    const chatCallStartedAt = Date.now();
     for (let attempt = 0; attempt <= ClaudeService.MAX_BRIEFING_RETRIES; attempt++) {
       try {
         const msg = await client.messages.create({
@@ -587,6 +638,12 @@ export class ClaudeService {
           messages,
         });
 
+        await recordServiceHealth(
+          "anthropic",
+          "ok",
+          "chatAboutSignal",
+          Date.now() - chatCallStartedAt,
+        );
         return msg.content
           .map((c) => (c.type === "text" ? c.text : ""))
           .join("")
@@ -603,6 +660,12 @@ export class ClaudeService {
         );
 
         if (!willRetry) {
+          await recordServiceHealth(
+            "anthropic",
+            status === 429 ? "rate_limited" : "error",
+            `chatAboutSignal: ${err?.message ?? "unknown error"}`,
+            Date.now() - chatCallStartedAt,
+          );
           return "I couldn't generate a response right now — please try again in a moment.";
         }
 

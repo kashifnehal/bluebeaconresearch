@@ -111,6 +111,7 @@ export async function reconcileOrphanedRawEventsOnce() {
           is_breaking: classification.isBreaking,
           is_active: true,
           event_date: raw.event_date,
+          classification_method: classification.classificationMethod,
         })
         .select("id")
         .maybeSingle();
