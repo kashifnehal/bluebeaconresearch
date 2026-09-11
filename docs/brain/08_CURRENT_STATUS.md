@@ -2,9 +2,19 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (stale Supabase project-ref docs purge — see `14_CHANGELOG.md` v0.45.0)
+Last updated: 2026-09-11 (#111 AI signal chat, backend half — see `14_CHANGELOG.md` v0.46.0)
 
 ---
+
+## AI signal chat, backend half (2026-09-11)
+
+`apps/backend` only. Full record: `14_CHANGELOG.md` v0.46.0, `LIVE_TODO.md`.
+
+- **#111 backend** — `GET/POST /v1/signals/:id/chat`, `ClaudeService.chatAboutSignal()` (same
+  `claude-sonnet-5` model + no-trade-advice rule as `generateAnalysis()`, plus refusal of
+  personalized position-advice questions), `signal_chat_messages` table + RLS. Gated on plan tier
+  (`403 premium_required` for free tier) and a 30-msg/24h per-user counter (`429 rate_limited`).
+  Frontend chat panel on the event page is still open.
 
 ## 5-year watchlist chart (2026-09-11)
 

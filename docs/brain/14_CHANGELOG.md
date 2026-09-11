@@ -8,6 +8,31 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.46.0 — #111 AI signal chat, backend half (2026-09-11)
+
+`apps/backend` only (frontend chat panel still open). New endpoints `GET/POST /v1/signals/:id/chat`
+(`signal-chat.routes.ts`, registered in `app.ts` under the existing `/v1/signals` prefix). New
+`ClaudeService.chatAboutSignal(signal, priorMessages, userMessage)` — same `claude-sonnet-5` model
+and the same buy/sell/position-sizing/entry-exit prohibition language as `generateAnalysis()`
+(copied verbatim, not rewritten, so the two prompts stay consistent), plus a chat-specific rule:
+recognizes and declines personalized position/portfolio-advice questions ("I hold N barrels,
+should I add more") with a fixed redirect line instead of attempting to answer. Grounding input is
+`title/summary/ai_analysis/region/country/severity/confidence/commodity_impacts/
+currency_pair_impacts/sources_count/event_date` from the `signals` row — no other signal's data
+enters the prompt. New table `signal_chat_messages` (migration
+`20260911180000_signal_chat_messages.sql`, applied to `evavcgfmemwryggdkjmx`) with the same
+user-owns-their-rows RLS convention as `alert_rules`/`watchlist_entries`/`saved_signals`. POST
+gates on `planTier !== "free"` (`403 { error: "premium_required" }` — passes for everyone today
+since all users default to `pro`) and a custom 30-messages/24h per-user counter (`429
+{ error: "rate_limited" }`) — no rate-limit library exists in this app yet, so this counts rows in
+`signal_chat_messages` directly rather than adding a dependency. Live-verified on the standing test
+account (romantannison, `pro` tier) against a real signal ("Yemen Perim Island..."): a normal
+question returned a grounded, on-topic answer citing that signal's actual severity/confidence
+numbers; "I hold 200 barrels of WTI, should I add more?" was declined with the exact specified
+redirect text, not answered. Both turns' 4 rows (2 user, 2 assistant) confirmed written to
+`signal_chat_messages` via direct SQL, then deleted (test data, not left in prod). See
+`LIVE_TODO.md` for the commit SHA.
+
 ### v0.45.0 — Stale Supabase project-ref citations purged from docs (2026-09-11)
 
 - Docs-only. Repo grep of the unused project ref found matches only in markdown (none in code or config). Copy-paste `SUPABASE_URL` values in archived `docs/brain/CLAUDE_CONTEXT.md` now use live `evavcgfmemwryggdkjmx`. Historical notes that named the unused ref as "old/wrong" were rephrased so a blind replace would not label the live project stale.

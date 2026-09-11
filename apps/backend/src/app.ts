@@ -19,6 +19,7 @@ import { eventsRoutes } from "./routes/events.js";
 import { telegramRoutes } from "./routes/telegram.js";
 import { backtestingRoutes } from "./routes/backtesting.js";
 import { adminRoutes } from "./routes/admin.js";
+import { signalChatRoutes } from "./routes/signal-chat.routes.js";
 
 export function buildApp() {
   const env = getEnv();
@@ -66,6 +67,7 @@ export function buildApp() {
   registerAuth(app);
 
   app.register(signalsRoutes, { prefix: "/v1/signals" });
+  app.register(signalChatRoutes, { prefix: "/v1/signals" });
   app.register(usersRoutes, { prefix: "/v1/users" });
   app.register(commoditiesRoutes, { prefix: "/v1/commodities" });
   app.register(apiKeysRoutes, { prefix: "/v1/api-keys" });

@@ -260,3 +260,16 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - **Tour + briefing copy.** #119 welcome GIF/video step before Joyride (placeholder asset; real recording still outstanding). #120 plain-language / 4-part / keep-hedging block on `generateAnalysis()` alongside the #103 buy/sell prohibition.
 - **Quick-view.** #122 desktop slide-over on Intelligence Feed stream rows. #123 new-tab only on that panel's "View full details"; feed/map/Alerts stay same-tab.
 - **Trust + calendar.** #126 `Fresh Xm` tag + live last-24h outlet coverage line. #127 importance/country/category/timezone filters on `/calendar`. Map chokepoint/pipeline layers still gated.
+
+---
+
+## PHASE 12 — #111 AI SIGNAL CHAT, BACKEND HALF (2026-09-11)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.46.0.
+
+- **`apps/backend` only** — the frontend chat panel on the event page is a separate, still-open piece of #111.
+- New `GET/POST /v1/signals/:id/chat` (`signal-chat.routes.ts`), registered in `app.ts` the same way as the other route plugins.
+- New `ClaudeService.chatAboutSignal()` reuses the same `claude-sonnet-5` model and the same buy/sell/position-sizing/entry-exit prohibition wording as `generateAnalysis()` (#120), plus a chat-specific rule that recognizes and declines personalized position/portfolio-advice questions with a fixed redirect instead of attempting to answer.
+- New `signal_chat_messages` table (migration `20260911180000_signal_chat_messages.sql`), same user-owns-their-rows RLS convention as `alert_rules`/`watchlist_entries`/`saved_signals`.
+- POST gates on plan tier (`403 premium_required` below `pro`, passes for everyone today) and a custom 30-messages/24h per-user counter (`429 rate_limited`) — no rate-limit dependency added.
+- Verified live on the standing test account against a real signal: an on-topic question returned a grounded answer citing that signal's actual severity/confidence figures; a personalized-position question ("I hold 200 barrels of WTI...") was declined with the exact specified redirect, not answered. Both turns confirmed written to `signal_chat_messages` via direct SQL, then removed (test data).
