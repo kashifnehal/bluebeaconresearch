@@ -16,7 +16,9 @@
 
 > ⚠️ UPDATED 2026-09-11 — Docs sync only (no application code): D19 / ADR 015 recorded; #104–#128 parked as plans/research in `docs/brain/LIVE_TODO.md` (none marked done; #129 left unmarked); repo-root `AGENTS.md` + `.cursor/mcp.json` added for Cursor Pro. Live Supabase project ref confirmed as `evavcgfmemwryggdkjmx`. Full detail: `docs/brain/14_CHANGELOG.md` v0.38.0, `docs/claude_project/14_CHANGELOG.md` PHASE 10.
 
-Last updated: 2026-08-12
+> ⚠️ UPDATED 2026-09-11 (later same day) — tonight's product batch shipped: #105 map popup, #107 watchlist seed (+ prefs persist), #108 backtesting auto-apply, #116 auth-timeout middleware, #119 welcome tour step, #120 plain-language briefings, #122/#123 quick-view slide-over, #124/#125 shared FilterBar + desk chips, #126 freshness/coverage, #127 calendar filters (map layers still gated). Do not duplicate verification here — per-commit evidence is in `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.39.0–v0.43.0. This tree: PHASE 11.
+
+Last updated: 2026-09-11
 
 ---
 

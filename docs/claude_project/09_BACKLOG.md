@@ -7,6 +7,50 @@
 
 > ⚠️ UPDATED 2026-08-19 — this backlog reflects a much earlier project phase (basic Railway deployment setup, Google OAuth setup, FIFA-appearing-as-a-signal quality bugs). Most items here (M1–M24, and most S-items) are long since resolved; it's kept as a historical record, not a current punch list. Note also that M23 ("Add PORT=8888 env var") was itself based on a since-corrected mistaken belief — the actual backend port default is 3001, not 8888.
 
+> ⚠️ UPDATED 2026-09-11 — the #104–#128 queue (parked as plans on 2026-09-11) is now tracked in **NUMBERED TICKETS** below. Shipped items use this file's existing close-out convention (strikethrough + **Done DATE**, same as S1/#86 and C3/#83). Per-commit evidence lives in `docs/brain/LIVE_TODO.md`, not here.
+
+---
+
+## NUMBERED TICKETS (#104–#128) — live queue
+
+The MoSCoW tables below are the historical record. This section is the current punch list for the 2026-09-10/11 founder-idea batch. Closed items stay visible (struck through) so the queue is auditable; they are not open work.
+
+### Shipped 2026-09-11
+
+| # | Item | Effort | Why |
+|---|------|--------|-----|
+| ~~#105~~ | ~~Map click-modal UI fix~~ | — | **Done 2026-09-11** — wrapping/scrollable map dialog. See `LIVE_TODO.md`. |
+| ~~#107~~ | ~~Watchlist default-populated cards + one-click add~~ | — | **Done 2026-09-11** — first-visit seed + prefs-aware persist to `user_preferences`. See `LIVE_TODO.md`. |
+| ~~#108~~ | ~~Backtesting Lab auto-apply filters + loading state~~ | — | **Done 2026-09-11**. See `LIVE_TODO.md`. |
+| ~~#116~~ | ~~"Authentication is temporarily unavailable"~~ | — | **Done 2026-09-11** (`a561690`) — middleware `getUser()` timeout 3s→8s. See `LIVE_TODO.md`. |
+| ~~#119~~ | ~~Onboarding GIF/video step~~ | — | **Done 2026-09-11** — welcome modal before Joyride; real GIF still needs recording. See `LIVE_TODO.md`. |
+| ~~#120~~ | ~~Plain-language AI-writing rewrite~~ | — | **Done 2026-09-11** — `generateAnalysis()` prompt only. See `LIVE_TODO.md`. |
+| ~~#122~~ | ~~Quick-view slide-over panel~~ | — | **Done 2026-09-11**. See `LIVE_TODO.md`. |
+| ~~#123~~ | ~~Event pages in a new tab~~ | — | **Done 2026-09-11** — new-tab only on quick-view "View full details". See `LIVE_TODO.md`. |
+| ~~#124~~ | ~~Feed filter bar + shared FilterBar~~ | — | **Done 2026-09-11** (`74b815b`). See `LIVE_TODO.md`. |
+| ~~#125~~ | ~~Trader-role saved views~~ | — | **Done 2026-09-11** (`74b815b`) — Oil/Grain/Metals desk chips. See `LIVE_TODO.md`. |
+| ~~#126~~ | ~~Trust/freshness signals~~ | — | **Done 2026-09-11** — `Fresh Xm` tag + live coverage line. See `LIVE_TODO.md`. |
+| ~~#127~~ | ~~Economic calendar filters~~ | — | **Done 2026-09-11** (calendar half). Map chokepoint/pipeline layers still gated — see open list. |
+
+### Still open
+
+| # | Item | Notes |
+|---|------|-------|
+| #104 | Vercel Hobby→Pro upgrade | Ready now, $20/mo, no gate. [founder-led] |
+| #106 | 5-year historical commodity charts | Scoped; on-demand Yahoo fetch recommended (don't conflict with #67 retention). |
+| #109 | Printable architecture/flowchart doc | Scoped, own session. |
+| #110 | Named-analyst content section | Parked, gated on real evidence of demand. |
+| #111 | AI chat on event page (premium) | Scoped; RAG-grounded; same buy/sell-refusal as #103. After go-live checklist. |
+| #112 | Push-notification connect UX | Scoped; dismissed state must be server-side. |
+| #113 | www/apex domain redirect | Ready now, free, Vercel dashboard only. [founder-led] |
+| #114 | Business continuity + legal registration | Checklist ready; founder picks jurisdiction. [founder-led] |
+| #115 | Signal-quality live-data audit | Ready-to-run, read-only verification prompt exists. |
+| #117 | Global marketing/ads compliance | Researched, no blocker; action folded into #102. |
+| #118 | Premium news/AI tier | Step 1 (GNews Essential) no gate; steps 2–3 gated on real revenue. |
+| #121 | Real /accuracy page + outcome-tracker worker | Spec'd; gated on signal history long enough to be honest. |
+| #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
+| #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
+
 ---
 
 ## MUST HAVE — Ship before any public launch

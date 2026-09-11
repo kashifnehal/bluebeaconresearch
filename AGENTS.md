@@ -25,6 +25,7 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 3. Nothing gets written as done/shipped/closed in `LIVE_TODO.md` without a real commit SHA next to it.
 4. Re-read `docs/brain/LIVE_TODO.md` fresh before touching anything — never rely on this chat's own memory of what it says.
 5. Keep deep research/rationale OUT of this repo. A terse conclusion and a pointer is enough; full detail arrives with the specific task when something is actually built.
+6. A shipped item's `LIVE_TODO.md` entry is not sufficient by itself — `docs/claude_project/09_BACKLOG.md`, `docs/claude_project/08_CURRENT_STATUS.md`, and `docs/claude_project/14_CHANGELOG.md` must reflect it too, since that tree is canonical. Do this in the same commit as the `LIVE_TODO.md` update going forward, not as a separate catch-up pass.
 
 ## Status honesty
 

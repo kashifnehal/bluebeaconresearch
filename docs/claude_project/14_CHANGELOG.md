@@ -237,3 +237,16 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - **LIVE_TODO** — #104–#128 recorded as plans/research only. None marked done. #129 left unmarked until a follow-up Closed, verified line can carry this commit's SHA.
 - **Cursor Pro setup** — repo-root `AGENTS.md` and `.cursor/mcp.json`. Live Supabase project ref confirmed as `evavcgfmemwryggdkjmx`; `jzomoxsbnssnibshecui` treated as stale.
 - **Briefing** — standing decision #15 + matching "never do" line.
+
+---
+
+## PHASE 11 — TONIGHT'S SHIPPING BATCH #105–#127 (2026-09-11)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.39.0–v0.43.0. Do not treat PHASE 10's "none marked done" line as current — that was the plan-parking commit.
+
+- **Map / watchlist / backtesting (`f6be851`, then `75d932c`).** #105 map click-modal (wrapping, scrollable React dialog). #107 watchlist first-visit seed of the 8 instruments, then prefs-aware seed + `user_preferences` persist. #108 Backtesting Lab auto-apply + loading state.
+- **Auth timeout (`a561690`).** #116 — middleware `getUser()` timeout raised 3s→8s so Vercel no longer aborts a slow Auth call as "temporarily unavailable."
+- **Feed filters (`74b815b`).** #124 shared FilterBar (commodity/region/min-severity/time range, incl. 30d) on feed and map. #125 Oil/Grain/Metals desk chips (feed-only, no new schema).
+- **Tour + briefing copy.** #119 welcome GIF/video step before Joyride (placeholder asset; real recording still outstanding). #120 plain-language / 4-part / keep-hedging block on `generateAnalysis()` alongside the #103 buy/sell prohibition.
+- **Quick-view.** #122 desktop slide-over on Intelligence Feed stream rows. #123 new-tab only on that panel's "View full details"; feed/map/Alerts stay same-tab.
+- **Trust + calendar.** #126 `Fresh Xm` tag + live last-24h outlet coverage line. #127 importance/country/category/timezone filters on `/calendar`. Map chokepoint/pipeline layers still gated.
