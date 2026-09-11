@@ -87,7 +87,7 @@ Commit `5f1ee16`. See `14_CHANGELOG.md` v0.37.0 for the full breakdown.
   >90d deleted; raw_events >180d deleted only when a signal references them;
   signals untouched. Day-one: 0 / 0 rows (tables hold ~30d of history).
 - **#53 commodity_impacts backfill RAN 2026-09-11** (script + prod data change,
-  this commit). Before: **767 filled / 2,057 empty** of 2,824. After: **1,634
+  `8733677`). Before: **767 filled / 2,057 empty** of 2,824. After: **1,634
   filled / 1,195 empty** of 2,829. Of the original empty set: 864 newly filled
   via `classifyEvent()` (Haiku), 992 Haiku-classified as genuinely `[]`
   (checkpointed), 201 skipped when Anthropic returned `credit balance is too low`
