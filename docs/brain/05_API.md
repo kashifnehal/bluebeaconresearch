@@ -88,7 +88,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Auth**: Required. Fastify also gates POST: `403 premium_required` if `planTier === "free"`; `429 rate_limited` after 30 user messages / rolling 24h (counted on `signal_chat_messages`, not `@fastify/rate-limit`); `503 { "error": "ai_temporarily_unavailable" }` if `chatAboutSignal()` throws unexpectedly (added 2026-09-12 — the POST handler previously had no try/catch around this call at all). The event-page panel now renders that 503 as "BBR's AI service is temporarily unavailable — try again shortly" rather than the generic catch-all.
 - **POST body**: `{ "message": string }` → `{ "reply": string }`. GET returns `{ "data": [{ id, role, content, created_at }] }` (last 50, oldest first).
 - **Consumers**: `SignalChatPanel` on `/events/[id]`.
-- **Why**: explain this briefing, not give buy/sell or personalized-position advice. See `18_AI_ENGINE.md` §3b / `ClaudeService.chatAboutSignal()`.
+- **Why**: explain this briefing, not give buy/sell or personalized-position advice. Grounded generation of the URL-identified signal — not RAG (D21 / ADR 017). Same #103 buy/sell rule as `generateAnalysis()`, plus personalized-advice refusal. See `18_AI_ENGINE.md` §3b / `ClaudeService.chatAboutSignal()`.
 
 ---
 
@@ -173,7 +173,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 #### `GET /v1/accuracy` (#121, 2026-09-11)
 
-- **Description**: Public, no-auth aggregation of `signal_outcomes` — overall + per-asset `hit_rate`/`avg_move_when_correct`/`sample_size_note` (gated to `not_enough_history: true` below 20 scored predictions), a `volatile_neutral_summary` kept separate from `hit_rate`, and `date_range`. Never live-recomputes against `commodity_prices`. Full detail: `docs/claude_project/05_API.md` §"Accuracy — GET /v1/accuracy".
+- **Description**: Public, no-auth aggregation of `signal_outcomes` — overall + per-asset `hit_rate`/`avg_move_when_correct`/`sample_size_note` (gated to `not_enough_history: true` below 20 scored predictions), a `volatile_neutral_summary` kept separate from `hit_rate`, and `date_range`. Never live-recomputes against `commodity_prices` (90-day retention would erase history). Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115. Endpoint contract: `docs/claude_project/05_API.md` §"Accuracy — GET /v1/accuracy".
 - **Auth**: None.
 
 ---

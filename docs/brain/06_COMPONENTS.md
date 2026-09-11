@@ -85,13 +85,14 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Props**: `{ signalId: string, classificationMethod?: 'claude' | 'heuristic' | null }`
 - **Parent**: `(dashboard)/events/[id]/page.tsx` — mounted below Full Analyst Briefing / Impact Breakdown (those sections untouched).
 - **How**: GET `/api/signals/:id/chat` on mount; POST on send with optimistic user bubble + rollback on failure. Loading spinner reuses #108's `progress_activity` + `animate-spin`. Always-visible disclaimer in a footer strip (not a tooltip). Plain-language copy for `403 premium_required` / `429 rate_limited` / `503 ai_temporarily_unavailable`. Heuristic note when `classificationMethod === 'heuristic'`. Composer stacks below a 420px container width. Working stitch tokens (`text-on-surface`, `text-on-surface-variant`) — `text-text-secondary`/`text-muted`/`text-bg-app` do not map.
-- **Why**: explain the briefing, never buy/sell or personalized-position advice. History is server-backed (`signal_chat_messages`); a page reload must restore the conversation.
+- **Why**: explain the briefing, never buy/sell or personalized-position advice. Grounded generation of the URL-identified signal — not RAG (D21 / ADR 017; same #103 rule as the briefing). History is server-backed (`signal_chat_messages`); a page reload must restore the conversation.
 
 ### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
 - **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
 - **How**: server component, direct server-side fetch (same pattern as `admin/metrics/page.tsx`, no client proxy route needed); dark-terminal styling matches `/status`.
 - **Shows**: overall hit rate + avg move + sample size always together; a separate volatile/neutral summary; a per-asset table with a "not enough history yet" state below `min_sample_size`; a permanent non-dismissible disclaimer; the plain-language date range. Full detail: `docs/claude_project/06_COMPONENTS.md` §7a.
 - **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page.
+- **Methodology**: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115.
 
 ---
 

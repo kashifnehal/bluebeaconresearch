@@ -30,6 +30,8 @@ Railway workers (startup + every 15 min)
 **Schedule:** `node-cron` every 15 minutes + immediate run on deploy.  
 **Last-fetched banner:** reads `pipeline:last_run` from Upstash Redis (fallback: newest `raw_events.created_at`).
 
+#121's `outcome-tracker.ts` is **not** on this 15-min loop. It is a separate daily cron (`0 5 * * *`) that writes `signal_outcomes` from already-stored signals + `commodity_prices`. Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Do not fold it into collectors.
+
 ---
 
 ## 2. Data Sources

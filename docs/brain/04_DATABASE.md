@@ -185,7 +185,7 @@ Per-user feed and notification settings, distinct from `profiles` (account/billi
 - **Unique Constraint**: `UNIQUE(user_id, signal_id)`
 
 ### Table 13b: `signal_chat_messages` (#111, migration `20260911180000_signal_chat_messages.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-11, `dcdc877`)
-Per-user, per-signal chat turns. Grounded only in that signal — see `ClaudeService.chatAboutSignal()`.
+Per-user, per-signal chat turns. This table is the conversation log only — **not** a retrieval corpus. Grounding is the parent `signals` row injected into `chatAboutSignal()` (see `docs/claude_project/18_AI_ENGINE.md` §3b, D21 / ADR 017). Same #103 buy/sell discipline as the briefing, plus a personalized-advice refusal. Do not add embeddings or a documents table for this feature.
 - `id` (`uuid`, PK, default `gen_random_uuid()`)
 - `signal_id` (`uuid`, NOT NULL, FK `signals.id` ON DELETE CASCADE)
 - `user_id` (`uuid`, NOT NULL, FK `profiles.id` ON DELETE CASCADE)
@@ -224,7 +224,7 @@ Service-role only (RLS enabled, no policy — correct by design).
 - `computed_at` (`timestamptz`, NOT NULL, default `now()`) / `expires_at` (`timestamptz`, NOT NULL)
 
 ### Table 18: `signal_outcomes` (#121 backend half, migration `20260911190000_signal_outcomes.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-11)
-Permanent, never-live-recomputed outcome record — one row per (signal, asset) pair, written once by `outcome-tracker.ts` and never rewritten. Public read (backs a public `/accuracy` page — aggregate/factual, not personal data); service-role write only, same "RLS enabled + no anon/authenticated write policy" pattern as `service_health_events`.
+Permanent, never-live-recomputed outcome record — one row per (signal, asset) pair, written once by `outcome-tracker.ts` and never rewritten. **Why permanent:** `commodity_prices` retains 90 days; recomputing `/accuracy` from that table would silently lose history after day 91. Public read (backs a public `/accuracy` page — aggregate/factual, not personal data); service-role write only, same "RLS enabled + no anon/authenticated write policy" pattern as `service_health_events`. Prerequisite **#53** (impacts must exist to score). Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. #115 is the quality-audit predecessor (severity bunching), not a schema dependency.
 - `id` (`uuid`, PK) / `signal_id` (`uuid`, NOT NULL, FK → `signals.id` ON DELETE CASCADE) / `asset` (`text`, NOT NULL)
 - `predicted_direction` (`text`, NOT NULL, check in `up`/`down`/`volatile`/`neutral` — copied verbatim from that signal's `commodity_impacts[].direction`, never re-derived)
 - `predicted_confidence` (`numeric`, nullable) / `price_at_event` (`numeric`, NOT NULL) / `price_at_checkpoint` (`numeric`, NOT NULL) / `checkpoint_hours` (`int`, NOT NULL, default `48`)

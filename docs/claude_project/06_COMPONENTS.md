@@ -204,7 +204,7 @@ interface SignalCardProps {
 ### SignalChatPanel (apps/web/components/signals/SignalChatPanel.tsx) — #111, `9f2aada`; visual pass 2026-09-12
 **Used in:** `(dashboard)/events/[id]/page.tsx`, below Full Analyst Briefing / Impact Breakdown (those sections are not restyled or replaced).
 
-**Why:** let a user ask follow-ups about **this** briefing without turning the page into a general advisor.
+**Why:** let a user ask follow-ups about **this** briefing without turning the page into a general advisor. Grounded generation of the URL-identified signal — not retrieval (D21 / ADR 017, `18_AI_ENGINE.md` §3b). Same #103 buy/sell rule as the briefing, plus personalized-advice refusal.
 
 **How:**
 - On mount: GET `/api/signals/:id/chat` (BFF → Fastify). Empty state: designed "Ask a question about this briefing" block (not a 12px caption).
@@ -400,6 +400,8 @@ export default function PageName() {
 ## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)
 
 ### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
+
+Reads stored `signal_outcomes` only. Methodology (48h/`event_date`, volatile/neutral excluded from headline, 20-sample floor, 24h price-distance guard, why not live-recomputed): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115.
 
 Public track-record page, server component, `dynamic = "force-dynamic"`. Fetches
 `GET /v1/accuracy` directly server-side (`process.env.API_URL`, `cache: "no-store"`)

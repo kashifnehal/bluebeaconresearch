@@ -539,3 +539,36 @@ credit (already an open item) means this path currently covers meaningful live t
   this session's other fix: Claude/Anthropic health now logged to `service_health_events`.
 
 **Cross-tree mapping:** Recorded as **ADR 016** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D21: Per-Signal Chat Is Grounded Generation + Two-Rule Prompt (#111)
+
+**Decision:** Event-page chat (`chatAboutSignal()`) injects the already-identified signal's stored fields into the system conversation. It is **not** a retrieval/vector-search pipeline. The system prompt carries two independent hard rules: (1) the #103 buy/sell prohibition, copied verbatim from `generateAnalysis()`; (2) an explicit refusal of personalized position/portfolio questions. Do not add RAG to this chat. Do not grow it into multi-signal "has this happened before?" search.
+
+**Context:** #111 sits on `/events/[id]`. The document is known before the first token is typed. A later reader may assume "AI chat" means embeddings + retrieval; that assumption is wrong here and would be a design regression.
+
+**Rationale:**
+- No "which document?" problem exists. Retrieval would add failure modes (wrong signal, stale index) without answering a real product question.
+- Multi-signal historical comparison is a different, larger, unplanned feature. The HISTORICAL tab is a structured `signals` query, not this chat.
+- Rule 1 is the same compliance discipline as #103, on a new surface. Rewrite one copy and the briefing and the chat will drift.
+- Rule 2 exists because of the publishers' exclusion boundary: general/impersonal published research stays outside investment-adviser regulation; a chat that answers one user's "I hold N barrels, should I add?" is personalized advice. Refusal (not answer-then-disclaimer) keeps the product on the publisher side.
+
+**Cross-tree mapping:** Recorded as **ADR 017** in `docs/brain/10_DECISIONS.md`. Full design: `18_AI_ENGINE.md` §3b.
+
+---
+
+## D22: Permanent 48h Outcome Rows, Not Live Recompute (#121)
+
+**Decision:** Predicted-vs-actual commodity direction is computed once, 48 hours after `event_date`, stored in `signal_outcomes`, and never live-recomputed from `commodity_prices`. Headline `hit_rate` counts only `up`/`down` predictions. `volatile`/`neutral` are excluded and reported separately. Per-asset percentages require 20 scored rows. Price points more than 24h from their target timestamp are skipped, not clamped.
+
+**Context:** #121's public `/accuracy` page needs a durable track record. `commodity_prices` retains 90 days. #53 backfilled `commodity_impacts` (the actual prerequisite). Prompt M (`1cdc95d`) found legacy pre-#87 EURUSD/USDRUB impacts clamping to a distant forex print and fabricating false 'flat' outcomes.
+
+**Rationale:**
+- A 90-day price table cannot answer "how have we done since launch" on demand; the outcome must outlive the tick.
+- A fixed 48h window is comparable; "price now" mixes horizons.
+- `volatile`/`neutral` have no single correct direction — blending them into hit-rate would invent accuracy.
+- A percentage on a handful of rows is worse than "not enough history yet."
+- Closest-row-in-the-table is not an observation near the event. The 24h guard exists because that bug shipped in a first pass (349 false flats) and had to be wiped.
+
+**Cross-tree mapping:** Recorded as **ADR 018** in `docs/brain/10_DECISIONS.md`. Full methodology: `17_SIGNAL_ENGINE.md` §7. Related: #53 (prerequisite), #115 (severity-bunching audit this work confirmed and extended).

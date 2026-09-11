@@ -36,7 +36,9 @@
 
 > ⚠️ UPDATED 2026-09-12 (later, `apps/web`) — SignalChatPanel visual/layout pass: contrast/type-size/composer wrapping, a heuristic auto-classified note, and specific copy for `503 ai_temporarily_unavailable`. Same component and backend contract. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.52.0. This tree: PHASE 18.
 
-Last updated: 2026-09-12
+> ⚠️ UPDATED 2026-09-12 (docs, no application code) — #111 and #121 documented at architecture depth (not changelog depth): grounded generation vs RAG + two-rule prompt / publishers' exclusion (`18_AI_ENGINE.md` §3b, D21/ADR 017); 48h outcome methodology (`17_SIGNAL_ENGINE.md` §7, D22/ADR 018). New **Known Limitations** section below. Cross-links: #111→#103, #121→#53/#115.
+
+Last updated: 2026-09-12 (#111/#121 architecture docs + Known Limitations; design in `18_AI_ENGINE.md` §3b / `17_SIGNAL_ENGINE.md` §7)
 
 ---
 
@@ -104,6 +106,29 @@ Dashboard shows eventDate → "X hours ago" = when article was PUBLISHED
 A signal ingested **5 minutes ago** from a BBC article published **12 hours ago** will display **"12 hours ago"**. Refreshing the page does not change this — it is intentional (v0.10.0 decision).
 
 Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New ingested signals with lower severity (e.g. 5) exist in the DB but may not become the hero card.
+
+---
+
+## Known Limitations
+
+Standing limitations. Not a changelog. Same section exists in `docs/brain/08_CURRENT_STATUS.md`. Design context: D20–D22 / ADR 016–018.
+
+### Heuristic classifier severity-scoring gap (found 2026-09-11, capped 2026-09-12)
+
+`heuristicClassify()` assigned severity 7–9 on bare keyword matches. Confirmed production ids:
+
+- `37e6c146-4189-4b96-be45-ad01ccaea016` — Oregon military-radar permitting story — severity **8** on "military".
+- `5e3b9c09-99ad-4959-88e2-dcc90c2bb629` — personal Navy memoir — severity **9** on "war".
+
+Both confidence `0.76` (heuristic-only). Cap: heuristic severity ≤ 6. #115 first flagged severity-bunching; this investigation confirmed it. The cap is a bound, not a quality fix.
+
+### Recurring Anthropic credit exhaustion
+
+Repeated `credit balance too low` (2026-08-19; #53 backfill 2026-09-11, 201 rows skipped; 2026-09-12 ingest, every classify call). Live traffic is heuristic-only until funded. Ops problem, not a code path to "fix" by retrying the API.
+
+### `service_health_events` did not track Claude/Anthropic until Prompt O
+
+Pre-2026-09-12 the table tracked collectors/prices only. Prompt O added `recordServiceHealth("anthropic", ...)` on `classifyEvent()` and `chatAboutSignal()`. Claude outages before that date are not in this table.
 
 ---
 

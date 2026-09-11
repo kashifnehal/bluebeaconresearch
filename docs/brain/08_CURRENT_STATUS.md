@@ -2,7 +2,7 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-12 (SignalChatPanel contrast/layout pass + heuristic flag + 503 copy — see `14_CHANGELOG.md` v0.52.0)
+Last updated: 2026-09-12 (#111/#121 architecture docs + no-mock-data audit — see Known Limitations below; design in `18_AI_ENGINE.md` §3b / `17_SIGNAL_ENGINE.md` §7)
 
 ---
 
@@ -494,6 +494,29 @@ Dashboard shows eventDate → "X hours ago" = when article was PUBLISHED
 A signal ingested **5 minutes ago** from a BBC article published **12 hours ago** will display **"12 hours ago"**. Refreshing the page does not change this — it is intentional (v0.10.0 decision).
 
 Featured cards on `/alerts` pick the first signal with **`severity >= 8`**. New ingested signals with lower severity (e.g. 5) exist in the DB but may not become the hero card.
+
+---
+
+## Known Limitations
+
+Standing limitations. Not a changelog. Same section exists in `docs/claude_project/08_CURRENT_STATUS.md`. Design context: D20–D22 / ADR 016–018.
+
+### Heuristic classifier severity-scoring gap (found 2026-09-11, capped 2026-09-12)
+
+`ClaudeService.heuristicClassify()` assigned severity 7–9 on bare keyword matches with no relevance judgment. Confirmed production false positives (live SQL on `evavcgfmemwryggdkjmx`):
+
+- `37e6c146-4189-4b96-be45-ad01ccaea016` — "Public comment open on environment study for proposed $1.1B military radar sites in Oregon" — severity **8** on the word "military".
+- `5e3b9c09-99ad-4959-88e2-dcc90c2bb629` — "9/11 in the Navy: I went to war, but never got off the boat" — severity **9** on the word "war".
+
+Both confidence `0.76` (heuristic `dynamicConfidence` only). Cap shipped: heuristic severity `Math.min(severity, 6)`; 7/8/9 require a real Claude classification. `signals.classification_method` records the path. This is the #115 severity-bunching concern confirmed and extended. The cap bounds the failure; it does not make keyword severity "correct."
+
+### Recurring Anthropic credit exhaustion
+
+The account has hit `credit balance too low` repeatedly (2026-08-19, again during the #53 backfill 2026-09-11 — 201 rows skipped — and again 2026-09-12 ingest, every classify call). While exhausted, live traffic is heuristic-only. Funding the account is an ops action, not a code bug. Do not treat heuristic coverage as "Claude is working." Do not hammer the API to confirm it is down.
+
+### `service_health_events` did not track Claude/Anthropic until Prompt O
+
+Until 2026-09-12, `service_health_events` logged ingestion sources (`gdelt` / `gnews` / `acled` / `rss` / `yahoo_finance`) only. Claude/Anthropic — the component `AGENTS.md` already listed as degraded — had zero rows. Prompt O added `recordServiceHealth("anthropic", ...)` in `classifyEvent()` and `chatAboutSignal()`. Historical Claude outages before that date are not in this table.
 
 ---
 

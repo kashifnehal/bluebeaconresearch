@@ -218,7 +218,7 @@ Then: insert user row → `ClaudeService.chatAboutSignal()` (`claude-sonnet-5`, 
 
 **⚠️ UPDATED 2026-09-12** — the `chatAboutSignal()` call is now wrapped in try/catch (it previously had none). Any unexpected error → `503 { "error": "ai_temporarily_unavailable" }` instead of a generic 500. The event-page chat panel renders this as "BBR's AI service is temporarily unavailable — try again shortly" (not the generic catch-all).
 
-**Why this shape:** the event-page chat must never become general market advice. Same buy/sell prohibition as `generateAnalysis()` (#120), plus an explicit refusal of personalized-position questions ("I hold 200 barrels…"). Web UI never calls Fastify directly — see §6 `signals/[id]/chat/route.ts`.
+**Why this shape:** the event-page chat must never become general market advice. Grounded generation of **this** signal only — not retrieval (D21 / ADR 017, `18_AI_ENGINE.md` §3b). Same buy/sell prohibition as `generateAnalysis()` (**#103**, also #120), plus an explicit refusal of personalized-position questions ("I hold 200 barrels…") because a one-user chat sits closer to the publishers' exclusion boundary than a briefing. Web UI never calls Fastify directly — see §6 `signals/[id]/chat/route.ts`.
 
 ---
 
@@ -314,6 +314,9 @@ alongside `hit_rate`, never one without the other. `volatile_neutral_summary` (m
 ≥2% counted as "the volatility call played out") is reported separately and never
 blended into `hit_rate`, since a volatile/neutral prediction has no single correct
 direction to score against. Backs the public `/accuracy` page (`06_COMPONENTS.md`).
+Methodology (48h/`event_date`, 24h price-distance guard, why the table is
+permanent): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite **#53**;
+quality context **#115**.
 
 ---
 

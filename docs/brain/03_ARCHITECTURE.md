@@ -132,3 +132,23 @@ apps/backend (Fastify) ──────┘
                              │
 apps/mobile (Expo RN) ───────┘
 ```
+
+---
+
+## 6. Per-signal chat (#111) — grounded generation, not retrieval
+
+Canonical design: `docs/claude_project/18_AI_ENGINE.md` §3b and D21 / ADR 017 (this file's ADR 017). Short version:
+
+The user is already on `/events/[id]`. Fastify loads **that** `signals` row; `chatAboutSignal()` injects stored fields into the prompt. Grounded generation — **not** RAG / vector search. Correct, not a shortcut: the document is identified by the URL before chat starts. Multi-signal retrieval ("has this happened before?") is a different, not-yet-planned feature.
+
+Two prompt rules: (1) no buy/sell — same as `generateAnalysis()` / **#103**; (2) refuse personalized position advice (publishers' exclusion: impersonal research vs. one-user advice). Table: `signal_chat_messages`. Web BFF: `/api/signals/[id]/chat`.
+
+---
+
+## 7. Outcome tracking & public accuracy (#121)
+
+Canonical methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7 and D22 / ADR 018.
+
+`outcome-tracker.ts` (`0 5 * * *`) writes `signal_outcomes` once per `(signal, asset)`. `GET /v1/accuracy` reads only that table. 48h checkpoint on `event_date`; `volatile`/`neutral` out of headline hit-rate; 20-sample floor per asset; 24h price-point guard (Prompt M / `1cdc95d`: legacy EURUSD/USDRUB clamped to a distant print and fabricated false flats). Permanent storage because `commodity_prices` drops rows after 90 days.
+
+Prerequisite **#53**. Quality context **#115**.

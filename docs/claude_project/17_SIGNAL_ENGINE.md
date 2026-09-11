@@ -251,50 +251,44 @@ If sanctions_matches populated: amber warning box listing matched entities and w
 
 ---
 
-## 7. SIGNAL OUTCOME TRACKING
+## 7. SIGNAL OUTCOME TRACKING (#121 — shipped; do not restore the old `alerts_sent` sketch)
 
-**Purpose:** Fill alerts_sent.outcome_direction to enable accuracy calculation.
+The block that used to live here (`alerts_sent.outcome_direction`, "NOT YET BUILT", price-at-now vs a `price_at_signal` field) is **not** the live design. Live system: table `signal_outcomes` + daily worker `apps/backend/src/workers/outcome-tracker.ts` + public `GET /v1/accuracy` + public `/accuracy` page. Standing rules: D22 / ADR 018. Schema: `docs/brain/04_DATABASE.md` Table 18.
 
-**Worker:** outcome-tracker.ts (daily 03:00 UTC — NOT YET BUILT)
+**Prerequisite:** **#53** (`commodity_impacts` historical backfill, `8733677`) — without filled `commodity_impacts`, there is nothing to score. **#115** (signal-quality live-data audit) first flagged the severity-bunching concern this session's investigation later confirmed and extended; #121 scores *direction* of `commodity_impacts`, not severity, but inherits that quality work as the reason empty/garbage impacts cannot be treated as a track record.
 
-**Logic:**
-```typescript
-// Find alerts sent 24-48 hours ago with no outcome yet
-const { data: pendingAlerts } = await supabase
-  .from('alerts_sent')
-  .select('*, signals(*)')
-  .is('outcome_direction', null)
-  .gte('created_at', new Date(Date.now() - 48 * 3600000).toISOString())
-  .lte('created_at', new Date(Date.now() - 24 * 3600000).toISOString())
+### Why a permanent table, not a live recompute
 
-for (const alert of pendingAlerts) {
-  const primaryAsset = alert.signals.commodity_impacts[0]?.asset
-  if (!primaryAsset) continue
+`commodity_prices` is retained 90 days (`retention.ts`). Recomputing hit-rate on demand from that table would silently lose every outcome older than 90 days and the public track record would shrink. `signal_outcomes` is written once per `(signal_id, asset)` and never rewritten. `GET /v1/accuracy` reads only this table.
 
-  // Get price at signal time
-  const priceAtSignal = alert.signals.price_at_signal?.[primaryAsset]
-  
-  // Get current price
-  const { data: currentPrice } = await supabase
-    .from('commodity_prices')
-    .select('price')
-    .eq('symbol', primaryAsset)
-    .order('fetched_at', { ascending: false })
-    .limit(1)
-    .single()
+### 48-hour fixed checkpoint, anchored on `event_date`
 
-  if (priceAtSignal && currentPrice) {
-    const pctChange = (currentPrice.price - priceAtSignal) / priceAtSignal * 100
-    const outcome = pctChange > 0.5 ? 'up' : pctChange < -0.5 ? 'down' : 'neutral'
-    const predicted = alert.signals.commodity_impacts[0]?.direction
-    
-    await supabase
-      .from('alerts_sent')
-      .update({
-        outcome_direction: outcome,
-        outcome_price_change: pctChange
-      })
-      .eq('id', alert.id)
-  }
-}
-```
+Not "price now" and not `created_at`. For every signal ≥48h old with a non-empty `commodity_impacts` array, for each `(signal, asset)` pair not already stored:
+
+1. Price at `event_date` (article/event time).
+2. Price at `event_date + 48h` (fixed horizon).
+3. `actual_pct_change`, `actual_direction` (`up`/`down`/`flat` if `abs(pct) < 0.5`), `is_directionally_correct`.
+
+`predicted_direction` / `predicted_confidence` are copied from that impact row, never re-derived. Cron: `0 5 * * *`. One-shot: `pnpm --filter backend outcome-tracker:once`.
+
+A fixed 48h window is comparable across signals. A floating "price now" window would mix 2-day-old and 60-day-old events into one statistic.
+
+### Headline hit-rate excludes `volatile` / `neutral`
+
+`up`/`down` predictions score true/false against actual `up`/`down`. `volatile` and `neutral` have no single actual direction that would validate them, so `is_directionally_correct` is **NULL** and they are **not** in `hit_rate`. They are reported separately as `volatile_neutral_summary` (fraction whose actual move exceeded `VOLATILITY_THRESHOLD_PCT = 2%`, ~4× the 0.5% flat-noise floor). Do not blend that fraction into the headline percentage.
+
+### 20-signal minimum per asset
+
+`MIN_SAMPLE_SIZE = 20` scored (`up`/`down`) predictions. Below that, `hit_rate` is `null` and `not_enough_history: true`. A percentage on 11 EURUSD rows is more misleading than useful. Tunable judgment call, not a natural law. `sample_size_note` is always returned with `hit_rate`.
+
+### 24h max-distance guard on price-point matching
+
+The worker binary-searches each asset's `commodity_prices` series for the point closest to the target timestamp. Closest-in-the-table is not "observed near that time."
+
+Prompt M / #121 backend (`1cdc95d`) found and fixed: *legacy pre-#87 EURUSD/USDRUB commodity_impacts entries (no forex price history before 2026-09-09) were clamping to a distant price and fabricating false 'flat' outcomes*. First pass wrote 3,263 rows including 349 with `price_at_event == price_at_checkpoint`. Those pairs had no real observation near either timestamp; both lookups clamped to the same earliest forex print, weeks away, so pct-change was 0 and the outcome was recorded as flat.
+
+`MAX_PRICE_POINT_DISTANCE_MS = 24h` (largest real sync gap observed ~18h13m). Past that, skip and log — do not write. Wipe-and-rerun after the fix: 2,965 clean rows.
+
+### What this is not
+
+Not a trading backtest (the `/api/backtesting` demo endpoint is a different, still-mock surface). Not a "top signals" / "best calls" list — the `/accuracy` page is forbidden from ranking individual calls. Not live-recomputed. Not scored on severity.

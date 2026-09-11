@@ -141,3 +141,27 @@ apps/backend (Fastify) ──────┘
                              │
 apps/mobile (Expo RN) ───────┘
 ```
+
+---
+
+## 6. Per-signal chat (#111) — grounded generation, not retrieval
+
+Event-page follow-up chat. Design lives in `docs/claude_project/18_AI_ENGINE.md` §3b and D21 / ADR 017. Short version for anyone opening this file first:
+
+The user is already on `/events/[id]`. The Fastify handler loads **that** `signals` row and `ClaudeService.chatAboutSignal()` injects its stored fields into the prompt. That is grounded generation. It is **not** a multi-document RAG / vector-search pipeline, and that is correct: there is no "which document?" problem. A future "has this happened before?" feature would be a different product, not an upgrade to this chat.
+
+Two independent prompt rules (do not collapse): (1) no buy/sell language — same wording as `generateAnalysis()`, which is **#103** applied to a new surface; (2) refuse personalized position/portfolio questions, because a chat answering one user's specific situation sits closer to the investment-adviser line than a published briefing (publishers' exclusion: general/impersonal stays outside; tailored advice does not). Persistence: `signal_chat_messages`. Web never calls Fastify from the browser — same-origin `/api/signals/[id]/chat` BFF.
+
+---
+
+## 7. Outcome tracking & public accuracy (#121)
+
+Not the stale `alerts_sent.outcome_direction` sketch. Live path: `outcome-tracker.ts` (cron `0 5 * * *`) writes `signal_outcomes` once per `(signal, asset)`; `GET /v1/accuracy` aggregates that table; `/accuracy` renders it. Full methodology: `17_SIGNAL_ENGINE.md` §7 and D22 / ADR 018.
+
+- 48h fixed checkpoint on `event_date`, not "price now".
+- `volatile`/`neutral` excluded from headline `hit_rate`, reported separately.
+- 20 scored predictions minimum per asset before a percentage is shown.
+- 24h max-distance on price-point matching — Prompt M / `1cdc95d` false-flat bug (legacy EURUSD/USDRUB clamped to a distant print).
+- Permanent table because `commodity_prices` is 90-day retained; live recompute would erase history.
+
+Prerequisite **#53** (impacts backfill). Quality context **#115** (severity-bunching audit this session confirmed and extended). Worker is daily, not on the 15-min ingest loop.

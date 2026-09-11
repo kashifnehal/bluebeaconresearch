@@ -382,3 +382,42 @@ match only — not an authoritative record of the original classification).
 
 ### Cross-tree mapping
 Recorded as **D20** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 18. ADR 017: Per-Signal Chat Is Grounded Generation + Two-Rule Prompt (#111)
+
+### Context
+#111 adds follow-up chat on `/events/[id]`. A later engineer may assume that means embeddings, a vector index, and multi-document retrieval. The relevant row is already identified by the URL. Chat also sits closer to personalized-advice regulation than a static briefing does.
+
+### Decision
+`chatAboutSignal()` is grounded generation: the signal's own stored fields are injected into the prompt. No retrieval pipeline. Two independent system-prompt rules: (1) #103 buy/sell prohibition, copied verbatim from `generateAnalysis()`; (2) refuse questions shaped as advice about the user's own position/portfolio, with a fixed redirect and no partial answer. Do not grow this into multi-signal retrieval.
+
+### Rationale
+- There is no "which document?" search problem. RAG here is the wrong architecture.
+- A real "has this happened before?" feature would be a different product (not yet planned). The HISTORICAL tab is a structured query, not this chat.
+- Rule 1 is #103's compliance discipline on a new surface — keep the wording in lockstep with the briefing prompt.
+- Rule 2 is the publishers' exclusion boundary: general/impersonal content stays outside investment-adviser regulation; answering one user's specific holdings question does not. Refusal is the design, not a disclaimer after an answer.
+
+### Cross-tree mapping
+Recorded as **D21** in `docs/claude_project/10_DECISIONS.md`. Full design: `docs/claude_project/18_AI_ENGINE.md` §3b.
+
+---
+
+## 19. ADR 018: Permanent 48h Outcome Rows, Not Live Recompute (#121)
+
+### Context
+The public `/accuracy` page needs a durable predicted-vs-actual record. `commodity_prices` is 90-day retained. #53 backfilled `commodity_impacts` so there was something to score. A first-pass worker (Prompt M, `1cdc95d`) clamped missing forex history to a distant print and fabricated false 'flat' outcomes.
+
+### Decision
+Write `signal_outcomes` once, 48h after `event_date`, never recompute live. Exclude `volatile`/`neutral` from headline hit-rate (report separately). Require 20 scored predictions per asset before showing a percentage. Reject price points more than 24h from the target timestamp.
+
+### Rationale
+- Live recompute against a 90-day table would silently destroy historical accuracy.
+- Fixed horizon is comparable; floating "now" is not.
+- `volatile`/`neutral` cannot be scored true/false against a single actual direction.
+- Small-n percentages mislead more than they inform.
+- Closest-row ≠ observed-near-event. Quote from `1cdc95d`: "legacy pre-#87 EURUSD/USDRUB commodity_impacts entries (no forex price history before 2026-09-09) were clamping to a distant price and fabricating false 'flat' outcomes."
+
+### Cross-tree mapping
+Recorded as **D22** in `docs/claude_project/10_DECISIONS.md`. Full methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Related: #53, #115.
