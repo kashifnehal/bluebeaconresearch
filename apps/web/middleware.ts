@@ -42,10 +42,29 @@ const PROTECTED = [
 // Two changes contain that blast radius:
 //   1. Only call getUser() for PROTECTED page routes. Everything else returns
 //      immediately without touching Supabase.
-//   2. Bound the getUser() call to AUTH_CHECK_TIMEOUT_MS. On timeout — or any
-//      auth error, or missing env — fail CLOSED: redirect to /login exactly like
-//      an unauthenticated request. A protected route never falls open.
-const AUTH_CHECK_TIMEOUT_MS = 3000;
+//   2. Bound the getUser() call to AUTH_CHECK_TIMEOUT_MS via Promise.race (do
+//      not AbortController-cancel the in-flight Auth HTTP request — that made
+//      GoTrue log "context canceled" / postgres dial canceled and worsened the
+//      2026-09-09 incident). On timeout — or any auth error, or missing env —
+//      fail CLOSED: redirect to /login exactly like an unauthenticated request.
+//      A protected route never falls open. 8s: a real GET /user took 6.4s and
+//      succeeded in that incident; 3s sat inside normal tail latency.
+const AUTH_CHECK_TIMEOUT_MS = 8000;
+const AUTH_CHECK_TIMEOUT = { timedOut: true } as const;
+
+function logAuthCheckError(err: unknown, phase: "failed" | "background") {
+  const e = err as { name?: string; message?: string; code?: string };
+  console.error(
+    phase === "failed"
+      ? "Middleware auth check failed:"
+      : "Middleware auth check (background):",
+    {
+      name: e?.name,
+      message: e instanceof Error ? e.message : String(err),
+      code: e?.code,
+    },
+  );
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -96,11 +115,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Abort the underlying auth HTTP request if it exceeds the budget, so this
-  // never rides the platform's ~25s function timeout to a 504.
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), AUTH_CHECK_TIMEOUT_MS);
-
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll: () => request.cookies.getAll(),
@@ -110,26 +124,42 @@ export async function middleware(request: NextRequest) {
         });
       },
     },
-    global: {
-      fetch: (input, init) =>
-        fetch(input, { ...init, signal: controller.signal }),
-    },
   });
 
   // getUser() validates the JWT server-side against Supabase, so expired or
-  // revoked tokens are rejected in production.
+  // revoked tokens are rejected in production. Race against a timer rather
+  // than aborting fetch: the request may still complete in the background.
   let user = null;
   let timedOut = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const getUserPromise = supabase.auth.getUser();
   try {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    user = data.user;
-  } catch {
-    // AbortError (auth backend too slow) or a genuine "no session" error — a
-    // protected route with no verified user either way.
-    timedOut = controller.signal.aborted;
+    const result = await Promise.race([
+      getUserPromise,
+      new Promise<typeof AUTH_CHECK_TIMEOUT>((resolve) => {
+        timer = setTimeout(
+          () => resolve(AUTH_CHECK_TIMEOUT),
+          AUTH_CHECK_TIMEOUT_MS,
+        );
+      }),
+    ]);
+    if ("timedOut" in result) {
+      timedOut = true;
+      // Let getUser() finish in the background; swallow a later rejection so
+      // it does not become an unhandled promise.
+      void getUserPromise.catch((err: unknown) => {
+        logAuthCheckError(err, "background");
+      });
+    } else {
+      if (result.error) throw result.error;
+      user = result.data.user;
+    }
+  } catch (err: unknown) {
+    // Genuine "no session" / AuthApiError — a protected route with no
+    // verified user. Timeout is handled via the sentinel above, not here.
+    logAuthCheckError(err, "failed");
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 
   if (!user) {

@@ -4,6 +4,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
+- #116 "Authentication is temporarily unavailable" — shipped 2026-09-11. Root cause was the 3s AbortController on middleware `getUser()` (Vercel `AbortError` on `/middleware` + GoTrue `context canceled` / `dial tcp [::1]:5432: operation was canceled` on 2026-09-09; a real `/user` also succeeded in 6.4s). Timeout raised to 8s; race against a timer instead of aborting Auth's fetch; `catch` now `console.error`s name/message/code. Fail-closed redirect + login banner on timeout unchanged. Type-check only — no middleware tests exist; live Auth slowness not reproduced.
 - #124 Feed filter bar + shared FilterBar — shipped 2026-09-11 (`74b815b`). Commodity/Region/min-severity/Time range (incl. 30d) on feed and map; region match is casing/hyphen insensitive. Playwright on romantannison: unfiltered 2823 → USOIL 478; map FilterBar present, This month sent `window=30d`, Africa region 20→6. Follow-up: map `fetchFiltered` now sends `limit=500` (API cap raised to match) so All / This month are not stuck on the first 20.
 - #125 Trader-role saved views — shipped 2026-09-11 (`74b815b`). Feed-only Oil/Grain/Metals chips set FilterBar controls (no new schema). Playwright: Oil Desk 185 = manual Energy + Middle East; Grain `cat:agriculture`/region All 87; Metals XAUUSD 256.
 - #107 follow-up Watchlist prefs-aware seed + user_preferences persist — shipped 2026-09-11 (`75d932c`). First-visit seed uses onboarding commodities ∪ forex when present (generic 8 only as fallback), still labeled “Suggested for you — remove anything you don't need.” List upserts to `user_preferences.watchlist_symbols` / `watchlist_suggested` (same `onConflict: "user_id"` path as #81); `bbr.watchlist.v1` stays a cache. Verified on standing test account romantannison: `commodities=['COPPER']` (set for this check — was empty) seeded the Copper card, not the generic 8, with the suggested banner; DB wrote `watchlist_symbols=['COPPER']`; `localStorage.clear()` + reload still showed Copper from the server row.
@@ -292,8 +293,6 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #114 Business continuity + legal registration — checklist ready; founder to pick a
   jurisdiction and register.
 - #115 Signal-quality live-data audit — ready-to-run, read-only verification prompt exists.
-- #116 "Authentication is temporarily unavailable" error — root cause unconfirmed; a
-  diagnostic-first prompt exists, no guess-and-fix.
 - #117 Global marketing/ads compliance — researched, no blocker found; action folded into
   #102.
 - #118 Premium news/AI tier — step 1 (GNews Essential) no gate; steps 2-3 gated on real
