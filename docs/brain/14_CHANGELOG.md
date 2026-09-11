@@ -8,6 +8,14 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.52.0 — SignalChatPanel visual pass + heuristic flag + 503 copy (2026-09-12)
+
+Visual/layout pass on `SignalChatPanel` after Prompt O shipped `classification_method` and `503 ai_temporarily_unavailable`. Same component, same backend contract.
+
+Step 0 (Playwright CLI, standing test account, real signal `4c8e932f-…`): desktop type was 9–10px; `text-text-secondary`/`text-bg-app` are dead tokens; 768px composer truncated; 390px panel was 70px because of the dashboard's fixed 256px sidebar (not fixed this pass); 503 rendered the generic catch-all.
+
+Shipped: stitch tokens + larger type + stacked composer below `@[420px]` + designed empty state/disclaimer; `classificationMethod === 'heuristic'` note; specific 503 copy. Event-detail BFF maps `classification_method`. Verified with before/after screenshots at 1440/768/390.
+
 ### v0.51.0 — Classification trust/reliability fixes (2026-09-12)
 
 Direct production investigation (live SQL against `evavcgfmemwryggdkjmx`) found

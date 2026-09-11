@@ -212,7 +212,7 @@ export default function EventDetailPage() {
         </button>
       </nav>
 
-      <div className="flex-1 p-8 pt-4 overflow-y-auto">
+      <div className="flex-1 px-4 py-4 sm:p-8 sm:pt-4 overflow-y-auto">
         <div className="mx-auto w-full max-w-[1280px]">
           {/* ── Hero Section ──────────────────────────────────────── */}
           <header className="flex flex-col xl:flex-row gap-10 items-start mb-12">
@@ -465,7 +465,10 @@ export default function EventDetailPage() {
                     {/* #111 (frontend half) — chat panel, below the existing
                        Full Analyst Briefing / Impact Breakdown sections above.
                        Does not touch or restyle those sections. */}
-                    <SignalChatPanel signalId={signal.id} />
+                    <SignalChatPanel
+                      signalId={signal.id}
+                      classificationMethod={signal.classificationMethod}
+                    />
                   </div>
 
                   <div className="md:col-span-4 space-y-6">

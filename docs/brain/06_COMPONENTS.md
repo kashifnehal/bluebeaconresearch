@@ -80,11 +80,11 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Purpose**: Desktop-only right-half slide-over preview of a feed row.
 - **Parent**: Intelligence Feed stream.
 
-### 3.5 `SignalChatPanel.tsx` (#111, `9f2aada`)
+### 3.5 `SignalChatPanel.tsx` (#111, `9f2aada`; visual pass 2026-09-12)
 - **Purpose**: Follow-up questions about **this** signal only, on the event detail page.
-- **Props**: `{ signalId: string }`
+- **Props**: `{ signalId: string, classificationMethod?: 'claude' | 'heuristic' | null }`
 - **Parent**: `(dashboard)/events/[id]/page.tsx` — mounted below Full Analyst Briefing / Impact Breakdown (those sections untouched).
-- **How**: GET `/api/signals/:id/chat` on mount (empty state: "Ask a question about this signal to get started"); POST on send with optimistic user bubble + rollback on failure. Loading spinner reuses #108's `progress_activity` + `animate-spin`. Always-visible disclaimer under the input (not a tooltip). Plain-language copy for `403 premium_required` / `429 rate_limited`.
+- **How**: GET `/api/signals/:id/chat` on mount; POST on send with optimistic user bubble + rollback on failure. Loading spinner reuses #108's `progress_activity` + `animate-spin`. Always-visible disclaimer in a footer strip (not a tooltip). Plain-language copy for `403 premium_required` / `429 rate_limited` / `503 ai_temporarily_unavailable`. Heuristic note when `classificationMethod === 'heuristic'`. Composer stacks below a 420px container width. Working stitch tokens (`text-on-surface`, `text-on-surface-variant`) — `text-text-secondary`/`text-muted`/`text-bg-app` do not map.
 - **Why**: explain the briefing, never buy/sell or personalized-position advice. History is server-backed (`signal_chat_messages`); a page reload must restore the conversation.
 
 ### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)

@@ -216,7 +216,7 @@ Gates (in order):
 
 Then: insert user row → `ClaudeService.chatAboutSignal()` (`claude-sonnet-5`, last 10 prior turns, grounded only in this signal's title/summary/`ai_analysis`/impacts/severity/confidence/sources_count/event_date) → insert assistant row → `{ "reply": string }`.
 
-**⚠️ UPDATED 2026-09-12** — the `chatAboutSignal()` call is now wrapped in try/catch (it previously had none). Any unexpected error → `503 { "error": "ai_temporarily_unavailable" }` instead of a generic 500, so the frontend can show a specific, honest message.
+**⚠️ UPDATED 2026-09-12** — the `chatAboutSignal()` call is now wrapped in try/catch (it previously had none). Any unexpected error → `503 { "error": "ai_temporarily_unavailable" }` instead of a generic 500. The event-page chat panel renders this as "BBR's AI service is temporarily unavailable — try again shortly" (not the generic catch-all).
 
 **Why this shape:** the event-page chat must never become general market advice. Same buy/sell prohibition as `generateAnalysis()` (#120), plus an explicit refusal of personalized-position questions ("I hold 200 barrels…"). Web UI never calls Fastify directly — see §6 `signals/[id]/chat/route.ts`.
 

@@ -40,6 +40,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | # | Item | Effort | Why |
 |---|------|--------|-----|
 | — | Heuristic-classifier severity cap + `classification_method` flag + AI health logging + chat error handling | — | **Done 2026-09-12** (partial follow-through on #115's signal-quality audit direction) — direct production investigation found the keyword-only heuristic fallback classifier assigning severity 8/9 on bare keyword matches (real examples: an Oregon military-radar-site permitting story scored 8 on "military", a personal Navy memoir scored 9 on "war"). Severity now hard-capped at 6 on that path; new `signals.classification_method` column records `claude` vs `heuristic` going forward (historical rows best-effort backfilled); Claude/Anthropic calls now logged to `service_health_events`; signal-chat POST route now has error handling (`503 ai_temporarily_unavailable` instead of a generic 500). See `LIVE_TODO.md`, ADR 016/D20. |
+| — | SignalChatPanel visual pass + heuristic note + 503 copy | — | **Done 2026-09-12** — contrast/type-size/composer wrapping on the existing #111 panel; `classification_method = heuristic` note; specific `ai_temporarily_unavailable` message. Same component and backend contract. See `LIVE_TODO.md`. |
 
 ### Still open
 

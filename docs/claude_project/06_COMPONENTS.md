@@ -201,17 +201,18 @@ interface SignalCardProps {
 
 ---
 
-### SignalChatPanel (apps/web/components/signals/SignalChatPanel.tsx) — #111, `9f2aada`
+### SignalChatPanel (apps/web/components/signals/SignalChatPanel.tsx) — #111, `9f2aada`; visual pass 2026-09-12
 **Used in:** `(dashboard)/events/[id]/page.tsx`, below Full Analyst Briefing / Impact Breakdown (those sections are not restyled or replaced).
 
 **Why:** let a user ask follow-ups about **this** briefing without turning the page into a general advisor.
 
 **How:**
-- On mount: GET `/api/signals/:id/chat` (BFF → Fastify). Empty state: "Ask a question about this signal to get started."
+- On mount: GET `/api/signals/:id/chat` (BFF → Fastify). Empty state: designed "Ask a question about this briefing" block (not a 12px caption).
 - Send: optimistic user bubble, POST `{ message }`, spinner matching #108 (`progress_activity` + `animate-spin`), then append `reply`. Rollback the optimistic bubble on 4xx/5xx.
-- Errors: `403` → "This feature needs a paid plan." / `429` → "You've hit today's question limit — try again tomorrow." Never dump the raw JSON.
-- Always-visible, non-dismissible line under the input: "This assistant explains the signal only — it can't give personalized investment advice."
-- Reload must restore history from `signal_chat_messages` (verified 2026-09-11). Styling uses the event page's CSS tokens (`--border-subtle`, `--accent`, Space Grotesk labels) — same file convention as `SignalQuickView.tsx`.
+- Errors: `403` → "This feature needs a paid plan." / `429` → "You've hit today's question limit — try again tomorrow." / `503 ai_temporarily_unavailable` → "BBR's AI service is temporarily unavailable — try again shortly". Never dump the raw JSON.
+- If the signal's `classificationMethod === 'heuristic'`, a note at the top of the panel: "This signal was auto-classified — Claude analysis is temporarily unavailable."
+- Always-visible, non-dismissible footer strip under the input: "This assistant explains the signal only — it can't give personalized investment advice."
+- Reload must restore history from `signal_chat_messages`. Styling uses working stitch tokens (`text-on-surface`, `text-on-surface-variant`, `text-primary-fixed-dim`) — `text-text-secondary` / `text-muted` / `text-bg-app` do not map in `tailwind.config.ts`. Composer stacks below a 420px container width.
 
 ---
 

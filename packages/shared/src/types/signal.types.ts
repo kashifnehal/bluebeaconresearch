@@ -35,6 +35,9 @@ export interface Signal {
   sanctionsMatches?: { actor: string; list: string }[];
   isBreaking: boolean;
   isActive: boolean;
+  // Set by classifyEvent() going forward (`claude` | `heuristic`). Null on
+  // pre-column rows that the 2026-09-12 backfill left unknown.
+  classificationMethod?: "claude" | "heuristic" | null;
   createdAt: string; // when WE ingested it
   eventDate?: string; // when the article/event was PUBLISHED
   updatedAt?: string; // last updated time for this signal record

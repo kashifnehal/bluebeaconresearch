@@ -161,6 +161,7 @@ export async function GET(
     sanctionsMatches: row.sanctions_matches ?? undefined,
     isBreaking: row.is_breaking ?? false,
     isActive: row.is_active ?? true,
+    classificationMethod: row.classification_method ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? undefined,
     eventDate,

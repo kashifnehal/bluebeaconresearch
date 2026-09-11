@@ -324,3 +324,11 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - `isRelevantEvent()` pre-filter investigated and confirmed to run uniformly before `classifyEvent()` regardless of which path classifies the event — not implicated in this bug, no change made.
 - Claude/Anthropic API calls now logged to `service_health_events` — previously only ingestion sources had health tracking.
 - `POST /v1/signals/:id/chat` now wraps `chatAboutSignal()` in try/catch, returning `503 ai_temporarily_unavailable` instead of a generic 500 on an unexpected error.
+
+## PHASE 18 — SIGNALCHATPANEL VISUAL PASS + HEURISTIC FLAG + 503 COPY (2026-09-12)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.52.0.
+
+- Visual/layout pass on `SignalChatPanel` after Prompt O's `classification_method` column and `503 ai_temporarily_unavailable` shipped. Same component, same backend contract.
+- Step 0 real screenshots (1440 / 768 / 390) found dead Tailwind tokens, 9–10px type, a truncated tablet composer, and 503 falling through to a generic error. 390px remaining crush is the dashboard's fixed 256px sidebar, not changed this pass.
+- Heuristic signals now show "This signal was auto-classified — Claude analysis is temporarily unavailable." 503 renders "BBR's AI service is temporarily unavailable — try again shortly."

@@ -34,6 +34,8 @@
 
 > ⚠️ UPDATED 2026-09-12 (reliability/trust fixes, `apps/backend` only) — direct production investigation found `heuristicClassify()` assigning severity 8/9 on bare keyword matches with no relevance judgment (real examples: an Oregon military-radar-site permitting story scored 8 on "military"; a personal Navy memoir scored 9 on "war"). Fixed: (1) heuristic severity hard-capped at 6 — 7/8/9 now only ever come from a real Claude classification; (2) new `signals.classification_method` column (`claude`|`heuristic`) set going forward by `classifyEvent()`, surfaced in the signals API responses, with a best-effort historical backfill (confidence-pattern match, separately flagged `classification_method_inferred`, not an authoritative reclassification); (3) Claude/Anthropic API calls now logged to `service_health_events` (previously untracked — only ingestion sources were); (4) `POST /v1/signals/:id/chat` now wraps `chatAboutSignal()` in try/catch, returning `503 ai_temporarily_unavailable` instead of a generic 500 on an unexpected error. See ADR 016 / D20 in `10_DECISIONS.md`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.51.0. This tree: PHASE 17.
 
+> ⚠️ UPDATED 2026-09-12 (later, `apps/web`) — SignalChatPanel visual/layout pass: contrast/type-size/composer wrapping, a heuristic auto-classified note, and specific copy for `503 ai_temporarily_unavailable`. Same component and backend contract. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.52.0. This tree: PHASE 18.
+
 Last updated: 2026-09-12
 
 ---

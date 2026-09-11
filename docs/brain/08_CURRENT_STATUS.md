@@ -2,13 +2,19 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-12 (heuristic-severity cap + classification_method flag + AI health logging — see `14_CHANGELOG.md` v0.51.0)
+Last updated: 2026-09-12 (SignalChatPanel contrast/layout pass + heuristic flag + 503 copy — see `14_CHANGELOG.md` v0.52.0)
 
 ---
 
 ## Classification trust/reliability fixes — heuristic severity cap, classification_method, AI health logging, chat error handling (2026-09-12)
 
 `apps/backend` only. Full record: `14_CHANGELOG.md` v0.51.0, `LIVE_TODO.md`, `10_DECISIONS.md` ADR 016.
+
+## SignalChatPanel visual pass + heuristic flag + 503 copy (2026-09-12)
+
+`apps/web` + `packages/shared` (event-detail BFF mapping). Full record: `14_CHANGELOG.md` v0.52.0, `LIVE_TODO.md`.
+
+Step 0 Playwright against a real heuristic signal (`4c8e932f-…`) found the #111 panel's real problems: dead Tailwind tokens (`text-text-secondary`, `text-bg-app`), 9–10px type, a composer that truncated at tablet width, and 503 falling through to generic "something went wrong". Redesign kept the same component and backend contract. `classification_method = heuristic` now renders an auto-classified note; `503 ai_temporarily_unavailable` has its own copy. 390px remaining crush is the dashboard's hardcoded 256px sidebar (`layout.tsx`), not the panel — not changed this pass.
 
 Direct production investigation (live SQL against `evavcgfmemwryggdkjmx`) found
 `ClaudeService.heuristicClassify()` assigning severity 7–9 on bare keyword
