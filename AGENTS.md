@@ -26,6 +26,17 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 4. Re-read `docs/brain/LIVE_TODO.md` fresh before touching anything — never rely on this chat's own memory of what it says.
 5. Keep deep research/rationale OUT of this repo. A terse conclusion and a pointer is enough; full detail arrives with the specific task when something is actually built.
 
+## Status honesty
+
+- **"Closed, verified" means the required check actually completed.** If Playwright/browser auth failed, MCP was missing, or you only got a partial pass, write `could not verify` plus the blocker — do not move the item into Closed, verified.
+- **Never invent or inflate verification evidence.** Don't describe a screenshot, login, or test-account walkthrough unless that run finished. A partial pass on one item is not a pass on all items in the same task.
+- **`git commit --amend` is off-limits unless the user explicitly asks.** Never amend to insert a self-referential SHA — that's how `7ac7c24` became an orphan while LIVE_TODO still cited it.
+
+## Compose with shipped decisions
+
+- A literal ticket does not license ignoring an adjacent decision that already shipped. If a prompt says "seed these 8 symbols" and #89 already seeds from `user_preferences`, compose: prefs-if-present, else the 8. If unsure, ask.
+- User-owned list/dismiss/preference state belongs in `user_preferences` (or the existing table), not `localStorage` alone. If the smallest path is localStorage-only, say that tradeoff explicitly and do not call the item fully closed.
+
 ## Standing rules (do not re-litigate)
 
 - **Never call it "an AI tool."** Always "a research platform" / "analyst team." This is a deliberate positioning choice.
@@ -73,3 +84,40 @@ A usage review showed **93% of spend happened at >150k context** and **~11% came
 - Telegram alerts — intentionally deferred by founder decision, not a bug.
 - ACLED collector credentials.
 - Supabase project ref confirmed 2026-09-11: `evavcgfmemwryggdkjmx` is the real, live project (verified via direct query — 747+ real signal rows). `jzomoxsbnssnibshecui` returns a permission error on this session's credentials and should be treated as stale/wrong until shown otherwise.
+
+## Which model to use
+
+Default: Cursor's own model (Grok 4.6, High effort, Fast on). Included in the $20/mo plan at no extra token cost.
+
+Switch to Claude Sonnet 5 only when: the task follows directly from a decision made in the founder's separate research session and needs to match that reasoning, or the task is complicated enough (see the list below).
+
+What counts as complicated enough to switch to Sonnet 5:
+- Anything touching auth, billing, or payments
+- Any task spanning both `apps/backend` and `apps/web` in one change
+- The AI-chat feature (#111), given its regulatory sensitivity
+- Any task that is a direct retry after this same session already produced a wrong/confused result once
+
+Effort: Medium by default. High only for complex or high-stakes work (auth, billing, migrations, anything touching money or user data).
+Context: 300K by default. 1M only when a task genuinely needs the whole repo in view.
+
+## MCP tools available in this repo (see `.cursor/mcp.json`)
+
+- Supabase — the database. Read freely; be careful writing to production tables outside a migration.
+- Vercel — the web app's host. Use for deployment status, logs, and env var checks.
+- Railway — the backend/workers host. Use for logs, deploy status, and service config.
+- Sentry — error tracking. Check here first when debugging a live bug before guessing.
+- Resend — outbound email. Read-only checks unless a task explicitly asks you to send something.
+- Playwright — browser automation, for the visual/interactive verification case above only.
+- GitHub — repo/PR/issue operations, if you need them beyond local git.
+
+Ask before taking a destructive or production-impacting action through any of these (e.g. deleting a Railway service, pausing a Vercel project, running a schema migration against production) — don't just do it because the tool allows it.
+
+## Two AI sessions on this business — the sync protocol (strict, not a suggestion)
+
+Cursor Pro (this IDE) does the actual coding: implementation, debugging, refactors, migrations. A separate Claude research/strategy session (outside this IDE, in a business-planning tool) does market research, planning, and independent verification of what gets shipped. It reads this repo read-only (a GitHub sync scoped to `docs/brain/` and `docs/claude_project/`) — it cannot push here. That makes this repo the only channel between the two, so:
+
+- Every task that changes status — ships something, kills an idea, scopes something, or records a founder decision — ends with a `docs/brain/LIVE_TODO.md` update, in the same commit as the code change (or its own docs-only commit if it's a decision with no code). Not optional, not "when convenient." If you didn't update it, the other session has no way to know the task happened.
+- A decision (a standing rule, a positioning call, a "never do X") also goes into `docs/claude_project/10_DECISIONS.md` and its mirror `docs/brain/10_DECISIONS.md`, in that file's existing Context/Decision/Rationale format. A backlog idea that isn't decided yet does not — it's a LIVE_TODO.md priority-queue line, nothing more, until it's actually decided or actually shipped.
+- Never write something as done/shipped/closed unless it has a real commit SHA behind it. A plan, a research finding, or a "we should build this" is a priority-queue line, full stop — writing it any other way is exactly the kind of stale-doc problem this file exists to prevent (see the doc-precedence rule above: "don't take a doc's self-reported status at face value").
+- Before starting a task that touches something the other session might have an opinion on (pricing, positioning, legal/compliance, anything already flagged as a founder decision in LIVE_TODO.md), re-read LIVE_TODO.md fresh — don't work from what you remember from earlier in this conversation, and don't assume anything discussed in a chat outside this repo is known to you unless it's written down here.
+- Deep research/rationale (competitor analysis, long tradeoff writeups) does not need to live in this repo. LIVE_TODO.md and 10_DECISIONS.md hold the terse, current, actionable version — the conclusion and the pointer, not the essay. When a researched idea actually gets picked up to build, it arrives as its own specific task prompt with the detail that task needs, the same way this file's own history already works (e.g. the #87 forex taxonomy entries — a short status line here, full detail was in the task that built it, not stored permanently in this repo).

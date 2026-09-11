@@ -4,9 +4,9 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
-- #105 Map click-modal UI fix — shipped 2026-09-11 (`7ac7c24`)
-- #107 Watchlist default-populated cards + one-click add — shipped 2026-09-11 (`7ac7c24`)
-- #108 Backtesting Lab auto-apply filters + loading state — shipped 2026-09-11 (`7ac7c24`)
+- #105 Map click-modal UI fix — shipped 2026-09-11 (`f6be851`)
+- #107 Watchlist default-populated cards + one-click add — shipped 2026-09-11 (`f6be851`)
+- #108 Backtesting Lab auto-apply filters + loading state — shipped 2026-09-11 (`f6be851`)
 - #75 Vercel Fluid/SSE retirement — ac356ed
 - #76 Telegram bot token + linking — re-verified 2026-09-06
 - #79 Real usage/analytics tracking — 99975cc; ADMIN_EMAILS follow-up closed
