@@ -2,9 +2,17 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (docs sync: Cowork research #104–#128 + ADR 015/D19 + Cursor Pro setup — see `14_CHANGELOG.md` v0.38.0)
+Last updated: 2026-09-11 (map popup / watchlist seed / backtesting auto-apply — see `14_CHANGELOG.md` v0.39.0)
 
 ---
+
+## Map popup, watchlist seed, backtesting auto-apply (2026-09-11)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.39.0, `LIVE_TODO.md`.
+
+- **#105** — Map marker click opens a wrapping, scrollable React dialog (severity, confidence, impacts, sources, time-ago, detail link) that does not overlap the Global Tension Index.
+- **#107** — Watchlist first-visit seed of the 8 tracked instruments, labeled as a suggestion and persisted so removals stick; add-on-select dropdown.
+- **#108** — Backtesting Lab filters auto-apply (400ms debounce, AbortController + request-id, loading/error states).
 
 ## Docs sync — Cowork research #104–#128, ADR 015/D19, Cursor Pro setup (2026-09-11)
 

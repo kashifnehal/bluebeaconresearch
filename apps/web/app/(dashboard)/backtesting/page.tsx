@@ -1,9 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 import { COMMODITIES, REGIONS } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
+
+type BacktestResult = {
+  totalEvents: number;
+  accuracyPct: number;
+  avgMovePct: number;
+  maxMovePct: number;
+  minMovePct: number;
+  isDemo?: boolean;
+  rows: Array<{
+    date: string;
+    country: string;
+    summary: string;
+    movePct: number;
+    correct: boolean;
+  }>;
+};
 
 const POPULAR = [
   {
@@ -59,56 +74,62 @@ export default function BacktestingPage() {
   );
   const [from, setFrom] = useState("2015-01-01");
   const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
+  const [results, setResults] = useState<BacktestResult | null>(null);
+  const [applied, setApplied] = useState<{
+    eventType: string;
+    region: string;
+    commodity: string;
+    horizon: string;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
-  const run = useMutation({
-    mutationFn: async (vars: {
-      eventType: string;
-      region: string;
-      commodity: string;
-      horizon: string;
-      from: string;
-      to: string;
-    }) => {
-      const {
-        eventType: ev,
-        region: rg,
-        commodity: cm,
-        horizon: hz,
-        from: fr,
-        to: toDate,
-      } = vars;
-      const res = await fetch("/api/backtesting", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          eventType: ev,
-          region: rg,
-          commodity: cm,
-          horizon: hz,
-          from: fr,
-          to: toDate,
-        }),
-      });
-      if (!res.ok) throw new Error("Backtest failed");
-      return (await res.json()) as {
-        totalEvents: number;
-        accuracyPct: number;
-        avgMovePct: number;
-        maxMovePct: number;
-        minMovePct: number;
-        isDemo?: boolean;
-        rows: Array<{
-          date: string;
-          country: string;
-          summary: string;
-          movePct: number;
-          correct: boolean;
-        }>;
-      };
-    },
-  });
+  useEffect(() => {
+    if (!eventType.trim()) {
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
 
-  const results = run.data;
+    const controller = new AbortController();
+    const requestId = ++requestIdRef.current;
+    const timer = window.setTimeout(async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/backtesting", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventType,
+            region,
+            commodity,
+            horizon,
+            from,
+            to,
+          }),
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error("Backtest failed");
+        const data = (await res.json()) as BacktestResult;
+        if (requestId !== requestIdRef.current) return;
+        setResults(data);
+        setApplied({ eventType, region, commodity, horizon });
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        if (requestId !== requestIdRef.current) return;
+        setError(err instanceof Error ? err.message : "Backtest failed");
+      } finally {
+        if (requestId === requestIdRef.current) setIsLoading(false);
+      }
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [eventType, region, commodity, horizon, from, to]);
 
   return (
     <div className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
@@ -157,14 +178,6 @@ export default function BacktestingPage() {
                     setHorizon(p.horizon as any);
                     setFrom(fromStr);
                     setTo(toDate);
-                    void run.mutate({
-                      eventType: p.eventType,
-                      region: p.region,
-                      commodity: p.commodity,
-                      horizon: p.horizon,
-                      from: fromStr,
-                      to: toDate,
-                    });
                   }}
                   className="bg-surface-container/40 p-4 border border-outline-variant/10 hover:border-primary/50 transition-all cursor-pointer group rounded-lg"
                 >
@@ -278,6 +291,7 @@ export default function BacktestingPage() {
                   {(["4hr", "24hr", "48hr", "7d"] as const).map((h) => (
                     <button
                       key={h}
+                      type="button"
                       onClick={() => setHorizon(h)}
                       className={`flex-1 px-4 py-1.5 text-[10px] font-black font-label rounded-md transition-all ${horizon === h ? "bg-primary text-black" : "text-on-surface-variant hover:text-on-surface"}`}
                     >
@@ -286,32 +300,56 @@ export default function BacktestingPage() {
                   ))}
                 </div>
               </div>
-              <button
-                onClick={() =>
-                  run.mutate({
-                    eventType,
-                    region,
-                    commodity,
-                    horizon,
-                    from,
-                    to,
-                  })
-                }
-                disabled={!eventType || run.isPending}
-                className="bg-primary hover:bg-primary-container text-black px-10 py-3.5 rounded-lg font-bold font-label text-sm flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined text-lg">
-                  {run.isPending ? "sync" : "play_arrow"}
-                </span>
-                {run.isPending ? "SIMULATING..." : "RUN BACKTEST"}
-              </button>
+              {isLoading && (
+                <div
+                  data-testid="backtest-loading"
+                  className="flex items-center gap-2 text-primary font-label text-[10px] font-bold tracking-widest uppercase"
+                >
+                  <span className="material-symbols-outlined text-lg animate-spin">
+                    progress_activity
+                  </span>
+                  Updating results
+                </div>
+              )}
             </div>
+            {error && (
+              <p
+                data-testid="backtest-error"
+                className="mt-6 text-sm text-error font-medium"
+              >
+                {error}. Adjust the filters to try again.
+              </p>
+            )}
           </div>
         </section>
 
         {/* Results Metadata */}
+        {isLoading && !results && (
+          <div
+            data-testid="backtest-skeleton"
+            className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"
+          >
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="h-24 rounded-xl bg-surface-container/40 border border-outline-variant/10 animate-pulse"
+              />
+            ))}
+          </div>
+        )}
         {results && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div
+            data-testid="backtest-results"
+            data-commodity={applied?.commodity ?? commodity}
+            data-horizon={applied?.horizon ?? horizon}
+            data-region={applied?.region ?? region}
+            className={`space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ${isLoading ? "opacity-60" : ""}`}
+          >
+            {applied && (
+              <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+                Showing results for {applied.eventType} · {applied.commodity} · {applied.horizon}
+              </p>
+            )}
             {results.isDemo && (
               <div className="p-4 rounded-md bg-amber-400 text-black font-semibold mb-2">
                 Scenario Research Mode — Results are illustrative simulations
@@ -471,7 +509,7 @@ export default function BacktestingPage() {
         )}
 
         {/* Empty State */}
-        {!results && !run.isPending && (
+        {!results && !isLoading && (
           <div className="flex flex-col items-center justify-center py-32 opacity-20 group">
             <span className="material-symbols-outlined text-6xl mb-6 group-hover:rotate-180 transition-transform duration-1000">
               history

@@ -8,6 +8,12 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.39.0 — Map popup, watchlist seed, backtesting auto-apply (#105 #107 #108) (2026-09-11)
+
+- **#105 Map click-modal** — Replaced the 240px MapLibre HTML popup with a React dialog: text wraps (`overflow-wrap: anywhere`), card scrolls instead of clipping, close via X / overlay / Escape, and the card sits to the right of the Global Tension Index so it never covers that panel. Popup now shows severity, confidence, commodity impacts, source count, time-ago, and a link to the full signal.
+- **#107 Watchlist defaults** — First visit with no persisted list seeds the 8 tracked instruments (USOIL, UKOIL, XAUUSD, WHEAT, NGAS, CORN, EURUSD, USDRUB), labeled “Suggested for you — remove anything you don't need.” List is stored in localStorage so a remove stays removed. The add dropdown now adds on selection; duplicate selections are ignored.
+- **#108 Backtesting auto-apply** — Removed the separate Run button. Filter changes re-query after a 400ms debounce, in-flight requests are aborted, and a spinner/skeleton plus error line cover the loading and failure states while filters stay usable.
+
 ### v0.38.0 — Docs sync: Cowork research #104–#128, ADR 015/D19, Cursor Pro setup (2026-09-11)
 
 Docs-only. No application code.

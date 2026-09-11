@@ -4,6 +4,9 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
+- #105 Map click-modal UI fix — shipped 2026-09-11 (`7ac7c24`)
+- #107 Watchlist default-populated cards + one-click add — shipped 2026-09-11 (`7ac7c24`)
+- #108 Backtesting Lab auto-apply filters + loading state — shipped 2026-09-11 (`7ac7c24`)
 - #75 Vercel Fluid/SSE retirement — ac356ed
 - #76 Telegram bot token + linking — re-verified 2026-09-06
 - #79 Real usage/analytics tracking — 99975cc; ADMIN_EMAILS follow-up closed
@@ -271,14 +274,11 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 ## Priority queue update — 2026-09-10/11, founder idea batches + competitor research
 (All items below are PLANS/RESEARCH ONLY, nothing here is built — do not mark any as done.)
 - #104 Vercel Hobby→Pro upgrade — ready now, $20/mo, no gate.
-- #105 Map click-modal UI fix (text overflow + info density + close control) — ready-to-run
-  prompt exists in the Cowork Project (doc 67).
+- #105 Map click-modal UI fix — closed 2026-09-11 (see "Closed, verified").
 - #106 5-year historical commodity charts — scoped, on-demand Yahoo Finance fetch recommended
   to avoid conflicting with the #67 retention job.
-- #107 Watchlist default-populated cards + one-click add — ready-to-run prompt exists, soft
-  default labeling required (not a silent pre-fill).
-- #108 Backtesting Lab auto-apply filters + loading state — ready-to-run prompt exists, needs
-  a debounce + race-condition guard.
+- #107 Watchlist default-populated cards + one-click add — closed 2026-09-11 (see "Closed, verified").
+- #108 Backtesting Lab auto-apply filters + loading state — closed 2026-09-11 (see "Closed, verified").
 - #109 Printable architecture/flowchart doc — scoped, own session.
 - #110 Named-analyst content section — parked, gated on real evidence of demand.
 - #111 AI chat on event page (premium) — scoped, RAG-grounded, same buy/sell-refusal

@@ -3,12 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { SEVERITY_CONFIG, COMMODITIES } from "@blue-beacon-research/shared";
 import type { Signal, CommodityImpact } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow, SELECT_CLASSES } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
+import { MapSignalPopup } from "@/components/map/MapSignalPopup";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import {
@@ -21,53 +21,32 @@ import {
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { getSignalCoordinates } from "@/lib/geo-coords";
 
-// Severity badge convention shared with components/signals/SeverityBadge.tsx (score
-// >=7 uses the SEVERITY_CONFIG label/color tiers; below that there's no defined tier,
-// so this falls back to a muted "Low" badge using the same neutral palette the rest
-// of the map page already uses for de-emphasized text/panels).
-function getSeverityVisual(score: number): { label: string; color: string; bgColor: string } {
-  if (score >= 10) return SEVERITY_CONFIG[10];
-  if (score >= 9) return SEVERITY_CONFIG[9];
-  if (score >= 8) return SEVERITY_CONFIG[8];
-  if (score >= 7) return SEVERITY_CONFIG[7];
-  return { label: "Low", color: "#86948a", bgColor: "#201f1f" };
-}
-
-type PopupSignal = {
-  id: string;
-  title: string;
-  severity: number;
-  commodityImpacts?: CommodityImpact[] | null;
-};
-
-// Shared by both popup call sites (feed-select flyto and unclustered-point click) —
-// previously each built its own near-identical HTML string inline. Kept as a plain
-// HTML-string builder (not a React component) since a MapLibre Popup hosts raw HTML
-// via setHTML(), not a React tree. Minimal by design: headline + severity + at most
-// one commodity-impact line + the drill-down link — this is an entry point into the
-// full analysis, not the analysis itself.
-function buildSignalPopupHTML(signal: PopupSignal): string {
-  const visual = getSeverityVisual(signal.severity);
-  const topImpact = [...(signal.commodityImpacts ?? [])].sort(
-    (a, b) => (b.confidence ?? 0) - (a.confidence ?? 0),
-  )[0];
-  const impactAsset = topImpact
-    ? COMMODITIES.find((c) => c.symbol === topImpact.asset)?.label ?? topImpact.asset
-    : null;
-  const impactDirection = topImpact
-    ? topImpact.direction.charAt(0).toUpperCase() + topImpact.direction.slice(1)
-    : null;
-
-  return `<div style="font-family: Inter, sans-serif; color: #e5e2e1; width: 240px;">
-    <div style="font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 8px;">${signal.title}</div>
-    <span style="display:inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 3px; background:${visual.bgColor}; color:${visual.color};">${signal.severity} · ${visual.label.toUpperCase()}</span>
-    ${
-      impactAsset
-        ? `<div style="margin-top:8px; font-size: 11px; color:#bbcac0;"><span style="color:#4edea3; font-weight:700;">${impactAsset}:</span> ${impactDirection}</div>`
-        : ""
-    }
-    <div style="margin-top:10px; padding-top: 8px; border-top: 1px solid #2a2a2a; text-align:right;"><a href="/events/${signal.id}" style="color:#4edea3;font-weight:700;font-size:10px;letter-spacing:0.05em;text-decoration:none;">VIEW EVENT →</a></div>
-  </div>`;
+function signalFromMapProps(props: Record<string, unknown>): Signal | null {
+  const id = typeof props.id === "string" ? props.id : "";
+  if (!id) return null;
+  let commodityImpacts: CommodityImpact[] = [];
+  try {
+    commodityImpacts = JSON.parse(String(props.commodityImpacts || "[]"));
+  } catch {
+    commodityImpacts = [];
+  }
+  const eventDate = typeof props.eventDate === "string" ? props.eventDate : undefined;
+  return {
+    id,
+    title: typeof props.title === "string" ? props.title : "",
+    summary: typeof props.summary === "string" ? props.summary : "",
+    severity: Number(props.severity) || 0,
+    confidence: Number(props.confidence) || 0,
+    eventType: typeof props.eventType === "string" ? props.eventType : "",
+    country: typeof props.country === "string" ? props.country : "",
+    region: (typeof props.region === "string" ? props.region : "global") as Signal["region"],
+    sourcesCount: Number(props.sourcesCount) || 1,
+    commodityImpacts,
+    isBreaking: false,
+    isActive: true,
+    createdAt: eventDate ?? new Date().toISOString(),
+    eventDate,
+  };
 }
 
 export default function MapPage() {
@@ -154,6 +133,7 @@ export default function MapPage() {
   const [tensionInfoOpen, setTensionInfoOpen] = useState(false);
   const [streamCollapsed, setStreamCollapsed] = useState(false);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
+  const [popupSignal, setPopupSignal] = useState<Signal | null>(null);
 
   const [mapError, setMapError] = useState<string | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -161,7 +141,16 @@ export default function MapPage() {
   const mapLibRef = useRef<any>(null);
 
   const signalsGeoJsonRef = useRef<any | null>(null);
-  const popupRef = useRef<any | null>(null);
+
+  const closePopup = () => {
+    setPopupSignal(null);
+    setSelectedSignalId(null);
+  };
+
+  const openPopupForSignal = (signal: Signal) => {
+    setSelectedSignalId(signal.id);
+    setPopupSignal(signal);
+  };
 
   // Helper: convert signals to GeoJSON FeatureCollection, excluding invalid coordinates
   function signalsToGeoJSON(items: Signal[]) {
@@ -179,6 +168,8 @@ export default function MapPage() {
           eventType: s.eventType,
           eventDate: s.eventDate ?? s.createdAt,
           summary: s.summary,
+          confidence: s.confidence,
+          sourcesCount: s.sourcesCount ?? 1,
           // GeoJSON sources stringify non-primitive property values internally anyway
           // (MapLibre can't carry arrays/objects through its vector-tile encoding) —
           // stringifying explicitly here makes that behavior visible and intentional
@@ -200,24 +191,13 @@ export default function MapPage() {
       return;
     }
 
-    if (popupRef.current) {
-      popupRef.current.remove();
-      popupRef.current = null;
-    }
-
     const [lng, lat] = getSignalCoordinates(signal);
     map.easeTo({
       center: [lng, lat],
       zoom: Math.max(map.getZoom(), 5),
     });
 
-    const html = buildSignalPopupHTML(signal);
-
-    const popup = new maplib.Popup({ offset: 12, closeButton: false })
-      .setLngLat([lng, lat])
-      .setHTML(html)
-      .addTo(map);
-    popupRef.current = popup;
+    openPopupForSignal(signal);
   }
 
   useEffect(() => {
@@ -462,35 +442,20 @@ export default function MapPage() {
             });
 
             map.on("click", "unclustered-point", (e: any) => {
+              e.originalEvent?.preventDefault?.();
               const feat = e.features && e.features[0];
               if (!feat) return;
               const props = feat.properties || {};
-              const sev = Number(props.severity) || 0;
-              const title = props.title ?? "";
-              let commodityImpacts: CommodityImpact[] = [];
-              try {
-                commodityImpacts = JSON.parse(props.commodityImpacts || "[]");
-              } catch {
-                commodityImpacts = [];
-              }
-              const html = buildSignalPopupHTML({
-                id: props.id,
-                title,
-                severity: sev,
-                commodityImpacts,
+              const live = geolocatedSignalsRef.current.find((s) => s.id === props.id);
+              const signal = live ?? signalFromMapProps(props);
+              if (signal) openPopupForSignal(signal);
+            });
+
+            map.on("click", (e: any) => {
+              const hits = map.queryRenderedFeatures(e.point, {
+                layers: ["unclustered-point", "clusters"],
               });
-
-              // Remove existing popup
-              if (popupRef.current) {
-                popupRef.current.remove();
-                popupRef.current = null;
-              }
-
-              const popup = new maplib.Popup({ offset: 12, closeButton: false })
-                .setLngLat(feat.geometry.coordinates)
-                .setHTML(html)
-                .addTo(map);
-              popupRef.current = popup;
+              if (hits.length === 0) closePopup();
             });
 
             // Change cursor on hover
@@ -528,15 +493,20 @@ export default function MapPage() {
 
     return () => {
       canceled = true;
-      if (popupRef.current) {
-        popupRef.current.remove();
-        popupRef.current = null;
-      }
       mapRef.current?.remove();
       mapRef.current = null;
       mapLibRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!popupSignal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closePopup();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [popupSignal]);
 
   // Fetch server-side filtered signals when filters change so filters affect actual dataset.
   // Only sets React state here — Effect below (keyed on `geolocatedSignals`) is the single
@@ -743,8 +713,16 @@ export default function MapPage() {
         </div>
       )}
 
+      {popupSignal && (
+        <MapSignalPopup
+          signal={popupSignal}
+          onClose={closePopup}
+          offsetLeft={filtersCollapsed ? "2rem" : "24rem"}
+        />
+      )}
+
       {!filtersCollapsed && (
-      <section className="absolute top-8 left-8 w-80 glass rounded-xl p-6 border-l-2 border-primary/40">
+      <section className="absolute top-8 left-8 z-20 w-80 glass rounded-xl p-6 border-l-2 border-primary/40">
         <button
           onClick={() => setFiltersCollapsed(true)}
           className="absolute -right-3 top-6 w-6 h-6 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors"

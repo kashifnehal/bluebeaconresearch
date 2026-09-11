@@ -14,6 +14,48 @@ import { logUsageEvent } from "@/lib/funnel-events";
 // dropdown, and the "Show All" set all work off this combined list unchanged.
 const WATCHLIST_ASSETS = [...COMMODITIES, ...FOREX_PAIRS];
 
+// The 8 instruments BBR tracks (apps/backend/src/routes/commodities.ts).
+// Seeded once on first visit; a later remove is persisted and never re-added.
+const SUGGESTED_WATCHLIST = [
+  "USOIL",
+  "UKOIL",
+  "XAUUSD",
+  "WHEAT",
+  "NGAS",
+  "CORN",
+  "EURUSD",
+  "USDRUB",
+] as const;
+
+const WATCHLIST_STORAGE_KEY = "bbr.watchlist.v1";
+
+type StoredWatchlist = {
+  symbols: string[];
+  seeded: boolean;
+  suggested?: boolean;
+};
+
+function readStoredWatchlist(): StoredWatchlist | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(WATCHLIST_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredWatchlist;
+    if (!parsed || !Array.isArray(parsed.symbols)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredWatchlist(value: StoredWatchlist) {
+  try {
+    window.localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(value));
+  } catch {
+    // Quota / private mode — watchlist still works for this session.
+  }
+}
+
 type Price = {
   symbol: string;
   price: number;
@@ -88,17 +130,14 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 export function WatchlistClient() {
   const params = useSearchParams();
   const preselect = params.get("symbol");
-  const [watch, setWatch] = useState<string[]>(() =>
-    preselect ? [preselect] : ["USOIL", "XAUUSD"],
-  );
-  const [addSymbol, setAddSymbol] = useState<string>("SELECT COMMODITY");
+  const [watch, setWatch] = useState<string[]>(() => (preselect ? [preselect] : []));
+  const [isSuggested, setIsSuggested] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   // Preference-aware default (#89, extended for forex in #87): when the user has
-  // told us which commodities and/or currency pairs they follow, seed the
-  // watchlist with those instead of the generic USOIL/XAUUSD default — unless
-  // they arrived via ?symbol= or have already changed the list themselves. One
-  // click flips between the two views; nothing is ever hidden (every asset stays
-  // addable from the dropdown).
+  // told us which commodities and/or currency pairs they follow, those remain
+  // one click away via "My Commodities". First-visit seed (#107) is the 8
+  // tracked instruments, labeled as a suggestion — not a silent prefs overwrite.
   const { data: myPrefs } = useMyPreferences();
   const prefSymbols = useMemo(
     () =>
@@ -109,15 +148,46 @@ export function WatchlistClient() {
   );
   const allSymbols = useMemo(() => WATCHLIST_ASSETS.map((a) => a.symbol), []);
   const touchedRef = useRef(false);
-  const [seededFromPrefs, setSeededFromPrefs] = useState(false);
 
   useEffect(() => {
-    if (preselect || touchedRef.current || seededFromPrefs) return;
-    if (prefSymbols.length > 0) {
-      setWatch(prefSymbols);
-      setSeededFromPrefs(true);
+    const stored = readStoredWatchlist();
+    if (preselect) {
+      const next = stored?.symbols?.includes(preselect)
+        ? stored.symbols
+        : [...(stored?.symbols ?? []), preselect];
+      setWatch(next);
+      setIsSuggested(false);
+      writeStoredWatchlist({ symbols: next, seeded: true, suggested: false });
+      setHydrated(true);
+      return;
     }
-  }, [prefSymbols, preselect, seededFromPrefs]);
+    if (stored) {
+      setWatch(stored.symbols);
+      setIsSuggested(Boolean(stored.suggested) && stored.symbols.length > 0);
+      setHydrated(true);
+      return;
+    }
+    // First visit: no persisted list. Seed the 8 tracked instruments once.
+    const seed = [...SUGGESTED_WATCHLIST];
+    setWatch(seed);
+    setIsSuggested(true);
+    writeStoredWatchlist({ symbols: seed, seeded: true, suggested: true });
+    setHydrated(true);
+  }, [preselect]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    writeStoredWatchlist({
+      symbols: watch,
+      seeded: true,
+      suggested: isSuggested,
+    });
+  }, [watch, hydrated, isSuggested]);
+
+  const showingSuggested =
+    isSuggested ||
+    (watch.length === SUGGESTED_WATCHLIST.length &&
+      SUGGESTED_WATCHLIST.every((s) => watch.includes(s)));
 
   const showingMyCommodities =
     prefSymbols.length > 0 &&
@@ -150,19 +220,20 @@ export function WatchlistClient() {
 
   const available = WATCHLIST_ASSETS.filter((c) => !watch.includes(c.symbol));
 
-  const handleAdd = () => {
-    if (addSymbol === "SELECT COMMODITY") return;
+  const handleSelectAdd = (value: string) => {
+    if (!value || value === "SELECT COMMODITY") return;
     touchedRef.current = true;
-    if (addSymbol === "__ALL__") {
+    setIsSuggested(false);
+    if (value === "__ALL__") {
       setWatch((p) => [...new Set([...p, ...available.map((c) => c.symbol)])]);
-    } else {
-      setWatch((p) => [...new Set([...p, addSymbol])]);
+      return;
     }
-    setAddSymbol("SELECT COMMODITY");
+    setWatch((p) => (p.includes(value) ? p : [...p, value]));
   };
 
   const handleRemove = (sym: string) => {
     touchedRef.current = true;
+    setIsSuggested(false);
     setWatch((w) => w.filter((x) => x !== sym));
   };
 
@@ -181,6 +252,14 @@ export function WatchlistClient() {
             <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">
               Commodity Watchlist
             </h1>
+            {showingSuggested && (
+              <p
+                data-testid="watchlist-suggested-banner"
+                className="mt-3 text-sm text-on-surface-variant max-w-xl"
+              >
+                Suggested for you — remove anything you don&apos;t need.
+              </p>
+            )}
             {prefSymbols.length > 0 && (
               <div className="mt-4 flex items-center gap-2">
                 <span className="font-label text-[10px] text-on-surface-variant tracking-widest uppercase">
@@ -189,6 +268,7 @@ export function WatchlistClient() {
                 <button
                   onClick={() => {
                     touchedRef.current = true;
+                    setIsSuggested(false);
                     setWatch(prefSymbols);
                   }}
                   aria-pressed={showingMyCommodities}
@@ -204,6 +284,7 @@ export function WatchlistClient() {
                 <button
                   onClick={() => {
                     touchedRef.current = true;
+                    setIsSuggested(false);
                     setWatch(allSymbols);
                   }}
                   aria-pressed={!showingMyCommodities}
@@ -223,12 +304,12 @@ export function WatchlistClient() {
             <div className="relative">
               <select
                 aria-label="Add commodity to watchlist"
-                value={addSymbol}
-                onChange={(e) => setAddSymbol(e.target.value)}
+                value="SELECT COMMODITY"
+                onChange={(e) => handleSelectAdd(e.target.value)}
                 className={`w-[220px] ${SELECT_CLASSES}`}
               >
                 <option disabled value="SELECT COMMODITY">
-                  SELECT COMMODITY
+                  ADD COMMODITY
                 </option>
                 {available.length > 1 && (
                   <option value="__ALL__">
@@ -245,13 +326,6 @@ export function WatchlistClient() {
                 keyboard_arrow_down
               </span>
             </div>
-            <button
-              onClick={handleAdd}
-              className="bg-gradient-to-br from-primary to-primary-container px-6 py-2.5 rounded-lg text-black font-label font-bold text-sm tracking-tight flex items-center gap-2 hover:opacity-90 transition-opacity active:scale-95 shadow-lg shadow-primary/10"
-            >
-              <span className="material-symbols-outlined text-lg">add</span>
-              ADD ASSET
-            </button>
           </div>
         </div>
 
