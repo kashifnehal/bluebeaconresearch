@@ -4,6 +4,8 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
+- #124 Feed filter bar + shared FilterBar — shipped 2026-09-11 (`74b815b`). Commodity/Region/min-severity/Time range (incl. 30d) on feed and map; region match is casing/hyphen insensitive. Playwright on romantannison: unfiltered 2823 → USOIL 478; map FilterBar present, This month sent `window=30d`, Africa region 20→6.
+- #125 Trader-role saved views — shipped 2026-09-11 (`74b815b`). Feed-only Oil/Grain/Metals chips set FilterBar controls (no new schema). Playwright: Oil Desk 185 = manual Energy + Middle East; Grain `cat:agriculture`/region All 87; Metals XAUUSD 256.
 - #107 follow-up Watchlist prefs-aware seed + user_preferences persist — shipped 2026-09-11 (`75d932c`). First-visit seed uses onboarding commodities ∪ forex when present (generic 8 only as fallback), still labeled “Suggested for you — remove anything you don't need.” List upserts to `user_preferences.watchlist_symbols` / `watchlist_suggested` (same `onConflict: "user_id"` path as #81); `bbr.watchlist.v1` stays a cache. Verified on standing test account romantannison: `commodities=['COPPER']` (set for this check — was empty) seeded the Copper card, not the generic 8, with the suggested banner; DB wrote `watchlist_symbols=['COPPER']`; `localStorage.clear()` + reload still showed Copper from the server row.
 - #105 Map click-modal UI fix — shipped 2026-09-11 (`f6be851`)
 - #107 Watchlist default-populated cards + one-click add — shipped 2026-09-11 (`f6be851`)
@@ -307,16 +309,9 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #123 Event pages in a new tab — scope narrowed after UX research to just the quick-view
   panel's "View full details" link; founder decision still open on final scope.
 - #124 Feed filter bar (Commodity/Region/Severity/Time range) + shared FilterBar component —
-  shipped 2026-09-11, NOT independently verified in the UI. Playwright could not log in to
-  `/dashboard` (redirected to `/login`; no standing-account password in this environment).
-  Do not treat as Closed, verified. API-level checks on the local `/api/signals` path did
-  pass: unfiltered total 2819 → USOIL 476; `region=middle-east` and `region=Middle East`
-  both returned 184; `window=30d` returned 2626 (between 7d=368 and all=2819). Map page
-  Playwright: FilterBar rendered, "This month" fired `/api/signals?...window=30d`.
-- #125 Trader-role saved views (Oil Desk/Grain Desk/Metals Desk) — shipped with #124 on the
-  feed page only, NOT independently verified in the UI (same login blocker). API: Oil Desk
-  combo `commodity=USOIL,UKOIL,NGAS&region=middle-east` = 184, identical to the Title-Case
-  region variant; Grain `WHEAT,CORN` = 86; Metals `XAUUSD` = 256.
+  closed 2026-09-11 (see "Closed, verified").
+- #125 Trader-role saved views (Oil Desk/Grain Desk/Metals Desk) — closed 2026-09-11 (see
+  "Closed, verified").
 - #126 Trust/freshness signals (coverage footer + "Fresh Xm" tag) — scoped, pairs with
   #115/#121.
 - #127 Economic calendar filters (importance/country/category/timezone) on the existing
