@@ -2,9 +2,16 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (map popup / watchlist seed / backtesting auto-apply — see `14_CHANGELOG.md` v0.39.0)
+Last updated: 2026-09-11 (watchlist prefs-aware seed + user_preferences persist — see `14_CHANGELOG.md` v0.40.0)
 
 ---
+
+## Watchlist prefs-aware seed + server persist (2026-09-11)
+
+`apps/web` + additive `user_preferences` columns. Full record: `14_CHANGELOG.md` v0.40.0, `LIVE_TODO.md`.
+
+- First-visit watchlist seed uses onboarding commodities ∪ forex when present; generic 8 only if those arrays are empty.
+- List is upserted to `user_preferences.watchlist_symbols` (NULL = never seeded). localStorage is cache only.
 
 ## Map popup, watchlist seed, backtesting auto-apply (2026-09-11)
 

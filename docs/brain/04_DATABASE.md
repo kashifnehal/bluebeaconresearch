@@ -167,6 +167,8 @@ Per-user feed and notification settings, distinct from `profiles` (account/billi
 - `onboarding_completed_at` (`timestamptz`, nullable) — added by `20260907004803`; set when the 2-step `/onboarding` wizard captures followed commodities/regions (#81). Backfilled from `profiles.onboarding_completed` for pre-existing users.
 - `created_at` (`timestamptz`, NOT NULL, default `now()`) — added by `20260907004803`
 - `digest_enabled` (`boolean`, NOT NULL, default `true`) — added by `20260907021500_user_preferences_digest_enabled.sql`; opt-out for the once-daily personalized digest (#83), toggled from Settings → Notifications
+- `watchlist_symbols` (`text[]`, nullable) — added by `20260911063000_user_preferences_watchlist.sql`. The user's edited watchlist (commodities ∪ forex). NULL = never persisted (first-visit seed still runs); empty array = user cleared the list. Source of truth over the `bbr.watchlist.v1` localStorage cache.
+- `watchlist_suggested` (`boolean`, NOT NULL, default `false`) — added by the same migration. True while the list is still the first-visit suggested seed.
 
 ### Table 12: `watchlist_entries`
 - `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL)

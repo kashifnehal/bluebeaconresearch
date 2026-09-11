@@ -4,6 +4,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
+- #107 follow-up Watchlist prefs-aware seed + user_preferences persist — shipped 2026-09-11. First-visit seed uses onboarding commodities ∪ forex when present (generic 8 only as fallback), still labeled “Suggested for you — remove anything you don't need.” List upserts to `user_preferences.watchlist_symbols` / `watchlist_suggested` (same `onConflict: "user_id"` path as #81); `bbr.watchlist.v1` stays a cache. Verified on standing test account romantannison: `commodities=['COPPER']` (set for this check — was empty) seeded the Copper card, not the generic 8, with the suggested banner; DB wrote `watchlist_symbols=['COPPER']`; `localStorage.clear()` + reload still showed Copper from the server row.
 - #105 Map click-modal UI fix — shipped 2026-09-11 (`f6be851`)
 - #107 Watchlist default-populated cards + one-click add — shipped 2026-09-11 (`f6be851`)
 - #108 Backtesting Lab auto-apply filters + loading state — shipped 2026-09-11 (`f6be851`)
@@ -277,7 +278,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #105 Map click-modal UI fix — closed 2026-09-11 (see "Closed, verified").
 - #106 5-year historical commodity charts — scoped, on-demand Yahoo Finance fetch recommended
   to avoid conflicting with the #67 retention job.
-- #107 Watchlist default-populated cards + one-click add — closed 2026-09-11 (see "Closed, verified").
+- #107 Watchlist default-populated cards + one-click add — closed 2026-09-11 (see "Closed, verified"). Follow-up (prefs-aware seed + `user_preferences` persist) also closed 2026-09-11 (see "Closed, verified").
 - #108 Backtesting Lab auto-apply filters + loading state — closed 2026-09-11 (see "Closed, verified").
 - #109 Printable architecture/flowchart doc — scoped, own session.
 - #110 Named-analyst content section — parked, gated on real evidence of demand.

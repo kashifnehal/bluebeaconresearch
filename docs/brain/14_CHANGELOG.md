@@ -8,6 +8,12 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.40.0 — Watchlist prefs-aware seed + server persist (2026-09-11)
+
+- **Watchlist first-visit seed** now reads `useMyPreferences()` before filling cards. Real onboarding commodities ∪ forex become the suggested list; the generic 8 is only the no-prefs fallback. Banner copy unchanged.
+- **Server persist** — additive migration `20260911063000_user_preferences_watchlist` adds nullable `watchlist_symbols` and `watchlist_suggested`. The watchlist page upserts those columns the same way #81 writes prefs (`onConflict: "user_id"`). localStorage `bbr.watchlist.v1` remains a fast cache; a cleared cache or new device reloads from `user_preferences`.
+- **Verified** on the standing test account: `commodities=['COPPER']` seeded Copper (not the generic 8); `localStorage.clear()` + reload still showed Copper from the server row.
+
 ### v0.39.0 — Map popup, watchlist seed, backtesting auto-apply (#105 #107 #108) (2026-09-11)
 
 - **#105 Map click-modal** — Replaced the 240px MapLibre HTML popup with a React dialog: text wraps (`overflow-wrap: anywhere`), card scrolls instead of clipping, close via X / overlay / Escape, and the card sits to the right of the Global Tension Index so it never covers that panel. Popup now shows severity, confidence, commodity impacts, source count, time-ago, and a link to the full signal.
