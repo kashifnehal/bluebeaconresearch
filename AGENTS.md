@@ -85,7 +85,7 @@ A usage review showed **93% of spend happened at >150k context** and **~11% came
 - `SUPABASE_SERVICE_ROLE_KEY` on Vercel.
 - Telegram alerts — intentionally deferred by founder decision, not a bug.
 - ACLED collector credentials.
-- Supabase project ref confirmed 2026-09-11: `evavcgfmemwryggdkjmx` is the real, live project (verified via direct query — 747+ real signal rows). `jzomoxsbnssnibshecui` returns a permission error on this session's credentials and should be treated as stale/wrong until shown otherwise.
+- Supabase project ref confirmed 2026-09-11: `evavcgfmemwryggdkjmx` is the real, live project (verified via direct query — 747+ real signal rows).
 
 ## Which model to use
 

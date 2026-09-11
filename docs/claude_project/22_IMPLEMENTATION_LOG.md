@@ -287,7 +287,7 @@ API_URL=https://bluebeaconresearch.com
 TELEGRAM_BOT_TOKEN=            # required when bot is active
 ```
 
-> ⚠️ CORRECTED 2026-08-27 — the env block above previously listed `jzomoxsbnssnibshecui.supabase.co`, an old/wrong project ref, and carried only an annotation saying so. The block itself is now fixed in place to `evavcgfmemwryggdkjmx.supabase.co`, matching the real `.env.local`, `supabase/.temp/project-ref`, and the current status docs (same correction already made in `21_PROJECT_BRIEFING.md`). Historical note: this same file's earlier session-log block above (Aug-05) always had the correct ref — it was this later "cumulative" listing that had regressed.
+> ⚠️ CORRECTED 2026-08-27 — the env block above previously listed a different, unused Supabase project URL and carried only an annotation saying so. The block itself is now fixed in place to `evavcgfmemwryggdkjmx.supabase.co`, matching the real `.env.local`, `supabase/.temp/project-ref`, and the current status docs (same correction already made in `21_PROJECT_BRIEFING.md`). Historical note: this same file's earlier session-log block above (Aug-05) always had the correct ref — it was this later "cumulative" listing that had regressed.
 
 ---
 

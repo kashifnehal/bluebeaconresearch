@@ -181,10 +181,9 @@ NODE_ENV=production
 PROJECT_READY=true
 PORT=3001
 
-# Supabase — corrected 2026-08-18: this block previously cited project ref
-# jzomoxsbnssnibshecui, an old/wrong project. The current status doc and the real
-# .env.local agree on evavcgfmemwryggdkjmx — updated to match those, not the other
-# way around (see docs/brain/CLAUDE_CONTEXT.md's own correction of the same stale ref).
+# Supabase — live project ref evavcgfmemwryggdkjmx (matches .env.local and
+# docs/brain/08_CURRENT_STATUS.md). A previous env block here cited a different,
+# unused project; corrected 2026-08-18.
 SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>

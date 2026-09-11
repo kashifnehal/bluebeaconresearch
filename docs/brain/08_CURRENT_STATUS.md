@@ -2,7 +2,7 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (5-year watchlist chart — see `14_CHANGELOG.md` v0.44.0)
+Last updated: 2026-09-11 (stale Supabase project-ref docs purge — see `14_CHANGELOG.md` v0.45.0)
 
 ---
 
@@ -54,7 +54,7 @@ Docs-only. No application code. Full record: `14_CHANGELOG.md` v0.38.0, `LIVE_TO
 
 - **ADR 015 / D19** recorded in both `10_DECISIONS.md` trees: never state or imply how recently BBR's real data history began.
 - **#104–#128** parked as plans/research only in `LIVE_TODO.md`. Nothing in that batch is built.
-- **Supabase project ref confirmed 2026-09-11:** `evavcgfmemwryggdkjmx` is the real, live project (verified via direct query — 747+ real signal rows). `jzomoxsbnssnibshecui` returns a permission error on this session's credentials and should be treated as stale/wrong until shown otherwise.
+- **Supabase project ref confirmed 2026-09-11:** `evavcgfmemwryggdkjmx` is the real, live project (verified via direct query — 747+ real signal rows). Remaining doc citations of a previous unused project ref were replaced 2026-09-11; none remain in the repo.
 - Repo-root `AGENTS.md` + `.cursor/mcp.json` added for Cursor Pro Agent sessions. `CLAUDE.md` left untouched (pointer-vs-delete is an open founder decision).
 
 ## Cost/waste batch, Service Health Dashboard P1, retention jobs (2026-09-09)

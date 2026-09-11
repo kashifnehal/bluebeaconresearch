@@ -235,10 +235,16 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 
 - **D19 / ADR 015** — "Established research company" positioning: never state or imply how recently BBR's real data history began. Framing rule only; does not relax D16 or "build it before you claim it" (#128).
 - **LIVE_TODO** — #104–#128 recorded as plans/research only. None marked done. #129 left unmarked until a follow-up Closed, verified line can carry this commit's SHA.
-- **Cursor Pro setup** — repo-root `AGENTS.md` and `.cursor/mcp.json`. Live Supabase project ref confirmed as `evavcgfmemwryggdkjmx`; `jzomoxsbnssnibshecui` treated as stale.
+- **Cursor Pro setup** — repo-root `AGENTS.md` and `.cursor/mcp.json`. Live Supabase project ref confirmed as `evavcgfmemwryggdkjmx`.
 - **Briefing** — standing decision #15 + matching "never do" line.
 
 ---
+
+## PHASE 13 — STALE SUPABASE PROJECT-REF DOCS PURGE (2026-09-11)
+
+> Docs-only; no application code. Technical record: `docs/brain/14_CHANGELOG.md` v0.45.0.
+
+- Unused Supabase project-ref string removed from remaining markdown. Live ref is `evavcgfmemwryggdkjmx`. Archived `CLAUDE_CONTEXT.md` env URLs now match that live project. No code or config files contained the unused ref.
 
 ## PHASE 12 — 5-YEAR WATCHLIST CHART #106 (2026-09-11)
 

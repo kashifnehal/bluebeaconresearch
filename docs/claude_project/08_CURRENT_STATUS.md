@@ -20,6 +20,8 @@
 
 > ⚠️ UPDATED 2026-09-11 (#106) — 5-year historical watchlist chart shipped: on-demand Yahoo `chart()` weekly bars, in-memory 15-minute cache, second panel on `/watchlist/[symbol]`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.44.0. This tree: PHASE 12.
 
+> ⚠️ UPDATED 2026-09-11 (docs hygiene) — remaining markdown citations of an unused Supabase project ref were purged. Live project remains `evavcgfmemwryggdkjmx`. No code/config contained the unused ref. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.45.0. This tree: PHASE 13.
+
 Last updated: 2026-09-11
 
 ---
