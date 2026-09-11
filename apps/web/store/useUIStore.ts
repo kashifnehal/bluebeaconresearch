@@ -27,12 +27,12 @@ type UIState = {
   // because the tour spans a dashboard->event-page navigation, and this
   // store is mounted once in the shared (dashboard) layout.
   tourActive: boolean;
-  tourPhase: "dashboard" | "event";
+  tourPhase: "welcome" | "dashboard" | "event";
   tourStepIndex: number;
   tourEventId: string | null;
   startTour: () => void;
   endTour: () => void;
-  setTourPhase: (phase: "dashboard" | "event") => void;
+  setTourPhase: (phase: "welcome" | "dashboard" | "event") => void;
   setTourStepIndex: (index: number) => void;
   setTourEventId: (id: string | null) => void;
 };
@@ -59,13 +59,13 @@ export const useUIStore = create<UIState>()(
       setHelpOpen: (open) => set({ helpOpen: open }),
 
       tourActive: false,
-      tourPhase: "dashboard",
+      tourPhase: "welcome",
       tourStepIndex: 0,
       tourEventId: null,
       startTour: () =>
-        set({ tourActive: true, tourPhase: "dashboard", tourStepIndex: 0, tourEventId: null }),
+        set({ tourActive: true, tourPhase: "welcome", tourStepIndex: 0, tourEventId: null }),
       endTour: () =>
-        set({ tourActive: false, tourPhase: "dashboard", tourStepIndex: 0, tourEventId: null }),
+        set({ tourActive: false, tourPhase: "welcome", tourStepIndex: 0, tourEventId: null }),
       setTourPhase: (phase) => set({ tourPhase: phase }),
       setTourStepIndex: (index) => set({ tourStepIndex: index }),
       setTourEventId: (id) => set({ tourEventId: id }),

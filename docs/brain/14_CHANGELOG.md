@@ -8,6 +8,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.41.0 — Welcome tour step + plain-language briefings (#119 #120) (2026-09-11)
+
+- **#119 Welcome demo step** — The product tour now starts on a skippable welcome modal before the existing 6 Joyride steps. Placeholder media path `/onboarding/welcome-demo.gif` (`<img>` for gif; looping muted autoplay `<video>` if the path is later swapped to mp4). Caption "See how it works"; "Got it, show me around" advances into the interactive tour; "Skip tour" still marks `product_tour_completed`. Real GIF still needs recording.
+- **#120 Plain-language briefings** — `generateAnalysis()` system prompt keeps the #103 buy/sell prohibition and adds a second instruction block: short sentences / active voice / jargon explained inline; 4-part structure (what happened → why it matters for the named commodity → urgency/priced-in vs new → what to watch next as a fact); hedging words (likely/may/could/tends to) must stay so simpler wording does not read more confident. `classifyEvent()` untouched. Regenerated 4 live severity≥7 signals for before/after (not written back to `signals.ai_analysis`).
+
 ### v0.40.0 — Watchlist prefs-aware seed + server persist (2026-09-11)
 
 - **Watchlist first-visit seed** now reads `useMyPreferences()` before filling cards. Real onboarding commodities ∪ forex become the suggested list; the generic 8 is only the no-prefs fallback. Banner copy unchanged.

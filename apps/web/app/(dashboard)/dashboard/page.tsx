@@ -162,10 +162,10 @@ export default function DashboardPage() {
   }, []);
 
   // Keep the tour's target event id in sync with the featured card while
-  // the dashboard phase of the tour is active (covers both first-run and
+  // the welcome or dashboard phase of the tour is active (covers both first-run and
   // "Replay product tour" from the Help modal).
   useEffect(() => {
-    if (tourActive && tourPhase === "dashboard" && featured) {
+    if (tourActive && (tourPhase === "welcome" || tourPhase === "dashboard") && featured) {
       setTourEventId(featured.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

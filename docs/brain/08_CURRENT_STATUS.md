@@ -2,9 +2,16 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (watchlist prefs-aware seed + user_preferences persist — see `14_CHANGELOG.md` v0.40.0)
+Last updated: 2026-09-11 (welcome tour step + plain-language briefings — see `14_CHANGELOG.md` v0.41.0)
 
 ---
+
+## Welcome tour step + plain-language briefings (2026-09-11)
+
+`apps/web` + `apps/backend` `generateAnalysis()` prompt only. Full record: `14_CHANGELOG.md` v0.41.0, `LIVE_TODO.md`.
+
+- **#119** — Product tour now opens on a welcome modal (GIF via `<img>`, mp4 via looping muted autoplay `<video>`) before the existing 6 Joyride steps. Placeholder asset `/onboarding/welcome-demo.gif`; real recording still outstanding.
+- **#120** — Sonnet `generateAnalysis()` system prompt adds a plain-language / 4-part structure / keep-hedging block alongside the existing buy/sell prohibition. `classifyEvent()` (Haiku) untouched.
 
 ## Watchlist prefs-aware seed + server persist (2026-09-11)
 

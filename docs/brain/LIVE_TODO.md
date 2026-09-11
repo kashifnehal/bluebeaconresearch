@@ -4,6 +4,8 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
+- #119 Onboarding GIF/video step — shipped 2026-09-11. Welcome modal before the existing 6 Joyride steps (`WelcomeTourStep`, `tourPhase: "welcome"`). Placeholder `/onboarding/welcome-demo.gif` (`<img>` for gif, looping muted autoplay `<video>` for mp4). Caption "See how it works"; "Got it, show me around" advances into the tour; "Skip tour" still persists `product_tour_completed`. Type-check only for the UI (no Playwright in `apps/web`). Real GIF still needs recording.
+- #120 Plain-language AI-writing rewrite — shipped 2026-09-11. `generateAnalysis()` system prompt adds plain-language / 4-part structure / keep-hedging instructions alongside the #103 buy/sell prohibition (not replacing it). `classifyEvent()` (Haiku) untouched. Regenerated 4 real severity≥7 signals (El Niño, ECB/Iran, Perim Island, Al Faw tanker) before/after; not written back to `ai_analysis`. Unit test asserts both instruction blocks.
 - #116 "Authentication is temporarily unavailable" — shipped 2026-09-11 (`a561690`). Root cause was the 3s AbortController on middleware `getUser()` (Vercel `AbortError` on `/middleware` + GoTrue `context canceled` / `dial tcp [::1]:5432: operation was canceled` on 2026-09-09; a real `/user` also succeeded in 6.4s). Timeout raised to 8s; race against a timer instead of aborting Auth's fetch; `catch` now `console.error`s name/message/code. Fail-closed redirect + login banner on timeout unchanged. Type-check only — no middleware tests exist; live Auth slowness not reproduced.
 - #124 Feed filter bar + shared FilterBar — shipped 2026-09-11 (`74b815b`). Commodity/Region/min-severity/Time range (incl. 30d) on feed and map; region match is casing/hyphen insensitive. Playwright on romantannison: unfiltered 2823 → USOIL 478; map FilterBar present, This month sent `window=30d`, Africa region 20→6. Follow-up: map `fetchFiltered` now sends `limit=500` (API cap raised to match) so All / This month are not stuck on the first 20.
 - #125 Trader-role saved views — shipped 2026-09-11 (`74b815b`). Feed-only Oil/Grain/Metals chips set FilterBar controls (no new schema). Playwright: Oil Desk 185 = manual Energy + Middle East; Grain `cat:agriculture`/region All 87; Metals XAUUSD 256.
@@ -297,10 +299,10 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   #102.
 - #118 Premium news/AI tier — step 1 (GNews Essential) no gate; steps 2-3 gated on real
   revenue.
-- #119 Onboarding GIF/video step — ready-to-run prompt for the UI plumbing; the GIF itself
-  still needs recording.
-- #120 Plain-language AI-writing rewrite (generateAnalysis() system prompt) — ready-to-run
-  prompt exists; must preserve hedging language (likely/may/could).
+- #119 Onboarding GIF/video step — closed 2026-09-11 (see "Closed, verified"). Real GIF still
+  needs recording.
+- #120 Plain-language AI-writing rewrite (generateAnalysis() system prompt) — closed 2026-09-11
+  (see "Closed, verified").
 - #121 Real /accuracy page + outcome-tracker worker — spec'd, full build recommendation
   exists; gated on real signal history being long enough to be honest.
 - #122 Quick-view slide-over panel — ready-to-run prompt exists; needs a discoverability

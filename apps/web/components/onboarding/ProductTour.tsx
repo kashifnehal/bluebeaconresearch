@@ -5,6 +5,7 @@ import Joyride, { type CallBackProps, type Step, STATUS } from "react-joyride";
 import { usePathname, useRouter } from "next/navigation";
 import { useUIStore } from "@/store/useUIStore";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { WelcomeTourStep } from "@/components/onboarding/WelcomeTourStep";
 
 const DASHBOARD_STEPS: Step[] = [
   {
@@ -118,7 +119,7 @@ export function ProductTour() {
   const onCorrectRoute =
     tourActive && ((tourPhase === "dashboard" && onDashboard) || (tourPhase === "event" && onTargetEvent));
 
-  const steps = tourPhase === "dashboard" ? DASHBOARD_STEPS : EVENT_STEPS;
+  const steps = tourPhase === "event" ? EVENT_STEPS : DASHBOARD_STEPS;
 
   // The event page's first target (the alert button) only exists once its
   // async signal fetch resolves — mounting Joyride before then means it
@@ -180,6 +181,21 @@ export function ProductTour() {
       if (action === "next") setTourStepIndex(index + 1);
       else if (action === "prev") setTourStepIndex(Math.max(0, index - 1));
     }
+  }
+
+  if (tourActive && tourPhase === "welcome") {
+    return (
+      <WelcomeTourStep
+        onContinue={() => {
+          setTourPhase("dashboard");
+          setTourStepIndex(0);
+        }}
+        onSkip={() => {
+          endTour();
+          void markTourCompleted();
+        }}
+      />
+    );
   }
 
   if (!shouldRun) return null;

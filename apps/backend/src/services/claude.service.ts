@@ -443,7 +443,11 @@ export class ClaudeService {
       "You never give buy/sell trading recommendations, position-sizing advice, entry/exit levels, or any directional trade call — " +
       "this is a hard rule, not a style preference. When an event has an obvious directional market implication, describe the " +
       "implication itself (e.g. 'this raises supply-disruption risk for wheat') without telling the reader what to do about it or " +
-      "what position to take.";
+      "what position to take. " +
+      "Write in plain language: short sentences, active voice, and explain jargon inline the first time it appears. " +
+      "Every factual claim — numbers, direction, and causal links — must survive unchanged. This changes how something is said, never what is claimed. " +
+      "Structure each briefing in this order: (1) what happened, in one sentence; (2) why it matters for the specific commodity, naming the mechanism; (3) how urgent it is — already priced in, or new; (4) what to watch next, stated as a fact, never as a trade instruction. " +
+      "Keep hedging words such as likely, may, could, and tends to. Plain language must not read more confident than the source material; simpler wording must not become a directive prediction.";
 
     // Trim the Sonnet payload (#95 item 1b). The old code stringified the entire
     // `signals` row (select *) and capped it at 6000 chars — shipping id, event_date,

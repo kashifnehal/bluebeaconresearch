@@ -59,6 +59,50 @@ async function main() {
   );
 
   runTest(
+    "generateAnalysis system prompt keeps the buy/sell prohibition and adds plain-language rules",
+    async () => {
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const promptService = new ClaudeService();
+        let capturedSystem = "";
+        (promptService as unknown as { client: unknown }).client = {
+          messages: {
+            create: async (opts: { system?: string }) => {
+              capturedSystem = String(opts.system ?? "");
+              return { content: [{ type: "text", text: "ok" }] };
+            },
+          },
+        };
+
+        await promptService.generateAnalysis(
+          { title: "Test event", summary: "Summary", region: "Global" },
+          { contextNotes: [] },
+        );
+
+        assert.match(
+          capturedSystem,
+          /never give buy\/sell trading recommendations/,
+        );
+        assert.match(capturedSystem, /plain language/);
+        assert.match(capturedSystem, /short sentences, active voice/);
+        assert.match(
+          capturedSystem,
+          /factual claim — numbers, direction, and causal links — must survive unchanged/,
+        );
+        assert.match(capturedSystem, /what happened, in one sentence/);
+        assert.match(capturedSystem, /never as a trade instruction/);
+        assert.match(capturedSystem, /likely, may, could, and tends to/);
+        assert.match(
+          capturedSystem,
+          /must not become a directive prediction/,
+        );
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
     "unrelated company event should return no commodity impact",
     async () => {
       const classification = await service.classifyEvent({
