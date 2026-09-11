@@ -9,6 +9,7 @@ import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { FilterBar } from "@/components/signals/FilterBar";
+import { SignalQuickView } from "@/components/signals/SignalQuickView";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   // list's prior fixed size, so the first render is unchanged); "Load more" adds
   // 10 and pulls the next API page once the current pages are exhausted.
   const [streamCount, setStreamCount] = useState(10);
+  const [quickViewSignal, setQuickViewSignal] = useState<Signal | null>(null);
 
   const applyDesk = (id: DeskPresetId) => {
     const preset = DESK_PRESETS[id];
@@ -666,9 +668,10 @@ export default function DashboardPage() {
                 style={{ borderColor: "rgba(60,74,66,0.3)" }}
               >
                 {streamList.length > 0 ? (
-                  streamList.map((item) => (
+                  streamList.map((item, index) => (
                     <div
                       key={item.id}
+                      data-testid="signal-stream-row"
                       onClick={() => openSignal(item)}
                       className="px-6 py-4 flex items-center gap-6 cursor-pointer group transition-colors"
                       style={{ backgroundColor: "transparent" }}
@@ -717,12 +720,27 @@ export default function DashboardPage() {
                       >
                         {Math.round(item.confidence * 100)}% CONFIDENCE
                       </div>
-                      <span
-                        className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform"
-                        style={{ color: "#86948a" }}
-                      >
-                        chevron_right
-                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          data-tour={index === 0 ? "quick-view" : undefined}
+                          data-testid="signal-quick-view-open"
+                          aria-label="Quick view"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setQuickViewSignal(item);
+                          }}
+                          className="hidden md:inline-flex h-8 w-8 items-center justify-center text-[#86948a] transition-colors hover:text-[#4edea3]"
+                        >
+                          <span className="material-symbols-outlined text-lg">preview</span>
+                        </button>
+                        <span
+                          className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform"
+                          style={{ color: "#86948a" }}
+                        >
+                          chevron_right
+                        </span>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -892,6 +910,11 @@ export default function DashboardPage() {
           </div>
         </div>
       </aside>
+
+      <SignalQuickView
+        signal={quickViewSignal}
+        onClose={() => setQuickViewSignal(null)}
+      />
     </div>
   );
 }

@@ -4,6 +4,8 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 [founder-led] = founder's own action, no engineering needed.
 
 ## Closed, verified
+- #122 Quick-view slide-over — shipped 2026-09-11. Intelligence Feed stream rows get a desktop-only preview icon before the existing `>`. Click opens a right-half slide-over (title, severity, confidence, commodity impacts, short `aiAnalysis` excerpt from `/api/signals`; no new API fields). Closes on overlay click or X. Discoverability: added a Joyride step targeting the new icon (reuses `product_tour_completed`, no new column) — smaller than a one-time tooltip + migration. Playwright on romantannison: panel matched the El Niño row (severity 7, 85% confidence, WHEAT/CORN/NGAS/USOIL impacts, briefing excerpt); overlay and X both close it.
+- #123 New tab only on quick-view "View full details" — shipped 2026-09-11 with #122. Feed row, Map popup, and Alerts signal-stream links left same-tab. The panel's "View full details" is a real `<a target="_blank" rel="noopener noreferrer">`. Playwright: row click stayed one tab at `/events/{id}`; the panel link opened a new already-logged-in event tab while the original stayed on `/dashboard`.
 - #119 Onboarding GIF/video step — shipped 2026-09-11. Welcome modal before the existing 6 Joyride steps (`WelcomeTourStep`, `tourPhase: "welcome"`). Placeholder `/onboarding/welcome-demo.gif` (`<img>` for gif, looping muted autoplay `<video>` for mp4). Caption "See how it works"; "Got it, show me around" advances into the tour; "Skip tour" still persists `product_tour_completed`. Type-check only for the UI (no Playwright in `apps/web`). Real GIF still needs recording.
 - #120 Plain-language AI-writing rewrite — shipped 2026-09-11. `generateAnalysis()` system prompt adds plain-language / 4-part structure / keep-hedging instructions alongside the #103 buy/sell prohibition (not replacing it). `classifyEvent()` (Haiku) untouched. Regenerated 4 real severity≥7 signals (El Niño, ECB/Iran, Perim Island, Al Faw tanker) before/after; not written back to `ai_analysis`. Unit test asserts both instruction blocks.
 - #116 "Authentication is temporarily unavailable" — shipped 2026-09-11 (`a561690`). Root cause was the 3s AbortController on middleware `getUser()` (Vercel `AbortError` on `/middleware` + GoTrue `context canceled` / `dial tcp [::1]:5432: operation was canceled` on 2026-09-09; a real `/user` also succeeded in 6.4s). Timeout raised to 8s; race against a timer instead of aborting Auth's fetch; `catch` now `console.error`s name/message/code. Fail-closed redirect + login banner on timeout unchanged. Type-check only — no middleware tests exist; live Auth slowness not reproduced.
@@ -305,10 +307,10 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   (see "Closed, verified").
 - #121 Real /accuracy page + outcome-tracker worker — spec'd, full build recommendation
   exists; gated on real signal history being long enough to be honest.
-- #122 Quick-view slide-over panel — ready-to-run prompt exists; needs a discoverability
-  nudge.
-- #123 Event pages in a new tab — scope narrowed after UX research to just the quick-view
-  panel's "View full details" link; founder decision still open on final scope.
+- #122 Quick-view slide-over panel — closed 2026-09-11 (see "Closed, verified").
+- #123 Event pages in a new tab — closed 2026-09-11 (see "Closed, verified"). Scope
+  settled: new-tab only on the quick-view "View full details" link; feed/map/alerts stay
+  same-tab.
 - #124 Feed filter bar (Commodity/Region/Severity/Time range) + shared FilterBar component —
   closed 2026-09-11 (see "Closed, verified").
 - #125 Trader-role saved views (Oil Desk/Grain Desk/Metals Desk) — closed 2026-09-11 (see

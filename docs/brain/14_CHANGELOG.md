@@ -8,6 +8,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.42.0 — Signal quick-view slide-over (#122 #123) (2026-09-11)
+
+- **#122 Quick-view panel** — Intelligence Feed stream rows (`chevron_right` → `/events/[id]`) gain a desktop-only preview icon. It opens a right-half slide-over with title, severity, confidence, commodity impacts, and a short excerpt of `aiAnalysis` from the existing `/api/signals` payload. Overlay click and X close it. Discoverability is a new Joyride dashboard step (`data-tour="quick-view"`), not a new DB flag — the tour already persists completion on `profiles.product_tour_completed`.
+- **#123 New tab, one link only** — Feed row, Map popup, and Alerts signal-stream links stay same-tab. Only the panel's "View full details" `<a>` uses `target="_blank" rel="noopener noreferrer"`.
+
 ### v0.41.0 — Welcome tour step + plain-language briefings (#119 #120) (2026-09-11)
 
 - **#119 Welcome demo step** — The product tour now starts on a skippable welcome modal before the existing 6 Joyride steps. Placeholder media path `/onboarding/welcome-demo.gif` (`<img>` for gif; looping muted autoplay `<video>` if the path is later swapped to mp4). Caption "See how it works"; "Got it, show me around" advances into the interactive tour; "Skip tour" still marks `product_tour_completed`. Real GIF still needs recording.

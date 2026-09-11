@@ -33,6 +33,12 @@ const DASHBOARD_STEPS: Step[] = [
       "Every signal has a full breakdown: what happened, what it affects, and the evidence behind it. This is where you decide if it matters to your positions.",
     placement: "top",
   },
+  {
+    target: '[data-tour="quick-view"]',
+    content:
+      "Need a faster look without leaving the feed? This preview opens a slide-over with severity, confidence, commodity impacts, and a short excerpt of the analyst briefing. Open full details from there when you want the complete file.",
+    placement: "left",
+  },
 ];
 
 const EVENT_STEPS: Step[] = [

@@ -2,9 +2,16 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (welcome tour step + plain-language briefings — see `14_CHANGELOG.md` v0.41.0)
+Last updated: 2026-09-11 (signal quick-view slide-over — see `14_CHANGELOG.md` v0.42.0)
 
 ---
+
+## Signal quick-view slide-over (2026-09-11)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.42.0, `LIVE_TODO.md`.
+
+- **#122** — Desktop-only preview icon on Intelligence Feed stream rows opens a right-half slide-over (title, severity, confidence, commodity impacts, `aiAnalysis` excerpt). Tour step added for discoverability.
+- **#123** — Only that panel's "View full details" link opens a new tab; feed / map popup / Alerts stay same-tab.
 
 ## Welcome tour step + plain-language briefings (2026-09-11)
 
