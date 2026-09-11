@@ -19,6 +19,7 @@ import {
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { EventLocationMap } from "@/components/signals/EventLocationMap";
+import { SignalChatPanel } from "@/components/signals/SignalChatPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import type { Signal } from "@blue-beacon-research/shared";
@@ -460,6 +461,11 @@ export default function EventDetailPage() {
                         ))}
                       </div>
                     )}
+
+                    {/* #111 (frontend half) — chat panel, below the existing
+                       Full Analyst Briefing / Impact Breakdown sections above.
+                       Does not touch or restyle those sections. */}
+                    <SignalChatPanel signalId={signal.id} />
                   </div>
 
                   <div className="md:col-span-4 space-y-6">

@@ -273,3 +273,16 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - New `signal_chat_messages` table (migration `20260911180000_signal_chat_messages.sql`), same user-owns-their-rows RLS convention as `alert_rules`/`watchlist_entries`/`saved_signals`.
 - POST gates on plan tier (`403 premium_required` below `pro`, passes for everyone today) and a custom 30-messages/24h per-user counter (`429 rate_limited`) — no rate-limit dependency added.
 - Verified live on the standing test account against a real signal: an on-topic question returned a grounded answer citing that signal's actual severity/confidence figures; a personalized-position question ("I hold 200 barrels of WTI...") was declined with the exact specified redirect, not answered. Both turns confirmed written to `signal_chat_messages` via direct SQL, then removed (test data).
+
+---
+
+## PHASE 13 — #111 AI SIGNAL CHAT, FRONTEND HALF — FEATURE COMPLETE (2026-09-11)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.47.0.
+
+- **`apps/web` only** — completes #111 (backend shipped in PHASE 12 above).
+- New `SignalChatPanel` (`components/signals/SignalChatPanel.tsx`), file-location convention matched to `SignalQuickView.tsx` (#122). Wired into the event detail page directly below the existing Full Analyst Briefing / Impact Breakdown sections, which are untouched. Styling reuses the page's own CSS-variable tokens rather than inventing a new visual language; the loading spinner reuses the exact pattern already shipped for #108's Backtesting Lab.
+- New same-origin proxy routes `app/api/signals/[id]/chat/route.ts` (GET+POST), following the exact auth-forwarding pattern already used by `api/telegram/connect-code/route.ts` — resolve the session server-side, forward the access token as a Bearer header to `apps/backend`, pass the backend's status/body straight through so `403 premium_required` / `429 rate_limited` reach the panel unchanged.
+- Panel behavior: fetches history on mount with an explicit empty state, optimistic user-message append with rollback on send failure, plain-language copy for the 403/429 cases, and an always-visible (non-dismissible) disclaimer under the input.
+- Playwright-verified end-to-end on the standing test account: empty state, a real grounded reply to an on-topic question, the disclaimer visible throughout, and the same conversation still present after a full page reload (proves it reads from the backend, not local state).
+- Also uncovered and worked around an unrelated Next.js 16 Turbopack dev-mode bug during verification: the dev server would not hydrate at all when reached via `127.0.0.1` (Chromium's Origin header on the HMR WebSocket gets treated as cross-origin, stalling the React debug channel). Using `localhost` instead resolves it for local Playwright runs; no application code was changed for this.

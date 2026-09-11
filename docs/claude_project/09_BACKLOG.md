@@ -32,7 +32,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#125~~ | ~~Trader-role saved views~~ | — | **Done 2026-09-11** (`74b815b`) — Oil/Grain/Metals desk chips. See `LIVE_TODO.md`. |
 | ~~#126~~ | ~~Trust/freshness signals~~ | — | **Done 2026-09-11** — `Fresh Xm` tag + live coverage line. See `LIVE_TODO.md`. |
 | ~~#127~~ | ~~Economic calendar filters~~ | — | **Done 2026-09-11** (calendar half). Map chokepoint/pipeline layers still gated — see open list. |
-| #111 | AI chat on event page (premium) — **backend half only** | — | **Backend done 2026-09-11.** `POST/GET /v1/signals/:id/chat`, `ClaudeService.chatAboutSignal()` (same `claude-sonnet-5` model + buy/sell-refusal language as #120's `generateAnalysis()`, plus a personalized-position-advice refusal), `signal_chat_messages` table + RLS. Frontend UI (the actual chat panel on the event page) is still open — see `LIVE_TODO.md`. |
+| ~~#111~~ | ~~AI chat on event page (premium)~~ | — | **Fully done 2026-09-11 (backend `dcdc877` + frontend).** `POST/GET /v1/signals/:id/chat`, `ClaudeService.chatAboutSignal()` (same `claude-sonnet-5` model + buy/sell-refusal language as #120's `generateAnalysis()`, plus a personalized-position-advice refusal), `signal_chat_messages` table + RLS. Frontend `SignalChatPanel` on the event page, wired via same-origin `/api/signals/:id/chat` proxy routes. Playwright-verified end-to-end incl. reload-persistence. See `LIVE_TODO.md`. |
 
 ### Still open
 
@@ -41,7 +41,6 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #104 | Vercel Hobby→Pro upgrade | Ready now, $20/mo, no gate. [founder-led] |
 | #109 | Printable architecture/flowchart doc | Scoped, own session. |
 | #110 | Named-analyst content section | Parked, gated on real evidence of demand. |
-| #111 | AI chat on event page — **frontend half** | Backend shipped 2026-09-11 (see Shipped table above): `POST/GET /v1/signals/:id/chat` is live. Remaining: the chat UI panel on the event page itself. |
 | #112 | Push-notification connect UX | Scoped; dismissed state must be server-side. |
 | #113 | www/apex domain redirect | Ready now, free, Vercel dashboard only. [founder-led] |
 | #114 | Business continuity + legal registration | Checklist ready; founder picks jurisdiction. [founder-led] |

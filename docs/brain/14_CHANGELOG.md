@@ -8,6 +8,47 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.47.0 — #111 AI signal chat, frontend half — feature complete (2026-09-11)
+
+`apps/web` only (backend was v0.46.0 below). New `SignalChatPanel`
+(`components/signals/SignalChatPanel.tsx`) — file-location convention matches
+`SignalQuickView.tsx` (#122): fetches `GET /api/signals/:id/chat` on mount (empty state
+"Ask a question about this signal to get started"), optimistic user-message append on
+send with rollback if the POST fails, plain-language copy for `403 premium_required`
+("This feature needs a paid plan.") and `429 rate_limited` ("You've hit today's question
+limit — try again tomorrow."), and an always-visible (non-dismissible, not a tooltip)
+disclaimer line under the input: "This assistant explains the signal only — it can't
+give personalized investment advice." Loading indicator reuses the exact
+`material-symbols-outlined progress_activity` + `animate-spin` pattern already shipped
+for #108's Backtesting Lab this batch (same pattern also in `LoadMoreButton.tsx`).
+Styling uses the event page's own CSS custom properties (`--border-subtle`, `--accent`,
+`text-muted`/`text-text-primary`, Space Grotesk labels) rather than a new visual
+language. Wired into `app/(dashboard)/events/[id]/page.tsx` directly below the existing
+Full Analyst Briefing / Impact Breakdown sections — that section is untouched. New
+same-origin proxy routes `app/api/signals/[id]/chat/route.ts` (GET+POST) match the exact
+auth-forwarding pattern already used by `api/telegram/connect-code/route.ts`: resolve the
+caller's Supabase session server-side via `createClient()`, forward the access token as
+`Authorization: Bearer` to `process.env.API_URL`, and pass the backend's status/body
+straight through unchanged (so the frontend reads `{ error: "premium_required" }` /
+`{ error: "rate_limited" }` by the same field names the backend already returns).
+Playwright-verified end-to-end on the standing test account (romantannison) against real
+signal `096759c2-5d38-4f8a-b2ab-81fcfcbfc168`: empty state rendered before any messages;
+"Why does Perim Island matter for oil shipping specifically?" returned a grounded,
+on-topic reply rendered in the panel; the disclaimer was visible the whole time;
+reloading the page showed the same question+reply still there, proving persistence reads
+from `signal_chat_messages` via the backend rather than local component state. Test rows
+deleted from `evavcgfmemwryggdkjmx` after verification. **Also found and worked around an
+unrelated environment bug during verification**: this repo's local Next.js 16 Turbopack
+dev server does not hydrate at all when reached via `127.0.0.1` — Chromium sends
+`Origin: http://127.0.0.1:3000` on the `/_next/webpack-hmr` WebSocket upgrade, which Next
+treats as cross-origin and rejects, which stalls the React debug channel that
+App-Router's dev-mode `hydrateRoot()` waits on (confirmed via CDP: zero DOM event
+listeners attached anywhere on the page while stuck). This is a known Next.js 16 dev-mode
+issue, not a bug in this app. Using `localhost` instead of `127.0.0.1` for local
+Playwright runs against this dev server resolves it — no `next.config.ts` change was
+made; noting this here so the next session that hits a "nothing on the page responds to
+clicks in Playwright" symptom doesn't have to re-diagnose it.
+
 ### v0.46.0 — #111 AI signal chat, backend half (2026-09-11)
 
 `apps/backend` only (frontend chat panel still open). New endpoints `GET/POST /v1/signals/:id/chat`
