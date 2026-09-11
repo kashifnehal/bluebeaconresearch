@@ -2,9 +2,15 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (freshness tags + calendar filters — see `14_CHANGELOG.md` v0.43.0)
+Last updated: 2026-09-11 (5-year watchlist chart — see `14_CHANGELOG.md` v0.44.0)
 
 ---
+
+## 5-year watchlist chart (2026-09-11)
+
+`apps/backend` + `apps/web`. Full record: `14_CHANGELOG.md` v0.44.0, `LIVE_TODO.md`.
+
+- **#106** — Watchlist symbol drill-down gains a second panel, "5-year history." On-demand Fastify route `GET /v1/prices/history-5y/:symbol` calls yahoo-finance2 `chart()` (weekly, 5y `period1`), 15-minute in-memory cache, no DB write and no cron. `price-syncer.ts` untouched.
 
 ## Freshness tags + calendar filters (2026-09-11)
 

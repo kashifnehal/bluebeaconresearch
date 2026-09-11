@@ -18,6 +18,8 @@
 
 > ⚠️ UPDATED 2026-09-11 (later same day) — tonight's product batch shipped: #105 map popup, #107 watchlist seed (+ prefs persist), #108 backtesting auto-apply, #116 auth-timeout middleware, #119 welcome tour step, #120 plain-language briefings, #122/#123 quick-view slide-over, #124/#125 shared FilterBar + desk chips, #126 freshness/coverage, #127 calendar filters (map layers still gated). Do not duplicate verification here — per-commit evidence is in `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.39.0–v0.43.0. This tree: PHASE 11.
 
+> ⚠️ UPDATED 2026-09-11 (#106) — 5-year historical watchlist chart shipped: on-demand Yahoo `chart()` weekly bars, in-memory 15-minute cache, second panel on `/watchlist/[symbol]`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.44.0. This tree: PHASE 12.
+
 Last updated: 2026-09-11
 
 ---

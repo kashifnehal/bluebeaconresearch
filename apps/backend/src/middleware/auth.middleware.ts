@@ -32,6 +32,11 @@ export function registerAuth(app: FastifyInstance) {
     // /v1/telegram/* routes (connect-code stays authenticated below).
     if (req.url.startsWith("/v1/telegram/webhook")) return;
 
+    // Public weekly OHLCV for a closed set of mapped commodity/forex symbols
+    // (#106). Same market-data posture as Next.js /api/prices — not an open
+    // Yahoo proxy (unknown symbols never reach Yahoo). Fastify rate-limit still applies.
+    if (req.url.startsWith("/v1/prices/history-5y")) return;
+
     const supabase = getSupabaseAdmin();
 
     const authHeader = req.headers.authorization;

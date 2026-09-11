@@ -19,6 +19,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 
 | # | Item | Effort | Why |
 |---|------|--------|-----|
+| ~~#106~~ | ~~5-year historical commodity charts~~ | — | **Done 2026-09-11** — on-demand Yahoo weekly `chart()`, watchlist panel. See `LIVE_TODO.md`. |
 | ~~#105~~ | ~~Map click-modal UI fix~~ | — | **Done 2026-09-11** — wrapping/scrollable map dialog. See `LIVE_TODO.md`. |
 | ~~#107~~ | ~~Watchlist default-populated cards + one-click add~~ | — | **Done 2026-09-11** — first-visit seed + prefs-aware persist to `user_preferences`. See `LIVE_TODO.md`. |
 | ~~#108~~ | ~~Backtesting Lab auto-apply filters + loading state~~ | — | **Done 2026-09-11**. See `LIVE_TODO.md`. |
@@ -37,7 +38,6 @@ The MoSCoW tables below are the historical record. This section is the current p
 | # | Item | Notes |
 |---|------|-------|
 | #104 | Vercel Hobby→Pro upgrade | Ready now, $20/mo, no gate. [founder-led] |
-| #106 | 5-year historical commodity charts | Scoped; on-demand Yahoo fetch recommended (don't conflict with #67 retention). |
 | #109 | Printable architecture/flowchart doc | Scoped, own session. |
 | #110 | Named-analyst content section | Parked, gated on real evidence of demand. |
 | #111 | AI chat on event page (premium) | Scoped; RAG-grounded; same buy/sell-refusal as #103. After go-live checklist. |

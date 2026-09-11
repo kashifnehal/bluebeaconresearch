@@ -114,6 +114,28 @@ export default function WatchlistSymbolPage() {
   });
   const points = historyPoints ?? [];
 
+  type History5y = {
+    points: PricePoint[];
+    incomplete: boolean;
+    availableFrom: string | null;
+  };
+  const { data: history5y, isLoading: history5yLoading } = useQuery({
+    queryKey: ["price-history-5y", symbol],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/prices/history-5y?symbol=${encodeURIComponent(symbol)}`,
+      );
+      const json = (await res.json()) as History5y;
+      return {
+        points: json.points ?? [],
+        incomplete: Boolean(json.incomplete),
+        availableFrom: json.availableFrom ?? null,
+      };
+    },
+    staleTime: 15 * 60 * 1000,
+  });
+  const history5yPoints = history5y?.points ?? [];
+
   const [signalsPage, setSignalsPage] = useState(1);
   // Different commodity → back to page 1. React's documented "adjust state when a
   // prop changes during render" pattern (store the last-seen symbol in state),
@@ -161,6 +183,18 @@ export default function WatchlistSymbolPage() {
 
   const chartDomain: [number, number] | null = chartData.length
     ? [chartData[0].t, chartData[chartData.length - 1].t]
+    : null;
+
+  const chart5yData = useMemo(
+    () =>
+      history5yPoints.map((p) => ({
+        t: new Date(p.fetchedAt).getTime(),
+        price: p.price,
+      })),
+    [history5yPoints],
+  );
+  const chart5yDomain: [number, number] | null = chart5yData.length
+    ? [chart5yData[0].t, chart5yData[chart5yData.length - 1].t]
     : null;
 
   return (
@@ -279,6 +313,77 @@ export default function WatchlistSymbolPage() {
           )}
           <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
             Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation.
+          </p>
+        </div>
+
+        {/* 5-year history (#106) — on-demand Yahoo weekly bars, not the 90-day DB series */}
+        <div className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-6 mb-8">
+          <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-2">
+            5-year history
+          </h2>
+          {history5y?.incomplete && history5y.availableFrom && chart5yData.length >= 2 && (
+            <p className="text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
+              Showing available history from{" "}
+              {new Date(history5y.availableFrom).toLocaleDateString(undefined, {
+                month: "short",
+                year: "numeric",
+              })}{" "}
+              — Yahoo does not have a full 5-year series for this symbol.
+            </p>
+          )}
+          {history5yLoading ? (
+            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
+              Loading 5-year history…
+            </p>
+          ) : chart5yData.length < 2 ? (
+            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
+              Not enough 5-year price history available for this symbol
+            </p>
+          ) : (
+            <div className="h-[340px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chart5yData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                  <XAxis
+                    dataKey="t"
+                    type="number"
+                    domain={chart5yDomain ?? ["dataMin", "dataMax"]}
+                    tickFormatter={(t) =>
+                      new Date(t).toLocaleDateString(undefined, {
+                        month: "short",
+                        year: "numeric",
+                      })
+                    }
+                    stroke="rgba(255,255,255,0.3)"
+                    tick={{ fontSize: 10, fontFamily: "monospace" }}
+                  />
+                  <YAxis
+                    domain={["auto", "auto"]}
+                    stroke="rgba(255,255,255,0.3)"
+                    tick={{ fontSize: 10, fontFamily: "monospace" }}
+                    width={70}
+                  />
+                  <Tooltip
+                    labelFormatter={(t) =>
+                      new Date(t as number).toLocaleDateString(undefined, {
+                        month: "short",
+                        year: "numeric",
+                      })
+                    }
+                    formatter={(v) => [typeof v === "number" ? v.toFixed(2) : String(v), "Price"]}
+                    contentStyle={{
+                      background: "#141414",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      fontSize: 11,
+                    }}
+                  />
+                  <Line type="monotone" dataKey="price" stroke="#6ffbbe" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
+            Weekly closes from Yahoo Finance. Informational only — not a trading recommendation.
           </p>
         </div>
 

@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.44.0 — 5-year historical watchlist chart (#106) (2026-09-11)
+
+- **#106** — On-demand 5-year weekly chart on `/watchlist/[symbol]`, below the existing 90-day series. New Fastify route `GET /v1/prices/history-5y/:symbol` uses yahoo-finance2 `chart()` (`period1` = 5 years ago, `interval: "1wk"`), cached in process memory for 15 minutes per symbol. Not written to `commodity_prices` and not scheduled — the live quote job in `price-syncer.ts` is unrelated and unchanged. Symbols Yahoo cannot cover for the full window render whatever bars exist (or an empty-state line) instead of failing the panel. Next.js BFF: `/api/prices/history-5y`.
+
 ### v0.43.0 — Freshness tags, coverage line, calendar filters (#126 #127) (2026-09-11)
 
 - **#126 Trust/freshness** — Signal cards (Intelligence Feed + map popup/list) show a `Fresh Xm` tag from that row's `created_at` via the existing `safeFormatDistanceToNow` helper (compact units). Feed header coverage line is live-queried: distinct `raw_events` outlet values (`raw_data.source` string / `raw_data.source.name` / `raw_data.domain`) on signals from the last 24h, plus `CONFIGURED_RSS_FEED_COUNT` (13, matching `RSS_FEEDS.length` in `rss-collector.ts`) and the configured GNews + GDELT + ACLED ingest paths. No estimated numbers.

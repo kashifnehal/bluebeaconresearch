@@ -240,6 +240,10 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 
 ---
 
+## PHASE 12 — 5-YEAR WATCHLIST CHART #106 (2026-09-11)
+
+- **#106 (`this commit`).** Watchlist symbol drill-down adds a "5-year history" panel below the 90-day chart. Fastify `GET /v1/prices/history-5y/:symbol` calls yahoo-finance2 `chart()` (weekly, 5-year `period1`), cached 15 minutes in memory. Not stored, not scheduled; `price-syncer.ts` untouched. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.44.0.
+
 ## PHASE 11 — TONIGHT'S SHIPPING BATCH #105–#127 (2026-09-11)
 
 > Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.39.0–v0.43.0. Do not treat PHASE 10's "none marked done" line as current — that was the plan-parking commit.

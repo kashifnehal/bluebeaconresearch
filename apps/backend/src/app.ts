@@ -14,6 +14,7 @@ import { apiKeysRoutes } from "./routes/api-keys.js";
 import { alertsRoutes } from "./routes/alerts.js";
 import { webhooksRoutes } from "./routes/webhooks.js";
 import { pricesRoutes } from "./routes/prices.js";
+import { priceHistoryRoutes } from "./routes/price-history.js";
 import { eventsRoutes } from "./routes/events.js";
 import { telegramRoutes } from "./routes/telegram.js";
 import { backtestingRoutes } from "./routes/backtesting.js";
@@ -70,6 +71,7 @@ export function buildApp() {
   app.register(apiKeysRoutes, { prefix: "/v1/api-keys" });
   app.register(alertsRoutes, { prefix: "/v1/alerts" });
   app.register(webhooksRoutes, { prefix: "/v1/webhooks" });
+  app.register(priceHistoryRoutes, { prefix: "/v1/prices/history-5y" });
   app.register(pricesRoutes, { prefix: "/v1/prices" });
   app.register(eventsRoutes, { prefix: "/v1/events" });
   app.register(telegramRoutes, { prefix: "/v1/telegram" });
