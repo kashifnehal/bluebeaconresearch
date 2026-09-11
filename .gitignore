@@ -41,3 +41,6 @@ yarn-error.log*
 
 # Playwright MCP debugging artifacts (screenshots, snapshots, console logs)
 .playwright-mcp/
+
+# One-time backfill local checkpoints (progress only, not source)
+**/.backfill-*-checkpoint.json

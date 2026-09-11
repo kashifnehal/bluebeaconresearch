@@ -8,6 +8,28 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.48.0 — #53 commodity_impacts historical backfill (2026-09-11)
+
+One-time script `apps/backend/src/scripts/backfill-commodity-impacts.ts` (not a
+cron). Reuses `ClaudeService.classifyEvent()` (`claude-haiku-4-5-20251001`) — the
+same function the live rss/gnews/gdelt/acled/reconciliation inserts call —
+and updates **only** `signals.commodity_impacts`. Live classification pipeline
+untouched.
+
+**Cost quote before writes (live `count_tokens` + response headers):** 2,057
+empty rows × 346 input tok, $1/$5 per MTok Haiku 4.5 → **$1.53–$2.77**. Account
+limits from a real Haiku call: **10,000 RPM / 10M ITPM / 2M OTPM** (Scale).
+Script: 5 in-flight, abort on credit-exhausted instead of writing heuristic.
+
+**Production run (already executed, not a deploy):**
+- Before: 2,824 rows, **767 filled / 2,057 empty**.
+- After: 2,829 rows, **1,634 filled / 1,195 empty** (+5 live ingest during the run).
+- Original empty set: **864 filled** + **992 Haiku-empty** (checkpointed) + **201
+  skipped** when Anthropic returned credit-balance-too-low (not written, not
+  checkpointed). Re-run `pnpm --filter backend backfill:commodity-impacts` after
+  credit restore. Smoke-test row `bde8c96a-…` (Iran ports blockade) wrote
+  USOIL/UKOIL/NGAS only; `currency_pair_impacts` / severity / summary unchanged.
+
 ### v0.47.0 — #111 AI signal chat, frontend half — feature complete (2026-09-11)
 
 `apps/web` only (backend was v0.46.0 below). New `SignalChatPanel`
@@ -184,13 +206,10 @@ Commit on `main`: `5f1ee16`. Backend + one new `apps/web` admin page + one migra
   (collection started ~2026-08-10; no prior pruning). Ran both jobs live: deleted
   0 / 0, matching.
 
-**Not done (by design):** #53 `commodity_impacts` backfill — estimate only.
-**2,019** signals have `commodity_impacts = '[]'` (backlog cited ~1,827; drifted
-up). Measured via `count_tokens`: avg **329** input tok/row + ~200 output →
-`claude-haiku-4-5` **$0.00133/row → ~$2.68** total (**~$1.34** via Batch API). Even
-at 3× that it's < $9. Anthropic credit is live (confirmed this session by real
-Haiku + Sonnet calls — the "restore Anthropic credit" open item is stale). Backfill
-NOT run — needs an explicit dollar-amount go-ahead.
+**#53 `commodity_impacts` backfill — later ran 2026-09-11.** See v0.48.0. The
+2026-09-09 estimate (2,019 empty, ~$2.68 / $1.34 batched) was superseded by the
+live re-quote of 2,057 empty / $1.53–$2.77; credit exhausted 201 rows short of
+the full set.
 
 ### v0.36.4 — Forex pair taxonomy #87 phase 4: watchlist drill-down forex support (2026-09-09)
 

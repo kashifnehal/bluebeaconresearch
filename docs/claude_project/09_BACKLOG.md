@@ -33,6 +33,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#126~~ | ~~Trust/freshness signals~~ | — | **Done 2026-09-11** — `Fresh Xm` tag + live coverage line. See `LIVE_TODO.md`. |
 | ~~#127~~ | ~~Economic calendar filters~~ | — | **Done 2026-09-11** (calendar half). Map chokepoint/pipeline layers still gated — see open list. |
 | ~~#111~~ | ~~AI chat on event page (premium)~~ | — | **Fully done 2026-09-11 (backend `dcdc877` + frontend).** `POST/GET /v1/signals/:id/chat`, `ClaudeService.chatAboutSignal()` (same `claude-sonnet-5` model + buy/sell-refusal language as #120's `generateAnalysis()`, plus a personalized-position-advice refusal), `signal_chat_messages` table + RLS. Frontend `SignalChatPanel` on the event page, wired via same-origin `/api/signals/:id/chat` proxy routes. Playwright-verified end-to-end incl. reload-persistence. See `LIVE_TODO.md`. |
+| ~~#53~~ | ~~Backfill missing `commodity_impacts` on historical signals~~ | — | **Ran 2026-09-11** — 767→1,634 filled via `classifyEvent()`; 201 left because Anthropic credit exhausted. See `LIVE_TODO.md`. |
 
 ### Still open
 
@@ -47,7 +48,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #115 | Signal-quality live-data audit | Ready-to-run, read-only verification prompt exists. |
 | #117 | Global marketing/ads compliance | Researched, no blocker; action folded into #102. |
 | #118 | Premium news/AI tier | Step 1 (GNews Essential) no gate; steps 2–3 gated on real revenue. |
-| #121 | Real /accuracy page + outcome-tracker worker | Spec'd; gated on signal history long enough to be honest. |
+| #121 | Real /accuracy page + outcome-tracker worker | Spec'd; gated on signal history long enough to be honest. #53 backfill ran 2026-09-11 (filled 767→1,634); 201 rows still empty because Anthropic credit exhausted mid-run. |
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
 

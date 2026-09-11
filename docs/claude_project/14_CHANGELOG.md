@@ -286,3 +286,12 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - Panel behavior: fetches history on mount with an explicit empty state, optimistic user-message append with rollback on send failure, plain-language copy for the 403/429 cases, and an always-visible (non-dismissible) disclaimer under the input.
 - Playwright-verified end-to-end on the standing test account: empty state, a real grounded reply to an on-topic question, the disclaimer visible throughout, and the same conversation still present after a full page reload (proves it reads from the backend, not local state).
 - Also uncovered and worked around an unrelated Next.js 16 Turbopack dev-mode bug during verification: the dev server would not hydrate at all when reached via `127.0.0.1` (Chromium's Origin header on the HMR WebSocket gets treated as cross-origin, stalling the React debug channel). Using `localhost` instead resolves it for local Playwright runs; no application code was changed for this.
+
+---
+
+## PHASE 14 — #53 COMMODITY_IMPACTS HISTORICAL BACKFILL (2026-09-11)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.48.0. The production UPDATE already ran; this commit ships the one-time script for reproducibility.
+
+- One-time `apps/backend/src/scripts/backfill-commodity-impacts.ts` (not a cron) reuses `ClaudeService.classifyEvent()` (Haiku) and writes only `commodity_impacts`.
+- Before: 767 filled / 2,057 empty. After: 1,634 filled / 1,195 empty. 201 remaining because Anthropic credit exhausted mid-run (not written; re-run after credit restore).

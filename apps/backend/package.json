@@ -15,7 +15,8 @@
     "migrate": "echo \"No migrations to run (Supabase managed externally)\"",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"(lint handled at repo root)\"",
-    "test": "tsx src/services/claude.service.test.ts"
+    "test": "tsx src/services/claude.service.test.ts",
+    "backfill:commodity-impacts": "tsx src/scripts/backfill-commodity-impacts.ts"
   },
   "keywords": [],
   "author": "",

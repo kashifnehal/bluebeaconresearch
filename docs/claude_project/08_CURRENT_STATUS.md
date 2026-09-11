@@ -26,6 +26,8 @@
 
 > ⚠️ UPDATED 2026-09-11 (docs hygiene) — remaining markdown citations of an unused Supabase project ref were purged. Live project remains `evavcgfmemwryggdkjmx`. No code/config contained the unused ref. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.45.0. This tree: PHASE 13.
 
+> ⚠️ UPDATED 2026-09-11 (#53) — historical `commodity_impacts` backfill ran via one-time `classifyEvent()` script. Before 767 filled / 2,057 empty; after 1,634 filled / 1,195 empty. 201 rows left because Anthropic credit exhausted (live pipeline back on heuristic fallback until restored). Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.48.0. This tree: PHASE 14.
+
 Last updated: 2026-09-11
 
 ---
