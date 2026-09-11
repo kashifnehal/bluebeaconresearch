@@ -304,3 +304,12 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - Backfilled to 2,965 rows against production (1,586 signals, 298 pairs skipped for missing price data, 0 errors).
 - Caught and fixed a real bug before committing: legacy pre-#87 `EURUSD`/`USDRUB` `commodity_impacts` entries have no forex price history before 2026-09-09, so an unbounded closest-price search was clamping to a distant point and fabricating false "flat" outcomes (349 of a first-pass 3,263 rows). Fixed with a 24h max-distance guard; data wiped and re-run clean.
 - Frontend `/accuracy` page itself is still open — not part of this half.
+
+## PHASE 16 — #121 FRONTEND HALF: GET /V1/ACCURACY + PUBLIC /ACCURACY PAGE (2026-09-11)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.50.0.
+
+- New public (no-auth) `GET /v1/accuracy` aggregates `signal_outcomes` (never live-recomputes) into overall + per-asset hit rate, avg move when correct, and sample size, always returned together; per-asset rows below 20 scored predictions ("not enough history yet") instead of a misleading percentage. A separate `volatile_neutral_summary` reports how often volatile/neutral calls saw a real (≥2%) move, kept fully apart from hit rate.
+- New public `/accuracy` page — no login required, matches the existing `/status`-style dark terminal aesthetic — renders all of the above together plus a permanent, non-dismissible past-performance disclaimer and the plain-language date range. Deliberately has no "top signals"/"best calls" highlight list anywhere, per a hard product rule.
+- Found and fixed a real latent bug while verifying: Supabase `.in()` filters with real UUIDs throw past ~400 items (a URL-length limit, not flakiness) — this had also silently broken part of last session's `outcome-tracker.ts` backfill. Both now chunk at 200.
+- Verified against production: overall and per-asset (USOIL) numbers hand-checked against direct SQL and matched exactly; real rendered page screenshotted with real, non-placeholder numbers.

@@ -8,6 +8,52 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.50.0 — #121 frontend half: GET /v1/accuracy + public /accuracy page (2026-09-11)
+
+New public (no-auth) `apps/backend/src/routes/accuracy.routes.ts` (`GET /v1/accuracy`,
+registered in `app.ts`) plus an explicit `/v1/accuracy` exemption added to the global
+auth `preHandler` hook in `middleware/auth.middleware.ts` (same pattern as the existing
+`/v1/prices/history-5y` exemption — that hook 401s every route by default). Reads only
+`signal_outcomes`, never live-recomputes. Returns, overall and per-asset: `total_scored`,
+`correct`, `hit_rate` (null + `not_enough_history: true` below `MIN_SAMPLE_SIZE = 20`,
+a tunable judgment call, not a hard requirement), `avg_move_when_correct`,
+`sample_size_note` (always paired with `hit_rate`), `volatile_neutral_summary` (fraction
+of volatile/neutral predictions whose actual move exceeded `VOLATILITY_THRESHOLD_PCT = 2%`
+— ~4x the worker's existing 0.5% flat-noise floor — kept fully separate from `hit_rate`),
+and `date_range`.
+
+New public page `apps/web/app/accuracy/page.tsx` (top-level route, outside `(dashboard)`
+and outside `middleware.ts`'s `PROTECTED` list, so no `requireUser()` gating — confirmed
+by inspecting `middleware.ts` directly rather than assumed). Dark-terminal styling
+matching `/status`. Shows overall hit rate + avg move + sample size together (never a
+bare percentage), a permanent non-dismissible past-performance disclaimer, a per-asset
+table with the not-enough-history state below threshold, and the plain-language date
+range. Deliberately has **no** "top signals"/"best calls" highlight list anywhere (hard
+rule per spec).
+
+**Real bug found and fixed during verification** (exposed by this task, not caused by
+it): `.in("id"/"signal_id", chunk)` calls with real ~36-char UUIDs throw
+`TypeError: fetch failed` once a chunk hits ~400 items — reproduced deterministically
+(380 always succeeds, 400 always fails), a URL-length limit somewhere in the request
+chain, not network flakiness. This silently dropped 3 of 4 chunks in
+`outcome-tracker.ts`'s existing-outcomes lookup during the prior session's backfill
+(harmless that run — the table was empty, so "missing" was already correct) and was
+nulling out `date_range` on every `/v1/accuracy` request. Fixed by dropping the chunk
+size 500→200 in both `accuracy.routes.ts` (`SIGNAL_LOOKUP_CHUNK`) and
+`outcome-tracker.ts` (`EXISTING_OUTCOMES_CHUNK`), plus a 3-attempt retry-with-backoff
+as cheap insurance against genuine transient blips.
+
+**Verified** against production `evavcgfmemwryggdkjmx`: overall `total_scored=2390,
+correct=1124, hit_rate=0.4703, avg_move_when_correct≈2.49%, date_range
+2026-08-09→2026-09-09`. Hand-checked USOIL via direct SQL
+(`count(*) FILTER (is_directionally_correct IS NOT NULL)`, etc. joined to `signals`
+for `event_date`): `total_scored=800, correct=395 (0.49375),
+avg_move_when_correct=2.5916757618488923` — matches the API response exactly.
+EURUSD (11 scored) / USDRUB (1 scored) both correctly show `not_enough_history: true`.
+Real rendered page screenshotted via the `playwright` CLI directly (the `@playwright/mcp`
+server wasn't connected this session) against the local dev server — real numbers
+render, no placeholders, no top-signals list. Full detail: `LIVE_TODO.md`.
+
 ### v0.49.0 — #121 backend half: signal_outcomes + outcome-tracker worker (2026-09-11)
 
 New table `signal_outcomes` (`20260911190000_signal_outcomes.sql`, applied live) and

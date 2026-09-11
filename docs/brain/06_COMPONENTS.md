@@ -87,6 +87,12 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **How**: GET `/api/signals/:id/chat` on mount (empty state: "Ask a question about this signal to get started"); POST on send with optimistic user bubble + rollback on failure. Loading spinner reuses #108's `progress_activity` + `animate-spin`. Always-visible disclaimer under the input (not a tooltip). Plain-language copy for `403 premium_required` / `429 rate_limited`.
 - **Why**: explain the briefing, never buy/sell or personalized-position advice. History is server-backed (`signal_chat_messages`); a page reload must restore the conversation.
 
+### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
+- **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
+- **How**: server component, direct server-side fetch (same pattern as `admin/metrics/page.tsx`, no client proxy route needed); dark-terminal styling matches `/status`.
+- **Shows**: overall hit rate + avg move + sample size always together; a separate volatile/neutral summary; a per-asset table with a "not enough history yet" state below `min_sample_size`; a permanent non-dismissible disclaimer; the plain-language date range. Full detail: `docs/claude_project/06_COMPONENTS.md` §7a.
+- **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page.
+
 ---
 
 ## 4. Primitives & UI Component Suite (`apps/web/components/ui`)

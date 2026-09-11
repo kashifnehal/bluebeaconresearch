@@ -396,6 +396,28 @@ export default function PageName() {
 
 ---
 
+## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)
+
+### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
+
+Public track-record page, server component, `dynamic = "force-dynamic"`. Fetches
+`GET /v1/accuracy` directly server-side (`process.env.API_URL`, `cache: "no-store"`)
+— same direct-fetch pattern as `app/admin/metrics/page.tsx`, no client-side proxy
+route needed since there's no interactivity. Dark-terminal styling matches
+`/status` (same header/Logo/footer chrome, `#0e0e0e`/`#131313`/`#3c4a42` tokens).
+
+Renders, always together (never a bare percentage): overall hit rate, avg move
+when correct, and sample size (3 `HeadlineStat` cards); a `volatile_neutral_summary`
+box kept visually and semantically separate from the hit-rate cards; a permanent,
+non-dismissible past-performance disclaimer near the top (no dismiss button, no
+localStorage state); a per-asset table (`AssetRow`) with a "not enough history yet"
+cell in place of hit rate/avg-move for any asset below `min_sample_size`; and the
+plain-language date range ("Based on N signals scored between … and …"). Contains
+**no** "top signals"/"best calls" highlight list anywhere — a hard product rule, not
+a style choice, per the #121 spec.
+
+---
+
 ## 8. SHARED UI TOKENS (SHADCN COMPONENTS USED)
 
 From shadcn/ui (all code lives in apps/web/components/ui/):

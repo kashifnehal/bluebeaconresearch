@@ -279,6 +279,41 @@ Single commodity price. Useful for signal card price display.
 
 ---
 
+### Accuracy — GET /v1/accuracy (#121, 2026-09-11)
+
+Public track-record aggregation. No auth (same posture as the two Prices endpoints
+above — public/informational, not personal). Reads only `signal_outcomes` (written
+once daily by `outcome-tracker.ts`), never live-recomputes against `commodity_prices`.
+
+**Response 200:**
+```json
+{
+  "overall": {
+    "total_scored": 2390,
+    "correct": 1124,
+    "hit_rate": 0.4703,
+    "not_enough_history": false,
+    "avg_move_when_correct": 2.49,
+    "sample_size_note": 2390,
+    "volatile_neutral_summary": { "total": 575, "fraction_above_threshold": 0.454, "threshold_pct": 2 },
+    "date_range": { "earliest": "2026-08-09T20:49:23+00:00", "latest": "2026-09-09T13:30:00+00:00" }
+  },
+  "by_asset": { "USOIL": { "...same shape as overall..." } },
+  "min_sample_size": 20,
+  "volatility_threshold_pct": 2,
+  "generated_at": "2026-09-11T14:09:08.504Z"
+}
+```
+Per-asset (or overall) `hit_rate` is `null` and `not_enough_history: true` below
+`min_sample_size` (20 — a judgment call, easy to retune) — a headline percentage on
+a tiny sample is more misleading than useful. `sample_size_note` is always returned
+alongside `hit_rate`, never one without the other. `volatile_neutral_summary` (moves
+≥2% counted as "the volatility call played out") is reported separately and never
+blended into `hit_rate`, since a volatile/neutral prediction has no single correct
+direction to score against. Backs the public `/accuracy` page (`06_COMPONENTS.md`).
+
+---
+
 ### 4.4 Alerts
 
 #### GET /v1/alerts/rules

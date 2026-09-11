@@ -15,7 +15,13 @@ const CHECKPOINT_HOURS = 48;
 const FLAT_THRESHOLD_PCT = 0.5;
 const SIGNAL_PAGE_SIZE = 1000;
 const PRICE_PAGE_SIZE = 1000;
-const EXISTING_OUTCOMES_CHUNK = 500;
+// 200, not 500: `.in("signal_id", chunk)` with real ~36-char UUIDs starts
+// throwing `TypeError: fetch failed` once the chunk hits ~400 items (a URL-length
+// limit somewhere in the request chain, root-caused during #121's frontend-half
+// verification — reproduced deterministically: 380 always succeeds, 400 always
+// fails). This is the same reason 3 of 4 chunks silently failed during this
+// worker's initial production backfill run; 200 leaves real margin.
+const EXISTING_OUTCOMES_CHUNK = 200;
 // Largest real gap observed in commodity_prices (an actual sync outage) is ~18h13m
 // (measured via lag() over fetched_at, 2026-09-11). 24h gives that a margin. Beyond
 // this, the "closest" point is not a real observation near the target timestamp —

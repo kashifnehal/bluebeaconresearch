@@ -37,6 +37,11 @@ export function registerAuth(app: FastifyInstance) {
     // Yahoo proxy (unknown symbols never reach Yahoo). Fastify rate-limit still applies.
     if (req.url.startsWith("/v1/prices/history-5y")) return;
 
+    // #121 — aggregate, factual accuracy stats (signal_outcomes), same public
+    // "informational, not personal" posture as the two prices routes above. Backs
+    // the public /accuracy page; Fastify rate-limit still applies.
+    if (req.url.startsWith("/v1/accuracy")) return;
+
     const supabase = getSupabaseAdmin();
 
     const authHeader = req.headers.authorization;

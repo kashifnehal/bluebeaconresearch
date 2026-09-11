@@ -169,6 +169,11 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Description**: Returns latest cached 24h prices for the symbols the price-syncer worker writes into `commodity_prices` — 8 commodities (`USOIL`, `UKOIL`, `XAUUSD`, `NGAS`, `WHEAT`, `COPPER`, `XAGUSD`, `CORN`) **and, since #87 phase 1, 6 forex pairs** (`EURUSD`, `GBPUSD`, `USDJPY`, `USDCHF`, `USDRUB`, `USDCNY`). Tier 1 (the `commodity_prices` query) returns every symbol present; the Tier-2 Redis fallback allow-list was widened to include the forex pairs in #87 phase 2 (`55df380`, 2026-09-09).
 - **Auth**: None (Public/Cached).
 
+#### `GET /v1/accuracy` (#121, 2026-09-11)
+
+- **Description**: Public, no-auth aggregation of `signal_outcomes` — overall + per-asset `hit_rate`/`avg_move_when_correct`/`sample_size_note` (gated to `not_enough_history: true` below 20 scored predictions), a `volatile_neutral_summary` kept separate from `hit_rate`, and `date_range`. Never live-recomputes against `commodity_prices`. Full detail: `docs/claude_project/05_API.md` §"Accuracy — GET /v1/accuracy".
+- **Auth**: None.
+
 ---
 
 ### 2.5 API Keys & Developer Webhooks

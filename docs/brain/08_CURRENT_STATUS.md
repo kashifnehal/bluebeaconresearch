@@ -2,9 +2,25 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-11 (#121 backend half — signal_outcomes + outcome-tracker worker — see `14_CHANGELOG.md` v0.49.0)
+Last updated: 2026-09-11 (#121 fully shipped — GET /v1/accuracy + public /accuracy page — see `14_CHANGELOG.md` v0.50.0)
 
 ---
+
+## #121 frontend half — GET /v1/accuracy + public /accuracy page (2026-09-11)
+
+`apps/backend` + `apps/web`. Full record: `14_CHANGELOG.md` v0.50.0, `LIVE_TODO.md`.
+
+New public (no-auth) `GET /v1/accuracy` aggregates `signal_outcomes` into overall +
+per-asset `hit_rate`/`avg_move_when_correct`/`sample_size_note` (gated to
+"not enough history yet" below 20 scored predictions — a tunable judgment call) +
+a `volatile_neutral_summary` kept fully separate from hit_rate + `date_range`. New
+public `/accuracy` page renders all of that together (never a bare percentage),
+plus a permanent disclaimer and a per-asset table — deliberately with **no**
+"top signals"/"best calls" list. Found and fixed a real latent bug while verifying:
+Supabase `.in()` filters with real UUIDs throw `TypeError: fetch failed` once a
+chunk hits ~400 items (a URL-length limit, not flakiness) — this had also silently
+broken 3 of 4 chunks in `outcome-tracker.ts`'s existing-outcomes lookup last
+session (harmless then, since the table was empty). Both now chunk at 200.
 
 ## #121 backend half — signal_outcomes + outcome-tracker worker (2026-09-11)
 
@@ -18,7 +34,8 @@ read stored results instead of live-recomputing against the 90-day-retained
 fixed a real bug pre-commit: legacy pre-#87 `EURUSD`/`USDRUB` commodity_impacts
 entries have no forex price history before 2026-09-09, so without a max-distance
 guard the worker was clamping to a distant price point and fabricating false "flat"
-outcomes — now skipped and logged instead. Frontend `/accuracy` page is still open.
+outcomes — now skipped and logged instead. Frontend `/accuracy` page shipped
+2026-09-11, see above.
 
 ## AI signal chat — feature complete (2026-09-11)
 

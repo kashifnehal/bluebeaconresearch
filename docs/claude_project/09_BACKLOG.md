@@ -48,7 +48,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #115 | Signal-quality live-data audit | Ready-to-run, read-only verification prompt exists. |
 | #117 | Global marketing/ads compliance | Researched, no blocker; action folded into #102. |
 | #118 | Premium news/AI tier | Step 1 (GNews Essential) no gate; steps 2–3 gated on real revenue. |
-| #121 | Real /accuracy page + outcome-tracker worker | **Backend half shipped 2026-09-11** — `signal_outcomes` table + daily `outcome-tracker.ts` worker, backfilled to 2,965 rows. Frontend `/accuracy` page still open, gated on signal history long enough to be honest. #53 backfill ran 2026-09-11 (filled 767→1,634 `commodity_impacts`); 201 rows still empty because Anthropic credit exhausted mid-run. |
+| #121 | Real /accuracy page + outcome-tracker worker | ~~**Fully shipped 2026-09-11**~~ — `signal_outcomes` table + daily `outcome-tracker.ts` worker (backfilled to 2,965 rows) + public `GET /v1/accuracy` aggregation endpoint + public `/accuracy` page (per-asset breakdown, permanent disclaimer, no "top signals" list). #53 backfill ran 2026-09-11 (filled 767→1,634 `commodity_impacts`); 201 rows still empty because Anthropic credit exhausted mid-run. |
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
 
