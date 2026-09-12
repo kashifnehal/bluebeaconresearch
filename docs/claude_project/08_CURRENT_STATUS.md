@@ -47,8 +47,10 @@
 > ⚠️ UPDATED 2026-09-12 (Discord alert channel) — webhook-URL-paste Discord delivery: `user_channels.discord_webhook_url` / `discord_connected_at`, dispatcher `discord` branch, Settings `<DiscordConnect />` + `POST /api/discord/test`, alert-rule Telegram/Discord/Slack checkboxes. No bot/OAuth. RLS unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.56.0. This tree: PHASE 22.
 
 > ⚠️ UPDATED 2026-09-12 (#53 remainder complete) — historical `commodity_impacts` backfill finished. Final: 2,891 signals, 1,678 filled / 1,213 Haiku-classified empty (all remaining empties checkpointed). No application code changed. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.57.0. This tree: PHASE 23.
+>
+> ⚠️ UPDATED 2026-09-13 (#137) — four event-page trust/UX bugs fixed in `apps/web` only: typed chat-history errors, flat-price subtext (diagnosed as a real 0% move, not a stale fetch) + severity-gated alert CTA, ANALYSIS Verification box removed, briefing empty-state is severity-gated rather than an outage story. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.58.0. This tree: PHASE 24.
 
-Last updated: 2026-09-12 (#53 remainder complete)
+Last updated: 2026-09-13 (#137 event-page trust/UX copy)
 
 ---
 

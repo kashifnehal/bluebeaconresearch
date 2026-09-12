@@ -347,6 +347,14 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - `chatAboutSignal()` trims a reply back to its last complete sentence only when Anthropic reports `stop_reason === "max_tokens"`. System prompt adds a ~180-word length instruction and a markdown-formatting instruction, and strengthens (does not replace) the sources-section instruction to fire reliably. #134's budget breakers, allowlist, relevance check, burst limiter, and `sanitizeCitedChatReply()` untouched.
 - `SignalChatPanel` now renders the assistant answer text through `react-markdown`, restricted to paragraphs/emphasis/lists — no links or images, so the real Sources list stays the only clickable-link surface.
 
+## PHASE 24 — #137 EVENT-PAGE TRUST/UX COPY (2026-09-13)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.58.0.
+
+- Chat history load uses typed `HistoryErrorCode` copy (401 / early-access / server / network) instead of one "please reload" sentence.
+- PROJECTED IMPACT no longer shows "(+0.0%)" on a flat live refresh; "CREATE SEVERE ALERT" is gated on severity ≥7.
+- ANALYSIS-tab "Confirmed by N source(s)" box removed. Full-briefing empty state is severity-gated, not "restoring capacity."
+
 ## PHASE 23 — #53 COMMODITY_IMPACTS REMAINDER BACKFILL COMPLETE (2026-09-12)
 
 > Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.57.0.

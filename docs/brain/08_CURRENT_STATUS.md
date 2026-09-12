@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-12 (#53 remainder complete)
+Last updated: 2026-09-13 (#137 event-page trust/UX copy)
 
 ---
+
+## #137 event-page trust/UX copy (2026-09-13)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.58.0, `LIVE_TODO.md`. Chat history load has typed error copy; PROJECTED IMPACT hides a meaningless (+0.0%) and gates "CREATE SEVERE ALERT" on severity ≥7; ANALYSIS Verification box removed; briefing empty-state is severity-gated, not an outage. Price "now" is a live latest-row fetch — the USOIL/UKOIL/XAUUSD +0.0% case was a real flat across two ticks.
 
 ## Discord alert channel (2026-09-12)
 

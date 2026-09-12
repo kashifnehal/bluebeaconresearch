@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.58.0 — #137 event-page trust/UX copy (2026-09-13)
+
+`apps/web` only. Four live-test bugs: typed chat-history errors (`HistoryErrorCode` / `HISTORY_ERROR_COPY`); flat price subtext after diagnosing that `currentPrice` is a real latest-row fetch (same quote on a later tick, not a stale-same-row bug) plus severity-gated alert CTA; ANALYSIS Verification box removed; briefing empty-state is severity-gated (pipeline-failure copy when severity ≥7 and `ai_analysis` is still empty). Old "restoring as intelligence capacity" string gone. Helper tests in `lib/signal-display.test.ts`.
+
 ### v0.57.0 — #53 commodity_impacts remainder backfill complete (2026-09-12)
 
 Docs-only. Re-ran existing `pnpm backfill:commodity-impacts` against production after Anthropic credit restore (no application code). LIMIT=3: 0 filled / 3 classified empty / 0 errors. Full remainder: queued=234, filled=16, classified_empty=218, errors=0. Final: 2,891 signals, 1,678 filled / 1,213 Haiku-classified empty (all remaining empties checkpointed). Ingestion spend $0.11→$0.27, inside the $2/day cap.

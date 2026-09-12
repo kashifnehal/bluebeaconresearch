@@ -33,6 +33,11 @@ import { getSignalCoordinates } from "@/lib/geo-coords";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent } from "@/lib/funnel-events";
+import {
+  emptyBriefingCopy,
+  eventAlertCta,
+  formatPriceSinceFiredSubtext,
+} from "@/lib/signal-display";
 
 function eventTypeLabel(eventType?: string | null): string {
   if (!eventType) return "this event";
@@ -126,6 +131,7 @@ export default function EventDetailPage() {
   const sources = data.sources ?? [];
   const historicalComparisons = data.historicalComparisons ?? [];
   const pricesAtSignal = data.pricesAtSignal ?? [];
+  const alertCta = eventAlertCta(signal.severity);
 
   const hasPreciseLocation =
     typeof signal.lat === "number" &&
@@ -325,15 +331,11 @@ export default function EventDetailPage() {
                           />
                           {priceInfo?.priceAtSignal != null && priceInfo?.currentPrice != null && (
                             <p className="text-[9px] font-mono text-muted pl-1">
-                              {c.asset} was ${priceInfo.priceAtSignal.toFixed(2)} when this fired.
-                              Now: ${priceInfo.currentPrice.toFixed(2)} (
-                              {priceInfo.currentPrice >= priceInfo.priceAtSignal ? "+" : ""}
-                              {(
-                                ((priceInfo.currentPrice - priceInfo.priceAtSignal) /
-                                  priceInfo.priceAtSignal) *
-                                100
-                              ).toFixed(1)}
-                              %)
+                              {formatPriceSinceFiredSubtext(
+                                c.asset,
+                                priceInfo.priceAtSignal,
+                                priceInfo.currentPrice,
+                              )}
                             </p>
                           )}
                         </div>
@@ -350,13 +352,19 @@ export default function EventDetailPage() {
               <div className="flex flex-col gap-2">
                 <Button
                   data-tour="set-alert"
+                  data-testid="event-alert-cta"
                   onClick={() => {
                     setModalForexPairs([]);
                     setAlertModalOpen(true);
                   }}
-                  className="h-11 bg-accent text-bg-app text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className={
+                    alertCta.variant === "severe"
+                      ? "h-11 bg-accent text-bg-app text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      : "h-11 border border-border bg-transparent text-text-secondary text-[9px] font-black uppercase tracking-widest rounded-sm hover:bg-surface/40 transition-all"
+                  }
+                  variant={alertCta.variant === "severe" ? "default" : "outline"}
                 >
-                  <Zap size={14} className="mr-2" /> CREATE SEVERE ALERT
+                  <Zap size={14} className="mr-2" /> {alertCta.label}
                 </Button>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
@@ -400,8 +408,7 @@ export default function EventDetailPage() {
             <div className="py-8">
               {/* ── ANALYSIS TAB ─────────────────────────────────── */}
               <TabsContent value="analysis" className="m-0 outline-none">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
-                  <div className="md:col-span-8 space-y-8">
+                <div className="space-y-8">
                     <div className="prose prose-invert max-w-none">
                       <div
                         className="text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
@@ -434,10 +441,10 @@ export default function EventDetailPage() {
                         <div
                           className="p-8 rounded-lg bg-surface/20 border border-dashed text-center"
                           style={{ borderColor: "var(--border-subtle)" }}
+                          data-testid="full-analyst-briefing-empty"
                         >
-                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted">
-                            Full analyst briefing pending — restoring as intelligence capacity is
-                            added back online.
+                          <p className="text-sm leading-relaxed text-text-secondary">
+                            {emptyBriefingCopy(signal.severity).text}
                           </p>
                         </div>
                       )}
@@ -475,24 +482,6 @@ export default function EventDetailPage() {
                       signalId={signal.id}
                       classificationMethod={signal.classificationMethod}
                     />
-                  </div>
-
-                  <div className="md:col-span-4 space-y-6">
-                    <div
-                      className="p-6 rounded-lg bg-surface/40 border"
-                      style={{ borderColor: "var(--border-subtle)" }}
-                    >
-                      <h5
-                        className="text-[10px] font-black uppercase tracking-widest text-text-primary mb-4"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                      >
-                        Verification
-                      </h5>
-                      <p className="text-xs font-mono text-text-secondary">
-                        Confirmed by {signal.sourcesCount} source{signal.sourcesCount === 1 ? "" : "s"}.
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </TabsContent>
 

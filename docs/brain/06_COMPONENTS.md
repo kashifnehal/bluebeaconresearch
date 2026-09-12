@@ -79,18 +79,19 @@ This document presents a complete inventory of all UI components in `apps/web/co
 
 ### 3.3 `CommodityChip.tsx`
 - **Purpose**: Small pill tag indicating affected physical commodity asset and market impact direction.
-- **Props**: `{ symbol: string; impact: 'BULLISH' | 'BEARISH' | 'VOLATILE' }`
-- **Styling**: Pill tag with directional arrow icon (`TrendingUp` green, `TrendingDown` red).
+- **Props**: `{ asset: string; direction: Direction; confidence: number; size?: 'sm' | 'md' }`
+- **Styling**: Pill tag with directional arrow. Size `md` shows the model confidence %, labeled as confidence (not a price move).
 
 ### 3.4 `SignalQuickView.tsx` (#122)
 - **Purpose**: Desktop-only right-half slide-over preview of a feed row.
 - **Parent**: Intelligence Feed stream.
+- **#137**: empty analyst-briefing copy is severity-gated (`emptyBriefingCopy(..., "compact")`), not "restoring capacity."
 
 ### 3.5 `SignalChatPanel.tsx` (#111, `9f2aada`; visual pass 2026-09-12)
 - **Purpose**: Follow-up questions about **this** signal only, on the event detail page.
 - **Props**: `{ signalId: string, classificationMethod?: 'claude' | 'heuristic' | null }`
 - **Parent**: `(dashboard)/events/[id]/page.tsx` — mounted below Full Analyst Briefing / Impact Breakdown (those sections untouched).
-- **How**: GET `/api/signals/:id/chat` on mount; POST on send with optimistic user bubble + rollback on failure. Loading spinner reuses #108's `progress_activity` + `animate-spin`. Always-visible disclaimer in a footer strip (not a tooltip). `403 chat_early_access_only` replaces the composer with an embedded `AccessLimitedModal`. Copy also covers `premium_required` / `rate_limited` / `rate_limited_burst` / budget-reached vs generic 503. Assistant "Sources" from `---SOURCES---`. Heuristic note when `classificationMethod === 'heuristic'`. Composer stacks below a 420px container width. Working stitch tokens (`text-on-surface`, `text-on-surface-variant`) — `text-text-secondary`/`text-muted`/`text-bg-app` do not map.
+- **How**: GET `/api/signals/:id/chat` on mount; POST on send with optimistic user bubble + rollback on failure. Loading spinner reuses #108's `progress_activity` + `animate-spin`. Always-visible disclaimer in a footer strip (not a tooltip). History-load failures use `HistoryErrorCode` / `HISTORY_ERROR_COPY` (401 / early-access / 5xx / network). `403 chat_early_access_only` replaces the composer with an embedded `AccessLimitedModal`. Copy also covers `premium_required` / `rate_limited` / `rate_limited_burst` / budget-reached vs generic 503. Assistant "Sources" from `---SOURCES---`. Heuristic note when `classificationMethod === 'heuristic'`. Composer stacks below a 420px container width. Working stitch tokens (`text-on-surface`, `text-on-surface-variant`) — `text-text-secondary`/`text-muted`/`text-bg-app` do not map.
 - **2026-09-12 quality fix**: `CitedAssistantReply`'s answer text now renders via `react-markdown` (`allowedElements={["p","strong","em","ul","ol","li"]}`, mirrors `events/[id]/page.tsx`) instead of a plain `<div>` — `a`/`img` excluded on purpose, so a model-written markdown link can't become clickable outside the real Sources list.
 - **Why**: explain the briefing, never buy/sell or personalized-position advice. Grounded generation of the URL-identified signal — not RAG (D21 / ADR 017; same #103 rule as the briefing). History is server-backed (`signal_chat_messages`); a page reload must restore the conversation.
 

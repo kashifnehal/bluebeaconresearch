@@ -46,6 +46,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#133~~ | ~~Mobile dashboard shell (390px crush)~~ | — | **Done 2026-09-12** — off-canvas sidebar below `md`, hamburger in TopBar, content no longer has a hardcoded 256px left margin on phones. Desktop/tablet unchanged. See `LIVE_TODO.md`. |
 | ~~#112~~ | ~~Push-notification connect UX~~ | — | **Done 2026-09-12** — Telegram-only. Header `forum` icon + contextual prompt after 3 signal views; dismissed state is `profiles.notification_prompt_dismissed_at` (server-side). Settings `<TelegramConnect />` stays the manage/disconnect home. See `LIVE_TODO.md`. |
 | — | Discord alert channel (webhook-URL-paste) | — | **Done 2026-09-12** — `user_channels.discord_*` columns, dispatcher `discord` branch, Settings `<DiscordConnect />` + `/api/discord/test`, alert-rule Telegram/Discord/Slack checkboxes. No bot/OAuth. See `LIVE_TODO.md`. |
+| ~~#137~~ | ~~Event-page trust/UX copy (four live-test bugs)~~ | — | **Done 2026-09-13** — typed chat history errors; flat price subtext + severity-gated alert CTA; ANALYSIS Verification box removed; briefing empty-state is severity-gated (not an outage). `apps/web` only. See `LIVE_TODO.md`. |
 
 ### Still open
 
@@ -62,6 +63,8 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #121 | Real /accuracy page + outcome-tracker worker | ~~**Fully shipped 2026-09-11**~~ — `signal_outcomes` table + daily `outcome-tracker.ts` worker (backfilled to 2,965 rows) + public `GET /v1/accuracy` aggregation endpoint + public `/accuracy` page (per-asset breakdown, permanent disclaimer, no "top signals" list). #53 backfill completed 2026-09-12 (1,678 filled / 1,213 Haiku-classified empty of 2,891). |
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
+| #138 | Site-wide copy & error-state integrity pass | Phase 2 after #137. Full grep-and-catalog of `apps/web` empty/error/fallback strings + a short voice guide. Known candidates: "Supabase client not available", IngestionStatusBanner, middleware auth-unavailable, `api-response.ts`. Not started. |
+| #139 | Ingestion / filter / severity / confidence audit | Research first — no Cursor prompt yet. Map what news is wanted, how severity/confidence are assigned, and which UI combinations don't hold together. |
 
 ---
 

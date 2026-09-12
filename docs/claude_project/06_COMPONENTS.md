@@ -225,7 +225,7 @@ interface SignalCardProps {
 **Why:** let a user ask follow-ups about **this** briefing without turning the page into a general advisor. Grounded generation of the URL-identified signal — not retrieval (D21 / ADR 017, `18_AI_ENGINE.md` §3b). Same #103 buy/sell rule as the briefing, plus personalized-advice refusal.
 
 **How:**
-- On mount: GET `/api/signals/:id/chat` (BFF → Fastify). Empty state: designed "Ask a question about this briefing" block (not a 12px caption).
+- On mount: GET `/api/signals/:id/chat` (BFF → Fastify). Empty state: designed "Ask a question about this briefing" block (not a 12px caption). History-load failures use `HistoryErrorCode` / `HISTORY_ERROR_COPY` (401 session expired, 403 early-access, 5xx server, network) — not one generic "please reload" sentence.
 - Send: optimistic user bubble, POST `{ message }`, spinner matching #108 (`progress_activity` + `animate-spin`), then append `reply`. Rollback the optimistic bubble on 4xx/5xx.
 - Errors: `403 chat_early_access_only` → embedded `AccessLimitedModal` ("AI Chat is currently available to early-access members…") instead of the composer. `403 premium_required` → "This feature needs a paid plan." / `429 rate_limited` → today's question limit / `429 rate_limited_burst` → slow down / `503` with a usage-limit message → try tomorrow / other `503 ai_temporarily_unavailable` → temporarily unavailable. Never dump the raw JSON.
 - Assistant replies render a "Sources" section of clickable handed URLs when the stored text includes `---SOURCES---`; omitted when empty.
@@ -263,7 +263,7 @@ volatile: bg-warning-subtle text-warning    "XAUUSD ↕"
 neutral:  bg-secondary      text-muted      "NGAS –"
 ```
 
-Size 'md': shows confidence % after direction arrow.
+Size 'md': shows confidence % after direction arrow (labeled as confidence in `aria-label` / title — not a price move).
 Shape: rounded-full pill.
 
 ---

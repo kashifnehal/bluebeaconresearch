@@ -1,6 +1,10 @@
 "use client";
 
 import type { Direction } from "@blue-beacon-research/shared";
+import {
+  commodityChipAriaLabel,
+  formatConfidencePercent,
+} from "@/lib/signal-display";
 
 export function CommodityChip({
   asset,
@@ -25,11 +29,20 @@ export function CommodityChip({
   const arrow =
     direction === "up" ? "↑" : direction === "down" ? "↓" : direction === "volatile" ? "↕" : "→";
 
+  const confidenceLabel = formatConfidencePercent(confidence);
+
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full text-xs font-medium px-2.5 py-1 ${cls}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full text-xs font-medium px-2.5 py-1 ${cls}`}
+      aria-label={commodityChipAriaLabel(asset, direction, confidence)}
+    >
       <span className="font-mono">{asset}</span>
       <span>{arrow}</span>
-      {size === "md" ? <span className="text-outline">{Math.round(confidence * 100)}%</span> : null}
+      {size === "md" ? (
+        <span className="text-outline" title={`${confidenceLabel} confidence`}>
+          {confidenceLabel}
+        </span>
+      ) : null}
     </span>
   );
 }

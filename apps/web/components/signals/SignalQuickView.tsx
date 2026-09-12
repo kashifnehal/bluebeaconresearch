@@ -5,6 +5,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
+import { emptyBriefingCopy } from "@/lib/signal-display";
 
 const EXCERPT_CHARS = 420;
 
@@ -157,8 +158,7 @@ export function SignalQuickView({
                         fontFamily: "'Inter', sans-serif",
                       }}
                     >
-                      Full analyst briefing pending — restoring as intelligence
-                      capacity is added back online.
+                      {emptyBriefingCopy(signal.severity, "compact").text}
                     </SheetPrimitive.Description>
                   )}
                 </section>

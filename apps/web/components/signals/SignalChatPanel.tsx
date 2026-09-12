@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { Info, MessageCircle, Send, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import AccessLimitedModal from "@/components/AccessLimitedModal";
+import {
+  HISTORY_ERROR_COPY,
+  type HistoryErrorCode,
+  historyErrorCodeFromResponse,
+} from "@/lib/signal-display";
 
 type ChatMessage = {
   id: string;
@@ -64,7 +69,7 @@ export function SignalChatPanel({
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyError, setHistoryError] = useState<HistoryErrorCode | null>(null);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<SendErrorCode | null>(null);
@@ -86,11 +91,14 @@ export function SignalChatPanel({
           if (!cancelled) setEarlyAccessOnly(true);
           return;
         }
-        if (!res.ok) throw new Error("history_fetch_failed");
+        if (!res.ok) {
+          if (!cancelled) setHistoryError(historyErrorCodeFromResponse(res.status, json));
+          return;
+        }
         if (!cancelled) setMessages(json.data ?? []);
       })
       .catch(() => {
-        if (!cancelled) setHistoryError("Couldn't load chat history — please reload the page.");
+        if (!cancelled) setHistoryError("network_error");
       })
       .finally(() => {
         if (!cancelled) setIsLoadingHistory(false);
@@ -246,7 +254,13 @@ export function SignalChatPanel({
               Loading conversation
             </div>
           ) : historyError ? (
-            <p className="text-sm leading-relaxed text-on-surface-variant">{historyError}</p>
+            <p
+              data-testid="signal-chat-history-error"
+              role="alert"
+              className="text-sm leading-relaxed text-on-surface-variant"
+            >
+              {HISTORY_ERROR_COPY[historyError]}
+            </p>
           ) : messages.length === 0 ? (
             <div
               className="flex min-h-[160px] flex-col items-start justify-center gap-3 py-4"
