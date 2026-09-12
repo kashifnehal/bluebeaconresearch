@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.57.0 — #53 commodity_impacts remainder backfill complete (2026-09-12)
+
+Docs-only. Re-ran existing `pnpm backfill:commodity-impacts` against production after Anthropic credit restore (no application code). LIMIT=3: 0 filled / 3 classified empty / 0 errors. Full remainder: queued=234, filled=16, classified_empty=218, errors=0. Final: 2,891 signals, 1,678 filled / 1,213 Haiku-classified empty (all remaining empties checkpointed). Ingestion spend $0.11→$0.27, inside the $2/day cap.
+
 ### v0.56.0 — Discord alert channel (2026-09-12)
 
 Webhook-URL-paste Discord delivery. Migration `20260912134700_user_channels_discord.sql` adds nullable `user_channels.discord_webhook_url` + `discord_connected_at` (applied live to `evavcgfmemwryggdkjmx`; existing `user_channels_all_own` covers the new columns — no policy change; no CHECK on `alert_rules.channels`). `alert-dispatcher.ts` selects the new column and POSTs `{ content }` (2000-char cap, 10s timeout) on `channel === "discord"`; missing URL queues, errors fail; other channel branches untouched. Settings NOTIFICATIONS gains `<DiscordConnect />` (Save upsert, Test via authenticated `POST /api/discord/test`, Disconnect). `/alerts` create-rule modal now has Telegram / Discord / Slack checkboxes, defaulting to whichever of those columns are populated. Playwright captured the new Settings block and the modal checkboxes. Invalid-webhook dispatch wrote `alerts_sent.channel='discord', status='failed'` without breaking that rule's Telegram delivery. A real Discord-channel landing was not run (no webhook URL in this session).

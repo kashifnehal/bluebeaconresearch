@@ -2,7 +2,7 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-12 (Discord alert channel)
+Last updated: 2026-09-12 (#53 remainder complete)
 
 ---
 
@@ -20,7 +20,7 @@ Webhook-URL-paste only (no bot/OAuth). New `user_channels` columns + dispatcher 
 
 ## #111 AI usage governance + cited chat (2026-09-12)
 
-`apps/backend` + `apps/web`. Full record: `14_CHANGELOG.md` v0.53.0, `LIVE_TODO.md`, ADR 019 / D23. Regular cron ingestion is safe under the ingestion ceiling. Do not resume the #53 remainder or promote chat until the founder confirms Railway values and sends one manual allowlisted message.
+`apps/backend` + `apps/web`. Full record: `14_CHANGELOG.md` v0.53.0, `LIVE_TODO.md`, ADR 019 / D23. Regular cron ingestion is safe under the ingestion ceiling. #53 remainder completed 2026-09-12. Do not promote chat until the founder confirms Railway values and sends one manual allowlisted message.
 
 ## Classification trust/reliability fixes — heuristic severity cap, classification_method, AI health logging, chat error handling (2026-09-12)
 
@@ -184,14 +184,12 @@ Commit `5f1ee16`. See `14_CHANGELOG.md` v0.37.0 for the full breakdown.
 - **Retention** (`workers/retention.ts`, weekly Sun 03:00 UTC): commodity_prices
   >90d deleted; raw_events >180d deleted only when a signal references them;
   signals untouched. Day-one: 0 / 0 rows (tables hold ~30d of history).
-- **#53 commodity_impacts backfill RAN 2026-09-11** (script + prod data change,
-  `8733677`). Before: **767 filled / 2,057 empty** of 2,824. After: **1,634
-  filled / 1,195 empty** of 2,829. Of the original empty set: 864 newly filled
-  via `classifyEvent()` (Haiku), 992 Haiku-classified as genuinely `[]`
-  (checkpointed), 201 skipped when Anthropic returned `credit balance is too low`
-  (not written, not checkpointed — re-run after credit restore). Live pipeline
-  is back on the heuristic fallback until credit is restored. Full detail:
-  `14_CHANGELOG.md` v0.48.0.
+- **#53 commodity_impacts backfill COMPLETE 2026-09-12** (script + prod data
+  change; remainder after `8733677`). First run 2026-09-11: **767→1,634 filled**
+  of 2,829; 201 skipped on `credit balance is too low`. Remainder run 2026-09-12:
+  queued 234 + LIMIT=3 spot-check, **16 filled / 221 classified empty / 0 errors**.
+  **Final: 1,678 filled / 1,213 empty of 2,891** — remaining empties are
+  Haiku-classified `[]` and checkpointed. Full detail: `14_CHANGELOG.md` v0.57.0.
 
 ---
 
@@ -528,7 +526,7 @@ Both confidence `0.76` (heuristic `dynamicConfidence` only). Cap shipped: heuris
 
 ### Recurring Anthropic credit exhaustion
 
-The account has hit `credit balance too low` repeatedly (2026-08-19, again during the #53 backfill 2026-09-11 — 201 rows skipped — and again 2026-09-12 ingest, every classify call). While exhausted, live traffic is heuristic-only. Funding the account is an ops action, not a code bug. Do not treat heuristic coverage as "Claude is working." Do not hammer the API to confirm it is down.
+The account has hit `credit balance too low` repeatedly (2026-08-19, again during the #53 backfill 2026-09-11 — 201 rows skipped — and again 2026-09-12 ingest, every classify call). Credit topped up 2026-09-12; #53 remainder completed the same day. Funding the account is an ops action, not a code bug. Do not treat heuristic coverage as "Claude is working." Do not hammer the API to confirm it is down.
 
 ### `service_health_events` did not track Claude/Anthropic until Prompt O
 
