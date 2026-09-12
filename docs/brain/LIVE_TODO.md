@@ -362,7 +362,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - #138 Site-wide copy & error-state integrity pass — **fully closed 2026-09-13**
   (see "Closed, verified").
 - #139 Signal ingestion, filtering, and severity/confidence logic audit — **research
-  written 2026-09-13, not shipped, no Cursor prompt.** Findings:
+  written 2026-09-13 (`fba11ac`), not shipped, no Cursor prompt.** Findings:
   `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. Core result: there is no
   post-classify meaning gate (junk at sev 1–4 / conf ≥0.85 still becomes a `signals`
   row); the live Haiku prompt has no rubric and does not receive the article summary;

@@ -64,7 +64,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #121 | Real /accuracy page + outcome-tracker worker | ~~**Fully shipped 2026-09-11**~~ — `signal_outcomes` table + daily `outcome-tracker.ts` worker (backfilled to 2,965 rows) + public `GET /v1/accuracy` aggregation endpoint + public `/accuracy` page (per-asset breakdown, permanent disclaimer, no "top signals" list). #53 backfill completed 2026-09-12 (1,678 filled / 1,213 Haiku-classified empty of 2,891). |
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
-| #139 | Ingestion / filter / severity / confidence audit | Research written 2026-09-13 — `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. No Cursor prompt until founder reviews the five decisions at the bottom of that doc. |
+| #139 | Ingestion / filter / severity / confidence audit | Research written 2026-09-13 (`fba11ac`) — `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. No Cursor prompt until founder reviews. |
 
 ---
 
