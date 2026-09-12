@@ -347,6 +347,14 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - `chatAboutSignal()` trims a reply back to its last complete sentence only when Anthropic reports `stop_reason === "max_tokens"`. System prompt adds a ~180-word length instruction and a markdown-formatting instruction, and strengthens (does not replace) the sources-section instruction to fire reliably. #134's budget breakers, allowlist, relevance check, burst limiter, and `sanitizeCitedChatReply()` untouched.
 - `SignalChatPanel` now renders the assistant answer text through `react-markdown`, restricted to paragraphs/emphasis/lists — no links or images, so the real Sources list stays the only clickable-link surface.
 
+## PHASE 25 — #138 PHASE 2 ERROR-COPY INTEGRITY (2026-09-13)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.59.0.
+
+- Missing-client toasts on alerts / event-detail / DiscordConnect use honest account-connect copy; technical `"Supabase client not available"` is `console.error` only.
+- Ingestion degraded banner no longer interpolates the internal Upstash `reason`. Accuracy/metrics pages no longer interpolate `{error.message}`.
+- Middleware "Authentication is temporarily unavailable" left as-is (fires only on the 8s `getUser()` timeout). TelegramConnect / CommandPalette load errors stay query-internal.
+
 ## PHASE 24 — #137 EVENT-PAGE TRUST/UX COPY (2026-09-13)
 
 > Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.58.0.

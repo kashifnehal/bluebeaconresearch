@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { isAdminEmail } from "@/lib/admin";
+import { METRICS_LOAD_ERROR } from "@/lib/user-error-copy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Founder-internal. Always render fresh — this is a live metrics snapshot.
@@ -20,18 +21,30 @@ type Metrics = {
 
 async function loadMetrics(accessToken: string): Promise<Metrics | { error: string }> {
   const apiBase = process.env.API_URL;
-  if (!apiBase) return { error: "Missing API_URL env var" };
+  if (!apiBase) {
+    console.error("[admin/metrics] load failed: Missing API_URL env var");
+    return { error: "Missing API_URL env var" };
+  }
   try {
     const res = await fetch(`${apiBase}/v1/admin/metrics`, {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     });
     const json = (await res.json().catch(() => null)) as { data?: Metrics; error?: string } | null;
-    if (!res.ok) return { error: json?.error ?? `Upstream ${res.status}` };
-    if (!json?.data) return { error: "Malformed upstream response" };
+    if (!res.ok) {
+      const detail = json?.error ?? `Upstream ${res.status}`;
+      console.error("[admin/metrics] load failed:", detail);
+      return { error: detail };
+    }
+    if (!json?.data) {
+      console.error("[admin/metrics] load failed: Malformed upstream response");
+      return { error: "Malformed upstream response" };
+    }
     return json.data;
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Request failed" };
+    const detail = e instanceof Error ? e.message : "Request failed";
+    console.error("[admin/metrics] load failed:", detail);
+    return { error: detail };
   }
 }
 
@@ -79,7 +92,7 @@ export default async function AdminMetricsPage() {
 
         {"error" in metrics ? (
           <div className="rounded-xl border border-[#7a3c3c] bg-[#1a1010] px-4 py-3 font-mono text-[12px] text-[#e0a0a0]">
-            Failed to load metrics: {metrics.error}
+            {METRICS_LOAD_ERROR}
           </div>
         ) : (
           <>

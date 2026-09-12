@@ -99,7 +99,7 @@ On open: marks all alerts as read (via API), resets unread_count badge.
 
 ### DiscordConnect (apps/web/components/DiscordConnect.tsx)
 **Used in:** Settings → NOTIFICATIONS, immediately after `<TelegramConnect />` and its divider (before Daily Digest).
-**Flow:** paste a Discord incoming-webhook URL → Save upserts `user_channels.discord_webhook_url` + `discord_connected_at` via the browser client (`user_channels_all_own`). Test POSTs `{ webhookUrl }` to `/api/discord/test` (auth required, server-side fetch). Connected state uses the same Linked badge language as TelegramConnect, plus Disconnect (both columns → null). No bot, no OAuth, no connect-code polling.
+**Flow:** paste a Discord incoming-webhook URL → Save upserts `user_channels.discord_webhook_url` + `discord_connected_at` via the browser client (`user_channels_all_own`). Test POSTs `{ webhookUrl }` to `/api/discord/test` (auth required, server-side fetch). Connected state uses the same Linked badge language as TelegramConnect, plus Disconnect (both columns → null). No bot, no OAuth, no connect-code polling. Missing-client Save/Disconnect toast uses honest account-connect copy (`throwIfNoSupabase`); `"Supabase client not available"` is `console.error` only (#138 Phase 2).
 
 ### Alerts create-rule modal (`(dashboard)/alerts/page.tsx`)
 Channel checkboxes for Telegram / Discord / Slack. `modalChannels` defaults to whichever of `telegram_chat_id` / `discord_webhook_url` / `slack_webhook_url` are present on the current user's `user_channels` row, else `["telegram"]`.

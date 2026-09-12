@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.59.0 — #138 Phase 2 error-copy integrity (2026-09-13)
+
+`apps/web` only. Known user-visible raw/ambiguous error strings from the #138 grep: `throwIfNoSupabase()` replaces `"Supabase client not available"` on alerts (two mutations), event-detail create-rule, and DiscordConnect — toast still reads `err.message`, now the honest account-connect sentence; technical string is `console.error` only (path is missing public Supabase env, not a live drop). IngestionStatusBanner no longer interpolates API `reason` (named Upstash/quota); fixed "temporarily unavailable" kept because there is no last-healthy timestamp. `/accuracy` and `/admin/metrics` stop interpolating `{error.message}`. Middleware copy left as-is (8s `getUser()` timeout only). TelegramConnect / CommandPalette throws confirmed query-internal. Helper tests in `lib/user-error-copy.test.ts`. Remainder: voice guide + `api-response.ts` catalog.
+
 ### v0.58.0 — #137 event-page trust/UX copy (2026-09-13)
 
 `apps/web` only. Four live-test bugs: typed chat-history errors (`HistoryErrorCode` / `HISTORY_ERROR_COPY`); flat price subtext after diagnosing that `currentPrice` is a real latest-row fetch (same quote on a later tick, not a stale-same-row bug) plus severity-gated alert CTA; ANALYSIS Verification box removed; briefing empty-state is severity-gated (pipeline-failure copy when severity ≥7 and `ai_analysis` is still empty). Old "restoring as intelligence capacity" string gone. Helper tests in `lib/signal-display.test.ts`.

@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (#137 event-page trust/UX copy)
+Last updated: 2026-09-13 (#138 Phase 2 error-copy integrity)
 
 ---
+
+## #138 Phase 2 error-copy integrity (2026-09-13)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.59.0, `LIVE_TODO.md`. Missing-client toasts use honest account-connect copy (technical string `console.error` only). Ingestion degraded banner no longer interpolates the Upstash `reason`. Accuracy/metrics pages use a fixed fallback sentence. Middleware auth-unavailable copy unchanged (timeout-only; duration not distinguishable).
 
 ## #137 event-page trust/UX copy (2026-09-13)
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { ACCURACY_LOAD_ERROR } from "@/lib/user-error-copy";
 
 // #121 frontend half — public track-record page. Reads only the pre-computed
 // `signal_outcomes` aggregates from GET /v1/accuracy (backend never live-
@@ -38,14 +39,23 @@ type AccuracyPayload = {
 
 async function loadAccuracy(): Promise<AccuracyPayload | { error: string }> {
   const apiBase = process.env.API_URL?.replace(/\/$/, "");
-  if (!apiBase) return { error: "Missing API_URL env var" };
+  if (!apiBase) {
+    console.error("[accuracy] load failed: Missing API_URL env var");
+    return { error: "Missing API_URL env var" };
+  }
   try {
     const res = await fetch(`${apiBase}/v1/accuracy`, { cache: "no-store" });
     const json = (await res.json().catch(() => null)) as AccuracyPayload | null;
-    if (!res.ok || !json) return { error: `Upstream ${res.status}` };
+    if (!res.ok || !json) {
+      const detail = `Upstream ${res.status}`;
+      console.error("[accuracy] load failed:", detail);
+      return { error: detail };
+    }
     return json;
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Request failed" };
+    const detail = e instanceof Error ? e.message : "Request failed";
+    console.error("[accuracy] load failed:", detail);
+    return { error: detail };
   }
 }
 
@@ -149,7 +159,7 @@ export default async function AccuracyPage() {
 
         {"error" in data ? (
           <div className="rounded-lg border border-[#7a3c3c] bg-[#1a1010] px-4 py-3 font-mono text-[12px] text-[#e0a0a0]">
-            Failed to load accuracy data: {data.error}
+            {ACCURACY_LOAD_ERROR}
           </div>
         ) : (
           <>

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Pagination } from "@/components/ui/Pagination";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { throwIfNoSupabase } from "@/lib/user-error-copy";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 
@@ -197,8 +198,7 @@ export default function AlertsPage() {
   const updateThreshold = useMutation({
     mutationFn: async ({ ruleId, minSeverity }: { ruleId: string; minSeverity: number }) => {
       if (minSeverity < 1 || minSeverity > 10) throw new Error("Severity must be between 1 and 10");
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Supabase client not available");
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const { error } = await supabase
         .from("alert_rules")
         .update({ min_severity: minSeverity })
@@ -305,8 +305,7 @@ export default function AlertsPage() {
         throw new Error("Severity must be between 1 and 10");
       }
 
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Supabase client not available");
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Authentication required");
 

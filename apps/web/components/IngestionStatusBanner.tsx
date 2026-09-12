@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { COLLECTOR_HEALTH_UNAVAILABLE } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 
 type IngestionStatusResponse = {
@@ -24,7 +25,11 @@ export function IngestionStatusBanner() {
     queryFn: async () => {
       const res = await fetch("/api/ingestion/status");
       if (!res.ok) throw new Error("Failed to fetch ingestion status");
-      return (await res.json()) as IngestionStatusResponse;
+      const json = (await res.json()) as IngestionStatusResponse;
+      if (json.degraded && json.reason) {
+        console.error("[ingestion-status] per-collector health unknown:", json.reason);
+      }
+      return json;
     },
     refetchInterval: 30_000,
   });
@@ -76,7 +81,12 @@ export function IngestionStatusBanner() {
 
       {degraded && (
         <span style={{ opacity: 0.9 }}>
-          {data?.reason ?? "Per-collector health is temporarily unavailable."}
+          {/* Assumes transience: API has no last-healthy timestamp for
+              pipeline:last_run. lastFetchedAt in fallback mode is newest
+              raw_events.created_at, not how long Redis/collector health has
+              been unknown. Do not interpolate data.reason — that string
+              names Upstash/Redis internals. */}
+          {COLLECTOR_HEALTH_UNAVAILABLE}
         </span>
       )}
 

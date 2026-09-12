@@ -27,6 +27,7 @@ import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { throwIfNoSupabase } from "@/lib/user-error-copy";
 import { useUIStore } from "@/store/useUIStore";
 import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } from "@/lib/utils";
 import { getSignalCoordinates } from "@/lib/geo-coords";
@@ -141,8 +142,7 @@ export default function EventDetailPage() {
 
   const createAlertRule = async () => {
     try {
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Supabase client not available");
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const {
         data: { user },
       } = await supabase.auth.getUser();

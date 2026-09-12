@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { isDiscordWebhookUrl } from "@/lib/discord-webhook";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { throwIfNoSupabase } from "@/lib/user-error-copy";
 
 /**
  * Webhook-URL-paste connect for Discord alerts. No bot, no OAuth — a one-shot
@@ -61,8 +62,7 @@ export function DiscordConnect() {
     discord_webhook_url: string | null;
     discord_connected_at: string | null;
   }) => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) throw new Error("Supabase client not available");
+    const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
     const {
       data: { user },
     } = await supabase.auth.getUser();
