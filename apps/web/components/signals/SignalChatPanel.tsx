@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Info, MessageCircle, Send, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import AccessLimitedModal from "@/components/AccessLimitedModal";
 
 type ChatMessage = {
@@ -377,7 +378,18 @@ function CitedAssistantReply({ content }: { content: string }) {
   const { answer, sources } = splitCitedReply(content);
   return (
     <div className="space-y-3">
-      <div>{answer}</div>
+      <div className="[&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_p+p]:mt-2.5">
+        {/* Markdown render of the model's answer only (#134 quality fix, 2026-09-12) —
+            mirrors the allowedElements pattern already used for the briefing render in
+            events/[id]/page.tsx. Deliberately restricted to paragraphs/emphasis/lists:
+            "a" and "img" are excluded on purpose. The ---SOURCES--- section below renders
+            the only vetted links via real <a> tags; if the model ever puts a markdown
+            link in its answer text it must NOT become clickable, or that would let an
+            un-vetted URL surface as a real link and bypass #134's citation safety work. */}
+        <ReactMarkdown allowedElements={["p", "strong", "em", "ul", "ol", "li"]} unwrapDisallowed>
+          {answer}
+        </ReactMarkdown>
+      </div>
       {sources.length > 0 && (
         <div
           data-testid="signal-chat-sources"

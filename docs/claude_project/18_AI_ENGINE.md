@@ -166,6 +166,12 @@ Grounding fields (live `signals` schema; there is no `sources` array column):
 
 **⚠️ UPDATED 2026-09-12** — replies append an optional `---SOURCES---` block of those handed URLs. Invented URLs are stripped before persist. A cheap relevance pre-check (heuristic, then Haiku `max_tokens: 20`) runs before Sonnet; advice/off-topic skip the paid reply. Two independent daily budgets (D23 / ADR 019) wrap `classifyEvent()`/`generateAnalysis()` vs `chatAboutSignal()`.
 
+**⚠️ UPDATED 2026-09-12 (later, quality fixes)** — real live testing found two bugs: replies could cut off mid-sentence, and the frontend didn't render markdown. `max_tokens` stays 600 (not raised — see Runtime contract). Two fixes:
+- **Truncation safety net.** `chatAboutSignal()` checks `msg.stop_reason` after the API call. When it's `"max_tokens"` (the model got cut off), `trimToLastCompleteSentence()` trims the raw reply back to the last `. `/`! `/`? ` boundary *before* `sanitizeCitedChatReply()` runs — a shorter-but-clean answer beats a longer one that dangles mid-word. No-op on a normal `end_turn`/`stop_sequence` finish, even if that reply happens to lack trailing punctuation.
+- **System prompt additions** (Rule 1 / Rule 2 below are untouched word-for-word): a ~180-word length instruction ("most questions should be answerable in 2-4 short paragraphs or a short bulleted list... unless the question genuinely needs a longer breakdown"), a markdown-formatting instruction (blank-line paragraphs, `-` bullets for multi-factor explanations, `**bold**` only for key terms/numbers), and a strengthened sources-section instruction — include `---SOURCES---` whenever the answer draws on the signal's stored briefing/summary/impact data, not only "if convenient." The separate never-fabricate-a-URL hard rule is unchanged.
+- **Frontend**: `SignalChatPanel`'s `CitedAssistantReply` now renders the answer text through `react-markdown`, `allowedElements={["p","strong","em","ul","ol","li"]}` (mirrors `events/[id]/page.tsx`'s existing briefing render) — `a`/`img` excluded on purpose. The real Sources `<ul>`/`<a>` block (unchanged) stays the only surface that can render a clickable link; a markdown link inside the model's answer text can never become one.
+- None of #134's budget breakers, `CHAT_ALLOWED_EMAILS` allowlist, relevance pre-check, burst limiter, or `sanitizeCitedChatReply()` itself were touched. Mocked-client tests only, per standing policy — no live Anthropic call was made to verify this.
+
 ### Two-rule system prompt
 
 The live system prompt has two independent hard rules. Do not collapse them into one "be careful" line, and do not rewrite Rule 1 independently of `generateAnalysis()`.
@@ -181,6 +187,7 @@ The publishers' exclusion (Investment Advisers Act) treats general, impersonal c
 ### Runtime contract
 
 - Model: `claude-sonnet-5` — same string as `generateAnalysis()`. Do not introduce a second chat model.
+- `max_tokens: 600`, deliberately not raised (2026-09-12 quality fix) — the system prompt's length instruction plus the `stop_reason === "max_tokens"` truncation safety net (above) manage that budget instead.
 - Prior turns: last 10, persisted in `signal_chat_messages` (user-owns-their-rows RLS).
 - POST gates: `403 chat_early_access_only` if the caller is not on `CHAT_ALLOWED_EMAILS` (fail closed if unset); then `403 premium_required` if `planTier === "free"`; `429 rate_limited` after 30 user-role messages / rolling 24h (fails closed on count error); `429 rate_limited_burst` after 5 / 5 min; chat daily budget → `503 ai_temporarily_unavailable` with a distinct usage-limit message; unexpected throw → `503 ai_temporarily_unavailable`.
 - Anthropic errors: retry retryable with backoff; no key / after retries → a short fallback string, never a fabricated briefing. Success/failure logged to `service_health_events` as `anthropic` (Prompt O).

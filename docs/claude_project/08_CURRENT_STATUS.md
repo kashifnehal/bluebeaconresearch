@@ -40,7 +40,9 @@
 
 > ⚠️ UPDATED 2026-09-12 (later, #111 governance) — dual Anthropic daily budgets, `CHAT_ALLOWED_EMAILS` fail-closed gate, fail-closed 30/day + 5/5min burst, Haiku relevance pre-check, cited replies, `[ANTHROPIC BUDGET]` logs + chat 50% email. Step 0: signups hardcode `pro` (plan-tier 403 is a no-op; left unchanged); daily counter previously failed open. Mocked tests only. D23 / ADR 019. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.53.0. This tree: PHASE 19.
 
-Last updated: 2026-09-12 (#111 AI usage governance + cited chat; D23 / ADR 019)
+> ⚠️ UPDATED 2026-09-12 (later still, #111 quality fixes) — real live testing after #134's governance audit found replies could cut off mid-sentence and markdown wasn't rendered. `max_tokens` stays 600; a `stop_reason === "max_tokens"` safety net trims to the last complete sentence instead. System prompt gains a ~180-word length instruction + a markdown-formatting instruction, and strengthens (without replacing) the sources-section instruction. `SignalChatPanel` now renders the answer via `react-markdown`, restricted to paragraphs/emphasis/lists (no links/images — the real Sources list stays the only clickable-link surface). #134's governance code untouched. Mocked tests only. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.54.0. This tree: PHASE 20.
+
+Last updated: 2026-09-12 (#111 chat quality fixes — mid-sentence cutoff + markdown rendering, #134 follow-up)
 
 ---
 

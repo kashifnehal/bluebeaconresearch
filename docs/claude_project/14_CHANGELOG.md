@@ -338,3 +338,11 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 > Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.53.0. Decision: D23 / ADR 019.
 
 - Two independent UTC-day Anthropic ceilings (ingestion vs chat). Chat gated by `CHAT_ALLOWED_EMAILS` (fail closed). Daily 30-msg cap fails closed; 5/5min burst. Cheap relevance pre-check before Sonnet. Cited replies may only use handed source URLs. Mocked tests only — no live Anthropic calls.
+
+## PHASE 20 — #111 CHAT QUALITY FIXES: MID-SENTENCE CUTOFF + MARKDOWN RENDERING (2026-09-12)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.54.0.
+
+- Live testing after #134's governance audit found two quality bugs: replies could cut off mid-sentence, and markdown wasn't rendered. `max_tokens` stays 600.
+- `chatAboutSignal()` trims a reply back to its last complete sentence only when Anthropic reports `stop_reason === "max_tokens"`. System prompt adds a ~180-word length instruction and a markdown-formatting instruction, and strengthens (does not replace) the sources-section instruction to fire reliably. #134's budget breakers, allowlist, relevance check, burst limiter, and `sanitizeCitedChatReply()` untouched.
+- `SignalChatPanel` now renders the assistant answer text through `react-markdown`, restricted to paragraphs/emphasis/lists — no links or images, so the real Sources list stays the only clickable-link surface.

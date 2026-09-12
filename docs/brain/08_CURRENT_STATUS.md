@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-12 (#111 AI usage governance + cited chat; two Anthropic daily budgets + `CHAT_ALLOWED_EMAILS`)
+Last updated: 2026-09-12 (#111 chat quality fixes — mid-sentence cutoff + markdown rendering, #134 follow-up)
 
 ---
+
+## #111 chat quality fixes: mid-sentence cutoff + markdown rendering (2026-09-12)
+
+`apps/backend` + `apps/web`. Full record: `14_CHANGELOG.md` v0.54.0, `LIVE_TODO.md`. Live testing after #134's governance audit found replies could cut off mid-sentence (`max_tokens` stays 600 — a truncation safety net checks `stop_reason === "max_tokens"` and trims to the last complete sentence) and markdown wasn't rendered (`SignalChatPanel` now renders the answer via `react-markdown`, links/images excluded). System prompt gains length/formatting instructions and a strengthened sources-section instruction; #134's governance code (budget breakers, allowlist, relevance check, burst limiter, `sanitizeCitedChatReply()`) untouched.
 
 ## #111 AI usage governance + cited chat (2026-09-12)
 
