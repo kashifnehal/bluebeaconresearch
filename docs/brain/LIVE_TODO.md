@@ -361,12 +361,13 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
   false "restoring capacity" briefing) — **closed 2026-09-13** (see "Closed, verified").
 - #138 Site-wide copy & error-state integrity pass — **fully closed 2026-09-13**
   (see "Closed, verified").
-- #139 Signal ingestion, filtering, and severity/confidence logic audit — research first,
-  no build spec yet. Three parts: (1) what news BBR wants and why (current sources/filters
-  vs examples that are excluded but matter / included but shouldn't); (2) end-to-end map of
-  filter → sort → severity → confidence; (3) what each UI surface actually represents and
-  which edge combinations (e.g. high confidence + flat 0.0% + "severe alert") don't hold
-  together. Founder is willing to rebuild pipeline pieces if research shows they're wrong.
+- #139 Signal ingestion, filtering, and severity/confidence logic audit — **research
+  written 2026-09-13, not shipped, no Cursor prompt.** Findings:
+  `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. Core result: there is no
+  post-classify meaning gate (junk at sev 1–4 / conf ≥0.85 still becomes a `signals`
+  row); the live Haiku prompt has no rubric and does not receive the article summary;
+  documented Goldstein/source-count/chokepoint severity math is not in code. Awaiting
+  founder review of the five decisions at the bottom of that doc before any build spec.
 
 ## Behavioral event instrumentation — Phase 0 landed 2026-09-09 (not gated, not urgent)
 
