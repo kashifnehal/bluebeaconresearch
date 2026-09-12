@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Pagination } from "@/components/ui/Pagination";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { throwIfNoSupabase } from "@/lib/user-error-copy";
+import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 
@@ -210,7 +210,7 @@ export default function AlertsPage() {
       toast.success("Threshold updated", { description: `Now alerting only at severity ${minSeverity}+` });
       queryClient.invalidateQueries({ queryKey: ["alert-rules"] });
     },
-    onError: (err: any) => toast.error(err?.message || "Failed to update threshold"),
+    onError: (err: unknown) => toast.error(safeMutationError(err, "Failed to update threshold")),
   });
 
   // Real alerts_sent rows only, grouped per rule then per signal (a signal can have
@@ -307,7 +307,7 @@ export default function AlertsPage() {
 
       const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Authentication required");
+      if (!user) throw new Error(AUTH_SESSION_ERROR);
 
       const { error } = await supabase.from("alert_rules").insert({
         user_id: user.id,
@@ -336,8 +336,8 @@ export default function AlertsPage() {
       setAlertModalOpen(false);
       queryClient.invalidateQueries({ queryKey: ["alert-rules"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to create alert rule");
+    onError: (err: unknown) => {
+      toast.error(safeMutationError(err, "Failed to create alert rule"));
     },
   });
 

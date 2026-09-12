@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-response";
+import { apiError, apiErrorLogged } from "@/lib/api-response";
 
 export async function GET() {
   // Uses the shared getRouteSupabaseClients() helper rather than re-doing
@@ -31,7 +31,7 @@ export async function GET() {
     .maybeSingle();
 
   if (error) {
-    return apiError(500, "db_error", error.message);
+    return apiErrorLogged(500, "db_error", error);
   }
 
   return NextResponse.json({

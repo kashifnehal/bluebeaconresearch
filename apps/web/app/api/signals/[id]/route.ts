@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-response";
+import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export async function GET(
 
   if (error) {
     console.error("[signals/:id] DB error:", error.message);
-    return apiError(500, "db_error", error.message);
+    return apiErrorLogged(500, "db_error", error);
   }
 
   if (!row) {

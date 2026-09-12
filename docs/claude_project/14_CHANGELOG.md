@@ -347,6 +347,14 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - `chatAboutSignal()` trims a reply back to its last complete sentence only when Anthropic reports `stop_reason === "max_tokens"`. System prompt adds a ~180-word length instruction and a markdown-formatting instruction, and strengthens (does not replace) the sources-section instruction to fire reliably. #134's budget breakers, allowlist, relevance check, burst limiter, and `sanitizeCitedChatReply()` untouched.
 - `SignalChatPanel` now renders the assistant answer text through `react-markdown`, restricted to paragraphs/emphasis/lists — no links or images, so the real Sources list stays the only clickable-link surface.
 
+## PHASE 26 — #138 FULLY CLOSED: VOICE GUIDE + REMAINING LEAKS (2026-09-13)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.59.1. Standing rule: D24 / ADR 020.
+
+- Empty/error copy must be a fixed honest sentence; never interpolate provider strings.
+- Next.js BFF `apiErrorLogged()` logs the raw detail and returns a generic `message`.
+- Settings, auth env-leak, confirm bridge, feed `fallbackReason`, mutation toasts, admin service-status.
+
 ## PHASE 25 — #138 PHASE 2 ERROR-COPY INTEGRITY (2026-09-13)
 
 > Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.59.0.

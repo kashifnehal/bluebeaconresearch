@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (#138 Phase 2 error-copy integrity)
+Last updated: 2026-09-13 (#138 fully closed)
 
 ---
+
+## #138 site-wide copy & error-state integrity (2026-09-13)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.59.0 + this remainder, `LIVE_TODO.md`, D24 / ADR 020. Voice guide: never interpolate provider strings; empty ≠ error; "temporarily" only on a real timeout. `apiErrorLogged()` for BFF DB/config failures. Settings/auth/feed/confirm leaks closed. Phase 2 SHA `0eb53a4`.
 
 ## #138 Phase 2 error-copy integrity (2026-09-13)
 

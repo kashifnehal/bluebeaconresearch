@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
+import { throwIfNoSupabase, userFacingCaughtError } from "@/lib/user-error-copy";
 import { loginSchema } from "@/lib/validators";
 import { fetchMyProfile, resolvePostAuthRedirect } from "@/lib/profile";
 import { isProjectReady } from "@/lib/flags";
@@ -97,8 +98,7 @@ function LoginForm() {
         }
         return;
       }
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
@@ -120,7 +120,7 @@ function LoginForm() {
       const profile = isProjectReady ? await fetchMyProfile() : null;
       window.location.href = resolvePostAuthRedirect(profile);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to sign in.");
+      setError(userFacingCaughtError(e, "Failed to sign in."));
     } finally {
       setIsLoading(false);
     }
@@ -130,8 +130,7 @@ function LoginForm() {
     if (!unconfirmedEmail) return;
     setResendState("sending");
     try {
-      const supabase = getSupabaseEmailAuthClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseEmailAuthClient());
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",
         email: unconfirmedEmail,
@@ -140,7 +139,7 @@ function LoginForm() {
       setResendState("sent");
     } catch (e: unknown) {
       setResendState("idle");
-      setError(e instanceof Error ? e.message : "Failed to resend confirmation email.");
+      setError(userFacingCaughtError(e, "Failed to resend confirmation email."));
     }
   }
 
@@ -148,8 +147,7 @@ function LoginForm() {
     setError(null);
     setIsLoading(true);
     try {
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const redirectTo = `${origin || window.location.origin}/auth/callback`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -157,7 +155,7 @@ function LoginForm() {
       });
       if (oauthError) throw oauthError;
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Google sign-in failed.");
+      setError(userFacingCaughtError(e, "Google sign-in failed."));
       setIsLoading(false);
     }
   }

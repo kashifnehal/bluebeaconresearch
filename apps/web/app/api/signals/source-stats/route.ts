@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { CONFIGURED_RSS_FEED_COUNT } from "@blue-beacon-research/shared";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-response";
+import { apiError, apiErrorLogged } from "@/lib/api-response";
 import { outletFromRawEvent } from "@/lib/coverage";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export async function GET() {
         .gte("created_at", since)
         .range(from, from + PAGE - 1);
       if (error) {
-        return apiError(500, "coverage-query-failed", error.message);
+        return apiErrorLogged(500, "coverage-query-failed", error);
       }
       const rows = data ?? [];
       for (const row of rows) {
@@ -56,7 +56,7 @@ export async function GET() {
         .select("source, raw_data")
         .in("id", chunk);
       if (error) {
-        return apiError(500, "coverage-query-failed", error.message);
+        return apiErrorLogged(500, "coverage-query-failed", error);
       }
       for (const row of data ?? []) {
         const outlet = outletFromRawEvent(row);
@@ -69,7 +69,6 @@ export async function GET() {
       rssFeedCount: CONFIGURED_RSS_FEED_COUNT,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "coverage-query-failed";
-    return apiError(500, "coverage-query-failed", message);
+    return apiErrorLogged(500, "coverage-query-failed", err);
   }
 }

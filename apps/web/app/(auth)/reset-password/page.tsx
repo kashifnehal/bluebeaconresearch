@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { throwIfNoSupabase, userFacingCaughtError } from "@/lib/user-error-copy";
 import { fetchMyProfile, resolvePostAuthRedirect } from "@/lib/profile";
 
 function ResetPasswordForm() {
@@ -85,8 +86,7 @@ function ResetPasswordForm() {
 
     setIsLoading(true);
     try {
-      const supabase = getSupabaseEmailAuthClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseEmailAuthClient());
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
 
@@ -118,7 +118,7 @@ function ResetPasswordForm() {
         window.location.href = target;
       }, 1500);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to reset password.");
+      setError(userFacingCaughtError(e, "Failed to reset password."));
     } finally {
       setIsLoading(false);
     }

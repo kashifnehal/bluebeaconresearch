@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import {
+  ACCOUNT_CONNECT_ERROR,
+  SETTINGS_SAVE_ERROR,
+  SUPABASE_CLIENT_UNAVAILABLE_TECHNICAL,
+} from "@/lib/user-error-copy";
 import { toast } from "sonner";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { DiscordConnect } from "@/components/DiscordConnect";
@@ -92,7 +97,8 @@ export default function SettingsPage() {
 
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      toast.error("System Failure: Supabase link not established");
+      console.error(SUPABASE_CLIENT_UNAVAILABLE_TECHNICAL);
+      toast.error(ACCOUNT_CONNECT_ERROR);
       setSaving(false);
       return;
     }
@@ -103,7 +109,8 @@ export default function SettingsPage() {
       .eq("id", profile.id);
 
     if (error) {
-      toast.error(`Update Failed: ${error.message}`);
+      console.error(error);
+      toast.error(SETTINGS_SAVE_ERROR);
     } else {
       toast.success("Profile Updated: Neural markers synced with BB-CENTRAL", {
         description: "Your tactical identification has been refreshed.",
@@ -121,7 +128,8 @@ export default function SettingsPage() {
     if (!supabase) {
       setDigestEnabled(prev);
       setDigestSaving(false);
-      toast.error("System Failure: Supabase link not established");
+      console.error(SUPABASE_CLIENT_UNAVAILABLE_TECHNICAL);
+      toast.error(ACCOUNT_CONNECT_ERROR);
       return;
     }
     const { error } = await supabase
@@ -131,7 +139,8 @@ export default function SettingsPage() {
     setDigestSaving(false);
     if (error) {
       setDigestEnabled(prev);
-      toast.error(`Update Failed: ${error.message}`);
+      console.error(error);
+      toast.error(SETTINGS_SAVE_ERROR);
     } else {
       toast.success(next ? "Daily digest on" : "Daily digest off");
     }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import type { Signal, CommodityImpact } from "@blue-beacon-research/shared";
+import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -726,8 +727,7 @@ export default function MapPage() {
             className="bg-yellow-600/95 text-black px-3 py-2 rounded shadow-md text-[11px] font-medium"
             suppressHydrationWarning
           >
-            Signal feed degraded — {fallbackReason ?? "unknown"}. Showing last
-            available data
+            {feedDegradedCopy(fallbackReason)}
             {fallbackLastUpdated ? (
               <span className="ml-2 text-[10px] text-black/80" suppressHydrationWarning>
                 (updated{" "}

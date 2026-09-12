@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { isDiscordWebhookUrl } from "@/lib/discord-webhook";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { throwIfNoSupabase } from "@/lib/user-error-copy";
+import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
 
 /**
  * Webhook-URL-paste connect for Discord alerts. No bot, no OAuth — a one-shot
@@ -66,7 +66,7 @@ export function DiscordConnect() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) throw new Error("Authentication required");
+    if (!user) throw new Error(AUTH_SESSION_ERROR);
     const { error } = await supabase.from("user_channels").upsert(
       {
         user_id: user.id,
@@ -100,7 +100,7 @@ export function DiscordConnect() {
         description: "Alert rules with a Discord channel will now deliver to this webhook.",
       });
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to save Discord webhook");
+      toast.error(safeMutationError(err, "Failed to save Discord webhook"));
     } finally {
       setSaving(false);
     }
@@ -119,7 +119,7 @@ export function DiscordConnect() {
       setConnectedAt(null);
       toast.success("Discord disconnected");
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to disconnect Discord");
+      toast.error(safeMutationError(err, "Failed to disconnect Discord"));
     } finally {
       setClearing(false);
     }
@@ -144,7 +144,8 @@ export function DiscordConnect() {
       const json = await res.json().catch(() => null);
       if (!res.ok) {
         setTestResult("fail");
-        setTestError(json?.error?.message ?? "Test failed");
+        console.error("[discord-test]", json?.error);
+        setTestError("Test failed");
         return;
       }
       if (json?.ok) {

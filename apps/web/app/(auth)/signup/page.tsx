@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
+import { throwIfNoSupabase, userFacingCaughtError } from "@/lib/user-error-copy";
 import { signupSchema } from "@/lib/validators";
 import type { PlanTier } from "@blue-beacon-research/shared";
 import { isProjectReady } from "@/lib/flags";
@@ -102,8 +103,7 @@ function SignupForm() {
       // the confirmation email link is opened in whatever browser/device/app the user
       // has Gmail in, not necessarily this one. Must match confirm/page.tsx. See
       // lib/supabase-email-auth.ts.
-      const supabase = getSupabaseEmailAuthClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseEmailAuthClient());
       const confirmUrl = `${window.location.origin}/confirm`;
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
@@ -169,7 +169,7 @@ function SignupForm() {
       // SSR-cookie-attachment decision in 10_DECISIONS.md.
       window.location.href = isProjectReady ? "/onboarding" : "/?joined=1";
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to sign up.");
+      setError(userFacingCaughtError(e, "Failed to sign up."));
     } finally {
       setIsLoading(false);
     }
@@ -179,8 +179,7 @@ function SignupForm() {
     setError(null);
     setIsLoading(true);
     try {
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -188,7 +187,7 @@ function SignupForm() {
       });
       if (oauthError) throw oauthError;
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Google sign-up failed.");
+      setError(userFacingCaughtError(e, "Google sign-up failed."));
       setIsLoading(false);
     }
   }

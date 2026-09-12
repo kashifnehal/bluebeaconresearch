@@ -27,7 +27,7 @@ import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { throwIfNoSupabase } from "@/lib/user-error-copy";
+import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
 import { useUIStore } from "@/store/useUIStore";
 import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } from "@/lib/utils";
 import { getSignalCoordinates } from "@/lib/geo-coords";
@@ -146,7 +146,7 @@ export default function EventDetailPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Authentication required");
+      if (!user) throw new Error(AUTH_SESSION_ERROR);
 
       if (modalMinSeverity < 1 || modalMinSeverity > 10) {
         throw new Error("Severity must be between 1 and 10");
@@ -175,7 +175,7 @@ export default function EventDetailPage() {
       });
       setAlertModalOpen(false);
     } catch (err: any) {
-      toast.error(err?.message || "Failed to create alert rule");
+      toast.error(safeMutationError(err, "Failed to create alert rule"));
     }
   };
 

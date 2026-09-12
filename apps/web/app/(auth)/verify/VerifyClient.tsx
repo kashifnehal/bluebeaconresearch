@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
+import { throwIfNoSupabase, userFacingCaughtError } from "@/lib/user-error-copy";
 
 export function VerifyClient() {
   const params = useSearchParams();
@@ -121,8 +122,7 @@ export function VerifyClient() {
     try {
       // Same implicit-flow client signUp() uses (lib/supabase-email-auth.ts) --
       // the resent link must match what confirm/page.tsx expects to receive.
-      const supabase = getSupabaseEmailAuthClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseEmailAuthClient());
       const { error: resendError } = await supabase.auth.resend({
         type: "signup",
         email,
@@ -131,7 +131,7 @@ export function VerifyClient() {
       setSent(true);
       setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Failed to resend email.";
+      const message = userFacingCaughtError(e, "Failed to resend email.");
       setError(message);
       // Rate-limit errors mean the cooldown wasn't respected (or an earlier attempt
       // already used it up) — start the cooldown anyway so the next click doesn't

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { apiError } from "@/lib/api-response";
+import { DISCORD_TEST_UNREACHABLE } from "@/lib/user-error-copy";
 import { isDiscordWebhookUrl } from "@/lib/discord-webhook";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 
@@ -38,9 +39,10 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
+    console.error("[discord/test] webhook unreachable:", e);
     return NextResponse.json({
       ok: false,
-      error: e instanceof Error ? e.message : "failed",
+      error: DISCORD_TEST_UNREACHABLE,
     });
   }
 }

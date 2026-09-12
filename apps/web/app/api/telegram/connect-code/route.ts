@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-response";
+import { apiError, apiErrorLogged } from "@/lib/api-response";
 
 export async function POST() {
   const supabase = await createClient();
@@ -13,7 +13,7 @@ export async function POST() {
 
   const apiBase = process.env.API_URL;
   if (!apiBase) {
-    return apiError(500, "config_error", "Missing API_URL env var");
+    return apiErrorLogged(500, "config_error", "Missing API_URL env var");
   }
 
   const res = await fetch(`${apiBase}/v1/telegram/connect-code`, {
@@ -25,7 +25,7 @@ export async function POST() {
 
   const json = await res.json().catch(() => null);
   if (!res.ok) {
-    return apiError(res.status, "upstream_error", json?.error ?? "Failed to generate connect code");
+    return apiErrorLogged(res.status, "upstream_error", json?.error ?? res.status);
   }
 
   return NextResponse.json(json ?? {});

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { GENERIC_REQUEST_ERROR } from "@/lib/user-error-copy";
 
 // Standard error shape for apps/web/app/api/* routes. Before this, at least four
 // different shapes coexisted across routes (bare string `error`, `error.message`
@@ -25,4 +26,10 @@ import { NextResponse } from "next/server";
 // established consumer contract already depends on the data key being present.
 export function apiError(status: number, code: string, message?: string) {
   return NextResponse.json({ error: { code, message: message ?? code } }, { status });
+}
+
+/** Log provider/internal detail; send a fixed user-safe message. Never pass error.message. */
+export function apiErrorLogged(status: number, code: string, detail: unknown) {
+  console.error(`[api] ${code}:`, detail);
+  return apiError(status, code, GENERIC_REQUEST_ERROR);
 }

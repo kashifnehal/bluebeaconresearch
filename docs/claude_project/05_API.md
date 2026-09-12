@@ -1,6 +1,8 @@
 # 05_API.md — Complete API Reference
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+>
+> ⚠️ UPDATED 2026-09-13 (#138) — Next.js BFF `apiError()` shape is unchanged (`{ error: { code, message } }`). DB/config failures now use `apiErrorLogged()` so `message` is a fixed user-safe sentence; provider `.message` is `console.error` only. Fastify `/v1` contract untouched.
 
 **Base URL (production):** https://api.bluebeaconresearch.com
 **Base URL (development):** http://localhost:3001

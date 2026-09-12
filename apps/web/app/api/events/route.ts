@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-response";
+import { apiError, apiErrorLogged } from "@/lib/api-response";
 
 // Minimal funnel-event log (2026-08-27) — see apps/web/lib/funnel-events.ts for the
 // client-side caller and supabase/migrations/013_events_table.sql for the table/RLS.
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       .limit(1);
 
     if (selectError) {
-      return apiError(500, "db_error", selectError.message);
+      return apiErrorLogged(500, "db_error", selectError);
     }
     if (existing && existing.length > 0) {
       return NextResponse.json({ inserted: false });
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     if (insertError.code === "23505") {
       return NextResponse.json({ inserted: false });
     }
-    return apiError(500, "db_error", insertError.message);
+    return apiErrorLogged(500, "db_error", insertError);
   }
 
   return NextResponse.json({ inserted: true });

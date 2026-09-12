@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.59.1 — #138 remainder: voice guide + remaining leaks (2026-09-13)
+
+`apps/web` only. Closes #138. Standing copy rule D24 / ADR 020. `apiErrorLogged()` so BFF JSON `message` is never a provider string. Settings, auth env-leak, confirm bridge, feed `fallbackReason`, mutation toasts, admin service-status. Tests in `lib/user-error-copy.test.ts`.
+
 ### v0.59.0 — #138 Phase 2 error-copy integrity (2026-09-13)
 
 `apps/web` only. Known user-visible raw/ambiguous error strings from the #138 grep: `throwIfNoSupabase()` replaces `"Supabase client not available"` on alerts (two mutations), event-detail create-rule, and DiscordConnect — toast still reads `err.message`, now the honest account-connect sentence; technical string is `console.error` only (path is missing public Supabase env, not a live drop). IngestionStatusBanner no longer interpolates API `reason` (named Upstash/quota); fixed "temporarily unavailable" kept because there is no last-healthy timestamp. `/accuracy` and `/admin/metrics` stop interpolating `{error.message}`. Middleware copy left as-is (8s `getUser()` timeout only). TelegramConnect / CommandPalette throws confirmed query-internal. Helper tests in `lib/user-error-copy.test.ts`. Remainder: voice guide + `api-response.ts` catalog.

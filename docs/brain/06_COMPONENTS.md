@@ -38,7 +38,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ### 1.3 `DiscordConnect.tsx`
 - **Purpose**: Settings NOTIFICATIONS block for pasting a Discord incoming-webhook URL (Save / Test / Disconnect). No bot or OAuth.
 - **Parent**: `(dashboard)/settings/page.tsx`, after `<TelegramConnect />`.
-- **How**: browser-client upsert to `user_channels`; Test calls `POST /api/discord/test`. Linked badge matches `TelegramConnect`. Missing-client toast uses honest account-connect copy (#138 Phase 2).
+- **How**: browser-client upsert to `user_channels`; Test calls `POST /api/discord/test`. Linked badge matches `TelegramConnect`. Missing-client / save toasts use honest copy; no PostgREST interpolation (#138).
 - **Related**: `/alerts` create-rule modal now has Telegram / Discord / Slack checkboxes, defaulting to connected channels.
 
 ### 2.2 `TopBar.tsx`

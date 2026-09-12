@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-response";
+import { apiError, apiErrorLogged } from "@/lib/api-response";
 
 export type AlertSignalSource = {
   title: string;
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
     .limit(limit);
 
   if (error) {
-    return apiError(500, "db_error", error.message);
+    return apiErrorLogged(500, "db_error", error);
   }
 
   const rows = data ?? [];

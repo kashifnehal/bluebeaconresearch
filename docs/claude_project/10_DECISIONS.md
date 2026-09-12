@@ -587,3 +587,15 @@ credit (already an open item) means this path currently covers meaningful live t
 - Raising the chat ceiling is an env var change, not a redeploy of new code.
 
 **Cross-tree mapping:** Recorded as **ADR 019** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D24: Empty/error copy — never interpolate provider strings (#138)
+
+**Decision:** User-visible empty and error copy is a fixed, honest sentence. Never interpolate `error.message`, API `reason`, `fallbackReason`, env-var names, or PostgREST/GoTrue internals. Technical detail is `console.error` only. Say "temporarily" only when the path is actually a timeout/retry (middleware 8s Auth check). Empty ≠ error (NotificationPanel). GoTrue messages the user can act on (invalid credentials, rate limit) may stay. No buy/sell. No fabricated "restoring capacity."
+
+**Context:** #137/#138 found raw internals in toasts, banners, settings, auth, and Next.js `apiError(..., error.message)`.
+
+**Rationale:** A trader cannot act on Upstash, PostgREST, or `db-error`. Honest fixed copy plus a log is enough to debug.
+
+**Cross-tree mapping:** Recorded as **ADR 020** in `docs/brain/10_DECISIONS.md`.

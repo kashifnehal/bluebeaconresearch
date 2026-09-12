@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { userFacingCaughtError } from "@/lib/user-error-copy";
 
 type TelegramStatus = {
   telegramConnected: boolean;
@@ -71,7 +72,10 @@ export function TelegramConnect() {
     mutationFn: async () => {
       const res = await fetch("/api/telegram/connect-code", { method: "POST" });
       const json = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(json?.error?.message ?? "Failed to generate connect code");
+      if (!res.ok) {
+        console.error("[telegram] connect-code failed:", json?.error);
+        throw new Error("Failed to generate connect code");
+      }
       return json as { code: string };
     },
     onSuccess: (data) => {
@@ -80,7 +84,7 @@ export function TelegramConnect() {
       queryClient.invalidateQueries({ queryKey: ["telegram", "status"] });
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : "Failed to generate connect code");
+      toast.error(userFacingCaughtError(err, "Failed to generate connect code"));
     },
   });
 

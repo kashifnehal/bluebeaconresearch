@@ -11,6 +11,7 @@ import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { FilterBar } from "@/components/signals/FilterBar";
 import { SignalQuickView } from "@/components/signals/SignalQuickView";
 import { FreshTag } from "@/components/signals/FreshTag";
+import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
@@ -234,7 +235,7 @@ export default function DashboardPage() {
             className="mb-6 px-3 py-2 rounded text-[11px] font-medium bg-yellow-600/95 text-black"
             suppressHydrationWarning
           >
-            Signal feed degraded — {fallbackReason ?? "unknown"}. Showing last available data
+            {feedDegradedCopy(fallbackReason)}
             {fallbackLastUpdated ? (
               <span className="ml-2 text-[10px] text-black/80" suppressHydrationWarning>
                 (updated {safeFormatDistanceToNow(fallbackLastUpdated)} ago)

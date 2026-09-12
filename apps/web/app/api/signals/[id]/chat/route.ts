@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-response";
+import { apiError, apiErrorLogged } from "@/lib/api-response";
 
 // #111 (frontend half) — proxies to the backend chat endpoints added in the
 // previous commit (apps/backend `signal-chat.routes.ts`). Same auth-forwarding
@@ -33,7 +33,7 @@ export async function GET(
   if (!token) return apiError(401, "unauthorized");
 
   const apiBase = process.env.API_URL?.replace(/\/$/, "");
-  if (!apiBase) return apiError(500, "config_error", "Missing API_URL env var");
+  if (!apiBase) return apiErrorLogged(500, "config_error", "Missing API_URL env var");
 
   try {
     const res = await fetch(`${apiBase}/v1/signals/${encodeURIComponent(id)}/chat`, {
@@ -66,7 +66,7 @@ export async function POST(
   if (!message) return apiError(400, "missing_message");
 
   const apiBase = process.env.API_URL?.replace(/\/$/, "");
-  if (!apiBase) return apiError(500, "config_error", "Missing API_URL env var");
+  if (!apiBase) return apiErrorLogged(500, "config_error", "Missing API_URL env var");
 
   try {
     const res = await fetch(`${apiBase}/v1/signals/${encodeURIComponent(id)}/chat`, {

@@ -440,3 +440,19 @@ Track two UTC-day ceilings inside the shared functions: `ANTHROPIC_DAILY_BUDGET_
 
 ### Cross-tree mapping
 Recorded as **D23** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 21. ADR 020: Empty/error copy — never interpolate provider strings (#138)
+
+### Context
+#137/#138 found raw internals reaching traders: `"Supabase client not available"`, Upstash `reason`, `{error.message}` on accuracy/metrics/settings, `fallbackReason` codes (`db-error`) on the feed, and Next.js `apiError(500, "db_error", error.message)`.
+
+### Decision
+Fixed honest sentences only. `console.error` the technical detail. "Temporarily" only for a real timeout/retry. Empty ≠ error. Actionable GoTrue messages (invalid credentials) may stay. Helpers live in `apps/web/lib/user-error-copy.ts`; BFF routes use `apiErrorLogged()`.
+
+### Rationale
+Provider strings are not something a user can act on and they look like a leak. A short voice guide plus the helper is cheaper than rewriting every catch by hand later.
+
+### Cross-tree mapping
+Recorded as **D24** in `docs/claude_project/10_DECISIONS.md`.

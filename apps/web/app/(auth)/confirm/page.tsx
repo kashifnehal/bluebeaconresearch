@@ -18,7 +18,6 @@ import { logFunnelEventOnce } from "@/lib/funnel-events";
 // (Gmail app, WhatsApp preview, a phone). See lib/supabase-email-auth.ts.
 function ConfirmForm() {
   const [status, setStatus] = useState<"validating" | "invalid">("validating");
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseEmailAuthClient();
@@ -50,7 +49,7 @@ function ConfirmForm() {
         refresh_token: sessionData.session.refresh_token,
       });
       if (bridgeError) {
-        setError(bridgeError.message);
+        console.error(bridgeError);
         setStatus("invalid");
         return;
       }
@@ -111,12 +110,12 @@ function ConfirmForm() {
               Confirmation link expired or invalid
             </h1>
             <p className="text-on-surface-variant text-sm mb-6">
-              {error ??
-                // GoTrue returns the identical otp_expired error whether the link was
-                // already used (e.g. clicked twice, or prefetched by an email security
-                // scanner) or is genuinely past its expiry window — the client can't
-                // tell those apart, so this covers both without guessing which one it is.
-                "This link has already been used or is no longer valid. If you've already confirmed your account, sign in below — otherwise, sign up again to get a new link."}
+              {/* GoTrue returns the identical otp_expired error whether the link was
+                  already used (e.g. clicked twice, or prefetched by an email security
+                  scanner) or is genuinely past its expiry window — the client can't
+                  tell those apart, so this covers both without guessing which one it is.
+                  Bridge-session failures use this same copy; raw GoTrue text is logged. */}
+              This link has already been used or is no longer valid. If you've already confirmed your account, sign in below — otherwise, sign up again to get a new link.
             </p>
             <div className="flex flex-col gap-3">
               <Link href="/login">

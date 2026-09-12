@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { throwIfNoSupabase } from "@/lib/user-error-copy";
 import { COMMODITIES, FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
 import { ArrowRight, Terminal } from "lucide-react";
 import Image from "next/image";
@@ -68,8 +69,7 @@ export default function OnboardingPage() {
     setIsSubmitting(true);
 
     try {
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) throw new Error("Missing Supabase env vars.");
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {

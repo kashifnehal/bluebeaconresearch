@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 
+import { SERVICE_HEALTH_LOAD_ERROR } from "@/lib/user-error-copy";
 import { loadServiceEvents, type ServiceHealthEvent } from "./actions";
 
 // Grouped tab structure — pre-scoped in claude/32_SERVICE_HEALTH_DASHBOARD_SPEC.md.
@@ -95,7 +96,8 @@ export default function ServiceStatusClient() {
         setLoadedLabel(effectiveLabel);
       } else {
         setEvents(null);
-        setError(result.error);
+        console.error("[service-status] load failed:", result.error);
+        setError(SERVICE_HEALTH_LOAD_ERROR);
       }
     });
   }

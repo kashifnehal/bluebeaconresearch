@@ -51,8 +51,10 @@
 > ⚠️ UPDATED 2026-09-13 (#137) — four event-page trust/UX bugs fixed in `apps/web` only: typed chat-history errors, flat-price subtext (diagnosed as a real 0% move, not a stale fetch) + severity-gated alert CTA, ANALYSIS Verification box removed, briefing empty-state is severity-gated rather than an outage story. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.58.0. This tree: PHASE 24.
 >
 > ⚠️ UPDATED 2026-09-13 (#138 Phase 2) — `apps/web` only: missing-client toasts no longer show `"Supabase client not available"`; IngestionStatusBanner no longer interpolates the Upstash `reason`; accuracy/metrics pages use a fixed fallback sentence. Middleware auth-unavailable copy unchanged (8s timeout only; longer outage not distinguishable). Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.59.0. This tree: PHASE 25.
+>
+> ⚠️ UPDATED 2026-09-13 (#138 fully closed) — voice guide D24 / ADR 020; `apiErrorLogged()`; remaining settings/auth/feed/confirm leaks. Brain changelog: v0.59.1. This tree: PHASE 26.
 
-Last updated: 2026-09-13 (#138 Phase 2 error-copy integrity)
+Last updated: 2026-09-13 (#138 fully closed)
 
 ---
 

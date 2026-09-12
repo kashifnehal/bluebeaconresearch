@@ -47,7 +47,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#112~~ | ~~Push-notification connect UX~~ | — | **Done 2026-09-12** — Telegram-only. Header `forum` icon + contextual prompt after 3 signal views; dismissed state is `profiles.notification_prompt_dismissed_at` (server-side). Settings `<TelegramConnect />` stays the manage/disconnect home. See `LIVE_TODO.md`. |
 | — | Discord alert channel (webhook-URL-paste) | — | **Done 2026-09-12** — `user_channels.discord_*` columns, dispatcher `discord` branch, Settings `<DiscordConnect />` + `/api/discord/test`, alert-rule Telegram/Discord/Slack checkboxes. No bot/OAuth. See `LIVE_TODO.md`. |
 | ~~#137~~ | ~~Event-page trust/UX copy (four live-test bugs)~~ | — | **Done 2026-09-13** — typed chat history errors; flat price subtext + severity-gated alert CTA; ANALYSIS Verification box removed; briefing empty-state is severity-gated (not an outage). `apps/web` only. See `LIVE_TODO.md`. |
-| ~~#138~~ | ~~Site-wide copy & error-state integrity pass (Phase 2 candidates)~~ | — | **Done 2026-09-13** — missing-client toasts, ingestion degraded banner (no raw Upstash `reason`), accuracy/metrics fallback sentences. Middleware timeout copy left as-is. Remainder: voice guide + `api-response.ts` catalog. See `LIVE_TODO.md`. |
+| ~~#138~~ | ~~Site-wide copy & error-state integrity pass~~ | — | **Fully done 2026-09-13** — Phase 2 candidates + remainder (voice guide D24/ADR 020, `apiErrorLogged`, settings/auth/feed leaks). See `LIVE_TODO.md`. |
 
 ### Still open
 
@@ -64,7 +64,6 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #121 | Real /accuracy page + outcome-tracker worker | ~~**Fully shipped 2026-09-11**~~ — `signal_outcomes` table + daily `outcome-tracker.ts` worker (backfilled to 2,965 rows) + public `GET /v1/accuracy` aggregation endpoint + public `/accuracy` page (per-asset breakdown, permanent disclaimer, no "top signals" list). #53 backfill completed 2026-09-12 (1,678 filled / 1,213 Haiku-classified empty of 2,891). |
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
-| #138 remainder | Voice guide + `api-response.ts` catalog | Phase 2 user-facing candidates shipped 2026-09-13. Leftover: short internal voice guide for empty/error states, and whether `api-response.ts` route-error *shape* needs a follow-up (not a toast). |
 | #139 | Ingestion / filter / severity / confidence audit | Research first — no Cursor prompt yet. Map what news is wanted, how severity/confidence are assigned, and which UI combinations don't hold together. |
 
 ---
