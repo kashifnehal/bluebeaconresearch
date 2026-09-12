@@ -177,7 +177,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
   const [{ data: prefsRows }, { data: channelsRows }, { data: profileRows }, { data: webhookRows }] =
     await Promise.all([
       supabase.from("user_preferences").select("user_id, quiet_start, quiet_end, timezone").in("user_id", userIds),
-      supabase.from("user_channels").select("user_id, telegram_chat_id, slack_webhook_url").in("user_id", userIds),
+      supabase.from("user_channels").select("user_id, telegram_chat_id, slack_webhook_url, discord_webhook_url").in("user_id", userIds),
       supabase.from("profiles").select("id, push_tokens").in("id", userIds),
       webhookUserIds.length
         ? supabase.from("webhook_endpoints").select("*").in("user_id", webhookUserIds).eq("is_active", true)
@@ -241,6 +241,17 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
             await axios.post(
               channelsRow.slack_webhook_url,
               { text: slackText },
+              { timeout: 10_000 },
+            );
+            status = "delivered";
+          }
+        } else if (channel === "discord") {
+          if (!channelsRow?.discord_webhook_url) {
+            status = "queued";
+          } else {
+            await axios.post(
+              channelsRow.discord_webhook_url,
+              { content: slackText.slice(0, 2000) },
               { timeout: 10_000 },
             );
             status = "delivered";

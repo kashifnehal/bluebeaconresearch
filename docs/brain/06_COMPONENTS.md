@@ -35,6 +35,12 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Hooks Used**: `usePathname()` from Next.js navigation.
 - **Styling**: `w-64 border-r border-neutral-800 bg-neutral-950/80 flex flex-col`.
 
+### 1.3 `DiscordConnect.tsx`
+- **Purpose**: Settings NOTIFICATIONS block for pasting a Discord incoming-webhook URL (Save / Test / Disconnect). No bot or OAuth.
+- **Parent**: `(dashboard)/settings/page.tsx`, after `<TelegramConnect />`.
+- **How**: browser-client upsert to `user_channels`; Test calls `POST /api/discord/test`. Linked badge matches `TelegramConnect`.
+- **Related**: `/alerts` create-rule modal now has Telegram / Discord / Slack checkboxes, defaulting to connected channels.
+
 ### 2.2 `TopBar.tsx`
 - **Purpose**: Header bar featuring a mobile hamburger (#133), search input, Telegram-connect `forum` icon (#112), notification bell, help, and user auth dropdown. `left-0` below `md`, `md:left-[256px]` at desktop.
 - **Props**: None.

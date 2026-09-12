@@ -103,6 +103,7 @@ Ingested news articles and military incident logs before AI processing.
 - `telegram_connected_at` (`timestamptz`)
 - `slack_webhook_url` (`text`, nullable)
 - `slack_connected_at` (`timestamptz`)
+- `discord_webhook_url` (`text`, nullable) / `discord_connected_at` (`timestamptz`) — added 2026-09-12, webhook-URL-paste only. Full column list + RLS note: `docs/brain/04_DATABASE.md` Table 6. Existing `user_channels_all_own` covers the new columns; no CHECK on `alert_rules.channels`.
 
 ### Table 7: `api_keys` & Table 8: `webhook_endpoints`
 Institutional developer API credentials and webhook subscription URLs.

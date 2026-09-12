@@ -347,6 +347,14 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - `chatAboutSignal()` trims a reply back to its last complete sentence only when Anthropic reports `stop_reason === "max_tokens"`. System prompt adds a ~180-word length instruction and a markdown-formatting instruction, and strengthens (does not replace) the sources-section instruction to fire reliably. #134's budget breakers, allowlist, relevance check, burst limiter, and `sanitizeCitedChatReply()` untouched.
 - `SignalChatPanel` now renders the assistant answer text through `react-markdown`, restricted to paragraphs/emphasis/lists — no links or images, so the real Sources list stays the only clickable-link surface.
 
+## PHASE 22 — DISCORD ALERT CHANNEL (2026-09-12)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.56.0.
+
+- Discord is a webhook-URL paste, not a bot. `user_channels` gains `discord_webhook_url` + `discord_connected_at`; existing `user_channels_all_own` covers them. Dispatcher POSTs `{ content }` (2000-char cap) on `channel === "discord"`.
+- Settings NOTIFICATIONS: `<DiscordConnect />` (Save / Test / Disconnect) immediately after Telegram. Test goes through authenticated `POST /api/discord/test`.
+- `/alerts` create-rule modal now has Telegram / Discord / Slack checkboxes, defaulting to connected channels.
+
 ## PHASE 21 — #133 MOBILE DASHBOARD SHELL + #112 TELEGRAM CONNECT UX (2026-09-12)
 
 > Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.55.0.

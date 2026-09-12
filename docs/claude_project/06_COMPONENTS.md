@@ -97,6 +97,13 @@ On open: marks all alerts as read (via API), resets unread_count badge.
 **Body:** existing `<TelegramConnect />` (Settings page usage unchanged)
 **Dismissed flag:** closing this modal does **not** write `profiles.notification_prompt_dismissed_at` — only the contextual prompt's "Not now" does. (#112, 2026-09-12)
 
+### DiscordConnect (apps/web/components/DiscordConnect.tsx)
+**Used in:** Settings → NOTIFICATIONS, immediately after `<TelegramConnect />` and its divider (before Daily Digest).
+**Flow:** paste a Discord incoming-webhook URL → Save upserts `user_channels.discord_webhook_url` + `discord_connected_at` via the browser client (`user_channels_all_own`). Test POSTs `{ webhookUrl }` to `/api/discord/test` (auth required, server-side fetch). Connected state uses the same Linked badge language as TelegramConnect, plus Disconnect (both columns → null). No bot, no OAuth, no connect-code polling.
+
+### Alerts create-rule modal (`(dashboard)/alerts/page.tsx`)
+Channel checkboxes for Telegram / Discord / Slack. `modalChannels` defaults to whichever of `telegram_chat_id` / `discord_webhook_url` / `slack_webhook_url` are present on the current user's `user_channels` row, else `["telegram"]`.
+
 ### NotificationConnectPrompt (apps/web/components/NotificationConnectPrompt.tsx)
 **Mounted in:** (dashboard)/layout.tsx
 **Shows** after `NOTIFICATION_PROMPT_AFTER_SIGNALS` (3) signal-detail mounts this session, if `notification_prompt_dismissed_at` is null and Telegram is not already connected (`/api/telegram/status`). Compact non-blocking card. "Not now" updates the user's own `profiles` row.

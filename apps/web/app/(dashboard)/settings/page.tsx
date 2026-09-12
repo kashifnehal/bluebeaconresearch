@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { toast } from "sonner";
 import { SELECT_CLASSES } from "@/lib/utils";
+import { DiscordConnect } from "@/components/DiscordConnect";
 import { TelegramConnect } from "@/components/TelegramConnect";
 
 const TABS = [
@@ -364,6 +365,8 @@ export default function SettingsPage() {
                 {activeTab === "NOTIFICATIONS" && (
                   <div className="space-y-4">
                     <TelegramConnect />
+                    <div className="border-t border-outline-variant/20 my-2" />
+                    <DiscordConnect />
                     <div className="border-t border-outline-variant/20 my-2" />
                     <div className="flex items-center justify-between">
                       <div>

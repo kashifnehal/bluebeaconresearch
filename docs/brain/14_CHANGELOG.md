@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.56.0 — Discord alert channel (2026-09-12)
+
+Webhook-URL-paste Discord delivery. Migration `20260912134700_user_channels_discord.sql` adds nullable `user_channels.discord_webhook_url` + `discord_connected_at` (applied live to `evavcgfmemwryggdkjmx`; existing `user_channels_all_own` covers the new columns — no policy change; no CHECK on `alert_rules.channels`). `alert-dispatcher.ts` selects the new column and POSTs `{ content }` (2000-char cap, 10s timeout) on `channel === "discord"`; missing URL queues, errors fail; other channel branches untouched. Settings NOTIFICATIONS gains `<DiscordConnect />` (Save upsert, Test via authenticated `POST /api/discord/test`, Disconnect). `/alerts` create-rule modal now has Telegram / Discord / Slack checkboxes, defaulting to whichever of those columns are populated. Playwright captured the new Settings block and the modal checkboxes. Invalid-webhook dispatch wrote `alerts_sent.channel='discord', status='failed'` without breaking that rule's Telegram delivery. A real Discord-channel landing was not run (no webhook URL in this session).
+
 ### v0.55.0 — #133 mobile dashboard shell + #112 Telegram connect UX (2026-09-12)
 
 `apps/web` only plus one additive `profiles` column. #133: `(dashboard)/layout.tsx` no longer hardcodes `marginLeft: 256px` — `md:ml-[256px]` instead. `Sidebar.tsx` is an off-canvas drawer below `md` (`-translate-x-full` / `translate-x-0` + backdrop). TopBar gains a `md:hidden` hamburger and spans `left-0` below `md` (`md:left-[256px]`). `useUIStore.mobileSidebarOpen`. Playwright before/after at 390/768/1440. #112: `profiles.notification_prompt_dismissed_at` (migration `20260912180000_profiles_notification_prompt_dismissed.sql`, live apply `20260912133049`). `NotificationConnectModal` reuses `<TelegramConnect />`. TopBar `forum` icon (all sizes, separate from the alerts bell). After 3 signal-detail mounts, a compact prompt offers the same flow; dismiss writes the profile timestamp. Settings-page Telegram block unchanged. Discord not built.

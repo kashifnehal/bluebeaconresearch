@@ -187,3 +187,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 #### `GET /api/webhooks` & `POST /api/webhooks`
 
 - **Description**: Subscribes target HTTP endpoint to real-time signal dispatches.
+
+#### `POST /api/discord/test` (Next.js, `apps/web/app/api/discord/test/route.ts`, 2026-09-12)
+
+- **Description**: Authenticated one-off ping of a Discord incoming-webhook URL. Body `{ webhookUrl }`. Returns `{ ok: true }` or `{ ok: false, error }`. Rejects non-Discord hosts. Settings Test button uses this instead of posting from the browser. Alert *delivery* itself is `alert-dispatcher.ts` (`channel === "discord"`), not this route.

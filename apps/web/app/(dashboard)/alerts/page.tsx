@@ -35,6 +35,44 @@ type DeliveryStatus = "queued" | "delivered" | "failed";
 // `.slice(0, 5)`, so page 1 of each rule renders exactly as it did before.
 const MATCHES_PER_PAGE = 5;
 
+const CHANNEL_OPTIONS = [
+  { id: "telegram", label: "Telegram" },
+  { id: "discord", label: "Discord" },
+  { id: "slack", label: "Slack" },
+] as const;
+
+type ConnectedChannels = {
+  telegram: boolean;
+  discord: boolean;
+  slack: boolean;
+};
+
+function defaultChannelsFrom(connected: ConnectedChannels | null | undefined): string[] {
+  if (!connected) return ["telegram"];
+  const next = CHANNEL_OPTIONS.map((c) => c.id).filter((id) => connected[id]);
+  return next.length ? [...next] : ["telegram"];
+}
+
+async function fetchConnectedChannels(): Promise<ConnectedChannels> {
+  const empty = { telegram: false, discord: false, slack: false };
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return empty;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return empty;
+  const { data } = await supabase
+    .from("user_channels")
+    .select("telegram_chat_id, discord_webhook_url, slack_webhook_url")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return {
+    telegram: Boolean(data?.telegram_chat_id),
+    discord: Boolean(data?.discord_webhook_url),
+    slack: Boolean(data?.slack_webhook_url),
+  };
+}
+
 // The one compliance line BBR shows on every signal surface — approved wording from
 // docs/claude_project/00_PROJECT.md §7 / 20_RISKS.md / 21_PROJECT_BRIEFING.md.
 const DISCLAIMER =
@@ -148,6 +186,11 @@ export default function AlertsPage() {
     refetchInterval: 30_000,
   });
 
+  const { data: connectedChannels } = useQuery({
+    queryKey: ["user-channels", "connected"],
+    queryFn: fetchConnectedChannels,
+  });
+
   const rules = rulesData?.rules ?? [];
   const isLoading = rulesLoading || alertsLoading;
 
@@ -227,7 +270,7 @@ export default function AlertsPage() {
     return null;
   }, [rules, matchesByRule]);
 
-  const openSetAlertModal = (signal?: Signal) => {
+  const openSetAlertModal = async (signal?: Signal) => {
     if (signal) {
       setModalRegion(signal.region || "middle-east");
       setModalMinSeverity(Math.max(1, signal.severity - 1));
@@ -237,9 +280,23 @@ export default function AlertsPage() {
       setModalMinSeverity(7);
       setModalEventType(undefined);
     }
-    setModalChannels(["telegram"]);
+    const connected = await queryClient.fetchQuery({
+      queryKey: ["user-channels", "connected"],
+      queryFn: fetchConnectedChannels,
+    });
+    setModalChannels(defaultChannelsFrom(connected));
     setModalForexPairs([]);
     setAlertModalOpen(true);
+  };
+
+  const toggleModalChannel = (id: string) => {
+    setModalChannels((prev) => {
+      if (prev.includes(id)) {
+        const next = prev.filter((c) => c !== id);
+        return next.length ? next : prev;
+      }
+      return [...prev, id];
+    });
   };
 
   const createAlertRule = useMutation({
@@ -666,6 +723,42 @@ export default function AlertsPage() {
                 onChange={(e) => setModalMinSeverity(Number(e.target.value))}
                 className="w-full bg-[#0e0e0e] border border-[#3c4a42] p-2 text-xs text-white rounded font-mono"
               />
+            </div>
+
+            <div data-testid="alert-channel-checkboxes">
+              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+                Delivery Channels
+              </label>
+              <p className="text-[10px] text-[#6b7674] mb-2">
+                Alerts go only to the channels you select. Connect them in Settings first.
+              </p>
+              <div className="flex flex-col gap-2">
+                {CHANNEL_OPTIONS.map((ch) => {
+                  const checked = modalChannels.includes(ch.id);
+                  const isConnected = Boolean(connectedChannels?.[ch.id]);
+                  return (
+                    <label
+                      key={ch.id}
+                      className="flex items-center gap-2 text-xs text-white cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        data-testid={`alert-channel-${ch.id}`}
+                        checked={checked}
+                        onChange={() => toggleModalChannel(ch.id)}
+                      />
+                      <span>{ch.label}</span>
+                      <span
+                        className={`text-[9px] uppercase font-bold ${
+                          isConnected ? "text-[#4edea3]" : "text-[#86948a]"
+                        }`}
+                      >
+                        {isConnected ? "Connected" : "Not connected"}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
 
             <div>

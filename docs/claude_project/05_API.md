@@ -679,6 +679,10 @@ apps/web/app/api/
 │   ├── checkout/route.ts     → Creates Stripe checkout session (STUBBED)
 │   ├── create-customer/route.ts → Creates Stripe customer (STUBBED)
 │   └── portal/route.ts      → Creates Stripe portal session (STUBBED)
-└── telegram/
-    └── connect-code/route.ts → Proxies POST /v1/telegram/connect-code
+├── telegram/
+│   └── connect-code/route.ts → Proxies POST /v1/telegram/connect-code
+└── discord/
+    └── test/route.ts → Authenticated one-off Discord webhook ping
+                           (`{ webhookUrl }` → `{ ok: true }` / `{ ok: false, error }`).
+                           Server-side fetch only; URL must be a Discord webhook host.
 ```

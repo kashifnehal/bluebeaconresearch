@@ -44,7 +44,9 @@
 
 > ⚠️ UPDATED 2026-09-12 (#133 + #112) — mobile dashboard shell is no longer crushed at 390px (off-canvas sidebar below `md`; 256px push unchanged at `md`+). Telegram connect UX: header icon + contextual prompt after 3 signal views; dismissed state is `profiles.notification_prompt_dismissed_at`. Discord not in this ship. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.55.0. This tree: PHASE 21.
 
-Last updated: 2026-09-12 (#133 mobile dashboard shell + #112 Telegram connect UX)
+> ⚠️ UPDATED 2026-09-12 (Discord alert channel) — webhook-URL-paste Discord delivery: `user_channels.discord_webhook_url` / `discord_connected_at`, dispatcher `discord` branch, Settings `<DiscordConnect />` + `POST /api/discord/test`, alert-rule Telegram/Discord/Slack checkboxes. No bot/OAuth. RLS unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.56.0. This tree: PHASE 22.
+
+Last updated: 2026-09-12 (Discord alert channel)
 
 ---
 

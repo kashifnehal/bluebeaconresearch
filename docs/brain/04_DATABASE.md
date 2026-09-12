@@ -117,8 +117,10 @@ Ingested news articles and incident logs before classification.
 - `telegram_connected_at` (`timestamptz`, nullable)
 - `slack_webhook_url` (`text`, nullable)
 - `slack_connected_at` (`timestamptz`, nullable)
+- `discord_webhook_url` (`text`, nullable) — webhook-URL-paste only; no bot/OAuth (2026-09-12)
+- `discord_connected_at` (`timestamptz`, nullable)
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
-- **RLS**: exactly one policy, `user_channels_all_own` (`ALL`) — consolidated from 4 overlapping policies by `20260817220713_consolidate_user_channels_rls.sql`; verified live 2026-08-27
+- **RLS**: exactly one policy, `user_channels_all_own` (`ALL`) — consolidated from 4 overlapping policies by `20260817220713_consolidate_user_channels_rls.sql`; verified live 2026-08-27. Row-level (`user_id = auth.uid()`); new Discord columns are covered with no policy change.
 
 ### Table 7: `alerts_sent`
 One row per alert actually dispatched. Written by `alert-dispatcher.ts`.
