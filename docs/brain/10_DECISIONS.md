@@ -421,3 +421,22 @@ Write `signal_outcomes` once, 48h after `event_date`, never recompute live. Excl
 
 ### Cross-tree mapping
 Recorded as **D22** in `docs/claude_project/10_DECISIONS.md`. Full methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Related: #53, #115.
+
+---
+
+## 20. ADR 019: Dual Anthropic Daily Budgets + Chat Email Allowlist (#111)
+
+### Context
+#111 is the first user-triggered Anthropic path. Ingestion cost does not scale with signups; chat cost does. A single shared dollar cap would let a busy news day block paying chat users, or the reverse. The existing plan-tier gate is a no-op today (signups hardcode `pro`). A Sep 11 Haiku spike was the #53 backfill, not a leak — but chat still needed a real ceiling before either the remainder backfill or chat promotion.
+
+### Decision
+Track two UTC-day ceilings inside the shared functions: `ANTHROPIC_DAILY_BUDGET_USD_INGESTION` (classifyEvent / generateAnalysis) and `ANTHROPIC_DAILY_BUDGET_USD_CHAT` (chatAboutSignal + relevance Haiku). Default $2 each if unset. Gate chat with `CHAT_ALLOWED_EMAILS` (fail closed if unset) and a distinct `403 chat_early_access_only` — leave the plan-tier check in place, do not fix "everyone is pro" here. Chat daily counter fails closed; add a 5/5min burst limit. Cheap relevance pre-check before Sonnet. Cite only handed source URLs. Log `[ANTHROPIC BUDGET]` at 50%/90%; email `ADMIN_EMAILS` at chat 50%. Never live-test this path against Anthropic from Cursor.
+
+### Rationale
+- Ingestion is news-volume-driven. A small flat cap is correct indefinitely.
+- Chat must grow with real allowlisted users; the number is an env var, not a code change.
+- Fail-closed cost gates: a false block is cheaper than an unmetered bypass.
+- The email allowlist sidesteps the unreliable plan-tier system until #84 billing exists.
+
+### Cross-tree mapping
+Recorded as **D23** in `docs/claude_project/10_DECISIONS.md`.

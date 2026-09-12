@@ -204,19 +204,24 @@ Returns this user's last 50 chat turns for this signal, oldest first. Auth requi
 
 **Response 200:** `{ "data": [{ "id", "role": "user"|"assistant", "content", "created_at" }] }`
 
+**⚠️ UPDATED 2026-09-12** — `CHAT_ALLOWED_EMAILS` allowlist (fail closed if unset) → `403 { "error": "chat_early_access_only" }` before history is returned.
+
 ---
 
 #### POST /v1/signals/:id/chat  (#111, `dcdc877`)
 Sends one follow-up question about **this signal only**. Auth required. Body: `{ "message": string }` (1–2000 chars).
 
 Gates (in order):
-- `planTier === "free"` → `403 { "error": "premium_required" }` (today every user defaults to `pro`, so this passes; the check is already correct for when billing tiers exist)
-- 30 user-role messages / rolling 24h, counted from `signal_chat_messages` (no extra rate-limit library) → `429 { "error": "rate_limited" }`
+- `CHAT_ALLOWED_EMAILS` miss or unset → `403 { "error": "chat_early_access_only" }` (manual early-access; not billing — replace once #84 exists)
+- `planTier === "free"` → `403 { "error": "premium_required" }` (today every signup is `pro`, so this is a no-op; left in place)
+- 30 user-role messages / rolling 24h → `429 { "error": "rate_limited" }` (fails **closed** on a count-query error)
+- 5 user-role messages / 5 minutes → `429 { "error": "rate_limited_burst" }`
+- Chat daily Anthropic budget exceeded → `503 { "error": "ai_temporarily_unavailable", "message": "BBR's AI usage limit for today has been reached, please try again tomorrow" }`
 - Missing signal → `404 { "error": "Not found" }`
 
-Then: insert user row → `ClaudeService.chatAboutSignal()` (`claude-sonnet-5`, last 10 prior turns, grounded only in this signal's title/summary/`ai_analysis`/impacts/severity/confidence/sources_count/event_date) → insert assistant row → `{ "reply": string }`.
+Then: cheap relevance pre-check (heuristic, then a tiny Haiku call if needed). Advice / off-topic return a fixed string and skip Sonnet. Relevant → `chatAboutSignal()` (`claude-sonnet-5`, last 10 prior turns, grounded in this signal plus handed `raw_events` URLs; reply may end with `---SOURCES---` of those URLs only).
 
-**⚠️ UPDATED 2026-09-12** — the `chatAboutSignal()` call is now wrapped in try/catch (it previously had none). Any unexpected error → `503 { "error": "ai_temporarily_unavailable" }` instead of a generic 500. The event-page chat panel renders this as "BBR's AI service is temporarily unavailable — try again shortly" (not the generic catch-all).
+**⚠️ UPDATED 2026-09-12** — unexpected throw still → `503 { "error": "ai_temporarily_unavailable" }`. Budget-exceeded uses the same error code with the distinct message above.
 
 **Why this shape:** the event-page chat must never become general market advice. Grounded generation of **this** signal only — not retrieval (D21 / ADR 017, `18_AI_ENGINE.md` §3b). Same buy/sell prohibition as `generateAnalysis()` (**#103**, also #120), plus an explicit refusal of personalized-position questions ("I hold 200 barrels…") because a one-user chat sits closer to the publishers' exclusion boundary than a briefing. Web UI never calls Fastify directly — see §6 `signals/[id]/chat/route.ts`.
 

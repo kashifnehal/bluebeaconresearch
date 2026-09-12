@@ -209,7 +209,8 @@ interface SignalCardProps {
 **How:**
 - On mount: GET `/api/signals/:id/chat` (BFF → Fastify). Empty state: designed "Ask a question about this briefing" block (not a 12px caption).
 - Send: optimistic user bubble, POST `{ message }`, spinner matching #108 (`progress_activity` + `animate-spin`), then append `reply`. Rollback the optimistic bubble on 4xx/5xx.
-- Errors: `403` → "This feature needs a paid plan." / `429` → "You've hit today's question limit — try again tomorrow." / `503 ai_temporarily_unavailable` → "BBR's AI service is temporarily unavailable — try again shortly". Never dump the raw JSON.
+- Errors: `403 chat_early_access_only` → embedded `AccessLimitedModal` ("AI Chat is currently available to early-access members…") instead of the composer. `403 premium_required` → "This feature needs a paid plan." / `429 rate_limited` → today's question limit / `429 rate_limited_burst` → slow down / `503` with a usage-limit message → try tomorrow / other `503 ai_temporarily_unavailable` → temporarily unavailable. Never dump the raw JSON.
+- Assistant replies render a "Sources" section of clickable handed URLs when the stored text includes `---SOURCES---`; omitted when empty.
 - If the signal's `classificationMethod === 'heuristic'`, a note at the top of the panel: "This signal was auto-classified — Claude analysis is temporarily unavailable."
 - Always-visible, non-dismissible footer strip under the input: "This assistant explains the signal only — it can't give personalized investment advice."
 - Reload must restore history from `signal_chat_messages`. Styling uses working stitch tokens (`text-on-surface`, `text-on-surface-variant`, `text-primary-fixed-dim`) — `text-text-secondary` / `text-muted` / `text-bg-app` do not map in `tailwind.config.ts`. Composer stacks below a 420px container width.

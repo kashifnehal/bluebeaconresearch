@@ -332,3 +332,9 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 - Visual/layout pass on `SignalChatPanel` after Prompt O's `classification_method` column and `503 ai_temporarily_unavailable` shipped. Same component, same backend contract.
 - Step 0 real screenshots (1440 / 768 / 390) found dead Tailwind tokens, 9–10px type, a truncated tablet composer, and 503 falling through to a generic error. 390px remaining crush is the dashboard's fixed 256px sidebar, not changed this pass.
 - Heuristic signals now show "This signal was auto-classified — Claude analysis is temporarily unavailable." 503 renders "BBR's AI service is temporarily unavailable — try again shortly."
+
+## PHASE 19 — #111 AI USAGE GOVERNANCE + CITED CHAT (2026-09-12)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.53.0. Decision: D23 / ADR 019.
+
+- Two independent UTC-day Anthropic ceilings (ingestion vs chat). Chat gated by `CHAT_ALLOWED_EMAILS` (fail closed). Daily 30-msg cap fails closed; 5/5min burst. Cheap relevance pre-check before Sonnet. Cited replies may only use handed source URLs. Mocked tests only — no live Anthropic calls.

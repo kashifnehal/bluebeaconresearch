@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 
 export type AuthedUser = {
   id: string;
+  email?: string | null;
   planTier: "free" | "analyst" | "pro" | "api";
 };
 
@@ -61,6 +62,7 @@ export function registerAuth(app: FastifyInstance) {
 
       req.user = {
         id: data.user.id,
+        email: data.user.email ?? null,
         planTier: (profile?.plan_tier ?? "free") as AuthedUser["planTier"],
       };
       return;
@@ -91,8 +93,11 @@ export function registerAuth(app: FastifyInstance) {
         .eq("id", keyRow.user_id)
         .maybeSingle();
 
+      const { data: keyUser } = await supabase.auth.admin.getUserById(keyRow.user_id);
+
       req.user = {
         id: keyRow.user_id,
+        email: keyUser?.user?.email ?? null,
         planTier: (profile?.plan_tier ?? "free") as AuthedUser["planTier"],
       };
       return;

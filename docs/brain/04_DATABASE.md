@@ -195,6 +195,12 @@ Per-user, per-signal chat turns. This table is the conversation log only — **n
 - **Index**: `(signal_id, user_id, created_at)`
 - **RLS**: same user-owns-their-rows convention as `alert_rules` / `watchlist_entries` / `saved_signals` — `select`/`insert` where `user_id = auth.uid()`. Fastify writes via the service-role client (bypasses RLS); the policies exist so a user-scoped key cannot read someone else's chat.
 
+### Table 13c: `anthropic_daily_usage` (#111 governance, migration `20260912120000_anthropic_daily_usage.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-12)
+UTC-day running spend estimates. Two rows per day max (`ingestion` | `chat`). Service-role write only; RLS enabled, no policies (same fail-closed pattern as `service_health_events`).
+- PK `(usage_date, bucket)`
+- `estimated_usd numeric(12,6)`, `input_tokens`, `output_tokens`, `call_count`
+- `warned_50` / `warned_90` / `chat_50pct_emailed_at` — so 50%/90% logs and the chat 50% email fire once per UTC day
+
 ### Table 14: `subscriptions`
 - `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL)
 - `stripe_subscription_id` (`text`, nullable, **UNIQUE**) / `stripe_price_id` (`text`, nullable)

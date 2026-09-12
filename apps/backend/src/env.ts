@@ -29,6 +29,15 @@ const envSchema = z.object({
   // founder-internal GET /v1/admin/* routes. Unset => nobody is admin (fail closed).
   ADMIN_EMAILS: z.string().optional(),
 
+  // Manual early-access gate for #111 chat — replace once real billing (#84) exists.
+  // Unset / empty => nobody can use chat (fail closed). Not the same as ADMIN_EMAILS.
+  CHAT_ALLOWED_EMAILS: z.string().optional(),
+
+  // Independent daily Anthropic ceilings (USD, UTC day). Defaults live in
+  // anthropic-budget.ts ($2 each) when unset.
+  ANTHROPIC_DAILY_BUDGET_USD_INGESTION: z.string().optional(),
+  ANTHROPIC_DAILY_BUDGET_USD_CHAT: z.string().optional(),
+
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
 

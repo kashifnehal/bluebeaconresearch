@@ -21,16 +21,32 @@ const C = {
 };
 
 interface AccessLimitedModalProps {
-  joinedWaitlist: boolean;
+  joinedWaitlist?: boolean;
+  variant?: "fullscreen" | "embedded";
+  title?: string;
+  body?: string;
+  italic?: string;
+  ctaLabel?: string;
+  hideCta?: boolean;
 }
 
-export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModalProps) {
+export default function AccessLimitedModal({
+  joinedWaitlist = false,
+  variant = "fullscreen",
+  title = "Access Limited",
+  body = "Only the first 1000 users are being onboarded in this phase.",
+  italic = "We are expanding our research capacity to maintain signal quality and accuracy.",
+  ctaLabel,
+  hideCta = false,
+}: AccessLimitedModalProps) {
+  const isEmbedded = variant === "embedded";
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<MutationObserver | null>(null);
 
-  // Lock scroll and block Escape key
+  // Lock scroll and block Escape key (fullscreen waitlist gate only).
   useEffect(() => {
+    if (isEmbedded) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -46,10 +62,11 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", blockEscape, { capture: true });
     };
-  }, []);
+  }, [isEmbedded]);
 
   // MutationObserver: re-insert modal if DevTools removes or hides it
   useEffect(() => {
+    if (isEmbedded) return;
     const modalNode = modalRef.current;
     if (!modalNode) return;
 
@@ -93,7 +110,7 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
     });
 
     return () => observerRef.current?.disconnect();
-  }, []);
+  }, [isEmbedded]);
 
   function handleJoinWaitlist() {
     router.push("/signup");
@@ -103,21 +120,20 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
     <div
       id="access-limited-modal"
       ref={modalRef}
+      data-testid={isEmbedded ? "chat-early-access-blocker" : undefined}
       style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
+        position: isEmbedded ? "relative" : "fixed",
+        inset: isEmbedded ? undefined : 0,
+        zIndex: isEmbedded ? undefined : 9999,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: C.backdrop,
-        backdropFilter: "blur(4px)",
-        WebkitBackdropFilter: "blur(4px)",
-        padding: "24px",
-        // Intercept ALL pointer events – nothing behind can be clicked
+        backgroundColor: isEmbedded ? "transparent" : C.backdrop,
+        backdropFilter: isEmbedded ? undefined : "blur(4px)",
+        WebkitBackdropFilter: isEmbedded ? undefined : "blur(4px)",
+        padding: isEmbedded ? "8px 0" : "24px",
         pointerEvents: "all",
       }}
-      // Intercept clicks on the backdrop (do nothing – no dismiss)
       onClick={(e) => e.stopPropagation()}
     >
       {/* Card */}
@@ -165,7 +181,7 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
             margin: "0 0 20px",
           }}
         >
-          Access Limited
+          {title}
         </h1>
 
         {/* Body text */}
@@ -179,7 +195,7 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
             margin: "0 0 12px",
           }}
         >
-          Only the first 1000 users are being onboarded in this phase.
+          {body}
         </p>
 
         <p
@@ -193,10 +209,10 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
             margin: "0 0 20px",
           }}
         >
-          We are expanding our research capacity to maintain signal quality and accuracy.
+          {italic}
         </p>
 
-        {/* CTA text */}
+        {!hideCta && (
         <p
           style={{
             fontFamily: "'Space Grotesk', sans-serif",
@@ -212,12 +228,14 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
         >
           Join the waitlist and get early access as soon as new slots open.
         </p>
+        )}
 
         {/* Join Waitlist Button */}
+        {!hideCta && (
         <button
           id="access-modal-join-btn"
-          onClick={joinedWaitlist ? undefined : handleJoinWaitlist}
-          disabled={joinedWaitlist}
+          onClick={joinedWaitlist || isEmbedded ? undefined : handleJoinWaitlist}
+          disabled={joinedWaitlist || isEmbedded}
           style={{
             width: "100%",
             backgroundColor: joinedWaitlist ? "rgba(78,222,163,0.35)" : C.btnBg,
@@ -246,8 +264,9 @@ export default function AccessLimitedModal({ joinedWaitlist }: AccessLimitedModa
             }
           }}
         >
-          {joinedWaitlist ? "Access Request Received" : "Join Waitlist"}
+          {ctaLabel ?? (joinedWaitlist ? "Access Request Received" : "Join Waitlist")}
         </button>
+        )}
 
         {/* Already Registered? */}
         {joinedWaitlist && <p

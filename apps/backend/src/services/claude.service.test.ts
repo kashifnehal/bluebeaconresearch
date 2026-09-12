@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
 import { ClaudeService } from "./claude.service.js";
 
+process.env.NODE_ENV = "test";
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
 process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || "test-supabase-role-key";
 
 const service = new ClaudeService();
+// Never let classifyEvent() build a real Anthropic SDK client in this file.
+// .env.local may contain a live key; a 401 still leaves the machine.
+(service as unknown as { client: unknown }).client = {
+  messages: {
+    create: async () => {
+      throw new Error("mocked anthropic — tests must not call the live API");
+    },
+  },
+};
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   try {
@@ -96,6 +106,48 @@ async function main() {
           capturedSystem,
           /must not become a directive prediction/,
         );
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
+    "chatAboutSignal prompt forbids invented URLs and asks for a ---SOURCES--- section",
+    async () => {
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const promptService = new ClaudeService();
+        let capturedSystem = "";
+        (promptService as unknown as { client: unknown }).client = {
+          messages: {
+            create: async (opts: { system?: string }) => {
+              capturedSystem = String(opts.system ?? "");
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: "Hormuz raises oil disruption risk.\n\n---SOURCES---\nhttps://allowed.example/story\nhttps://invented.example/nope",
+                  },
+                ],
+                usage: { input_tokens: 10, output_tokens: 20 },
+              };
+            },
+          },
+        };
+
+        const reply = await promptService.chatAboutSignal(
+          { title: "Hormuz disruption", summary: "Tankers delayed" },
+          [],
+          "Why does this matter for oil?",
+          ["https://allowed.example/story"],
+        );
+
+        assert.match(capturedSystem, /never construct, guess, paraphrase, or invent a URL/);
+        assert.match(capturedSystem, /---SOURCES---/);
+        assert.match(capturedSystem, /never give buy\/sell trading recommendations/);
+        assert.match(reply, /https:\/\/allowed\.example\/story/);
+        assert.doesNotMatch(reply, /invented\.example/);
       } finally {
         delete process.env.ANTHROPIC_API_KEY;
       }

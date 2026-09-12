@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Info, MessageCircle, Send, User } from "lucide-react";
+import AccessLimitedModal from "@/components/AccessLimitedModal";
 
 type ChatMessage = {
   id: string;
@@ -13,16 +14,35 @@ type ChatMessage = {
 type SendErrorCode =
   | "premium_required"
   | "rate_limited"
+  | "rate_limited_burst"
   | "ai_temporarily_unavailable"
+  | "ai_daily_budget_reached"
   | "generic";
 
 const SEND_ERROR_COPY: Record<SendErrorCode, string> = {
   premium_required: "This feature needs a paid plan.",
   rate_limited: "You've hit today's question limit — try again tomorrow.",
+  rate_limited_burst: "You're sending questions too quickly — wait a moment and try again.",
   ai_temporarily_unavailable:
     "BBR's AI service is temporarily unavailable — try again shortly",
+  ai_daily_budget_reached:
+    "BBR's AI usage limit for today has been reached — try again tomorrow.",
   generic: "Something went wrong sending that — please try again.",
 };
+
+const SOURCES_MARKER = "---SOURCES---";
+
+function splitCitedReply(content: string): { answer: string; sources: string[] } {
+  const idx = content.lastIndexOf(SOURCES_MARKER);
+  if (idx === -1) return { answer: content, sources: [] };
+  const answer = content.slice(0, idx).trim();
+  const sources = content
+    .slice(idx + SOURCES_MARKER.length)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^https?:\/\/\S+$/i.test(line));
+  return { answer, sources };
+}
 
 type ClassificationMethod = "claude" | "heuristic" | null | undefined;
 
@@ -47,6 +67,7 @@ export function SignalChatPanel({
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<SendErrorCode | null>(null);
+  const [earlyAccessOnly, setEarlyAccessOnly] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,8 +77,15 @@ export function SignalChatPanel({
 
     fetch(`/api/signals/${signalId}/chat`, { cache: "no-store" })
       .then(async (res) => {
+        const json = (await res.json().catch(() => ({}))) as {
+          data?: ChatMessage[];
+          error?: string;
+        };
+        if (res.status === 403 && json.error === "chat_early_access_only") {
+          if (!cancelled) setEarlyAccessOnly(true);
+          return;
+        }
         if (!res.ok) throw new Error("history_fetch_failed");
-        const json = (await res.json()) as { data?: ChatMessage[] };
         if (!cancelled) setMessages(json.data ?? []);
       })
       .catch(() => {
@@ -100,12 +128,22 @@ export function SignalChatPanel({
       });
 
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}) as { error?: string });
+        const body = await res.json().catch(() => ({})) as { error?: string; message?: string };
         setMessages((prev) => prev.filter((m) => m.id !== optimisticUserMessage.id));
-        if (res.status === 403 || body?.error === "premium_required") {
+        if (body?.error === "chat_early_access_only") {
+          setEarlyAccessOnly(true);
+        } else if (res.status === 403 || body?.error === "premium_required") {
           setSendError("premium_required");
+        } else if (body?.error === "rate_limited_burst") {
+          setSendError("rate_limited_burst");
         } else if (res.status === 429 || body?.error === "rate_limited") {
           setSendError("rate_limited");
+        } else if (
+          body?.error === "ai_temporarily_unavailable" &&
+          typeof body?.message === "string" &&
+          body.message.toLowerCase().includes("usage limit")
+        ) {
+          setSendError("ai_daily_budget_reached");
         } else if (res.status === 503 || body?.error === "ai_temporarily_unavailable") {
           setSendError("ai_temporarily_unavailable");
         } else {
@@ -133,6 +171,33 @@ export function SignalChatPanel({
   };
 
   const showHeuristicNote = classificationMethod === "heuristic";
+
+  if (earlyAccessOnly) {
+    return (
+      <div className="@container w-full min-w-0 scroll-mt-24" data-testid="signal-chat-panel">
+        <div className="mb-4 flex items-center gap-2.5">
+          <span className="h-px flex-1 bg-outline-variant/40" aria-hidden />
+          <div className="flex items-center gap-2">
+            <MessageCircle size={14} className="text-primary-fixed-dim" />
+            <span
+              className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-fixed-dim"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Ask About This Signal
+            </span>
+          </div>
+          <span className="h-px flex-1 bg-outline-variant/40" aria-hidden />
+        </div>
+        <AccessLimitedModal
+          variant="embedded"
+          hideCta
+          title="Early Access"
+          body="AI Chat is currently available to early-access members. Get in touch and we'll add you."
+          italic="The briefing, impacts, and sources on this page stay available."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="@container w-full min-w-0 scroll-mt-24" data-testid="signal-chat-panel">
@@ -223,7 +288,11 @@ export function SignalChatPanel({
                       : "border border-outline-variant/20 bg-surface-container text-on-surface"
                   }`}
                 >
-                  {m.content}
+                  {m.role === "assistant" ? (
+                    <CitedAssistantReply content={m.content} />
+                  ) : (
+                    m.content
+                  )}
                 </div>
                 {m.role === "user" && (
                   <div
@@ -300,6 +369,42 @@ export function SignalChatPanel({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function CitedAssistantReply({ content }: { content: string }) {
+  const { answer, sources } = splitCitedReply(content);
+  return (
+    <div className="space-y-3">
+      <div>{answer}</div>
+      {sources.length > 0 && (
+        <div
+          data-testid="signal-chat-sources"
+          className="border-t border-outline-variant/25 pt-2.5"
+        >
+          <p
+            className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-primary-fixed-dim"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Sources
+          </p>
+          <ul className="space-y-1">
+            {sources.map((url) => (
+              <li key={url} className="min-w-0">
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="break-all text-[12px] leading-snug text-primary-fixed-dim underline-offset-2 hover:underline"
+                >
+                  {url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

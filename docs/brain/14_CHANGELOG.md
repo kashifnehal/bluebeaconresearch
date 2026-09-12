@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.53.0 — #111 AI usage governance + cited chat (2026-09-12)
+
+Two independent UTC-day Anthropic budgets (ingestion vs chat), a fail-closed `CHAT_ALLOWED_EMAILS` early-access gate, fail-closed daily + 5/5min burst chat limits, a cheap relevance pre-check before Sonnet, and cited replies that may only reference handed source URLs. New table `anthropic_daily_usage`. Mocked tests only — no live Anthropic calls. See `LIVE_TODO.md`.
+
 ### v0.52.0 — SignalChatPanel visual pass + heuristic flag + 503 copy (2026-09-12)
 
 Visual/layout pass on `SignalChatPanel` after Prompt O shipped `classification_method` and `503 ai_temporarily_unavailable`. Same component, same backend contract.

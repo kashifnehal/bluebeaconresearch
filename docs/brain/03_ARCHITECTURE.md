@@ -143,6 +143,8 @@ The user is already on `/events/[id]`. Fastify loads **that** `signals` row; `ch
 
 Two prompt rules: (1) no buy/sell — same as `generateAnalysis()` / **#103**; (2) refuse personalized position advice (publishers' exclusion: impersonal research vs. one-user advice). Table: `signal_chat_messages`. Web BFF: `/api/signals/[id]/chat`.
 
+**⚠️ UPDATED 2026-09-12** — only user-triggered Anthropic path. Dual daily budgets (ingestion vs chat) and `CHAT_ALLOWED_EMAILS` (D23 / ADR 019).
+
 ---
 
 ## 7. Outcome tracking & public accuracy (#121)

@@ -38,7 +38,9 @@
 
 > ⚠️ UPDATED 2026-09-12 (docs, no application code) — #111 and #121 documented at architecture depth (not changelog depth): grounded generation vs RAG + two-rule prompt / publishers' exclusion (`18_AI_ENGINE.md` §3b, D21/ADR 017); 48h outcome methodology (`17_SIGNAL_ENGINE.md` §7, D22/ADR 018). New **Known Limitations** section below. Cross-links: #111→#103, #121→#53/#115.
 
-Last updated: 2026-09-12 (#111/#121 architecture docs + Known Limitations; design in `18_AI_ENGINE.md` §3b / `17_SIGNAL_ENGINE.md` §7)
+> ⚠️ UPDATED 2026-09-12 (later, #111 governance) — dual Anthropic daily budgets, `CHAT_ALLOWED_EMAILS` fail-closed gate, fail-closed 30/day + 5/5min burst, Haiku relevance pre-check, cited replies, `[ANTHROPIC BUDGET]` logs + chat 50% email. Step 0: signups hardcode `pro` (plan-tier 403 is a no-op; left unchanged); daily counter previously failed open. Mocked tests only. D23 / ADR 019. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.53.0. This tree: PHASE 19.
+
+Last updated: 2026-09-12 (#111 AI usage governance + cited chat; D23 / ADR 019)
 
 ---
 

@@ -152,6 +152,8 @@ The user is already on `/events/[id]`. The Fastify handler loads **that** `signa
 
 Two independent prompt rules (do not collapse): (1) no buy/sell language — same wording as `generateAnalysis()`, which is **#103** applied to a new surface; (2) refuse personalized position/portfolio questions, because a chat answering one user's specific situation sits closer to the investment-adviser line than a published briefing (publishers' exclusion: general/impersonal stays outside; tailored advice does not). Persistence: `signal_chat_messages`. Web never calls Fastify from the browser — same-origin `/api/signals/[id]/chat` BFF.
 
+**⚠️ UPDATED 2026-09-12** — this is the one user-triggered Anthropic path. Cost is split: ingestion (classify/brief) vs chat, two env ceilings (D23 / ADR 019). Access is `CHAT_ALLOWED_EMAILS` until #84 billing exists.
+
 ---
 
 ## 7. Outcome tracking & public accuracy (#121)

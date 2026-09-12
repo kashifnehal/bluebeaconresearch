@@ -572,3 +572,18 @@ credit (already an open item) means this path currently covers meaningful live t
 - Closest-row-in-the-table is not an observation near the event. The 24h guard exists because that bug shipped in a first pass (349 false flats) and had to be wiped.
 
 **Cross-tree mapping:** Recorded as **ADR 018** in `docs/brain/10_DECISIONS.md`. Full methodology: `17_SIGNAL_ENGINE.md` §7. Related: #53 (prerequisite), #115 (severity-bunching audit this work confirmed and extended).
+
+---
+
+## D23: Dual Anthropic Daily Budgets + Chat Email Allowlist (#111)
+
+**Decision:** Two independent UTC-day Anthropic ceilings (`ANTHROPIC_DAILY_BUDGET_USD_INGESTION` and `ANTHROPIC_DAILY_BUDGET_USD_CHAT`, default $2). Chat access is a manual `CHAT_ALLOWED_EMAILS` allowlist that fails closed if unset (`403 chat_early_access_only`). Do not share one budget across ingestion and chat. Do not treat the current plan-tier gate as the cost control. Never live-test chat against Anthropic from Cursor.
+
+**Context:** #111 is the first user-triggered Anthropic path. Ingestion cost does not scale with users; chat cost does. Today's plan-tier check is a no-op (signups hardcode `pro`).
+
+**Rationale:**
+- A shared cap lets a busy news day block chat, or chat starve classification.
+- The allowlist bounds cost by exactly the emails the founder adds, until #84 billing exists.
+- Raising the chat ceiling is an env var change, not a redeploy of new code.
+
+**Cross-tree mapping:** Recorded as **ADR 019** in `docs/brain/10_DECISIONS.md`.

@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-12 (#111/#121 architecture docs + no-mock-data audit — see Known Limitations below; design in `18_AI_ENGINE.md` §3b / `17_SIGNAL_ENGINE.md` §7)
+Last updated: 2026-09-12 (#111 AI usage governance + cited chat; two Anthropic daily budgets + `CHAT_ALLOWED_EMAILS`)
 
 ---
+
+## #111 AI usage governance + cited chat (2026-09-12)
+
+`apps/backend` + `apps/web`. Full record: `14_CHANGELOG.md` v0.53.0, `LIVE_TODO.md`, ADR 019 / D23. Regular cron ingestion is safe under the ingestion ceiling. Do not resume the #53 remainder or promote chat until the founder confirms Railway values and sends one manual allowlisted message.
 
 ## Classification trust/reliability fixes — heuristic severity cap, classification_method, AI health logging, chat error handling (2026-09-12)
 
