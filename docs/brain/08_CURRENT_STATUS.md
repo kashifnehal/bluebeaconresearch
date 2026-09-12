@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-12 (#111 chat quality fixes — mid-sentence cutoff + markdown rendering, #134 follow-up)
+Last updated: 2026-09-12 (#133 mobile dashboard shell + #112 Telegram connect UX)
 
 ---
+
+## #133 mobile dashboard shell + #112 Telegram connect UX (2026-09-12)
+
+`apps/web` + one `profiles` column. Full record: `14_CHANGELOG.md` v0.55.0, `LIVE_TODO.md`. Below `md` the dashboard sidebar is an off-canvas drawer (hamburger in TopBar); at `md`+ the 256px shell is unchanged. Header `forum` icon + after-3-signals prompt open the existing `<TelegramConnect />`; dismiss writes `profiles.notification_prompt_dismissed_at`. Discord not built.
 
 ## #111 chat quality fixes: mid-sentence cutoff + markdown rendering (2026-09-12)
 

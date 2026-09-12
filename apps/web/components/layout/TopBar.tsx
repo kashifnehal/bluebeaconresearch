@@ -6,6 +6,7 @@ import { useUIStore } from "@/store/useUIStore";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { HelpModal } from "@/components/HelpModal";
 import { CommandPalette } from "@/components/CommandPalette";
+import { NotificationConnectModal } from "@/components/NotificationConnectModal";
 import { getSupabaseBrowserClient, signOutAndRedirect } from "@/lib/supabase";
 
 export function TopBar() {
@@ -17,6 +18,9 @@ export function TopBar() {
     setNotifOpen,
     unreadCount,
     setHelpOpen,
+    setMobileSidebarOpen,
+    notificationConnectOpen,
+    setNotificationConnectOpen,
   } = useUIStore();
   const { setSearchSubmitted } = useUIStore();
 
@@ -113,16 +117,39 @@ export function TopBar() {
   return (
     <>
       <header
-        className="fixed top-0 right-0 z-40 flex items-center justify-between px-6"
+        className="fixed top-0 right-0 left-0 md:left-[256px] z-40 flex items-center justify-between px-6"
         style={{
-          left: "256px",
           height: "64px",
           backgroundColor: "#000000",
           borderBottom: "1px solid #2a2a2a",
         }}
       >
-        {/* Left: Search Bar */}
+        {/* Left: hamburger (mobile) + Search Bar */}
         <div className="flex items-center gap-4 flex-1">
+          <button
+            type="button"
+            className="md:hidden transition-colors shrink-0"
+            style={{
+              color: "#bbcac0",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+            onClick={() => setMobileSidebarOpen(true)}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
+            }}
+            aria-label="Open navigation"
+            title="Open navigation"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>
+              menu
+            </span>
+          </button>
           <div className="relative w-full max-w-md">
             <span
               className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2"
@@ -164,6 +191,33 @@ export function TopBar() {
         {/* Right: Icons + User Avatar */}
         <div className="flex items-center gap-6">
           <div className="flex gap-4 items-center">
+            {/* Connect-a-channel (Telegram). Distinct from the alerts bell. */}
+            <button
+              onClick={() => setNotificationConnectOpen(!notificationConnectOpen)}
+              className="relative transition-colors"
+              style={{
+                color: "#bbcac0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
+              }}
+              aria-label="Connect alert channel"
+              title="Connect alert channel"
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "24px" }}
+              >
+                forum
+              </span>
+            </button>
+
             {/* Notification Bell Button */}
             <button
               onClick={() => setNotifOpen(!notifOpen)}
@@ -342,6 +396,9 @@ export function TopBar() {
 
       {/* Centered Help Modal */}
       <HelpModal />
+
+      {/* Telegram connect (header icon + contextual prompt share this) */}
+      <NotificationConnectModal />
 
       {/* Global Cmd+K / Ctrl+K search */}
       <CommandPalette />

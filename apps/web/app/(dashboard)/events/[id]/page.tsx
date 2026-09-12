@@ -27,6 +27,7 @@ import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useUIStore } from "@/store/useUIStore";
 import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } from "@/lib/utils";
 import { getSignalCoordinates } from "@/lib/geo-coords";
 import { toast } from "sonner";
@@ -45,6 +46,11 @@ export default function EventDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const id = params.id;
+  const incrementSignalsViewed = useUIStore((s) => s.incrementSignalsViewed);
+
+  useEffect(() => {
+    incrementSignalsViewed();
+  }, [id, incrementSignalsViewed]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["signal", id],

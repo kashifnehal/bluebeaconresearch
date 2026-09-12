@@ -50,6 +50,7 @@ Extends `auth.users(id)` with billing tier and user settings.
 - `push_tokens` (`text[]`, NOT NULL, default `'{}'`)
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
 - `product_tour_completed` (`boolean`, NOT NULL, default `false`) — added by `010_add_product_tour_flag.sql`; deliberately separate from `onboarding_completed`, which gates the unrelated `/onboarding` wizard
+- `notification_prompt_dismissed_at` (`timestamptz`, nullable) — added by `20260912180000_profiles_notification_prompt_dismissed.sql` (#112); one-time dismissal of the in-app Telegram-connect prompt, kept separate from `onboarding_completed` / `product_tour_completed` for the same reason those two are separate
 
 ### Table 2: `signals`
 Stores LLM-synthesized geopolitical intelligence and asset impact data.
@@ -298,6 +299,7 @@ CREATE UNIQUE INDEX idx_signals_raw_event_ids_unique ON public.signals (raw_even
 9. **`008_fix_source_constraint.sql`**: Allowed `source='gnews'` in `raw_events` — believed applied for 2 days before it actually was (see `14_CHANGELOG.md` v0.19.0 and `16_MIGRATION_CHECKLIST.md`).
 10. **`009_signals_event_date.sql`**: Added `event_date` index for publish-time ordering.
 11. **`010_add_product_tour_flag.sql`**: `profiles.product_tour_completed` column.
+11b. **`20260912180000_profiles_notification_prompt_dismissed.sql`**: `profiles.notification_prompt_dismissed_at` (#112). Applied live 2026-09-12 as `20260912133049`.
 12. **`011_rls_remediation.sql`**: Enabled RLS on 7 previously-exposed tables; hardened `handle_new_user()`.
 13. **`20260817220713_consolidate_user_channels_rls.sql`** / **`20260817220714_reliability_indexes_parts_2_4.sql`** (2026-08-18): Consolidated `user_channels`' 4 overlapping RLS policies into 1; added the 6 indexes above; see full rationale in the migration file itself and `16_MIGRATION_CHECKLIST.md`. **Applied to the live DB 2026-08-19 (founder, via SQL editor) and verified two independent ways**: (1) Security Advisor via the Management API (`SUPABASE_ACCESS_TOKEN`, project linked 2026-08-19) confirms the `user_channels` "Multiple Permissive Policies" warning is gone, nothing new appeared; (2) Performance Advisor shows all 6 new indexes as `unused_index` findings (expected/benign for brand-new indexes — proves they exist, Postgres just hasn't recorded read traffic against them yet). Also live-tested the unique constraint directly: a duplicate `raw_event_ids` insert correctly threw `duplicate key value violates unique constraint "idx_signals_raw_event_ids_unique"`.
 

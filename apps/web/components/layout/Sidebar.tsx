@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOutAndRedirect } from "@/lib/supabase";
@@ -19,20 +20,37 @@ const NAV: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { unreadCount, setHelpOpen } = useUIStore();
+  const { unreadCount, setHelpOpen, mobileSidebarOpen, setMobileSidebarOpen } = useUIStore();
 
   async function handleLogout() {
     await signOutAndRedirect();
   }
 
+  // Close the off-canvas drawer after a navigation so it doesn't stay over
+  // the next page. No-op at md+ where the aside is always visible.
+  useEffect(() => {
+    setMobileSidebarOpen(false);
+  }, [pathname, setMobileSidebarOpen]);
+
   return (
-    // Labelled <aside> so it's distinguishable from the map page's own <aside>
-    // ("Live intelligence stream") — axe `landmark-unique`, /map. Keeping it a
-    // landmark (vs. a bare <div>) is what keeps the logo/help/logout content
-    // inside a landmark region (axe `region`).
+    <>
+    {mobileSidebarOpen && (
+      <div
+        data-testid="mobile-sidebar-backdrop"
+        className="fixed inset-0 z-[45] bg-black/60 md:hidden"
+        onClick={() => setMobileSidebarOpen(false)}
+        aria-hidden
+      />
+    )}
+    {/* Labelled <aside> so it's distinguishable from the map page's own <aside>
+        ("Live intelligence stream") — axe `landmark-unique`, /map. Keeping it a
+        landmark (vs. a bare <div>) is what keeps the logo/help/logout content
+        inside a landmark region (axe `region`). */}
     <aside
       aria-label="Primary navigation"
-      className="fixed left-0 top-0 h-full flex flex-col z-50"
+      className={`fixed left-0 top-0 h-full flex flex-col z-50 transition-transform duration-200 ease-out ${
+        mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      } md:translate-x-0`}
       style={{
         width: "256px",
         backgroundColor: "#000000",
@@ -142,5 +160,6 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

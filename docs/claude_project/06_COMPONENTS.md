@@ -13,7 +13,7 @@
 
 ### Sidebar (apps/web/components/layout/Sidebar.tsx)
 **Used in:** (dashboard)/layout.tsx
-**Fixed left, 200px wide on desktop. Hidden on mobile (replaced by bottom nav)**
+**Fixed left, 256px wide. At `md`+ always visible. Below `md` an off-canvas drawer (`-translate-x-full` / `translate-x-0`) driven by `useUIStore.mobileSidebarOpen`, with a tap-outside backdrop. (#133, 2026-09-12)**
 
 Props: None (reads auth + route from hooks)
 
@@ -37,15 +37,17 @@ Active state detection: usePathname() from next/navigation.
 
 ### TopBar (apps/web/components/layout/TopBar.tsx)
 **Used in:** (dashboard)/layout.tsx
-**Sticky top, full width minus sidebar**
+**Fixed top. `left-0` below `md`; `md:left-[256px]` at desktop so it clears the permanent sidebar.**
 
 Contains:
+0. **Hamburger (below `md` only)** — `menu` icon, first control in the bar, opens the off-canvas sidebar (#133)
 1. **Search input** — placeholder "Search signals, coordinates, entities..."
    - Controlled: useState('') debounced 300ms
    - onChange: updates useFeedStore.searchQuery
    - onEnter: calls /v1/signals?search=query
    - Shows X clear button when query non-empty
 
+1b. **Connect-channel icon (`forum`)** — all screen sizes. Opens `NotificationConnectModal` (wraps existing `<TelegramConnect />`). Distinct from the alerts bell. (#112)
 2. **Notification Bell (🔔)**
    - Badge: red dot with unread_count from useUIStore.unreadAlerts
    - onClick: toggles useUIStore.notificationPanelOpen
@@ -89,6 +91,15 @@ On open: marks all alerts as read (via API), resets unread_count badge.
 > `docs/brain/08_CURRENT_STATUS.md`'s 2026-08-25 entry.
 
 ---
+
+### NotificationConnectModal (apps/web/components/NotificationConnectModal.tsx)
+**Trigger:** TopBar `forum` icon, or the contextual prompt after 3 signal-detail views
+**Body:** existing `<TelegramConnect />` (Settings page usage unchanged)
+**Dismissed flag:** closing this modal does **not** write `profiles.notification_prompt_dismissed_at` — only the contextual prompt's "Not now" does. (#112, 2026-09-12)
+
+### NotificationConnectPrompt (apps/web/components/NotificationConnectPrompt.tsx)
+**Mounted in:** (dashboard)/layout.tsx
+**Shows** after `NOTIFICATION_PROMPT_AFTER_SIGNALS` (3) signal-detail mounts this session, if `notification_prompt_dismissed_at` is null and Telegram is not already connected (`/api/telegram/status`). Compact non-blocking card. "Not now" updates the user's own `profiles` row.
 
 ### HelpModal (apps/web/components/HelpModal.tsx)
 **Position:** Centered modal overlay

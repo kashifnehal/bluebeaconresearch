@@ -28,7 +28,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ## 2. Layout Components (`apps/web/components/layout`)
 
 ### 2.1 `Sidebar.tsx`
-- **Purpose**: Primary vertical terminal navigation sidebar.
+- **Purpose**: Primary vertical terminal navigation sidebar. Below `md` it is an off-canvas drawer (`useUIStore.mobileSidebarOpen`); at `md`+ always visible (#133).
 - **Props**: None.
 - **Parent**: `(dashboard)/layout.tsx`
 - **Children**: `Logo`, Lucide Nav Icons (`LayoutDashboard`, `Globe`, `Bell`, `BarChart3`, `Eye`, `Settings`).
@@ -36,7 +36,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Styling**: `w-64 border-r border-neutral-800 bg-neutral-950/80 flex flex-col`.
 
 ### 2.2 `TopBar.tsx`
-- **Purpose**: Header bar featuring search input, live latency status indicator, market price ticker, and user auth dropdown.
+- **Purpose**: Header bar featuring a mobile hamburger (#133), search input, Telegram-connect `forum` icon (#112), notification bell, help, and user auth dropdown. `left-0` below `md`, `md:left-[256px]` at desktop.
 - **Props**: None.
 - **Parent**: `(dashboard)/layout.tsx`
 - **Children**: `PriceTicker`, `DropdownMenu`, `Avatar`.

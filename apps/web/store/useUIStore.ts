@@ -23,6 +23,21 @@ type UIState = {
   helpOpen: boolean;
   setHelpOpen: (open: boolean) => void;
 
+  // Mobile off-canvas sidebar (below md). Persisted with the rest of this
+  // store — cheaper than adding a partialize exception for one field.
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (open: boolean) => void;
+
+  // Header + contextual Telegram-connect modal (#112). Same store as Help
+  // so TopBar and the signal-view prompt can open the same surface.
+  notificationConnectOpen: boolean;
+  setNotificationConnectOpen: (open: boolean) => void;
+
+  // Session-only count of signal-detail mounts. Excluded from persist so a
+  // fresh page load resets to 0 (the intended "this session" behavior).
+  signalsViewedThisSession: number;
+  incrementSignalsViewed: () => void;
+
   // Product tour (react-joyride). Lives here (not local component state)
   // because the tour spans a dashboard->event-page navigation, and this
   // store is mounted once in the shared (dashboard) layout.
@@ -58,6 +73,16 @@ export const useUIStore = create<UIState>()(
       helpOpen: false,
       setHelpOpen: (open) => set({ helpOpen: open }),
 
+      mobileSidebarOpen: false,
+      setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
+
+      notificationConnectOpen: false,
+      setNotificationConnectOpen: (open) => set({ notificationConnectOpen: open }),
+
+      signalsViewedThisSession: 0,
+      incrementSignalsViewed: () =>
+        set((s) => ({ signalsViewedThisSession: s.signalsViewedThisSession + 1 })),
+
       tourActive: false,
       tourPhase: "welcome",
       tourStepIndex: 0,
@@ -70,6 +95,12 @@ export const useUIStore = create<UIState>()(
       setTourStepIndex: (index) => set({ tourStepIndex: index }),
       setTourEventId: (id) => set({ tourEventId: id }),
     }),
-    { name: "blue-beacon-ui" },
+    {
+      name: "blue-beacon-ui",
+      partialize: (state) => {
+        const { signalsViewedThisSession, ...persisted } = state;
+        return persisted;
+      },
+    },
   ),
 );

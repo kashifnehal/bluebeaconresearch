@@ -45,6 +45,7 @@ Extends `auth.users(id)` with billing tier and user settings.
 - `onboarding_completed` (`boolean`, NOT NULL, default `false`)
 - `push_tokens` (`text[]`, NOT NULL, default `'{}'`)
 - `created_at` / `updated_at` (`timestamptz`, default `now()`)
+- `notification_prompt_dismissed_at` (`timestamptz`, nullable) — #112, 2026-09-12. One-time UI dismissal of the Telegram-connect prompt; full note in `docs/brain/04_DATABASE.md` Table 1.
 
 ### Table 2: `signals`
 Stores LLM-synthesized military/geopolitical intelligence and asset impact data.

@@ -42,7 +42,9 @@
 
 > ⚠️ UPDATED 2026-09-12 (later still, #111 quality fixes) — real live testing after #134's governance audit found replies could cut off mid-sentence and markdown wasn't rendered. `max_tokens` stays 600; a `stop_reason === "max_tokens"` safety net trims to the last complete sentence instead. System prompt gains a ~180-word length instruction + a markdown-formatting instruction, and strengthens (without replacing) the sources-section instruction. `SignalChatPanel` now renders the answer via `react-markdown`, restricted to paragraphs/emphasis/lists (no links/images — the real Sources list stays the only clickable-link surface). #134's governance code untouched. Mocked tests only. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.54.0. This tree: PHASE 20.
 
-Last updated: 2026-09-12 (#111 chat quality fixes — mid-sentence cutoff + markdown rendering, #134 follow-up)
+> ⚠️ UPDATED 2026-09-12 (#133 + #112) — mobile dashboard shell is no longer crushed at 390px (off-canvas sidebar below `md`; 256px push unchanged at `md`+). Telegram connect UX: header icon + contextual prompt after 3 signal views; dismissed state is `profiles.notification_prompt_dismissed_at`. Discord not in this ship. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.55.0. This tree: PHASE 21.
+
+Last updated: 2026-09-12 (#133 mobile dashboard shell + #112 Telegram connect UX)
 
 ---
 

@@ -43,6 +43,8 @@ The MoSCoW tables below are the historical record. This section is the current p
 | — | SignalChatPanel visual pass + heuristic note + 503 copy | — | **Done 2026-09-12** — contrast/type-size/composer wrapping on the existing #111 panel; `classification_method = heuristic` note; specific `ai_temporarily_unavailable` message. Same component and backend contract. See `LIVE_TODO.md`. |
 | — | #111 AI usage governance + cited chat | — | **Done 2026-09-12** — dual daily Anthropic budgets, `CHAT_ALLOWED_EMAILS` fail-closed gate, fail-closed 30/day + 5/5min burst, Haiku relevance pre-check, cited sources. See `LIVE_TODO.md`. |
 | — | #111 chat quality fixes (#134 follow-up): mid-sentence cutoff + no markdown rendering | — | **Done 2026-09-12** — `max_tokens` stays 600; a `stop_reason === "max_tokens"` safety net trims the reply to its last complete sentence instead of showing a dangling half-sentence. System prompt gains a ~180-word length instruction and a markdown-formatting instruction; the sources-section instruction is strengthened to fire reliably whenever the answer draws on the signal's stored data (not just "if convenient"). `SignalChatPanel`'s assistant-reply render is now `react-markdown` restricted to paragraphs/bold/italic/lists (`a`/`img` excluded — the real `<a>` Sources list stays the only clickable-link surface). #134's budget breakers/allowlist/relevance check/burst limiter/`sanitizeCitedChatReply` untouched. See `LIVE_TODO.md`. |
+| ~~#133~~ | ~~Mobile dashboard shell (390px crush)~~ | — | **Done 2026-09-12** — off-canvas sidebar below `md`, hamburger in TopBar, content no longer has a hardcoded 256px left margin on phones. Desktop/tablet unchanged. See `LIVE_TODO.md`. |
+| ~~#112~~ | ~~Push-notification connect UX~~ | — | **Done 2026-09-12** — Telegram-only. Header `forum` icon + contextual prompt after 3 signal views; dismissed state is `profiles.notification_prompt_dismissed_at` (server-side). Settings `<TelegramConnect />` stays the manage/disconnect home. See `LIVE_TODO.md`. |
 
 ### Still open
 
@@ -51,7 +53,6 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #104 | Vercel Hobby→Pro upgrade | Ready now, $20/mo, no gate. [founder-led] |
 | #109 | Printable architecture/flowchart doc | Scoped, own session. |
 | #110 | Named-analyst content section | Parked, gated on real evidence of demand. |
-| #112 | Push-notification connect UX | Scoped; dismissed state must be server-side. |
 | #113 | www/apex domain redirect | Ready now, free, Vercel dashboard only. [founder-led] |
 | #114 | Business continuity + legal registration | Checklist ready; founder picks jurisdiction. [founder-led] |
 | #115 | Signal-quality live-data audit | Ready-to-run, read-only verification prompt exists. Partial follow-through 2026-09-12 — see "Shipped 2026-09-12" above (heuristic severity cap + `classification_method`); broader audit itself not re-run. |
