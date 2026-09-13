@@ -6,6 +6,17 @@
 
 ---
 
+## PHASE 28 — #141 MATERIALITY GATE: THE PIPELINE'S FIRST REAL "DOES THIS MEAN ANYTHING?" REJECT STEP (2026-09-13)
+
+> Narrative summary for this tree. Full technical detail (prompt text, sanitization, per-call-site wiring, real verification output): `docs/brain/14_CHANGELOG.md` v0.61.0.
+
+- **The problem, confirmed by direct DB audit (#139):** 63% of signals in a 14-day window sat at severity 1-4, many with empty commodity impacts and, per Claude's own summary, "no market impact" — because classification and materiality (should this even become a signal) were never separated. Once `classifyEvent()` returned anything, it became a `signals` row, full stop.
+- **The fix:** a second, independent gate Claude (and the heuristic fallback) must clear after classifying — BBR's own materiality principle, inspired by (not literally applying) the reasonable-investor standard from US securities law. It asks: taking the story's own claims at face value, would a trader/import-export business/fund analyst actually change a decision because of this? It deliberately does NOT gate on whether the underlying claim is likely to be true — BBR assesses market impact of what's reported, fast, not outcome-prediction — but does gate hard on genuine novelty (new claim vs. a reminder of an already-known schedule) plus a real transmission mechanism (a stated market mechanism, a hit on a hardcoded 7-entity watchlist of market-moving figures/institutions, or a genuine armed-conflict/security event).
+- **New `signals` columns:** `relevance`, `novelty` (0-1 floats), `event_category` (9-value enum), `market_mechanism` (plain-language string or null), `is_preview` (true only for a pure calendar-reminder with no new claim), `source_confirmation` (official/reported/speculative — sourcing *type*, not truth), `materiality_pass` (the actual gate — existing rows backfill true, does not retroactively hide anything already live), `materiality_reasoning`.
+- **Enforced at all five live classify-then-insert call sites** (GNews, GDELT, RSS, ACLED, reconciliation collectors); a `materialityPass: false` result skips the `signals` insert entirely (the `raw_events` row is kept regardless, for dedup/audit) and logs the rejection to the existing `service_health_events` health log. The dormant `ai-classifier.ts` worker got a comment, not the gate, since nothing enqueues jobs onto it today.
+- **Verified live against production, real numbers:** a routine-administrative junk story correctly failed the gate (`materialityPass: false`, specific reasoning naming the failed criterion); a pure "Fed meets next Wednesday" calendar-reminder story correctly scored `isPreview: true, novelty: 0, materialityPass: false`; a real Red Sea tanker-strike story correctly passed with a genuine, non-invented market mechanism and populated every new field. All three ran through the real Claude API (not the heuristic fallback) and were cleaned up after.
+- **Known, documented v1 limitation:** novelty scoring uses a coarse "was a same country+event_type signal logged in the last 48h" hint, not real semantic/paraphrase duplicate detection — that's separate future work, not attempted here. The watchlist is a hardcoded array pending #142's live database table.
+
 ## PHASE 27 — #140 HIDE RAW CLASSIFIER CONFIDENCE ON COMMODITYCHIP (2026-09-13)
 
 > Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.60.0.

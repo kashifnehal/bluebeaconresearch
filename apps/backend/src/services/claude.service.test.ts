@@ -352,6 +352,213 @@ async function main() {
       assert.deepEqual(classification.commodityImpacts, []);
     },
   );
+
+  // ── #139/#141 materiality gate — heuristicClassify() (Step 4) ──────────────
+  // `service`'s mocked client always throws (see top of file), so every
+  // service.classifyEvent() call below exercises heuristicClassify(), not a
+  // real Claude read.
+
+  runTest(
+    "heuristic: no commodity/currency impact and no watchlist match fails the gate",
+    async () => {
+      const classification = await service.classifyEvent({
+        title: "Diplomatic talks continue ahead of possible trade negotiations",
+        summary:
+          "Officials meet to discuss future economic cooperation and policy frameworks.",
+        event_type: "news",
+        country: "US",
+        event_date: new Date().toISOString(),
+      });
+
+      assert.strictEqual(classification.materialityPass, false);
+      assert.match(
+        classification.materialityReasoning,
+        /no commodity\/currency impact and no watchlist match/,
+      );
+    },
+  );
+
+  runTest(
+    "heuristic: a validated commodity impact passes the gate",
+    async () => {
+      const classification = await service.classifyEvent({
+        title: "Pipeline explosion halts crude export from Saudi refinery",
+        summary:
+          "Disruption in the Red Sea supply chain pushes crude oil prices higher.",
+        event_type: "news",
+        country: "SA",
+        event_date: new Date().toISOString(),
+      });
+
+      assert.strictEqual(classification.materialityPass, true);
+      assert.match(
+        classification.materialityReasoning,
+        /matched a validated commodity\/currency impact/,
+      );
+    },
+  );
+
+  runTest(
+    "heuristic: a watchlist-entity match passes the gate even with no commodity impact",
+    async () => {
+      const classification = await service.classifyEvent({
+        title: "Elon Musk gives a wide-ranging interview about the economy",
+        summary: "No commodity, currency, or market mechanism mentioned.",
+        event_type: "news",
+        country: "US",
+        event_date: new Date().toISOString(),
+      });
+
+      assert.deepEqual(classification.commodityImpacts, []);
+      assert.deepEqual(classification.currencyPairImpacts, []);
+      assert.strictEqual(classification.materialityPass, true);
+      assert.match(
+        classification.materialityReasoning,
+        /matched watchlist entity Elon Musk/,
+      );
+    },
+  );
+
+  // ── #139/#141 materiality gate — classifyEvent()'s live prompt (Step 2/5) ──
+
+  runTest(
+    "classifyEvent prompt asks for the new materiality-gate fields, embeds the watchlist, and reflects the novelty hint",
+    async () => {
+      const promptService = new ClaudeService();
+      let capturedUser = "";
+      let capturedMaxTokens = 0;
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async (opts: { max_tokens?: number; messages?: { content?: string }[] }) => {
+            capturedMaxTokens = opts.max_tokens ?? 0;
+            capturedUser = String(opts.messages?.[0]?.content ?? "");
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    severity: 3,
+                    confidence: 0.6,
+                    commodityImpacts: [],
+                    currencyPairImpacts: [],
+                    isBreaking: false,
+                    summary: "Test event",
+                    region: "global",
+                    relevance: 0.9,
+                    novelty: 0.8,
+                    eventCategory: "other_market_relevant",
+                    marketMechanism: null,
+                    isPreview: false,
+                    sourceConfirmation: "reported",
+                    materialityPass: false,
+                    materialityReasoning: "no commodity/currency/watchlist mechanism",
+                  }),
+                },
+              ],
+              usage: { input_tokens: 10, output_tokens: 20 },
+            };
+          },
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const classification = await promptService.classifyEvent(
+          {
+            title: "Test event",
+            summary: "Test summary",
+            event_type: "news",
+            country: "US",
+            event_date: new Date().toISOString(),
+          },
+          { similarStoryLast48h: true },
+        );
+
+        assert.match(capturedUser, /"relevance"/);
+        assert.match(capturedUser, /"novelty"/);
+        assert.match(capturedUser, /"eventCategory"/);
+        assert.match(capturedUser, /"marketMechanism"/);
+        assert.match(capturedUser, /"isPreview"/);
+        assert.match(capturedUser, /"sourceConfirmation"/);
+        assert.match(capturedUser, /"materialityPass"/);
+        assert.match(capturedUser, /"materialityReasoning"/);
+        assert.match(capturedUser, /OPEC/);
+        assert.match(capturedUser, /Elon Musk/);
+        assert.match(capturedUser, /already logged in the.*last 48 hours: yes/);
+        assert.ok(capturedMaxTokens >= 900, `Expected max_tokens >= 900, got ${capturedMaxTokens}`);
+
+        assert.strictEqual(classification.classificationMethod, "claude");
+        assert.strictEqual(classification.relevance, 0.9);
+        assert.strictEqual(classification.novelty, 0.8);
+        assert.strictEqual(classification.eventCategory, "other_market_relevant");
+        assert.strictEqual(classification.marketMechanism, null);
+        assert.strictEqual(classification.isPreview, false);
+        assert.strictEqual(classification.sourceConfirmation, "reported");
+        assert.strictEqual(classification.materialityPass, false);
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
+    "classifyEvent sanitizes an out-of-range/invalid materiality response instead of trusting it",
+    async () => {
+      const promptService = new ClaudeService();
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => ({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  severity: 3,
+                  confidence: 0.6,
+                  commodityImpacts: [],
+                  currencyPairImpacts: [],
+                  isBreaking: false,
+                  summary: "Test event",
+                  region: "global",
+                  relevance: 1.4, // out of range -> should clamp to 1
+                  novelty: -0.2, // out of range -> should clamp to 0
+                  eventCategory: "not_a_real_category", // invalid -> null
+                  marketMechanism: "null", // literal string "null" -> null
+                  isPreview: "true", // not a real boolean -> false
+                  sourceConfirmation: "definitely_true", // invalid -> null
+                  materialityPass: "yes", // not a real boolean -> false (fail closed)
+                  materialityReasoning: "",
+                }),
+              },
+            ],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const classification = await promptService.classifyEvent({
+          title: "Test event",
+          summary: "Test summary",
+          event_type: "news",
+          country: "US",
+          event_date: new Date().toISOString(),
+        });
+
+        assert.strictEqual(classification.relevance, 1);
+        assert.strictEqual(classification.novelty, 0);
+        assert.strictEqual(classification.eventCategory, null);
+        assert.strictEqual(classification.marketMechanism, null);
+        assert.strictEqual(classification.isPreview, false);
+        assert.strictEqual(classification.sourceConfirmation, null);
+        // "yes" !== true -> fails closed, per the fail-closed comment in classifyEvent().
+        assert.strictEqual(classification.materialityPass, false);
+        assert.match(classification.materialityReasoning, /failed materiality gate/);
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
 }
 
 main().catch((err) => {

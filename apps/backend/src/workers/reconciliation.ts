@@ -3,6 +3,8 @@ import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
+import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { logMaterialityRejection } from "../lib/materiality-gate.js";
 
 const claude = new ClaudeService();
 
@@ -81,16 +83,42 @@ export async function reconcileOrphanedRawEventsOnce() {
   console.warn(`[Reconciliation] Found ${orphans.length} orphaned raw_events (insert succeeded, signal never created) — re-attempting classification`);
 
   let recovered = 0;
+  let rejected = 0;
   for (const raw of orphans) {
     try {
-      const classification = await claude.classifyEvent({
-        id: raw.id,
-        title: raw.title ?? "Untitled event",
-        summary: raw.summary ?? "",
-        country: raw.country,
-        event_type: raw.event_type,
-        event_date: raw.event_date,
+      const countryLabel = formatCountryName(raw.country);
+      const eventTypeLabel = raw.event_type ?? "unknown";
+      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
+        country: countryLabel,
+        eventType: eventTypeLabel,
       });
+      const classification = await claude.classifyEvent(
+        {
+          id: raw.id,
+          title: raw.title ?? "Untitled event",
+          summary: raw.summary ?? "",
+          country: raw.country,
+          event_type: raw.event_type,
+          event_date: raw.event_date,
+        },
+        { similarStoryLast48h },
+      );
+
+      // #139/#141 materiality gate — this is a live cron job (every 30 min)
+      // retrying classification for orphaned raw_events, one of the task's
+      // explicitly-named 5 live call sites. Same gate, same skip-the-insert
+      // behavior as the collectors: the raw_event stays (it's already there),
+      // only the signals insert is skipped.
+      if (!classification.materialityPass) {
+        rejected += 1;
+        await logMaterialityRejection({
+          collectorLabel: "Reconciliation",
+          title: raw.title ?? "Untitled event",
+          source: "reconciliation",
+          classification,
+        });
+        continue;
+      }
 
       const { data: sigInsert, error: sigErr } = await supabase
         .from("signals")
@@ -100,8 +128,8 @@ export async function reconcileOrphanedRawEventsOnce() {
           summary: classification.summary,
           severity: classification.severity,
           confidence: classification.confidence,
-          event_type: raw.event_type ?? "unknown",
-          country: formatCountryName(raw.country),
+          event_type: eventTypeLabel,
+          country: countryLabel,
           region: classification.region,
           lat: null,
           lng: null,
@@ -112,6 +140,14 @@ export async function reconcileOrphanedRawEventsOnce() {
           is_active: true,
           event_date: raw.event_date,
           classification_method: classification.classificationMethod,
+          relevance: classification.relevance ?? null,
+          novelty: classification.novelty ?? null,
+          event_category: classification.eventCategory ?? null,
+          market_mechanism: classification.marketMechanism ?? null,
+          is_preview: classification.isPreview ?? false,
+          source_confirmation: classification.sourceConfirmation ?? null,
+          materiality_pass: classification.materialityPass,
+          materiality_reasoning: classification.materialityReasoning ?? null,
         })
         .select("id")
         .maybeSingle();
@@ -144,5 +180,5 @@ export async function reconcileOrphanedRawEventsOnce() {
     }
   }
 
-  return { checked: candidates.length, orphaned: orphans.length, recovered, skippedStale: stale.length };
+  return { checked: candidates.length, orphaned: orphans.length, recovered, rejected, skippedStale: stale.length };
 }

@@ -4,6 +4,8 @@ import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { recordServiceHealth } from "../lib/service-health.js";
+import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { logMaterialityRejection } from "../lib/materiality-gate.js";
 
 const claude = new ClaudeService();
 
@@ -36,6 +38,7 @@ export async function runAcledCollectorOnce() {
   let inserted = 0;
   let duplicates = 0;
   let signals = 0;
+  let materialityRejected = 0;
 
   for (const e of events) {
     const externalId = e.data_id ? `acled-${e.data_id}` : null;
@@ -78,14 +81,41 @@ export async function runAcledCollectorOnce() {
 
     const rawEventId = insert.data.id as string;
     try {
-      const classification = await claude.classifyEvent({
-        id: rawEventId,
-        title,
-        summary: e.notes || "",
-        country: e.country ?? null,
-        event_type: e.event_type ?? "acled",
-        event_date: eventDate,
+      const countryLabel = formatCountryName(e.country ?? null);
+      const eventTypeLabel = e.event_type ?? "acled";
+      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
+        country: countryLabel,
+        eventType: eventTypeLabel,
       });
+      const classification = await claude.classifyEvent(
+        {
+          id: rawEventId,
+          title,
+          summary: e.notes || "",
+          country: e.country ?? null,
+          event_type: eventTypeLabel,
+          event_date: eventDate,
+        },
+        { similarStoryLast48h },
+      );
+
+      // #139/#141 materiality gate — the task spec explicitly calls out ACLED
+      // (armed-conflict/security) as BBR's own highest-value content category
+      // and instructs NOT skipping it; the gate still applies exactly the same
+      // way here as the other 4 live paths — armed-conflict/security events
+      // clear criterion (b) via "genuine armed-conflict/security event with
+      // plausible commodity relevance" in the prompt's own materiality
+      // instruction, so a real ACLED event should almost always still pass.
+      if (!classification.materialityPass) {
+        materialityRejected += 1;
+        await logMaterialityRejection({
+          collectorLabel: "ACLED",
+          title,
+          source: "acled",
+          classification,
+        });
+        continue;
+      }
 
       const { data: sigInsert, error: sigErr } = await supabase
         .from("signals")
@@ -95,8 +125,8 @@ export async function runAcledCollectorOnce() {
           summary: classification.summary,
           severity: classification.severity,
           confidence: classification.confidence,
-          event_type: e.event_type ?? "acled",
-          country: formatCountryName(e.country ?? null),
+          event_type: eventTypeLabel,
+          country: countryLabel,
           region: classification.region,
           lat: parseFloat(e.latitude) || null,
           lng: parseFloat(e.longitude) || null,
@@ -107,6 +137,14 @@ export async function runAcledCollectorOnce() {
           is_active: true,
           event_date: eventDate,
           classification_method: classification.classificationMethod,
+          relevance: classification.relevance ?? null,
+          novelty: classification.novelty ?? null,
+          event_category: classification.eventCategory ?? null,
+          market_mechanism: classification.marketMechanism ?? null,
+          is_preview: classification.isPreview ?? false,
+          source_confirmation: classification.sourceConfirmation ?? null,
+          materiality_pass: classification.materialityPass,
+          materiality_reasoning: classification.materialityReasoning ?? null,
         })
         .select("id")
         .maybeSingle();
@@ -133,5 +171,5 @@ export async function runAcledCollectorOnce() {
     }
   }
 
-  return { fetched, inserted, duplicates, signals };
+  return { fetched, inserted, duplicates, signals, materialityRejected };
 }

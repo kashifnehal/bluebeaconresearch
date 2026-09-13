@@ -10,6 +10,8 @@ import { insertOrMergeSignal } from "./signal-merge.js";
 import { tryTitlePreFilterSkip } from "./title-prefilter.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
+import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { logMaterialityRejection } from "../lib/materiality-gate.js";
 
 const claude = new ClaudeService();
 
@@ -90,6 +92,7 @@ export async function runGnewsCollectorOnce() {
   let filtered = 0;
   let signals = 0;
   let prefiltered = 0;
+  let materialityRejected = 0;
 
   for (const a of articles) {
     const externalId = a.url ? `gnews-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
@@ -149,14 +152,37 @@ export async function runGnewsCollectorOnce() {
 
     // Classify and write signal directly — reliable even when Redis/BullMQ is unavailable
     try {
-      const classification = await claude.classifyEvent({
-        id: rawEventId,
-        title: rawEventPayload.title,
-        summary: rawEventPayload.summary ?? "",
-        country: rawEventPayload.country,
-        event_type: rawEventPayload.event_type,
-        event_date: rawEventPayload.event_date,
+      const countryLabel = formatCountryName(rawEventPayload.country);
+      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
+        country: countryLabel,
+        eventType: rawEventPayload.event_type,
       });
+      const classification = await claude.classifyEvent(
+        {
+          id: rawEventId,
+          title: rawEventPayload.title,
+          summary: rawEventPayload.summary ?? "",
+          country: rawEventPayload.country,
+          event_type: rawEventPayload.event_type,
+          event_date: rawEventPayload.event_date,
+        },
+        { similarStoryLast48h },
+      );
+
+      // #139/#141 materiality gate — the "this does not mean anything, drop it"
+      // step the pipeline never had (claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md).
+      // raw_events row above stays either way (dedup/audit); only the signals
+      // insert is skipped.
+      if (!classification.materialityPass) {
+        materialityRejected += 1;
+        await logMaterialityRejection({
+          collectorLabel: "GNews",
+          title: rawEventPayload.title,
+          source: rawEventPayload.source,
+          classification,
+        });
+        continue;
+      }
 
       const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
         rawEventPayload.title,
@@ -209,5 +235,5 @@ export async function runGnewsCollectorOnce() {
     }
   }
 
-  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected };
 }

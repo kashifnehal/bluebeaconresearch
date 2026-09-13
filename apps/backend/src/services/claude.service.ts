@@ -38,12 +38,101 @@ function trimToLastCompleteSentence(text: string): string {
 const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 const SONNET_MODEL = "claude-sonnet-5";
 
+// #139/#141 — BBR's watchlist of individuals/institutions with a real, sourced
+// history of moving markets through their own statements. This is #142's list,
+// inlined directly here as a hardcoded array because #142's own database table
+// doesn't exist yet (per the task spec). A hit on this watchlist is one way
+// materialityPass criterion (b) can be satisfied even without a fully
+// worked-out market mechanism. FOLLOW-UP (tracked as #142): replace this
+// hardcoded array with a live database read once that table exists — do not
+// let this list silently become the permanent source of truth.
+type WatchlistEntry = { name: string; caveat: string; matcher: RegExp };
+
+const MATERIALITY_WATCHLIST: WatchlistEntry[] = [
+  {
+    name: "OPEC",
+    caveat: "statements are stabilizing, not shock-inducing",
+    matcher: /\bopec\b/i,
+  },
+  {
+    name: "Saudi Arabia's Energy Minister",
+    caveat: "statements are stabilizing, not shock-inducing",
+    matcher:
+      /\bsaudi[^.]{0,25}energy minister\b|\benergy minister[^.]{0,25}saudi\b|\bprince abdulaziz\b/i,
+  },
+  {
+    name: "Russian President",
+    caveat: "price moves from this figure's statements are historically short-lived/transient",
+    matcher: /\brussian president\b|\bpresident putin\b|\bvladimir putin\b|\bputin\b/i,
+  },
+  {
+    name: "US President",
+    caveat: "price moves from this figure's statements are historically short-lived/transient",
+    matcher: /\bus president\b|\bu\.s\. president\b|\bpresident trump\b|\bdonald trump\b|\btrump\b/i,
+  },
+  {
+    name: "US Federal Reserve Chair",
+    caveat: "only counts as the release itself, never a preview",
+    matcher: /\bfed(?:eral reserve)? chair\b|\bjerome powell\b|\bpowell\b/i,
+  },
+  {
+    name: "USDA",
+    caveat: "only counts as the release itself, never a preview",
+    matcher: /\busda\b/i,
+  },
+  {
+    name: "Elon Musk",
+    caveat: "price moves from this figure's statements are historically short-lived/transient",
+    matcher: /\belon musk\b|\bmusk\b/i,
+  },
+];
+
+/** Returns the matched watchlist entry's display name, or null if none match. */
+function matchWatchlist(text: string): string | null {
+  for (const entry of MATERIALITY_WATCHLIST) {
+    if (entry.matcher.test(text)) return entry.name;
+  }
+  return null;
+}
+
+/** Renders the watchlist as the inline prompt block Claude is given verbatim. */
+function watchlistPromptBlock(): string {
+  return MATERIALITY_WATCHLIST.map((e) => `- ${e.name} — ${e.caveat}.`).join("\n");
+}
+
+// #139/#141 — the materiality-gate instruction text, given to Claude verbatim
+// alongside the watchlist above, ahead of the JSON schema in classifyEvent()'s
+// prompt. This is BBR's own materiality principle: inspired by (not literally
+// applying) the reasonable-investor standard used in US securities law.
+const MATERIALITY_GATE_INSTRUCTION =
+  `Ask yourself: taking this story's own reported claims at face value — you are not being asked to judge whether they are true or will come to pass, only to assess what they would mean for a market if they hold — is there a substantial likelihood that a commodity trader, an import/export business, or a fund analyst would consider this important enough to change a decision they're about to make? This is BBR's own materiality principle, inspired by (not literally applying) the reasonable-investor standard used in US securities law for 50 years. Answer "pass" only if: (a) the story contains genuinely new information (a fact, a claim, a statement, a data release) rather than only reminding the reader of a previously-known, already-public schedule or date with nothing new added, AND (b) it clears ONE of: a real, stated market mechanism exists (marketMechanism is non-null and directly supported by the story), OR the story names an entity on BBR's watchlist below, OR it is a genuine armed-conflict/security event with plausible commodity relevance even without a fully worked-out mechanism yet. Do NOT weigh this decision by how likely you think the underlying event is to actually happen or turn out to be true — BBR is not in the business of predicting outcomes, only of assessing the market impact of what has actually been reported, and getting that assessment out fast, before the market has fully reacted. A story reporting a new, sourced, but unconfirmed claim (e.g. "sources say...") should pass exactly the same way a confirmed official statement would, if it clears (a) and (b) above — mark its sourcing strength separately in sourceConfirmation, don't use it to gate the story out. When sourceConfirmation is "reported" or "speculative," note in materialityReasoning that unconfirmed claims of this kind have historically produced smaller, shorter-lived market reactions than a confirmed release of the same category (per BBR's own research base) — this informs how the story's expected magnitude should be read, it does not reduce the likelihood of it passing this gate. General finance/earnings/corporate news with no commodity, currency, or watchlist-entity connection should NOT pass, regardless of how large the company or number involved is. When you reject a story, say specifically why in materialityReasoning — which criterion it failed — not just "not important."`;
+
 function usageFromMessage(msg: { usage?: { input_tokens?: number; output_tokens?: number } }) {
   return {
     inputTokens: msg.usage?.input_tokens ?? 0,
     outputTokens: msg.usage?.output_tokens ?? 0,
   };
 }
+
+// #139/#141 — the 9 fixed event categories the materiality-gate prompt asks
+// Claude to pick exactly one of (see MATERIALITY gate section of classifyEvent()
+// below). Kept as a real TS union (not just a runtime Set) so callers writing
+// signals.event_category get compile-time coverage, matching the CHECK
+// constraint added in migration 20260913160000_signals_materiality_gate.sql.
+export type EventCategory =
+  | "armed_conflict_security"
+  | "supply_disruption_logistics"
+  | "sanctions_trade_policy"
+  | "production_output_decision"
+  | "central_bank_monetary_policy"
+  | "scheduled_economic_data"
+  | "official_statement_commentary"
+  | "elections_political_transition"
+  | "other_market_relevant";
+
+// #139/#141 — what KIND of claim the story itself represents, not a judgment of
+// whether the claim is true (see sourceConfirmation prompt text below).
+export type SourceConfirmation = "official" | "reported" | "speculative";
 
 export type ClassificationResult = {
   severity: number;
@@ -69,6 +158,27 @@ export type ClassificationResult = {
   // show an "auto-classified, unverified" indicator instead of presenting a
   // keyword-guess as equally authoritative to a real Claude read.
   classificationMethod: "claude" | "heuristic";
+
+  // ── #139/#141 materiality gate fields ────────────────────────────────────
+  // Optional/nullable because heuristicClassify() (no real Claude read of the
+  // article) cannot meaningfully compute relevance/novelty/eventCategory/
+  // marketMechanism/sourceConfirmation — the heuristic path only ever sets
+  // materialityPass + materialityReasoning (see heuristicClassify() below and
+  // Step 4 of the #139/#141 task spec). A real Claude classification sets all
+  // of these. See claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md for why
+  // this gate exists: the live pipeline previously classified every article and
+  // wrote it straight into `signals` with no "this does not mean anything, drop
+  // it" step, even when Claude's own summary said "no market impact."
+  relevance?: number | null;
+  novelty?: number | null;
+  eventCategory?: EventCategory | null;
+  marketMechanism?: string | null;
+  isPreview?: boolean;
+  sourceConfirmation?: SourceConfirmation | null;
+  // Required on both paths — this is the actual gate every collector checks
+  // immediately after classifyEvent() returns (see lib/materiality-gate.ts).
+  materialityPass: boolean;
+  materialityReasoning: string;
 };
 
 export class ClaudeService {
@@ -191,10 +301,19 @@ export class ClaudeService {
 
   async classifyEvent(
     rawEvent: Record<string, unknown>,
+    // #139/#141 Step 5 — cheap novelty hint, computed by the caller (each
+    // collector queries hasSimilarRecentSignal() in lib/novelty-hint.ts before
+    // calling classifyEvent) so Claude's own novelty score has at least one
+    // real data point instead of judging novelty from the article text alone.
+    // Optional so existing/dormant callers (ai-classifier.ts, the
+    // backfill-commodity-impacts script) that don't compute this still compile
+    // and behave sanely (novelty judged from text alone, as before this change).
+    options?: { similarStoryLast48h?: boolean },
   ): Promise<ClassificationResult> {
     const client = this.getClient();
     const title = String(rawEvent.title ?? "New geopolitical event");
     const summaryText = String(rawEvent.summary ?? "");
+    const similarStoryLast48h = options?.similarStoryLast48h ?? false;
     const callStartedAt = Date.now();
 
     const ingestionBudgetOpen = client ? await isAnthropicBudgetAvailable("ingestion") : false;
@@ -213,12 +332,22 @@ export class ClaudeService {
     if (client && ingestionBudgetOpen) {
       try {
         const system =
-          "You are a senior geopolitical risk analyst. Classify this news event for financial market impact.";
+          "You are a senior geopolitical risk analyst for Blue Beacon Research (BBR), a geopolitical " +
+          "intelligence platform for commodity traders, import/export businesses, and fund analysts. " +
+          "Classify this news event for financial market impact, and apply BBR's materiality gate " +
+          "(instructions below) to decide whether it should become a market signal at all.";
         const user =
           `Event: ${title}\n` +
           `Country: ${String(rawEvent.country ?? "")}\n` +
           `Type: ${String(rawEvent.event_type ?? "")}\n` +
-          `Date: ${String(rawEvent.event_date ?? "")}\n\n` +
+          `Date: ${String(rawEvent.event_date ?? "")}\n` +
+          `A similar-looking story (same country/event-type combination) was already logged in the ` +
+          `last 48 hours: ${similarStoryLast48h ? "yes" : "no"} (a coarse hint, not a verdict — weigh it, ` +
+          `don't rely on it alone for novelty).\n\n` +
+          `BBR's watchlist of individuals/institutions with a real, sourced history of moving markets ` +
+          `through their own statements (relevant to materialityPass criterion (b) and to sourceConfirmation):\n` +
+          `${watchlistPromptBlock()}\n\n` +
+          `MATERIALITY GATE: ${MATERIALITY_GATE_INSTRUCTION}\n\n` +
           `Return ONLY valid JSON (no markdown):\n` +
           `{\n` +
           `  "severity": integer between 1 and 10,\n` +
@@ -227,12 +356,25 @@ export class ClaudeService {
           `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "isBreaking": boolean,\n` +
           `  "summary": string (max 120 chars),\n` +
-          `  "region": string\n` +
+          `  "region": string,\n` +
+          `  "relevance": a float 0.0-1.0 — how central is the named commodity/currency/entity/geography to what actually happened in this story (not just mentioned in passing)? A story about "World Trade Center" mentioning "trade" in the name only should score near 0; a story where a named commodity is the actual subject of the event should score high.,\n` +
+          `  "novelty": a float 0.0-1.0 — does this story contain information a market participant would not already know? Score LOW (near 0) for a story that only reminds the reader of an already-public, previously-known schedule, date, or routine recurring event, with no new claim, statement, or data attached (e.g. "the Fed meets next Wednesday," "USDA releases its report on the 12th," with nothing else reported). Score HIGH for a story that reports a new fact, statement, data point, or claim — including an unconfirmed or rumored one — that a reader could not already have known. Do not score this based on whether the underlying event has already happened or is confirmed — an unconfirmed but newly-reported claim about a future event scores HIGH on novelty; a reminder about a known future event scores LOW, regardless of how big that event will be.,\n` +
+          `  "eventCategory": one of exactly "armed_conflict_security"|"supply_disruption_logistics"|"sanctions_trade_policy"|"production_output_decision"|"central_bank_monetary_policy"|"scheduled_economic_data"|"official_statement_commentary"|"elections_political_transition"|"other_market_relevant",\n` +
+          `  "marketMechanism": a short string (max ~140 chars) explaining, in plain language, how this event could plausibly reach a commodity, currency, or broad market — or null if no real mechanism exists. Do not invent a mechanism that isn't actually supported by the story's own content.,\n` +
+          `  "isPreview": boolean — true ONLY if this story exclusively reminds the reader of a previously-known, already-scheduled event or date, with no new claim, statement, or data attached (a pure "week ahead" or "don't forget, X happens on date Y" story). False for any story that reports a new fact, statement, or claim — even an unconfirmed one — about an event that hasn't happened yet. A scheduled event's actual release/decision is always false. Most stories about a not-yet-happened event will be false here; true is reserved for the narrow, information-free reminder case.,\n` +
+          `  "sourceConfirmation": one of exactly "official"|"reported"|"speculative". "official" — a named official, institution, or government body making a direct, on-the-record statement, or an actual official release/decision. "reported" — a sourced claim attributed to named or unnamed sources ("sources say," "people familiar with the matter," a named outlet's own original reporting of a claim). "speculative" — commentary, analysis, or opinion guessing about a possible future event with no sourced claim behind it. Base this only on what the article itself states about its own sourcing — do not use this field to judge whether the claim is true, only what kind of claim it is.,\n` +
+          `  "materialityPass": boolean — the outcome of the MATERIALITY GATE instruction above,\n` +
+          `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important"\n` +
           `}`;
 
         const msg = await client.messages.create({
           model: HAIKU_MODEL,
-          max_tokens: 500,
+          // Was 500 — raised to cover the new materiality-gate fields
+          // (marketMechanism up to ~140 chars, materialityReasoning up to
+          // ~200 chars, plus eventCategory/sourceConfirmation/relevance/
+          // novelty/isPreview) without risking a truncated/unparseable JSON
+          // response on top of the existing fields.
+          max_tokens: 900,
           temperature: 0.2,
           system,
           messages: [{ role: "user", content: user }],
@@ -257,6 +399,30 @@ export class ClaudeService {
           parsed.currencyPairImpacts ?? [],
         );
         parsed.classificationMethod = "claude";
+
+        // #139/#141 — sanitize the new materiality-gate fields the same way the
+        // commodity/forex arrays above already are: a malformed/out-of-range
+        // value from Claude must never reach the DB (event_category and
+        // source_confirmation have CHECK constraints; relevance/novelty have
+        // range CHECKs — see migration 20260913160000_signals_materiality_gate.sql)
+        // and must never silently corrupt the gate decision itself.
+        parsed.relevance = this.sanitizeUnitFloat(parsed.relevance);
+        parsed.novelty = this.sanitizeUnitFloat(parsed.novelty);
+        parsed.eventCategory = this.sanitizeEventCategory(parsed.eventCategory);
+        parsed.marketMechanism = this.sanitizeMarketMechanism(parsed.marketMechanism);
+        parsed.isPreview = parsed.isPreview === true;
+        parsed.sourceConfirmation = this.sanitizeSourceConfirmation(parsed.sourceConfirmation);
+        // materialityPass must be an explicit boolean true — any other value
+        // (missing field, string, undefined from a malformed response) fails
+        // closed to false. A story Claude didn't clearly mark as passing does
+        // not get the benefit of the doubt; that's the entire point of the gate.
+        parsed.materialityPass = parsed.materialityPass === true;
+        parsed.materialityReasoning =
+          typeof parsed.materialityReasoning === "string" && parsed.materialityReasoning.trim()
+            ? parsed.materialityReasoning.trim().slice(0, 500)
+            : parsed.materialityPass
+              ? "claude: passed materiality gate (no reasoning text returned)"
+              : "claude: failed materiality gate (no reasoning text returned)";
         const usage = usageFromMessage(msg);
         await recordAnthropicUsage({
           bucket: "ingestion",
@@ -458,6 +624,35 @@ export class ClaudeService {
     const isBreaking =
       severity >= 8 || /breaking|urgent|just in|alert/i.test(text);
 
+    // #139/#141 Step 4 — heuristic-fallback materiality gate. The heuristic path
+    // has no real read of the article (it's a keyword-regex guess used only when
+    // Claude is unavailable), so it cannot compute relevance/novelty/eventCategory/
+    // marketMechanism/sourceConfirmation — but it must still be
+    // conservative-consistent with the real gate: only produce a signals row when
+    // EITHER (a) it already found at least one validated commodity/currency
+    // impact above, OR (b) the text matches one of the #139/#141 watchlist
+    // entities. sanitizeCommodityImpacts/sanitizeForexImpacts run below on the
+    // raw arrays either way, and are the very functions the gate criterion (a)
+    // relies on having already validated.
+    const sanitizedCommodityImpacts = this.sanitizeCommodityImpacts(commodityImpacts);
+    const sanitizedCurrencyPairImpacts = this.sanitizeForexImpacts(currencyPairImpacts);
+    const watchlistMatch = matchWatchlist(text);
+    const hasValidatedImpact =
+      sanitizedCommodityImpacts.length > 0 || sanitizedCurrencyPairImpacts.length > 0;
+
+    let materialityPass: boolean;
+    let materialityReasoning: string;
+    if (hasValidatedImpact) {
+      materialityPass = true;
+      materialityReasoning = "heuristic fallback: matched a validated commodity/currency impact";
+    } else if (watchlistMatch) {
+      materialityPass = true;
+      materialityReasoning = `heuristic fallback: matched watchlist entity ${watchlistMatch}`;
+    } else {
+      materialityPass = false;
+      materialityReasoning = "heuristic fallback: no commodity/currency impact and no watchlist match";
+    }
+
     // Compute dynamic confidence: more matching signal categories = higher certainty
     // Top-level confidence is the source/classification confidence while each impact
     // confidence is the market-impact confidence for that asset.
@@ -472,12 +667,18 @@ export class ClaudeService {
     return {
       severity,
       confidence: parseFloat(dynamicConfidence.toFixed(2)),
-      commodityImpacts: this.sanitizeCommodityImpacts(commodityImpacts),
-      currencyPairImpacts: this.sanitizeForexImpacts(currencyPairImpacts),
+      commodityImpacts: sanitizedCommodityImpacts,
+      currencyPairImpacts: sanitizedCurrencyPairImpacts,
       isBreaking,
       summary: title.slice(0, 120),
       region,
       classificationMethod: "heuristic",
+      // relevance/novelty/eventCategory/marketMechanism/sourceConfirmation
+      // deliberately omitted (left undefined -> written as null) — see the
+      // Step 4 comment above this function's materiality-gate block.
+      isPreview: false,
+      materialityPass,
+      materialityReasoning,
     };
   }
 
@@ -515,6 +716,54 @@ export class ClaudeService {
       normalized.push({ ...impact, asset });
     }
     return normalized;
+  }
+
+  // #139/#141 materiality-gate field sanitizers — same discipline as the
+  // commodity/forex sanitizers above: never trust a raw Claude JSON value
+  // straight into a DB column with a CHECK constraint or a defined range.
+  private static readonly EVENT_CATEGORIES: ReadonlySet<EventCategory> = new Set([
+    "armed_conflict_security",
+    "supply_disruption_logistics",
+    "sanctions_trade_policy",
+    "production_output_decision",
+    "central_bank_monetary_policy",
+    "scheduled_economic_data",
+    "official_statement_commentary",
+    "elections_political_transition",
+    "other_market_relevant",
+  ]);
+
+  private static readonly SOURCE_CONFIRMATIONS: ReadonlySet<SourceConfirmation> = new Set([
+    "official",
+    "reported",
+    "speculative",
+  ]);
+
+  /** Clamps to [0, 1]; returns null for anything non-numeric (never 0 by accident). */
+  private sanitizeUnitFloat(value: unknown): number | null {
+    const num = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(num)) return null;
+    return Math.min(1, Math.max(0, num));
+  }
+
+  private sanitizeEventCategory(value: unknown): EventCategory | null {
+    const str = String(value ?? "").trim() as EventCategory;
+    return ClaudeService.EVENT_CATEGORIES.has(str) ? str : null;
+  }
+
+  private sanitizeSourceConfirmation(value: unknown): SourceConfirmation | null {
+    const str = String(value ?? "").trim() as SourceConfirmation;
+    return ClaudeService.SOURCE_CONFIRMATIONS.has(str) ? str : null;
+  }
+
+  /** Null when Claude returns null/undefined/the literal string "null" or empty. */
+  private sanitizeMarketMechanism(value: unknown): string | null {
+    if (value === null || value === undefined) return null;
+    const str = String(value).trim();
+    if (!str || /^null$/i.test(str)) return null;
+    // Prompt asks for ~140 chars; capped generously higher rather than
+    // truncating mid-sentence on a slightly-over response.
+    return str.slice(0, 300);
   }
 
   // Small number of retries with exponential backoff, only for errors that are

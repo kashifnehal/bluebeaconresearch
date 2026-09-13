@@ -9,6 +9,8 @@ import { insertOrMergeSignal } from "./signal-merge.js";
 import { tryTitlePreFilterSkip } from "./title-prefilter.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
+import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { logMaterialityRejection } from "../lib/materiality-gate.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -93,6 +95,7 @@ export async function runGdeltCollectorOnce() {
   let filtered = 0;
   let signals = 0;
   let prefiltered = 0;
+  let materialityRejected = 0;
 
   for (const a of articles) {
     const externalId = a.url ? `gdelt-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
@@ -163,13 +166,33 @@ export async function runGdeltCollectorOnce() {
     }
 
     try {
-      const classification = await claude.classifyEvent({
-        id: rawEventId,
-        title,
-        country,
-        event_type: "news",
-        event_date: eventDate,
+      const countryLabel = formatCountryName(country);
+      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
+        country: countryLabel,
+        eventType: "news",
       });
+      const classification = await claude.classifyEvent(
+        {
+          id: rawEventId,
+          title,
+          country,
+          event_type: "news",
+          event_date: eventDate,
+        },
+        { similarStoryLast48h },
+      );
+
+      // #139/#141 materiality gate — see gnews-collector.ts for the full comment.
+      if (!classification.materialityPass) {
+        materialityRejected += 1;
+        await logMaterialityRejection({
+          collectorLabel: "GDELT",
+          title,
+          source: "gdelt",
+          classification,
+        });
+        continue;
+      }
 
       const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
         title,
@@ -222,5 +245,5 @@ export async function runGdeltCollectorOnce() {
     }
   }
 
-  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected };
 }

@@ -11,7 +11,11 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
  * and log-and-swallows on any failure — this is an observability side-channel, not
  * something that should ever become a new source of collector outages.
  */
-export type ServiceHealthStatus = "ok" | "error" | "rate_limited";
+// "rejected" added for #139/#141's materiality gate (service: "materiality_gate")
+// — reusing this existing append-only health log for the reject audit trail
+// instead of inventing a new table, per the task's explicit instruction to check
+// here first.
+export type ServiceHealthStatus = "ok" | "error" | "rate_limited" | "rejected";
 
 export async function recordServiceHealth(
   service: string,

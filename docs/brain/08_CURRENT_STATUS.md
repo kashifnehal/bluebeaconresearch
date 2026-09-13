@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (#140 CommodityChip confidence hidden)
+Last updated: 2026-09-13 (#141 materiality gate)
 
 ---
+
+## #141 materiality gate: the pipeline's first real "does this mean anything?" reject step (2026-09-13)
+
+`apps/backend` + Supabase migration only. Full record: `14_CHANGELOG.md` v0.61.0, `LIVE_TODO.md`. Built directly on the #139 audit's finding that 63% of signals in a 14-day window sat at severity 1-4 with no market impact — classification never had a reject step. Adds 8 new `signals` columns (`relevance`, `novelty`, `event_category`, `market_mechanism`, `is_preview`, `source_confirmation`, `materiality_pass`, `materiality_reasoning`); `classifyEvent()`'s prompt now asks Claude to apply BBR's own reasonable-investor-inspired materiality principle (genuine novelty + a real mechanism/watchlist-hit/armed-conflict relevance) alongside classification, gated at all 5 live call sites (gnews/gdelt/rss/acled collectors + reconciliation) — a `materialityPass: false` result skips the `signals` insert (raw_events kept) and logs to `service_health_events`. `heuristicClassify()` fallback made conservative-consistent (only passes with a validated commodity/currency impact or watchlist hit). Novelty gets a cheap v1 hint (same country+event_type logged in the last 48h) — documented as a coarse proxy, not real duplicate detection. **Verified live against production with real Claude calls** (credits were funded at verification time, contrary to the standing "exhausted" status below — worth re-checking): a junk administrative story correctly failed the gate; a "Fed meets next Wednesday" reminder correctly scored `isPreview: true, materialityPass: false`; a real Red Sea tanker-strike story correctly passed with a genuine market mechanism and populated every new column. All test rows created and deleted via script, not left in production.
 
 ## #140 hide raw classifier confidence on CommodityChip (2026-09-13)
 

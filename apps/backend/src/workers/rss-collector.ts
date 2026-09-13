@@ -9,6 +9,8 @@ import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
 import { tryTitlePreFilterSkip } from "./title-prefilter.js";
 import { recordServiceHealth } from "../lib/service-health.js";
+import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { logMaterialityRejection } from "../lib/materiality-gate.js";
 
 const claude = new ClaudeService();
 
@@ -137,6 +139,7 @@ export async function runRssCollectorOnce() {
   let filtered = 0;
   let signals = 0;
   let prefiltered = 0;
+  let materialityRejected = 0;
 
   for (const item of items) {
     if (!isRelevantEvent(item.title, item.summary, item.tier)) {
@@ -200,14 +203,34 @@ export async function runRssCollectorOnce() {
     }
 
     try {
-      const classification = await claude.classifyEvent({
-        id: rawEventId,
-        title: rawEventPayload.title,
-        summary: rawEventPayload.summary ?? "",
-        country: rawEventPayload.country,
-        event_type: rawEventPayload.event_type,
-        event_date: rawEventPayload.event_date,
+      const countryLabel = formatCountryName(rawEventPayload.country);
+      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
+        country: countryLabel,
+        eventType: rawEventPayload.event_type,
       });
+      const classification = await claude.classifyEvent(
+        {
+          id: rawEventId,
+          title: rawEventPayload.title,
+          summary: rawEventPayload.summary ?? "",
+          country: rawEventPayload.country,
+          event_type: rawEventPayload.event_type,
+          event_date: rawEventPayload.event_date,
+        },
+        { similarStoryLast48h },
+      );
+
+      // #139/#141 materiality gate — see gnews-collector.ts for the full comment.
+      if (!classification.materialityPass) {
+        materialityRejected += 1;
+        await logMaterialityRejection({
+          collectorLabel: "RSS",
+          title: rawEventPayload.title,
+          source: rawEventPayload.source,
+          classification,
+        });
+        continue;
+      }
 
       const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
         rawEventPayload.title,
@@ -268,5 +291,5 @@ export async function runRssCollectorOnce() {
   const error =
     feedsFailed > 0 ? `${feedsFailed}/${feedsAttempted} feeds failed: ${failedFeeds.join(", ")}` : undefined;
 
-  return { ok, error, fetched, inserted, duplicates, filtered, signals, prefiltered, feedsOk, feedsFailed };
+  return { ok, error, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected, feedsOk, feedsFailed };
 }

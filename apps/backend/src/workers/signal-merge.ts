@@ -211,6 +211,22 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
         is_active: true,
         event_date: eventDate,
         classification_method: classification.classificationMethod,
+        // #139/#141 materiality gate fields. By the time insertOrMergeSignal is
+        // called, the caller has already checked classification.materialityPass
+        // === true (a false result skips this whole call — see each collector's
+        // gate check right after classifyEvent() returns), so materiality_pass is
+        // always true on a freshly-inserted row here. relevance/novelty/
+        // eventCategory/marketMechanism/sourceConfirmation are null on a
+        // heuristic-fallback classification (see heuristicClassify()) — written
+        // as-is, not defaulted, so a null here honestly means "not computed."
+        relevance: classification.relevance ?? null,
+        novelty: classification.novelty ?? null,
+        event_category: classification.eventCategory ?? null,
+        market_mechanism: classification.marketMechanism ?? null,
+        is_preview: classification.isPreview ?? false,
+        source_confirmation: classification.sourceConfirmation ?? null,
+        materiality_pass: classification.materialityPass,
+        materiality_reasoning: classification.materialityReasoning ?? null,
       })
       .select("id")
       .maybeSingle();

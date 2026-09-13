@@ -118,6 +118,12 @@ export function startAiClassifierWorker() {
       // generateSignalAnalysis() and dispatchAlertsForSignal() directly instead — see
       // signal-generator.ts and alert-dispatcher.ts. Kept as-is, reserved for a
       // possible future move back to a fully queued classify→generate→dispatch pipeline.
+      // #139/#141: this worker's `insert` above does NOT check
+      // result.materialityPass — it's dormant, so it was deliberately left out of
+      // that gate rollout. If this worker is ever reactivated, it MUST also get
+      // the same materiality-gate check (skip the signals insert when
+      // materialityPass is false — see lib/materiality-gate.ts and the other 5
+      // live collectors) added before it's turned back on.
       if (r.severity >= 7) {
         await queues.signalGeneration.add("generate", { signalId }, { attempts: 3, backoff: { type: "exponential", delay: 1000 } });
       }

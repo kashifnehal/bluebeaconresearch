@@ -49,6 +49,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#137~~ | ~~Event-page trust/UX copy (four live-test bugs)~~ | — | **Done 2026-09-13** — typed chat history errors; flat price subtext + severity-gated alert CTA; ANALYSIS Verification box removed; briefing empty-state is severity-gated (not an outage). `apps/web` only. See `LIVE_TODO.md`. |
 | ~~#138~~ | ~~Site-wide copy & error-state integrity pass~~ | — | **Fully done 2026-09-13** — Phase 2 candidates + remainder (voice guide D24/ADR 020, `apiErrorLogged`, settings/auth/feed leaks). See `LIVE_TODO.md`. |
 | ~~#140~~ | ~~Hide raw classifier confidence on CommodityChip~~ | — | **Done 2026-09-13** — chip shows ticker + direction arrow only; `confidence` stays on the API/prop and in an unambiguous aria-label. `apps/web` only. See `LIVE_TODO.md`. |
+| ~~#141~~ | ~~Materiality gate — acts on #139's audit findings~~ | — | **Done 2026-09-13** — the pipeline's first real "does this mean anything?" reject step. 8 new `signals` columns (`relevance`/`novelty`/`event_category`/`market_mechanism`/`is_preview`/`source_confirmation`/`materiality_pass`/`materiality_reasoning`); `classifyEvent()` + heuristic fallback both apply BBR's reasonable-investor-inspired materiality principle; enforced at all 5 live classify-then-insert call sites, logged to `service_health_events` on reject. Verified live against production with 3 real Claude-classified test stories. `apps/backend` + migration only. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.61.0/PHASE 28. |
 
 ### Still open
 
@@ -65,7 +66,9 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #121 | Real /accuracy page + outcome-tracker worker | ~~**Fully shipped 2026-09-11**~~ — `signal_outcomes` table + daily `outcome-tracker.ts` worker (backfilled to 2,965 rows) + public `GET /v1/accuracy` aggregation endpoint + public `/accuracy` page (per-asset breakdown, permanent disclaimer, no "top signals" list). #53 backfill completed 2026-09-12 (1,678 filled / 1,213 Haiku-classified empty of 2,891). |
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
-| #139 | Ingestion / filter / severity / confidence audit | Research written 2026-09-13 (`fba11ac`) — `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. No Cursor prompt until founder reviews. |
+| #139 | Ingestion / filter / severity / confidence audit | Research written 2026-09-13 (`fba11ac`) — `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. Acted on 2026-09-13 via #141 (materiality gate) — see Shipped above. |
+| #142 | Live watchlist database table | #141 shipped with a hardcoded 7-entry watchlist array inlined in `claude.service.ts`'s prompt (OPEC, Saudi Energy Minister, Russian President, US President, Fed Chair, USDA, Elon Musk) as a stand-in — replace with a real DB table + read path once one exists. Not urgent; the hardcoded list works today. |
+| #143 | Frontend consumption of materiality-gate fields | #141 (`apps/backend`) added `relevance`/`novelty`/`event_category`/`market_mechanism`/`is_preview`/`source_confirmation`/`materiality_pass`/`materiality_reasoning` to `signals`; no `apps/web` UI reads them yet (out of scope for #141 by explicit instruction). |
 
 ---
 
