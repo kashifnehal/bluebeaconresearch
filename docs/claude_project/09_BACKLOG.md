@@ -51,6 +51,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#140~~ | ~~Hide raw classifier confidence on CommodityChip~~ | — | **Done 2026-09-13** — chip shows ticker + direction arrow only; `confidence` stays on the API/prop and in an unambiguous aria-label. `apps/web` only. See `LIVE_TODO.md`. |
 | ~~#141~~ | ~~Materiality gate — acts on #139's audit findings~~ | — | **Done 2026-09-13** — the pipeline's first real "does this mean anything?" reject step. 8 new `signals` columns (`relevance`/`novelty`/`event_category`/`market_mechanism`/`is_preview`/`source_confirmation`/`materiality_pass`/`materiality_reasoning`); `classifyEvent()` + heuristic fallback both apply BBR's reasonable-investor-inspired materiality principle; enforced at all 5 live classify-then-insert call sites, logged to `service_health_events` on reject. Verified live against production with 3 real Claude-classified test stories. `apps/backend` + migration only. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.61.0/PHASE 28. |
 | ~~#142~~ | ~~Live watchlist database table~~ | — | **Done 2026-09-13** — `media_impact_watchlist` (7 sourced rows, public-read / service-role write) replaces #141's hardcoded array; `signals.media_impact_entity` + `[Media-Impact]` tag on card/detail. Elon Musk markets omitted (BTC not tracked). Saylor/Wood not added. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.62.0/PHASE 29. |
+| ~~#143~~ | ~~Frontend consumption of materiality-gate fields~~ | — | **Done 2026-09-13** — PROJECTED IMPACT → MARKET IMPACT ASSESSMENT on event detail + SignalQuickView. Named parts from `market_mechanism` / impacts / direction / `event_category` / reused Media-Impact tag; Caldara & Iacoviello fallback when there is no direct match; `is_preview` calendar note. No raw confidence percent in the box. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.63.0/PHASE 30. |
 
 ### Still open
 
@@ -68,7 +69,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
 | #139 | Ingestion / filter / severity / confidence audit | Research written 2026-09-13 (`fba11ac`) — `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. Acted on 2026-09-13 via #141 (materiality gate) — see Shipped above. |
-| #143 | Frontend consumption of materiality-gate fields | #141 (`apps/backend`) added `relevance`/`novelty`/`event_category`/`market_mechanism`/`is_preview`/`source_confirmation`/`materiality_pass`/`materiality_reasoning` to `signals`; no `apps/web` UI reads them yet (out of scope for #141 by explicit instruction). |
+| #143 leftover | Other materiality-gate fields still unread in the UI | `relevance` / `novelty` / `source_confirmation` / `materiality_pass` / `materiality_reasoning` are stored but not shown. Event category / mechanism / preview / media-impact shipped in #143. |
 
 ---
 

@@ -19,6 +19,7 @@ import {
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { CommodityChip } from "@/components/signals/CommodityChip";
+import { MarketImpactAssessment } from "@/components/signals/MarketImpactAssessment";
 import { EventLocationMap } from "@/components/signals/EventLocationMap";
 import { SignalChatPanel } from "@/components/signals/SignalChatPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,7 +39,6 @@ import { logFunnelEventOnce, logUsageEvent } from "@/lib/funnel-events";
 import {
   emptyBriefingCopy,
   eventAlertCta,
-  formatPriceSinceFiredSubtext,
 } from "@/lib/signal-display";
 
 function eventTypeLabel(eventType?: string | null): string {
@@ -313,46 +313,12 @@ export default function EventDetailPage() {
                   }}
                 />
 
-                <div className="flex items-center gap-2 mb-6">
-                  <Target size={14} className="text-accent" />
-                  <span
-                    className="text-[10px] font-black uppercase tracking-[0.2em] text-text-primary"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                  >
-                    PROJECTED IMPACT
-                  </span>
-                </div>
-
-                {signal.commodityImpacts.length > 0 ? (
-                  <div className="space-y-3">
-                    {signal.commodityImpacts.map((c) => {
-                      const priceInfo = pricesAtSignal.find((p) => p.asset === c.asset);
-                      return (
-                        <div key={c.asset} className="space-y-1">
-                          <CommodityChip
-                            asset={c.asset}
-                            direction={c.direction}
-                            confidence={c.confidence}
-                            size="md"
-                          />
-                          {priceInfo?.priceAtSignal != null && priceInfo?.currentPrice != null && (
-                            <p className="text-[9px] font-mono text-muted pl-1">
-                              {formatPriceSinceFiredSubtext(
-                                c.asset,
-                                priceInfo.priceAtSignal,
-                                priceInfo.currentPrice,
-                              )}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-[10px] font-mono text-muted">
-                    No direct commodity impact identified for this event.
-                  </p>
-                )}
+                <MarketImpactAssessment
+                  signal={signal}
+                  pricesAtSignal={pricesAtSignal}
+                  showPriceSubtext
+                  headingIcon={<Target size={14} className="text-accent" />}
+                />
               </div>
 
               <div className="flex flex-col gap-2">

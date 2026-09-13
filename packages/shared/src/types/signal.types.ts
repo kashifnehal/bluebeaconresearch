@@ -8,6 +8,19 @@ export type Region =
   | "americas"
   | "global";
 
+// #141 CHECK enum on signals.event_category. Display labels live in
+// apps/web/lib/market-impact-assessment.ts (#143).
+export type EventCategory =
+  | "armed_conflict_security"
+  | "supply_disruption_logistics"
+  | "sanctions_trade_policy"
+  | "production_output_decision"
+  | "central_bank_monetary_policy"
+  | "scheduled_economic_data"
+  | "official_statement_commentary"
+  | "elections_political_transition"
+  | "other_market_relevant";
+
 export interface CommodityImpact {
   asset: string;
   direction: Direction;
@@ -42,6 +55,11 @@ export interface Signal {
   // sourced historical reaction pattern, not a forecast.
   mediaImpactEntity?: string | null;
   mediaImpactCaveat?: string | null;
+  // #141/#143 — materiality-gate fields the UI now reads. Null on pre-gate
+  // rows and on heuristic classifications that never computed them.
+  eventCategory?: EventCategory | null;
+  marketMechanism?: string | null;
+  isPreview?: boolean;
   createdAt: string; // when WE ingested it
   eventDate?: string; // when the article/event was PUBLISHED
   updatedAt?: string; // last updated time for this signal record

@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (#142 live media-impact watchlist)
+Last updated: 2026-09-13 (#143 MARKET IMPACT ASSESSMENT)
 
 ---
+
+## #143 MARKET IMPACT ASSESSMENT (2026-09-13)
+
+`apps/web` + shared Signal types. Full record: `14_CHANGELOG.md` v0.63.0, `LIVE_TODO.md`. Relabels PROJECTED IMPACT → MARKET IMPACT ASSESSMENT on event detail and SignalQuickView. Named parts from `market_mechanism` / impacts / direction / `event_category` / reused Media-Impact tag. Empty-match fallback is the sourced Caldara & Iacoviello (2022) sentence (no live GPR). `is_preview` notes the Economic Calendar. No raw classifier-confidence percent in the box.
 
 ## #142 live media-impact watchlist (2026-09-13)
 

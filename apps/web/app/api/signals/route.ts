@@ -6,6 +6,7 @@ import { REGIONS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { expandRegionVariants } from "@/lib/signal-filters";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
+import { parseEventCategory } from "@/lib/market-impact-assessment";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -54,6 +55,9 @@ type SignalRow = {
   updated_at: string | null;
   event_date: string | null;
   media_impact_entity: string | null;
+  event_category: string | null;
+  market_mechanism: string | null;
+  is_preview: boolean | null;
 };
 
 export async function GET(req: NextRequest) {
@@ -420,6 +424,12 @@ export async function GET(req: NextRequest) {
         mediaImpactCaveat: r.media_impact_entity
           ? (mediaImpactCaveats.get(r.media_impact_entity) ?? null)
           : null,
+        eventCategory: parseEventCategory(r.event_category),
+        marketMechanism:
+          typeof r.market_mechanism === "string" && r.market_mechanism.trim()
+            ? r.market_mechanism.trim()
+            : null,
+        isPreview: r.is_preview === true,
         createdAt: r.created_at,
         updatedAt: r.updated_at ?? undefined,
         eventDate,

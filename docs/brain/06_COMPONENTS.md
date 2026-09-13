@@ -88,10 +88,15 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Props**: `{ asset: string; direction: Direction; confidence: number; size?: 'sm' | 'md' }`
 - **Styling**: Pill tag with directional arrow. Both sizes show ticker + arrow only (#140). Classifier `confidence` stays on the prop for gating / `aria-label` ("model classification confidence {n}%"); it is not visible text and is not a price-direction probability.
 
+### 3.3b `MarketImpactAssessment.tsx` (#143)
+- **Purpose**: The event-detail / quick-view impact box, relabeled **MARKET IMPACT ASSESSMENT** (was PROJECTED IMPACT). Named parts from #141/#142 columns: market mechanism, affected markets (CommodityChip, confidence-free since #140), direction, event category, reused `MediaImpactTag`. Empty mechanism + empty impact lists → exact Caldara & Iacoviello 2022 fallback sentence (no live GPR number). `is_preview` → calendar note + `/calendar` link.
+- **Parents**: `events/[id]/page.tsx`, `SignalQuickView.tsx`.
+
 ### 3.4 `SignalQuickView.tsx` (#122)
 - **Purpose**: Desktop-only right-half slide-over preview of a feed row.
 - **Parent**: Intelligence Feed stream.
 - **#137**: empty analyst-briefing copy is severity-gated (`emptyBriefingCopy(..., "compact")`), not "restoring capacity."
+- **#143**: "Commodity impacts" section replaced by `MarketImpactAssessment`.
 
 ### 3.5 `SignalChatPanel.tsx` (#111, `9f2aada`; visual pass 2026-09-12)
 - **Purpose**: Follow-up questions about **this** signal only, on the event detail page.

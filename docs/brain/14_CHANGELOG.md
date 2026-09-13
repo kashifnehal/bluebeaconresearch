@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.63.0 — #143 MARKET IMPACT ASSESSMENT (2026-09-13)
+
+`apps/web` + `packages/shared` Signal types. Relabels the event-detail aside and SignalQuickView "PROJECTED IMPACT" / "Commodity impacts" box to **MARKET IMPACT ASSESSMENT**. Shared `MarketImpactAssessment` renders named parts from #141/#142 columns: `marketMechanism` (plain sentence, never invented in the UI), affected markets (`commodityImpacts` + `currencyPairImpacts` via #140's confidence-free `CommodityChip`), direction (Up/Down/Volatile/Neutral), `eventCategory` mapped to a 9-value display name, and #142's `MediaImpactTag` when `mediaImpactEntity` is set. When mechanism is null and both impact lists are empty, the box shows this exact sourced sentence instead of going blank: "No direct commodity match. Broad geopolitical risk events like this have historically been associated with a 5-10% move in equity indices and reduced oil demand within the following weeks (Caldara & Iacoviello, 2022)." No live GPR number. `isPreview` adds a small note linking `/calendar`. Next.js `/api/signals` and `/api/signals/:id` now map the three fields; `:id` also returns `currencyPairImpacts` (was dropped before). Fastify `/v1` unchanged (`select("*")` already had the columns).
+
 ### v0.62.0 — #142 live media-impact watchlist (2026-09-13)
 
 `apps/backend` + `apps/web` + a Supabase migration. Replaces the hardcoded 7-entry `MATERIALITY_WATCHLIST` array #141 inlined in `claude.service.ts` with a live table, and surfaces a match as a UI tag.

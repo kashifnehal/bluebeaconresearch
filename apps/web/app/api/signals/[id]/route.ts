@@ -3,6 +3,7 @@ import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
+import { parseEventCategory } from "@/lib/market-impact-assessment";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -113,6 +114,7 @@ export async function GET(
   );
 
   const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
+  const currencyPairImpacts = (row.currency_pair_impacts ?? []) as Signal["currencyPairImpacts"];
   const eventDate = row.event_date ?? row.created_at;
 
   const pricesAtSignal: PriceAtSignal[] = await Promise.all(
@@ -165,6 +167,7 @@ export async function GET(
     lng: row.lng ?? undefined,
     sourcesCount: row.sources_count ?? 1,
     commodityImpacts,
+    currencyPairImpacts,
     sanctionsMatches: row.sanctions_matches ?? undefined,
     isBreaking: row.is_breaking ?? false,
     isActive: row.is_active ?? true,
@@ -173,6 +176,12 @@ export async function GET(
     mediaImpactCaveat: mediaImpactEntity
       ? (mediaImpactCaveats.get(mediaImpactEntity) ?? null)
       : null,
+    eventCategory: parseEventCategory(row.event_category),
+    marketMechanism:
+      typeof row.market_mechanism === "string" && row.market_mechanism.trim()
+        ? row.market_mechanism.trim()
+        : null,
+    isPreview: row.is_preview === true,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? undefined,
     eventDate,

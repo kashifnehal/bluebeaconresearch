@@ -4,7 +4,7 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import type { Signal } from "@blue-beacon-research/shared";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
-import { CommodityChip } from "@/components/signals/CommodityChip";
+import { MarketImpactAssessment } from "@/components/signals/MarketImpactAssessment";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import { emptyBriefingCopy } from "@/lib/signal-display";
 
@@ -38,11 +38,6 @@ export function SignalQuickView({
     signal && Number.isFinite(signal.confidence)
       ? Math.round(signal.confidence * 100)
       : null;
-  const impacts = signal
-    ? [...(signal.commodityImpacts ?? [])].sort(
-        (a, b) => (b.confidence ?? 0) - (a.confidence ?? 0),
-      )
-    : [];
   const excerpt = signal?.aiAnalysis ? excerptAnalysis(signal.aiAnalysis) : null;
 
   return (
@@ -101,38 +96,7 @@ export function SignalQuickView({
 
               <div className="flex-1 space-y-6 overflow-y-auto p-6">
                 <section>
-                  <h3
-                    className="mb-3 text-[10px] font-bold uppercase tracking-widest"
-                    style={{
-                      color: "#86948a",
-                      fontFamily: "'Space Grotesk', sans-serif",
-                    }}
-                  >
-                    Commodity impacts
-                  </h3>
-                  {impacts.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {impacts.map((c) => (
-                        <CommodityChip
-                          key={`${signal.id}-${c.asset}`}
-                          asset={c.asset}
-                          direction={c.direction}
-                          confidence={c.confidence}
-                          size="md"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <p
-                      className="text-sm"
-                      style={{
-                        color: "#86948a",
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      None flagged on this signal.
-                    </p>
-                  )}
+                  <MarketImpactAssessment signal={signal} />
                 </section>
 
                 <section>

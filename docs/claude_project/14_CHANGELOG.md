@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 30 — #143 MARKET IMPACT ASSESSMENT (2026-09-13)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.63.0.
+
+- Relabels the event-detail / SignalQuickView "PROJECTED IMPACT" box to **MARKET IMPACT ASSESSMENT**. Not a new product surface.
+- Named parts from #141/#142 fields: market mechanism, affected markets (CommodityChip, confidence-free since #140), direction, event category display names, reused `[Media-Impact]` tag. Empty mechanism + empty impacts → exact Caldara & Iacoviello (2022) fallback sentence. `is_preview` → `/calendar` note.
+- Next.js BFF maps `eventCategory` / `marketMechanism` / `isPreview`; `/api/signals/:id` also returns `currencyPairImpacts`.
+
 ## PHASE 29 — #142 LIVE MEDIA-IMPACT WATCHLIST (2026-09-13)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.62.0.

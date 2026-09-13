@@ -186,6 +186,8 @@ Returns paginated signal feed. Auth required.
 #### GET /v1/signals/latest
 Returns 5 most recent signals. Used by landing page live preview and dashboard right sidebar. No plan restriction. Explicit select includes `media_impact_entity` (#142).
 
+> ⚠️ UPDATED 2026-09-13 (#143) — Next.js BFF `/api/signals` and `/api/signals/:id` map `eventCategory`, `marketMechanism`, and `isPreview` for the MARKET IMPACT ASSESSMENT box. `/api/signals/:id` also returns `currencyPairImpacts`.
+
 **Response 200:**
 ```json
 { "data": [ /* 5 signal objects, brief format */ ] }
