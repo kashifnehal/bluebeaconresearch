@@ -178,7 +178,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 #### `GET /v1/accuracy` (#121, 2026-09-11)
 
-- **Description**: Public, no-auth aggregation of `signal_outcomes` — overall + per-asset `hit_rate`/`avg_move_when_correct`/`sample_size_note` (gated to `not_enough_history: true` below 20 scored predictions), a `volatile_neutral_summary` kept separate from `hit_rate`, and `date_range`. Never live-recomputes against `commodity_prices` (90-day retention would erase history). Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115. Endpoint contract: `docs/claude_project/05_API.md` §"Accuracy — GET /v1/accuracy".
+- **Description**: Public, no-auth aggregation of `signal_outcomes` — overall + per-asset `hit_rate`/`avg_move_when_correct`/`sample_size_note` (gated to `not_enough_history: true` below 20 scored predictions), a `volatile_neutral_summary` kept separate from `hit_rate`, and `date_range`. Reads only `checkpoint_hours = 48` (the worker also writes 1h/4h/24h rows; those are excluded unless a future prompt adds a time-horizon selector). Never live-recomputes against `commodity_prices` (90-day retention would erase history). Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115. Endpoint contract: `docs/claude_project/05_API.md` §"Accuracy — GET /v1/accuracy".
 - **Auth**: None.
 
 ---

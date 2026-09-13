@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (#143 MARKET IMPACT ASSESSMENT)
+Last updated: 2026-09-13 (#121 follow-up: multi-horizon outcome checkpoints)
 
 ---
+
+## #121 follow-up — multi-horizon outcome checkpoints (2026-09-13)
+
+`apps/backend` only. Full record: `14_CHANGELOG.md` v0.64.0, `LIVE_TODO.md`. `outcome-tracker.ts` writes 1h/4h/24h/48h `signal_outcomes` rows once a signal is that old. 48h thresholds and the 24h price-distance guard are unchanged. `GET /v1/accuracy` filters `checkpoint_hours=48`. Unique key widened to `(signal_id, asset, checkpoint_hours)`. No `/accuracy` time-horizon selector.
 
 ## #143 MARKET IMPACT ASSESSMENT (2026-09-13)
 

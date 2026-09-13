@@ -158,7 +158,7 @@ Two independent prompt rules (do not collapse): (1) no buy/sell language — sam
 
 ## 7. Outcome tracking & public accuracy (#121)
 
-Not the stale `alerts_sent.outcome_direction` sketch. Live path: `outcome-tracker.ts` (cron `0 5 * * *`) writes `signal_outcomes` once per `(signal, asset)`; `GET /v1/accuracy` aggregates that table; `/accuracy` renders it. Full methodology: `17_SIGNAL_ENGINE.md` §7 and D22 / ADR 018.
+Not the stale `alerts_sent.outcome_direction` sketch. Live path: `outcome-tracker.ts` (cron `0 5 * * *`) writes `signal_outcomes` once per `(signal, asset, checkpoint_hours)` for 1h/4h/24h/48h; `GET /v1/accuracy` aggregates only the 48h rows; `/accuracy` renders it. Full methodology: `17_SIGNAL_ENGINE.md` §7 and D22 / ADR 018.
 
 - 48h fixed checkpoint on `event_date`, not "price now".
 - `volatile`/`neutral` excluded from headline `hit_rate`, reported separately.

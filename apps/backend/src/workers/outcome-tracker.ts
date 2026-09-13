@@ -5,13 +5,18 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
  *
  * commodity_prices only retains 90 days (retention.ts), so an /accuracy page
  * cannot recompute historical accuracy on demand — this worker is what makes
- * that data durable. Daily, it finds every signal that is >=48h old with a
- * non-empty commodity_impacts array and, for each (signal, asset) pair not
- * already recorded, looks up the commodity_prices point closest to event_date
- * and the point closest to event_date + 48h, and writes one signal_outcomes row
- * per pair. Never live-recomputed; never touches signals or commodity_prices.
+ * that data durable. Daily, it finds every signal old enough for at least one
+ * checkpoint in CHECKPOINT_HOURS_LIST, with a non-empty commodity_impacts
+ * array, and writes one signal_outcomes row per (signal, asset, checkpoint)
+ * that is not already recorded. A signal becomes eligible for a given
+ * checkpoint once it is actually that many hours old (1h rows are written at
+ * >=1h, not held until 48h). 48 stays in the list and keeps the same
+ * thresholds / findClosestPoint() / MAX_PRICE_POINT_DISTANCE_MS guard as
+ * before — GET /v1/accuracy still aggregates only those 48h rows. Never
+ * live-recomputed; never touches signals or commodity_prices.
  */
-const CHECKPOINT_HOURS = 48;
+const CHECKPOINT_HOURS_LIST = [1, 4, 24, 48] as const;
+const SHORTEST_CHECKPOINT_HOURS = CHECKPOINT_HOURS_LIST[0];
 const FLAT_THRESHOLD_PCT = 0.5;
 const SIGNAL_PAGE_SIZE = 1000;
 const PRICE_PAGE_SIZE = 1000;
@@ -169,6 +174,10 @@ async function fetchEligibleSignals(
   return eligible;
 }
 
+function outcomeKey(asset: string, checkpointHours: number): string {
+  return `${asset}::${checkpointHours}`;
+}
+
 async function fetchExistingOutcomeAssets(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   signalIds: string[],
@@ -178,7 +187,7 @@ async function fetchExistingOutcomeAssets(
     const chunk = signalIds.slice(i, i + EXISTING_OUTCOMES_CHUNK);
     const { data, error } = await supabase
       .from("signal_outcomes")
-      .select("signal_id, asset")
+      .select("signal_id, asset, checkpoint_hours")
       .in("signal_id", chunk);
     if (error) {
       console.error("[outcome-tracker] existing signal_outcomes fetch failed:", error.message);
@@ -186,21 +195,28 @@ async function fetchExistingOutcomeAssets(
     }
     for (const row of data ?? []) {
       const set = bySignal.get(row.signal_id as string) ?? new Set<string>();
-      set.add(row.asset as string);
+      set.add(outcomeKey(row.asset as string, row.checkpoint_hours as number));
       bySignal.set(row.signal_id as string, set);
     }
   }
   return bySignal;
 }
 
+type WorkPair = {
+  signal: EligibleSignal;
+  impact: CommodityImpact;
+  checkpointHours: number;
+};
+
 export async function runOutcomeTrackerOnce() {
   const supabase = getSupabaseAdmin();
-  const cutoffIso = new Date(Date.now() - CHECKPOINT_HOURS * 3_600_000).toISOString();
+  const nowMs = Date.now();
+  const cutoffIso = new Date(nowMs - SHORTEST_CHECKPOINT_HOURS * 3_600_000).toISOString();
 
   const eligible = await fetchEligibleSignals(supabase, cutoffIso);
   if (eligible.length === 0) {
     console.log(
-      `[outcome-tracker] no signals >= ${CHECKPOINT_HOURS}h old with non-empty commodity_impacts`,
+      `[outcome-tracker] no signals >= ${SHORTEST_CHECKPOINT_HOURS}h old with non-empty commodity_impacts`,
     );
     return { signalsProcessed: 0, outcomesWritten: 0, pairsSkipped: 0, skipReasons: {} as Record<string, number> };
   }
@@ -210,9 +226,9 @@ export async function runOutcomeTrackerOnce() {
     eligible.map((s) => s.id),
   );
 
-  // Which (signal, asset) pairs actually need work, grouped by asset so each
-  // asset's price series is loaded exactly once.
-  const pairsByAsset = new Map<string, Array<{ signal: EligibleSignal; impact: CommodityImpact }>>();
+  // Which (signal, asset, checkpoint) triples actually need work, grouped by
+  // asset so each asset's price series is loaded exactly once.
+  const pairsByAsset = new Map<string, WorkPair[]>();
   let signalsProcessed = 0;
   for (const signal of eligible) {
     const already = existingBySignal.get(signal.id) ?? new Set<string>();
@@ -220,14 +236,19 @@ export async function runOutcomeTrackerOnce() {
     for (const impact of signal.commodity_impacts) {
       if (impact?.asset && !uniqueImpacts.has(impact.asset)) uniqueImpacts.set(impact.asset, impact);
     }
-    const missing = [...uniqueImpacts.values()].filter((i) => !already.has(i.asset));
-    if (missing.length === 0) continue;
-    signalsProcessed += 1;
-    for (const impact of missing) {
-      const list = pairsByAsset.get(impact.asset) ?? [];
-      list.push({ signal, impact });
-      pairsByAsset.set(impact.asset, list);
+    const eventMs = new Date(signal.event_date).getTime();
+    let addedForSignal = false;
+    for (const impact of uniqueImpacts.values()) {
+      for (const checkpointHours of CHECKPOINT_HOURS_LIST) {
+        if (nowMs - eventMs < checkpointHours * 3_600_000) continue;
+        if (already.has(outcomeKey(impact.asset, checkpointHours))) continue;
+        addedForSignal = true;
+        const list = pairsByAsset.get(impact.asset) ?? [];
+        list.push({ signal, impact, checkpointHours });
+        pairsByAsset.set(impact.asset, list);
+      }
     }
+    if (addedForSignal) signalsProcessed += 1;
   }
 
   let outcomesWritten = 0;
@@ -249,15 +270,15 @@ export async function runOutcomeTrackerOnce() {
     }
 
     const rows: Array<Record<string, unknown>> = [];
-    for (const { signal, impact } of pairs) {
+    for (const { signal, impact, checkpointHours } of pairs) {
       const eventMs = new Date(signal.event_date).getTime();
-      const checkpointMs = eventMs + CHECKPOINT_HOURS * 3_600_000;
+      const checkpointMs = eventMs + checkpointHours * 3_600_000;
 
       const eventPoint = findClosestPoint(series, eventMs);
       const checkpointPoint = findClosestPoint(series, checkpointMs);
       if (!eventPoint || !checkpointPoint) {
         console.warn(
-          `[outcome-tracker] SKIP signal=${signal.id} asset=${asset} — no price data within ${MAX_PRICE_POINT_DISTANCE_MS / 3_600_000}h of ${!eventPoint ? "event_date" : "checkpoint"} (event=${!!eventPoint} checkpoint=${!!checkpointPoint})`,
+          `[outcome-tracker] SKIP signal=${signal.id} asset=${asset} checkpoint=${checkpointHours}h — no price data within ${MAX_PRICE_POINT_DISTANCE_MS / 3_600_000}h of ${!eventPoint ? "event_date" : "checkpoint"} (event=${!!eventPoint} checkpoint=${!!checkpointPoint})`,
         );
         bumpSkip(`${asset}: no price data within ${MAX_PRICE_POINT_DISTANCE_MS / 3_600_000}h of event_date/checkpoint`);
         continue;
@@ -275,7 +296,7 @@ export async function runOutcomeTrackerOnce() {
         predicted_confidence: impact.confidence ?? null,
         price_at_event: eventPoint.price,
         price_at_checkpoint: checkpointPoint.price,
-        checkpoint_hours: CHECKPOINT_HOURS,
+        checkpoint_hours: checkpointHours,
         actual_pct_change: actualPctChange,
         actual_direction: actualDirection,
         is_directionally_correct: correct,

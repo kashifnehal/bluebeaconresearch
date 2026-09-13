@@ -4,7 +4,8 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 
 /**
  * #121 frontend half — public GET /v1/accuracy. Reads only from `signal_outcomes`
- * (written once, daily, by `outcome-tracker.ts`) — never live-recomputes against
+ * (written once, daily, by `outcome-tracker.ts`; this route reads only the 48h
+ * checkpoint rows) — never live-recomputes against
  * `commodity_prices`, which only retains 90 days. No auth: this is the same public
  * "informational, not personal" class of data as `/v1/prices` / `/v1/prices/history-5y`.
  *
@@ -28,6 +29,11 @@ const MIN_SAMPLE_SIZE = 20;
 // needing a separate volatility calibration per asset. Kept fully separate from
 // hit_rate — never blended into the up/down accuracy number.
 const VOLATILITY_THRESHOLD_PCT = 2;
+
+// #121 headline numbers stay on the original 48h checkpoint. The worker also
+// writes 1h/4h/24h rows into the same table; those must not enter this
+// aggregation unless a future prompt adds an explicit time-horizon selector.
+const ACCURACY_CHECKPOINT_HOURS = 48;
 
 const PAGE_SIZE = 1000;
 // Root-caused during verification: `.in("id", chunk)` with a real ~36-char UUID
@@ -148,6 +154,7 @@ async function fetchAllOutcomes(
       supabase
         .from("signal_outcomes")
         .select("signal_id, asset, predicted_direction, actual_pct_change, is_directionally_correct")
+        .eq("checkpoint_hours", ACCURACY_CHECKPOINT_HOURS)
         .range(from, from + PAGE_SIZE - 1),
     );
     if (error) throw new Error(error.message);

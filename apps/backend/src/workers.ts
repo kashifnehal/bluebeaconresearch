@@ -225,7 +225,8 @@ async function main() {
 
   // #121 outcome tracker — daily, 05:00 UTC (after retention/sanctions so the
   // commodity_prices series it reads is settled for the day). Writes permanent
-  // signal_outcomes rows for signals that just crossed the 48h checkpoint;
+  // signal_outcomes rows for each checkpoint in [1, 4, 24, 48] once a signal is
+  // that many hours old; 48h behavior/thresholds are unchanged.
   // signals/commodity_prices are never modified.
   cron.schedule("0 5 * * *", async () => {
     try {

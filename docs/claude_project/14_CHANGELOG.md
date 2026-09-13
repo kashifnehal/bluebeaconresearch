@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 31 — #121 FOLLOW-UP: MULTI-HORIZON OUTCOME CHECKPOINTS (2026-09-13)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.64.0.
+
+- `outcome-tracker.ts` writes a `signal_outcomes` row for each of 1h / 4h / 24h / 48h once a signal is that old. 48h stays in the list with the same thresholds and 24h price-distance guard. A 5-minute checkpoint was not added (price sync is 15 minutes).
+- `GET /v1/accuracy` still aggregates only `checkpoint_hours = 48`. No `/accuracy` time-horizon selector.
+- Unique key on `signal_outcomes` widened from `(signal_id, asset)` to `(signal_id, asset, checkpoint_hours)` so multiple horizons can coexist. Existing 48h rows were not rewritten.
+
 ## PHASE 30 — #143 MARKET IMPACT ASSESSMENT (2026-09-13)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.63.0.

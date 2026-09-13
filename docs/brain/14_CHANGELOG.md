@@ -8,6 +8,14 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.64.0 — #121 follow-up: 1h/4h/24h/48h outcome checkpoints (2026-09-13)
+
+`apps/backend` only. `CHECKPOINT_HOURS` is now `CHECKPOINT_HOURS_LIST = [1, 4, 24, 48]`. The daily worker writes one `signal_outcomes` row per `(signal, asset, checkpoint)` once the signal is actually that many hours old — 1h/4h/24h are not deferred until 48h. 48h stays in the list; `FLAT_THRESHOLD_PCT`, `findClosestPoint()`, and `MAX_PRICE_POINT_DISTANCE_MS` are reused unchanged for every horizon. `GET /v1/accuracy` adds `.eq("checkpoint_hours", 48)` so the new rows cannot enter the #121 headline. No `/accuracy` time-horizon UI.
+
+**Migration** (`20260913190000_signal_outcomes_checkpoint_unique.sql`, applied live to `evavcgfmemwryggdkjmx` as `signal_outcomes_checkpoint_unique`): drop `UNIQUE (signal_id, asset)`, add `UNIQUE (signal_id, asset, checkpoint_hours)`. `checkpoint_hours` was already a per-row value (default 48); the old unique key made a second horizon per pair impossible. Existing 48h rows were not rewritten.
+
+**Verified** via `pnpm --filter backend outcome-tracker:once` against production: 9445 new rows; counts `1=3156 / 4=3152 / 24=3126 / 48=3049`; 1558/1558 of 48h-old scored signals have all four horizons; original 3038 48h rows still 2449/1152 (0.470396); five oldest 48h samples unchanged. 11 additional 48h rows are newly-eligible signals (existing 48h cron behavior).
+
 ### v0.63.0 — #143 MARKET IMPACT ASSESSMENT (2026-09-13)
 
 `apps/web` + `packages/shared` Signal types. Relabels the event-detail aside and SignalQuickView "PROJECTED IMPACT" / "Commodity impacts" box to **MARKET IMPACT ASSESSMENT**. Shared `MarketImpactAssessment` renders named parts from #141/#142 columns: `marketMechanism` (plain sentence, never invented in the UI), affected markets (`commodityImpacts` + `currencyPairImpacts` via #140's confidence-free `CommodityChip`), direction (Up/Down/Volatile/Neutral), `eventCategory` mapped to a 9-value display name, and #142's `MediaImpactTag` when `mediaImpactEntity` is set. When mechanism is null and both impact lists are empty, the box shows this exact sourced sentence instead of going blank: "No direct commodity match. Broad geopolitical risk events like this have historically been associated with a 5-10% move in equity indices and reduced oil demand within the following weeks (Caldara & Iacoviello, 2022)." No live GPR number. `isPreview` adds a small note linking `/calendar`. Next.js `/api/signals` and `/api/signals/:id` now map the three fields; `:id` also returns `currencyPairImpacts` (was dropped before). Fastify `/v1` unchanged (`select("*")` already had the columns).

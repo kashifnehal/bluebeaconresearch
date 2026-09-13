@@ -295,8 +295,10 @@ Single commodity price. Useful for signal card price display.
 ### Accuracy — GET /v1/accuracy (#121, 2026-09-11)
 
 Public track-record aggregation. No auth (same posture as the two Prices endpoints
-above — public/informational, not personal). Reads only `signal_outcomes` (written
-once daily by `outcome-tracker.ts`), never live-recomputes against `commodity_prices`.
+above — public/informational, not personal). Reads only `signal_outcomes` rows
+with `checkpoint_hours = 48` (written daily by `outcome-tracker.ts`, which also
+stores 1h/4h/24h rows that this endpoint ignores), never live-recomputes against
+`commodity_prices`.
 
 **Response 200:**
 ```json

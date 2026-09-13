@@ -259,7 +259,7 @@ The block that used to live here (`alerts_sent.outcome_direction`, "NOT YET BUIL
 
 ### Why a permanent table, not a live recompute
 
-`commodity_prices` is retained 90 days (`retention.ts`). Recomputing hit-rate on demand from that table would silently lose every outcome older than 90 days and the public track record would shrink. `signal_outcomes` is written once per `(signal_id, asset)` and never rewritten. `GET /v1/accuracy` reads only this table.
+`commodity_prices` is retained 90 days (`retention.ts`). Recomputing hit-rate on demand from that table would silently lose every outcome older than 90 days and the public track record would shrink. `signal_outcomes` is written once per `(signal_id, asset, checkpoint_hours)` and never rewritten. Horizons stored: 1h / 4h / 24h / 48h (2026-09-13 follow-up). `GET /v1/accuracy` still reads only the 48h rows.
 
 ### 48-hour fixed checkpoint, anchored on `event_date`
 
