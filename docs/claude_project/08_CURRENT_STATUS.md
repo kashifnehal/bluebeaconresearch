@@ -53,8 +53,10 @@
 > ⚠️ UPDATED 2026-09-13 (#138 Phase 2) — `apps/web` only: missing-client toasts no longer show `"Supabase client not available"`; IngestionStatusBanner no longer interpolates the Upstash `reason`; accuracy/metrics pages use a fixed fallback sentence. Middleware auth-unavailable copy unchanged (8s timeout only; longer outage not distinguishable). Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.59.0. This tree: PHASE 25.
 >
 > ⚠️ UPDATED 2026-09-13 (#138 fully closed) — voice guide D24 / ADR 020; `apiErrorLogged()`; remaining settings/auth/feed/confirm leaks. Brain changelog: v0.59.1. This tree: PHASE 26.
+>
+> ⚠️ UPDATED 2026-09-13 (#140) — `CommodityChip` no longer shows a raw classifier-confidence percent next to the direction arrow (`apps/web` only). Confidence stays on the API/prop and in "model classification confidence {n}%" aria-label. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.60.0. This tree: PHASE 27.
 
-Last updated: 2026-09-13 (#138 fully closed)
+Last updated: 2026-09-13 (#140 CommodityChip confidence hidden)
 
 ---
 

@@ -55,9 +55,13 @@ runTest("history-load maps 401 / 403 / 500 / other to the right code", () => {
   assert.equal(historyErrorCodeFromResponse(502), "server_error");
 });
 
-runTest("CommodityChip confidence is labeled as confidence, not a price move", () => {
+runTest("CommodityChip aria-label names model classification confidence, not a price probability", () => {
   assert.equal(formatConfidencePercent(0.88), "88%");
-  assert.match(commodityChipAriaLabel("USOIL", "up", 0.88), /88% confidence/);
+  assert.equal(
+    commodityChipAriaLabel("USOIL", "up", 0.88),
+    "USOIL up, model classification confidence 88%",
+  );
+  assert.equal(commodityChipAriaLabel("USOIL", "up", 0.88).includes("% confidence"), false);
 });
 
 runTest("flat price change does not render (+0.0%)", () => {

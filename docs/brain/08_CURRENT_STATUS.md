@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (#138 fully closed)
+Last updated: 2026-09-13 (#140 CommodityChip confidence hidden)
 
 ---
+
+## #140 hide raw classifier confidence on CommodityChip (2026-09-13)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.60.0, `LIVE_TODO.md`. `CommodityChip` visible text is ticker + direction arrow on both `sm` and `md`. Classifier `confidence` is no longer printed as a percent next to the arrow (it is not a calibrated price-direction probability). Aria-label still includes "model classification confidence {n}%".
 
 ## #138 site-wide copy & error-state integrity (2026-09-13)
 

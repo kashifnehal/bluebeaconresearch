@@ -44,7 +44,7 @@ export function commodityChipAriaLabel(
   direction: string,
   confidence: number,
 ): string {
-  return `${asset} ${direction}, ${formatConfidencePercent(confidence)} confidence`;
+  return `${asset} ${direction}, model classification confidence ${formatConfidencePercent(confidence)}`;
 }
 
 export function priceChangePercent(priceAtSignal: number, currentPrice: number): number {

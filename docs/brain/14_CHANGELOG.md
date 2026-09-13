@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.60.0 — #140 hide raw classifier confidence on CommodityChip (2026-09-13)
+
+`apps/web` only. `CommodityChip` no longer renders a visible classifier-confidence percent (previously `size="md"` only). Both sizes now show ticker + direction arrow. The `confidence` prop and API field stay; `commodityChipAriaLabel` now says "model classification confidence {n}%" so the number is not heard as a price probability. Parent usage sites do not reprint a per-asset percent beside the chip. Component render test covers sm/md × up/down/volatile/neutral.
+
 ### v0.59.1 — #138 remainder: voice guide + remaining leaks (2026-09-13)
 
 `apps/web` only. Closes #138. Standing copy rule D24 / ADR 020. `apiErrorLogged()` so BFF JSON `message` is never a provider string. Settings, auth env-leak, confirm bridge, feed `fallbackReason`, mutation toasts, admin service-status. Tests in `lib/user-error-copy.test.ts`.

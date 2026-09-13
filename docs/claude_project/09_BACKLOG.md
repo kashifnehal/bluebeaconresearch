@@ -48,6 +48,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | — | Discord alert channel (webhook-URL-paste) | — | **Done 2026-09-12** — `user_channels.discord_*` columns, dispatcher `discord` branch, Settings `<DiscordConnect />` + `/api/discord/test`, alert-rule Telegram/Discord/Slack checkboxes. No bot/OAuth. See `LIVE_TODO.md`. |
 | ~~#137~~ | ~~Event-page trust/UX copy (four live-test bugs)~~ | — | **Done 2026-09-13** — typed chat history errors; flat price subtext + severity-gated alert CTA; ANALYSIS Verification box removed; briefing empty-state is severity-gated (not an outage). `apps/web` only. See `LIVE_TODO.md`. |
 | ~~#138~~ | ~~Site-wide copy & error-state integrity pass~~ | — | **Fully done 2026-09-13** — Phase 2 candidates + remainder (voice guide D24/ADR 020, `apiErrorLogged`, settings/auth/feed leaks). See `LIVE_TODO.md`. |
+| ~~#140~~ | ~~Hide raw classifier confidence on CommodityChip~~ | — | **Done 2026-09-13** — chip shows ticker + direction arrow only; `confidence` stays on the API/prop and in an unambiguous aria-label. `apps/web` only. See `LIVE_TODO.md`. |
 
 ### Still open
 

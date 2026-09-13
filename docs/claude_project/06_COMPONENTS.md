@@ -263,7 +263,7 @@ volatile: bg-warning-subtle text-warning    "XAUUSD ↕"
 neutral:  bg-secondary      text-muted      "NGAS –"
 ```
 
-Size 'md': shows confidence % after direction arrow (labeled as confidence in `aria-label` / title — not a price move).
+Both sizes show ticker + direction arrow only. Classifier `confidence` is not visible text (it is the model's self-reported tagging confidence, not a price-direction probability). `aria-label` still includes "model classification confidence {n}%".
 Shape: rounded-full pill.
 
 ---

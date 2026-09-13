@@ -6,6 +6,13 @@
 
 ---
 
+## PHASE 27 — #140 HIDE RAW CLASSIFIER CONFIDENCE ON COMMODITYCHIP (2026-09-13)
+
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.60.0.
+
+- `CommodityChip` visible text is ticker + direction arrow on `sm` and `md`.
+- Classifier confidence stays on the API/prop and in an unambiguous screen-reader label; it is not shown as a percent next to the arrow.
+
 ## PHASE 0 — ORIGINAL IDEA (Pre-project)
 
 **Starting point:** The idea emerged from a simple frustration — commodity traders and importers consistently find out about geopolitical events AFTER markets have already moved. The Houthi Red Sea attacks in late 2023 were a perfect example: businesses that imported goods via that route found out about the disruption from their suppliers, not from any early-warning system.

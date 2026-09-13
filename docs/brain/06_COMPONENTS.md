@@ -80,7 +80,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ### 3.3 `CommodityChip.tsx`
 - **Purpose**: Small pill tag indicating affected physical commodity asset and market impact direction.
 - **Props**: `{ asset: string; direction: Direction; confidence: number; size?: 'sm' | 'md' }`
-- **Styling**: Pill tag with directional arrow. Size `md` shows the model confidence %, labeled as confidence (not a price move).
+- **Styling**: Pill tag with directional arrow. Both sizes show ticker + arrow only (#140). Classifier `confidence` stays on the prop for gating / `aria-label` ("model classification confidence {n}%"); it is not visible text and is not a price-direction probability.
 
 ### 3.4 `SignalQuickView.tsx` (#122)
 - **Purpose**: Desktop-only right-half slide-over preview of a feed row.
