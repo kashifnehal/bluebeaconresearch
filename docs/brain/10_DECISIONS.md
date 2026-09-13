@@ -422,6 +422,8 @@ Write `signal_outcomes` once, 48h after `event_date`, never recompute live. Excl
 ### Cross-tree mapping
 Recorded as **D22** in `docs/claude_project/10_DECISIONS.md`. Full methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Related: #53, #115.
 
+> ⚠️ UPDATED 2026-09-13 (#144) — worker also writes 1h / 4h / 24h. Public headline stays 48h. Do not blend horizons.
+
 ---
 
 ## 20. ADR 019: Dual Anthropic Daily Budgets + Chat Email Allowlist (#111)
@@ -456,3 +458,35 @@ Provider strings are not something a user can act on and they look like a leak. 
 
 ### Cross-tree mapping
 Recorded as **D24** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 22. ADR 021: Materiality gate fail-closed (#141)
+
+### Context
+#139: 63% of a 14-day window sat at severity 1–4 with empty impacts because classification had no reject step.
+
+### Decision
+`materialityPass` that is not an explicit `true` is `false`. Skip the `signals` insert at all 5 live sites. Do not gate on whether the claim will come true.
+
+### Rationale
+Severity ≠ materiality. Fail-closed so a missing field cannot create a desk row.
+
+### Cross-tree mapping
+Recorded as **D25** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 23. ADR 022: Media-impact watchlist is sourced-only (#142)
+
+### Context
+#141 hardcoded 7 names. #142 moved them to `media_impact_watchlist`.
+
+### Decision
+Sourced rows only. No Saylor / Wood / unsourced names. Elon Musk `markets` empty (BTC not tracked). Unsourced entity names sanitize to null.
+
+### Rationale
+The `[Media-Impact]` tag is a sourced historical pattern. An unsourced name would be fabricated authority.
+
+### Cross-tree mapping
+Recorded as **D26** in `docs/claude_project/10_DECISIONS.md`.

@@ -12,6 +12,7 @@ A signal is the core output of Blue Beacon Research. It answers one question: "W
 
 > ⚠️ UPDATED 2026-08-19 — A signal is no longer necessarily static once created. If a later article from a different source is classified as the same event at a *higher* severity, the existing signal's `severity`, `sources_count`, and `ai_analysis` are updated in place (an "escalation") rather than a second signal being created — see `docs/brain/10_DECISIONS.md` ADR 010. A same-or-lower-severity match from another source is a plain duplicate merge (`sources_count` grows, everything else stays put). `title` and `summary` are still fixed at first-insert time and are not updated by either case.
 > ⚠️ UPDATED 2026-08-19 (later, Prompt J.6) — An escalation can also now re-notify users. Already-alerted users get a second, distinctly-labeled "UPDATED: severity X → Y" alert, but only when the escalation crosses severity >=7 for the first time or jumps >=2 points in one go — a minor refinement (7→8) updates the signal quietly, no second alert. Full detail: `docs/brain/10_DECISIONS.md` ADR 010 addendum.
+> ⚠️ UPDATED 2026-09-13 (#141) — classification and materiality are now separate. A `classifyEvent()` result with `materialityPass: false` is **not** a signal. The insert is skipped at all 5 live call sites; `raw_events` stays. D25 / ADR 021. Watchlist used by that gate is the live table (#142), not a hardcoded array.
 
 A signal contains:
 - **Title**: concise event description (what happened)
@@ -263,7 +264,7 @@ The block that used to live here (`alerts_sent.outcome_direction`, "NOT YET BUIL
 
 ### 48-hour fixed checkpoint, anchored on `event_date`
 
-Not "price now" and not `created_at`. For every signal ≥48h old with a non-empty `commodity_impacts` array, for each `(signal, asset)` pair not already stored:
+Not "price now" and not `created_at`. #144 also stores 1h / 4h / 24h rows once a signal is that old; the public headline remains 48h. For every signal old enough for a given horizon, with a non-empty `commodity_impacts` array, for each `(signal, asset, checkpoint_hours)` not already stored:
 
 1. Price at `event_date` (article/event time).
 2. Price at `event_date + 48h` (fixed horizon).

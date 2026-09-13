@@ -6,7 +6,7 @@
 
 ---
 
-## PHASE 31 — #121 FOLLOW-UP: MULTI-HORIZON OUTCOME CHECKPOINTS (2026-09-13)
+## PHASE 31 — #144 MULTI-HORIZON OUTCOME CHECKPOINTS (2026-09-13)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.64.0.
 

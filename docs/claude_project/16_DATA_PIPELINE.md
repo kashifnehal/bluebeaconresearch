@@ -4,6 +4,8 @@
 
 **Classification: Internal — CTO Level**
 
+> ⚠️ UPDATED 2026-09-13 (#141 / #142) — after `classifyEvent()` (and the heuristic fallback), a **materiality gate** runs at all 5 live insert sites. `materiality_pass = false` skips the `signals` insert; `raw_events` is kept. The communicators list is live `public.media_impact_watchlist`, not the #141 hardcoded array. The ASCII diagram below still shows the older "classify → always store" shape — do not treat that as current. Authoritative pipeline: `docs/brain/15_INGESTION_PIPELINE.md`.
+
 ---
 
 ## 1. PIPELINE OVERVIEW

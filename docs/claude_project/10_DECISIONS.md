@@ -573,6 +573,8 @@ credit (already an open item) means this path currently covers meaningful live t
 
 **Cross-tree mapping:** Recorded as **ADR 018** in `docs/brain/10_DECISIONS.md`. Full methodology: `17_SIGNAL_ENGINE.md` §7. Related: #53 (prerequisite), #115 (severity-bunching audit this work confirmed and extended).
 
+> ⚠️ UPDATED 2026-09-13 (#144) — the worker also writes 1h / 4h / 24h rows. The public headline and `GET /v1/accuracy` stay on 48h. Do not blend horizons. No `/accuracy` time-horizon selector unless a future prompt adds one.
+
 ---
 
 ## D23: Dual Anthropic Daily Budgets + Chat Email Allowlist (#111)
@@ -599,3 +601,27 @@ credit (already an open item) means this path currently covers meaningful live t
 **Rationale:** A trader cannot act on Upstash, PostgREST, or `db-error`. Honest fixed copy plus a log is enough to debug.
 
 **Cross-tree mapping:** Recorded as **ADR 020** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D25: Materiality gate fail-closed — never insert a failed classify (#141)
+
+**Decision:** After `classifyEvent()` / `heuristicClassify()`, a `materialityPass` that is not an explicit `true` is treated as `false`. All 5 live classify-then-insert sites skip the `signals` insert. `raw_events` is kept. The gate does **not** ask whether the underlying claim will turn out true.
+
+**Context:** #139 found 63% of a 14-day window sitting at severity 1–4 with empty impacts / "no market impact" summaries because classification had no reject step.
+
+**Rationale:** Severity and "should this be a signal" are different questions. Fail-closed so a malformed/missing field cannot sneak a junk row onto the desk.
+
+**Cross-tree mapping:** Recorded as **ADR 021** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D26: Media-impact watchlist is sourced-only (#142)
+
+**Decision:** `public.media_impact_watchlist` is the only communicators list `classifyEvent()` uses. Seed only sourced rows. Do not add Michael Saylor, Cathie Wood, or any unsourced name. Elon Musk `markets` stays empty because BTC is not on BBR's allowlist. Unsourced `mediaImpactEntity` values sanitize to null.
+
+**Context:** #141 shipped a temporary hardcoded 7-entry array. #142 replaced it with the live table.
+
+**Rationale:** The UI tag is a sourced historical pattern, not a forecast. An unsourced name on that tag would be fabricated authority.
+
+**Cross-tree mapping:** Recorded as **ADR 022** in `docs/brain/10_DECISIONS.md`.

@@ -42,7 +42,7 @@
 
 ## 2. CLASSIFICATION PROMPT (claude.service.ts)
 
-> ⚠️ UPDATED 2026-09-13 (#142) — `classifyEvent()` no longer inlines a hardcoded watchlist. It reads `public.media_impact_watchlist` (`active=true`) through a 10-min in-memory cache and asks Claude for `mediaImpactEntity` (exact `entity_name` or null). The JSON block below is the older intended spec; the live prompt also includes the #141 materiality-gate fields and this new entity field. Unsourced names are sanitized to null before persist.
+> ⚠️ UPDATED 2026-09-13 (#141 / #142) — `classifyEvent()` (`max_tokens` 500→900) still returns the original fields (severity/confidence/commodityImpacts/currencyPairImpacts/isBreaking/summary/region) and **also** asks for: `relevance`, `novelty` (0–1), `eventCategory` (9-value enum, not the older list in the JSON block below), `marketMechanism` (plain language or null), `isPreview`, `sourceConfirmation` (`official`|`reported`|`speculative`), `materialityPass` + `materialityReasoning`, and `mediaImpactEntity`. The watchlist is live `public.media_impact_watchlist` via a 10-min cache — not the #141 hardcoded array. `materialityPass` fails closed to `false` unless explicitly `true`. Unsourced entity names sanitize to null. Heuristic fallback only passes the gate with a validated impact or a watchlist hit. The JSON block below is the older intended spec — do not copy it into new work.
 
 ```
 SYSTEM:

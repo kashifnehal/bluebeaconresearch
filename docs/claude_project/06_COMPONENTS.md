@@ -430,7 +430,7 @@ export default function PageName() {
 
 ### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
 
-Reads stored `signal_outcomes` only. Methodology (48h/`event_date`, volatile/neutral excluded from headline, 20-sample floor, 24h price-distance guard, why not live-recomputed): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115.
+Reads stored `signal_outcomes` only — `GET /v1/accuracy` filters `checkpoint_hours = 48`. The worker also writes 1h/4h/24h rows (#144); this page does not select a horizon. Methodology (48h/`event_date`, volatile/neutral excluded from headline, 20-sample floor, 24h price-distance guard, why not live-recomputed): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115.
 
 Public track-record page, server component, `dynamic = "force-dynamic"`. Fetches
 `GET /v1/accuracy` directly server-side (`process.env.API_URL`, `cache: "no-store"`)

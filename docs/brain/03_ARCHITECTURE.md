@@ -147,10 +147,14 @@ Two prompt rules: (1) no buy/sell — same as `generateAnalysis()` / **#103**; (
 
 ---
 
-## 7. Outcome tracking & public accuracy (#121)
+## 7. Outcome tracking & public accuracy (#121 / #144)
 
 Canonical methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7 and D22 / ADR 018.
 
 `outcome-tracker.ts` (`0 5 * * *`) writes `signal_outcomes` once per `(signal, asset, checkpoint_hours)` for 1h/4h/24h/48h. `GET /v1/accuracy` reads only the 48h rows. 48h checkpoint on `event_date` remains the public headline; `volatile`/`neutral` out of headline hit-rate; 20-sample floor per asset; 24h price-point guard (Prompt M / `1cdc95d`: legacy EURUSD/USDRUB clamped to a distant print and fabricated false flats). Permanent storage because `commodity_prices` drops rows after 90 days.
 
 Prerequisite **#53**. Quality context **#115**.
+
+## 8. Materiality gate + MARKET IMPACT ASSESSMENT (#141 / #142 / #143)
+
+`materiality_pass = false` skips the `signals` insert (D25 / ADR 021). Watchlist is live `media_impact_watchlist` (D26 / ADR 022). Event-detail box is **MARKET IMPACT ASSESSMENT**, not PROJECTED IMPACT. Canonical: `docs/claude_project/03_ARCHITECTURE.md` §8.

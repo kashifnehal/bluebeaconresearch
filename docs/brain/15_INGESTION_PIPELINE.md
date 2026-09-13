@@ -20,7 +20,9 @@ Railway workers (startup + every 15 min)
         ↓
   raw_events table       (dedupe by external_id)
         ↓
-  Claude/heuristic classify → signals table (event_date = article publish time)
+  Claude/heuristic classify → materiality gate (#141) → signals table
+        (materiality_pass=false skips the insert; raw_events kept.
+         Watchlist hit is live `media_impact_watchlist`, #142.)
         ↓
   Redis pipeline:last_run (last fetch timestamp + run stats)
         ↓
@@ -30,7 +32,7 @@ Railway workers (startup + every 15 min)
 **Schedule:** `node-cron` every 15 minutes + immediate run on deploy.  
 **Last-fetched banner:** reads `pipeline:last_run` from Upstash Redis (fallback: newest `raw_events.created_at`).
 
-#121's `outcome-tracker.ts` is **not** on this 15-min loop. It is a separate daily cron (`0 5 * * *`) that writes `signal_outcomes` from already-stored signals + `commodity_prices`. Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Do not fold it into collectors.
+#121/#144's `outcome-tracker.ts` is **not** on this 15-min loop. It is a separate daily cron (`0 5 * * *`) that writes `signal_outcomes` at 1h/4h/24h/48h from already-stored signals + `commodity_prices`. `GET /v1/accuracy` still aggregates 48h only. Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Do not fold it into collectors.
 
 ---
 
@@ -189,12 +191,14 @@ After passing the filter and dedup check:
      - never invent commodity exposure without evidence
      - return an empty `commodityImpacts` array when no defensible commodity signal exists
      - preserve separate event severity, source confidence, and asset-level market-impact confidence
+   > ⚠️ UPDATED 2026-09-13 (#141 / #142) — `classifyEvent()` also returns the materiality-gate fields and `mediaImpactEntity` (live `media_impact_watchlist`, 10-min cache — not the #141 hardcoded array). After classify, **before** any `signals` insert, all 5 live call sites (`gnews`/`gdelt`/`rss`/`acled`/`reconciliation`) check `materialityPass`. `false` → log `"rejected"` to `service_health_events` (`service: "materiality_gate"`) and skip the insert. `raw_events` stays. Heuristic path only passes with a validated commodity/currency impact or a watchlist hit.
 3. Insert into `signals` with:
    - `severity` 1–10
    - `confidence` 0.55–0.90 (dynamic)
    - `commodity_impacts` JSON (USOIL, XAUUSD, etc.)
    - `currency_pair_impacts` JSON (EURUSD…USDCNY) — same `{asset,direction,confidence}` shape, from `ClassificationResult.currencyPairImpacts`. Added by #87 phase 1 (`a15e2fd`) to the schema/classifier and by phase 1B (`abb2004`, 2026-09-09) to the live inserts below — `signal-merge.ts` `insertOrMergeSignal()`, `reconciliation.ts`, `acled-collector.ts`. Heuristic fallback only emits USDRUB (Russia+sanctions) / USDCNY (China+tariff/Taiwan); the other 4 pairs are AI-only on that path. ADR 010 merge semantics: written once at row creation, never rewritten on a duplicate/escalation merge (parity with `commodity_impacts`).
    - **`event_date`** = article publish time (from RSS `pubDate`, GNews `publishedAt`, GDELT `seendate`)
+   - **#141/#142 columns** = `relevance`, `novelty`, `event_category`, `market_mechanism`, `is_preview`, `source_confirmation`, `materiality_pass`, `materiality_reasoning`, `media_impact_entity`
 
 > ⚠️ UPDATED 2026-08-19 — Step 3 is no longer an unconditional insert in the 3 live collectors (`rss-collector.ts`, `gnews-collector.ts`, `gdelt-collector.ts`). After classification returns, `insertOrMergeSignal()` (`apps/backend/src/workers/signal-merge.ts`) checks recent same-region signals for a plausible cross-source match on the classified summary. No match → inserts exactly as described above. A match with lower/equal severity → merges into the existing signal instead (`raw_event_ids` grows, `sources_count` increments, no new row, Sonnet briefing reused not regenerated). A match with higher severity → treated as an escalation: updates the existing signal's `severity` and regenerates its briefing rather than creating a second row. **Classification itself is never skipped** — this only changes what happens to an already-classified result. Full design and thresholds: `10_DECISIONS.md` ADR 010; `14_CHANGELOG.md` v0.27.0. Not wired into `reconciliation.ts`'s orphan-recovery insert path — that one is unchanged.
 

@@ -484,6 +484,8 @@ Commit: "fix: error boundaries + empty states + loading states + backtesting dis
 ### PROMPT B1 — Event Classification Prompt
 Used in `claude.service.ts` classifyEvent method.
 
+> ⚠️ UPDATED 2026-09-13 (#141 / #142) — the JSON block below is the older intended spec. Live `classifyEvent()` also asks for the materiality-gate fields and `mediaImpactEntity`; the watchlist is `public.media_impact_watchlist`. Canonical prompt/model spec: `18_AI_ENGINE.md` §2.
+
 ```
 You are an expert geopolitical analyst specializing in commodity market impact assessment.
 Analyze the following event and return ONLY a valid JSON object — no preamble, no explanation, no markdown.

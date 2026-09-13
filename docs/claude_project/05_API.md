@@ -153,6 +153,11 @@ Returns paginated signal feed. Auth required.
       ],
       "classification_method": "claude",
       "media_impact_entity": null,
+      "event_category": "armed_conflict_security",
+      "market_mechanism": "Strait risk premium on seaborne crude.",
+      "is_preview": false,
+      "source_confirmation": "reported",
+      "materiality_pass": true,
       "price_at_signal": { "USOIL": 84.20, "capturedAt": "2026-02-28T03:42:00Z" },
       "sanctions_matches": [],
       "shipping_proximity": {
@@ -186,7 +191,7 @@ Returns paginated signal feed. Auth required.
 #### GET /v1/signals/latest
 Returns 5 most recent signals. Used by landing page live preview and dashboard right sidebar. No plan restriction. Explicit select includes `media_impact_entity` (#142).
 
-> ⚠️ UPDATED 2026-09-13 (#143) — Next.js BFF `/api/signals` and `/api/signals/:id` map `eventCategory`, `marketMechanism`, and `isPreview` for the MARKET IMPACT ASSESSMENT box. `/api/signals/:id` also returns `currencyPairImpacts`.
+> ⚠️ UPDATED 2026-09-13 (#141 / #143) — Fastify `/v1/signals` already returns the #141 columns via `select("*")`. Next.js BFF `/api/signals` and `/api/signals/:id` map `eventCategory`, `marketMechanism`, and `isPreview` for the MARKET IMPACT ASSESSMENT box. `/api/signals/:id` also returns `currencyPairImpacts`. `relevance` / `novelty` / `sourceConfirmation` / `materialityPass` / `materialityReasoning` are stored but not yet mapped in the BFF (#143 leftover).
 
 **Response 200:**
 ```json

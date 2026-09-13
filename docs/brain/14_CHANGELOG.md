@@ -8,7 +8,7 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.64.0 — #121 follow-up: 1h/4h/24h/48h outcome checkpoints (2026-09-13)
+### v0.64.0 — #144: 1h/4h/24h/48h outcome checkpoints (2026-09-13)
 
 `apps/backend` only. `CHECKPOINT_HOURS` is now `CHECKPOINT_HOURS_LIST = [1, 4, 24, 48]`. The daily worker writes one `signal_outcomes` row per `(signal, asset, checkpoint)` once the signal is actually that many hours old — 1h/4h/24h are not deferred until 48h. 48h stays in the list; `FLAT_THRESHOLD_PCT`, `findClosestPoint()`, and `MAX_PRICE_POINT_DISTANCE_MS` are reused unchanged for every horizon. `GET /v1/accuracy` adds `.eq("checkpoint_hours", 48)` so the new rows cannot enter the #121 headline. No `/accuracy` time-horizon UI.
 
