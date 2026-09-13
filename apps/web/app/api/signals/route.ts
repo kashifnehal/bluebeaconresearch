@@ -5,6 +5,7 @@ import { dedupeSignalsByTitle } from "@/lib/dedupe-signals";
 import { REGIONS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { expandRegionVariants } from "@/lib/signal-filters";
+import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -52,6 +53,7 @@ type SignalRow = {
   created_at: string;
   updated_at: string | null;
   event_date: string | null;
+  media_impact_entity: string | null;
 };
 
 export async function GET(req: NextRequest) {
@@ -368,6 +370,7 @@ export async function GET(req: NextRequest) {
     }
 
     const rows = (data ?? []) as SignalRow[];
+    const mediaImpactCaveats = await loadMediaImpactCaveats(supabase);
 
     // Batch-fetch event dates from raw_events for all signals that have raw_event_ids
     const allRawEventIds = rows
@@ -413,6 +416,10 @@ export async function GET(req: NextRequest) {
         sanctionsMatches: r.sanctions_matches ?? undefined,
         isBreaking: r.is_breaking ?? false,
         isActive: r.is_active ?? true,
+        mediaImpactEntity: r.media_impact_entity ?? null,
+        mediaImpactCaveat: r.media_impact_entity
+          ? (mediaImpactCaveats.get(r.media_impact_entity) ?? null)
+          : null,
         createdAt: r.created_at,
         updatedAt: r.updated_at ?? undefined,
         eventDate,

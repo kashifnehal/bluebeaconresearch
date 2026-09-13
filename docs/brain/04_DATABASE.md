@@ -75,6 +75,7 @@ Stores LLM-synthesized geopolitical intelligence and asset impact data.
 - `event_date` (`timestamptz`, nullable) — source article publish time; this, not `created_at`, is what the feed renders as "X hours ago"
 - `classification_method` (`text`, nullable, check: `claude`, `heuristic`) — added by `20260912000000_signals_classification_method.sql`. Set by `classifyEvent()` at write time going forward: `claude` only when a real Anthropic call succeeded, `heuristic` when `ClaudeService.heuristicClassify()`'s keyword fallback ran. NULL = predates this column and didn't match the one-time backfill below. Heuristic severity is hard-capped at 6 as of the same change — two confirmed production false positives that drove this (found by direct SQL, 2026-09-12): signal `37e6c146-4189-4b96-be45-ad01ccaea016` ("...military radar sites in Oregon...") scored severity 8 on the bare word "military"; signal `5e3b9c09-99ad-4959-88e2-dcc90c2bb629` ("9/11 in the Navy: I went to war, but never got off the boat", a personal memoir) scored severity 9 on the bare word "war". Never trust severity > 6 on a `heuristic` row from before this cap.
 - `classification_method_inferred` (`boolean`, NOT NULL, default `false`) — `true` only on the one-time historical backfill (confidence-pattern inference: heuristic's `dynamicConfidence` formula can only output 0.55/0.62/0.69/0.76/0.83/0.90, so a historical row with confidence in that exact set was marked `heuristic` + inferred; everything else left NULL). `false` for every row classified going forward. Backfill result on `evavcgfmemwryggdkjmx`, 2026-09-12: 1,722 rows marked `heuristic`/inferred, 1,124 left NULL (unknown).
+- `media_impact_entity` (`text`, nullable) — #142, migration `20260913180000_media_impact_watchlist.sql`. Exact `media_impact_watchlist.entity_name` when `classifyEvent()` attributes the story's statement/commentary to a watchlist communicator; null otherwise. Not a forecast.
 
 ### Table 3: `raw_events`
 Ingested news articles and incident logs before classification.
@@ -241,6 +242,15 @@ Permanent, never-live-recomputed outcome record — one row per (signal, asset) 
 - `is_directionally_correct` (`boolean`, nullable — **NULL for `volatile`/`neutral` predictions**, only `up`/`down` predictions are scored true/false)
 - `computed_at` (`timestamptz`, NOT NULL, default `now()`); **UNIQUE** `(signal_id, asset)`; index on `signal_id`.
 - Populated by looking up the `commodity_prices` row closest to `event_date` and the row closest to `event_date + checkpoint_hours` for that asset symbol (binary search over that asset's full price series, loaded once per worker run — not one query per pair). If the closest available point is more than 24h from its target (the largest real `commodity_prices` sync gap observed is ~18h13m), the pair is skipped rather than written with a fabricated/clamped price — this matters concretely for the legacy pre-#87 `EURUSD`/`USDRUB` entries some old `commodity_impacts` rows still carry, since those forex symbols only have price history from 2026-09-09 onward.
+
+### Table 18b: `media_impact_watchlist` (#142, migration `20260913180000_media_impact_watchlist.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-13)
+Reference table of communicators whose statements have a sourced historical market reaction. Public read (`to anon, authenticated using (true)`); service-role write only — same RLS shape as Table 18. Seeded with exactly 7 rows; do not add unsourced names (Saylor / Wood were explicitly excluded).
+- `id` (`uuid`, PK) / `entity_name` (`text`, NOT NULL, UNIQUE) / `entity_aliases` (`text[]`, NOT NULL, default `'{}'`)
+- `tier` (`text`, NOT NULL, check: `institutional_official` | `political_geopolitical` | `individual_social_media`)
+- `markets` (`text[]`, NOT NULL) — Elon Musk is `{}` because BTC is not on the approved asset list
+- `statement_type` / `evidence_summary` / `caveat` (`text`, NOT NULL) / `evidence_sources` (`text[]`, NOT NULL)
+- `active` (`boolean`, NOT NULL, default true) / `created_at` (`timestamptz`, NOT NULL, default now())
+- Partial index on `active` where true. Read by `classifyEvent()` via a 10-min in-memory cache.
 
 **Known drift corrected 2026-08-27** — the previous version of this section stated these, all of which were wrong against the live DB:
 - `alert_rules.channels` default was documented as `'{telegram}'`; it is actually `'{email}'`. This is the most misleading of the set, since it describes what a newly created rule does by default.

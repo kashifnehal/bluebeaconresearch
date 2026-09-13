@@ -107,6 +107,7 @@ export function startAiClassifierWorker() {
         // (parsed.data) — the zod schema above doesn't declare this field, so
         // safeParse would silently strip it from `r`.
         classification_method: result.classificationMethod,
+        media_impact_entity: result.mediaImpactEntity ?? null,
       }).select("id").maybeSingle();
 
       if (insert.error || !insert.data?.id) throw new Error("Failed to insert signal");

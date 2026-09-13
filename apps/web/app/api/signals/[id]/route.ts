@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
+import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -144,6 +145,12 @@ export async function GET(
     }),
   );
 
+  const mediaImpactCaveats = await loadMediaImpactCaveats(supabase);
+  const mediaImpactEntity =
+    typeof row.media_impact_entity === "string" && row.media_impact_entity.trim()
+      ? row.media_impact_entity
+      : null;
+
   const signal: Signal = {
     id: row.id,
     title: row.title,
@@ -162,6 +169,10 @@ export async function GET(
     isBreaking: row.is_breaking ?? false,
     isActive: row.is_active ?? true,
     classificationMethod: row.classification_method ?? null,
+    mediaImpactEntity,
+    mediaImpactCaveat: mediaImpactEntity
+      ? (mediaImpactCaveats.get(mediaImpactEntity) ?? null)
+      : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? undefined,
     eventDate,

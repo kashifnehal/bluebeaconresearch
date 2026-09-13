@@ -217,6 +217,8 @@ interface SignalCardProps {
 - Background: bg-danger-subtle
 - "BREAKING" badge prepended to title
 
+**#142 `[Media-Impact]` tag** (`MediaImpactTag.tsx`): shown when `signal.mediaImpactEntity` is set. Compact hover/title on cards; expanded entity + short caveat on the event detail page. Copy is a sourced historical reaction pattern — not a forecast, not a buy/sell. Live dashboard featured / secondary / stream cards render the same tag (those cards are inline in `dashboard/page.tsx`, not `SignalCard`).
+
 ---
 
 ### SignalChatPanel (apps/web/components/signals/SignalChatPanel.tsx) — #111, `9f2aada`; visual pass 2026-09-12

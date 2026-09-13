@@ -1,5 +1,84 @@
 import assert from "node:assert/strict";
 import { ClaudeService } from "./claude.service.js";
+import {
+  setWatchlistCacheForTests,
+  type MediaImpactWatchlistEntry,
+} from "../lib/media-impact-watchlist.js";
+
+const TEST_WATCHLIST: MediaImpactWatchlistEntry[] = [
+  {
+    entityName: "OPEC",
+    entityAliases: ["OPEC+"],
+    tier: "institutional_official",
+    markets: ["USOIL", "UKOIL"],
+    statementType: "official communication",
+    evidenceSummary: "Fed working paper",
+    evidenceSources: ["https://example.com/opec"],
+    caveat: "Official OPEC statements have historically REDUCED oil volatility.",
+  },
+  {
+    entityName: "Saudi Arabia's Energy Minister",
+    entityAliases: ["Prince Abdulaziz bin Salman"],
+    tier: "institutional_official",
+    markets: ["USOIL", "UKOIL"],
+    statementType: "public statement",
+    evidenceSummary: "Dated instances",
+    evidenceSources: ["https://example.com/saudi"],
+    caveat: "Real, dated, specific evidence.",
+  },
+  {
+    entityName: "US Federal Reserve Chair",
+    entityAliases: ["Jerome Powell", "Fed Chair"],
+    tier: "institutional_official",
+    markets: ["USOIL", "XAUUSD", "EURUSD"],
+    statementType: "official communication",
+    evidenceSummary: "FRBSF event study",
+    evidenceSources: ["https://example.com/fed"],
+    caveat: "Only the scheduled FOMC statement counts.",
+  },
+  {
+    entityName: "USDA",
+    entityAliases: ["WASDE"],
+    tier: "institutional_official",
+    markets: ["WHEAT", "CORN"],
+    statementType: "official communication",
+    evidenceSummary: "Mattos & Silveira 2016",
+    evidenceSources: ["https://example.com/usda"],
+    caveat: "Only the actual data release counts.",
+  },
+  {
+    entityName: "Russian President",
+    entityAliases: ["Vladimir Putin", "Putin"],
+    tier: "political_geopolitical",
+    markets: ["NGAS"],
+    statementType: "public statement",
+    evidenceSummary: "Dated gas-supply statements",
+    evidenceSources: ["https://example.com/ru"],
+    caveat: "Relevant to live natural-gas coverage.",
+  },
+  {
+    entityName: "US President",
+    entityAliases: ["U.S. President"],
+    tier: "political_geopolitical",
+    markets: ["USOIL", "UKOIL"],
+    statementType: "public statement",
+    evidenceSummary: "Dated WTI/Brent moves",
+    evidenceSources: ["https://example.com/us"],
+    caveat: "Short-term reaction historically, not a lasting repricing.",
+  },
+  {
+    entityName: "Elon Musk",
+    entityAliases: ["Musk"],
+    tier: "individual_social_media",
+    markets: [],
+    statementType: "public social-media post",
+    evidenceSummary: "CNBC / SEC fine",
+    evidenceSources: ["https://example.com/musk"],
+    caveat: "Same transience caveat as the academic literature.",
+  },
+];
+
+setWatchlistCacheForTests(TEST_WATCHLIST);
 
 process.env.NODE_ENV = "test";
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
@@ -375,6 +454,7 @@ async function main() {
         classification.materialityReasoning,
         /no commodity\/currency impact and no watchlist match/,
       );
+      assert.equal(classification.mediaImpactEntity ?? null, null);
     },
   );
 
@@ -416,6 +496,7 @@ async function main() {
         classification.materialityReasoning,
         /matched watchlist entity Elon Musk/,
       );
+      assert.equal(classification.mediaImpactEntity, "Elon Musk");
     },
   );
 
@@ -452,6 +533,7 @@ async function main() {
                     sourceConfirmation: "reported",
                     materialityPass: false,
                     materialityReasoning: "no commodity/currency/watchlist mechanism",
+                    mediaImpactEntity: null,
                   }),
                 },
               ],
@@ -482,8 +564,11 @@ async function main() {
         assert.match(capturedUser, /"sourceConfirmation"/);
         assert.match(capturedUser, /"materialityPass"/);
         assert.match(capturedUser, /"materialityReasoning"/);
+        assert.match(capturedUser, /"mediaImpactEntity"/);
         assert.match(capturedUser, /OPEC/);
         assert.match(capturedUser, /Elon Musk/);
+        assert.equal(capturedUser.includes("Cathie Wood"), false);
+        assert.equal(capturedUser.includes("Michael Saylor"), false);
         assert.match(capturedUser, /already logged in the.*last 48 hours: yes/);
         assert.ok(capturedMaxTokens >= 900, `Expected max_tokens >= 900, got ${capturedMaxTokens}`);
 
@@ -495,6 +580,103 @@ async function main() {
         assert.strictEqual(classification.isPreview, false);
         assert.strictEqual(classification.sourceConfirmation, "reported");
         assert.strictEqual(classification.materialityPass, false);
+        assert.equal(classification.mediaImpactEntity ?? null, null);
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
+    "classifyEvent keeps a watchlist mediaImpactEntity and drops an unsourced name",
+    async () => {
+      const promptService = new ClaudeService();
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => ({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  severity: 5,
+                  confidence: 0.7,
+                  commodityImpacts: [],
+                  currencyPairImpacts: [],
+                  isBreaking: false,
+                  summary: "OPEC issued an official communication",
+                  region: "global",
+                  relevance: 0.8,
+                  novelty: 0.7,
+                  eventCategory: "official_statement_commentary",
+                  marketMechanism: null,
+                  isPreview: false,
+                  sourceConfirmation: "official",
+                  materialityPass: true,
+                  materialityReasoning: "watchlist entity OPEC",
+                  mediaImpactEntity: "OPEC",
+                }),
+              },
+            ],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const hit = await promptService.classifyEvent({
+          title: "OPEC issued an official communication on output",
+          summary: "The organization released a statement.",
+          event_type: "news",
+          country: "Global",
+          event_date: new Date().toISOString(),
+        });
+        assert.equal(hit.mediaImpactEntity, "OPEC");
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => ({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  severity: 3,
+                  confidence: 0.5,
+                  commodityImpacts: [],
+                  currencyPairImpacts: [],
+                  isBreaking: false,
+                  summary: "A market commentator posted online",
+                  region: "global",
+                  relevance: 0.2,
+                  novelty: 0.4,
+                  eventCategory: "other_market_relevant",
+                  marketMechanism: null,
+                  isPreview: false,
+                  sourceConfirmation: "speculative",
+                  materialityPass: false,
+                  materialityReasoning: "no mechanism",
+                  mediaImpactEntity: "Cathie Wood",
+                }),
+              },
+            ],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const miss = await promptService.classifyEvent({
+          title: "A market commentator posted online",
+          summary: "No watchlist communicator is named.",
+          event_type: "news",
+          country: "US",
+          event_date: new Date().toISOString(),
+        });
+        assert.equal(miss.mediaImpactEntity ?? null, null);
       } finally {
         delete process.env.ANTHROPIC_API_KEY;
       }

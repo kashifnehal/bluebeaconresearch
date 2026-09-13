@@ -123,6 +123,8 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 > ⚠️ UPDATED 2026-09-11 (#121 backend half) — new table `signal_outcomes` (id, signal_id → signals, asset, predicted_direction, predicted_confidence, price_at_event, price_at_checkpoint, checkpoint_hours, actual_pct_change, actual_direction, is_directionally_correct, computed_at; unique `(signal_id, asset)`; index on `signal_id`; RLS public read, service-role write only). Applied live via `20260911190000_signal_outcomes.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 18. Permanent because `commodity_prices` is 90-day retained (D22 / ADR 018, `17_SIGNAL_ENGINE.md` §7). Prerequisite #53; quality context #115.
 >
 > ⚠️ UPDATED 2026-09-12 (reliability/trust fix) — two new `signals` columns: `classification_method` (`claude`|`heuristic`|NULL) and `classification_method_inferred` (boolean). Set going forward by `classifyEvent()`; historical rows best-effort backfilled by confidence-pattern match (1,722 marked `heuristic`, 1,124 left NULL). Paired with this: heuristic-path severity is now hard-capped at 6 — two confirmed real false positives ("military" scoring 8, "war" scoring 9 on unrelated stories) drove the cap; see `docs/brain/10_DECISIONS.md` ADR 016. Applied live via `20260912000000_signals_classification_method.sql`. Full detail: `docs/brain/04_DATABASE.md` Table 2.
+>
+> ⚠️ UPDATED 2026-09-13 (#142) — new table `media_impact_watchlist` (entity_name unique, aliases, tier CHECK, markets, statement_type, evidence_summary, evidence_sources, caveat, active; RLS public read / service-role write) + `signals.media_impact_entity`. Applied live via `20260913180000_media_impact_watchlist.sql`. Full columns: `docs/brain/04_DATABASE.md` Table 18b / Table 2.
 
 ---
 

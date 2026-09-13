@@ -57,8 +57,10 @@
 > ⚠️ UPDATED 2026-09-13 (#140) — `CommodityChip` no longer shows a raw classifier-confidence percent next to the direction arrow (`apps/web` only). Confidence stays on the API/prop and in "model classification confidence {n}%" aria-label. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.60.0. This tree: PHASE 27.
 
 > ⚠️ UPDATED 2026-09-13 (later, #141 — the most consequential ingestion change to date) — `apps/backend` + migration only. Direct answer to the #139 audit's finding that 63% of signals in a 14-day window were severity 1-4 "no market impact" junk: classification never had a reject step, so everything Claude classified became a `signals` row. Adds a materiality gate — 8 new `signals` columns (`relevance`, `novelty`, `event_category`, `market_mechanism`, `is_preview`, `source_confirmation`, `materiality_pass`, `materiality_reasoning`) and a second question `classifyEvent()` (and the heuristic fallback, conservative-consistently) must answer after classifying: does this story clear BBR's own reasonable-investor-inspired materiality bar (genuine new information AND a real market mechanism / watchlist-entity hit / genuine armed-conflict relevance)? Enforced at all 5 live classify-then-insert call sites; a fail skips the `signals` insert (raw_events kept for audit) and logs to `service_health_events`. Verified live against production with 3 real Claude-classified test stories (junk administrative story correctly rejected, a pure calendar-reminder correctly flagged `isPreview: true` and rejected, a real Red Sea tanker-strike story correctly passed with a genuine mechanism) — all test rows deleted after. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.61.0. This tree: PHASE 28.
+>
+> ⚠️ UPDATED 2026-09-13 (#142) — #141's hardcoded 7-entity watchlist is now `public.media_impact_watchlist` (live on `evavcgfmemwryggdkjmx`) plus `signals.media_impact_entity`. `classifyEvent()` reads active rows through a 10-min in-memory cache; the UI shows a `[Media-Impact]` tag (historical pattern, not a forecast) when the field is set. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.62.0. This tree: PHASE 29.
 
-Last updated: 2026-09-13 (#141 materiality gate)
+Last updated: 2026-09-13 (#142 live media-impact watchlist)
 
 ---
 

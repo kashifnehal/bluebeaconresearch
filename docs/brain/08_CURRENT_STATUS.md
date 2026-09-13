@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (#141 materiality gate)
+Last updated: 2026-09-13 (#142 live media-impact watchlist)
 
 ---
+
+## #142 live media-impact watchlist (2026-09-13)
+
+`apps/backend` + `apps/web` + Supabase migration. Full record: `14_CHANGELOG.md` v0.62.0, `LIVE_TODO.md`. Replaces #141's hardcoded watchlist array with `public.media_impact_watchlist` (7 sourced rows, public-read / service-role write) and writes `signals.media_impact_entity` from `classifyEvent()`. UI `[Media-Impact]` tag on card/detail when non-null. Elon Musk markets empty (BTC not tracked). Saylor/Wood not added. Verified live against production: 7 rows + correct tiers; live watchlist read + heuristic classify (OPEC → entity set, diplomatic talks → null).
 
 ## #141 materiality gate: the pipeline's first real "does this mean anything?" reject step (2026-09-13)
 

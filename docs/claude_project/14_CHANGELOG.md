@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 29 — #142 LIVE MEDIA-IMPACT WATCHLIST (2026-09-13)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.62.0.
+
+- Replaces #141's temporary hardcoded 7-entry watchlist in `classifyEvent()` with `public.media_impact_watchlist` (public-read / service-role write, same RLS shape as `signal_outcomes`). Seeded with the 7 sourced communicators only — no Saylor, no Wood. Elon Musk markets omitted because BBR does not track BTC.
+- New `signals.media_impact_entity` populated from a new `mediaImpactEntity` classify field (exact watchlist `entity_name`, or null). Backend caches the active list for 10 minutes.
+- `apps/web` shows a distinct `[Media-Impact]` tag on dashboard cards / stream, quick-view, and the event detail page whenever the field is set, with the entity name and a short caveat. Copy describes a sourced historical reaction pattern — not a forecast, not a buy/sell.
+
 ## PHASE 28 — #141 MATERIALITY GATE: THE PIPELINE'S FIRST REAL "DOES THIS MEAN ANYTHING?" REJECT STEP (2026-09-13)
 
 > Narrative summary for this tree. Full technical detail (prompt text, sanitization, per-call-site wiring, real verification output): `docs/brain/14_CHANGELOG.md` v0.61.0.

@@ -7,6 +7,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { SeverityBadge } from "./SeverityBadge";
 import { CommodityChip } from "./CommodityChip";
 import { FreshTag } from "./FreshTag";
+import { MediaImpactTag } from "./MediaImpactTag";
 
 export function SignalCard({
   signal,
@@ -40,6 +41,10 @@ export function SignalCard({
           <span className="text-outline text-xs uppercase tracking-wide">
             {signal.eventType}
           </span>
+          <MediaImpactTag
+            entity={signal.mediaImpactEntity}
+            caveat={signal.mediaImpactCaveat}
+          />
         </div>
         <div className="flex items-center gap-2 text-outline text-xs">
           <FreshTag createdAt={signal.createdAt} className="text-primary font-mono" />

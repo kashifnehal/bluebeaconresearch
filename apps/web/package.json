@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "test": "../backend/node_modules/.bin/tsx lib/signal-display.test.ts && ../backend/node_modules/.bin/tsx lib/user-error-copy.test.ts && ../backend/node_modules/.bin/tsx components/signals/CommodityChip.test.tsx"
+    "test": "../backend/node_modules/.bin/tsx lib/signal-display.test.ts && ../backend/node_modules/.bin/tsx lib/user-error-copy.test.ts && ../backend/node_modules/.bin/tsx components/signals/CommodityChip.test.tsx && ../backend/node_modules/.bin/tsx components/signals/MediaImpactTag.test.tsx"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

@@ -11,6 +11,13 @@ import {
 } from "../lib/chat-relevance.js";
 import { sanitizeCitedChatReply } from "../lib/cited-chat-reply.js";
 import { recordServiceHealth } from "../lib/service-health.js";
+import {
+  formatWatchlistPromptBlock,
+  getActiveWatchlist,
+  matchWatchlistEntity,
+  sanitizeMediaImpactEntity,
+  type MediaImpactWatchlistEntry,
+} from "../lib/media-impact-watchlist.js";
 
 // chatAboutSignal() truncation safety net (quality bug found in live testing,
 // 2026-09-12): max_tokens stays at 600 (do not raise it — see chatAboutSignal),
@@ -38,67 +45,11 @@ function trimToLastCompleteSentence(text: string): string {
 const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 const SONNET_MODEL = "claude-sonnet-5";
 
-// #139/#141 — BBR's watchlist of individuals/institutions with a real, sourced
-// history of moving markets through their own statements. This is #142's list,
-// inlined directly here as a hardcoded array because #142's own database table
-// doesn't exist yet (per the task spec). A hit on this watchlist is one way
-// materialityPass criterion (b) can be satisfied even without a fully
-// worked-out market mechanism. FOLLOW-UP (tracked as #142): replace this
-// hardcoded array with a live database read once that table exists — do not
-// let this list silently become the permanent source of truth.
-type WatchlistEntry = { name: string; caveat: string; matcher: RegExp };
-
-const MATERIALITY_WATCHLIST: WatchlistEntry[] = [
-  {
-    name: "OPEC",
-    caveat: "statements are stabilizing, not shock-inducing",
-    matcher: /\bopec\b/i,
-  },
-  {
-    name: "Saudi Arabia's Energy Minister",
-    caveat: "statements are stabilizing, not shock-inducing",
-    matcher:
-      /\bsaudi[^.]{0,25}energy minister\b|\benergy minister[^.]{0,25}saudi\b|\bprince abdulaziz\b/i,
-  },
-  {
-    name: "Russian President",
-    caveat: "price moves from this figure's statements are historically short-lived/transient",
-    matcher: /\brussian president\b|\bpresident putin\b|\bvladimir putin\b|\bputin\b/i,
-  },
-  {
-    name: "US President",
-    caveat: "price moves from this figure's statements are historically short-lived/transient",
-    matcher: /\bus president\b|\bu\.s\. president\b|\bpresident trump\b|\bdonald trump\b|\btrump\b/i,
-  },
-  {
-    name: "US Federal Reserve Chair",
-    caveat: "only counts as the release itself, never a preview",
-    matcher: /\bfed(?:eral reserve)? chair\b|\bjerome powell\b|\bpowell\b/i,
-  },
-  {
-    name: "USDA",
-    caveat: "only counts as the release itself, never a preview",
-    matcher: /\busda\b/i,
-  },
-  {
-    name: "Elon Musk",
-    caveat: "price moves from this figure's statements are historically short-lived/transient",
-    matcher: /\belon musk\b|\bmusk\b/i,
-  },
-];
-
-/** Returns the matched watchlist entry's display name, or null if none match. */
-function matchWatchlist(text: string): string | null {
-  for (const entry of MATERIALITY_WATCHLIST) {
-    if (entry.matcher.test(text)) return entry.name;
-  }
-  return null;
-}
-
-/** Renders the watchlist as the inline prompt block Claude is given verbatim. */
-function watchlistPromptBlock(): string {
-  return MATERIALITY_WATCHLIST.map((e) => `- ${e.name} — ${e.caveat}.`).join("\n");
-}
+// #142 — watchlist lives in public.media_impact_watchlist (active=true).
+// classifyEvent() reads it through getActiveWatchlist() (10-min in-memory TTL,
+// same cache shape as routes/price-history.ts). A hit is still one way
+// materialityPass criterion (b) can be satisfied without a fully worked-out
+// market mechanism. Do not re-inline a hardcoded list here.
 
 // #139/#141 — the materiality-gate instruction text, given to Claude verbatim
 // alongside the watchlist above, ahead of the JSON schema in classifyEvent()'s
@@ -179,6 +130,10 @@ export type ClassificationResult = {
   // immediately after classifyEvent() returns (see lib/materiality-gate.ts).
   materialityPass: boolean;
   materialityReasoning: string;
+  // #142 — exact media_impact_watchlist.entity_name when the story's
+  // statement/commentary is attributable to a watchlist communicator.
+  // Null when not applicable or when the model named something off-list.
+  mediaImpactEntity?: string | null;
 };
 
 export class ClaudeService {
@@ -315,6 +270,7 @@ export class ClaudeService {
     const summaryText = String(rawEvent.summary ?? "");
     const similarStoryLast48h = options?.similarStoryLast48h ?? false;
     const callStartedAt = Date.now();
+    const watchlist = await getActiveWatchlist();
 
     const ingestionBudgetOpen = client ? await isAnthropicBudgetAvailable("ingestion") : false;
     if (client && !ingestionBudgetOpen) {
@@ -346,7 +302,7 @@ export class ClaudeService {
           `don't rely on it alone for novelty).\n\n` +
           `BBR's watchlist of individuals/institutions with a real, sourced history of moving markets ` +
           `through their own statements (relevant to materialityPass criterion (b) and to sourceConfirmation):\n` +
-          `${watchlistPromptBlock()}\n\n` +
+          `${formatWatchlistPromptBlock(watchlist)}\n\n` +
           `MATERIALITY GATE: ${MATERIALITY_GATE_INSTRUCTION}\n\n` +
           `Return ONLY valid JSON (no markdown):\n` +
           `{\n` +
@@ -364,7 +320,8 @@ export class ClaudeService {
           `  "isPreview": boolean — true ONLY if this story exclusively reminds the reader of a previously-known, already-scheduled event or date, with no new claim, statement, or data attached (a pure "week ahead" or "don't forget, X happens on date Y" story). False for any story that reports a new fact, statement, or claim — even an unconfirmed one — about an event that hasn't happened yet. A scheduled event's actual release/decision is always false. Most stories about a not-yet-happened event will be false here; true is reserved for the narrow, information-free reminder case.,\n` +
           `  "sourceConfirmation": one of exactly "official"|"reported"|"speculative". "official" — a named official, institution, or government body making a direct, on-the-record statement, or an actual official release/decision. "reported" — a sourced claim attributed to named or unnamed sources ("sources say," "people familiar with the matter," a named outlet's own original reporting of a claim). "speculative" — commentary, analysis, or opinion guessing about a possible future event with no sourced claim behind it. Base this only on what the article itself states about its own sourcing — do not use this field to judge whether the claim is true, only what kind of claim it is.,\n` +
           `  "materialityPass": boolean — the outcome of the MATERIALITY GATE instruction above,\n` +
-          `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important"\n` +
+          `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important",\n` +
+          `  "mediaImpactEntity": the matched entity_name string from BBR's watchlist above if this story's statement or commentary is attributable to one of those entities, or null if not applicable. Return the exact entity_name from the list (never an alias, never a name that is not on the list). This field describes a sourced historical reaction pattern; it is not a forecast and not a trading recommendation.\n` +
           `}`;
 
         const msg = await client.messages.create({
@@ -423,6 +380,11 @@ export class ClaudeService {
             : parsed.materialityPass
               ? "claude: passed materiality gate (no reasoning text returned)"
               : "claude: failed materiality gate (no reasoning text returned)";
+        parsed.mediaImpactEntity = sanitizeMediaImpactEntity(
+          (parsed as ClassificationResult & { mediaImpactEntity?: unknown })
+            .mediaImpactEntity,
+          watchlist,
+        );
         const usage = usageFromMessage(msg);
         await recordAnthropicUsage({
           bucket: "ingestion",
@@ -449,13 +411,14 @@ export class ClaudeService {
       }
     }
 
-    return this.heuristicClassify(title, summaryText, rawEvent);
+    return this.heuristicClassify(title, summaryText, rawEvent, watchlist);
   }
 
   private heuristicClassify(
     title: string,
     summaryText: string,
     rawEvent: Record<string, unknown>,
+    watchlist: MediaImpactWatchlistEntry[] = [],
   ): ClassificationResult {
     const text = (title + " " + summaryText).toLowerCase();
 
@@ -630,13 +593,13 @@ export class ClaudeService {
     // marketMechanism/sourceConfirmation — but it must still be
     // conservative-consistent with the real gate: only produce a signals row when
     // EITHER (a) it already found at least one validated commodity/currency
-    // impact above, OR (b) the text matches one of the #139/#141 watchlist
+    // impact above, OR (b) the text matches one of the #142 live watchlist
     // entities. sanitizeCommodityImpacts/sanitizeForexImpacts run below on the
     // raw arrays either way, and are the very functions the gate criterion (a)
     // relies on having already validated.
     const sanitizedCommodityImpacts = this.sanitizeCommodityImpacts(commodityImpacts);
     const sanitizedCurrencyPairImpacts = this.sanitizeForexImpacts(currencyPairImpacts);
-    const watchlistMatch = matchWatchlist(text);
+    const watchlistMatch = matchWatchlistEntity(text, watchlist);
     const hasValidatedImpact =
       sanitizedCommodityImpacts.length > 0 || sanitizedCurrencyPairImpacts.length > 0;
 
@@ -679,6 +642,7 @@ export class ClaudeService {
       isPreview: false,
       materialityPass,
       materialityReasoning,
+      mediaImpactEntity: watchlistMatch,
     };
   }
 

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
+import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { EventLocationMap } from "@/components/signals/EventLocationMap";
 import { SignalChatPanel } from "@/components/signals/SignalChatPanel";
@@ -239,6 +240,11 @@ export default function EventDetailPage() {
                   </span>
                 </div>
                 <SeverityBadge score={signal.severity} />
+                <MediaImpactTag
+                  entity={signal.mediaImpactEntity}
+                  caveat={signal.mediaImpactCaveat}
+                  expanded
+                />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">
                   Acknowledge Status: ACTIVE
                 </span>

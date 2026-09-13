@@ -11,6 +11,7 @@ import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { FilterBar } from "@/components/signals/FilterBar";
 import { SignalQuickView } from "@/components/signals/SignalQuickView";
 import { FreshTag } from "@/components/signals/FreshTag";
+import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
@@ -399,6 +400,10 @@ export default function DashboardPage() {
                           ? "PRIORITY: CRITICAL"
                           : featured.eventType || "SIGNAL"}
                       </span>
+                      <MediaImpactTag
+                        entity={featured.mediaImpactEntity}
+                        caveat={featured.mediaImpactCaveat}
+                      />
                       <span
                         className="text-[11px]"
                         style={{
@@ -590,6 +595,10 @@ export default function DashboardPage() {
                           >
                             {secondaryA.eventType || "INTELLIGENCE"}
                           </span>
+                          <MediaImpactTag
+                            entity={secondaryA.mediaImpactEntity}
+                            caveat={secondaryA.mediaImpactCaveat}
+                          />
                         </div>
                         <span
                           className="material-symbols-outlined text-xl"
@@ -679,6 +688,10 @@ export default function DashboardPage() {
                           >
                             {secondaryB.eventType || "MARKET DRIFT"}
                           </span>
+                          <MediaImpactTag
+                            entity={secondaryB.mediaImpactEntity}
+                            caveat={secondaryB.mediaImpactCaveat}
+                          />
                         </div>
                         <span
                           className="material-symbols-outlined text-xl"
@@ -766,6 +779,10 @@ export default function DashboardPage() {
                           fontFamily: "'JetBrains Mono', monospace",
                           color: "#4edea3",
                         }}
+                      />
+                      <MediaImpactTag
+                        entity={item.mediaImpactEntity}
+                        caveat={item.mediaImpactCaveat}
                       />
                       <div
                         className="flex-1 font-semibold transition-colors group-hover:text-[#4edea3]"

@@ -60,6 +60,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
           { "asset": "USDRUB", "direction": "up", "confidence": 0.72 }
         ],
         "classification_method": "claude",
+        "media_impact_entity": null,
         "is_breaking": true,
         "created_at": "2026-08-04T12:00:00Z",
         "updated_at": "2026-08-04T12:15:00Z",
@@ -74,6 +75,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
   ```
 > ⚠️ UPDATED 2026-08-19 — Two caveats on the `ai_analysis` field above: (1) Anthropic API credit is currently exhausted, so a heuristic classifier fallback is generating this content, not live Claude; (2) for severity ≥7 signals specifically, this field was found completely unpopulated (0 of 423 signals, ever) due to a dormant-BullMQ-queue wiring bug, fixed 2026-08-19 by wiring `generateSignalAnalysis()` inline into the collectors and reconciliation worker.
 > ⚠️ UPDATED 2026-09-12 — new field `classification_method` (`"claude"` | `"heuristic"` | `null` for pre-existing unbackfilled rows) reflects which caveat above actually applied to this specific row. As of this date, heuristic-path severity is hard-capped at 6 — a `"heuristic"` row will never show severity > 6. See `10_DECISIONS.md` ADR 016 and migration `20260912000000_signals_classification_method.sql`.
+> ⚠️ UPDATED 2026-09-13 (#142) — `media_impact_entity` (`string` | `null`) is the matched `media_impact_watchlist.entity_name` when the story's statement is attributable to a sourced communicator; null otherwise. Next.js `/api/signals` and `/api/signals/:id` also attach `mediaImpactCaveat` (short first-sentence caveat from the watchlist) for the `[Media-Impact]` tag. Not a forecast.
 - **Consumers**: Next.js Dashboard, MapLibre Map (OpenStreetMap tiles), Mobile Client.
 
 **Notes**: In degraded or rate-limited scenarios `/api/signals` may return the last-known payload with additional non-breaking fields: `fallback` (boolean), `fallbackReason` (string), and `fallbackLastUpdated` (ISO timestamp). The server also sets header `x-signals-feed-status: degraded` when serving cached/fallback data.

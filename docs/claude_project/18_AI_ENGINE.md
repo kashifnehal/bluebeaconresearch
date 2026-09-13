@@ -42,6 +42,8 @@
 
 ## 2. CLASSIFICATION PROMPT (claude.service.ts)
 
+> ⚠️ UPDATED 2026-09-13 (#142) — `classifyEvent()` no longer inlines a hardcoded watchlist. It reads `public.media_impact_watchlist` (`active=true`) through a 10-min in-memory cache and asks Claude for `mediaImpactEntity` (exact `entity_name` or null). The JSON block below is the older intended spec; the live prompt also includes the #141 materiality-gate fields and this new entity field. Unsourced names are sanitized to null before persist.
+
 ```
 SYSTEM:
 You are an expert geopolitical analyst specializing in commodity market impact assessment.

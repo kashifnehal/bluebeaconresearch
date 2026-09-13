@@ -8,6 +8,18 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.62.0 — #142 live media-impact watchlist (2026-09-13)
+
+`apps/backend` + `apps/web` + a Supabase migration. Replaces the hardcoded 7-entry `MATERIALITY_WATCHLIST` array #141 inlined in `claude.service.ts` with a live table, and surfaces a match as a UI tag.
+
+**Migration** (`20260913180000_media_impact_watchlist.sql`, applied live to `evavcgfmemwryggdkjmx` as `media_impact_watchlist`): new `public.media_impact_watchlist` (entity_name, aliases, tier CHECK of the three specified values, markets, statement_type, evidence_summary, evidence_sources, caveat, active, created_at). RLS: `media_impact_watchlist_select_public` to `anon, authenticated using (true)` — same shape as `signal_outcomes` (#121); no write policy (service-role only). Seeded exactly 7 sourced rows. New nullable `signals.media_impact_entity` text. Elon Musk `markets` is `{}` — BBR's classifier allowlist is USOIL/UKOIL/NGAS/XAUUSD/WHEAT/CORN plus forex; BTC is not tracked. Michael Saylor and Cathie Wood were not inserted.
+
+**`classifyEvent()`** now `await getActiveWatchlist()` (10-min in-memory TTL, stale-on-error, same cache shape as `routes/price-history.ts`) and embeds `- name — caveat` the same way the hardcoded block did, plus a new `mediaImpactEntity` JSON field. Sanitizer accepts only an exact `entity_name` or a known alias. Heuristic fallback matches name/aliases from the live list and writes the same field. Insert paths: `signal-merge.ts`, `acled-collector.ts`, `reconciliation.ts` (dormant `ai-classifier.ts` also writes the column). `GET /v1/signals/latest` adds the column to its explicit select.
+
+**UI:** `MediaImpactTag` (`[Media-Impact]`) on the dashboard featured/secondary/stream cards, `SignalCard`, `SignalQuickView`, and event detail (expanded entity + first-sentence caveat). Hover/detail copy is a sourced historical pattern + "Historical pattern only — not a forecast." No buy/sell language.
+
+**Verification:** live SQL confirmed 7 rows / correct tiers / column / RLS (table absent from `rls_enabled_no_policy`). Live `getActiveWatchlist()` + forced-heuristic `classifyEvent()`: OPEC official-communication story → `mediaImpactEntity: "OPEC"`; diplomatic-talks story → null. Unit tests cover prompt field, unsourced-name drop, matcher, and tag render.
+
 ### v0.61.0 — #141 materiality gate: the pipeline's first real "does this mean anything?" reject step (2026-09-13)
 
 `apps/backend` + a Supabase migration only (no `apps/web` changes — #143 reads the new fields on the frontend once this is live). Builds directly on the #139 audit (`docs/claude_project/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`), which found 63% of signals in a 14-day window sitting at severity 1-4 — many with empty `commodity_impacts` and, per Claude's own one-line summary, "no market impact" — because `classifyEvent()`'s result unconditionally became a `signals` row with no reject step anywhere in the pipeline. This ships that reject step.

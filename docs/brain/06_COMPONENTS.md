@@ -64,9 +64,15 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Purpose**: Main card rendering a single intelligence signal event with expandable AI summary.
 - **Props**: `{ signal: Signal; onSelect?: () => void }`
 - **Parent**: `(dashboard)/dashboard/page.tsx`
-- **Children**: `SeverityBadge`, `CommodityChip`, `Button`.
+- **Children**: `SeverityBadge`, `CommodityChip`, `Button`, `MediaImpactTag` (#142).
 - **Hooks Used**: `useState` for expand/collapse toggle.
 - **Styling**: `p-4 rounded-xl border border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 transition-all`.
+- **#142**: `[Media-Impact]` when `mediaImpactEntity` is set. The live Intelligence Feed cards are inline in `dashboard/page.tsx` and render the same tag there.
+
+### 3.1b `MediaImpactTag.tsx` (#142)
+- **Purpose**: Distinct `[Media-Impact]` badge for a sourced watchlist communicator. Hover (card) or inline (event detail) shows entity + short caveat. Historical pattern only — not a forecast / not a buy/sell.
+- **Props**: `{ entity?: string | null; caveat?: string | null; expanded?: boolean }`
+- **Parents**: `SignalCard`, dashboard featured/secondary/stream, `SignalQuickView`, `events/[id]`.
 
 ### 3.2 `SeverityBadge.tsx`
 - **Purpose**: Color-coded numerical badge indicator for conflict severity (1–10).

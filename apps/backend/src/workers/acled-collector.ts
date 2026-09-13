@@ -145,6 +145,7 @@ export async function runAcledCollectorOnce() {
           source_confirmation: classification.sourceConfirmation ?? null,
           materiality_pass: classification.materialityPass,
           materiality_reasoning: classification.materialityReasoning ?? null,
+          media_impact_entity: classification.mediaImpactEntity ?? null,
         })
         .select("id")
         .maybeSingle();

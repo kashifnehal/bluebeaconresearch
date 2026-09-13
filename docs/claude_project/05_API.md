@@ -152,6 +152,7 @@ Returns paginated signal feed. Auth required.
         { "asset": "UKOIL", "direction": "up", "confidence": 0.81 }
       ],
       "classification_method": "claude",
+      "media_impact_entity": null,
       "price_at_signal": { "USOIL": 84.20, "capturedAt": "2026-02-28T03:42:00Z" },
       "sanctions_matches": [],
       "shipping_proximity": {
@@ -183,7 +184,7 @@ Returns paginated signal feed. Auth required.
 ---
 
 #### GET /v1/signals/latest
-Returns 5 most recent signals. Used by landing page live preview and dashboard right sidebar. No plan restriction.
+Returns 5 most recent signals. Used by landing page live preview and dashboard right sidebar. No plan restriction. Explicit select includes `media_impact_entity` (#142).
 
 **Response 200:**
 ```json

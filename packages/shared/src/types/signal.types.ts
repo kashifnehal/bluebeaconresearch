@@ -38,6 +38,10 @@ export interface Signal {
   // Set by classifyEvent() going forward (`claude` | `heuristic`). Null on
   // pre-column rows that the 2026-09-12 backfill left unknown.
   classificationMethod?: "claude" | "heuristic" | null;
+  // #142 — matched media_impact_watchlist.entity_name, or null. Describes a
+  // sourced historical reaction pattern, not a forecast.
+  mediaImpactEntity?: string | null;
+  mediaImpactCaveat?: string | null;
   createdAt: string; // when WE ingested it
   eventDate?: string; // when the article/event was PUBLISHED
   updatedAt?: string; // last updated time for this signal record

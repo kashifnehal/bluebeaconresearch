@@ -3,6 +3,7 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import type { Signal } from "@blue-beacon-research/shared";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
+import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import { emptyBriefingCopy } from "@/lib/signal-display";
@@ -66,6 +67,10 @@ export function SignalQuickView({
                 <div className="min-w-0 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <SeverityBadge score={signal.severity} />
+                    <MediaImpactTag
+                      entity={signal.mediaImpactEntity}
+                      caveat={signal.mediaImpactCaveat}
+                    />
                     {confidencePct != null && (
                       <span
                         className="font-mono text-[11px] uppercase tracking-wider"
