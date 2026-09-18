@@ -63,8 +63,10 @@
 > ⚠️ UPDATED 2026-09-13 (#143) — event-detail / SignalQuickView "PROJECTED IMPACT" box relabeled **MARKET IMPACT ASSESSMENT** and populated from #141/#142 columns (`market_mechanism`, `event_category`, `is_preview`, `media_impact_entity`, plus existing impacts). Empty-match fallback is the sourced Caldara & Iacoviello (2022) sentence, not a live GPR number. No raw classifier-confidence percent in the box. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.63.0. This tree: PHASE 30.
 
 > ⚠️ UPDATED 2026-09-13 (#144) — `outcome-tracker.ts` writes `signal_outcomes` at 1h/4h/24h/48h (eligible per horizon once that many hours old). 48h thresholds and the 24h price-distance guard are unchanged. `GET /v1/accuracy` filters `checkpoint_hours=48` so the new rows do not change the public headline. Unique key widened to `(signal_id, asset, checkpoint_hours)` — no new column. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.64.0. This tree: PHASE 31.
+>
+> ⚠️ UPDATED 2026-09-18 — Sidebar brand name links to `/dashboard`. Landing hero `<p>` subtext is "Blue Beacon Research - Geopolitical Research Giant"; h1 and meta descriptions unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.65.0. This tree: PHASE 32.
 
-Last updated: 2026-09-13 (#141–#144 topic-file catch-up)
+Last updated: 2026-09-18 (sidebar logo link + landing subtext)
 
 ---
 

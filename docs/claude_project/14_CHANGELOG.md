@@ -6,6 +6,13 @@
 
 ---
 
+## PHASE 32 — SIDEBAR LOGO HOME LINK + LANDING SUBTEXT (2026-09-18)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.65.0.
+
+- Sidebar brand name links to `/dashboard`.
+- Landing hero subtext (the `<p>` under the h1) is now "Blue Beacon Research - Geopolitical Research Giant". Headline and meta description unchanged.
+
 ## PHASE 31 — #144 MULTI-HORIZON OUTCOME CHECKPOINTS (2026-09-13)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.64.0.

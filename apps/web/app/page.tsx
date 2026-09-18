@@ -117,7 +117,7 @@ export default async function Home(props: {
               <span className="text-primary italic">→ actionable trading signals.</span>
             </h1>
             <p className="text-on-surface/60 text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium">
-              Blue Beacon Research provides high-fidelity geopolitical intelligence, synthesized into actionable trading signals for commodity and financial markets.
+              Blue Beacon Research - Geopolitical Research Giant
             </p>
             <div className="flex flex-col md:flex-row items-center justify-center gap-6">
               <Link 

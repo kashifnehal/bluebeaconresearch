@@ -60,9 +60,11 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <span className="font-headline font-bold text-sm tracking-tighter text-white">
-            Blue Beacon Research
-          </span>
+          <Link href="/dashboard">
+            <span className="font-headline font-bold text-sm tracking-tighter text-white">
+              Blue Beacon Research
+            </span>
+          </Link>
           <span
             className="text-[10px] px-1.5 py-0.5 border"
             style={{

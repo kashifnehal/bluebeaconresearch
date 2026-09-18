@@ -10,6 +10,7 @@
 
 **Name:** Blue Beacon Research
 **Tagline:** "High-fidelity geopolitical intelligence → actionable trading signals."
+**Subheadline (landing hero `<p>`, 2026-09-18):** "Blue Beacon Research - Geopolitical Research Giant"
 **Elevator pitch:** "We convert global conflicts, sanctions, and policy shifts into structured market signals — delivered to your Telegram before markets open, for 1/40th the cost of Bloomberg."
 
 **Tone of voice:**

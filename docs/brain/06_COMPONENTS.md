@@ -28,7 +28,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ## 2. Layout Components (`apps/web/components/layout`)
 
 ### 2.1 `Sidebar.tsx`
-- **Purpose**: Primary vertical terminal navigation sidebar. Below `md` it is an off-canvas drawer (`useUIStore.mobileSidebarOpen`); at `md`+ always visible (#133).
+- **Purpose**: Primary vertical terminal navigation sidebar. Below `md` it is an off-canvas drawer (`useUIStore.mobileSidebarOpen`); at `md`+ always visible (#133). Brand text "Blue Beacon Research" is a `<Link href="/dashboard">` (2026-09-18); ALPHA badge is not linked.
 - **Props**: None.
 - **Parent**: `(dashboard)/layout.tsx`
 - **Children**: `Logo`, Lucide Nav Icons (`LayoutDashboard`, `Globe`, `Bell`, `BarChart3`, `Eye`, `Settings`).

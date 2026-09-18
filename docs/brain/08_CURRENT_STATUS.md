@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-13 (docs catch-up #141–#144)
+Last updated: 2026-09-18 (sidebar logo link + landing subtext)
 
 ---
+
+## Sidebar logo → /dashboard + landing hero subtext (2026-09-18)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.65.0, `LIVE_TODO.md`. Sidebar brand span links to `/dashboard`. Landing hero `<p>` is "Blue Beacon Research - Geopolitical Research Giant"; h1 and meta descriptions unchanged.
 
 ## #144 — multi-horizon outcome checkpoints (2026-09-13)
 

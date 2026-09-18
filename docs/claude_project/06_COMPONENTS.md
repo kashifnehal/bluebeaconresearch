@@ -18,7 +18,7 @@
 Props: None (reads auth + route from hooks)
 
 Sections:
-- Logo: "● BLUE BEACON RESEARCH" (blue dot accent)
+- Logo: "Blue Beacon Research" brand text wrapped in `<Link href="/dashboard">` (2026-09-18); ALPHA badge beside it is not a link
 - Nav items (each 44px height, hover bg-elevated, active: green left border + text-accent):
   - Intelligence Feed → /dashboard
   - Global Map → /map
