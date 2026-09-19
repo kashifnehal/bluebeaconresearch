@@ -27,7 +27,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#119~~ | ~~Onboarding GIF/video step~~ | — | **Done 2026-09-11** — welcome modal before Joyride; real GIF still needs recording. See `LIVE_TODO.md`. |
 | ~~#120~~ | ~~Plain-language AI-writing rewrite~~ | — | **Done 2026-09-11** — `generateAnalysis()` prompt only. See `LIVE_TODO.md`. |
 | ~~#122~~ | ~~Quick-view slide-over panel~~ | — | **Done 2026-09-11**. See `LIVE_TODO.md`. |
-| ~~#123~~ | ~~Event pages in a new tab~~ | — | **Done 2026-09-11** — new-tab only on quick-view "View full details". See `LIVE_TODO.md`. |
+| ~~#123~~ | ~~Event pages in a new tab~~ | — | **Done 2026-09-11** (quick-view "View full details" only) **+ remainder 2026-09-19** — every other event-detail click now also opens a new tab. See `LIVE_TODO.md`. |
 | ~~#124~~ | ~~Feed filter bar + shared FilterBar~~ | — | **Done 2026-09-11** (`74b815b`). See `LIVE_TODO.md`. |
 | ~~#125~~ | ~~Trader-role saved views~~ | — | **Done 2026-09-11** (`74b815b`) — Oil/Grain/Metals desk chips. See `LIVE_TODO.md`. |
 | ~~#126~~ | ~~Trust/freshness signals~~ | — | **Done 2026-09-11** — `Fresh Xm` tag + live coverage line. See `LIVE_TODO.md`. |

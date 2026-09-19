@@ -95,6 +95,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ### 3.4 `SignalQuickView.tsx` (#122)
 - **Purpose**: Desktop-only right-half slide-over preview of a feed row.
 - **Parent**: Intelligence Feed stream.
+- **#123** (2026-09-11): "View full details" is `<a target="_blank" rel="noopener noreferrer">`. Remainder 2026-09-19: the same new-tab pattern is now on every other event-detail click (feed / map popup / watchlist / alerts / notifications / command palette / event Historical tab). ProductTour handoff stays same-tab.
 - **#137**: empty analyst-briefing copy is severity-gated (`emptyBriefingCopy(..., "compact")`), not "restoring capacity."
 - **#143**: "Commodity impacts" section replaced by `MarketImpactAssessment`.
 

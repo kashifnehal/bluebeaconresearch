@@ -423,10 +423,12 @@ export default function WatchlistSymbolPage() {
                   : ev.commodityImpacts.find((c) => c.asset === symbol);
                 const move = computeEventPriceMove(points, ev.eventDate ?? ev.createdAt);
                 return (
-                  <button
+                  <a
                     key={ev.id}
-                    onClick={() => router.push(`/events/${ev.id}`)}
-                    className="w-full text-left p-4 rounded-lg bg-black/20 border border-outline-variant/20 hover:border-primary/40 transition-colors"
+                    href={`/events/${ev.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full text-left p-4 rounded-lg bg-black/20 border border-outline-variant/20 hover:border-primary/40 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <span className="text-sm font-bold text-on-surface leading-snug">{ev.title}</span>
@@ -446,7 +448,7 @@ export default function WatchlistSymbolPage() {
                       {move.status === "ok" &&
                         `Price moved ${move.pct >= 0 ? "+" : ""}${move.pct.toFixed(2)}% in the ${move.windowHours}h following this signal ($${move.baselinePrice.toFixed(2)} → $${move.targetPrice.toFixed(2)}).`}
                     </p>
-                  </button>
+                  </a>
                 );
               })}
             </div>

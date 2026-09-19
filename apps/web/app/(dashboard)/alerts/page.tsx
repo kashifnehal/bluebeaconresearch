@@ -526,7 +526,10 @@ export default function AlertsPage() {
                             <div className="rounded-lg border border-outline-variant/15 bg-surface-container-low overflow-hidden">
                               {/* ── 1. EVENT ── */}
                               <CardSection step={1} label="Event">
-                                <button
+                                <a
+                                  href={`/events/${m.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   onClick={() => {
                                     logUsageEvent(
                                       "signal_viewed",
@@ -538,9 +541,8 @@ export default function AlertsPage() {
                                       }),
                                       false,
                                     );
-                                    router.push(`/events/${m.id}`);
                                   }}
-                                  className="text-left w-full group"
+                                  className="text-left w-full group block"
                                 >
                                   <div className="flex items-center gap-2 flex-wrap">
                                     {m.isBreaking && (
@@ -569,7 +571,7 @@ export default function AlertsPage() {
                                   <p className="mt-1.5 text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
                                     {m.title}
                                   </p>
-                                </button>
+                                </a>
                               </CardSection>
 
                               {/* ── 2. WHY IT MATTERS ── */}

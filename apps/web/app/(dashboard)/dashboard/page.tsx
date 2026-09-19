@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
@@ -26,7 +25,6 @@ import {
 import type { Signal } from "@blue-beacon-research/shared";
 
 export default function DashboardPage() {
-  const router = useRouter();
   // "My Feed" (#81) — opt-in narrowing to the commodities/regions the user follows.
   // Default OFF: existing users see the exact same full feed until they turn it on.
   const [personalized, setPersonalized] = useState(false);
@@ -54,12 +52,6 @@ export default function DashboardPage() {
   });
   const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
 
-  // signal_viewed — behavioral instrumentation (research doc claude/64). Fires on
-  // every open of a feed card, then routes through to the detail page as before.
-  const openSignal = (signal: Pick<Signal, "id" | "region" | "commodityImpacts" | "currencyPairImpacts">) => {
-    logUsageEvent("signal_viewed", signalEventMetadata(signal), false);
-    router.push(`/events/${signal.id}`);
-  };
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
   // list's prior fixed size, so the first render is unchanged); "Load more" adds
@@ -366,9 +358,18 @@ export default function DashboardPage() {
           <>
             {/* ── Featured Critical Card ────────────────────────────────── */}
             {featured ? (
-              <section
-                onClick={() => openSignal(featured)}
-                className="mb-10 relative overflow-hidden cursor-pointer group transition-all"
+              <a
+                href={`/events/${featured.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  logUsageEvent(
+                    "signal_viewed",
+                    signalEventMetadata(featured),
+                    false,
+                  )
+                }
+                className="mb-10 relative overflow-hidden cursor-pointer group transition-all block"
                 style={{
                   backgroundColor: "#131313",
                   border: "1px solid #3c4a42",
@@ -494,13 +495,9 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <button
+                    <span
                       data-tour="analyze-impact"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openSignal(featured);
-                      }}
-                      className="font-bold text-xs tracking-widest px-8 py-3 transition-all active:scale-95 duration-75 shrink-0"
+                      className="font-bold text-xs tracking-widest px-8 py-3 transition-all active:scale-95 duration-75 shrink-0 inline-block"
                       style={{
                         backgroundColor: "#4edea3",
                         color: "#003824",
@@ -509,10 +506,10 @@ export default function DashboardPage() {
                       }}
                     >
                       ANALYZE IMPACT
-                    </button>
+                    </span>
                   </div>
                 </div>
-              </section>
+              </a>
             ) : null}
 
             {/* ── Secondary Intelligence Grid ────────────────────────────── */}
@@ -520,9 +517,18 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                 {/* Card A */}
                 {secondaryA && (
-                  <article
-                    onClick={() => openSignal(secondaryA)}
-                    className="group cursor-pointer transition-colors"
+                  <a
+                    href={`/events/${secondaryA.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      logUsageEvent(
+                        "signal_viewed",
+                        signalEventMetadata(secondaryA),
+                        false,
+                      )
+                    }
+                    className="group cursor-pointer transition-colors block"
                     style={{
                       backgroundColor: "#131313",
                       border: "1px solid #3c4a42",
@@ -608,14 +614,23 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                  </article>
+                  </a>
                 )}
 
                 {/* Card B */}
                 {secondaryB && (
-                  <article
-                    onClick={() => openSignal(secondaryB)}
-                    className="group cursor-pointer transition-colors"
+                  <a
+                    href={`/events/${secondaryB.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      logUsageEvent(
+                        "signal_viewed",
+                        signalEventMetadata(secondaryB),
+                        false,
+                      )
+                    }
+                    className="group cursor-pointer transition-colors block"
                     style={{
                       backgroundColor: "#131313",
                       border: "1px solid #3c4a42",
@@ -701,7 +716,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                  </article>
+                  </a>
                 )}
               </div>
             )}
@@ -743,9 +758,7 @@ export default function DashboardPage() {
                   streamList.map((item, index) => (
                     <div
                       key={item.id}
-                      data-testid="signal-stream-row"
-                      onClick={() => openSignal(item)}
-                      className="px-6 py-4 flex items-center gap-6 cursor-pointer group transition-colors"
+                      className="px-6 py-4 flex items-center gap-6 group transition-colors"
                       style={{ backgroundColor: "transparent" }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLElement).style.backgroundColor =
@@ -756,75 +769,85 @@ export default function DashboardPage() {
                           "transparent";
                       }}
                     >
-                      <div
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{
-                          backgroundColor:
-                            item.severity >= 8 ? "#ee7d77" : "#4edea3",
-                        }}
-                      />
-                      <div
-                        className="w-20 text-[12px] shrink-0"
-                        style={{
-                          color: "#86948a",
-                          fontFamily: "'JetBrains Mono', monospace",
-                        }}
+                      <a
+                        href={`/events/${item.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="signal-stream-row"
+                        onClick={() =>
+                          logUsageEvent(
+                            "signal_viewed",
+                            signalEventMetadata(item),
+                            false,
+                          )
+                        }
+                        className="flex min-w-0 flex-1 items-center gap-6"
                       >
-                        {safeFormatDistanceToNow(item.eventDate ?? item.createdAt)}
-                      </div>
-                      <FreshTag
-                        createdAt={item.createdAt}
-                        className="text-[11px] shrink-0"
-                        style={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          color: "#4edea3",
-                        }}
-                      />
-                      <MediaImpactTag
-                        entity={item.mediaImpactEntity}
-                        caveat={item.mediaImpactCaveat}
-                      />
-                      <div
-                        className="flex-1 font-semibold transition-colors group-hover:text-[#4edea3]"
-                        style={{
-                          color: "#e5e2e1",
-                          fontFamily: "'Inter', sans-serif",
-                        }}
-                      >
-                        {item.title}
-                      </div>
-                      <div
-                        className="text-[12px] px-2 py-0.5 border shrink-0"
-                        style={{
-                          color: "#4edea3",
-                          backgroundColor: "rgba(78,222,163,0.1)",
-                          borderColor: "rgba(78,222,163,0.2)",
-                          fontFamily: "'JetBrains Mono', monospace",
-                        }}
-                      >
-                        {Math.round(item.confidence * 100)}% CONFIDENCE
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          data-tour={index === 0 ? "quick-view" : undefined}
-                          data-testid="signal-quick-view-open"
-                          aria-label="Quick view"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setQuickViewSignal(item);
+                        <div
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{
+                            backgroundColor:
+                              item.severity >= 8 ? "#ee7d77" : "#4edea3",
                           }}
-                          className="hidden md:inline-flex h-8 w-8 items-center justify-center text-[#86948a] transition-colors hover:text-[#4edea3]"
+                        />
+                        <div
+                          className="w-20 text-[12px] shrink-0"
+                          style={{
+                            color: "#86948a",
+                            fontFamily: "'JetBrains Mono', monospace",
+                          }}
                         >
-                          <span className="material-symbols-outlined text-lg">preview</span>
-                        </button>
+                          {safeFormatDistanceToNow(item.eventDate ?? item.createdAt)}
+                        </div>
+                        <FreshTag
+                          createdAt={item.createdAt}
+                          className="text-[11px] shrink-0"
+                          style={{
+                            fontFamily: "'JetBrains Mono', monospace",
+                            color: "#4edea3",
+                          }}
+                        />
+                        <MediaImpactTag
+                          entity={item.mediaImpactEntity}
+                          caveat={item.mediaImpactCaveat}
+                        />
+                        <div
+                          className="flex-1 font-semibold transition-colors group-hover:text-[#4edea3]"
+                          style={{
+                            color: "#e5e2e1",
+                            fontFamily: "'Inter', sans-serif",
+                          }}
+                        >
+                          {item.title}
+                        </div>
+                        <div
+                          className="text-[12px] px-2 py-0.5 border shrink-0"
+                          style={{
+                            color: "#4edea3",
+                            backgroundColor: "rgba(78,222,163,0.1)",
+                            borderColor: "rgba(78,222,163,0.2)",
+                            fontFamily: "'JetBrains Mono', monospace",
+                          }}
+                        >
+                          {Math.round(item.confidence * 100)}% CONFIDENCE
+                        </div>
                         <span
-                          className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform"
+                          className="material-symbols-outlined text-lg shrink-0 group-hover:translate-x-1 transition-transform"
                           style={{ color: "#86948a" }}
                         >
                           chevron_right
                         </span>
-                      </div>
+                      </a>
+                      <button
+                        type="button"
+                        data-tour={index === 0 ? "quick-view" : undefined}
+                        data-testid="signal-quick-view-open"
+                        aria-label="Quick view"
+                        onClick={() => setQuickViewSignal(item)}
+                        className="hidden md:inline-flex h-8 w-8 shrink-0 items-center justify-center text-[#86948a] transition-colors hover:text-[#4edea3]"
+                      >
+                        <span className="material-symbols-outlined text-lg">preview</span>
+                      </button>
                     </div>
                   ))
                 ) : (

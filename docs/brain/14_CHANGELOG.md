@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.67.0 — #123 remainder: every event-detail click opens a new tab (2026-09-19)
+
+`apps/web` only. `ef73885` shipped new-tab only on SignalQuickView "View full details". Remaining event-detail entry points now use the same `<a target="_blank" rel="noopener noreferrer">` pattern: Intelligence Feed featured/secondary/stream (inline in `dashboard/page.tsx`; `SignalCard.tsx` is unused on web), map popup + sidebar VIEW DETAILS, watchlist Correlated Signals, alerts Recent Matches, event-detail Historical comparisons, NotificationPanel rows, CommandPalette Signals results. Map sidebar card click still selects the pin. ProductTour dashboard→event handoff stays `router.push` so Joyride can continue.
+
 ### v0.66.0 — #145 watchlist empty-state defaults + single range chart (2026-09-19)
 
 `apps/web` only. Watchlist list page first-paints the shared `COMMODITIES` cards when the user has no selections, so the page is never an empty dropdown while prefs hydrate; a row of category chips (same list) toggles membership without replacing the add dropdown. Cards still read live `/api/prices` + `/api/prices/history` — no mock quotes. Drill-down `/watchlist/[symbol]` drops the second "5-year history" panel: one chart, range buttons 1M / 6M / 1Y / 3Y / 5Y. 1M slices the existing 90-day DB series; 6M+ slice the existing Yahoo weekly `history-5y` fetch. The two honest 5Y fallbacks are unchanged.

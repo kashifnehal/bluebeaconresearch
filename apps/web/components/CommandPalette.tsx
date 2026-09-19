@@ -179,6 +179,10 @@ export function CommandPalette() {
 
   function select(item: ResultItem) {
     setOpen(false);
+    if (item.group === "Signals") {
+      window.open(item.href, "_blank", "noopener,noreferrer");
+      return;
+    }
     router.push(item.href);
   }
 
@@ -252,7 +256,32 @@ export function CommandPalette() {
                 {items.map((item) => {
                   flatIndex += 1;
                   const isActive = flatIndex === clampedActiveIndex;
-                  return (
+                  return item.group === "Signals" ? (
+                    <a
+                      key={item.key}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setOpen(false)}
+                      onMouseEnter={() => setActiveIndex(flatIndex)}
+                      className={`flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors cursor-pointer ${
+                        isActive ? "bg-[#1f2b25]" : "hover:bg-[#1a1a1a]"
+                      }`}
+                    >
+                      <span
+                        className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                        style={{ fontSize: "16px" }}
+                      >
+                        {item.icon}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
+                        {item.sublabel && (
+                          <span className="block truncate text-[10px] text-[#86948a]">{item.sublabel}</span>
+                        )}
+                      </span>
+                    </a>
+                  ) : (
                     <button
                       key={item.key}
                       onClick={() => select(item)}

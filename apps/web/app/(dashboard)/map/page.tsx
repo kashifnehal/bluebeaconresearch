@@ -209,7 +209,7 @@ export default function MapPage() {
     const map = mapRef.current;
     const maplib = mapLibRef.current;
     if (!map || !maplib) {
-      router.push(`/events/${signal.id}`);
+      window.open(`/events/${signal.id}`, "_blank", "noopener,noreferrer");
       return;
     }
 
@@ -947,18 +947,18 @@ export default function MapPage() {
                   <p className="text-[11px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2 group-hover:text-primary transition-colors">
                     {signal.title}
                   </p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/events/${signal.id}`);
-                    }}
-                    className="label text-[9px] text-primary flex items-center gap-1 group-hover:underline"
+                  <a
+                    href={`/events/${signal.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="label text-[9px] text-primary inline-flex items-center gap-1 group-hover:underline"
                   >
                     VIEW DETAILS
                     <span className="material-symbols-outlined text-[10px]">
                       arrow_forward
                     </span>
-                  </button>
+                  </a>
                 </div>
               );
             })

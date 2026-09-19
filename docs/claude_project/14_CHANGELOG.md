@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 34 — #123 REMAINDER: EVENT DETAIL IN A NEW TAB (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.67.0.
+
+- Every click that opens `/events/{id}` now uses `target="_blank" rel="noopener noreferrer"` (same pattern as the 2026-09-11 quick-view "View full details" link).
+- Live Intelligence Feed is inline in `dashboard/page.tsx`; `SignalCard.tsx` is unused on web.
+- ProductTour handoff to the event page stays same-tab so Joyride can continue.
+
 ## PHASE 33 — #145 WATCHLIST EMPTY-STATE DEFAULTS + SINGLE RANGE CHART (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.66.0.

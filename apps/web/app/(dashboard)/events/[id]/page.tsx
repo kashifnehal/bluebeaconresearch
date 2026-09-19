@@ -462,9 +462,11 @@ export default function EventDetailPage() {
                 {historicalComparisons.length >= 2 ? (
                   <div className="space-y-3">
                     {historicalComparisons.map((h) => (
-                      <button
+                      <a
                         key={h.id}
-                        onClick={() => router.push(`/events/${h.id}`)}
+                        href={`/events/${h.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="w-full text-left p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 transition-all"
                       >
                         <div className="flex flex-col gap-1">
@@ -478,7 +480,7 @@ export default function EventDetailPage() {
                             <CommodityChip key={c.asset} asset={c.asset} direction={c.direction} confidence={c.confidence} />
                           ))}
                         </div>
-                      </button>
+                      </a>
                     ))}
                   </div>
                 ) : (

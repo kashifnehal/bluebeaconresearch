@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useUIStore } from "@/store/useUIStore";
 import { safeFormatDistanceToNow } from "@/lib/utils";
@@ -22,7 +21,6 @@ type AlertItem = {
 };
 
 export function NotificationPanel() {
-  const router = useRouter();
   const { notifOpen, setNotifOpen, resetUnread, setUnreadCount } = useUIStore();
   const [readItems, setReadItems] = useState<Record<string, boolean>>({});
 
@@ -135,11 +133,13 @@ export function NotificationPanel() {
               const notDelivered = status === "queued" || status === "failed";
 
               return (
-                <div
+                <a
                   key={item.id}
+                  href={`/events/${signalId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   onClick={() => {
                     setNotifOpen(false);
-                    router.push(`/events/${signalId}`);
                   }}
                   className={`p-4 cursor-pointer transition-colors hover:bg-[#1f1f1f] flex gap-3 items-start ${
                     !isRead ? "bg-[#18231d]" : "bg-transparent"
@@ -194,7 +194,7 @@ export function NotificationPanel() {
                       </p>
                     )}
                   </div>
-                </div>
+                </a>
               );
             })
           ) : (

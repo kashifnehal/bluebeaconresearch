@@ -74,7 +74,7 @@ Contains:
 Content:
 - Header: "Recent Alerts" + close X + "Mark all read" button
 - List: last 10 alerts_sent from GET /v1/alerts/recent
-- Each item: severity colored dot + time ago + signal title + "View →" link
+- Each item: severity colored dot + time ago + signal title + "View →" link (`<a target="_blank" rel="noopener noreferrer">` to `/events/{id}`, #123 remainder 2026-09-19)
 - Unread items: bg-elevated (slightly brighter background)
 - Read items: normal background
 - Empty state: Bell icon + "No alerts yet. Create alert rules to get started."
@@ -193,7 +193,7 @@ interface SignalCardProps {
 - Title (h2 size, font-medium text-white)
 - Summary paragraph
 - Region + Country + Confidence badges
-- "ANALYZE IMPACT →" button → /events/[signal.id]
+- "ANALYZE IMPACT →" button → /events/[signal.id] (new tab; #123 remainder 2026-09-19)
 - Price-at-signal row (if price_at_signal populated and signal < 72h):
   "WTI at signal: $84.20 | Now: $87.31 +3.7% ↑ · 4h 23m ago"
 
@@ -202,7 +202,7 @@ interface SignalCardProps {
 - Title (2 lines max, line-clamp-2)
 - Summary (2 lines max)
 - Region + severity tags
-- Entire card clickable → /events/[signal.id]
+- Entire card clickable → /events/[signal.id] (new tab; #123 remainder 2026-09-19)
 
 **Compact variant** (Recent Signal Stream):
 - Severity colored dot
@@ -210,7 +210,7 @@ interface SignalCardProps {
 - Title (flex-1, truncated)
 - Confidence badge
 - Chevron →
-- Entire row clickable → /events/[signal.id]
+- Entire row clickable → /events/[signal.id] (new tab; #123 remainder 2026-09-19). Live feed is inline in `dashboard/page.tsx`, not this component. Quick-view "View full details" already opened a new tab (`ef73885`). Remaining event-detail clicks (map popup, watchlist Correlated Signals, alerts Recent Matches, NotificationPanel, CommandPalette Signals, event Historical tab) now use the same `<a target="_blank" rel="noopener noreferrer">` pattern.
 
 **Breaking state** (is_breaking = true):
 - Left border: border-l-4 border-danger

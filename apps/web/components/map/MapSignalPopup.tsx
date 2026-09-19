@@ -98,6 +98,8 @@ export function MapSignalPopup({
 
         <a
           href={`/events/${signal.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-flex items-center gap-1 label text-[10px] font-bold tracking-[0.12em] text-primary hover:underline"
         >
           VIEW FULL SIGNAL

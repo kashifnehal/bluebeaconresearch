@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-19 (watchlist empty-state defaults + single range chart)
+Last updated: 2026-09-19 (#123 remainder — event detail in a new tab)
 
 ---
+
+## #123 remainder — every event-detail click opens a new tab (2026-09-19)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.67.0, `LIVE_TODO.md`. `ef73885` left new-tab only on SignalQuickView. Live Intelligence Feed is inline in `dashboard/page.tsx` (`SignalCard.tsx` unused on web). Event-detail clicks now use `target="_blank" rel="noopener noreferrer"` on the feed, map popup + VIEW DETAILS, watchlist Correlated Signals, alerts Recent Matches, event Historical tab, NotificationPanel, and CommandPalette Signals. ProductTour handoff stays same-tab.
 
 ## #145 watchlist empty-state defaults + single range chart (2026-09-19)
 
@@ -175,7 +179,7 @@ outcomes — now skipped and logged instead. Frontend `/accuracy` page shipped
 `apps/web` only. Full record: `14_CHANGELOG.md` v0.42.0, `LIVE_TODO.md`.
 
 - **#122** — Desktop-only preview icon on Intelligence Feed stream rows opens a right-half slide-over (title, severity, confidence, commodity impacts, `aiAnalysis` excerpt). Tour step added for discoverability.
-- **#123** — Only that panel's "View full details" link opens a new tab; feed / map popup / Alerts stay same-tab.
+- **#123** — Remainder 2026-09-19: every event-detail click opens a new tab. Original 2026-09-11 ship was quick-view "View full details" only.
 
 ## Welcome tour step + plain-language briefings (2026-09-11)
 
