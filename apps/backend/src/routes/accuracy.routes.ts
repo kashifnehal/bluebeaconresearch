@@ -8,6 +8,8 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
  * checkpoint rows) — never live-recomputes against
  * `commodity_prices`, which only retains 90 days. No auth: this is the same public
  * "informational, not personal" class of data as `/v1/prices` / `/v1/prices/history-5y`.
+ * Sample size is scored pipeline rows, not users (`signal_outcomes` has no user_id);
+ * `profiles.is_test_account` cannot inflate it and is not filtered here.
  *
  * Follows the same plain-async-function Fastify-plugin pattern as price-history.ts /
  * signal-chat.routes.ts (registered in app.ts via `app.register(..., { prefix })`).

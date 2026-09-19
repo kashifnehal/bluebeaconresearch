@@ -44,3 +44,7 @@ yarn-error.log*
 
 # One-time backfill local checkpoints (progress only, not source)
 **/.backfill-*-checkpoint.json
+
+# Prospect/demo account passwords (emails are documented; secrets stay local)
+.demo-accounts.local.json
+**/.demo-accounts.local.json

@@ -292,8 +292,22 @@ export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: bo
     console.error("[digest] preferences query failed:", error.message);
     return result;
   }
-  result.eligible = prefs?.length ?? 0;
-  if (!prefs || prefs.length === 0) return result;
+
+  // #146 — demo/prospect accounts must never enter digest eligible/sent counts
+  // or generate bounce traffic to unused mailboxes.
+  const { data: testRows, error: testErr } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("is_test_account", true);
+  if (testErr) {
+    console.error("[digest] is_test_account filter failed:", testErr.message);
+    return result;
+  }
+  const testIds = new Set((testRows ?? []).map((r) => r.id as string));
+  const realPrefs = (prefs ?? []).filter((p) => !testIds.has(p.user_id));
+
+  result.eligible = realPrefs.length;
+  if (realPrefs.length === 0) return result;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bluebeaconresearch.com";
 
@@ -302,7 +316,7 @@ export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: bo
   const { data: userPage } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   for (const u of userPage?.users ?? []) if (u.email) emailById.set(u.id, u.email);
 
-  for (const pref of prefs as PrefRow[]) {
+  for (const pref of realPrefs as PrefRow[]) {
     const to = emailById.get(pref.user_id);
     if (!to) {
       result.failed += 1;

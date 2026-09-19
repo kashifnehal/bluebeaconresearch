@@ -490,3 +490,19 @@ The `[Media-Impact]` tag is a sourced historical pattern. An unsourced name woul
 
 ### Cross-tree mapping
 Recorded as **D26** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 24. ADR 023: Test/demo accounts never enter real usage numbers (#146)
+
+### Context
+Prospect testers need pre-confirmed logins. Those accounts must not inflate founder-console or investor-facing user counts.
+
+### Decision
+`profiles.is_test_account` is the only source of truth. Filter it out of every real-user aggregate (`admin_usage_metrics()`, digest eligibility, and any future count). Do not turn Confirm Email off globally. Do not store this flag in `user_metadata`.
+
+### Rationale
+Admin `email_confirm: true` is per-account. A global confirm-email off switch would weaken real signup. Client-editable metadata could self-flag and hide a real user from metrics.
+
+### Cross-tree mapping
+Recorded as **D27** in `docs/claude_project/10_DECISIONS.md`.

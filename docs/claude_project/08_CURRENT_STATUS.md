@@ -72,7 +72,9 @@
 
 > ⚠️ UPDATED 2026-09-19 (#145) — watchlist list page first-paints `COMMODITIES` cards when there are no selections, plus category chips to add/remove (dropdown kept). Drill-down is one price chart with 1M/6M/1Y/3Y/5Y (90-day DB for 1M, Yahoo weekly 5y fetch for longer). Honest 5Y empty/incomplete copy unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.66.0. This tree: PHASE 33.
 
-Last updated: 2026-09-19 (#142 individual_social_media watchlist data)
+> ⚠️ UPDATED 2026-09-19 (#146) — 10 pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console usage metrics and digest eligibility exclude the flag. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.69.0. This tree: PHASE 36.
+
+Last updated: 2026-09-19 (#146 prospect/demo accounts)
 
 ---
 

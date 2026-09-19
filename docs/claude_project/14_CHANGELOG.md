@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 36 — #146 PROSPECT/DEMO ACCOUNTS EXCLUDED FROM USAGE NUMBERS (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.69.0.
+
+- 10 Admin-API-created, pre-confirmed demo accounts. Confirm Email stays ON globally.
+- `profiles.is_test_account` is filtered out of founder-console usage metrics and digest eligibility.
+- No `apps/web` signup/login bypass. `/v1/accuracy` sample size is pipeline `signal_outcomes`, not a user count.
+
 ## PHASE 35 — #142 INDIVIDUAL_SOCIAL_MEDIA WATCHLIST DATA (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.68.0.

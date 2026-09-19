@@ -40,7 +40,8 @@ async function assertAdmin(req: FastifyRequest, reply: FastifyReply): Promise<st
 export async function adminRoutes(app: FastifyInstance) {
   // GET /v1/admin/metrics — usage snapshot for the founder-only /admin/metrics page.
   // Aggregation lives in public.admin_usage_metrics()
-  // (supabase/migrations/20260904000002_admin_usage_metrics_fn.sql).
+  // (supabase/migrations/20260919160000_profiles_is_test_account.sql supersedes
+  // 20260904000002/000003). Every count excludes profiles.is_test_account = true.
   app.get("/metrics", async (req, reply) => {
     const email = await assertAdmin(req, reply);
     if (!email) return;

@@ -8,6 +8,12 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.69.0 — #146 prospect/demo accounts excluded from usage numbers (2026-09-19)
+
+`profiles.is_test_account boolean not null default false`. Ten Admin-API users (`email_confirm: true`, `app_metadata.is_test_account`) with onboarding-complete state. Global Confirm Email unchanged; no `apps/web` signup/login bypass. `admin_usage_metrics()` and digest eligibility filter the flag via `is_real_user()` / `.eq("is_test_account", true)` exclusion. `/v1/accuracy` sample size is `signal_outcomes` (no `user_id`) — not a user count.
+
+**Migration** (`20260919160000_profiles_is_test_account.sql`, applied live to `evavcgfmemwryggdkjmx` as `profiles_is_test_account`): column + column-level UPDATE revoke + protect trigger; `handle_new_user()` copies the flag from `raw_app_meta_data` only; `admin_usage_metrics()` rewritten. Seed script `apps/backend/src/scripts/seed-demo-accounts.ts`.
+
 ### v0.68.0 — #142 individual_social_media watchlist data (2026-09-19)
 
 Data-only on `public.media_impact_watchlist`. `classifyEvent()`, `media-impact-watchlist.ts`, and the `[Media-Impact]` UI tag were not changed. Live table went from 7 sourced rows to 8.

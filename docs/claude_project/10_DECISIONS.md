@@ -625,3 +625,15 @@ credit (already an open item) means this path currently covers meaningful live t
 **Rationale:** The UI tag is a sourced historical pattern, not a forecast. An unsourced name on that tag would be fabricated authority.
 
 **Cross-tree mapping:** Recorded as **ADR 022** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D27: Test/demo accounts never enter real usage numbers (#146)
+
+**Decision:** `profiles.is_test_account` is the only source of truth. Exclude it from every real-user aggregate (`admin_usage_metrics()`, digest eligibility, any future count). Do not turn Confirm Email off globally. Do not store this flag in `user_metadata`.
+
+**Context:** Prospect testers need pre-confirmed logins without inflating founder-console or investor-facing user counts.
+
+**Rationale:** Admin `email_confirm: true` is per-account. A global confirm-email off switch would weaken real signup. Client-editable metadata could self-flag and hide a real user from metrics.
+
+**Cross-tree mapping:** Recorded as **ADR 023** in `docs/brain/10_DECISIONS.md`.
