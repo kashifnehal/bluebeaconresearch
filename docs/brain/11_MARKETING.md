@@ -22,7 +22,7 @@ This document specifies the marketing strategy, value proposition, landing page 
 ### Hero Section Copy
 
 - **Headline**: "High-fidelity geopolitical intelligence → actionable trading signals."
-- **Subheadline**: "Blue Beacon Research - Geopolitical Research Giant"
+- **Subheadline**: "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders"
 - **Live Status Pill**: `Live — monitoring active global conflicts` (Pulsing green indicator).
 - **Primary CTA**: "Start Free" (`/signup`) / "Get Early Access" (Opens Waitlist Modal when `isProjectReady` is gated).
 

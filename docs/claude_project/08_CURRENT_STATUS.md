@@ -64,7 +64,7 @@
 
 > ⚠️ UPDATED 2026-09-13 (#144) — `outcome-tracker.ts` writes `signal_outcomes` at 1h/4h/24h/48h (eligible per horizon once that many hours old). 48h thresholds and the 24h price-distance guard are unchanged. `GET /v1/accuracy` filters `checkpoint_hours=48` so the new rows do not change the public headline. Unique key widened to `(signal_id, asset, checkpoint_hours)` — no new column. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.64.0. This tree: PHASE 31.
 >
-> ⚠️ UPDATED 2026-09-18 — Sidebar brand name links to `/dashboard`. Landing hero `<p>` subtext is "Blue Beacon Research - Geopolitical Research Giant"; h1 and meta descriptions unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.65.0. This tree: PHASE 32.
+> ⚠️ UPDATED 2026-09-18 — Sidebar brand name links to `/dashboard`. Landing hero `<p>` was a short brand line later replaced by #174; h1 and meta descriptions unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.65.0. This tree: PHASE 32.
 
 > ⚠️ UPDATED 2026-09-19 (#123 remainder) — every event-detail click opens a new tab (`target="_blank" rel="noopener noreferrer"`), not only SignalQuickView. Live feed is inline in `dashboard/page.tsx`. ProductTour handoff stays same-tab. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.67.0. This tree: PHASE 34.
 
@@ -86,7 +86,9 @@
 
 > ⚠️ UPDATED 2026-09-20 (homepage copy integrity) — `apps/web/app/page.tsx` drops fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second claims; retone to research language; live `signals` count + `/accuracy` link (no homepage hit-rate %). Prices unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.75.0. This tree: PHASE 42.
 
-Last updated: 2026-09-20 (homepage copy integrity)
+> ⚠️ UPDATED 2026-09-20 (#174 + #175) — landing hero `<p>` is "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders" (headline unchanged). Map Tension Index info tooltip closes on outside click; hover preview and methodology sentence unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.76.0. This tree: PHASE 43.
+
+Last updated: 2026-09-20 (#174 homepage subtext + #175 Tension Index tooltip)
 
 ---
 

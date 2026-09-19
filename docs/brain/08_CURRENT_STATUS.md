@@ -2,7 +2,9 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-20 (homepage copy integrity)
+Last updated: 2026-09-20 (#174 homepage subtext + #175 Tension Index tooltip)
+
+> ⚠️ UPDATED 2026-09-20 (#174 + #175) — landing hero `<p>` is "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders" (headline unchanged). Map Tension Index info tooltip closes on outside click; hover preview and methodology sentence unchanged. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.76.0.
 
 > ⚠️ UPDATED 2026-09-20 (homepage copy integrity) — landing `app/page.tsx` no longer ships fabricated latency/integrity/archive/encryption claims; copy is research-register; live `signals` count + `/accuracy` link (no homepage hit-rate %). Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.75.0.
 
@@ -19,6 +21,10 @@ Last updated: 2026-09-20 (homepage copy integrity)
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 Admin-API-created, pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console `admin_usage_metrics()` (signups / auth_users / DAU / WAU / waitlist / events_last_7d) and digest eligibility exclude the flag. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.69.0.
 
 ---
+
+## #174 homepage subtext + #175 Tension Index click-outside (2026-09-20)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.76.0, `LIVE_TODO.md`. Landing hero `<p>` is "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders"; h1 unchanged. Map Tension Index "i" tooltip closes on outside click; `group-hover` preview and existing methodology sentence stay as-is.
 
 ## Homepage copy integrity (2026-09-20)
 
@@ -58,7 +64,7 @@ Data-only. Full record: `14_CHANGELOG.md` v0.68.0, `LIVE_TODO.md`. Live `media_i
 
 ## Sidebar logo → /dashboard + landing hero subtext (2026-09-18)
 
-`apps/web` only. Full record: `14_CHANGELOG.md` v0.65.0, `LIVE_TODO.md`. Sidebar brand span links to `/dashboard`. Landing hero `<p>` is "Blue Beacon Research - Geopolitical Research Giant"; h1 and meta descriptions unchanged.
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.65.0, `LIVE_TODO.md`. Sidebar brand span links to `/dashboard`. Landing hero `<p>` was a short brand line later replaced by #174; h1 and meta descriptions unchanged.
 
 ## #144 — multi-horizon outcome checkpoints (2026-09-13)
 

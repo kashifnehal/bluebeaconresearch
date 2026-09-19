@@ -6,6 +6,13 @@
 
 ---
 
+## PHASE 43 — #174 HOMEPAGE SUBTEXT + #175 TENSION INDEX CLICK-OUTSIDE (2026-09-20)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.76.0.
+
+- Landing hero `<p>` is now "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline and meta unchanged.
+- Map Tension Index info tooltip closes on outside click; hover preview and methodology sentence unchanged.
+
 ## PHASE 42 — HOMEPAGE COPY INTEGRITY (2026-09-20)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.75.0.
@@ -87,7 +94,7 @@
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.65.0.
 
 - Sidebar brand name links to `/dashboard`.
-- Landing hero subtext (the `<p>` under the h1) is now "Blue Beacon Research - Geopolitical Research Giant". Headline and meta description unchanged.
+- Landing hero subtext (the `<p>` under the h1) was set to a short brand line (later replaced by #174). Headline and meta description unchanged.
 
 ## PHASE 31 — #144 MULTI-HORIZON OUTCOME CHECKPOINTS (2026-09-13)
 

@@ -8,6 +8,14 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.76.0 — #174 homepage subtext + #175 Tension Index click-outside (2026-09-20)
+
+`apps/web` only.
+
+**#174:** Landing hero `<p>` in `app/page.tsx` is now exactly "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Hero `<h1>` and meta descriptions unchanged. No "AI" / "AI-powered" in the line. The 2026-09-18 brand line (v0.65.0) had already been rewritten by the v0.75.0 copy-integrity pass; this replaces that interim sentence.
+
+**#175:** Map Global Tension Index info tooltip (`tensionInfoOpen` in `app/(dashboard)/map/page.tsx`) closes on `mousedown` outside the "i" button and tooltip — same pattern as `TopBar.tsx`. CSS `group-hover` preview and the existing methodology sentence are unchanged. No formula or calculation added to the tooltip.
+
 ### v0.75.0 — Homepage copy integrity (2026-09-20)
 
 `apps/web/app/page.tsx` only. Public landing no longer presents unverifiable proof points or defense-contractor register.
@@ -86,7 +94,7 @@ Data-only on `public.media_impact_watchlist`. `classifyEvent()`, `media-impact-w
 
 ### v0.65.0 — Sidebar logo home link + landing subtext (2026-09-18)
 
-`apps/web` only. Sidebar "Blue Beacon Research" brand text is a `<Link href="/dashboard">` (confirmed `app/(dashboard)/dashboard/page.tsx`). Landing hero `<p>` subtext is now "Blue Beacon Research - Geopolitical Research Giant". Hero `<h1>` and page/layout meta descriptions were not the same string and were left unchanged.
+`apps/web` only. Sidebar "Blue Beacon Research" brand text is a `<Link href="/dashboard">` (confirmed `app/(dashboard)/dashboard/page.tsx`). Landing hero `<p>` subtext was set to a short brand line (later replaced by #174 / v0.76.0). Hero `<h1>` and page/layout meta descriptions were not the same string and were left unchanged.
 
 ### v0.64.0 — #144: 1h/4h/24h/48h outcome checkpoints (2026-09-13)
 

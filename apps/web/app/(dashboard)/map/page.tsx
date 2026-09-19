@@ -153,6 +153,7 @@ export default function MapPage() {
 
   const [filtersCollapsed, setFiltersCollapsed] = useState(false);
   const [tensionInfoOpen, setTensionInfoOpen] = useState(false);
+  const tensionInfoRef = useRef<HTMLDivElement | null>(null);
   const [streamCollapsed, setStreamCollapsed] = useState(false);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
   const [popupSignal, setPopupSignal] = useState<Signal | null>(null);
@@ -168,6 +169,21 @@ export default function MapPage() {
     setPopupSignal(null);
     setSelectedSignalId(null);
   };
+
+  // Same mousedown-outside pattern as TopBar's avatar dropdown: click the "i"
+  // to pin the tooltip; click anywhere else (not the button or tooltip) to close.
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        tensionInfoRef.current &&
+        !tensionInfoRef.current.contains(event.target as Node)
+      ) {
+        setTensionInfoOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const openPopupForSignal = (signal: Signal) => {
     setSelectedSignalId(signal.id);
@@ -761,7 +777,7 @@ export default function MapPage() {
               <div className="label text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
                 Global Tension Index
               </div>
-              <div className="relative group">
+              <div className="relative group" ref={tensionInfoRef}>
                 <button
                   type="button"
                   onClick={() => setTensionInfoOpen((v) => !v)}

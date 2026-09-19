@@ -346,6 +346,7 @@ No separate `components/landing/*` files exist. The public homepage is this serv
 - CTA overlay: "Sign up to read the full assessment" → `/signup`. Empty state is "Loading the latest signal…" (no Beacon-Alpha / hardcoded example card).
 - New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point).
 - Removed fabricated lines: 42ms, 100% Verified, 40yr Intel Archive, Encrypted Support, sub-second synthesis.
+- Hero `<p>` (#174, 2026-09-20): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.
 
 ---
 
@@ -398,6 +399,7 @@ Calculation (from API /v1/signals?period=24h):
 - Bull/Neutral/Bear: aggregated commodity_impacts directions
 
 > ⚠️ UPDATED 2026-08-25 — No separate `GlobalTensionIndex.tsx` component exists; this lives inline in `apps/web/app/(dashboard)/map/page.tsx` (the `tensionMetrics` useMemo + its JSX panel), computed client-side from the already-fetched `liveSignals` via title/eventType regex matching — not a call to `/v1/signals?period=24h`. There's no "LIVE" badge or "ACTIVE SENTIMENT" Bull/Neutral/Bear row in the current build (pre-existing spec/reality gaps, not touched this session). What *did* change this session: an info icon (methodology tooltip, matching `HelpModal.tsx`'s wording) and a real last-24h trend sparkline were added next to the score — see `docs/brain/14_CHANGELOG.md` v0.28.5.
+> ⚠️ UPDATED 2026-09-20 (#175) — clicking the "i" still pins `tensionInfoOpen`; `mousedown` outside the button+tooltip now closes it (same pattern as `TopBar.tsx`). CSS `group-hover` preview and the existing methodology sentence are unchanged. No formula added.
 
 ---
 

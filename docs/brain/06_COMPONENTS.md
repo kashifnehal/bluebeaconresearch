@@ -122,6 +122,11 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()` (`signals` exact count via `getRouteSupabaseClients()` — RLS is authenticated-only).
 - Copy integrity: fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second lines removed; research-register CTAs.
 - Links to `/accuracy` without displaying a hit-rate percentage.
+- Hero `<p>` (#174): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.
+
+### 3.5c Map page Tension Index tooltip (`app/(dashboard)/map/page.tsx`) (#175)
+
+- Inline in the filters panel, not a separate component. Click the "i" to pin `tensionInfoOpen`; `mousedown` outside the button+tooltip closes it (TopBar dropdown pattern). CSS `group-hover` preview unchanged. Tooltip copy stays the existing methodology sentence — no formula.
 
 ### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
 - **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
