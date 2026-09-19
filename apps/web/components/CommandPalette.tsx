@@ -40,6 +40,7 @@ const STATIC_PAGES: { label: string; href: string; icon: string }[] = [
   { label: "Alerts", href: "/alerts", icon: "notifications" },
   { label: "Backtesting Lab", href: "/backtesting", icon: "science" },
   { label: "Settings", href: "/settings", icon: "settings" },
+  { label: "Help", href: "/help", icon: "help" },
 ];
 
 export function CommandPalette() {

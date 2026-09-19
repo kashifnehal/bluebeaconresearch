@@ -131,7 +131,9 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 >
 > ⚠️ UPDATED 2026-09-13 (#142) — new table `media_impact_watchlist` (entity_name unique, aliases, tier CHECK, markets, statement_type, evidence_summary, evidence_sources, caveat, active; RLS public read / service-role write) + `signals.media_impact_entity`. Applied live via `20260913180000_media_impact_watchlist.sql`. Full columns: `docs/brain/04_DATABASE.md` Table 18b / Table 2.
 
-> ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — new table `search_content_embeddings` (`extensions.vector(256)`, HNSW cosine, RLS on / no policies, service-role RPC `match_search_content`). pgvector enabled (was available, not installed). Catalog is real page copy only; FAQ waits on #155. Full columns: `docs/brain/04_DATABASE.md` Table 18c.
+> ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — new table `search_content_embeddings` (`extensions.vector(256)`, HNSW cosine, RLS on / no policies, service-role RPC `match_search_content`). pgvector enabled (was available, not installed). Catalog is real page copy; FAQ copy indexed as of #155. Full columns: `docs/brain/04_DATABASE.md` Table 18c.
+>
+> ⚠️ UPDATED 2026-09-19 (#155) — new table `feedback_submissions` (user-owned insert/select; optional email + page_context). Applied live via `20260919220000_feedback_submissions.sql`. Full columns: `docs/brain/04_DATABASE.md` Table 18d.
 >
 > ⚠️ UPDATED 2026-09-19 (#142 data) — live table is 8 sourced rows (Musk evidence refresh + AP-hack compromised-account row). Schema/RLS unchanged. Migration `20260919143000_media_impact_watchlist_individual_social.sql`.
 

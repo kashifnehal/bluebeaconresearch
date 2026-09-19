@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
@@ -155,6 +156,12 @@ export default function SettingsPage() {
           </h1>
           <p className="font-mono text-[10px] text-primary tracking-widest uppercase font-bold">
             System Configuration & User Preferences
+          </p>
+          <p className="mt-3 text-sm text-on-surface/60">
+            Questions about what a score or label means?{" "}
+            <Link href="/help" className="text-primary hover:underline font-medium">
+              Help &amp; FAQ
+            </Link>
           </p>
         </div>
 

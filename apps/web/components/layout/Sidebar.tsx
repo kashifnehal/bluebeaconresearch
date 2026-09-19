@@ -20,7 +20,7 @@ const NAV: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { unreadCount, setHelpOpen, mobileSidebarOpen, setMobileSidebarOpen } = useUIStore();
+  const { unreadCount, mobileSidebarOpen, setMobileSidebarOpen } = useUIStore();
 
   async function handleLogout() {
     await signOutAndRedirect();
@@ -140,16 +140,19 @@ export function Sidebar() {
         <div className="text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#4edea3" }}>
           Node: BB-ALPHA-09
         </div>
-        <button
-          onClick={() => setHelpOpen(true)}
+        <Link
+          href="/help"
           className="flex items-center gap-2 w-full text-left transition-colors"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: "rgba(229,226,225,0.6)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: pathname === "/help" || pathname.startsWith("/help/") ? "#4edea3" : "rgba(229,226,225,0.6)", padding: 0 }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#e5e2e1"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(229,226,225,0.6)"; }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.color =
+              pathname === "/help" || pathname.startsWith("/help/") ? "#4edea3" : "rgba(229,226,225,0.6)";
+          }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>help</span>
           Help
-        </button>
+        </Link>
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 w-full text-left transition-colors"

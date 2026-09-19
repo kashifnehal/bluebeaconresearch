@@ -28,7 +28,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ## 2. Layout Components (`apps/web/components/layout`)
 
 ### 2.1 `Sidebar.tsx`
-- **Purpose**: Primary vertical terminal navigation sidebar. Below `md` it is an off-canvas drawer (`useUIStore.mobileSidebarOpen`); at `md`+ always visible (#133). Brand text "Blue Beacon Research" is a `<Link href="/dashboard">` (2026-09-18); ALPHA badge is not linked.
+- **Purpose**: Primary vertical terminal navigation sidebar. Below `md` it is an off-canvas drawer (`useUIStore.mobileSidebarOpen`); at `md`+ always visible (#133). Brand text "Blue Beacon Research" is a `<Link href="/dashboard">` (2026-09-18); ALPHA badge is not linked. Footer Help goes to `/help` (#155), not the HelpModal.
 - **Props**: None.
 - **Parent**: `(dashboard)/layout.tsx`
 - **Children**: `Logo`, Lucide Nav Icons (`LayoutDashboard`, `Globe`, `Bell`, `BarChart3`, `Eye`, `Settings`).
@@ -52,7 +52,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ### 2.2b `CommandPalette.tsx`
 - **Purpose**: Global Cmd+K / Ctrl+K search over Pages, Signals, Watchlist commodities, and Alert Rules (client-side + debounced `/api/signals`). Unchanged deterministic path.
 - **Parent**: `TopBar.tsx`.
-- **Assist fallback (2026-09-19)**: when that search settles with fewer than 2 hits, POST `/api/search/assist` (debounced, not per keystroke). A separate **Suggested** group shows the one-line Haiku answer + page link. Never mixed into Pages/Signals. Empty FAQ catalog until #155.
+- **Assist fallback (2026-09-19)**: when that search settles with fewer than 2 hits, POST `/api/search/assist` (debounced, not per keystroke). A separate **Suggested** group shows the one-line Haiku answer + page link. Never mixed into Pages/Signals. FAQ copy indexed as of #155.
 
 ### 2.3 `PriceTicker.tsx`
 - **Purpose**: Scrolling real-time 24h ticker bar displaying physical commodity prices (`USOIL`, `GOLD`, `NG`, `COPPER`).
@@ -60,6 +60,10 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Parent**: `TopBar.tsx`
 - **Hooks Used**: `useQuery` fetching `/api/prices` every 15 seconds.
 - **Styling**: Monospaced font display (`font-mono text-xs`), green/red color deltas (`text-emerald-400` / `text-rose-400`).
+
+### 2.4 `FeedbackForm.tsx` (#155)
+- **Purpose**: Help-page bug/feedback form (message, optional email, read-only page context). POST `/api/feedback`. Not live chat.
+- **Parent**: `(dashboard)/help/page.tsx`
 
 ---
 

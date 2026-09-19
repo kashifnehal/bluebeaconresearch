@@ -28,7 +28,7 @@ Sections:
   - Settings → /settings
 - Bottom section:
   - "Node: BB-ALPHA-09" text (cosmetic)
-  - Help link → opens HelpModal
+  - Help link → `/help` (#155 FAQ + feedback form)
   - Logout button → supabase.auth.signOut()
 
 Active state detection: usePathname() from next/navigation.
@@ -49,7 +49,7 @@ Contains:
 
 1b. **Connect-channel icon (`forum`)** — all screen sizes. Opens `NotificationConnectModal` (wraps existing `<TelegramConnect />`). Distinct from the alerts bell. (#112)
 
-1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K. Existing Pages / Signals / Watchlist / Alert Rules search unchanged. When that search returns fewer than 2 hits after debounce, POST `/api/search/assist` and show a separate **Suggested** group (AI one-liner + page URL). Not blended with deterministic groups. FAQ indexing waits on #155.
+1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K. Existing Pages / Signals / Watchlist / Alert Rules search unchanged. When that search returns fewer than 2 hits after debounce, POST `/api/search/assist` and show a separate **Suggested** group (AI one-liner + page URL). Not blended with deterministic groups. FAQ copy indexed as of #155 (`SEARCH_FAQ_ENTRIES` + Help page in Pages).
 2. **Notification Bell (🔔)**
    - Badge: red dot with unread_count from useUIStore.unreadAlerts
    - onClick: toggles useUIStore.notificationPanelOpen
@@ -63,7 +63,7 @@ Contains:
    - Shows user initials (first letter of full_name)
    - Background: accent green
    - onClick: toggles user dropdown
-   - Dropdown: user name, email, divider, Settings link, Sign Out button
+   - Dropdown: user name, email, divider, Help link (`/help`), Settings link, Sign Out button
 
 5. **"Terminal Sentinel v2.4.0-STABLE" + username** — cosmetic brand text, top right
 
@@ -119,16 +119,19 @@ Channel checkboxes for Telegram / Discord / Slack. `modalChannels` defaults to w
 
 ### HelpModal (apps/web/components/HelpModal.tsx)
 **Position:** Centered modal overlay
-**Trigger:** ? icon in TopBar
+**Trigger:** ? icon in TopBar (unchanged). Sidebar Help now goes to `/help` instead.
 
 Content (5 accordion sections):
 1. **Reading signal cards** — severity 1–10 explanation, confidence %, direction
 2. **Setting up Telegram alerts** — step by step: find @BlueBeaconBot → /connect [code]
 3. **Using the map** — click dots, Global Tension Index explanation
 4. **Backtesting** — how to use, disclaimer about demo data
-5. **Contact support** — mailto:support@bluebeaconresearch.com
+5. **Help & feedback** — link to `/help` FAQ (#155)
 
 Close: X button or click outside overlay.
+
+### Help page (`apps/web/app/(dashboard)/help/page.tsx`) + `FeedbackForm.tsx` (#155)
+Logged-in `/help` (middleware-protected). 10 FAQ answers from `lib/help-faq.ts` (current classifier / materiality / accuracy / LIVE behavior). Form fields: message, optional email, read-only page context. POST `/api/feedback` → `feedback_submissions`. No live chat.
 
 ---
 

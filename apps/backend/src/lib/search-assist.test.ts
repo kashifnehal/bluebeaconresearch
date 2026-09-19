@@ -30,12 +30,18 @@ function runTest(name: string, fn: () => void) {
   }
 }
 
-runTest("catalog is real pages only — FAQ waits on #155", () => {
-  assert.equal(SEARCH_FAQ_ENTRIES.length, 0);
-  const urls = getSearchCatalog().map((e) => e.url);
+runTest("catalog includes #155 FAQ copy plus the Help page", () => {
+  assert.equal(SEARCH_FAQ_ENTRIES.length, 10);
+  assert.equal(
+    SEARCH_FAQ_ENTRIES.every((e) => e.sourceKind === "faq" && e.url.startsWith("/help#") && e.content.length > 40),
+    true,
+  );
+  const urls = getSearchCatalog()
+    .filter((e) => e.sourceKind === "page")
+    .map((e) => e.url);
   assert.deepEqual(
     urls.sort(),
-    ["/alerts", "/backtesting", "/calendar", "/dashboard", "/map", "/settings", "/watchlist"],
+    ["/alerts", "/backtesting", "/calendar", "/dashboard", "/help", "/map", "/settings", "/watchlist"],
   );
   assert.equal(
     SEARCH_PAGE_ENTRIES.every((e) => e.content.length > 20 && e.sourceKind === "page"),

@@ -341,6 +341,22 @@ export function TopBar() {
                   <button
                     onClick={() => {
                       setAvatarOpen(false);
+                      router.push("/help");
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-[#201f1f] hover:text-[#4edea3] flex items-center gap-2 transition-colors"
+                  >
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ fontSize: "16px" }}
+                    >
+                      help
+                    </span>
+                    Help
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setAvatarOpen(false);
                       router.push("/settings");
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-[#201f1f] hover:text-[#4edea3] flex items-center gap-2 transition-colors"

@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.73.0 — #155 minimal FAQ + feedback form (2026-09-19)
+
+`apps/web` + Supabase migration. Logged-in `/help` page with 10 FAQ answers written from current product behavior (classifier confidence is not a price probability; accuracy `MIN_SAMPLE_SIZE = 20`; “LIVE DATA FEED ON” is a static label vs the ingestion banner; materiality gate is BBR’s own product gate, not TSC/Basic). Feedback form posts to `POST /api/feedback` → `feedback_submissions` (RLS insert/select own). Chose the table over Resend because `RESEND_API_KEY` is on Railway workers, not the Vercel web app. Sidebar Help, Settings, TopBar avatar, Cmd+K Pages, and HelpModal link to `/help`. Backend `SEARCH_FAQ_ENTRIES` filled from the same answers (index refresh is on the next search-assist catalog sync). No live chat.
+
 ### v0.72.0 — Fastify /docs no longer public (2026-09-19)
 
 `apps/backend` only. Live `GET https://api.bluebeaconresearch.com/docs` returned 200 Swagger UI HTML; `/docs/json` returned OpenAPI 3.0.3 for the full `/v1` surface (including `/v1/admin/*` and `/v1/telegram/webhook`) with no auth. Cause: `app.register(swaggerUi, { routePrefix: "/docs" })` plus an auth-hook exemption for `req.url.startsWith("/docs")`.
@@ -20,7 +24,7 @@ This document records historic development milestones, schema evolutions, featur
 
 Existing `CommandPalette.tsx` Pages/Signals/Watchlist/Alert Rules search is unchanged. When that search settles with fewer than 2 hits, the palette may show a separate **Suggested** group: one Haiku sentence plus the matching page URL.
 
-**Index:** `search_content_embeddings` (`vector(256)`). pgvector was available on the project and not installed — enabled this ship. Catalog is already-written page copy (titles, URLs, on-page / tour / hint sentences). `#155` FAQ does not exist yet; FAQ slot is empty.
+**Index:** `search_content_embeddings` (`vector(256)`). pgvector was available on the project and not installed — enabled this ship. Catalog is already-written page copy (titles, URLs, on-page / tour / hint sentences). FAQ copy is indexed as of #155 (`SEARCH_FAQ_ENTRIES` + `/help`).
 
 **Embeddings:** Anthropic has no embeddings API. Cheapest Anthropic-partnered option is Voyage `voyage-4-lite` ($0.02/MTok, 200M free, 256-d). `VOYAGE_API_KEY` optional; unset uses `local-hash-v1` so retrieval works without a new vendor. Rows store `embedding_model`.
 

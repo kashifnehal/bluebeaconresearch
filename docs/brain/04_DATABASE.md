@@ -267,7 +267,14 @@ Small RAG index of **already-written** BBR page copy (and FAQ text later). Not `
 - `embedding` (`extensions.vector(256)`) / `embedding_model` (`text`) — `voyage-4-lite` when `VOYAGE_API_KEY` is set, else `local-hash-v1`
 - `source_kind` (`page`|`faq`) / `content_hash` / `created_at` / `updated_at`
 - HNSW cosine index. RLS on, no policies (service-role only — same as `anthropic_daily_usage`). RPC `match_search_content(query_embedding, match_threshold, match_count, filter_model)` is `service_role` execute only.
-- FAQ rows wait on #155 (no FAQ copy in the repo yet).
+- FAQ rows: #155 (`/help` copy in `SEARCH_FAQ_ENTRIES`).
+
+### Table 18d: `feedback_submissions` (#155, migration `20260919220000_feedback_submissions.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-19)
+In-app Help/FAQ feedback and bug reports. Not live chat. Chose a table over Resend because the web app has no `RESEND_API_KEY` (that key is on Railway workers).
+- `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL, FK → `profiles.id` ON DELETE CASCADE)
+- `message` (`text`, NOT NULL, 10–4000 chars) / `email` (`text`, nullable) / `page_context` (`text`, nullable, ≤200)
+- `created_at` (`timestamptz`, NOT NULL, default now())
+- RLS on: authenticated insert/select own rows (`user_id = auth.uid()`). No update/delete policies. Service-role reads all.
 
 **Known drift corrected 2026-08-27** — the previous version of this section stated these, all of which were wrong against the live DB:
 - `alert_rules.channels` default was documented as `'{telegram}'`; it is actually `'{email}'`. This is the most misleading of the set, since it describes what a newly created rule does by default.

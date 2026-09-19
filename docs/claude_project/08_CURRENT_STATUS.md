@@ -78,9 +78,11 @@
 
 > ⚠️ UPDATED 2026-09-19 (Fastify /docs no longer public) — production Swagger UI at `/docs` was unauthenticated. Now `development`/`test` only. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.72.0. This tree: PHASE 39.
 >
-> ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — existing palette search kept; Suggested group is a RAG fallback when that search returns <2 hits. `POST /v1/search/assist`, `search_content_embeddings`, Haiku on the chat daily budget. FAQ waits on #155. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.71.0. This tree: PHASE 38.
+> ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — existing palette search kept; Suggested group is a RAG fallback when that search returns <2 hits. `POST /v1/search/assist`, `search_content_embeddings`, Haiku on the chat daily budget. FAQ indexed as of #155. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.71.0. This tree: PHASE 38.
+>
+> ⚠️ UPDATED 2026-09-19 (#155 minimal FAQ) — `/help` FAQ + `feedback_submissions` (table, not Resend; no live chat). Sidebar/Settings/TopBar/Cmd+K. `SEARCH_FAQ_ENTRIES` filled. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.73.0. This tree: PHASE 40.
 
-Last updated: 2026-09-19 (Fastify /docs no longer public)
+Last updated: 2026-09-19 (#155 minimal FAQ)
 
 ---
 

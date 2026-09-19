@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "test": "../backend/node_modules/.bin/tsx lib/signal-display.test.ts && ../backend/node_modules/.bin/tsx lib/user-error-copy.test.ts && ../backend/node_modules/.bin/tsx lib/market-impact-assessment.test.ts && ../backend/node_modules/.bin/tsx lib/feature-hints.test.ts && ../backend/node_modules/.bin/tsx lib/command-palette-assist.test.ts && ../backend/node_modules/.bin/tsx components/signals/CommodityChip.test.tsx && ../backend/node_modules/.bin/tsx components/signals/MediaImpactTag.test.tsx && ../backend/node_modules/.bin/tsx components/signals/MarketImpactAssessment.test.tsx"
+    "test": "../backend/node_modules/.bin/tsx lib/signal-display.test.ts && ../backend/node_modules/.bin/tsx lib/user-error-copy.test.ts && ../backend/node_modules/.bin/tsx lib/market-impact-assessment.test.ts && ../backend/node_modules/.bin/tsx lib/feature-hints.test.ts && ../backend/node_modules/.bin/tsx lib/command-palette-assist.test.ts && ../backend/node_modules/.bin/tsx lib/feedback.test.ts && ../backend/node_modules/.bin/tsx lib/help-faq.test.ts && ../backend/node_modules/.bin/tsx components/signals/CommodityChip.test.tsx && ../backend/node_modules/.bin/tsx components/signals/MediaImpactTag.test.tsx && ../backend/node_modules/.bin/tsx components/signals/MarketImpactAssessment.test.tsx"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

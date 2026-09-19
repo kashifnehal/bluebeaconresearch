@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 40 — #155 MINIMAL FAQ + FEEDBACK FORM (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.73.0.
+
+- Logged-in `/help` with 10 FAQ answers from current classifier / materiality-gate / accuracy / LIVE behavior.
+- Feedback form writes `feedback_submissions` (chose table over Resend: web app has no `RESEND_API_KEY`). No live chat.
+- Discoverable from Sidebar Help, Settings, TopBar avatar, Cmd+K. Search-assist FAQ catalog filled.
+
 ## PHASE 39 — FASTIFY /DOCS NO LONGER PUBLIC (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.72.0.
@@ -18,7 +26,7 @@
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.71.0.
 
 - Existing Cmd+K Pages/Signals/Watchlist/Alert Rules search kept. Suggested group is a separate, labeled fallback when that search returns fewer than 2 hits.
-- `POST /v1/search/assist` retrieves real page copy via pgvector, then one Haiku sentence on the chat daily budget. FAQ indexing waits on #155.
+- `POST /v1/search/assist` retrieves real page copy via pgvector, then one Haiku sentence on the chat daily budget. FAQ copy indexed as of #155.
 
 ## PHASE 37 — DRIVER.JS FEATURE HINTS (2026-09-19)
 

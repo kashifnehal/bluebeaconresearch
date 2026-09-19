@@ -136,16 +136,17 @@ export function HelpModal() {
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               <span className="material-symbols-outlined text-sm">mail</span>
-              5. Contact Support & Encrypted Desk
+              5. Help & feedback
             </h3>
             <p className="text-xs text-[#bbcac0]">
-              Need custom API integrations, enterprise nodes, or tactical assistance? Contact our engineering team:
+              For how the product actually works today, and to send a bug report, use Help.
             </p>
             <a
-              href="mailto:support@bluebeaconresearch.com"
+              href="/help"
+              onClick={() => setHelpOpen(false)}
               className="inline-block mt-2 font-mono text-xs text-[#4edea3] hover:underline"
             >
-              support@bluebeaconresearch.com
+              Open Help &amp; FAQ
             </a>
           </div>
         </div>

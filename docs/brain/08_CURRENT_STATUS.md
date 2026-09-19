@@ -2,11 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-19 (Fastify /docs no longer public)
+Last updated: 2026-09-19 (#155 minimal FAQ)
+
+> ⚠️ UPDATED 2026-09-19 (#155 minimal FAQ) — logged-in `/help` FAQ (10 questions) + `feedback_submissions` form (table, not Resend; no live chat). Sidebar/Settings/TopBar/Cmd+K link it. `SEARCH_FAQ_ENTRIES` filled. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.73.0.
 
 > ⚠️ UPDATED 2026-09-19 (Fastify /docs no longer public) — production `GET /docs` was unauthenticated Swagger UI. Now development/test only; auth allowlist no longer skips `/docs` in production. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.72.0.
 
-> ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — existing Command Palette search kept. Fallback `POST /v1/search/assist` + Suggested group when that search returns <2 hits. `search_content_embeddings` + pgvector; Haiku one-liner on the chat daily budget. FAQ waits on #155. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.71.0.
+> ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — existing Command Palette search kept. Fallback `POST /v1/search/assist` + Suggested group when that search returns <2 hits. `search_content_embeddings` + pgvector; Haiku one-liner on the chat daily budget. FAQ copy indexed as of #155. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.71.0.
 
 > ⚠️ UPDATED 2026-09-19 (Driver.js feature hints) — `apps/web` only. One first-time pulsing hint on the Watchlist dropdown+chips, the dashboard FilterBar, and the event-detail RECORD button (`driver.js` Feature Hints, localStorage `bbr_hint_seen_<id>`). RECORD also has a persistent hover tooltip matching `handleRecord()` (browser localStorage only; no list UI). Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.70.0.
 
@@ -14,13 +16,17 @@ Last updated: 2026-09-19 (Fastify /docs no longer public)
 
 ---
 
+## #155 minimal FAQ + feedback form (2026-09-19)
+
+`apps/web` + migration. Full record: `14_CHANGELOG.md` v0.73.0, `LIVE_TODO.md`. `/help` is a logged-in Help/FAQ (dashboard chrome, middleware-protected) with 10 answers from current classifier/materiality/accuracy/LIVE behavior and a small feedback form into `feedback_submissions`. Discoverable from Sidebar Help, Settings, TopBar avatar, Cmd+K. Search-assist FAQ catalog is no longer empty.
+
 ## Fastify /docs no longer public (2026-09-19)
 
 `apps/backend` only. Full record: `14_CHANGELOG.md` v0.72.0, `LIVE_TODO.md`. `@fastify/swagger-ui` at `/docs` was registered in every environment and skipped by the auth hook. Production served the OpenAPI path list with no token. Swagger now loads only for `development`/`test`.
 
 ## Cmd+K search assist (2026-09-19)
 
-`apps/web` + `apps/backend` + migration. Full record: `14_CHANGELOG.md` v0.71.0, `LIVE_TODO.md`. Existing Cmd+K Pages/Signals/Watchlist/Alert Rules search unchanged. When it settles with fewer than 2 hits, a separate Suggested group may show one Haiku sentence + page URL from `search_content_embeddings`. FAQ not indexed (#155 does not exist yet).
+`apps/web` + `apps/backend` + migration. Full record: `14_CHANGELOG.md` v0.71.0, `LIVE_TODO.md`. Existing Cmd+K Pages/Signals/Watchlist/Alert Rules search unchanged. When it settles with fewer than 2 hits, a separate Suggested group may show one Haiku sentence + page URL from `search_content_embeddings`. FAQ copy is indexed as of #155 (`SEARCH_FAQ_ENTRIES` + `/help`).
 
 ## Driver.js feature hints (2026-09-19)
 

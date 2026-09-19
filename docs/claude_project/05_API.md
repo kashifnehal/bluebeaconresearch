@@ -240,7 +240,7 @@ Then: cheap relevance pre-check (heuristic, then a tiny Haiku call if needed). A
 ---
 
 #### POST /v1/search/assist  (Cmd+K search assist, 2026-09-19)
-Auth required. Body: `{ "query": string }` (2–200 chars). RAG over `search_content_embeddings` (real page copy; FAQ waits on #155), then one Haiku sentence if cosine similarity clears the model threshold. Chat daily Anthropic budget (`isAnthropicBudgetAvailable("chat")` / `assertAnthropicBudget("chat")`). Below threshold or `NO_ANSWER` → `{ "status": "no_confident_answer" }` (200). Budget exceeded → `503 ai_temporarily_unavailable` with the same daily-limit message as #111. Next.js BFF: `app/api/search/assist/route.ts`. See `18_AI_ENGINE.md` §3c.
+Auth required. Body: `{ "query": string }` (2–200 chars). RAG over `search_content_embeddings` (real page copy + #155 FAQ), then one Haiku sentence if cosine similarity clears the model threshold. Chat daily Anthropic budget (`isAnthropicBudgetAvailable("chat")` / `assertAnthropicBudget("chat")`). Below threshold or `NO_ANSWER` → `{ "status": "no_confident_answer" }` (200). Budget exceeded → `503 ai_temporarily_unavailable` with the same daily-limit message as #111. Next.js BFF: `app/api/search/assist/route.ts`. See `18_AI_ENGINE.md` §3c.
 
 ---
 
@@ -701,8 +701,11 @@ apps/web/app/api/
 │   └── portal/route.ts      → Creates Stripe portal session (STUBBED)
 ├── telegram/
 │   └── connect-code/route.ts → Proxies POST /v1/telegram/connect-code
-└── discord/
-    └── test/route.ts → Authenticated one-off Discord webhook ping
-                           (`{ webhookUrl }` → `{ ok: true }` / `{ ok: false, error }`).
-                           Server-side fetch only; URL must be a Discord webhook host.
+├── discord/
+│   └── test/route.ts → Authenticated one-off Discord webhook ping
+│                          (`{ webhookUrl }` → `{ ok: true }` / `{ ok: false, error }`).
+│                          Server-side fetch only; URL must be a Discord webhook host.
+└── feedback/route.ts     → #155 authenticated POST. Body `{ message, email?, pageContext? }`
+                               writes `feedback_submissions` (RLS own-row insert). `{ ok: true }`.
+                               401 if signed out. Not live chat. Not Resend.
 ```

@@ -31,6 +31,7 @@ const PROTECTED = [
   "/backtesting",
   "/settings",
   "/onboarding",
+  "/help",
 ];
 
 // Incident-response hardening (2026-08-28): a degraded Supabase auth gateway made

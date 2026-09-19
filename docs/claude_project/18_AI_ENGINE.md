@@ -206,7 +206,7 @@ Tiny RAG over **BBR's own already-written page copy** (Command Palette fallback 
 1. Embed the user query (`voyage-4-lite` at 256-d when `VOYAGE_API_KEY` is set — cheapest Anthropic-partnered embedding, $0.02/MTok, 200M free; otherwise `local-hash-v1` so pgvector works with no new vendor). Anthropic has no embeddings API.
 2. `match_search_content` cosine lookup on `search_content_embeddings`. Below the model threshold → `{ status: "no_confident_answer" }`, no Haiku call.
 3. One Haiku call (`claude-haiku-4-5-20251001`, `max_tokens: 80`), chat daily budget via `assertAnthropicBudget("chat")` / `isAnthropicBudgetAvailable("chat")`. One sentence from retrieved context only; include the page URL; `NO_ANSWER` if the snippet doesn't support a reply. Same no-buy/sell / not-financial-advice rule.
-4. Catalog: real page titles/URLs + on-page / ProductTour / feature-hint copy. `#155` FAQ is empty until that FAQ exists.
+4. Catalog: real page titles/URLs + on-page / ProductTour / feature-hint copy + #155 FAQ answers (`SEARCH_FAQ_ENTRIES`, `/help`).
 
 Frontend (`CommandPalette.tsx`) keeps the existing Pages/Signals/Watchlist/Alert Rules search. Assist fires only after that search settles with fewer than 2 hits (debounced). Suggested group is labeled separately.
 
