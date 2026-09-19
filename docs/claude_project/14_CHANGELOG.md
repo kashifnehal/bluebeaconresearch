@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 42 — HOMEPAGE COPY INTEGRITY (2026-09-20)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.75.0.
+
+- Landing no longer claims 42ms / 100% Verified / 40yr archive / Encrypted Support / sub-second synthesis.
+- Copy retone to research language; live `signals` count; `/accuracy` link without a homepage hit-rate %.
+- Monitor / Analyst / Pro prices unchanged; Pro archive label is now 5-year price history.
+
 ## PHASE 41 — #143 LEFTOVER: EVENT-DETAIL MATERIALITY FIELDS (2026-09-20)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.74.0.

@@ -117,6 +117,12 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **2026-09-12 quality fix**: `CitedAssistantReply`'s answer text now renders via `react-markdown` (`allowedElements={["p","strong","em","ul","ol","li"]}`, mirrors `events/[id]/page.tsx`) instead of a plain `<div>` — `a`/`img` excluded on purpose, so a model-written markdown link can't become clickable outside the real Sources list.
 - **Why**: explain the briefing, never buy/sell or personalized-position advice. Grounded generation of the URL-identified signal — not RAG (D21 / ADR 017; same #103 rule as the briefing). History is server-backed (`signal_chat_messages`); a page reload must restore the conversation.
 
+### 3.5b Landing page (`apps/web/app/page.tsx`) (2026-09-20)
+
+- Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()` (`signals` exact count via `getRouteSupabaseClients()` — RLS is authenticated-only).
+- Copy integrity: fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second lines removed; research-register CTAs.
+- Links to `/accuracy` without displaying a hit-rate percentage.
+
 ### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
 - **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
 - **How**: server component, direct server-side fetch (same pattern as `admin/metrics/page.tsx`, no client proxy route needed); dark-terminal styling matches `/status`.

@@ -84,7 +84,9 @@
 >
 > ⚠️ UPDATED 2026-09-20 (#143 leftover) — event-detail surfaces already-stored `novelty` / `sourceConfirmation` / `materialityReasoning` (null-hidden). `/api/signals/:id` mapping only. Quick-view header no longer prints raw `{n}% confidence`. Timeline / related-event clustering not built. Still unread: `relevance` / `materiality_pass`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.74.0. This tree: PHASE 41.
 
-Last updated: 2026-09-20 (#143 leftover)
+> ⚠️ UPDATED 2026-09-20 (homepage copy integrity) — `apps/web/app/page.tsx` drops fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second claims; retone to research language; live `signals` count + `/accuracy` link (no homepage hit-rate %). Prices unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.75.0. This tree: PHASE 42.
+
+Last updated: 2026-09-20 (homepage copy integrity)
 
 ---
 

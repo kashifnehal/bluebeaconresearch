@@ -60,6 +60,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | — | Cmd+K search assist RAG fallback | — | **Done 2026-09-19** — existing palette search kept; Suggested group + `POST /v1/search/assist` when that search returns <2 hits. `search_content_embeddings` + pgvector; Haiku on the chat daily budget. FAQ indexed as of #155. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.71.0/PHASE 38. |
 | — | Fastify `/docs` no longer public | — | **Done 2026-09-19** — production Swagger UI was unauthenticated; now `development`/`test` only. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.72.0/PHASE 39. |
 | ~~#155~~ | ~~Minimal FAQ~~ | — | **Done 2026-09-19** — `/help` FAQ (10 live-behavior answers) + `feedback_submissions` form (table, not Resend; no live chat). Sidebar/Settings/TopBar/Cmd+K. `SEARCH_FAQ_ENTRIES` filled. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.73.0/PHASE 40. |
+| — | Homepage copy integrity (fabricated claims + sci-fi register) | — | **Done 2026-09-20** — removed 42ms / 100% Verified / 40yr archive / Encrypted Support / sub-second synthesis; retone; live `signals` count; `/accuracy` link with no homepage hit-rate %. Prices unchanged. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.75.0/PHASE 42. |
 
 ### Still open
 

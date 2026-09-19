@@ -2,7 +2,9 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-20 (#143 leftover — event-detail materiality fields)
+Last updated: 2026-09-20 (homepage copy integrity)
+
+> ⚠️ UPDATED 2026-09-20 (homepage copy integrity) — landing `app/page.tsx` no longer ships fabricated latency/integrity/archive/encryption claims; copy is research-register; live `signals` count + `/accuracy` link (no homepage hit-rate %). Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.75.0.
 
 > ⚠️ UPDATED 2026-09-20 (#143 leftover) — event-detail now shows `novelty` / `source_confirmation` / `materiality_reasoning` when present (null-hidden; most pre-gate rows show nothing). `/api/signals/:id` mapping only. SignalQuickView header no longer prints raw `{n}% confidence`. Timeline / related-event clustering not built. Still unread: `relevance` / `materiality_pass`. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.74.0.
 
@@ -17,6 +19,10 @@ Last updated: 2026-09-20 (#143 leftover — event-detail materiality fields)
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 Admin-API-created, pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console `admin_usage_metrics()` (signups / auth_users / DAU / WAU / waitlist / events_last_7d) and digest eligibility exclude the flag. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.69.0.
 
 ---
+
+## Homepage copy integrity (2026-09-20)
+
+`apps/web/app/page.tsx`. Removed five fabricated claims (100% Verified, 42ms, 40yr archive, Encrypted Support, sub-second synthesis). Retoned sci-fi CTAs/nav. Live `getHomepageStats()` count of `signals`. Trust proof links to `/accuracy` without displaying a hit rate. Prices unchanged. Full record: `14_CHANGELOG.md` v0.75.0, `LIVE_TODO.md`.
 
 ## #143 leftover — event-detail materiality fields (2026-09-20)
 

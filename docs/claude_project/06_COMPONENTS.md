@@ -337,16 +337,28 @@ Counter behavior:
 
 ---
 
-### LiveSignalPreview (apps/web/components/landing/LiveSignalPreview.tsx)
-**Shows on landing page — first thing visitor sees after hero**
+### Landing page (`apps/web/app/page.tsx`) — 2026-09-20 copy integrity
 
-Fetches: GET /v1/signals/latest (cached 60s)
-Shows: Most recent signal as a full SignalCard (large variant)
+No separate `components/landing/*` files exist. The public homepage is this server component.
+
+- `dynamic = "force-dynamic"`. `getLatestSignal()` still reads the newest active `signals` row. Public reads use `getRouteSupabaseClients().supabase` (service role when the key is set). Live RLS is `signals_select_authenticated` only; the cookie/anon client returns 0 rows to a logged-out visitor.
+- `getHomepageStats()` runs `select count(*) from signals` (`count: "exact", head: true`) and renders "N signals tracked" — live, not hardcoded.
+- CTA overlay: "Sign up to read the full assessment" → `/signup`. Empty state is "Loading the latest signal…" (no Beacon-Alpha / hardcoded example card).
+- New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point).
+- Removed fabricated lines: 42ms, 100% Verified, 40yr Intel Archive, Encrypted Support, sub-second synthesis.
+
+---
+
+### LiveSignalPreview (historical spec — not a separate file)
+
+The older spec below described a `components/landing/LiveSignalPreview.tsx` that was never split out. Treat `app/page.tsx` as the source of truth.
+
+Fetches: newest active `signals` row (server, same request as the page)
+Shows: Most recent signal title/summary/impacts
 Blur: Lower 40% of card blurred with gradient overlay
-Overlay text: "Sign up to see full analysis →"
-CTA button: "AUTHORIZE FULL ACCESS →" → /signup
+CTA button: "Sign up to read the full assessment" → /signup
 
-If no signals in DB: shows hardcoded example card.
+If no signals in DB: "Loading the latest signal…" — no hardcoded example card.
 
 ---
 
@@ -446,6 +458,8 @@ export default function PageName() {
 ### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
 
 Reads stored `signal_outcomes` only — `GET /v1/accuracy` filters `checkpoint_hours = 48`. The worker also writes 1h/4h/24h rows (#144); this page does not select a horizon. Methodology (48h/`event_date`, volatile/neutral excluded from headline, 20-sample floor, 24h price-distance guard, why not live-recomputed): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115.
+
+Homepage (2026-09-20) links here from nav, footer, and a dedicated track-record section and does **not** reprint `hit_rate` on `/`.
 
 Public track-record page, server component, `dynamic = "force-dynamic"`. Fetches
 `GET /v1/accuracy` directly server-side (`process.env.API_URL`, `cache: "no-store"`)

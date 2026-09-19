@@ -8,6 +8,20 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.75.0 — Homepage copy integrity (2026-09-20)
+
+`apps/web/app/page.tsx` only. Public landing no longer presents unverifiable proof points or defense-contractor register.
+
+**Removed (confirmed in source, not replaced with a new invented number):** "System Integrity: 100% Verified"; "Latency: 42ms"; Pro-tier "40yr Intel Archive" (real shipped history is #106 5-year Yahoo weekly); footer "Encrypted Support" on `mailto:`; "Sub-second synthesis of geopolitical volatility pulses." Adjacent false-immediacy copy in the feature grid ("sub-second analysis", "proprietary military datasets", "encrypted channels") also rewritten to what the pipeline actually does.
+
+**Retone:** nav/CTAs/headers/footer use How it works / Pricing / Sign up / View live signals / Dashboard / Support. Preferred §4 terms (Research Assessment, Market Impact Assessment, Source Verification, Uncertainty) replace Neural Confidence / Sentinel Synthesis / Scenario Lab Access / Beacon Stream.
+
+**Live stats:** `getHomepageStats()` — Supabase `select count(*) from signals` (exact count, `head: true`) on each render (`dynamic = "force-dynamic"`). Rendered as "N signals tracked". Latest-signal preview still uses `getLatestSignal()`. Both reads use `getRouteSupabaseClients().supabase` (service role when the key is set — same helper as the signals API routes): live RLS policy `signals_select_authenticated` would otherwise return 0 rows to a logged-out visitor.
+
+**Accuracy:** new section + nav/footer links to the existing public `/accuracy` page. No homepage hit-rate percentage — publishing the checkpoint-gated methodology page is the trust signal.
+
+**Unchanged:** Monitor $0 / Analyst $49 / Pro $199.
+
 ### v0.74.0 — #143 leftover: event-detail novelty / source / why-this-signal (2026-09-20)
 
 `apps/web` + `packages/shared` only. No backend or classifier change — `novelty`, `source_confirmation`, and `materiality_reasoning` have existed on `signals` since #141 (`ea34f28`) and were already fetched by `/api/signals/:id` via `select("*")`.

@@ -22,6 +22,8 @@ Every feature exists to serve this loop. Features that don't serve this loop sho
 
 ### 2.1 Landing Page (/)
 
+> ⚠️ UPDATED 2026-09-20 — implemented inline in `apps/web/app/page.tsx` (no separate `landing/` components). Nav is How it works / Pricing / Accuracy. CTAs are Sign up / View live signals (not Establish Intel Link / Authorize Full Access). Live preview shows the latest `signals` row plus a live `count(*)` ("N signals tracked"). Fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second lines are gone. Trust section links to `/accuracy` and does not print a hit-rate percentage. Pro archive label is 5-year price history. See `docs/brain/14_CHANGELOG.md` v0.75.0.
+
 **Purpose:** Convert visitors to signups. Present BBR as a legitimate research firm.
 
 **URL:** bluebeaconresearch.com
