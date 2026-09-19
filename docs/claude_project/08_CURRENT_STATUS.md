@@ -68,9 +68,11 @@
 
 > ⚠️ UPDATED 2026-09-19 (#123 remainder) — every event-detail click opens a new tab (`target="_blank" rel="noopener noreferrer"`), not only SignalQuickView. Live feed is inline in `dashboard/page.tsx`. ProductTour handoff stays same-tab. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.67.0. This tree: PHASE 34.
 
+> ⚠️ UPDATED 2026-09-19 (#142 data) — `media_impact_watchlist` is 8 sourced rows. Musk evidence is the 2018 "funding secured" / SEC record (`markets` still empty: TSLA/BTC not tracked). New compromised-official-account row for the 2013 AP Twitter hack. Classifier/UI path unchanged. No Trump-named individual row. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.68.0. This tree: PHASE 35.
+
 > ⚠️ UPDATED 2026-09-19 (#145) — watchlist list page first-paints `COMMODITIES` cards when there are no selections, plus category chips to add/remove (dropdown kept). Drill-down is one price chart with 1M/6M/1Y/3Y/5Y (90-day DB for 1M, Yahoo weekly 5y fetch for longer). Honest 5Y empty/incomplete copy unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.66.0. This tree: PHASE 33.
 
-Last updated: 2026-09-19 (#123 remainder — event detail in a new tab)
+Last updated: 2026-09-19 (#142 individual_social_media watchlist data)
 
 ---
 

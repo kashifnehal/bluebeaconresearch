@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-19 (#123 remainder — event detail in a new tab)
+Last updated: 2026-09-19 (#142 individual_social_media watchlist data)
 
 ---
+
+## #142 individual_social_media data update (2026-09-19)
+
+Data-only. Full record: `14_CHANGELOG.md` v0.68.0, `LIVE_TODO.md`. Live `media_impact_watchlist` is now **8** sourced rows (was 7). Elon Musk evidence replaced with the 2018 "funding secured" / SEC record; `markets` still empty (TSLA and BTC not on the allowlist). New `Compromised official social-media account` row for the April 2013 AP Twitter hack. No Trump-named individual row. Classifier/UI path unchanged.
 
 ## #123 remainder — every event-detail click opens a new tab (2026-09-19)
 
@@ -28,7 +32,7 @@ Last updated: 2026-09-19 (#123 remainder — event detail in a new tab)
 
 ## #142 live media-impact watchlist (2026-09-13)
 
-`apps/backend` + `apps/web` + Supabase migration. Full record: `14_CHANGELOG.md` v0.62.0, `LIVE_TODO.md`. Replaces #141's hardcoded watchlist array with `public.media_impact_watchlist` (7 sourced rows, public-read / service-role write) and writes `signals.media_impact_entity` from `classifyEvent()`. UI `[Media-Impact]` tag on card/detail when non-null. Elon Musk markets empty (BTC not tracked). Saylor/Wood not added. Verified live against production: 7 rows + correct tiers; live watchlist read + heuristic classify (OPEC → entity set, diplomatic talks → null).
+`apps/backend` + `apps/web` + Supabase migration. Full record: `14_CHANGELOG.md` v0.62.0, `LIVE_TODO.md`. Replaces #141's hardcoded watchlist array with `public.media_impact_watchlist` (public-read / service-role write) and writes `signals.media_impact_entity` from `classifyEvent()`. UI `[Media-Impact]` tag on card/detail when non-null. Seeded 7 sourced rows on 2026-09-13; **8 rows as of 2026-09-19** (v0.68.0 data update — Musk evidence + AP-hack row). Elon Musk markets empty (TSLA/BTC not tracked). Saylor/Wood not added.
 
 ## #141 materiality gate: the pipeline's first real "does this mean anything?" reject step (2026-09-13)
 

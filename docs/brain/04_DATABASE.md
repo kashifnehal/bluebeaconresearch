@@ -252,10 +252,10 @@ Permanent, never-live-recomputed outcome record — one row per (signal, asset, 
 - Populated by looking up the `commodity_prices` row closest to `event_date` and the row closest to `event_date + checkpoint_hours` for that asset symbol (binary search over that asset's full price series, loaded once per worker run — not one query per pair). If the closest available point is more than 24h from its target (the largest real `commodity_prices` sync gap observed is ~18h13m), the pair is skipped rather than written with a fabricated/clamped price — this matters concretely for the legacy pre-#87 `EURUSD`/`USDRUB` entries some old `commodity_impacts` rows still carry, since those forex symbols only have price history from 2026-09-09 onward.
 
 ### Table 18b: `media_impact_watchlist` (#142, migration `20260913180000_media_impact_watchlist.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-13)
-Reference table of communicators whose statements have a sourced historical market reaction. Public read (`to anon, authenticated using (true)`); service-role write only — same RLS shape as Table 18. Seeded with exactly 7 rows; do not add unsourced names (Saylor / Wood were explicitly excluded).
+Reference table of communicators whose statements have a sourced historical market reaction. Public read (`to anon, authenticated using (true)`); service-role write only — same RLS shape as Table 18. Seeded with 7 rows on 2026-09-13; **8 sourced rows as of 2026-09-19** (`20260919143000_media_impact_watchlist_individual_social.sql` — Musk evidence refresh + AP-hack row). Do not add unsourced names (Saylor / Wood were explicitly excluded; a Trump-named individual row is parked for founder sign-off).
 - `id` (`uuid`, PK) / `entity_name` (`text`, NOT NULL, UNIQUE) / `entity_aliases` (`text[]`, NOT NULL, default `'{}'`)
 - `tier` (`text`, NOT NULL, check: `institutional_official` | `political_geopolitical` | `individual_social_media`)
-- `markets` (`text[]`, NOT NULL) — Elon Musk is `{}` because BTC is not on the approved asset list
+- `markets` (`text[]`, NOT NULL) — Elon Musk and the AP-hack row are `{}` because TSLA / BTC / S&P 500 are not on the approved asset list
 - `statement_type` / `evidence_summary` / `caveat` (`text`, NOT NULL) / `evidence_sources` (`text[]`, NOT NULL)
 - `active` (`boolean`, NOT NULL, default true) / `created_at` (`timestamptz`, NOT NULL, default now())
 - Partial index on `active` where true. Read by `classifyEvent()` via a 10-min in-memory cache.

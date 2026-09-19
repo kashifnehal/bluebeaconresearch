@@ -8,6 +8,12 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.68.0 — #142 individual_social_media watchlist data (2026-09-19)
+
+Data-only on `public.media_impact_watchlist`. `classifyEvent()`, `media-impact-watchlist.ts`, and the `[Media-Impact]` UI tag were not changed. Live table went from 7 sourced rows to 8.
+
+**Migration** (`20260919143000_media_impact_watchlist_individual_social.sql`, applied live to `evavcgfmemwryggdkjmx` as `media_impact_watchlist_individual_social`): Elon Musk evidence replaced with the independently-checkable August 7, 2018 "funding secured" tweet / SEC v. Musk record (TSLA up to ~13% intraday; $20M Musk + $20M Tesla 2018 settlement; 2023 NPR/CNN trial coverage). `markets` remains `{}` because TSLA and BTC are not on BBR's approved asset allowlist. New `Compromised official social-media account` row for the April 23, 2013 AP Twitter hack (~$136B S&P 500 drop in 2–3 minutes), framed as a compromised/false official account rather than a named individual's credibility; `markets` `{}` because the S&P 500 is not tracked. No Trump-named `individual_social_media` row.
+
 ### v0.67.0 — #123 remainder: every event-detail click opens a new tab (2026-09-19)
 
 `apps/web` only. `ef73885` shipped new-tab only on SignalQuickView "View full details". Remaining event-detail entry points now use the same `<a target="_blank" rel="noopener noreferrer">` pattern: Intelligence Feed featured/secondary/stream (inline in `dashboard/page.tsx`; `SignalCard.tsx` is unused on web), map popup + sidebar VIEW DETAILS, watchlist Correlated Signals, alerts Recent Matches, event-detail Historical comparisons, NotificationPanel rows, CommandPalette Signals results. Map sidebar card click still selects the pin. ProductTour dashboard→event handoff stays `router.push` so Joyride can continue.

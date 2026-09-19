@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 35 — #142 INDIVIDUAL_SOCIAL_MEDIA WATCHLIST DATA (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.68.0.
+
+- Data-only. Live `media_impact_watchlist` is 8 sourced rows (was 7). Classifier, cache, and `[Media-Impact]` tag unchanged.
+- Elon Musk evidence is now the August 2018 "funding secured" tweet / SEC settlement record. `markets` still empty (TSLA and BTC are not on BBR's allowlist).
+- New `Compromised official social-media account` row for the April 2013 AP Twitter hack (~$136B S&P 500 drop). Not a named individual's credibility. No Trump-named individual row.
+
 ## PHASE 34 — #123 REMAINDER: EVENT DETAIL IN A NEW TAB (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.67.0.
