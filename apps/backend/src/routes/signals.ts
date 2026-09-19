@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { planGuard } from "../middleware/plan-guard.middleware.js";
 import { REDIS_CHANNELS } from "../workers/pubsub.js";
 import { getRedis } from "../clients/redis.js";
+import { sortByRelevance } from "../lib/relevance-rank.js";
 
 const querySchema = z.object({
   severity: z.coerce.number().int().min(1).max(10).optional(),
@@ -12,7 +13,11 @@ const querySchema = z.object({
   commodity: z.string().min(1).optional(),
   window: z.enum(["latest", "24h", "7d", "30d", "active"]).optional(),
   cursor: z.string().min(1).optional(),
-  sort: z.enum(["severity", "newest"]).default("severity"),
+  // "relevance" = recency+severity blend, computed in application code — see
+  // sortByRelevance()/relevanceRankScore() in ../lib/relevance-rank.js. Added
+  // for command-palette-style search ranking; does not change the default
+  // ("severity") used elsewhere.
+  sort: z.enum(["severity", "newest", "relevance"]).default("severity"),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
@@ -108,29 +113,60 @@ export async function signalsRoutes(app: FastifyInstance) {
       query = query.gt("created_at", cursor);
     }
 
+    // sort=relevance blends recency+severity in application code (below),
+    // not SQL — it needs a candidate set fetched up front and re-ranked/sliced
+    // after the query returns, not the `.range()`-based DB paging the other
+    // sort modes use.
+    const isRelevanceSort = sort === "relevance";
+    const RELEVANCE_CANDIDATE_LIMIT = 200;
+
     query =
       sort === "newest"
         ? query.order("created_at", { ascending: false })
-        : query
-            .order("severity", { ascending: false })
-            .order("created_at", { ascending: false });
+        : isRelevanceSort
+          ? // Pre-sort for the candidate fetch — most-recent/highest-severity
+            // first is a reasonable set to draw the top RELEVANCE_CANDIDATE_LIMIT
+            // rows from before the real recency+severity re-rank below.
+            query
+              .order("created_at", { ascending: false })
+              .order("severity", { ascending: false })
+          : query
+              .order("severity", { ascending: false })
+              .order("created_at", { ascending: false });
 
     const { data, error, count } = cursor
       ? await query.limit(clampedLimit)
-      : await query.range(from, to);
+      : isRelevanceSort
+        ? await query.limit(Math.max(RELEVANCE_CANDIDATE_LIMIT, to + 1))
+        : await query.range(from, to);
     if (error) return reply.status(500).send({ error: "Query failed" });
 
+    // Re-rank the candidate set by recency+severity, then take this page's
+    // slice out of that ranked order. `rank_score = severity / (hours_since + 2) ^ 1.8`
+    // — see ../lib/relevance-rank.js. NOTE: nextCursor below is only
+    // approximate for relevance mode (created_at of whatever row lands last
+    // in the *sliced* ranked page, not the DB fetch order) — acceptable
+    // today since sort=relevance has no page>1 caller yet.
+    const rankedRows = isRelevanceSort
+      ? sortByRelevance(
+          (data ?? []) as { severity: number; created_at: string }[],
+          (r) => r.severity,
+          (r) => r.created_at,
+        )
+      : (data ?? []);
+    const pagedRows = isRelevanceSort ? rankedRows.slice(from, to + 1) : rankedRows;
+
     const nextCursor =
-      Array.isArray(data) && data.length
+      Array.isArray(pagedRows) && pagedRows.length
         ? // Use the last row's created_at as the next cursor
-          ((data[data.length - 1] as { created_at?: string }).created_at ??
-          null)
+          ((pagedRows[pagedRows.length - 1] as { created_at?: string })
+            .created_at ?? null)
         : null;
 
     return reply.send({
-      data: data ?? [],
+      data: pagedRows,
       meta: {
-        total: count ?? data?.length ?? 0,
+        total: count ?? pagedRows?.length ?? 0,
         page,
         limit: clampedLimit,
         nextCursor,

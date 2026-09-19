@@ -88,6 +88,8 @@
 
 > ⚠️ UPDATED 2026-09-20 (#174 + #175) — landing hero `<p>` is "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders" (headline unchanged). Map Tension Index info tooltip closes on outside click; hover preview and methodology sentence unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.76.0. This tree: PHASE 43.
 
+> ⚠️ UPDATED 2026-09-20 (search-quality fix) — Cmd+K `CommandPalette.tsx` Pages/Watchlist/Alert-Rules matching moved from exact-substring to Fuse.js fuzzy+keyword; added a missing Economic Calendar page entry. New `sort=relevance` (recency+severity blend, computed in application code) on both the Next.js BFF `GET /api/signals` and Fastify `GET /v1/signals`; command palette's own Signals search now uses it. Corrected a stale `05_API.md` claim that the BFF signals route proxies to Fastify — it reads Supabase directly. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.77.0. This tree: PHASE 44.
+
 Last updated: 2026-09-20 (#174 homepage subtext + #175 Tension Index tooltip)
 
 ---

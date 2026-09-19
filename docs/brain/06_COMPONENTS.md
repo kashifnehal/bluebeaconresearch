@@ -50,8 +50,9 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Styling**: `h-14 border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md flex items-center justify-between px-4`.
 
 ### 2.2b `CommandPalette.tsx`
-- **Purpose**: Global Cmd+K / Ctrl+K search over Pages, Signals, Watchlist commodities, and Alert Rules (client-side + debounced `/api/signals`). Unchanged deterministic path.
+- **Purpose**: Global Cmd+K / Ctrl+K search over Pages, Signals, Watchlist commodities, and Alert Rules (client-side + debounced `/api/signals`).
 - **Parent**: `TopBar.tsx`.
+- **Fuzzy keyword matching (2026-09-20)**: Pages / Watchlist commodities / Alert Rules now match via Fuse.js (`fuse.js@7`, threshold 0.3, extended-search) against label+keywords, not `.includes()` substring — logic lives in `lib/command-palette-search.ts` (unit-tested there, not inline) so e.g. "charts" finds Watchlist and "what are the commodity news" finds the Intelligence Feed. 8 `STATIC_PAGES` entries now (added Economic Calendar, previously missing from this list though already in the backend's AI-assist catalog). Signals search unchanged (still hits `/api/signals`) except its `sort` param moved from `severity` to `relevance` (recency+severity blend — see `05_API.md`) — command-palette search only, not the Intelligence Feed page's default.
 - **Assist fallback (2026-09-19)**: when that search settles with fewer than 2 hits, POST `/api/search/assist` (debounced, not per keystroke). A separate **Suggested** group shows the one-line Haiku answer + page link. Never mixed into Pages/Signals. FAQ copy indexed as of #155.
 
 ### 2.3 `PriceTicker.tsx`

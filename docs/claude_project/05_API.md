@@ -125,8 +125,7 @@ Returns paginated signal feed. Auth required.
 | region | string | — | Filter by region slug |
 | commodity | string | — | Filter by asset symbol (USOIL etc) |
 | category | string | — | Filter by event_category |
-| search | string | — | Full-text search on title+summary |
-| sort | string | severity | "severity" or "newest" |
+| sort | string | severity | "severity", "newest", or "relevance" (new 2026-09-20 — see below) |
 | limit | integer | 20 | Max 100 for API tier, 20 otherwise |
 | cursor | string | — | ISO timestamp for cursor pagination |
 | is_breaking | boolean | — | Filter breaking signals only |
@@ -195,6 +194,7 @@ Returns 5 most recent signals. Used by landing page live preview and dashboard r
 
 > ⚠️ UPDATED 2026-09-13 (#141 / #143) — Fastify `/v1/signals` already returns the #141 columns via `select("*")`. Next.js BFF `/api/signals` and `/api/signals/:id` map `eventCategory`, `marketMechanism`, and `isPreview` for the MARKET IMPACT ASSESSMENT box. `/api/signals/:id` also returns `currencyPairImpacts`.
 > ⚠️ UPDATED 2026-09-20 (#143 leftover) — `/api/signals/:id` now also maps `novelty` / `sourceConfirmation` / `materialityReasoning` (null-safe). List `/api/signals` does not. Still unmapped: `relevance` / `materialityPass`.
+> ⚠️ UPDATED 2026-09-20 (search-quality fix) — the `search` param row above was removed: this Fastify route's actual zod query schema never had one (confirmed reading `apps/backend/src/routes/signals.ts`) — that row was aspirational, not real. Command-palette-style text search only exists on the Next.js BFF `/api/signals` (§6 below), which reads Supabase directly rather than proxying here (also corrected below — a stale claim this ship found). New `sort=relevance` blends recency+severity in application code (`rank_score = severity / (hours_since_created_at + 2)^1.8`, `apps/backend/src/lib/relevance-rank.ts`) over a candidate window (existing filters still apply), then slices the requested page — added for parity with the BFF route's new relevance sort, though nothing currently calls it on this Fastify surface.
 
 **Response 200:**
 ```json
@@ -684,7 +684,8 @@ These are Next.js API routes, not the Fastify backend. They act as a thin proxy/
 
 ```
 apps/web/app/api/
-├── signals/route.ts          → proxies GET /v1/signals
+├── signals/route.ts          → reads Supabase directly (NOT a Fastify proxy — corrected
+│                                2026-09-20; own filters/search/sort, same as [id] below)
 ├── signals/[id]/route.ts     → event-detail payload (reads Supabase directly)
 ├── signals/[id]/chat/route.ts → #111 BFF: GET+POST, forwards the caller's Supabase
 │                                session as Bearer to Fastify `/v1/signals/:id/chat`

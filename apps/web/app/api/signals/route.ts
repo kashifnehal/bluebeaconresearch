@@ -7,6 +7,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { expandRegionVariants } from "@/lib/signal-filters";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import { parseEventCategory } from "@/lib/market-impact-assessment";
+import { sortByRelevance } from "@/lib/signal-relevance-rank";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -312,6 +313,15 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // sort=relevance (#command-palette search) blends recency+severity in
+    // application code (see lib/signal-relevance-rank.ts) rather than SQL, so
+    // it needs a candidate set fetched up front and re-ranked/sliced below —
+    // NOT the DB-level `.range()` paging the other sort modes use. Command
+    // palette is currently the only caller (limit=5, page 1); the main
+    // Intelligence Feed page's default sort is untouched (still "severity").
+    const isRelevanceSort = sort === "relevance";
+    const RELEVANCE_CANDIDATE_LIMIT = 200;
+
     // Sort: most recent articles first (within severity tier)
     query =
       sort === "newest"
@@ -322,12 +332,18 @@ export async function GET(req: NextRequest) {
           ? query
               .order("confidence", { ascending: false })
               .order("event_date", { ascending: false })
-          : query
+          : // Also used as the pre-sort for isRelevanceSort's candidate fetch —
+            // most-recent/highest-severity first is a reasonable ordering to take
+            // the top RELEVANCE_CANDIDATE_LIMIT rows from before the real
+            // recency+severity re-rank happens in application code below.
+            query
               .order("event_date", { ascending: false })
               .order("severity", { ascending: false })
               .order("created_at", { ascending: false });
 
-    const { data, error, count } = await query.range(rangeFrom, rangeTo);
+    const { data, error, count } = isRelevanceSort
+      ? await query.limit(Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1))
+      : await query.range(rangeFrom, rangeTo);
 
     // A page request past the last row (PostgREST "range not satisfiable",
     // code PGRST103) is a normal end-of-list condition, not a failure — return
@@ -438,16 +454,30 @@ export async function GET(req: NextRequest) {
 
     const deduped = dedupeSignalsByTitle(signals);
 
+    // Re-rank the candidate set by recency+severity and take this page's slice
+    // out of that ranked order — the DB-level `.order()`/`.limit()` above only
+    // fetched a reasonable candidate window, it did not do the real ranking.
+    const rankedSignals = isRelevanceSort
+      ? sortByRelevance(deduped, (s) => s.severity, (s) => s.eventDate)
+      : deduped;
+    const pagedSignals = isRelevanceSort
+      ? rankedSignals.slice(rangeFrom, rangeFrom + rowLimit)
+      : rankedSignals;
+
     // `hasMore` / `total` are computed from the raw DB rows (pre-title-dedupe) and
     // the exact row count, so paging never stalls just because one page happened
     // to collapse several same-headline signals. Cross-page headline dupes are
     // still possible (dedupe is per-page) but the client keys the merged feed by
     // signal id, so they don't render twice.
+    // NOTE: for isRelevanceSort, `rows.length` is the fetched candidate-window
+    // size, not the page size — `hasMore`/`nextCursor` are therefore only
+    // approximate for relevance mode (fine today: command palette, the only
+    // caller, always requests page 1 and never pages through it).
     const total = count ?? rangeFrom + rows.length;
     const hasMore = rangeFrom + rows.length < total;
 
     const payload = {
-      signals: deduped,
+      signals: pagedSignals,
       nextCursor: hasMore ? String(page + 1) : null,
       total,
       // Whether the "My Feed" narrowing was actually applied (false when the

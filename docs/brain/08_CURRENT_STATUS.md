@@ -2,7 +2,9 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-20 (#174 homepage subtext + #175 Tension Index tooltip)
+Last updated: 2026-09-20 (search-quality fix — Cmd+K fuzzy match + relevance sort)
+
+> ⚠️ UPDATED 2026-09-20 (search-quality fix) — `CommandPalette.tsx` Pages/Watchlist/Alert-Rules matching is now Fuse.js fuzzy+keyword (was exact substring); added a missing Economic Calendar page entry. New `sort=relevance` on `GET /api/signals` (Next.js BFF) and `GET /v1/signals` (Fastify) blends recency+severity in application code; command palette's Signals search now uses it. **Found and fixed a stale doc claim**: `docs/claude_project/05_API.md` said the BFF `signals/route.ts` proxies to Fastify `/v1/signals` — it doesn't; it reads Supabase directly and is the only one of the two with a `search` param. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.77.0.
 
 > ⚠️ UPDATED 2026-09-20 (#174 + #175) — landing hero `<p>` is "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders" (headline unchanged). Map Tension Index info tooltip closes on outside click; hover preview and methodology sentence unchanged. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.76.0.
 
@@ -21,6 +23,10 @@ Last updated: 2026-09-20 (#174 homepage subtext + #175 Tension Index tooltip)
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 Admin-API-created, pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console `admin_usage_metrics()` (signups / auth_users / DAU / WAU / waitlist / events_last_7d) and digest eligibility exclude the flag. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.69.0.
 
 ---
+
+## Search-quality fix — Cmd+K fuzzy match + relevance sort (2026-09-20)
+
+`apps/web` + `apps/backend`. Full record: `14_CHANGELOG.md` v0.77.0, `LIVE_TODO.md`. Three parts: (1) `CommandPalette.tsx` Pages/Watchlist/Alert-Rules matching moved from `.includes()` substring to Fuse.js fuzzy+keyword matching (`fuse.js` added to `apps/web`, threshold 0.3), with a real Economic Calendar entry added to `STATIC_PAGES` (was missing there, already in the backend's AI-assist catalog). (2) New `sort=relevance` on both `GET /api/signals` (Next.js BFF — the route the browser actually hits) and Fastify `GET /v1/signals` (separate API-tier surface) — `rank_score = severity / (hours_since + 2)^1.8`, computed in application code over a candidate window, not SQL. Command palette's Signals search now uses `sort=relevance` instead of `sort=severity`; the Intelligence Feed page's default sort is untouched. (3) Found mid-task that `docs/claude_project/05_API.md` incorrectly described the BFF signals route as proxying to Fastify — it reads Supabase directly and is the only one of the two routes with a `search` param (Fastify's zod schema never had one); corrected in both API doc trees.
 
 ## #174 homepage subtext + #175 Tension Index click-outside (2026-09-20)
 

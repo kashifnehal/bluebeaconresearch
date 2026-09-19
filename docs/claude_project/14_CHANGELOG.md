@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 44 — SEARCH-QUALITY FIX: CMD+K FUZZY MATCH + RELEVANCE SORT (2026-09-20)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.77.0.
+
+- Command palette Pages/Watchlist/Alert-Rules matching is now Fuse.js fuzzy+keyword, not exact substring. Added a missing Economic Calendar page entry.
+- New `sort=relevance` (recency+severity blend, application-code ranked) on both the Next.js BFF and Fastify signals routes; command palette's own Signals search now uses it. Intelligence Feed page's default sort unchanged.
+- Corrected a stale doc claim that the BFF signals route proxies to Fastify — it reads Supabase directly and is the only one of the two with a `search` param.
+
 ## PHASE 43 — #174 HOMEPAGE SUBTEXT + #175 TENSION INDEX CLICK-OUTSIDE (2026-09-20)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.76.0.

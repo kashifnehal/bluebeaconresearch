@@ -49,7 +49,7 @@ Contains:
 
 1b. **Connect-channel icon (`forum`)** — all screen sizes. Opens `NotificationConnectModal` (wraps existing `<TelegramConnect />`). Distinct from the alerts bell. (#112)
 
-1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K. Existing Pages / Signals / Watchlist / Alert Rules search unchanged. When that search returns fewer than 2 hits after debounce, POST `/api/search/assist` and show a separate **Suggested** group (AI one-liner + page URL). Not blended with deterministic groups. FAQ copy indexed as of #155 (`SEARCH_FAQ_ENTRIES` + Help page in Pages).
+1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K over Pages / Signals / Watchlist / Alert Rules. **2026-09-20 search-quality fix**: Pages / Watchlist / Alert Rules now fuzzy-match on label+keywords (Fuse.js, `lib/command-palette-search.ts`) instead of exact substring — added a missing Economic Calendar page entry and real user-word keywords per page. Signals search still hits `/api/signals` but now with `sort=relevance` (recency+severity blend) instead of `sort=severity`, command-palette only. When the combined search returns fewer than 2 hits after debounce, POST `/api/search/assist` and show a separate **Suggested** group (AI one-liner + page URL). Not blended with deterministic groups. FAQ copy indexed as of #155 (`SEARCH_FAQ_ENTRIES` + Help page in Pages).
 2. **Notification Bell (🔔)**
    - Badge: red dot with unread_count from useUIStore.unreadAlerts
    - onClick: toggles useUIStore.notificationPanelOpen

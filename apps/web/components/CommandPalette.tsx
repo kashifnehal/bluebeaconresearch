@@ -7,6 +7,7 @@ import { COMMODITIES } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { shouldFetchSearchAssist } from "@/lib/command-palette-assist";
+import { STATIC_PAGES, matchStaticPages, matchCommodities, matchAlertRules } from "@/lib/command-palette-search";
 
 type AlertRuleLite = {
   id: string;
@@ -32,16 +33,6 @@ type ResultItem = {
 };
 
 const GROUP_ORDER: ResultGroup[] = ["Pages", "Signals", "Watchlist", "Alert Rules"];
-
-const STATIC_PAGES: { label: string; href: string; icon: string }[] = [
-  { label: "Intelligence Feed", href: "/dashboard", icon: "dashboard" },
-  { label: "Map", href: "/map", icon: "public" },
-  { label: "Watchlist", href: "/watchlist", icon: "visibility" },
-  { label: "Alerts", href: "/alerts", icon: "notifications" },
-  { label: "Backtesting Lab", href: "/backtesting", icon: "science" },
-  { label: "Settings", href: "/settings", icon: "settings" },
-  { label: "Help", href: "/help", icon: "help" },
-];
 
 export function CommandPalette() {
   const router = useRouter();
@@ -96,8 +87,11 @@ export function CommandPalette() {
   const { data: signalsData, isFetching: signalsFetching } = useQuery({
     queryKey: ["command-palette-signals", debouncedQuery],
     queryFn: async () => {
+      // sort=relevance (recency+severity ranked, not severity-only) — see
+      // apps/web/app/api/signals/route.ts. Command-palette search only; the
+      // main Intelligence Feed page keeps its own default sort unchanged.
       const res = await fetch(
-        `/api/signals?search=${encodeURIComponent(debouncedQuery)}&limit=5&sort=severity`,
+        `/api/signals?search=${encodeURIComponent(debouncedQuery)}&limit=5&sort=relevance`,
       );
       if (!res.ok) throw new Error("Failed to search signals");
       return (await res.json()) as { signals: Signal[] };
@@ -121,12 +115,9 @@ export function CommandPalette() {
 
   const results = useMemo<ResultItem[]>(() => {
     const items: ResultItem[] = [];
-    const q = trimmedQuery.toLowerCase();
 
-    for (const p of STATIC_PAGES) {
-      if (!q || p.label.toLowerCase().includes(q)) {
-        items.push({ key: `page-${p.href}`, group: "Pages", label: p.label, icon: p.icon, href: p.href });
-      }
+    for (const p of matchStaticPages(trimmedQuery)) {
+      items.push({ key: `page-${p.href}`, group: "Pages", label: p.label, icon: p.icon, href: p.href });
     }
 
     if (hasQuery) {
@@ -141,31 +132,26 @@ export function CommandPalette() {
         });
       }
 
-      for (const c of COMMODITIES) {
-        if (c.symbol.toLowerCase().includes(q) || c.label.toLowerCase().includes(q)) {
-          items.push({
-            key: `commodity-${c.symbol}`,
-            group: "Watchlist",
-            label: c.label,
-            sublabel: c.symbol,
-            icon: "trending_up",
-            href: `/watchlist/${encodeURIComponent(c.symbol)}`,
-          });
-        }
+      for (const c of matchCommodities(trimmedQuery, COMMODITIES)) {
+        items.push({
+          key: `commodity-${c.symbol}`,
+          group: "Watchlist",
+          label: c.label,
+          sublabel: c.symbol,
+          icon: "trending_up",
+          href: `/watchlist/${encodeURIComponent(c.symbol)}`,
+        });
       }
 
-      for (const r of rulesData?.rules ?? []) {
-        const haystack = [r.name, ...(r.regions ?? []), ...(r.commodities ?? [])].join(" ").toLowerCase();
-        if (haystack.includes(q)) {
-          items.push({
-            key: `rule-${r.id}`,
-            group: "Alert Rules",
-            label: r.name,
-            sublabel: r.regions?.length ? r.regions.join(", ") : "All regions",
-            icon: "notifications_active",
-            href: "/alerts",
-          });
-        }
+      for (const r of matchAlertRules(trimmedQuery, rulesData?.rules ?? [])) {
+        items.push({
+          key: `rule-${r.id}`,
+          group: "Alert Rules",
+          label: r.name,
+          sublabel: r.regions?.length ? r.regions.join(", ") : "All regions",
+          icon: "notifications_active",
+          href: "/alerts",
+        });
       }
     }
 
