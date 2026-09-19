@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "node:crypto";
 
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { exposeApiDocs } from "../env.js";
 
 export type AuthedUser = {
   id: string;
@@ -24,8 +25,11 @@ function sha256Hex(input: string) {
 
 export function registerAuth(app: FastifyInstance) {
   app.addHook("preHandler", async (req, reply) => {
-    // Allow health/docs/root without auth
-    if (req.url === "/" || req.url.startsWith("/health") || req.url.startsWith("/docs")) return;
+    // Allow health/root without auth. `/docs` is only registered in
+    // development/test; do not exempt it in production even if someone
+    // re-enables Swagger later.
+    if (req.url === "/" || req.url.startsWith("/health")) return;
+    if (exposeApiDocs() && req.url.startsWith("/docs")) return;
 
     // Telegram's webhook callback (routes/telegram.ts) carries no JWT/API key and
     // never will — Telegram itself is the caller, not one of our users. Exempting

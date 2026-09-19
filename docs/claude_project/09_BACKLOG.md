@@ -58,6 +58,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#146~~ | ~~10 prospect/demo accounts that never count toward usage numbers~~ | — | **Done 2026-09-19** — `profiles.is_test_account`; Admin `email_confirm: true` for 10 accounts only (Confirm Email stays ON). Metrics + digest exclude the flag. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.69.0/PHASE 36. |
 | — | Driver.js feature hints (watchlist / dashboard filters / RECORD) | — | **Done 2026-09-19** — Feature Hints mode, one beacon each, localStorage `bbr_hint_seen_<id>`. RECORD tooltip matches `handleRecord()` (browser localStorage only). See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.70.0/PHASE 37. |
 | — | Cmd+K search assist RAG fallback | — | **Done 2026-09-19** — existing palette search kept; Suggested group + `POST /v1/search/assist` when that search returns <2 hits. `search_content_embeddings` + pgvector; Haiku on the chat daily budget. FAQ waits on #155. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.71.0/PHASE 38. |
+| — | Fastify `/docs` no longer public | — | **Done 2026-09-19** — production Swagger UI was unauthenticated; now `development`/`test` only. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.72.0/PHASE 39. |
 
 ### Still open
 

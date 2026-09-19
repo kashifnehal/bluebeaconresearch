@@ -8,6 +8,14 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.72.0 — Fastify /docs no longer public (2026-09-19)
+
+`apps/backend` only. Live `GET https://api.bluebeaconresearch.com/docs` returned 200 Swagger UI HTML; `/docs/json` returned OpenAPI 3.0.3 for the full `/v1` surface (including `/v1/admin/*` and `/v1/telegram/webhook`) with no auth. Cause: `app.register(swaggerUi, { routePrefix: "/docs" })` plus an auth-hook exemption for `req.url.startsWith("/docs")`.
+
+**Shipped:** register Swagger only when `NODE_ENV` is `development` or `test`; drop `/docs` from the unauthenticated allowlist in production. Global 60/min rate limit was already on (not added this ship). Post-#138 `search.routes.ts` does not leak `error.message` to the client.
+
+**Not this ship:** JS minification (not a security control); ToS reverse-engineering clause (founder/legal); per-route rate-limit changes.
+
 ### v0.71.0 — Cmd+K search assist RAG fallback (2026-09-19)
 
 Existing `CommandPalette.tsx` Pages/Signals/Watchlist/Alert Rules search is unchanged. When that search settles with fewer than 2 hits, the palette may show a separate **Suggested** group: one Haiku sentence plus the matching page URL.

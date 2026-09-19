@@ -2,6 +2,8 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 >
+> ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** public. It registers only when `NODE_ENV` is `development` or `test`. Production previously served unauthenticated OpenAPI at `https://api.bluebeaconresearch.com/docs`. Auth hook no longer skips `/docs` in production. Global rate limit remains `@fastify/rate-limit` 60/min in-memory (see `apps/backend/src/app.ts`).
+>
 > ⚠️ UPDATED 2026-09-13 (#138) — Fastify `/v1` unchanged. Next.js BFF `apiErrorLogged()` no longer forwards provider `.message` in the JSON `message` field (see `apps/web/lib/api-response.ts`).
 
 This document details every REST endpoint in `apps/backend/src/routes`, including HTTP methods, authentication requirements, rate limiting thresholds, request/response payload schemas, and client consumers.
@@ -11,7 +13,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 ## 1. Fastify Server Setup & Middlewares
 
 - **Base URL**: `http://localhost:3001` (Dev) / `https://api.bluebeaconresearch.com` (Production)
-- **Framework**: Fastify `v5.8.2` with `@fastify/cors` and `@fastify/swagger`
+- **Framework**: Fastify `v5.8.2` with `@fastify/cors` and `@fastify/swagger` (Swagger UI `/docs` is local/test only as of 2026-09-19; not a public developer portal)
 - **Auth Guard**: `apps/backend/src/middleware/auth.ts` verifies Supabase JWT `Authorization: Bearer <token>` or `x-api-key: <hash>`
 - **Plan Guard**: `apps/backend/src/middleware/plan-guard.ts` checks user plan tier (`free`, `analyst`, `pro`, `api`)
 

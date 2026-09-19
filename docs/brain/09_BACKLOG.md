@@ -36,4 +36,4 @@ This document outlines prioritized tasks, technical debt resolution, feature enh
 
 - [ ] **Upgrade Tailwind CSS Config**: Streamline legacy custom color variables in `apps/web/tailwind.config.ts`.
 - [ ] **Unit & Integration Test Suite**: Expand Vitest / Jest coverage across Fastify routes and BullMQ worker queue handlers.
-- [ ] **OpenAPI Spec Auto-Generation**: Auto-publish Swagger UI documentation to public developer developer portal (`/docs`).
+- [ ] **OpenAPI Spec Auto-Generation**: Do **not** auto-publish Swagger UI to a public `/docs` portal. Confirmed 2026-09-19: production `/docs` was already live and unauthenticated; closed by registering Swagger only in `development`/`test`. A future authenticated developer portal is a separate founder decision.

@@ -783,7 +783,7 @@ Monthly → check /settings to adjust alert thresholds
 
 ```
 Sign up → /settings → API Keys → create bb_live_... key
-Read /docs API documentation
+Read /docs API documentation (local/test Swagger UI only as of 2026-09-19 — production `/docs` is not a public portal)
 Test: curl /v1/signals?severity=8 -H "Authorization: Bearer bb_live_..."
 Build webhook receiver → configure in /settings → Webhook Endpoints
 Test webhook delivery

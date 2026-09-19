@@ -6,6 +6,13 @@
 
 ---
 
+## PHASE 39 — FASTIFY /DOCS NO LONGER PUBLIC (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.72.0.
+
+- Production `GET /docs` was unauthenticated Swagger UI + OpenAPI JSON for the full `/v1` surface.
+- Swagger now registers only for `NODE_ENV=development|test`. Auth hook no longer skips `/docs` in production.
+
 ## PHASE 38 — CMD+K SEARCH ASSIST (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.71.0.

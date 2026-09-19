@@ -70,6 +70,11 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
+/** Swagger UI at `/docs` is local/test only. Production must not serve a public OpenAPI UI. */
+export function exposeApiDocs(nodeEnv: Env["NODE_ENV"] = process.env.NODE_ENV as Env["NODE_ENV"]): boolean {
+  return nodeEnv === "development" || nodeEnv === "test";
+}
+
 export function getEnv(): Env {
   // Fallback for SUPABASE_URL if only its public variant is provided
   if (!process.env.SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL) {

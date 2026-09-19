@@ -5,7 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 
-import { getEnv } from "./env.js";
+import { exposeApiDocs, getEnv } from "./env.js";
 import { signalsRoutes } from "./routes/signals.js";
 import { registerAuth } from "./middleware/auth.middleware.js";
 import { usersRoutes } from "./routes/users.js";
@@ -56,12 +56,17 @@ export function buildApp() {
     timeWindow: "1 minute",
   });
 
-  app.register(swagger, {
-    openapi: {
-      info: { title: "Blue Beacon API", version: "1.0.0" },
-    },
-  });
-  app.register(swaggerUi, { routePrefix: "/docs" });
+  // OpenAPI UI was previously registered unconditionally at `/docs` and exempted
+  // from auth, so production served the full route map unauthenticated. Keep it
+  // for local/test only; production 404s.
+  if (exposeApiDocs(env.NODE_ENV)) {
+    app.register(swagger, {
+      openapi: {
+        info: { title: "Blue Beacon API", version: "1.0.0" },
+      },
+    });
+    app.register(swaggerUi, { routePrefix: "/docs" });
+  }
 
   app.get("/", async () => ({ message: "Blue Beacon API is live", status: "ok" }));
   app.get("/health", async () => ({ status: "ok", uptime: process.uptime() }));
