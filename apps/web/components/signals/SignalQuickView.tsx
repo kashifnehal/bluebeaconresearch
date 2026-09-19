@@ -34,10 +34,6 @@ export function SignalQuickView({
   onClose: () => void;
 }) {
   const open = signal != null;
-  const confidencePct =
-    signal && Number.isFinite(signal.confidence)
-      ? Math.round(signal.confidence * 100)
-      : null;
   const excerpt = signal?.aiAnalysis ? excerptAnalysis(signal.aiAnalysis) : null;
 
   return (
@@ -66,14 +62,6 @@ export function SignalQuickView({
                       entity={signal.mediaImpactEntity}
                       caveat={signal.mediaImpactCaveat}
                     />
-                    {confidencePct != null && (
-                      <span
-                        className="font-mono text-[11px] uppercase tracking-wider"
-                        style={{ color: "#86948a" }}
-                      >
-                        {confidencePct}% confidence
-                      </span>
-                    )}
                   </div>
                   <SheetPrimitive.Title
                     className="text-xl font-bold leading-tight"

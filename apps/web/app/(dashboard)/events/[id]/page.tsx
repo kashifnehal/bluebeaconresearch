@@ -440,6 +440,23 @@ export default function EventDetailPage() {
                       )}
                     </div>
 
+                    {signal.materialityReasoning ? (
+                      <details
+                        data-testid="why-this-signal"
+                        className="group"
+                      >
+                        <summary
+                          className="mb-4 cursor-pointer text-[10px] font-black uppercase tracking-[0.2em] text-accent"
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        >
+                          Why this signal
+                        </summary>
+                        <p className="text-base leading-relaxed text-text-secondary">
+                          {signal.materialityReasoning}
+                        </p>
+                      </details>
+                    ) : null}
+
                     {signal.commodityImpacts.length > 0 && (
                       <div className="space-y-3">
                         <div

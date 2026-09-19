@@ -3,6 +3,7 @@ import type {
   Direction,
   EventCategory,
   Signal,
+  SourceConfirmation,
 } from "@blue-beacon-research/shared";
 
 export const EVENT_CATEGORY_LABELS: Record<EventCategory, string> = {
@@ -29,6 +30,52 @@ export function eventCategoryLabel(
 ): string | null {
   const parsed = parseEventCategory(value);
   return parsed ? EVENT_CATEGORY_LABELS[parsed] : null;
+}
+
+export const SOURCE_CONFIRMATION_LABELS: Record<SourceConfirmation, string> = {
+  official: "Official statement",
+  reported: "Reported claim",
+  speculative: "Speculative / unconfirmed",
+};
+
+const SOURCE_CONFIRMATION_SET = new Set<string>(
+  Object.keys(SOURCE_CONFIRMATION_LABELS),
+);
+
+export function parseSourceConfirmation(
+  value: unknown,
+): SourceConfirmation | null {
+  if (typeof value !== "string") return null;
+  return SOURCE_CONFIRMATION_SET.has(value)
+    ? (value as SourceConfirmation)
+    : null;
+}
+
+export function sourceConfirmationLabel(
+  value: SourceConfirmation | string | null | undefined,
+): string | null {
+  const parsed = parseSourceConfirmation(value);
+  return parsed ? SOURCE_CONFIRMATION_LABELS[parsed] : null;
+}
+
+export function parseNovelty(value: unknown): number | null {
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : NaN;
+  if (!Number.isFinite(n) || n < 0 || n > 1) return null;
+  return n;
+}
+
+// UI display buckets only — not researched thresholds. Labels must stay
+// descriptive, not "score ≥ 0.7" / "70% new".
+export function noveltyLabel(value: number | null | undefined): string | null {
+  if (value == null || !Number.isFinite(value)) return null;
+  if (value >= 0.7) return "New development";
+  if (value >= 0.3) return "Partial update";
+  return "Mostly a repeat/reminder";
 }
 
 export const GPR_FALLBACK_SENTENCE =

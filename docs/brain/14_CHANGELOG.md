@@ -8,6 +8,16 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.74.0 — #143 leftover: event-detail novelty / source / why-this-signal (2026-09-20)
+
+`apps/web` + `packages/shared` only. No backend or classifier change — `novelty`, `source_confirmation`, and `materiality_reasoning` have existed on `signals` since #141 (`ea34f28`) and were already fetched by `/api/signals/:id` via `select("*")`.
+
+**Wiring:** shared `Signal` type gains optional `novelty` / `sourceConfirmation` / `materialityReasoning`. The `:id` BFF maps the snake_case columns (null-safe). List `/api/signals` is unchanged.
+
+**Display:** MARKET IMPACT ASSESSMENT adds Source confirmation (Official statement / Reported claim / Speculative / unconfirmed) and Novelty (UI buckets only: ≥0.7 New development, ≥0.3 Partial update, else Mostly a repeat/reminder) before Market mechanism. ANALYSIS tab adds a "Why this signal" `<details>` with the raw `materialityReasoning` string. All three render nothing when the field is null — the common pre-gate case. SignalQuickView header no longer shows `{n}% confidence` (same class of leftover #140 fixed on CommodityChip); MarketImpactAssessment already covers source confirmation when the field is present.
+
+**Not this ship:** spec items 12 (timeline/developments) and 14 (related events / story clustering) — no backend mechanism. `relevance` and `materiality_pass` remain unread (`materiality_pass` is a write-time insert gate).
+
 ### v0.73.0 — #155 minimal FAQ + feedback form (2026-09-19)
 
 `apps/web` + Supabase migration. Logged-in `/help` page with 10 FAQ answers written from current product behavior (classifier confidence is not a price probability; accuracy `MIN_SAMPLE_SIZE = 20`; “LIVE DATA FEED ON” is a static label vs the ingestion banner; materiality gate is BBR’s own product gate, not TSC/Basic). Feedback form posts to `POST /api/feedback` → `feedback_submissions` (RLS insert/select own). Chose the table over Resend because `RESEND_API_KEY` is on Railway workers, not the Vercel web app. Sidebar Help, Settings, TopBar avatar, Cmd+K Pages, and HelpModal link to `/help`. Backend `SEARCH_FAQ_ENTRIES` filled from the same answers (index refresh is on the next search-assist catalog sync). No live chat.

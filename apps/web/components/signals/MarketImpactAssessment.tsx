@@ -10,6 +10,8 @@ import {
   collectMarketImpacts,
   eventCategoryLabel,
   formatImpactDirections,
+  noveltyLabel,
+  sourceConfirmationLabel,
   usesGprFallback,
 } from "@/lib/market-impact-assessment";
 import { formatPriceSinceFiredSubtext } from "@/lib/signal-display";
@@ -58,6 +60,8 @@ export function MarketImpactAssessment({
   const impacts = collectMarketImpacts(signal);
   const fallback = usesGprFallback(signal);
   const category = eventCategoryLabel(signal.eventCategory);
+  const sourceConfirmation = sourceConfirmationLabel(signal.sourceConfirmation);
+  const novelty = noveltyLabel(signal.novelty);
   const direction = formatImpactDirections(impacts);
   const preview = signal.isPreview === true;
 
@@ -85,6 +89,29 @@ export function MarketImpactAssessment({
           </a>
           .
         </p>
+      ) : null}
+
+      {sourceConfirmation ? (
+        <Part label="Source confirmation">
+          <span
+            data-testid="market-impact-source-confirmation"
+            className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[11px] font-medium text-text-secondary"
+            style={{ borderColor: "var(--border-subtle)" }}
+          >
+            {sourceConfirmation}
+          </span>
+        </Part>
+      ) : null}
+
+      {novelty ? (
+        <Part label="Novelty">
+          <p
+            data-testid="market-impact-novelty"
+            className="text-[12px] text-text-secondary"
+          >
+            {novelty}
+          </p>
+        </Part>
       ) : null}
 
       {fallback ? (

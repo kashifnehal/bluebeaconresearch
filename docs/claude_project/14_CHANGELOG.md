@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 41 — #143 LEFTOVER: EVENT-DETAIL MATERIALITY FIELDS (2026-09-20)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.74.0.
+
+- Event-detail now surfaces already-stored `novelty` / `source_confirmation` / `materiality_reasoning` (null-hidden).
+- `/api/signals/:id` mapping + MARKET IMPACT ASSESSMENT labels + ANALYSIS "Why this signal".
+- SignalQuickView header drops raw `{n}% confidence`. Timeline / related-event clustering not built.
+
 ## PHASE 40 — #155 MINIMAL FAQ + FEEDBACK FORM (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.73.0.

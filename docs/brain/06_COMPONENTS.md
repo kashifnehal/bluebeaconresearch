@@ -97,8 +97,8 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Props**: `{ asset: string; direction: Direction; confidence: number; size?: 'sm' | 'md' }`
 - **Styling**: Pill tag with directional arrow. Both sizes show ticker + arrow only (#140). Classifier `confidence` stays on the prop for gating / `aria-label` ("model classification confidence {n}%"); it is not visible text and is not a price-direction probability.
 
-### 3.3b `MarketImpactAssessment.tsx` (#143)
-- **Purpose**: The event-detail / quick-view impact box, relabeled **MARKET IMPACT ASSESSMENT** (was PROJECTED IMPACT). Named parts from #141/#142 columns: market mechanism, affected markets (CommodityChip, confidence-free since #140), direction, event category, reused `MediaImpactTag`. Empty mechanism + empty impact lists → exact Caldara & Iacoviello 2022 fallback sentence (no live GPR number). `is_preview` → calendar note + `/calendar` link.
+### 3.3b `MarketImpactAssessment.tsx` (#143; #143 leftover 2026-09-20)
+- **Purpose**: The event-detail / quick-view impact box, relabeled **MARKET IMPACT ASSESSMENT** (was PROJECTED IMPACT). Named parts from #141/#142 columns: source confirmation + novelty (2026-09-20; hidden when null), market mechanism, affected markets (CommodityChip, confidence-free since #140), direction, event category, reused `MediaImpactTag`. Empty mechanism + empty impact lists → exact Caldara & Iacoviello 2022 fallback sentence (no live GPR number). `is_preview` → calendar note + `/calendar` link.
 - **Parents**: `events/[id]/page.tsx`, `SignalQuickView.tsx`.
 
 ### 3.4 `SignalQuickView.tsx` (#122)
@@ -107,6 +107,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **#123** (2026-09-11): "View full details" is `<a target="_blank" rel="noopener noreferrer">`. Remainder 2026-09-19: the same new-tab pattern is now on every other event-detail click (feed / map popup / watchlist / alerts / notifications / command palette / event Historical tab). ProductTour handoff stays same-tab.
 - **#137**: empty analyst-briefing copy is severity-gated (`emptyBriefingCopy(..., "compact")`), not "restoring capacity."
 - **#143**: "Commodity impacts" section replaced by `MarketImpactAssessment`.
+- **2026-09-20**: header no longer shows a raw `{n}% confidence` badge (#140 leftover). Source confirmation, when present on the Signal, is already in `MarketImpactAssessment` below.
 
 ### 3.5 `SignalChatPanel.tsx` (#111, `9f2aada`; visual pass 2026-09-12)
 - **Purpose**: Follow-up questions about **this** signal only, on the event detail page.

@@ -2,7 +2,9 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-19 (#155 minimal FAQ)
+Last updated: 2026-09-20 (#143 leftover — event-detail materiality fields)
+
+> ⚠️ UPDATED 2026-09-20 (#143 leftover) — event-detail now shows `novelty` / `source_confirmation` / `materiality_reasoning` when present (null-hidden; most pre-gate rows show nothing). `/api/signals/:id` mapping only. SignalQuickView header no longer prints raw `{n}% confidence`. Timeline / related-event clustering not built. Still unread: `relevance` / `materiality_pass`. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.74.0.
 
 > ⚠️ UPDATED 2026-09-19 (#155 minimal FAQ) — logged-in `/help` FAQ (10 questions) + `feedback_submissions` form (table, not Resend; no live chat). Sidebar/Settings/TopBar/Cmd+K link it. `SEARCH_FAQ_ENTRIES` filled. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.73.0.
 
@@ -15,6 +17,10 @@ Last updated: 2026-09-19 (#155 minimal FAQ)
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 Admin-API-created, pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console `admin_usage_metrics()` (signups / auth_users / DAU / WAU / waitlist / events_last_7d) and digest eligibility exclude the flag. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.69.0.
 
 ---
+
+## #143 leftover — event-detail materiality fields (2026-09-20)
+
+`apps/web` + shared Signal types. The three #141 columns were already stored and already in `/api/signals/:id`'s `select("*")`; they were never mapped onto the response or shown. Event-detail MARKET IMPACT ASSESSMENT now has Source confirmation + Novelty (plain-language labels, hidden when null). ANALYSIS tab has "Why this signal" when `materialityReasoning` is set. Quick-view header confidence percent removed. Spec items 12/14 not attempted. Full record: `14_CHANGELOG.md` v0.74.0, `LIVE_TODO.md`.
 
 ## #155 minimal FAQ + feedback form (2026-09-19)
 

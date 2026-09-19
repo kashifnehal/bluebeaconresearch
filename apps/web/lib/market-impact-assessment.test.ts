@@ -4,9 +4,14 @@ import type { EventCategory, Signal } from "@blue-beacon-research/shared";
 import {
   EVENT_CATEGORY_LABELS,
   GPR_FALLBACK_SENTENCE,
+  SOURCE_CONFIRMATION_LABELS,
   eventCategoryLabel,
   formatImpactDirections,
+  noveltyLabel,
   parseEventCategory,
+  parseNovelty,
+  parseSourceConfirmation,
+  sourceConfirmationLabel,
   usesGprFallback,
 } from "./market-impact-assessment";
 
@@ -114,4 +119,26 @@ runTest("direction labels stay human-readable and drop a single shared direction
     "USOIL Up · XAUUSD Volatile",
   );
   assert.equal(formatImpactDirections([]), null);
+});
+
+runTest("source confirmation maps the three enum values and rejects unknown", () => {
+  assert.equal(sourceConfirmationLabel("official"), "Official statement");
+  assert.equal(sourceConfirmationLabel("reported"), "Reported claim");
+  assert.equal(sourceConfirmationLabel("speculative"), "Speculative / unconfirmed");
+  assert.equal(Object.keys(SOURCE_CONFIRMATION_LABELS).length, 3);
+  assert.equal(parseSourceConfirmation("rumor"), null);
+  assert.equal(sourceConfirmationLabel(null), null);
+});
+
+runTest("novelty labels are UI buckets, not raw decimals", () => {
+  assert.equal(noveltyLabel(0.7), "New development");
+  assert.equal(noveltyLabel(0.99), "New development");
+  assert.equal(noveltyLabel(0.3), "Partial update");
+  assert.equal(noveltyLabel(0.69), "Partial update");
+  assert.equal(noveltyLabel(0.29), "Mostly a repeat/reminder");
+  assert.equal(noveltyLabel(0), "Mostly a repeat/reminder");
+  assert.equal(noveltyLabel(null), null);
+  assert.equal(parseNovelty(1.2), null);
+  assert.equal(parseNovelty("0.8"), 0.8);
+  assert.equal(parseNovelty("nope"), null);
 });

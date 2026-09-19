@@ -81,8 +81,10 @@
 > ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — existing palette search kept; Suggested group is a RAG fallback when that search returns <2 hits. `POST /v1/search/assist`, `search_content_embeddings`, Haiku on the chat daily budget. FAQ indexed as of #155. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.71.0. This tree: PHASE 38.
 >
 > ⚠️ UPDATED 2026-09-19 (#155 minimal FAQ) — `/help` FAQ + `feedback_submissions` (table, not Resend; no live chat). Sidebar/Settings/TopBar/Cmd+K. `SEARCH_FAQ_ENTRIES` filled. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.73.0. This tree: PHASE 40.
+>
+> ⚠️ UPDATED 2026-09-20 (#143 leftover) — event-detail surfaces already-stored `novelty` / `sourceConfirmation` / `materialityReasoning` (null-hidden). `/api/signals/:id` mapping only. Quick-view header no longer prints raw `{n}% confidence`. Timeline / related-event clustering not built. Still unread: `relevance` / `materiality_pass`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.74.0. This tree: PHASE 41.
 
-Last updated: 2026-09-19 (#155 minimal FAQ)
+Last updated: 2026-09-20 (#143 leftover)
 
 ---
 

@@ -285,7 +285,9 @@ Shape: rounded-full pill.
 ### MarketImpactAssessment (apps/web/components/signals/MarketImpactAssessment.tsx) — #143
 **Used in:** event detail aside (`events/[id]/page.tsx`) and `SignalQuickView`. Relabel of the old PROJECTED IMPACT / "Commodity impacts" box — not a new product surface.
 
-Named parts, populated from #141/#142 signal fields: Market mechanism (`marketMechanism`), Affected market(s) (existing `commodityImpacts` + `currencyPairImpacts` via `CommodityChip`), Direction, Event category (9-value enum → display name, e.g. `armed_conflict_security` → "Armed Conflict & Security"), Media-Impact tag (reuses `MediaImpactTag` when `mediaImpactEntity` is set). When mechanism is null and both impact lists are empty, the box shows the exact sourced Caldara & Iacoviello (2022) fallback sentence — not a live GPR number. `isPreview` adds a small note with a link to `/calendar`. No raw classifier-confidence percent in this box.
+Named parts, populated from #141/#142 signal fields: Source confirmation (`official` → "Official statement", `reported` → "Reported claim", `speculative` → "Speculative / unconfirmed"), Novelty (UI buckets only: ≥0.7 "New development", ≥0.3 "Partial update", else "Mostly a repeat/reminder"), Market mechanism (`marketMechanism`), Affected market(s) (existing `commodityImpacts` + `currencyPairImpacts` via `CommodityChip`), Direction, Event category (9-value enum → display name, e.g. `armed_conflict_security` → "Armed Conflict & Security"), Media-Impact tag (reuses `MediaImpactTag` when `mediaImpactEntity` is set). Source confirmation and novelty render nothing when null — no N/A. When mechanism is null and both impact lists are empty, the box shows the exact sourced Caldara & Iacoviello (2022) fallback sentence — not a live GPR number. `isPreview` adds a small note with a link to `/calendar`. No raw classifier-confidence percent in this box.
+
+Event-detail ANALYSIS tab also has a "Why this signal" `<details>` (below Full Analyst Briefing) when `materialityReasoning` is non-null — raw classifier reasoning, not invented uncertainty copy. SignalQuickView header no longer shows `{n}% confidence`.
 
 ---
 

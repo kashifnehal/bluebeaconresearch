@@ -112,6 +112,42 @@ runTest("empty mechanism + empty impacts shows the exact GPR fallback sentence",
   assert.equal(/GPR/i.test(text), false);
 });
 
+runTest("source confirmation and novelty render only when set, never as N/A", () => {
+  const withGate = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        sourceConfirmation: "official",
+        novelty: 0.82,
+        marketMechanism: "Strait closure raises crude supply risk.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+    }),
+  );
+  const withGateText = visibleText(withGate);
+  assert.match(withGate, /data-testid="market-impact-source-confirmation"/);
+  assert.match(withGate, /data-testid="market-impact-novelty"/);
+  assert.match(withGateText, /Official statement/);
+  assert.match(withGateText, /New development/);
+  assert.equal(withGateText.includes("0.82"), false);
+  assert.equal(withGateText.includes("official"), false);
+
+  const withoutGate = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        sourceConfirmation: null,
+        novelty: null,
+        marketMechanism: null,
+      }),
+    }),
+  );
+  const withoutGateText = visibleText(withoutGate);
+  assert.equal(withoutGate.includes("market-impact-source-confirmation"), false);
+  assert.equal(withoutGate.includes("market-impact-novelty"), false);
+  assert.equal(withoutGateText.includes("Source confirmation"), false);
+  assert.equal(withoutGateText.includes("Novelty"), false);
+  assert.equal(withoutGateText.includes("N/A"), false);
+});
+
 runTest("is_preview shows the calendar note and link", () => {
   const html = renderToStaticMarkup(
     createElement(MarketImpactAssessment, {

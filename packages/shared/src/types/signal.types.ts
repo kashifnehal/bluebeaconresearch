@@ -8,6 +8,10 @@ export type Region =
   | "americas"
   | "global";
 
+// #141 CHECK enum on signals.source_confirmation. Display labels live in
+// apps/web/lib/market-impact-assessment.ts. Sourcing *type*, not truth.
+export type SourceConfirmation = "official" | "reported" | "speculative";
+
 // #141 CHECK enum on signals.event_category. Display labels live in
 // apps/web/lib/market-impact-assessment.ts (#143).
 export type EventCategory =
@@ -60,6 +64,10 @@ export interface Signal {
   eventCategory?: EventCategory | null;
   marketMechanism?: string | null;
   isPreview?: boolean;
+  // 0–1 classifier novelty. Null on pre-gate / heuristic rows.
+  novelty?: number | null;
+  sourceConfirmation?: SourceConfirmation | null;
+  materialityReasoning?: string | null;
   createdAt: string; // when WE ingested it
   eventDate?: string; // when the article/event was PUBLISHED
   updatedAt?: string; // last updated time for this signal record

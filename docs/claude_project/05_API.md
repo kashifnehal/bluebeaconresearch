@@ -193,7 +193,8 @@ Returns paginated signal feed. Auth required.
 #### GET /v1/signals/latest
 Returns 5 most recent signals. Used by landing page live preview and dashboard right sidebar. No plan restriction. Explicit select includes `media_impact_entity` (#142).
 
-> ⚠️ UPDATED 2026-09-13 (#141 / #143) — Fastify `/v1/signals` already returns the #141 columns via `select("*")`. Next.js BFF `/api/signals` and `/api/signals/:id` map `eventCategory`, `marketMechanism`, and `isPreview` for the MARKET IMPACT ASSESSMENT box. `/api/signals/:id` also returns `currencyPairImpacts`. `relevance` / `novelty` / `sourceConfirmation` / `materialityPass` / `materialityReasoning` are stored but not yet mapped in the BFF (#143 leftover).
+> ⚠️ UPDATED 2026-09-13 (#141 / #143) — Fastify `/v1/signals` already returns the #141 columns via `select("*")`. Next.js BFF `/api/signals` and `/api/signals/:id` map `eventCategory`, `marketMechanism`, and `isPreview` for the MARKET IMPACT ASSESSMENT box. `/api/signals/:id` also returns `currencyPairImpacts`.
+> ⚠️ UPDATED 2026-09-20 (#143 leftover) — `/api/signals/:id` now also maps `novelty` / `sourceConfirmation` / `materialityReasoning` (null-safe). List `/api/signals` does not. Still unmapped: `relevance` / `materialityPass`.
 
 **Response 200:**
 ```json

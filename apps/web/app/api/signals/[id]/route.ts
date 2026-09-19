@@ -3,7 +3,11 @@ import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
-import { parseEventCategory } from "@/lib/market-impact-assessment";
+import {
+  parseEventCategory,
+  parseNovelty,
+  parseSourceConfirmation,
+} from "@/lib/market-impact-assessment";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -182,6 +186,13 @@ export async function GET(
         ? row.market_mechanism.trim()
         : null,
     isPreview: row.is_preview === true,
+    novelty: parseNovelty(row.novelty),
+    sourceConfirmation: parseSourceConfirmation(row.source_confirmation),
+    materialityReasoning:
+      typeof row.materiality_reasoning === "string" &&
+      row.materiality_reasoning.trim()
+        ? row.materiality_reasoning.trim()
+        : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? undefined,
     eventDate,
