@@ -24,6 +24,12 @@ import { EventLocationMap } from "@/components/signals/EventLocationMap";
 import { SignalChatPanel } from "@/components/signals/SignalChatPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { RECORD_BUTTON_TOOLTIP } from "@/lib/feature-hints";
 import type { Signal } from "@blue-beacon-research/shared";
 import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
@@ -346,13 +352,25 @@ export default function EventDetailPage() {
                   >
                     <Share2 size={14} className="mr-2" /> SHARE
                   </Button>
-                  <Button
-                    onClick={handleRecord}
-                    variant="outline"
-                    className="h-11 border-border text-[9px] font-black uppercase tracking-widest rounded-sm"
-                  >
-                    <Bookmark size={14} className="mr-2" /> RECORD
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          id="bbr-hint-event-record"
+                          data-hint="event_record"
+                          data-testid="event-record"
+                          onClick={handleRecord}
+                          variant="outline"
+                          className="h-11 border-border text-[9px] font-black uppercase tracking-widest rounded-sm"
+                        />
+                      }
+                    >
+                      <Bookmark size={14} className="mr-2" /> RECORD
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-left">
+                      {RECORD_BUTTON_TOOLTIP}
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </aside>

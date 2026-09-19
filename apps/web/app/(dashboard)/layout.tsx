@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 import { ProductTour } from "@/components/onboarding/ProductTour";
+import { FeatureHints } from "@/components/onboarding/FeatureHints";
 import { NotificationConnectPrompt } from "@/components/NotificationConnectPrompt";
 
 export default function DashboardLayout({
@@ -11,6 +12,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0e0e0e" }}>
       <ProductTour />
+      <FeatureHints />
       <NotificationConnectPrompt />
       <Sidebar />
       {/* Full-width below md (sidebar is off-canvas). 256px left inset at md+

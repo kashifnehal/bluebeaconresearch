@@ -2,11 +2,17 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-19 (#146 prospect/demo accounts + usage-number exclusion)
+Last updated: 2026-09-19 (Driver.js feature hints)
+
+> ⚠️ UPDATED 2026-09-19 (Driver.js feature hints) — `apps/web` only. One first-time pulsing hint on the Watchlist dropdown+chips, the dashboard FilterBar, and the event-detail RECORD button (`driver.js` Feature Hints, localStorage `bbr_hint_seen_<id>`). RECORD also has a persistent hover tooltip matching `handleRecord()` (browser localStorage only; no list UI). Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.70.0.
 
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 Admin-API-created, pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console `admin_usage_metrics()` (signups / auth_users / DAU / WAU / waitlist / events_last_7d) and digest eligibility exclude the flag. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.69.0.
 
 ---
+
+## Driver.js feature hints (2026-09-19)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.70.0, `LIVE_TODO.md`. One first-time Driver.js Feature Hint (not a tour) on `/watchlist` dropdown+chips, dashboard FilterBar, and event-detail RECORD. Seen state is `bbr_hint_seen_<id>` in localStorage. RECORD hover tooltip matches `handleRecord()` → `bb.saved_signals`; Backtesting Lab has no Record button.
 
 ## #142 individual_social_media data update (2026-09-19)
 

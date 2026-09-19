@@ -6,6 +6,13 @@
 
 ---
 
+## PHASE 37 — DRIVER.JS FEATURE HINTS (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.70.0.
+
+- First-time pulsing hints (not a guided tour) on Watchlist chips/dropdown, dashboard FilterBar, and event-detail RECORD.
+- Seen state is per-browser `localStorage` (`bbr_hint_seen_<id>`). RECORD hover tooltip matches what `handleRecord()` actually writes.
+
 ## PHASE 36 — #146 PROSPECT/DEMO ACCOUNTS EXCLUDED FROM USAGE NUMBERS (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.69.0.

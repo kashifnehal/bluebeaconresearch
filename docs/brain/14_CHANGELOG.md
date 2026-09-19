@@ -8,6 +8,14 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.70.0 — Driver.js feature hints (2026-09-19)
+
+`apps/web` only. Adds `driver.js@1.8.0` (MIT) and uses **Feature Hints** — pulsing beacons, click-to-explain popover, `overlay: false`, no next/back, not a replacement for the existing `react-joyride` ProductTour.
+
+**Targets (one hint each):** `/watchlist` dropdown + category-chip area (`data-hint="watchlist_chips"`); dashboard FilterBar (`data-hint="dashboard_filters"`); event-detail RECORD (`data-hint="event_record"`). Hints hide while `tourActive`. Seen keys: `bbr_hint_seen_watchlist_chips` / `dashboard_filters` / `event_record`. Dismiss on Got it or on clicking the highlighted control.
+
+**RECORD diagnosis:** the only literal Record action is `handleRecord()` in `events/[id]/page.tsx` (Backtesting Lab has none). It prepends `{id, title, createdAt}` to `localStorage["bb.saved_signals"]` (capped at 100) and toasts "Saved to Recorded Signals". No other file reads that key; the `saved_signals` table is unused by this button. Persistent hover tooltip (not a hint) states that honestly.
+
 ### v0.69.0 — #146 prospect/demo accounts excluded from usage numbers (2026-09-19)
 
 `profiles.is_test_account boolean not null default false`. Ten Admin-API users (`email_confirm: true`, `app_metadata.is_test_account`) with onboarding-complete state. Global Confirm Email unchanged; no `apps/web` signup/login bypass. `admin_usage_metrics()` and digest eligibility filter the flag via `is_real_user()` / `.eq("is_test_account", true)` exclusion. `/v1/accuracy` sample size is `signal_outcomes` (no `user_id`) — not a user count.

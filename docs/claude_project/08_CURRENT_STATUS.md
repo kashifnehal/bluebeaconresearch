@@ -74,7 +74,9 @@
 
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console usage metrics and digest eligibility exclude the flag. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.69.0. This tree: PHASE 36.
 
-Last updated: 2026-09-19 (#146 prospect/demo accounts)
+> ⚠️ UPDATED 2026-09-19 (Driver.js feature hints) — first-time pulsing hints on Watchlist chips/dropdown, dashboard FilterBar, and event-detail RECORD (`driver.js` Feature Hints, `bbr_hint_seen_<id>`). RECORD also has a persistent hover tooltip matching `handleRecord()` (browser localStorage only). Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.70.0. This tree: PHASE 37.
+
+Last updated: 2026-09-19 (Driver.js feature hints)
 
 ---
 

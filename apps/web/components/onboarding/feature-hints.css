@@ -1,0 +1,75 @@
+/* Dark-terminal theme for Driver.js Feature Hints (not the Joyride tour). */
+:root {
+  --driver-hint-color: #4edea3;
+  --driver-hint-size: 18px;
+}
+
+.bbr-feature-hint.driver-popover {
+  background-color: #131313;
+  color: #e5e2e1;
+  border: 1px solid #3c4a42;
+  border-radius: 0;
+  font-family: Inter, sans-serif;
+  box-shadow: none;
+  filter: drop-shadow(0 1px 4px rgb(0 0 0 / 0.45));
+}
+
+.bbr-feature-hint .driver-popover-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #e5e2e1;
+}
+
+.bbr-feature-hint .driver-popover-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #bbcac0;
+}
+
+.bbr-feature-hint .driver-popover-close-btn {
+  color: #86948a;
+}
+
+.bbr-feature-hint .driver-popover-close-btn:hover,
+.bbr-feature-hint .driver-popover-close-btn:focus {
+  color: #e5e2e1;
+}
+
+.bbr-feature-hint .driver-popover-footer-btn {
+  background-color: #4edea3;
+  color: #003824;
+  border: none;
+  border-radius: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+}
+
+.bbr-feature-hint .driver-popover-footer-btn:hover,
+.bbr-feature-hint .driver-popover-footer-btn:focus {
+  background-color: #6ffbbe;
+}
+
+.bbr-feature-hint .driver-popover-arrow {
+  border-color: #131313;
+}
+
+.bbr-feature-hint.driver-popover-arrow-side-left {
+  border-left-color: #131313;
+}
+
+.bbr-feature-hint.driver-popover-arrow-side-right {
+  border-right-color: #131313;
+}
+
+.bbr-feature-hint.driver-popover-arrow-side-top {
+  border-top-color: #131313;
+}
+
+.bbr-feature-hint.driver-popover-arrow-side-bottom {
+  border-bottom-color: #131313;
+}

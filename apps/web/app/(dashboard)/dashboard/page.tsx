@@ -239,11 +239,13 @@ export default function DashboardPage() {
 
         {/* Filter bar + trader-role desks (#124 / #125). My Feed stays a separate control. */}
         <div className="flex flex-wrap gap-3 mb-4 items-end">
-          <FilterBar
-            value={filters}
-            onChange={handleFiltersChange}
-            extraRegions={liveSignals.map((s) => s.region)}
-          />
+          <div id="bbr-hint-dashboard-filters" data-hint="dashboard_filters">
+            <FilterBar
+              value={filters}
+              onChange={handleFiltersChange}
+              extraRegions={liveSignals.map((s) => s.region)}
+            />
+          </div>
           {typeof total === "number" && !isLoading && (
             <span
               data-testid="feed-total"

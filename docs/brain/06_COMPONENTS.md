@@ -117,6 +117,11 @@ This document presents a complete inventory of all UI components in `apps/web/co
 ### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19)
 - **List:** first paint with no selections shows `COMMODITIES` cards; category chips toggle add/remove (dropdown kept). Live `/api/prices` + history sparkline only.
 - **Detail:** one price chart, range buttons 1M / 6M / 1Y / 3Y / 5Y. 1M from the 90-day DB series; longer ranges from Yahoo weekly `history-5y`. Honest 5Y empty/incomplete copy unchanged.
+- **2026-09-19:** one Driver.js Feature Hint on the dropdown + chip area (`data-hint="watchlist_chips"`). See 3.8.
+
+### 3.8 `FeatureHints.tsx` (2026-09-19)
+- **Purpose:** first-time pulsing hints (not the Joyride ProductTour). `overlay: false`; seen keys `bbr_hint_seen_*` in localStorage.
+- **Also:** persistent hover tooltip on event-detail RECORD (`RECORD_BUTTON_TOOLTIP`) matching `handleRecord()` → `bb.saved_signals`. No Record control in Backtesting Lab.
 
 ---
 

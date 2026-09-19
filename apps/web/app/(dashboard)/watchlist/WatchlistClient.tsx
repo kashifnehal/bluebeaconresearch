@@ -296,6 +296,8 @@ export function WatchlistClient() {
   return (
     <div className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
       <div className="max-w-[1440px] mx-auto">
+        {/* Dropdown + category chips (#145): one first-time Driver.js hint. */}
+        <div id="bbr-hint-watchlist-chips" data-hint="watchlist_chips">
         {/* Page Header */}
         <div className="flex items-end justify-between mb-10">
           <div>
@@ -426,6 +428,8 @@ export function WatchlistClient() {
               </div>
             );
           })}
+        </div>
+
         </div>
 
         {/* Commodity Cards Grid */}

@@ -108,6 +108,13 @@ Channel checkboxes for Telegram / Discord / Slack. `modalChannels` defaults to w
 **Mounted in:** (dashboard)/layout.tsx
 **Shows** after `NOTIFICATION_PROMPT_AFTER_SIGNALS` (3) signal-detail mounts this session, if `notification_prompt_dismissed_at` is null and Telegram is not already connected (`/api/telegram/status`). Compact non-blocking card. "Not now" updates the user's own `profiles` row.
 
+### FeatureHints (apps/web/components/onboarding/FeatureHints.tsx) (2026-09-19)
+**Mounted in:** (dashboard)/layout.tsx, next to ProductTour.
+**Not a tour.** Uses Driver.js Feature Hints (`driver.js/hints`): one pulsing beacon per page, click expands a 1–2 sentence popover, `overlay: false`, no next/back. Hidden while `tourActive`.
+**Targets:** `/watchlist` `[data-hint="watchlist_chips"]` (ADD COMMODITY + category chips); `/dashboard` `[data-hint="dashboard_filters"]` (FilterBar); `/events/[id]` `[data-hint="event_record"]` (RECORD).
+**Seen:** `localStorage` `bbr_hint_seen_<id>` — per-browser, as specified (not `user_preferences`). Dismiss on Got it or on clicking the highlighted control.
+**RECORD hover tooltip** (always-on, not a hint): `RECORD_BUTTON_TOOLTIP` in `lib/feature-hints.ts`, wrapping the event-detail RECORD button. Copy matches `handleRecord()`: writes `bb.saved_signals` in this browser; no in-app list reads it. Backtesting Lab has no Record button.
+
 ### HelpModal (apps/web/components/HelpModal.tsx)
 **Position:** Centered modal overlay
 **Trigger:** ? icon in TopBar
