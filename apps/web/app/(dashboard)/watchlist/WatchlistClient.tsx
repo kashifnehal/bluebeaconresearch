@@ -14,18 +14,13 @@ import { logUsageEvent } from "@/lib/funnel-events";
 // dropdown, and the "Show All" set all work off this combined list unchanged.
 const WATCHLIST_ASSETS = [...COMMODITIES, ...FOREX_PAIRS];
 
-// Fallback seed when the user has no onboarding commodity/forex selection.
-// Seeded once on first visit; a later remove is persisted and never re-added.
-const SUGGESTED_WATCHLIST = [
-  "USOIL",
-  "UKOIL",
-  "XAUUSD",
-  "WHEAT",
-  "NGAS",
-  "CORN",
-  "EURUSD",
-  "USDRUB",
-] as const;
+// First-paint / no-selection seed: the shared commodity list, so the page is
+// never an empty dropdown while prefs/localStorage hydrate. A later remove is
+// persisted and not silently re-added. Prefs (commodities ∪ forex) still win
+// once they load (#89 / #107). Forex stays addable via the dropdown.
+const DEFAULT_WATCHLIST = COMMODITIES.map((c) => c.symbol);
+
+const COMMODITY_CATEGORY_ORDER = ["energy", "metals", "agriculture"] as const;
 
 const WATCHLIST_STORAGE_KEY = "bbr.watchlist.v1";
 
@@ -137,12 +132,26 @@ export function WatchlistClient() {
   const preselect = params.get("symbol");
   const [watch, setWatch] = useState<string[]>(() => {
     const stored = readStoredWatchlist();
-    if (preselect) return withPreselect(stored?.symbols ?? [], preselect);
-    return stored?.symbols ?? [];
+    const fallback = [...DEFAULT_WATCHLIST];
+    if (preselect) {
+      return withPreselect(
+        stored?.symbols && stored.symbols.length > 0 ? stored.symbols : fallback,
+        preselect,
+      );
+    }
+    // Seeded + not suggested + possibly empty = the user cleared the list.
+    if (stored && stored.seeded && stored.suggested === false) {
+      return stored.symbols;
+    }
+    if (stored?.symbols && stored.symbols.length > 0) return stored.symbols;
+    return fallback;
   });
-  const [isSuggested, setIsSuggested] = useState(
-    () => Boolean(readStoredWatchlist()?.suggested) && !preselect,
-  );
+  const [isSuggested, setIsSuggested] = useState(() => {
+    if (preselect) return false;
+    const stored = readStoredWatchlist();
+    if (stored && stored.seeded && stored.suggested === false) return false;
+    return stored?.suggested ?? true;
+  });
   const [hydrated, setHydrated] = useState(false);
 
   // Preference-aware default (#89, extended for forex in #87): when the user has
@@ -164,6 +173,11 @@ export function WatchlistClient() {
 
   useEffect(() => {
     if (hydrated || !isFetched) return;
+    // Chip / dropdown edits during the prefs fetch must not be overwritten.
+    if (touchedRef.current) {
+      setHydrated(true);
+      return;
+    }
 
     const stored = readStoredWatchlist();
     const serverSymbols = myPrefs?.watchlistSymbols ?? null;
@@ -193,7 +207,7 @@ export function WatchlistClient() {
     }
 
     const seed =
-      prefSymbols.length > 0 ? [...prefSymbols] : [...SUGGESTED_WATCHLIST];
+      prefSymbols.length > 0 ? [...prefSymbols] : [...DEFAULT_WATCHLIST];
     const next = withPreselect(seed, preselect);
     const suggested = !preselect;
     setWatch(next);
@@ -222,8 +236,8 @@ export function WatchlistClient() {
 
   const showingSuggested =
     isSuggested ||
-    (watch.length === SUGGESTED_WATCHLIST.length &&
-      SUGGESTED_WATCHLIST.every((s) => watch.includes(s)));
+    (watch.length === DEFAULT_WATCHLIST.length &&
+      DEFAULT_WATCHLIST.every((s) => watch.includes(s)));
 
   const showingMyCommodities =
     prefSymbols.length > 0 &&
@@ -271,6 +285,12 @@ export function WatchlistClient() {
     touchedRef.current = true;
     setIsSuggested(false);
     setWatch((w) => w.filter((x) => x !== sym));
+  };
+
+  const handleToggleChip = (sym: string) => {
+    touchedRef.current = true;
+    setIsSuggested(false);
+    setWatch((p) => (p.includes(sym) ? p.filter((x) => x !== sym) : [...p, sym]));
   };
 
   return (
@@ -363,6 +383,49 @@ export function WatchlistClient() {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* One-click commodity chips — additive to the dropdown. Grouped by
+            the shared COMMODITIES category so a new user can add/remove
+            without opening ADD COMMODITY. */}
+        <div className="mb-8" data-testid="watchlist-commodity-chips">
+          {COMMODITY_CATEGORY_ORDER.map((category) => {
+            const chips = COMMODITIES.filter((c) => c.category === category);
+            if (chips.length === 0) return null;
+            return (
+              <div key={category} className="mb-3 last:mb-0">
+                <p className="font-label text-[10px] text-on-surface-variant tracking-widest uppercase mb-2">
+                  {category}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {chips.map((c) => {
+                    const active = watch.includes(c.symbol);
+                    return (
+                      <button
+                        key={c.symbol}
+                        type="button"
+                        aria-pressed={active}
+                        aria-label={
+                          active
+                            ? `Remove ${c.label} from watchlist`
+                            : `Add ${c.label} to watchlist`
+                        }
+                        onClick={() => handleToggleChip(c.symbol)}
+                        className="px-3 py-1 rounded-sm font-label text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                        style={{
+                          backgroundColor: active ? "#4edea3" : "transparent",
+                          color: active ? "#003824" : "#bbcac0",
+                          borderColor: active ? "#4edea3" : "#3c4a42",
+                        }}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Commodity Cards Grid */}

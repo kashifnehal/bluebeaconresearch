@@ -2,9 +2,13 @@
 
 > **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
 
-Last updated: 2026-09-18 (sidebar logo link + landing subtext)
+Last updated: 2026-09-19 (watchlist empty-state defaults + single range chart)
 
 ---
+
+## #145 watchlist empty-state defaults + single range chart (2026-09-19)
+
+`apps/web` only. Full record: `14_CHANGELOG.md` v0.66.0, `LIVE_TODO.md`. `/watchlist` first-paints `COMMODITIES` cards (never an empty dropdown) and adds category chips to add/remove without the dropdown. `/watchlist/[symbol]` replaces the fixed 90-day chart + separate 5-year panel with one chart and 1M/6M/1Y/3Y/5Y buttons (90-day DB series for 1M; Yahoo weekly bars for longer ranges). Honest 5Y empty/incomplete copy unchanged.
 
 ## Sidebar logo → /dashboard + landing hero subtext (2026-09-18)
 

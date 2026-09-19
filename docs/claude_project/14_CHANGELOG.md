@@ -6,6 +6,13 @@
 
 ---
 
+## PHASE 33 — #145 WATCHLIST EMPTY-STATE DEFAULTS + SINGLE RANGE CHART (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.66.0.
+
+- `/watchlist` first-paints shared `COMMODITIES` cards when the user has no selections; category chips add/remove (dropdown kept). Live prices only.
+- `/watchlist/[symbol]` is one chart with 1M / 6M / 1Y / 3Y / 5Y. 1M from the 90-day DB series; longer ranges from the existing Yahoo weekly 5y fetch. The two honest 5Y fallback sentences are unchanged.
+
 ## PHASE 32 — SIDEBAR LOGO HOME LINK + LANDING SUBTEXT (2026-09-18)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.65.0.

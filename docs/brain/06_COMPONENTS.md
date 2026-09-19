@@ -113,6 +113,10 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page.
 - **Methodology**: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115. #144: worker stores 1h/4h/24h/48h; this page still reads 48h only (no horizon selector).
 
+### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19)
+- **List:** first paint with no selections shows `COMMODITIES` cards; category chips toggle add/remove (dropdown kept). Live `/api/prices` + history sparkline only.
+- **Detail:** one price chart, range buttons 1M / 6M / 1Y / 3Y / 5Y. 1M from the 90-day DB series; longer ranges from Yahoo weekly `history-5y`. Honest 5Y empty/incomplete copy unchanged.
+
 ---
 
 ## 4. Primitives & UI Component Suite (`apps/web/components/ui`)

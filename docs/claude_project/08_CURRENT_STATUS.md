@@ -66,7 +66,9 @@
 >
 > ⚠️ UPDATED 2026-09-18 — Sidebar brand name links to `/dashboard`. Landing hero `<p>` subtext is "Blue Beacon Research - Geopolitical Research Giant"; h1 and meta descriptions unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.65.0. This tree: PHASE 32.
 
-Last updated: 2026-09-18 (sidebar logo link + landing subtext)
+> ⚠️ UPDATED 2026-09-19 (#145) — watchlist list page first-paints `COMMODITIES` cards when there are no selections, plus category chips to add/remove (dropdown kept). Drill-down is one price chart with 1M/6M/1Y/3Y/5Y (90-day DB for 1M, Yahoo weekly 5y fetch for longer). Honest 5Y empty/incomplete copy unchanged. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.66.0. This tree: PHASE 33.
+
+Last updated: 2026-09-19 (#145 watchlist empty-state + range chart)
 
 ---
 

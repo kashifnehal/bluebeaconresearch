@@ -54,6 +54,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#143~~ | ~~Frontend consumption of materiality-gate fields~~ | — | **Done 2026-09-13** — PROJECTED IMPACT → MARKET IMPACT ASSESSMENT on event detail + SignalQuickView. Named parts from `market_mechanism` / impacts / direction / `event_category` / reused Media-Impact tag; Caldara & Iacoviello fallback when there is no direct match; `is_preview` calendar note. No raw confidence percent in the box. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.63.0/PHASE 30. |
 | ~~#144~~ | ~~1h/4h/24h/48h outcome checkpoints~~ | — | **Done 2026-09-13** (`9be929a`) — `outcome-tracker.ts` writes all four horizons; `GET /v1/accuracy` still aggregates 48h only. Unique key widened to `(signal_id, asset, checkpoint_hours)`. No `/accuracy` time-horizon UI. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.64.0/PHASE 31. |
 | — | Sidebar logo → `/dashboard` + landing hero subtext | — | **Done 2026-09-18** — brand span in `Sidebar.tsx` is a Next.js `<Link href="/dashboard">`. Landing hero `<p>` in `app/page.tsx` is "Blue Beacon Research - Geopolitical Research Giant"; h1 and meta descriptions unchanged. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.65.0/PHASE 32. |
+| ~~#145~~ | ~~Watchlist empty-state defaults + single range chart~~ | — | **Done 2026-09-19** — `/watchlist` first-paints `COMMODITIES` cards + category chips; `/watchlist/[symbol]` one chart with 1M/6M/1Y/3Y/5Y. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.66.0/PHASE 33. |
 
 ### Still open
 

@@ -35,6 +35,26 @@ const HISTORY_DAYS = 90;
 // default before pagination, so page 1 of this list is byte-identical to today.
 const SIGNALS_PAGE_SIZE = 20;
 
+type ChartRangeId = "1M" | "6M" | "1Y" | "3Y" | "5Y";
+const CHART_RANGES = [
+  // 90-day `commodity_prices` series — 1M fits inside that window.
+  { id: "1M" as const, label: "1M", source: "db" as const, days: 30 },
+  // Longer ranges are sliced from the existing Yahoo weekly-bars 5y fetch.
+  { id: "6M" as const, label: "6M", source: "yahoo" as const, days: 183 },
+  { id: "1Y" as const, label: "1Y", source: "yahoo" as const, days: 365 },
+  { id: "3Y" as const, label: "3Y", source: "yahoo" as const, days: 365 * 3 },
+  { id: "5Y" as const, label: "5Y", source: "yahoo" as const, days: null },
+] as const;
+
+function slicePointsToDays(
+  points: PricePoint[],
+  days: number | null,
+): PricePoint[] {
+  if (days == null) return points;
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  return points.filter((p) => new Date(p.fetchedAt).getTime() >= cutoff);
+}
+
 function findAtOrBefore(points: PricePoint[], iso: string): PricePoint | null {
   const t = new Date(iso).getTime();
   let result: PricePoint | null = null;
@@ -113,6 +133,9 @@ export default function WatchlistSymbolPage() {
     },
   });
   const points = historyPoints ?? [];
+  const [chartRange, setChartRange] = useState<ChartRangeId>("1M");
+  const activeRange =
+    CHART_RANGES.find((r) => r.id === chartRange) ?? CHART_RANGES[0];
 
   type History5y = {
     points: PricePoint[];
@@ -144,6 +167,7 @@ export default function WatchlistSymbolPage() {
   if (trackedSymbol !== symbol) {
     setTrackedSymbol(symbol);
     setSignalsPage(1);
+    setChartRange("1M");
   }
 
   const {
@@ -176,26 +200,28 @@ export default function WatchlistSymbolPage() {
     logUsageEvent("watchlist_symbol_viewed", { symbol, is_forex: isForex }, "entity");
   }, [symbol, isForex]);
 
-  const chartData = useMemo(
-    () => points.map((p) => ({ t: new Date(p.fetchedAt).getTime(), price: p.price })),
-    [points],
-  );
+  const chartData = useMemo(() => {
+    const source = activeRange.source === "db" ? points : history5yPoints;
+    return slicePointsToDays(source, activeRange.days).map((p) => ({
+      t: new Date(p.fetchedAt).getTime(),
+      price: p.price,
+    }));
+  }, [activeRange, points, history5yPoints]);
 
   const chartDomain: [number, number] | null = chartData.length
     ? [chartData[0].t, chartData[chartData.length - 1].t]
     : null;
 
-  const chart5yData = useMemo(
-    () =>
-      history5yPoints.map((p) => ({
-        t: new Date(p.fetchedAt).getTime(),
-        price: p.price,
-      })),
-    [history5yPoints],
-  );
-  const chart5yDomain: [number, number] | null = chart5yData.length
-    ? [chart5yData[0].t, chart5yData[chart5yData.length - 1].t]
-    : null;
+  const chartLoading =
+    activeRange.source === "db" ? historyLoading : history5yLoading;
+  const isFiveYearRange = activeRange.id === "5Y";
+  const showYahooIncomplete =
+    isFiveYearRange &&
+    Boolean(history5y?.incomplete) &&
+    Boolean(history5y?.availableFrom) &&
+    chartData.length >= 2;
+  const useLongAxisTicks =
+    activeRange.source === "yahoo" && activeRange.id !== "6M";
 
   return (
     <div className="fixed inset-0 left-[256px] right-[260px] top-16 bg-surface-container-lowest overflow-y-auto p-10">
@@ -254,18 +280,60 @@ export default function WatchlistSymbolPage() {
           </div>
         </div>
 
-        {/* Price chart */}
+        {/* Single price chart + range selector (replaces the fixed 90-day chart
+            and the separate 5-year Yahoo panel). 1M reads the 90-day DB series;
+            6M/1Y/3Y/5Y slice the existing Yahoo weekly-bars fetch. */}
         <div className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-6 mb-8">
-          <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-6">
-            Price History — Last {HISTORY_DAYS} Days
-          </h2>
-          {historyLoading ? (
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
+              Price History
+            </h2>
+            <div
+              className="flex flex-wrap gap-1"
+              role="group"
+              aria-label="Price history range"
+              data-testid="watchlist-chart-ranges"
+            >
+              {CHART_RANGES.map((range) => {
+                const selected = range.id === chartRange;
+                return (
+                  <button
+                    key={range.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setChartRange(range.id)}
+                    className="px-3 py-1 rounded-sm font-label text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                    style={{
+                      backgroundColor: selected ? "#4edea3" : "transparent",
+                      color: selected ? "#003824" : "#bbcac0",
+                      borderColor: selected ? "#4edea3" : "#3c4a42",
+                    }}
+                  >
+                    {range.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {showYahooIncomplete && history5y?.availableFrom && (
+            <p className="text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
+              Showing available history from{" "}
+              {new Date(history5y.availableFrom).toLocaleDateString(undefined, {
+                month: "short",
+                year: "numeric",
+              })}{" "}
+              — Yahoo does not have a full 5-year series for this symbol.
+            </p>
+          )}
+          {chartLoading ? (
             <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
-              Loading price history…
+              {isFiveYearRange ? "Loading 5-year history…" : "Loading price history…"}
             </p>
           ) : chartData.length < 2 ? (
             <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
-              Not enough price history yet for a chart view
+              {isFiveYearRange
+                ? "Not enough 5-year price history available for this symbol"
+                : "Not enough price history yet for a chart view"}
             </p>
           ) : (
             <div className="h-[340px]">
@@ -277,7 +345,15 @@ export default function WatchlistSymbolPage() {
                     type="number"
                     domain={chartDomain ?? ["dataMin", "dataMax"]}
                     tickFormatter={(t) =>
-                      new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                      useLongAxisTicks
+                        ? new Date(t).toLocaleDateString(undefined, {
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : new Date(t).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })
                     }
                     stroke="rgba(255,255,255,0.3)"
                     tick={{ fontSize: 10, fontFamily: "monospace" }}
@@ -289,7 +365,14 @@ export default function WatchlistSymbolPage() {
                     width={70}
                   />
                   <Tooltip
-                    labelFormatter={(t) => new Date(t as number).toLocaleString()}
+                    labelFormatter={(t) =>
+                      useLongAxisTicks
+                        ? new Date(t as number).toLocaleDateString(undefined, {
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : new Date(t as number).toLocaleString()
+                    }
                     formatter={(v) => [typeof v === "number" ? v.toFixed(2) : String(v), "Price"]}
                     contentStyle={{
                       background: "#141414",
@@ -298,7 +381,8 @@ export default function WatchlistSymbolPage() {
                     }}
                   />
                   <Line type="monotone" dataKey="price" stroke="#6ffbbe" strokeWidth={2} dot={false} />
-                  {chartDomain &&
+                  {activeRange.source === "db" &&
+                    chartDomain &&
                     events.map((ev) => {
                       const iso = ev.eventDate ?? ev.createdAt;
                       const t = new Date(iso).getTime();
@@ -312,78 +396,9 @@ export default function WatchlistSymbolPage() {
             </div>
           )}
           <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
-            Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation.
-          </p>
-        </div>
-
-        {/* 5-year history (#106) — on-demand Yahoo weekly bars, not the 90-day DB series */}
-        <div className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-6 mb-8">
-          <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-2">
-            5-year history
-          </h2>
-          {history5y?.incomplete && history5y.availableFrom && chart5yData.length >= 2 && (
-            <p className="text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
-              Showing available history from{" "}
-              {new Date(history5y.availableFrom).toLocaleDateString(undefined, {
-                month: "short",
-                year: "numeric",
-              })}{" "}
-              — Yahoo does not have a full 5-year series for this symbol.
-            </p>
-          )}
-          {history5yLoading ? (
-            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
-              Loading 5-year history…
-            </p>
-          ) : chart5yData.length < 2 ? (
-            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
-              Not enough 5-year price history available for this symbol
-            </p>
-          ) : (
-            <div className="h-[340px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chart5yData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis
-                    dataKey="t"
-                    type="number"
-                    domain={chart5yDomain ?? ["dataMin", "dataMax"]}
-                    tickFormatter={(t) =>
-                      new Date(t).toLocaleDateString(undefined, {
-                        month: "short",
-                        year: "numeric",
-                      })
-                    }
-                    stroke="rgba(255,255,255,0.3)"
-                    tick={{ fontSize: 10, fontFamily: "monospace" }}
-                  />
-                  <YAxis
-                    domain={["auto", "auto"]}
-                    stroke="rgba(255,255,255,0.3)"
-                    tick={{ fontSize: 10, fontFamily: "monospace" }}
-                    width={70}
-                  />
-                  <Tooltip
-                    labelFormatter={(t) =>
-                      new Date(t as number).toLocaleDateString(undefined, {
-                        month: "short",
-                        year: "numeric",
-                      })
-                    }
-                    formatter={(v) => [typeof v === "number" ? v.toFixed(2) : String(v), "Price"]}
-                    contentStyle={{
-                      background: "#141414",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      fontSize: 11,
-                    }}
-                  />
-                  <Line type="monotone" dataKey="price" stroke="#6ffbbe" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-          <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
-            Weekly closes from Yahoo Finance. Informational only — not a trading recommendation.
+            {activeRange.source === "db"
+              ? "Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation."
+              : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
           </p>
         </div>
 

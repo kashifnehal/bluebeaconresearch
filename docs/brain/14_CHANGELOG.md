@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.66.0 — #145 watchlist empty-state defaults + single range chart (2026-09-19)
+
+`apps/web` only. Watchlist list page first-paints the shared `COMMODITIES` cards when the user has no selections, so the page is never an empty dropdown while prefs hydrate; a row of category chips (same list) toggles membership without replacing the add dropdown. Cards still read live `/api/prices` + `/api/prices/history` — no mock quotes. Drill-down `/watchlist/[symbol]` drops the second "5-year history" panel: one chart, range buttons 1M / 6M / 1Y / 3Y / 5Y. 1M slices the existing 90-day DB series; 6M+ slice the existing Yahoo weekly `history-5y` fetch. The two honest 5Y fallbacks are unchanged.
+
 ### v0.65.0 — Sidebar logo home link + landing subtext (2026-09-18)
 
 `apps/web` only. Sidebar "Blue Beacon Research" brand text is a `<Link href="/dashboard">` (confirmed `app/(dashboard)/dashboard/page.tsx`). Landing hero `<p>` subtext is now "Blue Beacon Research - Geopolitical Research Giant". Hero `<h1>` and page/layout meta descriptions were not the same string and were left unchanged.
