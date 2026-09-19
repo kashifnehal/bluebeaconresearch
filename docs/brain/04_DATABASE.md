@@ -261,6 +261,14 @@ Reference table of communicators whose statements have a sourced historical mark
 - `active` (`boolean`, NOT NULL, default true) / `created_at` (`timestamptz`, NOT NULL, default now())
 - Partial index on `active` where true. Read by `classifyEvent()` via a 10-min in-memory cache.
 
+### Table 18c: `search_content_embeddings` (Cmd+K search assist, migration `20260919210000_search_content_embeddings.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-19)
+Small RAG index of **already-written** BBR page copy (and FAQ text later). Not `signals`. `vector` extension was available (0.8.0) but not installed — enabled in `extensions` this ship.
+- `id` (`uuid`, PK) / `content_key` (`text`, UNIQUE) / `title` / `url` / `content` (`text`)
+- `embedding` (`extensions.vector(256)`) / `embedding_model` (`text`) — `voyage-4-lite` when `VOYAGE_API_KEY` is set, else `local-hash-v1`
+- `source_kind` (`page`|`faq`) / `content_hash` / `created_at` / `updated_at`
+- HNSW cosine index. RLS on, no policies (service-role only — same as `anthropic_daily_usage`). RPC `match_search_content(query_embedding, match_threshold, match_count, filter_model)` is `service_role` execute only.
+- FAQ rows wait on #155 (no FAQ copy in the repo yet).
+
 **Known drift corrected 2026-08-27** — the previous version of this section stated these, all of which were wrong against the live DB:
 - `alert_rules.channels` default was documented as `'{telegram}'`; it is actually `'{email}'`. This is the most misleading of the set, since it describes what a newly created rule does by default.
 - `profiles` was missing `product_tour_completed`; `signals` was missing both `event_date` and `shipping_proximity`; `alert_rules` was missing `frequency`, `created_at`, `updated_at`, and `last_triggered_at`.

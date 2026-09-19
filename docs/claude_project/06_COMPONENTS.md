@@ -48,6 +48,8 @@ Contains:
    - Shows X clear button when query non-empty
 
 1b. **Connect-channel icon (`forum`)** — all screen sizes. Opens `NotificationConnectModal` (wraps existing `<TelegramConnect />`). Distinct from the alerts bell. (#112)
+
+1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K. Existing Pages / Signals / Watchlist / Alert Rules search unchanged. When that search returns fewer than 2 hits after debounce, POST `/api/search/assist` and show a separate **Suggested** group (AI one-liner + page URL). Not blended with deterministic groups. FAQ indexing waits on #155.
 2. **Notification Bell (🔔)**
    - Badge: red dot with unread_count from useUIStore.unreadAlerts
    - onClick: toggles useUIStore.notificationPanelOpen

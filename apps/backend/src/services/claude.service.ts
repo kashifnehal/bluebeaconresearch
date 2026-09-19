@@ -1038,4 +1038,52 @@ export class ClaudeService {
     // Unreachable, but keeps TypeScript's control-flow analysis happy.
     return "I couldn't generate a response right now — please try again in a moment.";
   }
+
+  // Cmd+K search assist — one-sentence answer grounded only in the retrieved
+  // page/FAQ snippet. Haiku (cheap), chat budget, never invents a URL.
+  async answerSearchAssist(
+    query: string,
+    retrieved: { title: string; url: string; content: string },
+  ): Promise<string> {
+    await assertAnthropicBudget("chat");
+    const client = this.getClient();
+    if (!client) return "NO_ANSWER";
+
+    const started = Date.now();
+    const msg = await client.messages.create({
+      model: HAIKU_MODEL,
+      max_tokens: 80,
+      temperature: 0,
+      system:
+        "You help users find the right page in Blue Beacon Research, a geopolitical intelligence research platform. " +
+        "Answer in exactly one sentence using ONLY the retrieved page below. Include that page's URL exactly as given. " +
+        "If the retrieved page does not answer the question, reply with exactly NO_ANSWER. " +
+        "Never give buy/sell or portfolio advice. Never invent pages, URLs, or facts. " +
+        "Informational only — not financial advice.",
+      messages: [
+        {
+          role: "user",
+          content:
+            `User query: ${query}\n\nRetrieved page:\nTitle: ${retrieved.title}\nURL: ${retrieved.url}\nText: ${retrieved.content}`,
+        },
+      ],
+    });
+    const usage = usageFromMessage(msg);
+    await recordAnthropicUsage({
+      bucket: "chat",
+      model: HAIKU_MODEL,
+      ...usage,
+    });
+    const text = msg.content
+      .map((c) => (c.type === "text" ? c.text : ""))
+      .join("")
+      .trim();
+    await recordServiceHealth(
+      "anthropic",
+      "ok",
+      "searchAssist",
+      Date.now() - started,
+    );
+    return text;
+  }
 }

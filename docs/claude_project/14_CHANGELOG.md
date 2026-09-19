@@ -6,6 +6,13 @@
 
 ---
 
+## PHASE 38 — CMD+K SEARCH ASSIST (2026-09-19)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.71.0.
+
+- Existing Cmd+K Pages/Signals/Watchlist/Alert Rules search kept. Suggested group is a separate, labeled fallback when that search returns fewer than 2 hits.
+- `POST /v1/search/assist` retrieves real page copy via pgvector, then one Haiku sentence on the chat daily budget. FAQ indexing waits on #155.
+
 ## PHASE 37 — DRIVER.JS FEATURE HINTS (2026-09-19)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.70.0.

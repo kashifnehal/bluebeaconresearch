@@ -237,6 +237,11 @@ Then: cheap relevance pre-check (heuristic, then a tiny Haiku call if needed). A
 
 ---
 
+#### POST /v1/search/assist  (Cmd+K search assist, 2026-09-19)
+Auth required. Body: `{ "query": string }` (2–200 chars). RAG over `search_content_embeddings` (real page copy; FAQ waits on #155), then one Haiku sentence if cosine similarity clears the model threshold. Chat daily Anthropic budget (`isAnthropicBudgetAvailable("chat")` / `assertAnthropicBudget("chat")`). Below threshold or `NO_ANSWER` → `{ "status": "no_confident_answer" }` (200). Budget exceeded → `503 ai_temporarily_unavailable` with the same daily-limit message as #111. Next.js BFF: `app/api/search/assist/route.ts`. See `18_AI_ENGINE.md` §3c.
+
+---
+
 #### GET /v1/signals/stream (SSE)
 Server-Sent Events stream of new signals. Auth required. Analyst+ plan.
 
@@ -681,6 +686,7 @@ apps/web/app/api/
 ├── signals/[id]/chat/route.ts → #111 BFF: GET+POST, forwards the caller's Supabase
 │                                session as Bearer to Fastify `/v1/signals/:id/chat`
 │                                (same auth-forwarding pattern as telegram/connect-code)
+├── search/assist/route.ts    → Cmd+K assist BFF: POST, Bearer to Fastify `/v1/search/assist`
 ├── events/stream/route.ts    → SSE handler (polls Supabase directly)
 ├── prices/route.ts           → proxies GET /v1/prices
 ├── alerts/route.ts           → proxies /v1/alerts/*

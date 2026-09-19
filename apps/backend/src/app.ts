@@ -21,6 +21,7 @@ import { backtestingRoutes } from "./routes/backtesting.js";
 import { adminRoutes } from "./routes/admin.js";
 import { signalChatRoutes } from "./routes/signal-chat.routes.js";
 import { accuracyRoutes } from "./routes/accuracy.routes.js";
+import { searchRoutes } from "./routes/search.routes.js";
 
 export function buildApp() {
   const env = getEnv();
@@ -81,6 +82,7 @@ export function buildApp() {
   app.register(backtestingRoutes, { prefix: "/v1/backtesting" });
   app.register(adminRoutes, { prefix: "/v1/admin" });
   app.register(accuracyRoutes, { prefix: "/v1/accuracy" });
+  app.register(searchRoutes, { prefix: "/v1/search" });
 
   return app;
 }

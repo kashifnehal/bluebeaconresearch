@@ -48,6 +48,11 @@ const envSchema = z.object({
 
   ANTHROPIC_API_KEY: z.string().optional(),
 
+  // Optional. Anthropic has no embeddings API; Voyage `voyage-4-lite` is their
+  // recommended cheapest partner ($0.02/MTok, 200M free). Unset → local-hash-v1
+  // embedder so /v1/search/assist still retrieves without a new paid vendor.
+  VOYAGE_API_KEY: z.string().optional(),
+
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   ACLED_EMAIL: z.string().optional(),

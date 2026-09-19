@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { COMMODITIES } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { shouldFetchSearchAssist } from "@/lib/command-palette-assist";
 
 type AlertRuleLite = {
   id: string;
@@ -15,10 +16,15 @@ type AlertRuleLite = {
 };
 
 type ResultGroup = "Pages" | "Signals" | "Watchlist" | "Alert Rules";
+type PaletteGroup = ResultGroup | "Suggested";
+
+type AssistResponse =
+  | { status: "ok"; answer: string; title: string; url: string }
+  | { status: "no_confident_answer" };
 
 type ResultItem = {
   key: string;
-  group: ResultGroup;
+  group: PaletteGroup;
   label: string;
   sublabel?: string;
   icon: string;
@@ -165,9 +171,50 @@ export function CommandPalette() {
     return items;
   }, [trimmedQuery, hasQuery, signalsData, rulesData]);
 
+  const assistEnabled = shouldFetchSearchAssist({
+    open,
+    trimmedQuery,
+    debouncedQuery,
+    deterministicCount: results.length,
+    signalsFetching,
+  });
+
+  const { data: assistData, isFetching: assistFetching } = useQuery({
+    queryKey: ["command-palette-assist", debouncedQuery],
+    queryFn: async (): Promise<AssistResponse> => {
+      const res = await fetch("/api/search/assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: debouncedQuery }),
+      });
+      if (!res.ok) return { status: "no_confident_answer" };
+      const json = (await res.json()) as AssistResponse;
+      if (json?.status === "ok" && json.answer && json.url) return json;
+      return { status: "no_confident_answer" };
+    },
+    enabled: assistEnabled,
+    staleTime: 30_000,
+  });
+
+  const suggested: ResultItem[] =
+    assistEnabled && assistData?.status === "ok"
+      ? [
+          {
+            key: `suggested-${assistData.url}`,
+            group: "Suggested",
+            label: assistData.answer,
+            sublabel: assistData.title,
+            icon: "auto_awesome",
+            href: assistData.url,
+          },
+        ]
+      : [];
+
+  const navItems = [...results, ...suggested];
+
   // Derived, not stored: clamps a stale index (from a previous result set) down
   // to range instead of resetting state from an effect keyed on results.length.
-  const clampedActiveIndex = Math.min(activeIndex, Math.max(results.length - 1, 0));
+  const clampedActiveIndex = Math.min(activeIndex, Math.max(navItems.length - 1, 0));
 
   const groupedResults = useMemo(
     () =>
@@ -189,21 +236,35 @@ export function CommandPalette() {
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, results.length - 1));
+      setActiveIndex((i) => Math.min(i + 1, navItems.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const item = results[clampedActiveIndex];
+      const item = navItems[clampedActiveIndex];
       if (item) select(item);
     }
   }
 
   // Explicit no-match state: only once the debounced signals search has settled,
   // so a mid-typing/mid-fetch moment never flashes "no results" before it's true.
+  // Wait on the assist fallback too — it only runs when deterministic hits are few.
   const showEmptyState =
-    hasQuery && !signalsFetching && (!hasDebouncedQuery || debouncedQuery === trimmedQuery) && results.length === 0;
+    hasQuery &&
+    !signalsFetching &&
+    (!hasDebouncedQuery || debouncedQuery === trimmedQuery) &&
+    results.length === 0 &&
+    suggested.length === 0 &&
+    !assistFetching;
+
+  const showAssistPending =
+    hasQuery &&
+    results.length === 0 &&
+    assistEnabled &&
+    assistFetching &&
+    suggested.length === 0 &&
+    (!hasDebouncedQuery || debouncedQuery === trimmedQuery);
 
   let flatIndex = -1;
 
@@ -245,68 +306,117 @@ export function CommandPalette() {
               </p>
             </div>
           ) : (
-            groupedResults.map(({ group, items }) => (
-              <div key={group} className="mb-2 last:mb-0">
-                <div
-                  className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-                >
-                  {group}
+            <>
+              {groupedResults.map(({ group, items }) => (
+                <div key={group} className="mb-2 last:mb-0">
+                  <div
+                    className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  >
+                    {group}
+                  </div>
+                  {items.map((item) => {
+                    flatIndex += 1;
+                    const isActive = flatIndex === clampedActiveIndex;
+                    return item.group === "Signals" ? (
+                      <a
+                        key={item.key}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setOpen(false)}
+                        onMouseEnter={() => setActiveIndex(flatIndex)}
+                        className={`flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors cursor-pointer ${
+                          isActive ? "bg-[#1f2b25]" : "hover:bg-[#1a1a1a]"
+                        }`}
+                      >
+                        <span
+                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          style={{ fontSize: "16px" }}
+                        >
+                          {item.icon}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
+                          {item.sublabel && (
+                            <span className="block truncate text-[10px] text-[#86948a]">{item.sublabel}</span>
+                          )}
+                        </span>
+                      </a>
+                    ) : (
+                      <button
+                        key={item.key}
+                        onClick={() => select(item)}
+                        onMouseEnter={() => setActiveIndex(flatIndex)}
+                        className={`flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors cursor-pointer ${
+                          isActive ? "bg-[#1f2b25]" : "hover:bg-[#1a1a1a]"
+                        }`}
+                      >
+                        <span
+                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          style={{ fontSize: "16px" }}
+                        >
+                          {item.icon}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
+                          {item.sublabel && (
+                            <span className="block truncate text-[10px] text-[#86948a]">{item.sublabel}</span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-                {items.map((item) => {
-                  flatIndex += 1;
-                  const isActive = flatIndex === clampedActiveIndex;
-                  return item.group === "Signals" ? (
-                    <a
-                      key={item.key}
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setOpen(false)}
-                      onMouseEnter={() => setActiveIndex(flatIndex)}
-                      className={`flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors cursor-pointer ${
-                        isActive ? "bg-[#1f2b25]" : "hover:bg-[#1a1a1a]"
-                      }`}
-                    >
-                      <span
-                        className="material-symbols-outlined shrink-0 text-[#4edea3]"
-                        style={{ fontSize: "16px" }}
+              ))}
+              {suggested.length > 0 && (
+                <div className="mb-2 last:mb-0 border-t border-[#2a2a2a] pt-2">
+                  <div
+                    className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#4edea3]"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  >
+                    Suggested
+                  </div>
+                  {suggested.map((item) => {
+                    flatIndex += 1;
+                    const isActive = flatIndex === clampedActiveIndex;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => select(item)}
+                        onMouseEnter={() => setActiveIndex(flatIndex)}
+                        className={`flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors cursor-pointer ${
+                          isActive ? "bg-[#1f2b25]" : "hover:bg-[#1a1a1a]"
+                        }`}
                       >
-                        {item.icon}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
-                        {item.sublabel && (
-                          <span className="block truncate text-[10px] text-[#86948a]">{item.sublabel}</span>
-                        )}
-                      </span>
-                    </a>
-                  ) : (
-                    <button
-                      key={item.key}
-                      onClick={() => select(item)}
-                      onMouseEnter={() => setActiveIndex(flatIndex)}
-                      className={`flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors cursor-pointer ${
-                        isActive ? "bg-[#1f2b25]" : "hover:bg-[#1a1a1a]"
-                      }`}
-                    >
-                      <span
-                        className="material-symbols-outlined shrink-0 text-[#4edea3]"
-                        style={{ fontSize: "16px" }}
-                      >
-                        {item.icon}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
-                        {item.sublabel && (
-                          <span className="block truncate text-[10px] text-[#86948a]">{item.sublabel}</span>
-                        )}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))
+                        <span
+                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          style={{ fontSize: "16px" }}
+                        >
+                          {item.icon}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-xs font-semibold text-[#e5e2e1] whitespace-normal">
+                            {item.label}
+                          </span>
+                          {item.sublabel && (
+                            <span className="block truncate text-[10px] text-[#86948a]">
+                              AI suggestion · {item.sublabel}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+
+          {showAssistPending && (
+            <div className="px-2 py-2 text-[10px] uppercase tracking-widest text-[#86948a]">
+              Looking for a suggestion...
+            </div>
           )}
 
           {hasQuery && signalsFetching && (

@@ -57,6 +57,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#145~~ | ~~Watchlist empty-state defaults + single range chart~~ | — | **Done 2026-09-19** — `/watchlist` first-paints `COMMODITIES` cards + category chips; `/watchlist/[symbol]` one chart with 1M/6M/1Y/3Y/5Y. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.66.0/PHASE 33. |
 | ~~#146~~ | ~~10 prospect/demo accounts that never count toward usage numbers~~ | — | **Done 2026-09-19** — `profiles.is_test_account`; Admin `email_confirm: true` for 10 accounts only (Confirm Email stays ON). Metrics + digest exclude the flag. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.69.0/PHASE 36. |
 | — | Driver.js feature hints (watchlist / dashboard filters / RECORD) | — | **Done 2026-09-19** — Feature Hints mode, one beacon each, localStorage `bbr_hint_seen_<id>`. RECORD tooltip matches `handleRecord()` (browser localStorage only). See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.70.0/PHASE 37. |
+| — | Cmd+K search assist RAG fallback | — | **Done 2026-09-19** — existing palette search kept; Suggested group + `POST /v1/search/assist` when that search returns <2 hits. `search_content_embeddings` + pgvector; Haiku on the chat daily budget. FAQ waits on #155. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.71.0/PHASE 38. |
 
 ### Still open
 
@@ -76,6 +77,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #139 | Ingestion / filter / severity / confidence audit | Research written 2026-09-13 (`fba11ac`) — `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. Acted on 2026-09-13 via #141 (materiality gate) — see Shipped above. |
 | #143 leftover | Other materiality-gate fields still unread in the UI | `relevance` / `novelty` / `source_confirmation` / `materiality_pass` / `materiality_reasoning` are stored but not shown. Event category / mechanism / preview / media-impact shipped in #143. |
 | #142 leftover | Trump-named `individual_social_media` watchlist row | Peer-reviewed tweet-reaction papers exist; inclusion is a positioning decision, not just evidence. Office-level `US President` row already ships. Awaiting founder sign-off; do not add from a coding session. |
+| #155 | Minimal FAQ | Not in the repo yet (no FAQ route/copy). Cmd+K search-assist catalog has an empty FAQ slot (`SEARCH_FAQ_ENTRIES`) to fill when this ships. |
 
 ---
 

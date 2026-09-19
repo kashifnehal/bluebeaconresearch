@@ -8,6 +8,18 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.71.0 — Cmd+K search assist RAG fallback (2026-09-19)
+
+Existing `CommandPalette.tsx` Pages/Signals/Watchlist/Alert Rules search is unchanged. When that search settles with fewer than 2 hits, the palette may show a separate **Suggested** group: one Haiku sentence plus the matching page URL.
+
+**Index:** `search_content_embeddings` (`vector(256)`). pgvector was available on the project and not installed — enabled this ship. Catalog is already-written page copy (titles, URLs, on-page / tour / hint sentences). `#155` FAQ does not exist yet; FAQ slot is empty.
+
+**Embeddings:** Anthropic has no embeddings API. Cheapest Anthropic-partnered option is Voyage `voyage-4-lite` ($0.02/MTok, 200M free, 256-d). `VOYAGE_API_KEY` optional; unset uses `local-hash-v1` so retrieval works without a new vendor. Rows store `embedding_model`.
+
+**Endpoint:** `POST /v1/search/assist` + Next.js BFF `/api/search/assist`. Cosine threshold miss → `no_confident_answer` (no Haiku). Hit → one Haiku call on the **chat** daily budget (`assertAnthropicBudget` / `isAnthropicBudgetAvailable`). Same no-buy/sell rule.
+
+**Verified:** mocked unit tests only (no live Anthropic/Voyage). Founder-run one query after reviewing the diff.
+
 ### v0.70.0 — Driver.js feature hints (2026-09-19)
 
 `apps/web` only. Adds `driver.js@1.8.0` (MIT) and uses **Feature Hints** — pulsing beacons, click-to-explain popover, `overlay: false`, no next/back, not a replacement for the existing `react-joyride` ProductTour.

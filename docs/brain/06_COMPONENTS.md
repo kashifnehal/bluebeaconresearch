@@ -49,6 +49,11 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Hooks Used**: `useMe()`, `useAuthStore()`.
 - **Styling**: `h-14 border-b border-neutral-800 bg-neutral-950/60 backdrop-blur-md flex items-center justify-between px-4`.
 
+### 2.2b `CommandPalette.tsx`
+- **Purpose**: Global Cmd+K / Ctrl+K search over Pages, Signals, Watchlist commodities, and Alert Rules (client-side + debounced `/api/signals`). Unchanged deterministic path.
+- **Parent**: `TopBar.tsx`.
+- **Assist fallback (2026-09-19)**: when that search settles with fewer than 2 hits, POST `/api/search/assist` (debounced, not per keystroke). A separate **Suggested** group shows the one-line Haiku answer + page link. Never mixed into Pages/Signals. Empty FAQ catalog until #155.
+
 ### 2.3 `PriceTicker.tsx`
 - **Purpose**: Scrolling real-time 24h ticker bar displaying physical commodity prices (`USOIL`, `GOLD`, `NG`, `COPPER`).
 - **Props**: None.

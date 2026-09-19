@@ -95,6 +95,16 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Consumers**: `SignalChatPanel` on `/events/[id]`.
 - **Why**: explain this briefing, not give buy/sell or personalized-position advice. Grounded generation of the URL-identified signal — not RAG (D21 / ADR 017). Same #103 buy/sell rule as `generateAnalysis()`, plus personalized-advice refusal. See `18_AI_ENGINE.md` §3b / `ClaudeService.chatAboutSignal()`.
 
+#### `POST /v1/search/assist` (Cmd+K fallback)
+
+- **Description**: One-sentence suggestion from retrieved BBR page copy when the existing Command Palette search has few hits. Fastify `apps/backend/src/routes/search.routes.ts`; Next.js BFF `apps/web/app/api/search/assist/route.ts` forwards the caller's Bearer token (same pattern as signal chat).
+- **Auth**: Required (`requireUser`). Not gated by `CHAT_ALLOWED_EMAILS` (palette is for every signed-in user). Chat daily Anthropic budget still applies.
+- **POST body**: `{ "query": string }` (2–200 chars).
+- **200**: `{ "status": "ok", "answer", "title", "url", "similarity" }` or `{ "status": "no_confident_answer" }` when similarity is below threshold, the index is empty, or Haiku returns `NO_ANSWER`.
+- **503**: `{ "error": "ai_temporarily_unavailable" }` when the chat daily budget is spent (same message as #111) or Haiku throws.
+- **Consumers**: `CommandPalette` "Suggested" group only — never blended into Pages/Signals.
+- **See**: `18_AI_ENGINE.md` §3c.
+
 ---
 
 ### 2.2 Alert Rules & Dispatch Endpoints

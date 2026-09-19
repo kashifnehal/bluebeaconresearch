@@ -741,6 +741,46 @@ async function main() {
       }
     },
   );
+
+  runTest(
+    "answerSearchAssist uses Haiku, the retrieved URL, and the no-buy/sell rule (mocked client)",
+    async () => {
+      const promptService = new ClaudeService();
+      let capturedSystem = "";
+      let capturedUser = "";
+      let capturedModel = "";
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async (opts: { model?: string; system?: string; messages?: { content?: string }[] }) => {
+            capturedModel = String(opts.model ?? "");
+            capturedSystem = String(opts.system ?? "");
+            capturedUser = String(opts.messages?.[0]?.content ?? "");
+            return {
+              content: [{ type: "text", text: "The Global Map is at /map." }],
+              usage: { input_tokens: 20, output_tokens: 12 },
+            };
+          },
+        },
+      };
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const text = await promptService.answerSearchAssist("where is the map", {
+          title: "Map",
+          url: "/map",
+          content: "Global tension map.",
+        });
+        assert.equal(text, "The Global Map is at /map.");
+        assert.equal(capturedModel, "claude-haiku-4-5-20251001");
+        assert.match(capturedSystem, /NO_ANSWER/);
+        assert.match(capturedSystem, /not financial advice/i);
+        assert.match(capturedSystem, /buy\/sell/);
+        assert.match(capturedUser, /\/map/);
+        assert.equal(capturedUser.includes("https://evil.example"), false);
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
 }
 
 main().catch((err) => {

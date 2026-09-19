@@ -76,7 +76,9 @@
 
 > ⚠️ UPDATED 2026-09-19 (Driver.js feature hints) — first-time pulsing hints on Watchlist chips/dropdown, dashboard FilterBar, and event-detail RECORD (`driver.js` Feature Hints, `bbr_hint_seen_<id>`). RECORD also has a persistent hover tooltip matching `handleRecord()` (browser localStorage only). Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.70.0. This tree: PHASE 37.
 
-Last updated: 2026-09-19 (Driver.js feature hints)
+> ⚠️ UPDATED 2026-09-19 (Cmd+K search assist) — existing palette search kept; Suggested group is a RAG fallback when that search returns <2 hits. `POST /v1/search/assist`, `search_content_embeddings`, Haiku on the chat daily budget. FAQ waits on #155. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.71.0. This tree: PHASE 38.
+
+Last updated: 2026-09-19 (Cmd+K search assist)
 
 ---
 
