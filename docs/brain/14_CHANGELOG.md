@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-21 (v0.80.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-21 (v0.81.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.81.0 — #178 list materiality fields + #179 map popup source confirmation (2026-09-21)
+
+`apps/web` only. `GET /api/signals` maps `novelty` / `sourceConfirmation` / `materialityReasoning` with the same parsers as `/api/signals/:id`. `MapSignalPopup` replaces the raw `{n}% confidence` badge with `sourceConfirmationLabel` (hidden when null). No backend/classifier change.
 
 ### v0.80.0 — Homepage stats count via response body (2026-09-21)
 

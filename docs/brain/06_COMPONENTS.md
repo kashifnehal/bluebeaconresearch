@@ -131,6 +131,10 @@ This document presents a complete inventory of all UI components in `apps/web/co
 
 - Inline in the filters panel, not a separate component. Click the "i" to pin `tensionInfoOpen`; `mousedown` outside the button+tooltip closes it (TopBar dropdown pattern). CSS `group-hover` preview unchanged. Tooltip copy stays the existing methodology sentence — no formula.
 
+### 3.5d `MapSignalPopup.tsx` (#179)
+
+- Header badge is `sourceConfirmationLabel` (Official statement / Reported claim / Speculative / unconfirmed), hidden when `sourceConfirmation` is null. Raw `{n}% confidence` removed. Depends on #178 list-endpoint mapping.
+
 ### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
 - **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
 - **How**: server component, direct server-side fetch (same pattern as `admin/metrics/page.tsx`, no client proxy route needed); dark-terminal styling matches `/status`.

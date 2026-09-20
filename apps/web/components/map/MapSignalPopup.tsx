@@ -5,6 +5,7 @@ import { safeFormatDistanceToNow } from "@/lib/utils";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { FreshTag } from "@/components/signals/FreshTag";
+import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 
 export function MapSignalPopup({
   signal,
@@ -16,9 +17,7 @@ export function MapSignalPopup({
   offsetLeft: string;
 }) {
   const timeAgo = safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt);
-  const confidencePct = Number.isFinite(signal.confidence)
-    ? Math.round(signal.confidence * 100)
-    : null;
+  const confirmationLabel = sourceConfirmationLabel(signal.sourceConfirmation);
   const impacts = [...(signal.commodityImpacts ?? [])].sort(
     (a, b) => (b.confidence ?? 0) - (a.confidence ?? 0),
   );
@@ -43,9 +42,9 @@ export function MapSignalPopup({
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex flex-wrap items-center gap-2 min-w-0">
             <SeverityBadge score={signal.severity} />
-            {confidencePct != null && (
+            {confirmationLabel != null && (
               <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider">
-                {confidencePct}% confidence
+                {confirmationLabel}
               </span>
             )}
           </div>

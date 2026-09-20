@@ -1,10 +1,17 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-21 (PHASE 47).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-21 (PHASE 48).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 48 — #178 LIST MATERIALITY FIELDS + #179 MAP POPUP SOURCE CONFIRMATION (2026-09-21)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.81.0.
+
+- List `GET /api/signals` now maps `novelty` / `sourceConfirmation` / `materialityReasoning` (same parsers as `:id`).
+- Map popup shows a null-hidden source-confirmation label instead of `{n}% confidence`.
 
 ## PHASE 47 — HOMEPAGE STATS COUNT VIA RESPONSE BODY (2026-09-21)
 

@@ -285,6 +285,8 @@ Named parts, populated from #141/#142 signal fields: Source confirmation (`offic
 
 Event-detail ANALYSIS tab also has a "Why this signal" `<details>` (below Full Analyst Briefing) when `materialityReasoning` is non-null — raw classifier reasoning, not invented uncertainty copy. SignalQuickView header no longer shows `{n}% confidence`.
 
+`MapSignalPopup` (#179) uses the same null-hidden `sourceConfirmationLabel` in the header badge slot (same wording as this box). No percentage fallback.
+
 ---
 
 ### BreakingAlertBanner (apps/web/components/signals/BreakingAlertBanner.tsx)

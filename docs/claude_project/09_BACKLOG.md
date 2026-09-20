@@ -84,7 +84,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | #127 leftover | Map chokepoint/pipeline layers | Still gated on a real data-vendor cost check. |
 | #128 | Human-review trust layer | Stage 1 is a founder action; do not claim "human-reviewed" before Stage 1 is real. |
 | #139 | Ingestion / filter / severity / confidence audit | Research written 2026-09-13 (`fba11ac`) — `claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md`. Acted on 2026-09-13 via #141 (materiality gate) — see Shipped above. |
-| #143 leftover | Remaining materiality-gate fields still unread in the UI | `novelty` / `source_confirmation` / `materiality_reasoning` now shown on event detail (2026-09-20). Still unread: `relevance` / `materiality_pass` (`materiality_pass` is a write-time insert gate). |
+| #143 leftover | Remaining materiality-gate fields still unread in the UI | `novelty` / `source_confirmation` / `materiality_reasoning` on event detail (2026-09-20) and now also on list `GET /api/signals` + map popup (#178/#179, 2026-09-21). Still unread: `relevance` / `materiality_pass` (`materiality_pass` is a write-time insert gate). |
 | #142 leftover | Trump-named `individual_social_media` watchlist row | Peer-reviewed tweet-reaction papers exist; inclusion is a positioning decision, not just evidence. Office-level `US President` row already ships. Awaiting founder sign-off; do not add from a coding session. |
 
 ---
