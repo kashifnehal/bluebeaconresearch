@@ -1,6 +1,6 @@
 # 13_PROMPTS.md — AI Rebuilder Prompt Specifications
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — ARCHIVED Antigravity-era rebuild prompts.** Do not use as current architecture. Live prompts: `docs/claude_project/18_AI_ENGINE.md`. `claude/23_TODO.md` is not in this repo.
 
 This document contains modular system prompts designed to allow an autonomous AI engineer or LLM to independently rebuild or extend any module of Blue Beacon Research from scratch without prior repository context.
 

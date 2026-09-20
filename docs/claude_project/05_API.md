@@ -1,6 +1,6 @@
 # 05_API.md — Complete API Reference
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20** for `/docs`, `sort=relevance`, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** a public developer portal. Registers only when `NODE_ENV` is `development` or `test`. Live production previously returned 200 + OpenAPI JSON with no auth. Global Fastify rate limit in code is 60/min in-memory (`apps/backend/src/app.ts`), not the 100/min Redis figures below (those are stale planning numbers).
 >

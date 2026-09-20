@@ -1,6 +1,6 @@
 # 04_DATABASE.md — PostgreSQL Database Schema & Migration Architecture
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — pointer file.** Authoritative schema: `docs/brain/04_DATABASE.md` + `supabase/migrations/*.sql`. `claude/23_TODO.md` is not in this repo.
 
 This document provides a comprehensive specification of the Supabase PostgreSQL database schema, table structures, Row Level Security (RLS) policies, foreign key relationships, performance indexes, constraint enums, and sequential migrations.
 

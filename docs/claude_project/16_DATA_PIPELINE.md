@@ -1,6 +1,6 @@
 # 16_DATA_PIPELINE.md — Complete Data Pipeline Documentation
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20 for the materiality-gate note below.** ASCII diagrams further down are older. Authoritative pipeline: `docs/brain/15_INGESTION_PIPELINE.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 

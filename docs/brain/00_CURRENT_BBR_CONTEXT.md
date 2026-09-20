@@ -1,12 +1,39 @@
 # BLUE BEACON RESEARCH — CURRENT PRODUCT, BUSINESS & TECHNICAL CONTEXT
 
-**Document purpose:** authoritative handoff/context for continuing BBR work in a new ChatGPT/Claude thread.
+**Document purpose:** strategic / product handoff for a new ChatGPT/Claude thread. Not the live engineering punch list.
 
-**As of:** 2026-09-16
+**As of:** 2026-09-20 (strategy body written 2026-09-16; shipped-since and path corrections added 2026-09-20)
 
 **Repository:** `kashifnehal/bluebeaconresearch`
 
 **Status:** Working product / MVP moving toward commercial validation. Technical foundation is substantially built, but product-market fit and willingness-to-pay are not yet validated.
+
+**Live engineering truth (read these, do not use this file as the changelog):**
+`docs/brain/LIVE_TODO.md` → `docs/brain/08_CURRENT_STATUS.md` → `docs/brain/14_CHANGELOG.md` (latest v0.78.0). Onboarding brief: `docs/claude_project/21_PROJECT_BRIEFING.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are **not in this repo**.
+
+---
+
+# 0. WHAT SHIPPED AFTER THE 2026-09-16 DRAFT
+
+Do not treat the rest of this file as "nothing has been built since mid-September." The 2026-09-16–20 ships (full evidence in `LIVE_TODO.md`):
+
+| Date | What |
+|------|------|
+| 2026-09-18 | Sidebar brand → `/dashboard`; landing hero subtext later replaced by #174 |
+| 2026-09-19 | #145 watchlist default cards + single 1M/6M/1Y/3Y/5Y chart |
+| 2026-09-19 | #123 remainder — every event-detail click opens a new tab |
+| 2026-09-19 | #142 data: 8 sourced `media_impact_watchlist` rows (Musk evidence + AP-hack row). No Trump-named individual row |
+| 2026-09-19 | #146 10 demo accounts, `profiles.is_test_account`, excluded from metrics/digest |
+| 2026-09-19 | Driver.js one-time feature hints (watchlist, FilterBar, RECORD) |
+| 2026-09-19 | Cmd+K Suggested RAG fallback (`POST /v1/search/assist`, `search_content_embeddings`) |
+| 2026-09-19 | Fastify `/docs` Swagger is **not** public (dev/test only) |
+| 2026-09-19 | #155 `/help` FAQ + `feedback_submissions` |
+| 2026-09-20 | #143 leftover: event-detail shows novelty / source confirmation / why-this-signal when present |
+| 2026-09-20 | Homepage copy integrity — no fabricated 42ms / 100% Verified / 40yr / Encrypted Support claims |
+| 2026-09-20 | #174 landing subtext + #175 Tension Index click-outside |
+| 2026-09-20 | Cmd+K Fuse.js fuzzy+keyword; `sort=relevance` on both signals routes; Economic Calendar added to palette pages |
+
+Already shipped before this draft and still true: #141 materiality gate, #142 live watchlist table, #143 MARKET IMPACT ASSESSMENT, #144 1h/4h/24h/48h outcomes, #111 chat, #121 `/accuracy`, #87 forex, Discord webhook alerts.
 
 ---
 
@@ -848,30 +875,29 @@ Repository:
 
 `https://github.com/kashifnehal/bluebeaconresearch`
 
-Important current paths:
+Important current paths (corrected 2026-09-20 — several 09-16 paths did not exist):
 
-- `apps/web/app/api/signals/route.ts`
+- `apps/web/app/api/signals/route.ts` — Next.js BFF; reads Supabase **directly**, does not proxy Fastify
 - `apps/web/app/api/signals/[id]/route.ts`
-- `apps/web/app/events/[id]/page.tsx`
-- `apps/web/app/events/[id]/analysis/page.tsx`
-- `apps/web/app/events/page.tsx`
-- `apps/web/app/map/page.tsx`
-- `apps/web/app/dashboard/page.tsx`
-- `apps/web/app/watchlist/page.tsx`
+- `apps/web/app/(dashboard)/events/[id]/page.tsx` — not `app/events/[id]/page.tsx`
+- `apps/web/app/(dashboard)/map/page.tsx`
+- `apps/web/app/(dashboard)/dashboard/page.tsx`
+- `apps/web/app/(dashboard)/watchlist/page.tsx`
+- `apps/web/app/(dashboard)/watchlist/[symbol]/page.tsx`
+- `apps/web/app/(dashboard)/help/page.tsx`
+- `apps/web/app/(dashboard)/calendar/page.tsx`
 - `apps/web/app/accuracy/page.tsx`
-- `apps/web/app/api/events/stream/route.ts`
-- `apps/web/lib/auth.ts`
-- `apps/web/app/login/page.tsx`
+- `apps/web/app/page.tsx` — public landing
+- `apps/web/components/CommandPalette.tsx`
+- `apps/web/app/(auth)/login/page.tsx`
 - `apps/web/middleware.ts`
-- `apps/backend/src/services/claude.ts`
-- `apps/backend/src/services/acled.ts`
-- `apps/backend/src/collectors/gdelt.ts`
-- `apps/backend/src/collectors/rss.ts`
+- `apps/backend/src/services/claude.service.ts` — not `claude.ts`
+- `apps/backend/src/services/acled.service.ts`
+- `apps/backend/src/workers/gdelt-collector.ts` / `rss-collector.ts` / `gnews-collector.ts` / `acled-collector.ts`
+- `apps/backend/src/workers/price-syncer.ts` / `alert-dispatcher.ts` / `outcome-tracker.ts` / `digest-sender.ts`
 - `apps/backend/src/workers.ts`
-- `apps/backend/src/services/price-syncer.ts`
-- `apps/backend/src/services/alert-dispatcher.ts`
-- `apps/backend/src/routes/telegram.ts`
-- `apps/backend/src/routes/push.ts`
+- `apps/backend/src/routes/signals.ts` — Fastify `/v1/signals` (API-tier; browser uses the BFF)
+- `apps/backend/src/routes/search.routes.ts` — `POST /v1/search/assist`
 
 The current web map architecture is:
 
@@ -921,7 +947,7 @@ Important:
 - If only country-level location is known, label/display country-level location.
 - Never invent coordinates just to make the map look complete.
 
-The `/api/signals` endpoint currently supports severity/region/commodity/sort but has not fully implemented every documented filter such as `has_coords`.
+The Next.js BFF `GET /api/signals` supports severity/region/commodity/`search`/`sort` including `sort=relevance` (2026-09-20; application-code rank, not SQL). It reads Supabase directly — it does not proxy Fastify. Not every documented filter (e.g. `has_coords`) is implemented.
 
 ---
 
@@ -1071,6 +1097,8 @@ The event detail page should become a source-first research page containing, as 
 13. Uncertainty / what is not known.
 14. Related events.
 
+Shipped on event-detail as of 2026-09-20: source confirmation, novelty (when non-null), market mechanism, affected markets, direction, event category, media-impact tag, materiality reasoning ("Why this signal"), per-signal chat (#111), historical comparable-events tab. **Not built:** timeline/developments (item 12) and related-event clustering (item 14). Still unread in UI: `relevance`, `materiality_pass`.
+
 Do not expose internal prompts/model-chain details as product value.
 
 ---
@@ -1095,7 +1123,7 @@ Existing architecture has moved toward outcome tracking at:
 - 24h
 - 48h
 
-Public accuracy infrastructure exists, but publishing performance should wait until there is enough meaningful history and methodology.
+Public `/accuracy` is live (#121). Headline aggregates **48h** `signal_outcomes` only (#144 also writes 1h/4h/24h). Per-asset rows below 20 scored predictions show "not enough history yet". Homepage links to `/accuracy` but **does not print a hit-rate percentage** (2026-09-20 copy-integrity). Do not invent a homepage accuracy number.
 
 ---
 
@@ -1142,15 +1170,15 @@ The product should create a reason to return because it is useful, not because o
 
 # 28. NOTIFICATION CHANNELS
 
-Planned/considered channels include:
+Live / considered channels:
 
-- web push
-- Telegram
-- Discord
-- mobile notifications
-- eventually WhatsApp if a suitable provider/licensing/credential setup is selected
+- in-app + email digest (#83)
+- Telegram — connect UX shipped (#112); delivery still blocked on `TELEGRAM_BOT_TOKEN` (founder-deferred)
+- Discord — webhook-URL paste shipped 2026-09-12 (no bot/OAuth)
+- Slack webhook
+- web / mobile push — not the current focus
 
-Do not implement WhatsApp using assumptions about a provider or credentials.
+**WhatsApp (#85) is KILLED, not paused** (D18 / ADR 014). Do not implement it. Do not treat "eventually WhatsApp" as an open backlog item.
 
 If an external service is missing credentials/licensing:
 
@@ -1739,10 +1767,10 @@ Everything else is supporting infrastructure.
 
 When continuing BBR work:
 
-1. Read this document first.
+1. Read `docs/claude_project/21_PROJECT_BRIEFING.md` first, then `docs/brain/LIVE_TODO.md`, `docs/brain/08_CURRENT_STATUS.md`, and this file for strategy.
 2. Inspect the current repository before proposing code changes.
-3. Treat current code as the implementation source of truth and this document as the current strategic/product handoff.
-4. Check existing `docs/brain` and `docs/claude_project` before inventing architecture.
+3. Treat current code as the implementation source of truth. This document is the strategic/product handoff; `LIVE_TODO` / `08` / `14` are the live engineering truth.
+4. Check existing `docs/brain` and `docs/claude_project` before inventing architecture. Topic map: API → both `05_API.md`; schema → `docs/brain/04_DATABASE.md`; Claude prompt → `docs/claude_project/18_AI_ENGINE.md`; UI → both `06_COMPONENTS.md`.
 5. Identify stale documentation before relying on it.
 6. Do not contradict explicit decisions in this document without explaining why.
 7. Do not introduce Mapbox unless the founder explicitly changes the decision.

@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — live changelog as of 2026-09-20 (v0.78.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.78.0 — Docs onboarding catch-up (2026-09-20)
+
+Docs-only. Last 15 commits (`b378713`…`d195c4e`) already documented their *code* in this file through v0.77.0 and in `LIVE_TODO.md`. What a new model would still get wrong:
+
+- `docs/claude_project/21_PROJECT_BRIEFING.md` still said August 2026, listed `/calendar` as the biggest missing feature, described classify→always-insert, and pointed at `claude/23_TODO.md` (not in this repo).
+- `docs/brain/00_CURRENT_BBR_CONTEXT.md` was as-of 2026-09-16 and listed paths that do not exist (`claude.ts`, `app/events/...`, `collectors/gdelt.ts`).
+- `22_IMPLEMENTATION_LOG.md`, `CLAUDE_CONTEXT.md`, and brain `13_PROMPTS.md` read as live changelogs/rebuild specs.
+- `19_ROADMAP.md` still had `/accuracy` and the outcome-tracker unchecked.
+- Both `03_ARCHITECTURE.md` files stopped at #143 and omitted Cmd+K / `/help` / private `/docs`.
+
+Those files now point at this changelog + `LIVE_TODO.md`. No application behavior changed.
 
 ### v0.77.0 — Search-quality fix: Cmd+K fuzzy match + relevance sort (2026-09-20)
 

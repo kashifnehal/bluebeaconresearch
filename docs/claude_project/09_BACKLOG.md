@@ -1,6 +1,6 @@
 # 09_BACKLOG.md — Complete Product Backlog
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — live numbered-ticket queue as of 2026-09-20.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Priority method: MoSCoW (Must / Should / Could / Won't)**
@@ -63,6 +63,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | — | Homepage copy integrity (fabricated claims + sci-fi register) | — | **Done 2026-09-20** — removed 42ms / 100% Verified / 40yr archive / Encrypted Support / sub-second synthesis; retone; live `signals` count; `/accuracy` link with no homepage hit-rate %. Prices unchanged. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.75.0/PHASE 42. |
 | ~~#174~~ | ~~Homepage subtext~~ | — | **Done 2026-09-20** — landing hero `<p>` is "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.76.0/PHASE 43. |
 | — | Search-quality fix: Cmd+K fuzzy match + relevance sort | — | **Done 2026-09-20** — command palette Pages/Watchlist/Alert-Rules now Fuse.js fuzzy+keyword (was exact substring); missing Economic Calendar entry added. New `sort=relevance` on both signals routes (BFF + Fastify), used by command palette's Signals search only. Corrected a stale doc claim that the BFF route proxies to Fastify. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.77.0/PHASE 44. |
+| — | Docs onboarding catch-up | — | **Done 2026-09-20** — `21_PROJECT_BRIEFING` + `00_CURRENT_BBR_CONTEXT` + architecture/roadmap/historical-file banners. No application code. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.78.0/PHASE 45. |
 | ~~#175~~ | ~~Tension Index tooltip click-outside~~ | — | **Done 2026-09-20** — map `tensionInfoOpen` closes on outside mousedown; hover preview + methodology sentence unchanged. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.76.0/PHASE 43. |
 
 ### Still open

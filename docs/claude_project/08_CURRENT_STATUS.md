@@ -1,6 +1,6 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — live status banners as of 2026-09-20.** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 >
 > ⚠️ UPDATED 2026-08-27 — Several fixes landed this session (GDELT/GNews ingestion-time geocoding, `commodity_impacts` classification bug + partial backfill, Sonnet briefing error logging/retry, signal-generation dormant-queue doc correction) plus a Telegram connect-flow gap found (not yet fixed). Per this doc's own policy, full detail lives in `docs/brain/08_CURRENT_STATUS.md` §5 and `docs/brain/14_CHANGELOG.md` v0.30.0 — not duplicated here.
 >
@@ -90,7 +90,9 @@
 
 > ⚠️ UPDATED 2026-09-20 (search-quality fix) — Cmd+K `CommandPalette.tsx` Pages/Watchlist/Alert-Rules matching moved from exact-substring to Fuse.js fuzzy+keyword; added a missing Economic Calendar page entry. New `sort=relevance` (recency+severity blend, computed in application code) on both the Next.js BFF `GET /api/signals` and Fastify `GET /v1/signals`; command palette's own Signals search now uses it. Corrected a stale `05_API.md` claim that the BFF signals route proxies to Fastify — it reads Supabase directly. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.77.0. This tree: PHASE 44.
 
-Last updated: 2026-09-20 (#174 homepage subtext + #175 Tension Index tooltip)
+> ⚠️ UPDATED 2026-09-20 (docs onboarding catch-up) — `21_PROJECT_BRIEFING.md` brought to 2026-09-20 (was August). `00_CURRENT_BBR_CONTEXT.md` shipped-since table + real file paths. `22_IMPLEMENTATION_LOG` / `CLAUDE_CONTEXT` / brain `13_PROMPTS` marked historical. `19_ROADMAP` accuracy/outcome-tracker checked. Architecture §9. Dead `claude/23_TODO.md` pointer removed from the files a new model hits first. This tree: PHASE 45.
+
+Last updated: 2026-09-20 (docs onboarding catch-up)
 
 ---
 

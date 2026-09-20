@@ -1,6 +1,6 @@
 # 01_PRODUCT.md — Product Architecture & Page Specifications
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — topic/historical file.** Live product state: `docs/claude_project/21_PROJECT_BRIEFING.md` + `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 This document defines every user-facing page and view across the Web Terminal (`apps/web`) and Mobile Application (`apps/mobile`), including routes, component hierarchies, state management, API endpoints, user journeys, and implementation status.
 

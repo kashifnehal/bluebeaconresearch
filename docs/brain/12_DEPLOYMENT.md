@@ -1,6 +1,6 @@
 # 12_DEPLOYMENT.md — Deployment Architecture, Infrastructure & Environment Variables
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — topic/historical file (last infra edit 2026-08-22).** Live status: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` is not in this repo. Fastify `/docs` is not a public portal.
 
 This document provides a guide to infrastructure hosting, CI/CD deployment pipelines, required secrets, environment variable configurations, and external API service dependencies.
 

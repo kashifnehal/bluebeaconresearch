@@ -1,6 +1,6 @@
 # 17_SIGNAL_ENGINE.md — Signal Generation Logic
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20 for materiality + outcomes notes.** `claude/23_TODO.md` is not in this repo. Live classify fields: `18_AI_ENGINE.md`.
 
 **Classification: Internal — CTO Level**
 

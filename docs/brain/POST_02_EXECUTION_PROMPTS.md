@@ -1,6 +1,6 @@
 # Blue Beacon Research — Post-Prompt-02 CTO Execution Prompts
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — ARCHIVED execution-prompt pack (reviewed 2026-08-14).** WhatsApp items in this file are superseded — #85 is killed (D18 / ADR 014). Live queue: `docs/claude_project/09_BACKLOG.md`. `claude/23_TODO.md` is not in this repo.
 
 Last reviewed: 2026-08-14
 

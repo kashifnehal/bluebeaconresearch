@@ -1,6 +1,6 @@
 # 13_PROMPTS.md — AI Rebuilder Prompt Specifications
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — HISTORICAL rebuild prompts (2026-08).** Do **not** use these as current architecture. Live classify+materiality: `docs/claude_project/18_AI_ENGINE.md` + `docs/brain/15_INGESTION_PIPELINE.md`. These prompts still say "write every classified event to `signals`" and omit the #141 gate, #111 chat, #121 outcomes, and Cmd+K search assist. `claude/23_TODO.md` is not in this repo.
 
 This document contains modular system prompts designed to allow an autonomous AI engineer or LLM to independently rebuild or extend any module of Blue Beacon Research from scratch without prior repository context.
 

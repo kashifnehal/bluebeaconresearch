@@ -1,6 +1,6 @@
 # 02_BUSINESS.md — Business Model, Pricing & Monetization Strategy
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — topic/historical file.** Live engineering truth: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 This document outlines the commercial framework, user target personas, pricing tiers, feature gating limits, and monetization strategy for Blue Beacon Research.
 

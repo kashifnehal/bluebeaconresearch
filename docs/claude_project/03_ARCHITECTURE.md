@@ -1,6 +1,6 @@
 # 03_ARCHITECTURE.md — System Architecture & Data Pipelines
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20.** Day-to-day truth: `docs/brain/LIVE_TODO.md`, `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pipeline ASCII in §2 is older than the materiality gate — use §8 and `docs/brain/15_INGESTION_PIPELINE.md`.
 
 This document details the high-level and low-level software architecture, data flow diagrams, background queue workers, state synchronization, and component dependencies across the Turborepo workspace.
 
@@ -176,4 +176,13 @@ Classification and "should this be a signal at all" are separate. After `classif
 
 The communicators list is `public.media_impact_watchlist` (sourced rows only; D26 / ADR 022). A match writes `signals.media_impact_entity` and the UI shows `[Media-Impact]`.
 
-Event-detail / SignalQuickView impact box is labeled **MARKET IMPACT ASSESSMENT** (`MarketImpactAssessment.tsx`) — mechanism, markets, direction, event category, reused media-impact tag, Caldara & Iacoviello fallback when there is no direct match. Not a new product surface.
+Event-detail / SignalQuickView impact box is labeled **MARKET IMPACT ASSESSMENT** (`MarketImpactAssessment.tsx`) — mechanism, markets, direction, event category, reused media-impact tag, Caldara & Iacoviello fallback when there is no direct match. As of 2026-09-20 also shows source confirmation + novelty when non-null, and ANALYSIS has "Why this signal" from `materiality_reasoning`. Not a new product surface. Timeline / related-event clustering not built.
+
+---
+
+## 9. Search, Help, and public API-docs (2026-09-19 / 2026-09-20)
+
+- **Cmd+K** (`CommandPalette.tsx`): Pages / Watchlist / Alert Rules use Fuse.js fuzzy+keyword (`apps/web/lib/command-palette-search.ts`, threshold 0.3). Signals hit Next.js `GET /api/signals?sort=relevance` (`rank_score = severity / (hours_since + 2)^1.8` in application code). Intelligence Feed default sort is unchanged. When the combined search returns <2 hits, `POST /api/search/assist` → Fastify `POST /v1/search/assist` may show a separate Suggested group (pgvector over `search_content_embeddings` + one Haiku sentence on the **chat** daily budget). Catalog is product page copy + #155 FAQ — never `signals` rows.
+- **Help:** logged-in `/help` (#155) + `feedback_submissions`. Discoverable from Sidebar, Settings, TopBar, Cmd+K.
+- **Fastify `/docs`:** Swagger UI registers only when `NODE_ENV` is `development` or `test`. Production previously served unauthenticated OpenAPI for the full `/v1` surface. Not a public developer portal.
+- **BFF vs Fastify:** the browser's `/api/signals` BFF reads Supabase directly. Fastify `GET /v1/signals` is a separate API-tier surface. Only the BFF has a `search` param.

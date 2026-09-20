@@ -1,6 +1,6 @@
 # 16_MIGRATION_CHECKLIST.md — Schema Deploy Process & Standing Verification Checklist
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — live migration checklist.** Pair with `docs/brain/04_DATABASE.md`. `claude/23_TODO.md` is not in this repo.
 
 Added 2026-08-18 (commit `97b7c4b` era, this file lands in the next commit) — Reliability/DB-cleanup pass.
 

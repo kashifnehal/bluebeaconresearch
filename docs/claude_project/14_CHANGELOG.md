@@ -1,10 +1,18 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — live changelog as of 2026-09-20 (PHASE 45).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 45 — DOCS ONBOARDING CATCH-UP (2026-09-20)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.78.0.
+
+- `21_PROJECT_BRIEFING.md` synced to 2026-09-20 (was August). Materiality gate, chat, accuracy, Help, Fuse/`sort=relevance`, and current open ops items are now in the file a new model is told to paste first.
+- `00_CURRENT_BBR_CONTEXT.md` gained a shipped-since table and real repo paths.
+- Historical files (`22_IMPLEMENTATION_LOG`, `CLAUDE_CONTEXT`, brain `13_PROMPTS`) marked as such. `19_ROADMAP` accuracy/outcome-tracker checked. Architecture §9 added.
 
 ## PHASE 44 — SEARCH-QUALITY FIX: CMD+K FUZZY MATCH + RELEVANCE SORT (2026-09-20)
 

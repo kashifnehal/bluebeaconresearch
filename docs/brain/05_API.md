@@ -1,6 +1,6 @@
 # 05_API.md — Fastify REST API Architecture & OpenAPI Specifications
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20** for `/docs`, `sort=relevance`, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** public. It registers only when `NODE_ENV` is `development` or `test`. Production previously served unauthenticated OpenAPI at `https://api.bluebeaconresearch.com/docs`. Auth hook no longer skips `/docs` in production. Global rate limit remains `@fastify/rate-limit` 60/min in-memory (see `apps/backend/src/app.ts`).
 >

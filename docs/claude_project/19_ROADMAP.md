@@ -1,6 +1,6 @@
 # 19_ROADMAP.md — Product & Company Roadmap
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — planning file, checkboxes below are not the live queue.** Current ships and leftover tickets: `docs/claude_project/09_BACKLOG.md` + `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo. WhatsApp is **killed** (D18), not a later-month item.
 
 **Classification: Internal — CTO Level**
 
@@ -45,11 +45,11 @@ Product:
 - [ ] Central bank rates widget on watchlist
 - [x] Morning brief automated — **#83, done 2026-09-07**: personalized daily digest email (06:00 UTC, `node-cron`), each user's own preference-matched top-5. Telegram alerts are per-signal, not a scheduled brief. Prod step left: `RESEND_API_KEY` on Railway workers.
 - [ ] Public Telegram channel (@BlueBeaconResearch) with delayed free signals
-- [ ] /accuracy public page with live track record
+- [x] /accuracy public page with live track record — **#121 frontend 2026-09-11**; 48h headline only. #144 also writes 1h/4h/24h rows. Homepage links here but does not print a hit-rate %.
 - [x] Settings Notifications tab built — Telegram connect + Daily Digest opt-out toggle (#83) live
 - [ ] Settings Security tab (change password, sessions)
 - [ ] Guardian API as second news source
-- [ ] Outcome tracker worker (fills outcome_direction for accuracy)
+- [x] Outcome tracker worker — **#121 / #144**. Live table is `signal_outcomes`, not the old `alerts_sent.outcome_direction` sketch.
 
 Marketing:
 - [ ] Twitter @BlueBeaconHQ active: daily signal + outcome posts

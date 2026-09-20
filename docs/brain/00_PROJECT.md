@@ -1,6 +1,6 @@
 # 00_PROJECT.md — Blue Beacon Research Overview & Core Vision
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — historical vision file (reviewed 2026-08-19).** Not the live punch list. Current state: `docs/brain/LIVE_TODO.md` / `08_CURRENT_STATUS.md` / `docs/claude_project/21_PROJECT_BRIEFING.md`. `claude/23_TODO.md` is not in this repo.
 
 > **System Identity**: Blue Beacon Research is an enterprise-grade, sub-second geopolitical risk intelligence and signal processing platform designed for commodity traders, macroeconomic hedge funds, institutional risk managers, and defense/geopolitical analysts.
 
@@ -34,7 +34,7 @@ To become the definitive sub-second tactical intelligence terminal that bridges 
 - **Ingestion Workers**: Cron-based background workers collecting data from GDELT, ACLED, and GNews every 15 minutes.
 - **AI Synthesis Pipeline**: Anthropic Claude 3.5 Sonnet/Haiku structured prompt generation producing JSON-formatted signals (severity, confidence, target commodities, rationale).
 > ⚠️ UPDATED 2026-08-19 — Anthropic API credit is currently exhausted; a heuristic classifier fallback is doing this in production, not live Claude.
-- **Fastify Backend API**: High-performance REST server with Swagger/OpenAPI documentation, JWT authentication, and plan-based access controls (`free`, `analyst`, `pro`, `api`).
+- **Fastify Backend API**: High-performance REST server with JWT authentication and plan-based access controls (`free`, `analyst`, `pro`, `api`). Swagger/OpenAPI at `/docs` is **local/test only** as of 2026-09-19 — not a public portal.
 - **Next.js 16 Web Terminal**: Dark-mode terminal UI featuring live breaking news tickers, interactive Mapbox conflict maps, custom alert rule management, backtesting suite, asset watchlists, and institutional settings.
 > ⚠️ UPDATED 2026-08-19 — Inconsistent with §5's Technology Stack Matrix in this same file: the map actually uses MapLibre GL with OpenStreetMap raster tiles, not Mapbox, and requires no Mapbox token (see also `13_PROMPTS.md`'s implementation note).
 - **Multi-Channel Alert Dispatcher**: Sub-second alert router via BullMQ & Upstash Redis delivering payloads to Telegram Bots, Slack Webhooks, custom HTTP Webhook endpoints, and Expo Push Notifications.

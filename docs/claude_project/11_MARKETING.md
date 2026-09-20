@@ -1,6 +1,6 @@
 # 11_MARKETING.md — Complete Marketing Strategy
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — topic/historical file.** Live engineering truth: `docs/brain/LIVE_TODO.md`, `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Landing hero subtext as of 2026-09-20: "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders".
 
 **Classification: Internal — CTO Level**
 

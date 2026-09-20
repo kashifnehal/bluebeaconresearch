@@ -1,6 +1,6 @@
 # 11_MARKETING.md — Product Positioning & Marketing Strategy
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — topic/historical file.** Live engineering truth: `docs/brain/LIVE_TODO.md` / `08_CURRENT_STATUS.md` / `14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. Landing hero subtext as of 2026-09-20: "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders".
 
 This document specifies the marketing strategy, value proposition, landing page copy audit, CTA conversion funnels, positioning, and SEO architecture for Blue Beacon Research.
 

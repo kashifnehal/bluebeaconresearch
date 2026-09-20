@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural & Product Decision Log
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20 for standing rules.** Latest ADRs through D26 / ADR 022 (`media_impact_watchlist`) plus #146 test-account exclusion. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Format: Decision → Context → Options considered → Choice → Rationale → Trade-offs**
@@ -85,6 +85,7 @@
 - 2–3× faster than Express for JSON serialization (important for signal feed endpoint)
 - Built-in schema validation via JSON Schema (reduces boilerplate)
 - @fastify/swagger for auto-generated OpenAPI docs at /docs
+  > ⚠️ UPDATED 2026-09-20 — choosing Fastify+swagger still stands. **Serving** `/docs` in production does not: as of 2026-09-19 Swagger UI registers only when `NODE_ENV` is `development` or `test`. Live production had been an unauthenticated OpenAPI dump. Not a public developer portal. Global rate limit in code is in-memory 60/min, not the Redis-backed figure implied below.
 - @fastify/rate-limit is mature and Redis-backed
 - Plugin architecture is clean and testable
 - No need for NestJS complexity at this stage

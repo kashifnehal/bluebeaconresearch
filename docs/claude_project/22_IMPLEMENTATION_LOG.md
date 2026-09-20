@@ -1,6 +1,6 @@
 # CLAUDE_CONTEXT.md — Project Synchronization & Change Log for Claude
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — HISTORICAL (sessions through 2026-08).** Do not treat this file as the current changelog. Live record: `docs/brain/LIVE_TODO.md` (Closed, verified, with SHAs), `docs/brain/14_CHANGELOG.md` (v0.77.0 as of 2026-09-20), `docs/claude_project/14_CHANGELOG.md` (PHASE 44). `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 
 > **Purpose**: This file acts as the primary contextual changelog and implementation record for uploading directly into the Claude Project context. Every task execution, code change, architectural refinement, and bugfix is documented here with precise timestamps, modified files, diff summaries, and verification results.
 

@@ -1,8 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — live technical status as of 2026-09-20.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-20 (search-quality fix — Cmd+K fuzzy match + relevance sort)
+Last updated: 2026-09-20 (docs onboarding catch-up — briefing / context / architecture pointers)
+
+> ⚠️ UPDATED 2026-09-20 (docs onboarding catch-up) — last 15 commits' *code* was already documented in this file + `LIVE_TODO` + `14_CHANGELOG` through v0.77.0. What was stale: `21_PROJECT_BRIEFING.md` still said August 2026 (missing calendar, materiality gate, chat, accuracy, Help, Fuse/`sort=relevance`; still called `/calendar` the biggest missing feature; still pointed at `claude/23_TODO.md` which is not in this repo). `00_CURRENT_BBR_CONTEXT.md` was as-of 2026-09-16 with wrong file paths (`claude.ts`, `app/events/...`). `22_IMPLEMENTATION_LOG.md` / `CLAUDE_CONTEXT.md` / `13_PROMPTS.md` are now explicitly marked historical. `19_ROADMAP.md` `/accuracy` + outcome-tracker checkboxes marked done. Both `03_ARCHITECTURE.md` gained §9 (search/help/`/docs`).
 
 > ⚠️ UPDATED 2026-09-20 (search-quality fix) — `CommandPalette.tsx` Pages/Watchlist/Alert-Rules matching is now Fuse.js fuzzy+keyword (was exact substring); added a missing Economic Calendar page entry. New `sort=relevance` on `GET /api/signals` (Next.js BFF) and `GET /v1/signals` (Fastify) blends recency+severity in application code; command palette's Signals search now uses it. **Found and fixed a stale doc claim**: `docs/claude_project/05_API.md` said the BFF `signals/route.ts` proxies to Fastify `/v1/signals` — it doesn't; it reads Supabase directly and is the only one of the two with a `search` param. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.77.0.
 
@@ -23,6 +25,10 @@ Last updated: 2026-09-20 (search-quality fix — Cmd+K fuzzy match + relevance s
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 Admin-API-created, pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console `admin_usage_metrics()` (signups / auth_users / DAU / WAU / waitlist / events_last_7d) and digest eligibility exclude the flag. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.69.0.
 
 ---
+
+## Docs onboarding catch-up (2026-09-20)
+
+Docs-only. No application code. The last 15 commits already wrote themselves into `LIVE_TODO` / this file / `14_CHANGELOG` through v0.77.0. A new model reading `21_PROJECT_BRIEFING.md` first would still have believed it was August 2026. Full record: `14_CHANGELOG.md` v0.78.0.
 
 ## Search-quality fix — Cmd+K fuzzy match + relevance sort (2026-09-20)
 

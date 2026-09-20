@@ -1,6 +1,6 @@
 # 15_INGESTION_PIPELINE.md — News Ingestion Logic, Filters & Display Rules
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
 
 This document describes **exactly** how Blue Beacon Research fetches news, filters it, stores it, and displays it on the dashboard. Read this before changing collectors or wondering why certain headlines appear (or don't).
 

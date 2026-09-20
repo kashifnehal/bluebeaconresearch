@@ -1,6 +1,6 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — ARCHIVED Antigravity-era changelog.** Live changelog: `docs/brain/14_CHANGELOG.md` (v0.78.0) and `docs/claude_project/14_CHANGELOG.md` (PHASE 45). `claude/23_TODO.md` is not in this repo.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 

@@ -1,6 +1,6 @@
 # 00_PROJECT.md — Blue Beacon Research: Project Foundation
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — historical foundation file.** Live state: `docs/claude_project/21_PROJECT_BRIEFING.md` + `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Last Updated: August 2026**

@@ -1,9 +1,11 @@
 # 21_PROJECT_BRIEFING.md — New Project Onboarding Brief
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20.** This file is still the durable onboarding brief (why / stack / standing rules). It is **not** the live punch list. `claude/23_TODO.md` and `22_SESSION_HANDOFF.md` are **not in this repo** — do not look for them.
+>
+> **After this file, read in order:** `docs/brain/LIVE_TODO.md` → `docs/brain/08_CURRENT_STATUS.md` → `docs/brain/14_CHANGELOG.md` (latest is v0.78.0, this docs catch-up). Canonical tree: `docs/claude_project/`. Technical annex: `docs/brain/`. Strategy handoff written 2026-09-16, patched 2026-09-20: `docs/brain/00_CURRENT_BBR_CONTEXT.md`.
 
 **PURPOSE: Paste this file FIRST in any new Claude conversation or project about BBR.**
-**Last synced: August 2026 — reflects CLAUDE_CONTEXT.md session logs through 2026-08-07**
+**Last synced: 2026-09-20 — live state through search-quality fix (Cmd+K Fuse.js + `sort=relevance`)**
 
 ---
 
@@ -20,54 +22,60 @@ The founder builds with AI coding tools (Antigravity/Cursor/Copilot). This proje
 **The product is a signal pipeline, not a UI project.**
 
 ```
-RSS/GDELT/ACLED/GNews → isRelevantEvent() pre-filter → Claude 3.5 (or heuristic fallback) →
-structured signal → Supabase DB → Dashboard feed + Telegram alerts
+RSS / GDELT / GNews / ACLED (creds still missing)
+        ↓
+isRelevantEvent() pre-filter + title-prefilter
+        ↓
+classifyEvent() — Claude Haiku if credits > 0, ELSE heuristic (severity hard-capped at 6)
+        ↓
+materiality gate (#141) — materialityPass=false skips signals insert; raw_events kept
+        ↓
+insertOrMergeSignal() → Supabase `signals`
+        ↓
+Next.js BFF GET /api/signals (reads Supabase directly — does NOT proxy Fastify)
+        ↓
+Dashboard / map / watchlist / event-detail / Cmd+K
 ```
 
-Both Railway services (backend API + workers) are currently **OPERATIONAL**. The pipeline is live and ingesting. The primary degraded component is **Anthropic API credit exhaustion** — the heuristic fallback classifier is active and producing signals, but AI-quality briefings are paused.
+Both Railway services (backend API + workers) are **OPERATIONAL**. The pipeline is live. The primary degraded component is still **Anthropic API credit** — heuristic fallback covers classification; quality briefings/chat suffer when credits are out.
 
 ---
 
-## ACTUAL CURRENT STATE (August 2026) — FROM VERIFIED SESSION LOGS
+## ACTUAL CURRENT STATE (2026-09-20)
 
-### ✅ CONFIRMED WORKING (do not re-implement these)
+Do not treat a row that says "✅ 100% Operational" as ground truth without checking `docs/brain/08_CURRENT_STATUS.md`. Schema source of truth is `supabase/migrations/*.sql` plus `docs/brain/04_DATABASE.md` / `docs/brain/16_MIGRATION_CHECKLIST.md` — not the August "9 migrations" list later in this file.
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Railway Backend (HTTP API) | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
-| Railway Workers (Cron) | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
-| Turborepo Monorepo | ✅ Operational | Clean structure, both services deploy from `apps/backend` |
-| Next.js 16 Web App (Vercel) | ✅ Operational | Live at `bluebeaconresearch.com` |
-| PostgreSQL Schema (Supabase) | ✅ Operational | 9 migrations applied (000–008 + event_date index) |
-| Upstash Redis / BullMQ | ✅ Operational | `rediss://` TLS protocol fixed |
-| Price Syncer (Yahoo Finance) | ✅ Operational | 8 commodities every 15 min — Alpha Vantage REPLACED |
-| Heuristic Fallback Classifier | ✅ Operational | Dynamic confidence 55–90%, word-boundary filtering |
-| Signal Pre-filter | ✅ Operational | `isRelevantEvent()` in gdelt + gnews collectors |
-| Country Mapping | ✅ Operational | `COUNTRY_CODES` ISO-2 + `formatCountryName()` in ai-classifier |
-| Duplicate Prevention | ✅ Operational | `contains(raw_event_ids, [rawEventId])` check before insert |
-| Google OAuth 2.0 | ✅ Operational | PKCE flow, `/auth/callback/route.ts`, profile trigger |
-| Interactive UI Controls | ✅ 100% Operational | All buttons, filters, modals, FABs, CSV downloads active |
-| RSS Collectors | ✅ Operational | BBC, Al Jazeera, Guardian, NPR, UN News (Reuters 404 — others compensate) |
+### ✅ SHIPPED — do not re-implement
 
-> ⚠️ UPDATED 2026-08-19 — the "9 migrations applied (000–008 + event_date index)" row is stale; `supabase/migrations/` now has 000–012 (13 files), including migration 012 (RLS consolidation, 6 new indexes, unique constraint) applied to the live DB 2026-08-19.
+| Surface | Notes |
+|---------|--------|
+| Railway backend + workers | `api.bluebeaconresearch.com`; workers `sleepApplication: false` |
+| Next.js 16 web (Vercel) | `bluebeaconresearch.com` |
+| Supabase | Live project `evavcgfmemwryggdkjmx` |
+| Forex taxonomy (#87) | 6 pairs end-to-end (prefs, feed, alerts, digest) |
+| Event-page chat (#111) | Grounded on that signal only; buy/sell + position-advice refusal |
+| Public `/accuracy` (#121/#144) | 48h headline; worker also writes 1h/4h/24h rows |
+| Materiality gate (#141) | First real reject step; 8 new `signals` columns |
+| Live `media_impact_watchlist` (#142) | 8 sourced rows as of 2026-09-19 (no Trump-named individual row) |
+| MARKET IMPACT ASSESSMENT (#143) | Event-detail + quick-view; novelty / source confirmation / why-this-signal when present |
+| Economic calendar (#86) | `/calendar` — static curated list, not a paid live API |
+| Logged-in Help (#155) | `/help` FAQ + `feedback_submissions` (table, not Resend) |
+| Cmd+K | Fuse.js fuzzy+keyword on Pages/Watchlist/Rules; Signals use `sort=relevance`; Suggested RAG fallback when <2 hits |
+| Discord alerts | Webhook-URL paste only (no bot/OAuth) |
+| Demo accounts (#146) | 10 `demo01@`–`demo10@` with `profiles.is_test_account`; excluded from metrics/digest |
+| Fastify `/docs` | Swagger is **dev/test only** — production was briefly a public OpenAPI dump |
 
-### ⚠️ DEGRADED (working but impaired)
+### ⚠️ DEGRADED / STILL OPEN
 
-| Component | Status | What's happening |
-|-----------|--------|-----------------|
-| **Claude AI Classifier** | ⚠️ Degraded — HIGH | Zero Anthropic credit. Heuristic fallback active. Signals generate but lack Claude briefings. Top priority: add Anthropic credits. |
-| GDELT Ingestion | ⚠️ Degraded | HTTP 429 rate limits. 30s retry added. May still fail at peak. |
-| GNews Ingestion | ⚠️ Degraded | Free tier — 1 query/run. Mostly duplicates after initial ingest. |
-| RSS (Reuters) | ⚠️ Partial | `reutersagency.com` URL returns 404 on Railway. Other feeds compensate. |
-
-### ❌ NOT YET SET UP (genuine open items)
-
-| Item | Impact | Fix |
-|------|--------|-----|
-| `TELEGRAM_BOT_TOKEN` not in Railway | Telegram alerts not delivering | Add token to Railway workers env vars |
-| `SUPABASE_SERVICE_ROLE_KEY` not on Vercel | `/api/signals` may return empty on some refreshes | Add key to Vercel environment variables |
-| ACLED credentials not set | ACLED collector inactive | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway |
-| Anthropic API credit = $0 | No Claude briefings | Top-up Anthropic account |
+| Item | Status |
+|------|--------|
+| Anthropic credit | Heuristic fallback covering; 7/8/9 severity only from real Claude |
+| `TELEGRAM_BOT_TOKEN` | Intentionally deferred by founder; connect UX (#112) exists, delivery still blocked |
+| `SUPABASE_SERVICE_ROLE_KEY` on Vercel | Required for reliable server-side `/api/signals` |
+| ACLED credentials | Collector inactive until licensed + set |
+| #143 leftover | `relevance` / `materiality_pass` still unread in UI (`materiality_pass` is a write-time gate) |
+| #142 leftover | Trump-named watchlist row is a founder positioning decision — do not add from a coding session |
+| #127 leftover | Map chokepoint/pipeline layers still gated on a vendor-cost check |
 
 ---
 
@@ -80,7 +88,7 @@ Backend:      Fastify 4 + Node.js 20 + TypeScript (PORT=3001 — corrected 2026-
               line previously said 8888, which contradicted both apps/backend/src/env.ts's
               actual default and docs/brain/10_DECISIONS.md's "port 3001" record)
 Queue:        BullMQ + Upstash Redis (MUST use rediss:// TLS, not redis://)
-Database:     Supabase PostgreSQL (12 migrations applied as of 2026-08-18 — was 9)
+Database:     Supabase PostgreSQL (`supabase/migrations/*.sql` — far past the August "12 migrations" count; see `docs/brain/16_MIGRATION_CHECKLIST.md`)
 AI:           Claude 3.5 Haiku (classification) + Sonnet (briefings) — HEURISTIC FALLBACK ACTIVE
 Maps:         MapLibre GL JS + OpenStreetMap tiles (corrected 2026-08-18 — this said "Mapbox
               GL JS" but the actual dependency is maplibre-gl, no Mapbox token required;
@@ -139,20 +147,24 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 Railway workers (startup + every 15m)
   RSS (BBC, Al Jazeera, Guardian, NPR, UN News) + GNews + GDELT
         ↓
-isRelevantEvent() — ~70% of articles filtered out
+isRelevantEvent() / title-prefilter — most articles dropped
         ↓
 Deduplicate by external_id — most remaining already in DB
         ↓
-Insert into raw_events + BullMQ ai-classification queue
+Insert into raw_events; classify inline (BullMQ ai-classification queue is dormant)
         ↓
-AI Classifier (Claude 3.5 Haiku if credits > 0, ELSE heuristic fallback)
+classifyEvent() — Haiku if credits > 0, ELSE heuristic (severity ≤6)
         ↓
-Insert into signals table (event_date = article PUBLISH time)
+materiality gate — false skips signals insert; raw_events kept; reject logged
         ↓
-/api/signals (default: 24h fresh + active ongoing events)
+insertOrMergeSignal() (cross-source merge / escalation)
         ↓
-Dashboard shows event_date → "X hours ago" = article publish time, NOT ingestion time
+signals.event_date = article PUBLISH time, not ingestion time
+        ↓
+Next.js BFF /api/signals (Supabase direct) → dashboard
 ```
+
+Authoritative pipeline writeup: `docs/brain/15_INGESTION_PIPELINE.md`. Do not restore the old "classify → always insert" shape.
 
 **Verify pipeline health in Supabase SQL:**
 ```sql
@@ -228,9 +240,9 @@ NEXT_PUBLIC_APP_URL=https://bluebeaconresearch.com
 
 ---
 
-## IMMEDIATE PRIORITY — THE ONLY 4 THINGS THAT MATTER NOW
+## IMMEDIATE PRIORITY — STILL OPEN (founder / ops)
 
-> ⚠️ UPDATED 2026-08-19 — items 1–3 below are still literally open, but this list is no longer "the only things that matter": a 2026-08-18/19 pass fixed a separate, more severe bug (alert dispatch and severity≥7 AI briefings were never triggered at all due to a dormant/unfed BullMQ queue, independent of the Telegram token issue below), plus wired up Sentry, PostHog, CI, and a DB cleanup/reliability pass. See `docs/brain/08_CURRENT_STATUS.md` and `14_CHANGELOG.md` for the current punch list.
+Live punch list: `docs/brain/LIVE_TODO.md` + `docs/claude_project/09_BACKLOG.md` numbered tickets. These four ops items from August are **still open**; they are not the only work that exists.
 
 **1. Top up Anthropic API credits** (15 minutes)
 Go to console.anthropic.com → Billing → Add credits. The heuristic fallback keeps the system alive but Claude briefings are the core product value. Without credits, signal quality is degraded.
@@ -250,7 +262,9 @@ curl -X POST "https://api.telegram.org/botYOUR_TOKEN/setWebhook?url=https://api.
 
 ## DATABASE SCHEMA — MIGRATIONS APPLIED
 
-9 migrations confirmed applied in Supabase:
+> ⚠️ UPDATED 2026-09-20 — the numbered list below is **August 2026 history**. Do not treat "9 migrations" or the 2026-08-19 "through 012" note as current. Live schema: `supabase/migrations/*.sql`. Checklist: `docs/brain/16_MIGRATION_CHECKLIST.md`. Table/column docs: `docs/brain/04_DATABASE.md`. Recent additions include `signal_chat_messages`, `signal_outcomes` (unique on `signal_id, asset, checkpoint_hours`), 8 materiality columns on `signals`, `media_impact_watchlist`, `search_content_embeddings`, `feedback_submissions`, `profiles.is_test_account`, Discord columns on `user_channels`.
+
+9 migrations confirmed applied in Supabase (historical snapshot — incomplete):
 ```
 000_init_schema.sql        — core tables, UUID extensions, indexes
 001_rls_policies.sql       — Row Level Security for tenant isolation
@@ -287,18 +301,18 @@ slack_connected_at   TIMESTAMPTZ
 | FinancialJuice | Partial | Audio squawk — borrow: browser alert sound for severity 9+ |
 | Glint.trade | None | Prediction markets, different customer |
 
-**Biggest missing feature: Economic Calendar (/calendar page)**
-Every tool traders use daily has CPI/NFP/Fed decision calendar. BBR has none. Add after Anthropic credits restored.
+**Economic Calendar:** shipped 2026-09-07 (#86) as `/calendar` on a static curated file (deliberate v1). Not a live paid calendar API. Map chokepoint/pipeline layers (#127 leftover) are still gated.
 
 ---
 
 ## HOW TO WORK WITH THIS PROJECT
 
 **When asked to build something new:**
-1. Check if it's already built — CLAUDE_CONTEXT.md logs all implemented changes
-2. Check 09_BACKLOG.md — is it already prioritised?
-3. Check 10_DECISIONS.md — has this been decided before?
+1. Check `docs/brain/LIVE_TODO.md` Closed, verified — most recent ships are there, with SHAs
+2. Check `docs/claude_project/09_BACKLOG.md` numbered tickets and `docs/claude_project/10_DECISIONS.md`
+3. Check the topic file for that surface (`05_API`, `04_DATABASE`, `06_COMPONENTS`, `18_AI_ENGINE`)
 4. Always use existing tech stack. No new frameworks.
+5. `docs/claude_project/22_IMPLEMENTATION_LOG.md` and `docs/brain/CLAUDE_CONTEXT.md` are **August session logs**, not the current changelog.
 
 **When debugging a pipeline issue:**
 1. Check Railway workers logs first — `startup:rss` and `workers:heartbeat` tell you if cron is running
@@ -312,6 +326,6 @@ Every tool traders use daily has CPI/NFP/Fed decision calendar. BBR has none. Ad
 - Never make buy/sell recommendations in signal copy or UI
 - Never call it "an AI tool" — always "a research platform"
 - Never state or imply how recently BBR's real data history began (D19 / ADR 015)
-- Never remove the terminal aesthetic (dark design, Node/Encryption cosmetic elements) — intentional brand
+- Dashboard stays a dark terminal. Public landing (`app/page.tsx`) uses research-register copy as of 2026-09-20 (v0.75.0) — do not restore fabricated latency/integrity/archive claims or the old sci-fi CTAs
 - Never use `router.push` after auth actions — use `window.location.href` for SSR cookie attachment
 - Never use `redis://` — always `rediss://` (TLS required by Upstash/ioredis)

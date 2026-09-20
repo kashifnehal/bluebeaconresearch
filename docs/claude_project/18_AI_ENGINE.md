@@ -1,6 +1,6 @@
 # 18_AI_ENGINE.md — AI Engine: Prompts, Models, Fallbacks
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20** for classify (#141/#142), briefing (#120), chat (#111), and Cmd+K search assist (§3c, FAQ indexed as of #155). JSON blocks lower in the file are older intended spec — do not copy them over live `claude.service.ts`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 

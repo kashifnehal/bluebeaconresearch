@@ -1,6 +1,6 @@
 # 03_ARCHITECTURE.md — System Architecture & Data Pipelines
 
-> **📍 Doc status — reviewed 2026-08-19.** Not rewritten — see inline ⚠️ UPDATED notes below for anything that's changed since this was last accurate. This file remains the durable planning/architecture record; for day-to-day current state cross-reference the BBR Claude project's `claude/23_TODO.md` and `22_SESSION_HANDOFF.md`.
+> **📍 Doc status — current as of 2026-09-20.** Annex to `docs/claude_project/03_ARCHITECTURE.md`. Day-to-day truth: `docs/brain/LIVE_TODO.md` / `08_CURRENT_STATUS.md` / `14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 This document details the high-level and low-level software architecture, data flow diagrams, background queue workers, state synchronization, and component dependencies across the Turborepo workspace.
 
@@ -157,4 +157,8 @@ Prerequisite **#53**. Quality context **#115**.
 
 ## 8. Materiality gate + MARKET IMPACT ASSESSMENT (#141 / #142 / #143)
 
-`materiality_pass = false` skips the `signals` insert (D25 / ADR 021). Watchlist is live `media_impact_watchlist` (D26 / ADR 022). Event-detail box is **MARKET IMPACT ASSESSMENT**, not PROJECTED IMPACT. Canonical: `docs/claude_project/03_ARCHITECTURE.md` §8.
+`materiality_pass = false` skips the `signals` insert (D25 / ADR 021). Watchlist is live `media_impact_watchlist` (D26 / ADR 022). Event-detail box is **MARKET IMPACT ASSESSMENT**, not PROJECTED IMPACT. Novelty / source confirmation / why-this-signal shown when present (2026-09-20). Canonical: `docs/claude_project/03_ARCHITECTURE.md` §8.
+
+## 9. Search, Help, public API-docs
+
+Canonical: `docs/claude_project/03_ARCHITECTURE.md` §9. Short version: Cmd+K is Fuse.js + `sort=relevance` on the Next.js BFF (not a Fastify proxy); Suggested RAG is `POST /v1/search/assist`; `/help` is the logged-in FAQ; Fastify `/docs` is not public.
