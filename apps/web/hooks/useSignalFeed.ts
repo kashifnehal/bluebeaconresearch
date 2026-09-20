@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { useUIStore } from "@/store/useUIStore";
 import { useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
 import {
@@ -27,8 +26,6 @@ export function useSignalFeed({
   minSeverity = 1,
   window = null,
 }: Options = {}) {
-  const { searchSubmitted } = useUIStore();
-
   const {
     data,
     isLoading,
@@ -40,7 +37,6 @@ export function useSignalFeed({
     queryKey: [
       "signals",
       "feed",
-      searchSubmitted ?? "",
       personalized,
       commodity ?? "",
       region ?? "",
@@ -50,11 +46,7 @@ export function useSignalFeed({
     initialPageParam: "1",
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
-      if (searchSubmitted && searchSubmitted.trim().length >= 3) {
-        params.set("search", searchSubmitted.trim());
-      } else {
-        params.set("sort", "severity");
-      }
+      params.set("sort", "severity");
       if (personalized) params.set("personalized", "true");
       const symbols = symbolsForCommodityFilter(commodity);
       if (symbols.length > 0) params.set("commodity", symbols.join(","));

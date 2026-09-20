@@ -61,6 +61,14 @@ runTest('"smb" (no real match) returns nothing for pages, commodities, or rules 
   assert.deepEqual(matchAlertRules("smb", RULES), []);
 });
 
+runTest("expanded keywords: oil price finds Watchlist; world map finds Map; smb still matches nothing", () => {
+  const oil = matchStaticPages("oil price").map((p) => p.label);
+  assert.ok(oil.includes("Watchlist"), `expected Watchlist in ${JSON.stringify(oil)}`);
+  const world = matchStaticPages("world map").map((p) => p.label);
+  assert.ok(world.includes("Map"), `expected Map in ${JSON.stringify(world)}`);
+  assert.deepEqual(matchStaticPages("smb"), []);
+});
+
 runTest("does not fabricate a page match for unrelated noise input", () => {
   assert.deepEqual(matchStaticPages("xyz garbage input"), []);
 });

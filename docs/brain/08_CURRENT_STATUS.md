@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-20.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-20 (docs onboarding catch-up — briefing / context / architecture pointers)
+Last updated: 2026-09-20 (header search unified with Cmd+K + last-resort palette fallback)
+
+> ⚠️ UPDATED 2026-09-20 (header search = Cmd+K + last-resort fallback) — TopBar search opens `CommandPalette`; in-page `searchQuery`/`searchSubmitted` path removed. Palette last-resort **"Not sure? Try"** → `/dashboard` when every other source is empty. Keywords expanded; backend `SEARCH_PAGE_ENTRIES` kept in sync. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.79.0.
 
 > ⚠️ UPDATED 2026-09-20 (docs onboarding catch-up) — last 15 commits' *code* was already documented in this file + `LIVE_TODO` + `14_CHANGELOG` through v0.77.0. What was stale: `21_PROJECT_BRIEFING.md` still said August 2026 (missing calendar, materiality gate, chat, accuracy, Help, Fuse/`sort=relevance`; still called `/calendar` the biggest missing feature; still pointed at `claude/23_TODO.md` which is not in this repo). `00_CURRENT_BBR_CONTEXT.md` was as-of 2026-09-16 with wrong file paths (`claude.ts`, `app/events/...`). `22_IMPLEMENTATION_LOG.md` / `CLAUDE_CONTEXT.md` / `13_PROMPTS.md` are now explicitly marked historical. `19_ROADMAP.md` `/accuracy` + outcome-tracker checkboxes marked done. Both `03_ARCHITECTURE.md` gained §9 (search/help/`/docs`).
 
@@ -25,6 +27,10 @@ Last updated: 2026-09-20 (docs onboarding catch-up — briefing / context / arch
 > ⚠️ UPDATED 2026-09-19 (#146) — 10 Admin-API-created, pre-confirmed prospect/demo accounts (`demo01@`–`demo10@bluebeaconresearch.com`) with `profiles.is_test_account`. Confirm Email stays ON for real signups. Founder-console `admin_usage_metrics()` (signups / auth_users / DAU / WAU / waitlist / events_last_7d) and digest eligibility exclude the flag. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.69.0.
 
 ---
+
+## Header search = Cmd+K + last-resort fallback (2026-09-20)
+
+`apps/web` + backend keyword-catalog sync only. Full record: `14_CHANGELOG.md` v0.79.0, `LIVE_TODO.md`. Header search is a button that opens the existing command palette (`useUIStore.commandPaletteOpen`). The old TopBar-input → store `searchQuery` → dashboard `.includes()` filter → optional `useSignalFeed` `search=` path is gone. When Cmd+K settles with zero Pages/Signals/Watchlist/Alert-Rules hits and assist is off or not `ok`, a single static **"Not sure? Try"** item links `/dashboard`. No new API.
 
 ## Docs onboarding catch-up (2026-09-20)
 

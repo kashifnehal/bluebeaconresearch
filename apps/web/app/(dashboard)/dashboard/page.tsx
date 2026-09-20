@@ -50,7 +50,7 @@ export default function DashboardPage() {
     minSeverity: filters.minSeverity,
     window: filters.window,
   });
-  const { searchQuery, tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
+  const { tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
 
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
@@ -111,37 +111,21 @@ export default function DashboardPage() {
     return arr.slice(0, 3);
   }, [liveSignals]);
 
-  // Client-side search only — commodity/region/severity/window are server-side.
-  const filteredSignals = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return liveSignals;
-    return liveSignals.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        s.country?.toLowerCase().includes(q) ||
-        s.eventType?.toLowerCase().includes(q) ||
-        s.summary?.toLowerCase().includes(q),
-    );
-  }, [liveSignals, searchQuery]);
-
   const featured =
-    filteredSignals.find((s) => s.severity >= 8) || filteredSignals[0];
-  const secondaryA = filteredSignals[1];
-  const secondaryB = filteredSignals[2];
-  const streamList = filteredSignals.slice(0, streamCount);
+    liveSignals.find((s) => s.severity >= 8) || liveSignals[0];
+  const secondaryA = liveSignals[1];
+  const secondaryB = liveSignals[2];
+  const streamList = liveSignals.slice(0, streamCount);
 
-  // A client search filter makes the API's raw `total` an over-count for this
-  // view, so only surface the "X of Y" number when search isn't narrowing locally.
-  const streamFilterActive = searchQuery.trim().length > 0;
   const filtersActive =
     filters.commodity != null ||
     filters.region != null ||
     filters.minSeverity > 1 ||
     filters.window != null;
-  const canLoadMoreStream = streamCount < filteredSignals.length || hasNextPage;
+  const canLoadMoreStream = streamCount < liveSignals.length || hasNextPage;
   const handleLoadMoreStream = () => {
     setStreamCount((c) => c + 10);
-    if (streamCount + 10 >= filteredSignals.length && hasNextPage) {
+    if (streamCount + 10 >= liveSignals.length && hasNextPage) {
       void fetchNextPage();
     }
   };
@@ -864,9 +848,7 @@ export default function DashboardPage() {
                         fontFamily: "'Space Grotesk', sans-serif",
                       }}
                     >
-                      {searchQuery
-                        ? `No results for '${searchQuery}'`
-                        : "No active signals matching filter"}
+                      No active signals matching filter
                     </p>
                   </div>
                 )}
@@ -877,7 +859,7 @@ export default function DashboardPage() {
                   isLoading={isFetchingNextPage}
                   onClick={handleLoadMoreStream}
                   loadedCount={streamList.length}
-                  totalCount={streamFilterActive ? null : total}
+                  totalCount={total}
                   endLabel="End of signal stream"
                 />
               )}

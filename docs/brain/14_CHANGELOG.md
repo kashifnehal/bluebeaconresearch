@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-20 (v0.78.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-20 (v0.79.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.79.0 — Header search = Cmd+K + last-resort fallback (2026-09-20)
+
+`apps/web` + keyword-catalog sync in `apps/backend/src/lib/search-catalog.ts`. **(A)** Header search is no longer an independent in-page filter. `TopBar` renders a button (same look, `aria-label="Open search"`) that sets `useUIStore.commandPaletteOpen`; `CommandPalette` reads that flag (Cmd+K/Ctrl+K still toggles it). Removed `searchQuery` / `searchSubmitted` from the store, the dashboard `filteredSignals` `.includes()` client filter, and `useSignalFeed`'s `search` param. Intelligence Feed list/pagination now always uses the unfiltered `liveSignals` feed. **(B)** `STATIC_PAGES` keywords expanded with more real user words (e.g. "oil price"→Watchlist, "world map"→Map); backend `SEARCH_PAGE_ENTRIES` content updated to match. When every palette source is empty after settle (assist off or not `ok`), a single static **"Not sure? Try"** item points at `/dashboard` — no extra network call, no fuzzy closest-match.
 
 ### v0.78.0 — Docs onboarding catch-up (2026-09-20)
 

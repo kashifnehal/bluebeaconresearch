@@ -12,8 +12,6 @@ import { getSupabaseBrowserClient, signOutAndRedirect } from "@/lib/supabase";
 export function TopBar() {
   const router = useRouter();
   const {
-    searchQuery,
-    setSearchQuery,
     notifOpen,
     setNotifOpen,
     unreadCount,
@@ -21,10 +19,9 @@ export function TopBar() {
     setMobileSidebarOpen,
     notificationConnectOpen,
     setNotificationConnectOpen,
+    setCommandPaletteOpen,
   } = useUIStore();
-  const { setSearchSubmitted } = useUIStore();
 
-  const [localQuery, setLocalQuery] = useState(searchQuery);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [user, setUser] = useState<{
     name: string;
@@ -32,40 +29,7 @@ export function TopBar() {
     initials: string;
   } | null>(null);
 
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Debounced sync from local input to global searchQuery store
-  const handleInputChange = (val: string) => {
-    setLocalQuery(val);
-    // Clear any previous server-submitted search while editing
-    setSearchSubmitted(null);
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-    debounceTimerRef.current = setTimeout(() => {
-      const trimmed = val.trim();
-      // Only apply client-side filtering when user has typed at least 3 chars,
-      // or when clearing the field entirely.
-      if (trimmed.length === 0) {
-        setSearchQuery("");
-      } else if (trimmed.length >= 3) {
-        setSearchQuery(trimmed);
-      }
-    }, 300);
-  };
-
-  const handleClear = () => {
-    setLocalQuery("");
-    setSearchQuery("");
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && localQuery.trim().length >= 3) {
-      // Trigger server-side search
-      const q = localQuery.trim();
-      setSearchQuery(q);
-      setSearchSubmitted(q);
-    }
-  };
 
   // Fetch current user details for dropdown
   useEffect(() => {
@@ -152,39 +116,27 @@ export function TopBar() {
           </button>
           <div className="relative w-full max-w-md">
             <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2"
+              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
               style={{ fontSize: "16px", color: "#86948a" }}
             >
               search
             </span>
-            <input
-              value={localQuery}
-              onChange={(e) => handleInputChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full border-none border-b focus:ring-0 text-xs py-2 pl-10 pr-8"
+            <button
+              type="button"
+              aria-label="Open search"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="w-full border-none border-b focus:ring-0 text-xs py-2 pl-10 pr-8 text-left"
               style={{
                 backgroundColor: "#0e0e0e",
                 borderBottom: "1px solid #3c4a42",
-                color: "#e5e2e1",
+                color: "#86948a",
                 fontFamily: "'JetBrains Mono', monospace",
                 outline: "none",
+                cursor: "pointer",
               }}
-              placeholder="Search signals, coordinates, entities..."
-              type="text"
-            />
-            {localQuery && (
-              <button
-                onClick={handleClear}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#86948a] hover:text-[#e5e2e1] transition-colors p-1"
-              >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ fontSize: "14px" }}
-                >
-                  close
-                </span>
-              </button>
-            )}
+            >
+              Search signals, coordinates, entities...
+            </button>
           </div>
         </div>
 

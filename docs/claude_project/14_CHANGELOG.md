@@ -1,10 +1,17 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-20 (PHASE 45).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-20 (PHASE 46).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 46 — HEADER SEARCH = CMD+K + LAST-RESORT FALLBACK (2026-09-20)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.79.0.
+
+- Header search box is a button that opens the existing Cmd+K palette (`commandPaletteOpen` in `useUIStore`). Old in-page `searchQuery` / `searchSubmitted` filter path removed.
+- Last-resort **"Not sure? Try"** row → Intelligence Feed when the palette has no matches. Keyword lists expanded; backend search-catalog page copy kept in sync.
 
 ## PHASE 45 — DOCS ONBOARDING CATCH-UP (2026-09-20)
 

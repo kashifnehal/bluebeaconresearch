@@ -108,6 +108,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
       "Intelligence Feed.",
       "Real-time global signal monitoring.",
       "This is your live signal feed. New geopolitical and macro events that could affect markets you care about show up here as they're confirmed.",
+      "commodity news. what's happening. today. updates.",
       "Narrow the Intelligence Feed by commodity, region, minimum severity, and time window. The list updates as soon as you change a dropdown.",
       "Need a faster look without leaving the feed? This preview opens a slide-over with severity, confidence, commodity impacts, and a short excerpt of the analyst briefing.",
     ].join(" "),
@@ -118,7 +119,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     title: "Map",
     url: "/map",
     content: [
-      "Map. Global Map. Global tension map.",
+      "Map. Global Map. Global tension map. world map. conflict map. geopolitical map. where.",
       "You can also see global risk concentration on the Map.",
       "Global Tension Index.",
     ].join(" "),
@@ -129,7 +130,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     title: "Watchlist",
     url: "/watchlist",
     content: [
-      "Watchlist. Commodity Watchlist. Asset Monitoring.",
+      "Watchlist. Commodity Watchlist. Asset Monitoring. commodities. prices. oil price. gold price. track.",
       "On Watchlist, click into any commodity to see its price charted against the events that moved it.",
       "Tap a category chip to add or remove that market, or pick a specific asset from ADD COMMODITY. Your list is saved to your account.",
     ].join(" "),
@@ -140,7 +141,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     title: "Alerts",
     url: "/alerts",
     content: [
-      "Alerts. Alert Rules & Signals.",
+      "Alerts. Alert Rules & Signals. telegram. discord. my alerts.",
       "What you asked to be told about — your rules, and the signals that actually matched them.",
       "Turn any signal type into a standing rule — get notified automatically next time something like this happens, without checking back manually.",
     ].join(" "),
@@ -151,7 +152,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     title: "Backtesting Lab",
     url: "/backtesting",
     content: [
-      "Backtesting Lab. Scenario Research. Backtesting.",
+      "Backtesting Lab. Scenario Research. Backtesting. backtest lab. accuracy. test. simulation.",
       "Analyze historical market volatility markers and validate predictive models against real-world geopolitical events.",
       "You can also test how past events like this one moved markets in Backtesting.",
     ].join(" "),
@@ -162,7 +163,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     title: "Settings",
     url: "/settings",
     content: [
-      "Settings. System Configuration & User Preferences.",
+      "Settings. System Configuration & User Preferences. profile. account settings.",
       "ACCOUNT. NOTIFICATIONS. APPEARANCE. SECURITY. DATA.",
       "Questions about what a score or label means? Help & FAQ.",
     ].join(" "),
@@ -173,7 +174,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     title: "Help",
     url: "/help",
     content: [
-      "Help. FAQ. Feedback.",
+      "Help. FAQ. Feedback. how do i. question. contact us.",
       "Straight answers about what the product does today. This is not a live help desk — use the form at the bottom to send feedback or a bug report.",
     ].join(" "),
     sourceKind: "page",
@@ -183,7 +184,7 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     title: "Economic Calendar",
     url: "/calendar",
     content: [
-      "Economic Calendar. Calendar.",
+      "Economic Calendar. Calendar. events calendar. upcoming events. schedule.",
       "Fed, ECB, BOJ, and major US data releases — the scheduled events that move the instruments Blue Beacon tracks.",
     ].join(" "),
     sourceKind: "page",

@@ -7,12 +7,6 @@ type UIState = {
   compactMode: boolean;
   setCompactMode: (v: boolean) => void;
 
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  // Search submitted via Enter key for server-side search
-  searchSubmitted: string | null;
-  setSearchSubmitted: (q: string | null) => void;
-
   notifOpen: boolean;
   setNotifOpen: (open: boolean) => void;
 
@@ -32,6 +26,9 @@ type UIState = {
   // so TopBar and the signal-view prompt can open the same surface.
   notificationConnectOpen: boolean;
   setNotificationConnectOpen: (open: boolean) => void;
+
+  commandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
 
   // Session-only count of signal-detail mounts. Excluded from persist so a
   // fresh page load resets to 0 (the intended "this session" behavior).
@@ -58,11 +55,6 @@ export const useUIStore = create<UIState>()(
       compactMode: false,
       setCompactMode: (v) => set({ compactMode: v }),
 
-      searchQuery: "",
-      setSearchQuery: (q) => set({ searchQuery: q }),
-      searchSubmitted: null,
-      setSearchSubmitted: (q) => set({ searchSubmitted: q }),
-
       notifOpen: false,
       setNotifOpen: (open) => set({ notifOpen: open }),
 
@@ -78,6 +70,9 @@ export const useUIStore = create<UIState>()(
 
       notificationConnectOpen: false,
       setNotificationConnectOpen: (open) => set({ notificationConnectOpen: open }),
+
+      commandPaletteOpen: false,
+      setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
 
       signalsViewedThisSession: 0,
       incrementSignalsViewed: () =>

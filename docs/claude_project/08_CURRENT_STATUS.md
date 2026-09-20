@@ -92,6 +92,8 @@
 
 > ⚠️ UPDATED 2026-09-20 (docs onboarding catch-up) — `21_PROJECT_BRIEFING.md` brought to 2026-09-20 (was August). `00_CURRENT_BBR_CONTEXT.md` shipped-since table + real file paths. `22_IMPLEMENTATION_LOG` / `CLAUDE_CONTEXT` / brain `13_PROMPTS` marked historical. `19_ROADMAP` accuracy/outcome-tracker checked. Architecture §9. Dead `claude/23_TODO.md` pointer removed from the files a new model hits first. This tree: PHASE 45.
 
+> ⚠️ UPDATED 2026-09-20 (header search = Cmd+K + last-resort fallback) — TopBar search opens `CommandPalette`; in-page `searchQuery`/`searchSubmitted` path removed. Palette last-resort **"Not sure? Try"** → `/dashboard` when every other source is empty. Keywords expanded; backend `SEARCH_PAGE_ENTRIES` kept in sync. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.79.0. This tree: PHASE 46.
+
 Last updated: 2026-09-20 (docs onboarding catch-up)
 
 ---

@@ -1,6 +1,6 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
-> **📍 Doc status — current as of 2026-09-20** for CommandPalette (Fuse + relevance + Suggested), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-20** for CommandPalette (header-unified + last-resort fallback), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
 
 **Framework:** Next.js 16 + React 18 + TypeScript
 **Component library:** Shadcn/ui (Radix UI primitives)
@@ -41,15 +41,11 @@ Active state detection: usePathname() from next/navigation.
 
 Contains:
 0. **Hamburger (below `md` only)** — `menu` icon, first control in the bar, opens the off-canvas sidebar (#133)
-1. **Search input** — placeholder "Search signals, coordinates, entities..."
-   - Controlled: useState('') debounced 300ms
-   - onChange: updates useFeedStore.searchQuery
-   - onEnter: calls /v1/signals?search=query
-   - Shows X clear button when query non-empty
+1. **Search button** — looks like the old search bar (icon + "Search signals, coordinates, entities..."); `aria-label="Open search"`. Click sets `useUIStore.commandPaletteOpen` and opens `CommandPalette`. No in-page filter; `searchQuery` / `searchSubmitted` removed from the store.
 
 1b. **Connect-channel icon (`forum`)** — all screen sizes. Opens `NotificationConnectModal` (wraps existing `<TelegramConnect />`). Distinct from the alerts bell. (#112)
 
-1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K over Pages / Signals / Watchlist / Alert Rules. **2026-09-20 search-quality fix**: Pages / Watchlist / Alert Rules now fuzzy-match on label+keywords (Fuse.js, `lib/command-palette-search.ts`) instead of exact substring — added a missing Economic Calendar page entry and real user-word keywords per page. Signals search still hits `/api/signals` but now with `sort=relevance` (recency+severity blend) instead of `sort=severity`, command-palette only. When the combined search returns fewer than 2 hits after debounce, POST `/api/search/assist` and show a separate **Suggested** group (AI one-liner + page URL). Not blended with deterministic groups. FAQ copy indexed as of #155 (`SEARCH_FAQ_ENTRIES` + Help page in Pages).
+1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K **and** the header search button. Same Pages / Signals / Watchlist / Alert Rules search as 2026-09-20 (Fuse.js keywords + `sort=relevance` Signals + Suggested assist). **2026-09-20 header unify:** `open` lives in `useUIStore.commandPaletteOpen` so TopBar can open it. **Last-resort fallback:** if that search settles empty and assist is off or not `ok`, a single static **"Not sure? Try"** item links `/dashboard` (no extra network call). Keyword lists expanded (e.g. "oil price"→Watchlist). FAQ copy indexed as of #155 (`SEARCH_FAQ_ENTRIES` + Help page in Pages).
 2. **Notification Bell (🔔)**
    - Badge: red dot with unread_count from useUIStore.unreadAlerts
    - onClick: toggles useUIStore.notificationPanelOpen

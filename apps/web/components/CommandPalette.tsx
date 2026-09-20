@@ -8,6 +8,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { shouldFetchSearchAssist } from "@/lib/command-palette-assist";
 import { STATIC_PAGES, matchStaticPages, matchCommodities, matchAlertRules } from "@/lib/command-palette-search";
+import { useUIStore } from "@/store/useUIStore";
 
 type AlertRuleLite = {
   id: string;
@@ -17,7 +18,7 @@ type AlertRuleLite = {
 };
 
 type ResultGroup = "Pages" | "Signals" | "Watchlist" | "Alert Rules";
-type PaletteGroup = ResultGroup | "Suggested";
+type PaletteGroup = ResultGroup | "Suggested" | "Not sure? Try";
 
 type AssistResponse =
   | { status: "ok"; answer: string; title: string; url: string }
@@ -36,15 +37,12 @@ const GROUP_ORDER: ResultGroup[] = ["Pages", "Signals", "Watchlist", "Alert Rule
 
 export function CommandPalette() {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const { commandPaletteOpen: open, setCommandPaletteOpen: setOpen } = useUIStore();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Global Cmd+K / Ctrl+K toggle — mounted once, independent of the TopBar's own
-  // inline current-page filter input (kept as-is; this is a separate, global,
-  // cross-entity search, not a replacement for it).
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -52,23 +50,25 @@ export function CommandPalette() {
         // Reset local UI state right here (inside the event handler, not a
         // useEffect keyed on `open`) — only actually resets on the transition
         // into "open" since `next` is false on the toggle-closed branch.
-        setOpen((prev) => {
-          const next = !prev;
-          if (next) {
-            setQuery("");
-            setDebouncedQuery("");
-            setActiveIndex(0);
-          }
-          return next;
-        });
+        const prev = useUIStore.getState().commandPaletteOpen;
+        const next = !prev;
+        if (next) {
+          setQuery("");
+          setDebouncedQuery("");
+          setActiveIndex(0);
+        }
+        setOpen(next);
       }
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [setOpen]);
 
   useEffect(() => {
     if (!open) return;
+    setQuery("");
+    setDebouncedQuery("");
+    setActiveIndex(0);
     const t = setTimeout(() => inputRef.current?.focus(), 20);
     return () => clearTimeout(t);
   }, [open]);
@@ -197,7 +197,28 @@ export function CommandPalette() {
         ]
       : [];
 
-  const navItems = [...results, ...suggested];
+  // Last-resort static fallback — only when every other source is empty.
+  // No extra network call; always the Intelligence Feed, clearly labeled as a guess.
+  const querySettled = debouncedQuery === trimmedQuery;
+  const stillFetching = signalsFetching || assistFetching;
+  const fallback: ResultItem[] =
+    hasQuery &&
+    results.length === 0 &&
+    (assistEnabled === false || assistData?.status !== "ok") &&
+    querySettled &&
+    !stillFetching
+      ? [
+          {
+            key: "fallback-dashboard",
+            group: "Not sure? Try",
+            label: "Intelligence Feed",
+            icon: "dashboard",
+            href: "/dashboard",
+          },
+        ]
+      : [];
+
+  const navItems = [...results, ...suggested, ...fallback];
 
   // Derived, not stored: clamps a stale index (from a previous result set) down
   // to range instead of resetting state from an effect keyed on results.length.
@@ -243,6 +264,7 @@ export function CommandPalette() {
     (!hasDebouncedQuery || debouncedQuery === trimmedQuery) &&
     results.length === 0 &&
     suggested.length === 0 &&
+    fallback.length === 0 &&
     !assistFetching;
 
   const showAssistPending =
@@ -391,6 +413,40 @@ export function CommandPalette() {
                               AI suggestion · {item.sublabel}
                             </span>
                           )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {fallback.length > 0 && (
+                <div className="mb-2 last:mb-0 border-t border-[#2a2a2a] pt-2">
+                  <div
+                    className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  >
+                    Not sure? Try
+                  </div>
+                  {fallback.map((item) => {
+                    flatIndex += 1;
+                    const isActive = flatIndex === clampedActiveIndex;
+                    return (
+                      <button
+                        key={item.key}
+                        onClick={() => select(item)}
+                        onMouseEnter={() => setActiveIndex(flatIndex)}
+                        className={`flex w-full items-center gap-3 rounded-sm px-2 py-2 text-left transition-colors cursor-pointer ${
+                          isActive ? "bg-[#1f2b25]" : "hover:bg-[#1a1a1a]"
+                        }`}
+                      >
+                        <span
+                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          style={{ fontSize: "16px" }}
+                        >
+                          {item.icon}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
                         </span>
                       </button>
                     );
