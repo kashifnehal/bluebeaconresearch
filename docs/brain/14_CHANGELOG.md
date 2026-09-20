@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-20 (v0.79.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-21 (v0.80.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.80.0 — Homepage stats count via response body (2026-09-21)
+
+`apps/web/app/page.tsx` `getHomepageStats()` only. Exact `signals` count is now `select("id", { count: "exact" })` (no `head: true`) so PostgREST returns the count in the body rather than a `Content-Range` header that production fetch can drop. Empty/error paths `console.error` the full Postgrest error object (and the catch). Still uses `getRouteSupabaseClients()` so the logged-out homepage can see past `signals_select_authenticated`.
 
 ### v0.79.0 — Header search = Cmd+K + last-resort fallback (2026-09-20)
 
@@ -52,7 +56,7 @@ Those files now point at this changelog + `LIVE_TODO.md`. No application behavio
 
 **Retone:** nav/CTAs/headers/footer use How it works / Pricing / Sign up / View live signals / Dashboard / Support. Preferred §4 terms (Research Assessment, Market Impact Assessment, Source Verification, Uncertainty) replace Neural Confidence / Sentinel Synthesis / Scenario Lab Access / Beacon Stream.
 
-**Live stats:** `getHomepageStats()` — Supabase `select count(*) from signals` (exact count, `head: true`) on each render (`dynamic = "force-dynamic"`). Rendered as "N signals tracked". Latest-signal preview still uses `getLatestSignal()`. Both reads use `getRouteSupabaseClients().supabase` (service role when the key is set — same helper as the signals API routes): live RLS policy `signals_select_authenticated` would otherwise return 0 rows to a logged-out visitor.
+**Live stats:** `getHomepageStats()` — Supabase exact `signals` count on each render (`dynamic = "force-dynamic"`). As of v0.80.0 this is `select("id", { count: "exact" })` (no `head: true`) so the count is in the response body. Rendered as "N signals tracked". Latest-signal preview still uses `getLatestSignal()`. Both reads use `getRouteSupabaseClients().supabase` (service role when the key is set — same helper as the signals API routes): live RLS policy `signals_select_authenticated` would otherwise return 0 rows to a logged-out visitor.
 
 **Accuracy:** new section + nav/footer links to the existing public `/accuracy` page. No homepage hit-rate percentage — publishing the checkpoint-gated methodology page is the trust signal.
 

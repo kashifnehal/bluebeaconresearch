@@ -1,8 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live technical status as of 2026-09-20.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
+> **📍 Doc status — live technical status as of 2026-09-21.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-20 (header search unified with Cmd+K + last-resort palette fallback)
+Last updated: 2026-09-21 (homepage stats count via response body)
+
+> ⚠️ UPDATED 2026-09-21 (homepage stats count via response body) — `getHomepageStats()` exact count is `select("id", { count: "exact" })` (no `head: true`); Postgrest failures log the full error object. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.80.0.
 
 > ⚠️ UPDATED 2026-09-20 (header search = Cmd+K + last-resort fallback) — TopBar search opens `CommandPalette`; in-page `searchQuery`/`searchSubmitted` path removed. Palette last-resort **"Not sure? Try"** → `/dashboard` when every other source is empty. Keywords expanded; backend `SEARCH_PAGE_ENTRIES` kept in sync. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.79.0.
 
@@ -46,7 +48,7 @@ Docs-only. No application code. The last 15 commits already wrote themselves int
 
 ## Homepage copy integrity (2026-09-20)
 
-`apps/web/app/page.tsx`. Removed five fabricated claims (100% Verified, 42ms, 40yr archive, Encrypted Support, sub-second synthesis). Retoned sci-fi CTAs/nav. Live `getHomepageStats()` count of `signals`. Trust proof links to `/accuracy` without displaying a hit rate. Prices unchanged. Full record: `14_CHANGELOG.md` v0.75.0, `LIVE_TODO.md`.
+`apps/web/app/page.tsx`. Removed five fabricated claims (100% Verified, 42ms, 40yr archive, Encrypted Support, sub-second synthesis). Retoned sci-fi CTAs/nav. Live `getHomepageStats()` count of `signals` (v0.80.0: body count, not HEAD). Trust proof links to `/accuracy` without displaying a hit rate. Prices unchanged. Full record: `14_CHANGELOG.md` v0.75.0 + v0.80.0, `LIVE_TODO.md`.
 
 ## #143 leftover — event-detail materiality fields (2026-09-20)
 

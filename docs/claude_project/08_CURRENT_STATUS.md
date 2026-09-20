@@ -1,6 +1,6 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-09-20.** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live status banners as of 2026-09-21.** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 >
 > ⚠️ UPDATED 2026-08-27 — Several fixes landed this session (GDELT/GNews ingestion-time geocoding, `commodity_impacts` classification bug + partial backfill, Sonnet briefing error logging/retry, signal-generation dormant-queue doc correction) plus a Telegram connect-flow gap found (not yet fixed). Per this doc's own policy, full detail lives in `docs/brain/08_CURRENT_STATUS.md` §5 and `docs/brain/14_CHANGELOG.md` v0.30.0 — not duplicated here.
 >
@@ -94,7 +94,9 @@
 
 > ⚠️ UPDATED 2026-09-20 (header search = Cmd+K + last-resort fallback) — TopBar search opens `CommandPalette`; in-page `searchQuery`/`searchSubmitted` path removed. Palette last-resort **"Not sure? Try"** → `/dashboard` when every other source is empty. Keywords expanded; backend `SEARCH_PAGE_ENTRIES` kept in sync. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.79.0. This tree: PHASE 46.
 
-Last updated: 2026-09-20 (docs onboarding catch-up)
+> ⚠️ UPDATED 2026-09-21 (homepage stats count via response body) — `getHomepageStats()` uses a non-HEAD exact `signals` count so "N signals tracked" is in the response body; failures log the full Postgrest error. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.80.0. This tree: PHASE 47.
+
+Last updated: 2026-09-21 (homepage stats count via response body)
 
 ---
 

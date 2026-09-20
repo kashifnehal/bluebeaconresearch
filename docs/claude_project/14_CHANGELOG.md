@@ -1,10 +1,17 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-20 (PHASE 46).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-21 (PHASE 47).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 47 — HOMEPAGE STATS COUNT VIA RESPONSE BODY (2026-09-21)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.80.0.
+
+- `getHomepageStats()` now uses a non-HEAD exact count (`select("id", { count: "exact" })`) so "N signals tracked" does not depend on a `Content-Range` header.
+- Failures log the full Postgrest error object.
 
 ## PHASE 46 — HEADER SEARCH = CMD+K + LAST-RESORT FALLBACK (2026-09-20)
 

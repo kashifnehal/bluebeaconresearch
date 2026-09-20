@@ -122,7 +122,7 @@ This document presents a complete inventory of all UI components in `apps/web/co
 
 ### 3.5b Landing page (`apps/web/app/page.tsx`) (2026-09-20)
 
-- Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()` (`signals` exact count via `getRouteSupabaseClients()` — RLS is authenticated-only).
+- Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()` (`signals` exact count via `select("id", { count: "exact" })` — no `head: true`; RLS is authenticated-only, so reads go through `getRouteSupabaseClients()`).
 - Copy integrity: fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second lines removed; research-register CTAs.
 - Links to `/accuracy` without displaying a hit-rate percentage.
 - Hero `<p>` (#174): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.

@@ -66,12 +66,16 @@ async function getHomepageStats(): Promise<{ totalSignals: number | null }> {
     const supabase = await getHomepageDataClient();
     const { count, error } = await supabase
       .from("signals")
-      .select("*", { count: "exact", head: true });
+      .select("id", { count: "exact" });
 
     // 0 from the anon fallback is RLS hiding every row, not an empty table.
-    if (error || count == null || count === 0) return { totalSignals: null };
+    if (error || count == null || count === 0) {
+      console.error("[getHomepageStats] count query returned no usable count:", { error, count });
+      return { totalSignals: null };
+    }
     return { totalSignals: count };
-  } catch {
+  } catch (err) {
+    console.error("[getHomepageStats] count query threw:", err);
     return { totalSignals: null };
   }
 }

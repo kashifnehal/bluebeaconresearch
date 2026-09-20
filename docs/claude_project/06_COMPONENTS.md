@@ -338,7 +338,7 @@ Counter behavior:
 No separate `components/landing/*` files exist. The public homepage is this server component.
 
 - `dynamic = "force-dynamic"`. `getLatestSignal()` still reads the newest active `signals` row. Public reads use `getRouteSupabaseClients().supabase` (service role when the key is set). Live RLS is `signals_select_authenticated` only; the cookie/anon client returns 0 rows to a logged-out visitor.
-- `getHomepageStats()` runs `select count(*) from signals` (`count: "exact", head: true`) and renders "N signals tracked" — live, not hardcoded.
+- `getHomepageStats()` runs an exact `signals` count (`select("id", { count: "exact" })`, no `head: true`) and renders "N signals tracked" — live, not hardcoded. Failures log the full Postgrest error.
 - CTA overlay: "Sign up to read the full assessment" → `/signup`. Empty state is "Loading the latest signal…" (no Beacon-Alpha / hardcoded example card).
 - New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point).
 - Removed fabricated lines: 42ms, 100% Verified, 40yr Intel Archive, Encrypted Support, sub-second synthesis.
