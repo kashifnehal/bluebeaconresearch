@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-error": "#690005", "on-tertiary": "#611213", "tertiary-container": "#ffb3ad", "secondary-fixed": "#8efc67", "secondary-container": "#3ba615", "on-tertiary-container": "#8e3432", "tertiary-fixed": "#ffdad7", "outline": "#86948a", "on-surface-variant": "#bbcac0", "on-primary-fixed-variant": "#005236", "on-background": "#e5e2e1", "surface-variant": "#353534", "surface-container": "#201f1f", "on-secondary-fixed-variant": "#145200", "on-tertiary-fixed": "#410004", "primary-fixed-dim": "#4edea3", "primary-fixed": "#6ffbbe", "on-primary-container": "#005f40", "outline-variant": "#3c4a42", "error": "#ffb4ab", "primary-container": "#4edea3", "on-secondary-container": "#093100", "inverse-on-surface": "#313030", "on-secondary-fixed": "#042100", "inverse-surface": "#e5e2e1", "secondary-fixed-dim": "#72df4d", "on-primary": "#003824", "inverse-primary": "#006c4a", "surface": "#131313", "on-error-container": "#ffdad6", "surface-container-highest": "#353534", "surface-bright": "#393939", "on-surface": "#e5e2e1", "secondary": "#72df4d", "error-container": "#93000a", "surface-dim": "#131313", "surface-container-low": "#1c1b1b", "tertiary": "#ffdad7", "surface-tint": "#4edea3", "background": "#131313", "surface-container-lowest": "#0e0e0e", "on-secondary": "#0b3900", "primary": "#6ffbbe", "tertiary-fixed-dim": "#ffb3ae", "on-tertiary-fixed-variant": "#7f2927", "on-primary-fixed": "#002114", "surface-container-high": "#2a2a2a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": {}, "fontFamily": { "headline": ["Inter"], "display": ["Inter"], "body": ["Inter"], "label": ["Space Grotesk"] }, "fontSize": {} } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0e0e0e;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}@keyframes tactical-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.85);}}.animate-tactical-pulse{animation:tactical-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;}</style></head><body class="bg-surface-container-lowest text-on-surface font-body flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 bg-[#000000]/90 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-14 px-3 flex items-center justify-between gap-2"><div class="flex items-center gap-2 min-w-0 flex-shrink"><img alt="High-fidelity app icon and brand emblem for Blue Beacon Research in a refined Steel Cyan / Cobalt Blue colorway. The faceted geometric capital 'B' emblem from {{DATA:IMAGE:IMAGE_4}} with precision gradients of deep navy (#0B192C), electric cobalt (#1E40AF), and luminous cyan beam (#38BDF8) refraction in the center. Positioned on an institutional dark obsidian background (#0B0D0E) with a subtle matte border. Clean, authoritative, fintech terminal aesthetic." class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1XjKZQcm01iPqDc1hN4HPQ_lkfae_p-Q8ZB3D30ZTKnMdSa8lhmjbbnG94R8uNoW7No0lnmPVRaAB369_JtWpdOFK61OEprrXnDe5Gv54yEjcI0ZTTfrXT4_lo8Am-uxIbC_F80EHBuDBunmH5NcfV4Gns_aUXejOQEtKsRbI9RLWXYtfRJEUZ1LNkwt5h9_RiITNAO07uvyH3BQkr1XshMvQf15EbAxCTeIE-AsykjpCtP81zwcbYFuySI"/><div class="flex items-center gap-1.5 truncate"><span class="text-xs font-headline font-bold tracking-tight text-white uppercase whitespace-nowrap">BLUE BEACON</span><span class="px-1.5 py-0.5 text-[9px] font-label font-bold tracking-widest uppercase bg-surface-container text-primary-container rounded-[2px]">ALPHA</span></div></div><div class="flex items-center gap-2 flex-shrink-0"><div class="flex items-center gap-1.5 px-2 py-1 rounded-[2px] bg-surface-container-low"><span class="w-2 h-2 rounded-full bg-primary-container animate-tactical-pulse"></span><span class="text-[10px] font-label font-bold tracking-wider text-primary-container uppercase">LIVE</span></div><button aria-label="Alerts" class="relative w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-[#EE7D77] text-[#000000] text-[9px] font-bold font-mono rounded-full leading-none">10</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-14 pb-20 bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full relative select-none">
+<!-- Interactive Tactical Map Canvas Area -->
+<div class="relative w-full h-[calc(100vh-3.5rem-4.5rem)] overflow-hidden bg-surface-container-lowest">
+<!-- Base Tactical World Cartography SVG Layer -->
+<div class="absolute inset-0 w-full h-full bg-[#0a0d12]">
+<!-- Tactical Grid Lines & Radar Rings -->
+<svg class="absolute inset-0 w-full h-full opacity-20 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="48" id="tacticalGrid" patternunits="userSpaceOnUse" width="48">
+<path d="M 48 0 L 0 0 0 48" fill="none" opacity="0.4" stroke="#4edea3" stroke-dasharray="2 4" stroke-width="0.5"></path>
+</pattern>
+</defs>
+<rect fill="url(#tacticalGrid)" height="100%" width="100%"></rect>
+<circle cx="58%" cy="48%" fill="none" opacity="0.2" r="140" stroke="#4edea3" stroke-dasharray="4 6" stroke-width="0.75"></circle>
+<circle cx="58%" cy="48%" fill="none" opacity="0.15" r="220" stroke="#86948a" stroke-dasharray="2 8" stroke-width="0.5"></circle>
+</svg>
+<!-- Stylized Geopolitical Landmasses Silhouettes -->
+<svg class="w-full h-full object-cover opacity-85" preserveaspectratio="xMidYMid slice" viewbox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg">
+<g fill="#171c26" stroke="#222b3a" stroke-width="0.75">
+<!-- North America -->
+<path d="M120,80 Q160,70 210,90 Q260,110 270,160 Q240,200 220,240 Q180,250 150,230 Q120,190 100,160 Z M190,260 L220,310 L235,305 L210,250 Z"></path>
+<!-- South America -->
+<path d="M230,330 Q290,340 310,390 Q320,470 270,550 Q240,560 230,490 Q210,410 220,350 Z"></path>
+<!-- Eurasia -->
+<path d="M460,90 Q540,70 650,80 Q770,90 860,130 Q910,180 880,240 Q820,270 760,260 Q700,290 640,240 Q570,230 500,200 Q470,150 460,90 Z"></path>
+<!-- Western Europe & UK -->
+<circle cx="455" cy="165" r="14"></circle>
+<path d="M430,130 L450,120 L445,150 L425,140 Z"></path>
+<!-- Africa -->
+<path d="M450,230 Q540,220 570,270 Q590,340 550,420 Q500,480 470,440 Q430,370 420,300 Q425,250 450,230 Z"></path>
+<!-- East Asia / Islands -->
+<path d="M780,250 Q830,260 840,320 Q810,380 770,340 Z"></path>
+<!-- Southeast Asia archipelago hints -->
+<circle cx="810" cy="380" r="16"></circle>
+<circle cx="850" cy="400" r="10"></circle>
+<circle cx="830" cy="430" r="12"></circle>
+<!-- Australia -->
+<path d="M780,440 Q860,430 880,480 Q870,540 800,530 Q760,490 780,440 Z"></path>
+</g>
+<!-- Ocean Route / Pipeline Vector Data -->
+<path d="M240,250 Q360,220 450,240 T580,330 T780,340" fill="none" opacity="0.45" stroke="#4edea3" stroke-dasharray="3 6" stroke-width="1.2"></path>
+<path d="M570,280 L595,355 L680,390" fill="none" opacity="0.5" stroke="#EE7D77" stroke-dasharray="2 5" stroke-width="1.2"></path>
+</svg>
+</div>
+<!-- Live Hotspot Beacons with Tactical Pulses -->
+<!-- Hotspot 1: Middle East / Persian Gulf (High Critical - Red) -->
+<button class="hotspot-trigger group absolute top-[43%] left-[58%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-2 z-20 focus:outline-none" data-status="Critical Escalation" data-title="Persian Gulf &amp; Hormuz Chokepoint" data-val="56" type="button">
+<span class="absolute w-12 h-12 rounded-full bg-[#EE7D77]/20 animate-ping duration-1000"></span>
+<span class="absolute w-9 h-9 rounded-full bg-[#EE7D77]/40 backdrop-blur-sm"></span>
+<div class="relative w-7 h-7 rounded-full bg-[#93000a] text-[#ffdad6] flex items-center justify-center shadow-lg shadow-[#93000a]/50">
+<span class="text-[11px] font-mono font-bold tracking-tighter leading-none">56</span>
+</div>
+</button>
+<!-- Hotspot 2: Ukraine / Black Sea Corridor (Amber Warning) -->
+<button class="hotspot-trigger group absolute top-[30%] left-[54%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-2 z-20 focus:outline-none" data-status="Elevated Kinetic Activity" data-title="Eastern Europe / Black Sea" data-val="27" type="button">
+<span class="absolute w-10 h-10 rounded-full bg-[#f4fed3]/15 animate-pulse duration-700"></span>
+<span class="absolute w-8 h-8 rounded-full bg-[#f4fed3]/30"></span>
+<div class="relative w-6 h-6 rounded-full bg-[#3ba615] text-[#042100] flex items-center justify-center shadow-md">
+<span class="text-[10px] font-mono font-bold tracking-tighter leading-none">27</span>
+</div>
+</button>
+<!-- Hotspot 3: Red Sea / Bab el-Mandeb (High Critical - Red) -->
+<button class="hotspot-trigger group absolute top-[49%] left-[53%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-2 z-20 focus:outline-none" data-status="Maritime Interdiction" data-title="Southern Red Sea Transit" data-val="46" type="button">
+<span class="absolute w-11 h-11 rounded-full bg-[#EE7D77]/20 animate-ping"></span>
+<div class="relative w-7 h-7 rounded-full bg-[#ffb4ab] text-[#690005] flex items-center justify-center shadow-lg">
+<span class="text-[11px] font-mono font-bold tracking-tighter leading-none">46</span>
+</div>
+</button>
+<!-- Hotspot 4: West Africa / Gulf of Guinea (Amber) -->
+<button class="hotspot-trigger group absolute top-[56%] left-[46%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-2 z-20 focus:outline-none" data-status="Resource Security Shift" data-title="Sahel &amp; Gulf of Guinea" data-val="37" type="button">
+<div class="relative w-6 h-6 rounded-full bg-[#353534] text-[#8efc67] flex items-center justify-center shadow-md">
+<span class="text-[10px] font-mono font-bold tracking-tighter leading-none">37</span>
+</div>
+</button>
+<!-- Hotspot 5: North Atlantic / UK Maritime (Cyan Beacon) -->
+<button class="hotspot-trigger group absolute top-[27%] left-[45%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-2 z-20 focus:outline-none" data-status="Infrastructure Surveillance" data-title="North Sea Energy Subsea" data-val="28" type="button">
+<div class="relative w-6 h-6 rounded-full bg-[#201f1f] text-[#4edea3] flex items-center justify-center shadow-sm">
+<span class="text-[10px] font-mono font-bold tracking-tighter leading-none">28</span>
+</div>
+</button>
+<!-- Hotspot 6: East Asia / Taiwan Strait (Red Pulse) -->
+<button class="hotspot-trigger group absolute top-[44%] left-[78%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-2 z-20 focus:outline-none" data-status="Aerial &amp; Naval Sorties" data-title="Taiwan Strait &amp; Luzon" data-val="34" type="button">
+<span class="absolute w-9 h-9 rounded-full bg-[#EE7D77]/25 animate-ping"></span>
+<div class="relative w-6 h-6 rounded-full bg-[#93000a] text-[#ffdad6] flex items-center justify-center shadow-lg shadow-[#93000a]/40">
+<span class="text-[10px] font-mono font-bold tracking-tighter leading-none">34</span>
+</div>
+</button>
+<!-- Hotspot 7: North America Transshipment (Dim Blue/Cyan) -->
+<button class="hotspot-trigger group absolute top-[36%] left-[23%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-2 z-20 focus:outline-none" data-status="Logistics Nominal" data-title="North America Continental" data-val="14" type="button">
+<div class="relative w-6 h-6 rounded-full bg-[#201f1f] text-[#bbcac0] flex items-center justify-center">
+<span class="text-[10px] font-mono font-bold tracking-tighter leading-none">14</span>
+</div>
+</button>
+<!-- FLOATING TOP BAR: Global Tension Index Glassmorphic Card -->
+<div class="absolute top-2.5 inset-x-2.5 z-30 pointer-events-auto">
+<div class="bg-[#131313]/90 backdrop-blur-md rounded-lg p-3 shadow-2xl flex flex-col gap-2.5 transition-all">
+<!-- Tension Index Header & Metrics -->
+<div class="flex items-start justify-between">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="text-[10px] font-label font-bold text-on-surface-variant uppercase tracking-wider">Global Tension Index</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[14px]">info</span>
+</div>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="text-3xl font-mono font-bold tracking-tight text-white leading-none">99</span>
+<div class="flex items-center gap-0.5 text-error text-xs font-mono font-bold">
+<span class="material-symbols-outlined text-[14px] leading-none">arrow_drop_up</span>
+<span>2.4</span>
+</div>
+<span class="text-[10px] font-body text-on-surface-variant/80 ml-1">20 active signals</span>
+</div>
+</div>
+<!-- Quick Filters Toggle / Trend Micro Chart -->
+<div class="flex items-center gap-1.5">
+<div class="flex flex-col items-end">
+<div class="flex items-center gap-0.5 h-3.5">
+<span class="w-1.5 h-2 bg-primary-container rounded-[1px]"></span>
+<span class="w-1.5 h-3 bg-primary-container rounded-[1px]"></span>
+<span class="w-1.5 h-2.5 bg-primary-container rounded-[1px]"></span>
+<span class="w-1.5 h-3.5 bg-error rounded-[1px]"></span>
+</div>
+<span class="text-[8px] font-mono text-on-surface-variant uppercase mt-0.5">24h delta</span>
+</div>
+<button aria-label="Toggle Tactical Parameters" class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary-container active:scale-95 transition-transform" id="btnFilterToggle">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+</div>
+<!-- Metric Breakdown Segmented Bar -->
+<div class="space-y-1">
+<div class="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden flex">
+<div class="h-full bg-primary-container transition-all" style="width: 65%;" title="Kinetic: 65%"></div>
+<div class="h-full bg-[#72df4d] transition-all" style="width: 30%;" title="Cyber: 30%"></div>
+<div class="h-full bg-[#EE7D77] transition-all" style="width: 5%;" title="Diplomatic: 5%"></div>
+</div>
+<div class="flex items-center justify-between text-[9px] font-label font-bold text-on-surface-variant tracking-wider">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-[1px] bg-primary-container"></span>
+<span>KINETIC 65%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-[1px] bg-[#72df4d]"></span>
+<span>CYBER 30%</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-[1px] bg-[#EE7D77]"></span>
+<span>DIPLO 5%</span>
+</div>
+</div>
+</div>
+<!-- Collapsible Parameters Tray (Default Hidden / Compact) -->
+<div class="hidden pt-2 border-t-0 flex flex-col gap-2" id="filterParametersTray">
+<div class="grid grid-cols-2 gap-2">
+<div>
+<span class="text-[9px] font-label text-on-surface-variant uppercase">Commodity</span>
+<div class="mt-0.5 px-2 py-1 bg-surface-container-lowest rounded text-[11px] font-mono text-on-surface flex items-center justify-between">
+<span>CRUDE &amp; GAS</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">expand_more</span>
+</div>
+</div>
+<div>
+<span class="text-[9px] font-label text-on-surface-variant uppercase">Min Severity</span>
+<div class="mt-0.5 px-2 py-1 bg-surface-container-lowest rounded text-[11px] font-mono text-primary-container flex items-center justify-between">
+<span>LVL 3+ (HIGH)</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">tune</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- FLOATING MAP CONTROLS (Right Side Tactical Rail) -->
+<div class="absolute right-2.5 top-36 z-30 flex flex-col gap-1.5 pointer-events-auto">
+<button aria-label="Zoom In" class="w-9 h-9 rounded-lg bg-[#131313]/90 backdrop-blur-md text-on-surface hover:text-primary active:scale-90 flex items-center justify-center shadow-lg transition-transform" id="btnZoomIn">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+<button aria-label="Zoom Out" class="w-9 h-9 rounded-lg bg-[#131313]/90 backdrop-blur-md text-on-surface hover:text-primary active:scale-90 flex items-center justify-center shadow-lg transition-transform" id="btnZoomOut">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<div class="w-9 h-[1px] bg-surface-container-high my-0.5"></div>
+<button aria-label="Layer Selection" class="w-9 h-9 rounded-lg bg-[#131313]/90 backdrop-blur-md text-primary-container hover:text-primary active:scale-90 flex items-center justify-center shadow-lg transition-transform" id="btnLayerToggle">
+<span class="material-symbols-outlined text-[18px]">layers</span>
+</button>
+<button aria-label="Center Map on Target" class="w-9 h-9 rounded-lg bg-[#131313]/90 backdrop-blur-md text-on-surface hover:text-primary active:scale-90 flex items-center justify-center shadow-lg transition-transform" id="btnCenterTarget">
+<span class="material-symbols-outlined text-[18px]">my_location</span>
+</button>
+</div>
+<!-- Active Cluster Inspector Banner (Interactive Micro-modal on Hotspot Tap) -->
+<div class="hidden absolute bottom-44 inset-x-3 z-30 pointer-events-auto" id="inspectorCard">
+<div class="bg-surface-container/95 backdrop-blur-md p-3 rounded-lg shadow-2xl flex items-center justify-between">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-2.5 h-2.5 rounded-full bg-error animate-tactical-pulse"></div>
+<div class="min-w-0">
+<h2 class="text-xs font-headline font-bold text-white truncate" id="inspectorTitle">Persian Gulf Corridor</h2>
+<p class="text-[10px] font-mono text-primary-container truncate" id="inspectorSubtitle">56 Signals Detected • Threat Escalation</p>
+</div>
+</div>
+<button aria-label="Dismiss inspector" class="p-1 text-on-surface-variant hover:text-on-surface" id="inspectorClose">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- BOTTOM INTELLIGENCE DRAWER (Mobile Tactical Bottom-Sheet) -->
+<div class="absolute bottom-0 inset-x-0 z-40 bg-[#131313]/95 backdrop-blur-xl rounded-t-xl transition-all duration-300 shadow-[0_-8px_24px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto" id="intelDrawer">
+<!-- Status Ribbon Header -->
+<div class="w-full h-[2px] bg-primary-container"></div>
+<!-- Drag Handle & Tap Anchor -->
+<div class="w-full pt-2 pb-1.5 flex flex-col items-center justify-center cursor-pointer active:opacity-75" id="drawerHandle">
+<div class="w-9 h-1 rounded-full bg-surface-container-highest"></div>
+</div>
+<!-- Drawer Head Status Info -->
+<div class="px-3 pb-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-tactical-pulse"></span>
+<span class="text-[11px] font-label font-bold tracking-wider text-white uppercase">LIVE INTELLIGENCE FEED</span>
+</div>
+<div class="flex items-center gap-1.5 px-1.5 py-0.5 bg-surface-container rounded-[2px]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EE7D77]"></span>
+<span class="text-[9px] font-mono font-semibold text-[#EE7D77] uppercase">LATENCY ~5m</span>
+</div>
+</div>
+<!-- Signal Previews Container -->
+<div class="px-3 pb-3 space-y-2 max-h-48 overflow-y-auto">
+<!-- Feed Card 1 (High Impact) -->
+<div class="bg-surface-container-low p-2.5 rounded-lg active:bg-surface-container transition-colors">
+<div class="flex items-center justify-between text-[9px] font-mono text-on-surface-variant mb-1">
+<div class="flex items-center gap-1.5">
+<span class="px-1 py-0.2 rounded-[2px] bg-surface-container-highest text-primary-container font-bold">SIGNAL</span>
+<span>15h ago</span>
+</div>
+<span class="text-[#72df4d]">FRESH 12H</span>
+</div>
+<p class="text-[11px] font-headline font-semibold text-on-surface line-clamp-2 leading-snug">
+            Russia Imports Record Fuel From India As Ukraine Strikes Hit Key Refineries
+          </p>
+<div class="mt-1.5 flex items-center justify-between">
+<span class="text-[9px] font-mono text-on-surface-variant">REF: #UA-IN-7782</span>
+<button class="text-[10px] font-label font-bold text-primary-container hover:underline flex items-center gap-0.5">
+              VIEW DETAILS
+              <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Feed Card 2 -->
+<div class="bg-surface-container-low p-2.5 rounded-lg active:bg-surface-container transition-colors">
+<div class="flex items-center justify-between text-[9px] font-mono text-on-surface-variant mb-1">
+<div class="flex items-center gap-1.5">
+<span class="px-1 py-0.2 rounded-[2px] bg-surface-container-highest text-secondary-fixed font-bold">COMMODITY</span>
+<span>15h ago</span>
+</div>
+<span class="text-on-surface-variant">FRESH 14H</span>
+</div>
+<p class="text-[11px] font-headline font-semibold text-on-surface line-clamp-1 leading-snug">
+            Iranian heavy crude benchmark clears over $81/bbl amidst Hormuz route inspection
+          </p>
+<div class="mt-1 flex items-center justify-between">
+<span class="text-[9px] font-mono text-on-surface-variant">OPEC / TANKER_TRACK</span>
+<button class="text-[10px] font-label font-bold text-primary-container hover:underline flex items-center gap-0.5">
+              ANALYZE
+              <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Action Footer: Open Full Tactical Terminal -->
+<div class="px-3 pb-3 pt-1">
+<button class="w-full h-10 rounded bg-gradient-to-r from-primary to-primary-container text-on-primary font-label font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg active:scale-[0.98] transition-transform" type="button">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span>OPEN FULL TERMINAL</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function initTacticalMapMicroInteractions() {
+    // Hotspot inspection interactivity
+    const hotspots = document.querySelectorAll('.hotspot-trigger');
+    const inspector = document.getElementById('inspectorCard');
+    const inspectorTitle = document.getElementById('inspectorTitle');
+    const inspectorSub = document.getElementById('inspectorSubtitle');
+    const inspectorClose = document.getElementById('inspectorClose');
+
+    hotspots.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const title = btn.getAttribute('data-title') || 'Tactical Sector';
+        const val = btn.getAttribute('data-val') || '0';
+        const status = btn.getAttribute('data-status') || 'Active Monitoring';
+        
+        if (inspectorTitle) inspectorTitle.textContent = title;
+        if (inspectorSub) inspectorSub.textContent = val + ' Signals Detected • ' + status;
+        if (inspector) inspector.classList.remove('hidden');
+      });
+    });
+
+    if (inspectorClose) {
+      inspectorClose.addEventListener('click', () => {
+        if (inspector) inspector.classList.add('hidden');
+      });
+    }
+
+    // Parameters Tray Toggle
+    const btnFilterToggle = document.getElementById('btnFilterToggle');
+    const filterTray = document.getElementById('filterParametersTray');
+    if (btnFilterToggle && filterTray) {
+      btnFilterToggle.addEventListener('click', () => {
+        filterTray.classList.toggle('hidden');
+      });
+    }
+
+    // Tactical Zoom and Recenter micro feedback
+    const btnCenter = document.getElementById('btnCenterTarget');
+    if (btnCenter) {
+      btnCenter.addEventListener('click', () => {
+        btnCenter.classList.add('text-primary-container');
+        setTimeout(() => btnCenter.classList.remove('text-primary-container'), 600);
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-[#000000]/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container [&amp;&gt;div]:bg-primary-container"><div class="flex justify-between items-center h-16 px-1 max-w-md mx-auto"><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="dashboard" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">rss_feed</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Feed</span></a><a aria-current="page" class="group relative flex flex-col items-center justify-center w-full h-full transition-colors min-h-[44px] min-w-[44px] text-primary-container [&amp;&gt;div]:bg-primary-container" data-path="global-conflict-map" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">public</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Map</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="commodity-watchlist" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">visibility</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Watchlist</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="backtesting" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">history</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Backtest</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="terminal-controls" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">menu</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">More</span></a></div></nav></body></html>

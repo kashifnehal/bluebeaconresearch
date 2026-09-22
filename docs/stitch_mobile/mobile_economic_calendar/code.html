@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-error": "#690005", "on-tertiary": "#611213", "tertiary-container": "#ffb3ad", "secondary-fixed": "#8efc67", "secondary-container": "#3ba615", "on-tertiary-container": "#8e3432", "tertiary-fixed": "#ffdad7", "outline": "#86948a", "on-surface-variant": "#bbcac0", "on-primary-fixed-variant": "#005236", "on-background": "#e5e2e1", "surface-variant": "#353534", "surface-container": "#201f1f", "on-secondary-fixed-variant": "#145200", "on-tertiary-fixed": "#410004", "primary-fixed-dim": "#4edea3", "primary-fixed": "#6ffbbe", "on-primary-container": "#005f40", "outline-variant": "#3c4a42", "error": "#ffb4ab", "primary-container": "#4edea3", "on-secondary-container": "#093100", "inverse-on-surface": "#313030", "on-secondary-fixed": "#042100", "inverse-surface": "#e5e2e1", "secondary-fixed-dim": "#72df4d", "on-primary": "#003824", "inverse-primary": "#006c4a", "surface": "#131313", "on-error-container": "#ffdad6", "surface-container-highest": "#353534", "surface-bright": "#393939", "on-surface": "#e5e2e1", "secondary": "#72df4d", "error-container": "#93000a", "surface-dim": "#131313", "surface-container-low": "#1c1b1b", "tertiary": "#ffdad7", "surface-tint": "#4edea3", "background": "#131313", "surface-container-lowest": "#0e0e0e", "on-secondary": "#0b3900", "primary": "#6ffbbe", "tertiary-fixed-dim": "#ffb3ae", "on-tertiary-fixed-variant": "#7f2927", "on-primary-fixed": "#002114", "surface-container-high": "#2a2a2a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": {}, "fontFamily": { "headline": ["Inter"], "display": ["Inter"], "body": ["Inter"], "label": ["Space Grotesk"] }, "fontSize": {} } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0e0e0e;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}@keyframes tactical-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.85);}}.animate-tactical-pulse{animation:tactical-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;}</style></head><body class="bg-surface-container-lowest text-on-surface font-body flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 bg-[#000000]/90 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-14 px-3 flex items-center justify-between gap-2"><div class="flex items-center gap-2 min-w-0 flex-shrink"><img alt="High-fidelity app icon and brand emblem for Blue Beacon Research in a refined Steel Cyan / Cobalt Blue colorway. The faceted geometric capital 'B' emblem from {{DATA:IMAGE:IMAGE_4}} with precision gradients of deep navy (#0B192C), electric cobalt (#1E40AF), and luminous cyan beam (#38BDF8) refraction in the center. Positioned on an institutional dark obsidian background (#0B0D0E) with a subtle matte border. Clean, authoritative, fintech terminal aesthetic." class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1XjKZQcm01iPqDc1hN4HPQ_lkfae_p-Q8ZB3D30ZTKnMdSa8lhmjbbnG94R8uNoW7No0lnmPVRaAB369_JtWpdOFK61OEprrXnDe5Gv54yEjcI0ZTTfrXT4_lo8Am-uxIbC_F80EHBuDBunmH5NcfV4Gns_aUXejOQEtKsRbI9RLWXYtfRJEUZ1LNkwt5h9_RiITNAO07uvyH3BQkr1XshMvQf15EbAxCTeIE-AsykjpCtP81zwcbYFuySI"/><div class="flex items-center gap-1.5 truncate"><span class="text-xs font-headline font-bold tracking-tight text-white uppercase whitespace-nowrap">BLUE BEACON</span><span class="px-1.5 py-0.5 text-[9px] font-label font-bold tracking-widest uppercase bg-surface-container text-primary-container rounded-[2px]">ALPHA</span></div></div><div class="flex items-center gap-2 flex-shrink-0"><div class="flex items-center gap-1.5 px-2 py-1 rounded-[2px] bg-surface-container-low"><span class="w-2 h-2 rounded-full bg-primary-container animate-tactical-pulse"></span><span class="text-[10px] font-label font-bold tracking-wider text-primary-container uppercase">LIVE</span></div><button aria-label="Alerts" class="relative w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-[#EE7D77] text-[#000000] text-[9px] font-bold font-mono rounded-full leading-none">10</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-14 pb-20 bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full">
+<!-- Macro Header & Filters Section -->
+<section class="px-4 pt-4 pb-3 flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[2px] bg-surface-container-high text-primary font-label text-[10px] font-bold tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-tactical-pulse"></span>
+        MACRO CATALYSTS
+      </span>
+<span class="text-outline text-xs font-mono">NODE: BB-ALPHA-09</span>
+</div>
+<h1 class="text-2xl font-headline font-bold tracking-tight text-on-surface">Economic Calendar</h1>
+<p class="text-xs font-body text-on-surface-variant leading-relaxed">
+      Scheduled central bank decisions, CPI releases, and OPEC summits moving tracked instruments.
+    </p>
+<!-- Horizontal Scrollable Filter Ribbon -->
+<div class="flex items-center gap-1.5 overflow-x-auto py-2 -mx-4 px-4 no-scrollbar">
+<button class="px-2.5 py-1 rounded-[2px] bg-surface-container text-on-surface-variant text-[11px] font-label font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all">
+        All Importance
+      </button>
+<button class="px-2.5 py-1 rounded-[2px] bg-primary text-on-primary font-label text-[11px] font-bold uppercase tracking-wider whitespace-nowrap shadow-[0_0_12px_rgba(78,222,163,0.25)] active:scale-95 transition-all">
+        High Only (12)
+      </button>
+<button class="px-2 py-1 rounded-[2px] bg-surface-container text-on-surface-variant text-[11px] font-label font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all">
+        USD
+      </button>
+<button class="px-2 py-1 rounded-[2px] bg-surface-container text-on-surface-variant text-[11px] font-label font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all">
+        EUR
+      </button>
+<button class="px-2 py-1 rounded-[2px] bg-surface-container text-on-surface-variant text-[11px] font-label font-bold uppercase tracking-wider whitespace-nowrap active:scale-95 transition-all">
+        JPY
+      </button>
+<div class="h-4 w-[1px] bg-surface-container-high mx-0.5"></div>
+<button class="flex items-center gap-1 px-2 py-1 rounded-[2px] bg-surface-container-high text-primary font-label text-[10px] font-bold tracking-widest uppercase whitespace-nowrap" id="tzToggleBtn">
+<span class="material-symbols-outlined text-[12px]">schedule</span>
+<span id="tzLabel">UTC</span>
+</button>
+</div>
+</section>
+<!-- Hero: Next High-Impact Countdown -->
+<section class="px-4 py-2">
+<div class="relative overflow-hidden rounded-lg bg-surface-container p-4 shadow-[0_0_24px_rgba(78,222,163,0.08)]">
+<!-- Status Ribbon -->
+<div class="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-primary via-primary-fixed to-secondary"></div>
+<div class="flex items-center justify-between gap-2 mb-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[15px]">radar</span>
+<span class="text-[10px] font-label font-bold tracking-widest text-primary uppercase">NEXT HIGH-IMPACT EVENT</span>
+</div>
+<span class="px-1.5 py-0.5 rounded-[2px] bg-error-container text-error text-[9px] font-mono font-bold tracking-wide uppercase">T-MINUS</span>
+</div>
+<div class="flex flex-col gap-0.5">
+<h2 class="text-xl font-headline font-bold text-on-surface tracking-tight leading-snug">FOMC Interest Rate Decision</h2>
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant font-body">
+<span class="material-symbols-outlined text-[14px] text-outline">flag</span>
+<span>United States</span>
+<span class="text-outline">•</span>
+<span class="font-mono text-on-surface">Wed, Sep 16 at 18:00 UTC</span>
+</div>
+</div>
+<!-- Tactical Countdown Timer -->
+<div class="mt-3.5 p-3 rounded-lg bg-surface-container-lowest flex items-center justify-between">
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-widest text-outline">COUNTDOWN CLOCK</span>
+<div class="text-2xl font-mono font-bold text-primary tracking-wider drop-shadow-[0_0_8px_rgba(78,222,163,0.35)]" id="heroCountdown">
+            02d : 18h : 05m : 32s
+          </div>
+</div>
+<button aria-label="Pin Event" class="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary hover:text-white transition-colors" id="bookmarkHero">
+<span class="material-symbols-outlined text-[20px]">bookmark_add</span>
+</button>
+</div>
+<!-- Consensus strip -->
+<div class="mt-2.5 flex items-center justify-between text-[11px] font-mono text-on-surface-variant pt-2 bg-surface-container-low/50 px-2.5 py-1.5 rounded-[2px]">
+<span>Consensus: <span class="text-on-surface font-bold">5.25%</span></span>
+<span class="text-outline">/</span>
+<span>Previous: <span class="text-on-surface font-bold">5.50%</span></span>
+<span class="text-outline">/</span>
+<span class="text-primary">Bias: 25bp Cut</span>
+</div>
+</div>
+</section>
+<!-- Horizontal Date Ribbon Selector -->
+<section class="px-4 pt-3 pb-1">
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] font-label font-bold uppercase tracking-wider text-outline">WEEK 38 • SEPTEMBER 2026</span>
+<span class="text-[10px] font-mono text-primary font-medium">14 HIGH-IMPACT</span>
+</div>
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+<button class="flex-1 min-w-[56px] py-2 px-1 rounded-lg bg-surface-container flex flex-col items-center gap-0.5 active:scale-95 transition-all">
+<span class="text-[10px] font-label font-bold text-outline">MON</span>
+<span class="text-sm font-mono font-semibold text-on-surface">14</span>
+</button>
+<button class="flex-1 min-w-[56px] py-2 px-1 rounded-lg bg-surface-container flex flex-col items-center gap-0.5 active:scale-95 transition-all">
+<span class="text-[10px] font-label font-bold text-outline">TUE</span>
+<span class="text-sm font-mono font-semibold text-on-surface">15</span>
+</button>
+<!-- Active Day -->
+<button class="flex-1 min-w-[56px] py-2 px-1 rounded-lg bg-primary text-on-primary flex flex-col items-center gap-0.5 shadow-[0_0_14px_rgba(78,222,163,0.3)] scale-[1.03] transition-all">
+<span class="text-[10px] font-label font-bold text-on-primary tracking-wide flex items-center gap-1">
+          WED <span class="w-1 h-1 rounded-full bg-on-primary"></span>
+</span>
+<span class="text-sm font-mono font-bold text-on-primary">16</span>
+</button>
+<button class="flex-1 min-w-[56px] py-2 px-1 rounded-lg bg-surface-container flex flex-col items-center gap-0.5 active:scale-95 transition-all">
+<span class="text-[10px] font-label font-bold text-outline">THU</span>
+<span class="text-sm font-mono font-semibold text-on-surface">17</span>
+</button>
+<button class="flex-1 min-w-[56px] py-2 px-1 rounded-lg bg-surface-container flex flex-col items-center gap-0.5 active:scale-95 transition-all">
+<span class="text-[10px] font-label font-bold text-outline">FRI</span>
+<span class="text-sm font-mono font-semibold text-on-surface">18</span>
+</button>
+</div>
+</section>
+<!-- Scheduled Event Cards Feed -->
+<section class="px-4 py-2 flex flex-col gap-3">
+<!-- Section Subheader -->
+<div class="flex items-center justify-between text-[11px] font-label font-bold uppercase tracking-wider text-on-surface-variant pt-1">
+<span>TODAY'S TACTICAL TIMELINE</span>
+<span class="font-mono text-outline text-[10px]">RELOADED 12s AGO</span>
+</div>
+<!-- Event Card 1: ECB Rate Decision -->
+<article class="p-3.5 rounded-lg bg-surface-container flex flex-col gap-2.5 relative active:bg-surface-container-high transition-colors">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-[2px] bg-surface-container-high font-mono text-[11px] text-primary font-bold">12:15 UTC</span>
+<span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">Eurozone (EUR)</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] bg-error-container text-error text-[9px] font-label font-bold tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EE7D77]"></span>
+          HIGH IMPACT
+        </span>
+</div>
+<div class="flex items-start justify-between gap-3">
+<h3 class="text-sm font-headline font-bold text-on-surface leading-snug">ECB Governing Council Rate Decision</h3>
+<button aria-label="Set Alert" class="alert-btn w-8 h-8 rounded-[2px] bg-surface-container-low text-on-surface-variant flex items-center justify-center hover:text-primary active:scale-95 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">notifications_none</span>
+</button>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-3 gap-2 p-2 rounded-[2px] bg-surface-container-lowest font-mono text-xs">
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Forecast</span>
+<span class="font-bold text-on-surface">3.75%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Previous</span>
+<span class="font-bold text-on-surface">4.00%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Actual</span>
+<span class="font-bold text-primary tracking-widest">—</span>
+</div>
+</div>
+</article>
+<!-- Event Card 2: FOMC Press Conference -->
+<article class="p-3.5 rounded-lg bg-surface-container flex flex-col gap-2.5 relative active:bg-surface-container-high transition-colors">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-[2px] bg-surface-container-high font-mono text-[11px] text-primary font-bold">18:00 UTC</span>
+<span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">United States (USD)</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] bg-error-container text-error text-[9px] font-label font-bold tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EE7D77]"></span>
+          HIGH IMPACT
+        </span>
+</div>
+<div class="flex items-start justify-between gap-3">
+<h3 class="text-sm font-headline font-bold text-on-surface leading-snug">FOMC Press Conference &amp; Economic Projections</h3>
+<button aria-label="Set Alert" class="alert-btn w-8 h-8 rounded-[2px] bg-surface-container-low text-primary flex items-center justify-center active:scale-95 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">notifications_active</span>
+</button>
+</div>
+<div class="flex items-center justify-between p-2 rounded-[2px] bg-surface-container-lowest font-mono text-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[14px]">show_chart</span>
+<span class="text-[10px] font-label uppercase tracking-wider text-outline">Vol Forecast</span>
+</div>
+<div class="text-right text-secondary-fixed text-[11px]">
+          USOIL ±3.1% <span class="text-outline">•</span> Gold ±1.8%
+        </div>
+</div>
+</article>
+<!-- Event Card 3: BOJ Policy -->
+<article class="p-3.5 rounded-lg bg-surface-container flex flex-col gap-2.5 relative active:bg-surface-container-high transition-colors">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-[2px] bg-surface-container-high font-mono text-[11px] text-primary font-bold">03:00 UTC (Approx)</span>
+<span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">Japan (JPY)</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] bg-error-container text-error text-[9px] font-label font-bold tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EE7D77]"></span>
+          HIGH IMPACT
+        </span>
+</div>
+<div class="flex items-start justify-between gap-3">
+<h3 class="text-sm font-headline font-bold text-on-surface leading-snug">BOJ Monetary Policy Statement</h3>
+<button aria-label="Set Alert" class="alert-btn w-8 h-8 rounded-[2px] bg-surface-container-low text-on-surface-variant flex items-center justify-center hover:text-primary active:scale-95 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">notifications_none</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-2 p-2 rounded-[2px] bg-surface-container-lowest font-mono text-xs">
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Benchmark Rate</span>
+<span class="font-bold text-on-surface">-0.10%</span>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Mandate Focus</span>
+<span class="font-bold text-primary truncate">Yield Curve Control</span>
+</div>
+</div>
+</article>
+<!-- Event Card 4: OPEC MOMR -->
+<article class="p-3.5 rounded-lg bg-surface-container flex flex-col gap-2.5 relative active:bg-surface-container-high transition-colors">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-[2px] bg-surface-container-high font-mono text-[11px] text-on-surface-variant font-bold">All Day</span>
+<span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">OPEC Cartel</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] bg-surface-container-high text-[#E5A93C] text-[9px] font-label font-bold tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-[#E5A93C]"></span>
+          MEDIUM IMPACT
+        </span>
+</div>
+<div class="flex items-start justify-between gap-3">
+<h3 class="text-sm font-headline font-bold text-on-surface leading-snug">OPEC Monthly Oil Market Report (MOMR)</h3>
+<button aria-label="Set Alert" class="alert-btn w-8 h-8 rounded-[2px] bg-surface-container-low text-on-surface-variant flex items-center justify-center hover:text-primary active:scale-95 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">notifications_none</span>
+</button>
+</div>
+<div class="p-2 rounded-[2px] bg-surface-container-lowest flex items-center justify-between text-xs font-mono">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Watch Focus</span>
+<span class="text-on-surface text-[11px] font-medium">Global Demand &amp; Quota Compliance</span>
+</div>
+</article>
+<!-- Event Card 5: US CPI -->
+<article class="p-3.5 rounded-lg bg-surface-container flex flex-col gap-2.5 relative active:bg-surface-container-high transition-colors">
+<div class="flex items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-[2px] bg-surface-container-high font-mono text-[11px] text-primary font-bold">12:30 UTC</span>
+<span class="text-xs font-label uppercase tracking-wider text-on-surface-variant">United States (USD)</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[2px] bg-error-container text-error text-[9px] font-label font-bold tracking-wider uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EE7D77]"></span>
+          HIGH IMPACT
+        </span>
+</div>
+<div class="flex items-start justify-between gap-3">
+<h3 class="text-sm font-headline font-bold text-on-surface leading-snug">US Consumer Price Index (CPI YoY)</h3>
+<button aria-label="Set Alert" class="alert-btn w-8 h-8 rounded-[2px] bg-surface-container-low text-on-surface-variant flex items-center justify-center hover:text-primary active:scale-95 transition-transform flex-shrink-0">
+<span class="material-symbols-outlined text-[18px]">notifications_none</span>
+</button>
+</div>
+<div class="grid grid-cols-3 gap-2 p-2 rounded-[2px] bg-surface-container-lowest font-mono text-xs">
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Forecast</span>
+<span class="font-bold text-on-surface">2.9%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Previous</span>
+<span class="font-bold text-on-surface">3.2%</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] font-label uppercase tracking-wider text-outline">Signal Risk</span>
+<span class="font-bold text-error">Hawkish</span>
+</div>
+</div>
+</article>
+</section>
+<!-- Sticky-styled Bottom Micro Sync Action Bar -->
+<section class="mt-3 px-4 pb-4">
+<div class="p-3.5 rounded-lg bg-surface-container flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-xs font-body text-on-surface font-medium">Showing 14 High-Impact Events this week</span>
+</div>
+<button class="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary font-label text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_12px_rgba(78,222,163,0.2)] active:scale-95 transition-all" id="syncCalBtn">
+<span class="material-symbols-outlined text-[18px]">event</span>
+<span>SYNC TO GOOGLE / ICAL</span>
+</button>
+</div>
+</section>
+</div>
+<script>
+  (function() {
+    // Dynamic countdown clock
+    let totalSeconds = (2 * 86400) + (18 * 3600) + (5 * 60) + 32;
+    const clockEl = document.getElementById('heroCountdown');
+    
+    if (clockEl) {
+      setInterval(() => {
+        if (totalSeconds <= 0) return;
+        totalSeconds--;
+        const d = Math.floor(totalSeconds / 86400);
+        const h = Math.floor((totalSeconds % 86400) / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+        clockEl.textContent = 
+          String(d).padStart(2, '0') + 'd : ' +
+          String(h).padStart(2, '0') + 'h : ' +
+          String(m).padStart(2, '0') + 'm : ' +
+          String(s).padStart(2, '0') + 's';
+      }, 1000);
+    }
+
+    // Timezone toggle micro-interaction
+    const tzBtn = document.getElementById('tzToggleBtn');
+    const tzLabel = document.getElementById('tzLabel');
+    if (tzBtn && tzLabel) {
+      tzBtn.addEventListener('click', () => {
+        if (tzLabel.textContent === 'UTC') {
+          tzLabel.textContent = 'LOCAL';
+        } else {
+          tzLabel.textContent = 'UTC';
+        }
+      });
+    }
+
+    // Alert button state toggles
+    document.querySelectorAll('.alert-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+          if (icon.textContent === 'notifications_none') {
+            icon.textContent = 'notifications_active';
+            btn.classList.add('text-primary');
+            btn.classList.remove('text-on-surface-variant');
+          } else {
+            icon.textContent = 'notifications_none';
+            btn.classList.remove('text-primary');
+            btn.classList.add('text-on-surface-variant');
+          }
+        }
+      });
+    });
+
+    // Calendar sync micro-feedback
+    const syncBtn = document.getElementById('syncCalBtn');
+    if (syncBtn) {
+      syncBtn.addEventListener('click', () => {
+        const originalHtml = syncBtn.innerHTML;
+        syncBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>CALENDAR EXPORTED</span>';
+        setTimeout(() => {
+          syncBtn.innerHTML = originalHtml;
+        }, 2200);
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-[#000000]/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container [&amp;&gt;div]:bg-primary-container"><div class="flex justify-between items-center h-16 px-1 max-w-md mx-auto"><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="dashboard" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">rss_feed</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Feed</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="global-conflict-map" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">public</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Map</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="commodity-watchlist" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">visibility</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Watchlist</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="backtesting" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">history</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Backtest</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="terminal-controls" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">menu</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">More</span></a></div></nav></body></html>

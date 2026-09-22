@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-error": "#690005", "on-tertiary": "#611213", "tertiary-container": "#ffb3ad", "secondary-fixed": "#8efc67", "secondary-container": "#3ba615", "on-tertiary-container": "#8e3432", "tertiary-fixed": "#ffdad7", "outline": "#86948a", "on-surface-variant": "#bbcac0", "on-primary-fixed-variant": "#005236", "on-background": "#e5e2e1", "surface-variant": "#353534", "surface-container": "#201f1f", "on-secondary-fixed-variant": "#145200", "on-tertiary-fixed": "#410004", "primary-fixed-dim": "#4edea3", "primary-fixed": "#6ffbbe", "on-primary-container": "#005f40", "outline-variant": "#3c4a42", "error": "#ffb4ab", "primary-container": "#4edea3", "on-secondary-container": "#093100", "inverse-on-surface": "#313030", "on-secondary-fixed": "#042100", "inverse-surface": "#e5e2e1", "secondary-fixed-dim": "#72df4d", "on-primary": "#003824", "inverse-primary": "#006c4a", "surface": "#131313", "on-error-container": "#ffdad6", "surface-container-highest": "#353534", "surface-bright": "#393939", "on-surface": "#e5e2e1", "secondary": "#72df4d", "error-container": "#93000a", "surface-dim": "#131313", "surface-container-low": "#1c1b1b", "tertiary": "#ffdad7", "surface-tint": "#4edea3", "background": "#131313", "surface-container-lowest": "#0e0e0e", "on-secondary": "#0b3900", "primary": "#6ffbbe", "tertiary-fixed-dim": "#ffb3ae", "on-tertiary-fixed-variant": "#7f2927", "on-primary-fixed": "#002114", "surface-container-high": "#2a2a2a" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": {}, "fontFamily": { "headline": ["Inter"], "display": ["Inter"], "body": ["Inter"], "label": ["Space Grotesk"] }, "fontSize": {} } } }</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#0e0e0e;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}@keyframes tactical-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.85);}}.animate-tactical-pulse{animation:tactical-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;}</style></head><body class="bg-surface-container-lowest text-on-surface font-body flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 bg-[#000000]/90 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-14 px-3 flex items-center justify-between gap-2"><div class="flex items-center gap-2 min-w-0 flex-shrink"><img alt="High-fidelity app icon and brand emblem for Blue Beacon Research in a refined Steel Cyan / Cobalt Blue colorway. The faceted geometric capital 'B' emblem from {{DATA:IMAGE:IMAGE_4}} with precision gradients of deep navy (#0B192C), electric cobalt (#1E40AF), and luminous cyan beam (#38BDF8) refraction in the center. Positioned on an institutional dark obsidian background (#0B0D0E) with a subtle matte border. Clean, authoritative, fintech terminal aesthetic." class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1XjKZQcm01iPqDc1hN4HPQ_lkfae_p-Q8ZB3D30ZTKnMdSa8lhmjbbnG94R8uNoW7No0lnmPVRaAB369_JtWpdOFK61OEprrXnDe5Gv54yEjcI0ZTTfrXT4_lo8Am-uxIbC_F80EHBuDBunmH5NcfV4Gns_aUXejOQEtKsRbI9RLWXYtfRJEUZ1LNkwt5h9_RiITNAO07uvyH3BQkr1XshMvQf15EbAxCTeIE-AsykjpCtP81zwcbYFuySI"/><div class="flex items-center gap-1.5 truncate"><span class="text-xs font-headline font-bold tracking-tight text-white uppercase whitespace-nowrap">BLUE BEACON</span><span class="px-1.5 py-0.5 text-[9px] font-label font-bold tracking-widest uppercase bg-surface-container text-primary-container rounded-[2px]">ALPHA</span></div></div><div class="flex items-center gap-2 flex-shrink-0"><div class="flex items-center gap-1.5 px-2 py-1 rounded-[2px] bg-surface-container-low"><span class="w-2 h-2 rounded-full bg-primary-container animate-tactical-pulse"></span><span class="text-[10px] font-label font-bold tracking-wider text-primary-container uppercase">LIVE</span></div><button aria-label="Alerts" class="relative w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center bg-[#EE7D77] text-[#000000] text-[9px] font-bold font-mono rounded-full leading-none">10</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-14 pb-20 bg-surface-container-lowest min-h-screen"><div class="flex flex-col w-full pb-10 space-y-4">
+<!-- 1. Top Tactical Subheader Navigation -->
+<div class="px-3 pt-2 flex items-center justify-between">
+<a class="inline-flex items-center gap-1 text-xs font-label tracking-wide text-primary-container hover:text-primary active:scale-95 transition-all" data-path="commodity-watchlist" href="#">
+<span class="material-symbols-outlined text-[16px]">arrow_back_ios</span>
+<span>BACK TO WATCHLIST</span>
+</a>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-high">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="text-[10px] font-label font-bold tracking-widest text-primary-container uppercase">ENERGY • DRILL-DOWN</span>
+</div>
+</div>
+<!-- 2. Asset Header & Live Ticker Bar -->
+<div class="px-3">
+<div class="bg-surface-container rounded-lg p-3.5 flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div class="min-w-0">
+<div class="flex items-center gap-2">
+<h1 class="text-xl font-headline font-bold text-on-surface tracking-tight">Brent Crude</h1>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-[11px] font-mono text-on-surface-variant">UKOIL</span>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-0.5 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[13px] text-primary-container">anchor</span>
+<span>North Sea Forties, Oseberg &amp; Ekofisk Blend</span>
+</p>
+</div>
+<div class="text-right">
+<div class="text-2xl font-mono font-bold text-on-surface tracking-tight" id="live-price-hero">$107.54</div>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container text-[11px] font-mono font-bold mt-0.5">
+<span>▲</span>
+<span>+2.80%</span>
+</div>
+</div>
+</div>
+<!-- Quick Metrics Strip -->
+<div class="grid grid-cols-3 gap-2 pt-2 mt-1 border-t-0">
+<div class="bg-surface-container-high p-2 rounded">
+<span class="block text-[9px] font-label text-on-surface-variant uppercase">24H Range</span>
+<span class="text-xs font-mono font-bold text-on-surface mt-0.5 block">$104.12 - $108.30</span>
+</div>
+<div class="bg-surface-container-high p-2 rounded">
+<span class="block text-[9px] font-label text-on-surface-variant uppercase">Implied Vol</span>
+<span class="text-xs font-mono font-bold text-primary mt-0.5 block">34.8% <span class="text-[9px] text-primary-container">HIGH</span></span>
+</div>
+<div class="bg-surface-container-high p-2 rounded">
+<span class="block text-[9px] font-label text-on-surface-variant uppercase">Georisk Index</span>
+<span class="text-xs font-mono font-bold text-on-surface mt-0.5 block text-[#EE7D77]">CRITICAL 8.4</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Interactive Price Chart Module (Last 90 Days) -->
+<div class="px-3">
+<div class="bg-surface-container rounded-lg p-3.5 flex flex-col gap-3 relative overflow-hidden">
+<!-- Status Ribbon -->
+<div class="absolute top-0 left-0 right-0 h-[2px] bg-primary-container"></div>
+<!-- Header & Timeframe Pills -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary-container">show_chart</span>
+<h2 class="text-xs font-label font-bold tracking-wider uppercase text-on-surface">PRICE HISTORY — 90 DAYS</h2>
+</div>
+<!-- Range Pills -->
+<div class="flex items-center gap-1 bg-surface-container-lowest p-0.5 rounded" id="timeframe-container">
+<button class="tf-btn px-2 py-0.5 text-[10px] font-label font-semibold rounded text-on-surface-variant hover:text-on-surface transition-colors" data-tf="24H" type="button">24H</button>
+<button class="tf-btn px-2 py-0.5 text-[10px] font-label font-semibold rounded text-on-surface-variant hover:text-on-surface transition-colors" data-tf="7D" type="button">7D</button>
+<button class="tf-btn px-2 py-0.5 text-[10px] font-label font-bold rounded bg-primary-container text-on-primary-container transition-colors" data-tf="90D" type="button">90D</button>
+<button class="tf-btn px-2 py-0.5 text-[10px] font-label font-semibold rounded text-on-surface-variant hover:text-on-surface transition-colors" data-tf="1Y" type="button">1Y</button>
+<button class="tf-btn px-2 py-0.5 text-[10px] font-label font-semibold rounded text-on-surface-variant hover:text-on-surface transition-colors" data-tf="5Y" type="button">5Y</button>
+</div>
+</div>
+<!-- SVG Chart Canvas Area -->
+<div class="relative w-full h-56 bg-surface-container-lowest rounded p-2 overflow-hidden select-none" id="chart-viewport">
+<!-- SVG Grid & Data Line -->
+<svg class="w-full h-full" id="price-svg" preserveaspectratio="none" viewbox="0 0 400 200">
+<defs>
+<lineargradient id="neonGlow" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#4EDE93" stop-opacity="0.32"></stop>
+<stop offset="100%" stop-color="#4EDE93" stop-opacity="0.0"></stop>
+</lineargradient>
+<filter height="120%" id="emeraldBlur" width="120%" x="-10%" y="-10%">
+<fedropshadow dx="0" dy="0" flood-color="#4edea3" flood-opacity="0.4" stddeviation="2"></fedropshadow>
+</filter>
+</defs>
+<!-- Y-Axis Reference Guidelines -->
+<line stroke="#2a2a2a" stroke-dasharray="2,3" stroke-width="1" x1="30" x2="390" y1="30" y2="30"></line>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" x="5" y="34">$112</text>
+<line stroke="#2a2a2a" stroke-dasharray="2,3" stroke-width="1" x1="30" x2="390" y1="75" y2="75"></line>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" x="5" y="79">$98</text>
+<line stroke="#2a2a2a" stroke-dasharray="2,3" stroke-width="1" x1="30" x2="390" y1="120" y2="120"></line>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" x="5" y="124">$90</text>
+<line stroke="#2a2a2a" stroke-dasharray="2,3" stroke-width="1" x1="30" x2="390" y1="165" y2="165"></line>
+<text fill="#86948a" font-family="JetBrains Mono" font-size="8" x="5" y="169">$84</text>
+<!-- Geopolitical Event Markers (Vertical Dashes matching screenshot) -->
+<g id="geopolitical-dashes">
+<line opacity="0.65" stroke="#EE7D77" stroke-dasharray="3,3" stroke-width="1" x1="160" x2="160" y1="15" y2="175"></line>
+<circle cx="160" cy="20" fill="#EE7D77" r="2.5"></circle>
+<line opacity="0.7" stroke="#4edea3" stroke-dasharray="3,3" stroke-width="1" x1="245" x2="245" y1="15" y2="175"></line>
+<circle cx="245" cy="20" fill="#4edea3" r="2.5"></circle>
+<line opacity="0.65" stroke="#EE7D77" stroke-dasharray="3,3" stroke-width="1" x1="310" x2="310" y1="15" y2="175"></line>
+<circle cx="310" cy="20" fill="#EE7D77" r="2.5"></circle>
+</g>
+<!-- Filled Gradient Area -->
+<path d="M 30,165 
+                   C 45,150 55,138 70,138 
+                   C 85,138 95,145 110,140
+                   C 120,135 130,120 145,115
+                   C 155,110 160,118 175,100
+                   C 185,90 195,92 205,82
+                   C 215,75 225,88 235,80
+                   C 245,72 250,72 270,72
+                   C 280,72 285,100 295,115
+                   C 305,135 315,148 325,135
+                   C 335,120 345,132 355,118
+                   C 365,105 375,80 390,45
+                   L 390,175 L 30,175 Z" fill="url(#neonGlow)"></path>
+<!-- Main Kinetic Price Line -->
+<path d="M 30,165 
+                   C 45,150 55,138 70,138 
+                   C 85,138 95,145 110,140
+                   C 120,135 130,120 145,115
+                   C 155,110 160,118 175,100
+                   C 185,90 195,92 205,82
+                   C 215,75 225,88 235,80
+                   C 245,72 250,72 270,72
+                   C 280,72 285,100 295,115
+                   C 305,135 315,148 325,135
+                   C 335,120 345,132 355,118
+                   C 365,105 375,80 390,45" fill="none" filter="url(#emeraldBlur)" id="chart-path" stroke="#6ffbbe" stroke-linecap="round" stroke-width="2"></path>
+<!-- Active Crosshair Line (Fixed point inspection matching reference) -->
+<line id="crosshair-x" opacity="0.6" stroke="#86948a" stroke-width="1" x1="235" x2="235" y1="15" y2="175"></line>
+<circle cx="235" cy="80" fill="#131313" id="crosshair-dot" r="3.5" stroke="#6ffbbe" stroke-width="2"></circle>
+</svg>
+<!-- Tactical Inspection Box (Overlaid directly like image) -->
+<div class="absolute top-6 left-1/2 -translate-x-1/2 sm:left-[55%] bg-surface/95 backdrop-blur-md px-2.5 py-1.5 rounded shadow-lg pointer-events-none transition-all" id="chart-tooltip">
+<div class="text-[9px] font-mono text-on-surface-variant flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span id="tooltip-date">21/08/2026, 04:30:00</span>
+</div>
+<div class="text-[11px] font-mono font-bold text-primary mt-0.5">
+            Price: <span class="text-on-surface" id="tooltip-val">$93.24</span>
+</div>
+</div>
+<!-- X-Axis Dates -->
+<div class="absolute bottom-1 left-7 right-2 flex justify-between text-[9px] font-mono text-on-surface-variant">
+<span>10 Aug</span>
+<span>15 Aug</span>
+<span>19 Aug</span>
+<span>24 Aug</span>
+<span>28 Aug</span>
+</div>
+</div>
+<!-- Chart Micro Legend -->
+<div class="flex items-center justify-between text-[9px] font-mono text-on-surface-variant pt-1 px-0.5">
+<span class="flex items-center gap-1.5">
+<span class="w-2 h-0.5 bg-[#EE7D77] inline-block"></span>
+<span>DASHED LINES = GEOPOLITICAL ALERTS</span>
+</span>
+<span class="text-right">INFORMATIONAL ONLY</span>
+</div>
+</div>
+</div>
+<!-- 4. Macro 5-Year History (Collapsible Card) -->
+<div class="px-3">
+<div class="bg-surface-container rounded-lg overflow-hidden">
+<button class="w-full p-3 flex items-center justify-between text-left hover:bg-surface-bright/20 transition-colors" id="toggle-5y-btn" type="button">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary-container">history_toggle_off</span>
+<div>
+<h3 class="text-xs font-label font-bold tracking-wider uppercase text-on-surface">5-Year Macro Trajectory</h3>
+<p class="text-[10px] font-mono text-on-surface-variant">Low: $65.20 · High: $139.10 · Cycle: High Volatility</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] transition-transform duration-200" id="toggle-5y-icon">expand_more</span>
+</button>
+<!-- 5Y Content Body -->
+<div class="px-3.5 pb-3 hidden" id="macro-5y-panel">
+<div class="bg-surface-container-lowest p-2.5 rounded flex flex-col gap-2">
+<div class="flex justify-between items-center text-[10px] font-mono text-on-surface-variant">
+<span>SEPT 2021</span>
+<span>DEC 2022</span>
+<span>MAR 2024</span>
+<span>JUL 2025</span>
+<span>SEPT 2026</span>
+</div>
+<!-- Mini 5-Year Wave Sparkline -->
+<svg class="w-full h-14" preserveaspectratio="none" viewbox="0 0 350 60">
+<path d="M 0,45 
+                     C 20,40 30,20 45,15
+                     C 60,10 70,30 85,42
+                     C 100,50 115,25 130,28
+                     C 145,30 160,50 180,45
+                     C 200,40 210,18 230,12
+                     C 245,8 260,25 275,40
+                     C 290,52 305,38 320,20
+                     C 335,12 345,18 350,15" fill="none" opacity="0.85" stroke="#4edea3" stroke-linecap="round" stroke-width="1.75"></path>
+</svg>
+<div class="flex items-center justify-between text-[9px] font-label uppercase text-on-surface-variant pt-1 border-t-0">
+<span>Weekly Closes via Terminal Datastream</span>
+<span class="text-primary-container font-bold font-mono">BRENT CAGR: +12.4%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. Correlated Geopolitical Signals Stream -->
+<div class="px-3 flex flex-col gap-2.5">
+<div class="flex items-center justify-between px-0.5">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary-container">radar</span>
+<h2 class="text-xs font-label font-bold tracking-wider uppercase text-on-surface">CORRELATED SIGNALS — LAST 90 DAYS</h2>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-[10px] font-mono font-bold text-primary-container">12 SIGNALS</span>
+</div>
+<!-- Signal List Item 1 -->
+<div class="bg-surface-container rounded-lg p-3 hover:bg-surface-bright/20 transition-all flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<h4 class="text-xs font-headline font-semibold text-on-surface leading-snug line-clamp-2">Russia Imports Record Fuel From India As Ukraine Strikes Hit Refineries</h4>
+<span class="flex-shrink-0 px-2 py-0.5 rounded bg-[#EE7D77]/20 text-[#EE7D77] text-[10px] font-mono font-bold whitespace-nowrap flex items-center gap-0.5">
+<span>UKOIL</span>
+<span>↓ -0.8%</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EE7D77]"></span>
+<span>INDIA · 15h ago · SEVERITY 6</span>
+</span>
+<span class="text-[9px] font-label uppercase text-on-surface-variant">CHOKEPOINT DISRUPTION</span>
+</div>
+<p class="text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1.5 rounded">Maritime fuel rerouting via Arabian Sea; offset by localized supply substitution.</p>
+</div>
+<!-- Signal List Item 2 -->
+<div class="bg-surface-container rounded-lg p-3 hover:bg-surface-bright/20 transition-all flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<h4 class="text-xs font-headline font-semibold text-on-surface leading-snug line-clamp-2">Iranian heavy oil price at over $81 in August : OPEC data</h4>
+<span class="flex-shrink-0 px-2 py-0.5 rounded bg-primary-container/20 text-primary-container text-[10px] font-mono font-bold whitespace-nowrap flex items-center gap-0.5">
+<span>UKOIL</span>
+<span>↑ +0.4%</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span>IRAN · 15h ago · SEVERITY 4</span>
+</span>
+<span class="text-[9px] font-label uppercase text-on-surface-variant">OPEC QUOTA</span>
+</div>
+<p class="text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1.5 rounded">Tight physical export balances in Bandar Abbas indicate sustained premium pressure.</p>
+</div>
+<!-- Signal List Item 3 (High Severity) -->
+<div class="bg-surface-container rounded-lg p-3 hover:bg-surface-bright/20 transition-all flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<h4 class="text-xs font-headline font-semibold text-on-surface leading-snug line-clamp-2">Strait of Hormuz Ship Attack Raises Fears Over Global Oil Supplies</h4>
+<span class="flex-shrink-0 px-2 py-0.5 rounded bg-primary-container/20 text-primary-container text-[10px] font-mono font-bold whitespace-nowrap flex items-center gap-0.5">
+<span>UKOIL</span>
+<span>↑ +2.4%</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-[#EE7D77] animate-pulse"></span>
+<span class="text-[#EE7D77] font-semibold">MIDEAST · 18h ago · SEVERITY 8</span>
+</span>
+<span class="text-[9px] font-label uppercase text-primary-container">SURGE CATALYST</span>
+</div>
+<p class="text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1.5 rounded">Direct kinetic threat across transit zone; VLCC marine insurance premiums surged 45%.</p>
+</div>
+<!-- Signal List Item 4 -->
+<div class="bg-surface-container rounded-lg p-3 hover:bg-surface-bright/20 transition-all flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<h4 class="text-xs font-headline font-semibold text-on-surface leading-snug line-clamp-2">Houthi in Yemen bombs Saudi Arabia | PlaneteAfrique</h4>
+<span class="flex-shrink-0 px-2 py-0.5 rounded bg-primary-container/20 text-primary-container text-[10px] font-mono font-bold whitespace-nowrap flex items-center gap-0.5">
+<span>UKOIL</span>
+<span>↑ +1.9%</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span>NIGER / SAUDI · 23h ago · SEVERITY 7</span>
+</span>
+<span class="text-[9px] font-label uppercase text-on-surface-variant">INFRASTRUCTURE</span>
+</div>
+<p class="text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1.5 rounded">Unmanned drone swarm targeted secondary crude processing hub near Jizan.</p>
+</div>
+<!-- Signal List Item 5 -->
+<div class="bg-surface-container rounded-lg p-3 hover:bg-surface-bright/20 transition-all flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<h4 class="text-xs font-headline font-semibold text-on-surface leading-snug line-clamp-2">UK reaffirms solidarity with Saudi Arabia after Houthi attacks</h4>
+<span class="flex-shrink-0 px-2 py-0.5 rounded bg-primary-container/20 text-primary-container text-[10px] font-mono font-bold whitespace-nowrap flex items-center gap-0.5">
+<span>UKOIL</span>
+<span>↑ +0.7%</span>
+</span>
+</div>
+<div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span>UK / MIDEAST · 1d ago · SEVERITY 6</span>
+</span>
+<span class="text-[9px] font-label uppercase text-on-surface-variant">ALLIANCE STANCE</span>
+</div>
+<p class="text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1.5 rounded">Joint patrol deterrence commitment reduces immediate freight escalation premium.</p>
+</div>
+<!-- Signal Stream Pagination Footer -->
+<div class="flex items-center justify-between pt-2 px-1 text-[11px] font-label">
+<button class="px-3 py-1.5 rounded bg-surface-container-high text-on-surface-variant opacity-60 cursor-not-allowed uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">chevron_left</span> PREV
+      </button>
+<span class="text-[10px] font-mono text-on-surface-variant uppercase">PAGE 1 OF 3</span>
+<button class="px-3 py-1.5 rounded bg-surface-container-high text-primary-container hover:bg-surface-bright active:scale-95 transition-all uppercase flex items-center gap-1">
+        NEXT <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- 6. Sticky Bottom Action Strip -->
+<div class="sticky bottom-0 z-20 px-3 py-2.5 bg-[#000000]/90 backdrop-blur-md">
+<button class="w-full py-3 px-4 rounded bg-gradient-to-r from-primary to-primary-container text-on-primary font-label font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg" id="create-alert-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">add_alert</span>
+<span>CREATE UKOIL PRICE &amp; GEORISK ALERT</span>
+</button>
+</div>
+<!-- Alert Creation Modal / Slide-Up Toast (Micro-interaction) -->
+<div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4" id="alert-dialog">
+<div class="bg-surface-container p-4 rounded-lg w-full max-w-sm flex flex-col gap-3 shadow-2xl">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">notifications_active</span>
+<span class="text-xs font-label font-bold uppercase tracking-wider text-on-surface">UKOIL Tactical Alert</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface" id="close-dialog-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<p class="text-xs text-on-surface-variant">Deploy real-time push notification if Brent Crude breaches resistance or triggers SEV &gt; 7 chokepoint threat.</p>
+<div class="bg-surface-container-lowest p-2.5 rounded flex flex-col gap-2">
+<div class="flex justify-between items-center text-[11px] font-mono">
+<span class="text-on-surface-variant">Trigger Level:</span>
+<span class="text-primary-container font-bold">&gt; $110.00 / bbl</span>
+</div>
+<div class="flex justify-between items-center text-[11px] font-mono">
+<span class="text-on-surface-variant">Geo Severity:</span>
+<span class="text-[#EE7D77] font-bold">≥ Level 7 (Kinetic)</span>
+</div>
+</div>
+<button class="w-full py-2.5 rounded bg-primary-container text-on-primary-container font-label font-bold text-xs uppercase tracking-wider active:scale-95 transition-transform" id="confirm-alert-btn" type="button">
+        CONFIRM MONITORING NODE
+      </button>
+</div>
+</div>
+</div>
+<script>
+  // 1. Interactive Timeframe Switcher
+  const tfButtons = document.querySelectorAll('.tf-btn');
+  const priceHero = document.getElementById('live-price-hero');
+  const tooltipVal = document.getElementById('tooltip-val');
+  const tooltipDate = document.getElementById('tooltip-date');
+
+  tfButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tfButtons.forEach(b => {
+        b.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-bold');
+        b.classList.add('text-on-surface-variant', 'font-semibold');
+      });
+      btn.classList.add('bg-primary-container', 'text-on-primary-container', 'font-bold');
+      btn.classList.remove('text-on-surface-variant', 'font-semibold');
+
+      // Micro update simulated feedback
+      const tf = btn.getAttribute('data-tf');
+      if (tf === '24H') {
+        tooltipVal.textContent = '$106.88';
+        tooltipDate.textContent = 'TODAY, 14:15:00';
+      } else if (tf === '7D') {
+        tooltipVal.textContent = '$101.40';
+        tooltipDate.textContent = '24/08/2026, 09:00:00';
+      } else if (tf === '90D') {
+        tooltipVal.textContent = '$93.24';
+        tooltipDate.textContent = '21/08/2026, 04:30:00';
+      } else if (tf === '1Y') {
+        tooltipVal.textContent = '$82.15';
+        tooltipDate.textContent = '14/11/2025, 12:00:00';
+      } else if (tf === '5Y') {
+        tooltipVal.textContent = '$68.90';
+        tooltipDate.textContent = '03/05/2022, 10:00:00';
+      }
+    });
+  });
+
+  // 2. Interactive 5-Year Collapsible
+  const toggleBtn = document.getElementById('toggle-5y-btn');
+  const panel = document.getElementById('macro-5y-panel');
+  const icon = document.getElementById('toggle-5y-icon');
+
+  if (toggleBtn && panel && icon) {
+    toggleBtn.addEventListener('click', () => {
+      const isHidden = panel.classList.contains('hidden');
+      if (isHidden) {
+        panel.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        panel.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+      }
+    });
+  }
+
+  // 3. Interactive Alert Dialog
+  const alertBtn = document.getElementById('create-alert-btn');
+  const alertModal = document.getElementById('alert-dialog');
+  const closeDialogBtn = document.getElementById('close-dialog-btn');
+  const confirmBtn = document.getElementById('confirm-alert-btn');
+
+  if (alertBtn && alertModal && closeDialogBtn && confirmBtn) {
+    alertBtn.addEventListener('click', () => {
+      alertModal.classList.remove('hidden');
+      alertModal.classList.add('flex');
+    });
+
+    const hideModal = () => {
+      alertModal.classList.add('hidden');
+      alertModal.classList.remove('flex');
+    };
+
+    closeDialogBtn.addEventListener('click', hideModal);
+    confirmBtn.addEventListener('click', () => {
+      confirmBtn.textContent = 'MONITOR ACTIVE ✓';
+      setTimeout(() => {
+        hideModal();
+        confirmBtn.textContent = 'CONFIRM MONITORING NODE';
+      }, 700);
+    });
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-[#000000]/95 backdrop-blur-xl shadow-[0_-2px_12px_rgba(0,0,0,0.6)]" data-active-classes="text-primary-container [&amp;&gt;div]:bg-primary-container"><div class="flex justify-between items-center h-16 px-1 max-w-md mx-auto"><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="dashboard" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">rss_feed</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Feed</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="global-conflict-map" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">public</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Map</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="commodity-watchlist" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">visibility</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Watchlist</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="backtesting" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">history</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">Backtest</span></a><a class="group relative flex flex-col items-center justify-center w-full h-full text-on-surface-variant hover:text-on-surface transition-colors min-h-[44px] min-w-[44px]" data-path="terminal-controls" href="#"><div class="absolute top-0 inset-x-3 h-[2px] bg-transparent rounded-full transition-colors duration-200"></div><span class="material-symbols-outlined text-[22px] mb-0.5">menu</span><span class="text-[10px] font-label font-semibold uppercase tracking-wider">More</span></a></div></nav></body></html>
