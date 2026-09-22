@@ -154,7 +154,7 @@ export default function SettingsPage() {
           <h1 className="font-headline font-extrabold text-4xl tracking-tighter mb-2 text-on-surface text-white">
             Settings
           </h1>
-          <p className="font-mono text-[10px] text-primary tracking-widest uppercase font-bold">
+          <p className="font-mono text-[12px] md:text-[10px] text-primary tracking-widest uppercase font-bold">
             System Configuration & User Preferences
           </p>
           <p className="mt-3 text-sm text-on-surface/60">
@@ -195,7 +195,7 @@ export default function SettingsPage() {
               </div>
               <div className="bg-surface-container p-8 rounded-lg border-t-2 border-primary shadow-xl">
                 {loading ? (
-                  <div className="h-48 flex items-center justify-center font-mono text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
+                  <div className="h-48 flex items-center justify-center font-mono text-[12px] md:text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
                     Accessing BB-PROFILE-BUFFER...
                   </div>
                 ) : (
@@ -207,7 +207,7 @@ export default function SettingsPage() {
                     }}
                   >
                     <div className="space-y-2">
-                      <label className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
+                      <label className="font-label text-[12px] md:text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
                         Full Name
                       </label>
                       <input
@@ -223,7 +223,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="space-y-2 opacity-80">
-                      <label htmlFor="settings-email" className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
+                      <label htmlFor="settings-email" className="font-label text-[12px] md:text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
                         Email Address
                       </label>
                       <input
@@ -233,7 +233,7 @@ export default function SettingsPage() {
                         type="email"
                         value={profile?.email || ""}
                       />
-                      <p className="font-mono text-[10px] text-on-surface-variant flex items-center gap-1 mt-1">
+                      <p className="font-mono text-[12px] md:text-[10px] text-on-surface-variant flex items-center gap-1 mt-1">
                         <span className="material-symbols-outlined text-xs">
                           lock
                         </span>{" "}
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                 </h2>
               </div>
               <div className="space-y-6">
-                <label className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
+                <label className="font-label text-[12px] md:text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
                   Theme Engine
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -285,7 +285,7 @@ export default function SettingsPage() {
                           Trader (Default)
                         </p>
                         <p
-                          className={`font-mono text-[10px] uppercase font-bold tracking-widest ${theme === "dark" ? "text-primary" : "text-on-surface-variant"}`}
+                          className={`font-mono text-[12px] md:text-[10px] uppercase font-bold tracking-widest ${theme === "dark" ? "text-primary" : "text-on-surface-variant"}`}
                         >
                           DARK_EMERALD_OPTIMIZED
                         </p>
@@ -326,7 +326,7 @@ export default function SettingsPage() {
                           Day Mode
                         </p>
                         <p
-                          className={`font-mono text-[10px] uppercase font-bold tracking-widest ${theme === "light" ? "text-primary" : "text-on-surface-variant"}`}
+                          className={`font-mono text-[12px] md:text-[10px] uppercase font-bold tracking-widest ${theme === "light" ? "text-primary" : "text-on-surface-variant"}`}
                         >
                           HIGH_VISIBILITY_SURFACE
                         </p>
@@ -386,10 +386,10 @@ export default function SettingsPage() {
                     <div className="border-t border-outline-variant/20 my-2" />
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-label text-[10px] font-bold uppercase">
+                        <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">
                           Daily Digest
                         </p>
-                        <p className="text-[10px] text-on-surface-variant max-w-md">
+                        <p className="text-[12px] md:text-[10px] text-on-surface-variant max-w-md">
                           Once a day, your top signals from the last 24 hours — filtered to the
                           regions and commodities you follow, ranked by severity. Informational
                           only, not financial advice.
@@ -406,10 +406,10 @@ export default function SettingsPage() {
                     <div className="border-t border-outline-variant/20 my-2" />
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-label text-[10px] font-bold uppercase">
+                        <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">
                           Email Alerts
                         </p>
-                        <p className="text-[10px] text-on-surface-variant">
+                        <p className="text-[12px] md:text-[10px] text-on-surface-variant">
                           Receive urgent alerts via email
                         </p>
                       </div>
@@ -422,10 +422,10 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-label text-[10px] font-bold uppercase">
+                        <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">
                           Push Notifications
                         </p>
-                        <p className="text-[10px] text-on-surface-variant">
+                        <p className="text-[12px] md:text-[10px] text-on-surface-variant">
                           Use browser push for critical updates
                         </p>
                       </div>
@@ -452,7 +452,7 @@ export default function SettingsPage() {
                 {activeTab === "SECURITY" && (
                   <div className="space-y-4">
                     <div>
-                      <label className="font-label text-[10px] font-bold uppercase">
+                      <label className="font-label text-[12px] md:text-[10px] font-bold uppercase">
                         Change Password
                       </label>
                       <input
@@ -480,10 +480,10 @@ export default function SettingsPage() {
                 {activeTab === "DATA" && (
                   <div className="space-y-4">
                     <div>
-                      <label className="font-label text-[10px] font-bold uppercase">
+                      <label className="font-label text-[12px] md:text-[10px] font-bold uppercase">
                         Export Audit Log
                       </label>
-                      <p className="text-[10px] text-on-surface-variant">
+                      <p className="text-[12px] md:text-[10px] text-on-surface-variant">
                         Download your recorded signals and activity log.
                       </p>
                       <div className="mt-3">
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="font-label text-[10px] font-bold uppercase">
+                      <label className="font-label text-[12px] md:text-[10px] font-bold uppercase">
                         Data Retention (days)
                       </label>
                       <select
@@ -528,7 +528,7 @@ export default function SettingsPage() {
           low-contrast axe finding on these cosmetic strings. */}
       <footer
         aria-hidden="true"
-        className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-outline uppercase tracking-[0.2em] font-bold"
+        className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[12px] md:text-[10px] font-mono text-outline uppercase tracking-[0.2em] font-bold"
       >
         <div>ACCESS_POINT: BB-ALPHA-09</div>
         <div className="flex gap-8">

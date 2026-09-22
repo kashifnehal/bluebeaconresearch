@@ -82,7 +82,7 @@ export function WelcomeTourStep({
           <button
             type="button"
             onClick={onSkip}
-            className="text-[11px] font-bold text-[#86948a] underline"
+            className="text-[12px] md:text-[11px] font-bold text-[#86948a] underline"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Skip tour
@@ -90,7 +90,7 @@ export function WelcomeTourStep({
           <button
             type="button"
             onClick={onContinue}
-            className="bg-[#4edea3] px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-[#003824]"
+            className="bg-[#4edea3] px-4 py-2 text-[12px] md:text-[11px] font-bold uppercase tracking-wider text-[#003824]"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Got it, show me around

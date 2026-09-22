@@ -153,7 +153,7 @@ export default function BacktestingPage() {
         <div className="grid grid-cols-12 gap-8 mb-12">
           {/* Left Column: Popular Backtests */}
           <section className="col-span-12 lg:col-span-5 space-y-4">
-            <h2 className="font-label text-[#4EDEA3] text-[10px] font-black tracking-[0.2em] uppercase">
+            <h2 className="font-label text-[#4EDEA3] text-[12px] md:text-[10px] font-black tracking-[0.2em] uppercase">
               Popular Simulations
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -183,7 +183,7 @@ export default function BacktestingPage() {
                   <p className="text-sm font-bold text-on-surface mb-2 leading-tight group-hover:text-primary transition-colors">
                     {p.title}
                   </p>
-                  <p className="text-[9px] font-label text-on-surface-variant tracking-widest uppercase group-hover:text-primary/70">
+                  <p className="text-[12px] md:text-[9px] font-label text-on-surface-variant tracking-widest uppercase group-hover:text-primary/70">
                     Initialize Simulation
                   </p>
                 </div>
@@ -203,14 +203,14 @@ export default function BacktestingPage() {
               <div className="absolute bottom-6 left-6">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                  <span className="font-label text-[10px] text-primary tracking-widest uppercase font-bold">
+                  <span className="font-label text-[12px] md:text-[10px] text-primary tracking-widest uppercase font-bold">
                     Scenario Simulator
                   </span>
                 </div>
                 <h2 className="text-2xl font-bold font-mono text-on-surface">
                   Hypothetical Event Impact
                 </h2>
-                <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-widest mt-1">
+                <p className="text-[12px] md:text-[10px] text-on-surface-variant font-mono uppercase tracking-widest mt-1">
                   Explore how a hypothetical event might move a commodity,
                   based on illustrative patterns
                 </p>
@@ -222,7 +222,7 @@ export default function BacktestingPage() {
         {/* Custom Backtest Form */}
         <section className="mb-12">
           <div className="bg-surface-container/60 p-8 border-l-4 border-primary rounded-r-xl shadow-2xl backdrop-blur-sm">
-            <h2 className="font-label text-[10px] font-black text-on-surface-variant mb-8 flex items-center gap-2 tracking-[0.3em] uppercase">
+            <h2 className="font-label text-[12px] md:text-[10px] font-black text-on-surface-variant mb-8 flex items-center gap-2 tracking-[0.3em] uppercase">
               <span className="material-symbols-outlined text-sm">
                 settings_input_component
               </span>{" "}
@@ -230,7 +230,7 @@ export default function BacktestingPage() {
             </h2>
             <div className="flex flex-wrap items-end gap-8">
               <div className="flex-1 min-w-[240px]">
-                <label className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
+                <label className="block font-label text-[12px] md:text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
                   Event Type
                 </label>
                 <input
@@ -242,7 +242,7 @@ export default function BacktestingPage() {
                 />
               </div>
               <div className="w-[180px]">
-                <label htmlFor="backtest-filter-region" className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
+                <label htmlFor="backtest-filter-region" className="block font-label text-[12px] md:text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
                   Region
                 </label>
                 <select
@@ -263,7 +263,7 @@ export default function BacktestingPage() {
                 </select>
               </div>
               <div className="w-[180px]">
-                <label htmlFor="backtest-filter-commodity" className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
+                <label htmlFor="backtest-filter-commodity" className="block font-label text-[12px] md:text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
                   Commodity
                 </label>
                 <select
@@ -284,7 +284,7 @@ export default function BacktestingPage() {
                 </select>
               </div>
               <div className="min-w-[200px]">
-                <label className="block font-label text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
+                <label className="block font-label text-[12px] md:text-[10px] text-on-surface-variant mb-2 font-bold tracking-widest uppercase">
                   Analysis Horizon
                 </label>
                 <div className="flex bg-black/40 p-1 rounded-lg border border-outline-variant/30">
@@ -293,7 +293,7 @@ export default function BacktestingPage() {
                       key={h}
                       type="button"
                       onClick={() => setHorizon(h)}
-                      className={`flex-1 px-4 py-1.5 text-[10px] font-black font-label rounded-md transition-all ${horizon === h ? "bg-primary text-black" : "text-on-surface-variant hover:text-on-surface"}`}
+                      className={`flex-1 px-4 py-1.5 text-[12px] md:text-[10px] font-black font-label rounded-md transition-all ${horizon === h ? "bg-primary text-black" : "text-on-surface-variant hover:text-on-surface"}`}
                     >
                       {h}
                     </button>
@@ -303,7 +303,7 @@ export default function BacktestingPage() {
               {isLoading && (
                 <div
                   data-testid="backtest-loading"
-                  className="flex items-center gap-2 text-primary font-label text-[10px] font-bold tracking-widest uppercase"
+                  className="flex items-center gap-2 text-primary font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase"
                 >
                   <span className="material-symbols-outlined text-lg animate-spin">
                     progress_activity
@@ -346,7 +346,7 @@ export default function BacktestingPage() {
             className={`space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ${isLoading ? "opacity-60" : ""}`}
           >
             {applied && (
-              <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+              <p className="text-[12px] md:text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
                 Showing results for {applied.eventType} · {applied.commodity} · {applied.horizon}
               </p>
             )}
@@ -385,7 +385,7 @@ export default function BacktestingPage() {
                   key={stat.label}
                   className="bg-surface-container/40 p-6 border border-outline-variant/10 rounded-xl group hover:border-primary/30 transition-colors"
                 >
-                  <p className="font-label text-[9px] text-on-surface-variant mb-2 font-bold tracking-[0.2em] uppercase">
+                  <p className="font-label text-[12px] md:text-[9px] text-on-surface-variant mb-2 font-bold tracking-[0.2em] uppercase">
                     {stat.label}
                   </p>
                   <p
@@ -432,7 +432,7 @@ export default function BacktestingPage() {
                     a.click();
                     URL.revokeObjectURL(url);
                   }}
-                  className="flex items-center gap-2 text-[10px] font-label font-bold text-on-surface-variant hover:text-primary transition-colors tracking-widest uppercase cursor-pointer"
+                  className="flex items-center gap-2 text-[12px] md:text-[10px] font-label font-bold text-on-surface-variant hover:text-primary transition-colors tracking-widest uppercase cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">
                     download
@@ -444,19 +444,19 @@ export default function BacktestingPage() {
                 <table className="w-full text-left">
                   <thead className="bg-black/40 border-b border-outline-variant/10">
                     <tr>
-                      <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
+                      <th className="px-6 py-4 font-label text-[12px] md:text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
                         Sample Case
                       </th>
-                      <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
+                      <th className="px-6 py-4 font-label text-[12px] md:text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
                         Geography
                       </th>
-                      <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
+                      <th className="px-6 py-4 font-label text-[12px] md:text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
                         Synthesis
                       </th>
-                      <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
+                      <th className="px-6 py-4 font-label text-[12px] md:text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
                         Delta %
                       </th>
-                      <th className="px-6 py-4 font-label text-[10px] text-on-surface-variant uppercase font-bold tracking-widest text-center">
+                      <th className="px-6 py-4 font-label text-[12px] md:text-[10px] text-on-surface-variant uppercase font-bold tracking-widest text-center">
                         Prediction
                       </th>
                     </tr>
@@ -509,7 +509,7 @@ export default function BacktestingPage() {
             <span className="material-symbols-outlined text-6xl mb-6 group-hover:rotate-180 transition-transform duration-1000">
               history
             </span>
-            <p className="font-label text-[11px] font-black uppercase tracking-[0.5em] text-on-surface">
+            <p className="font-label text-[12px] md:text-[11px] font-black uppercase tracking-[0.5em] text-on-surface">
               System Idle: Ready for Simulation
             </p>
           </div>
@@ -517,7 +517,7 @@ export default function BacktestingPage() {
       </div>
 
       {/* Footer / System Integrity */}
-      <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
+      <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[12px] md:text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
         <div>BLUE BEACON RESEARCH SYSTEM HASH: 88F9-AX21-KL88</div>
         <div className="flex gap-8">
           <span>LATENCY: 12ms</span>

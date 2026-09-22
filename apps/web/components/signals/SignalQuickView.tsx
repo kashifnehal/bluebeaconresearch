@@ -89,7 +89,7 @@ export function SignalQuickView({
 
                 <section>
                   <h3
-                    className="mb-3 text-[10px] font-bold uppercase tracking-widest"
+                    className="mb-3 text-[12px] md:text-[10px] font-bold uppercase tracking-widest"
                     style={{
                       color: "#86948a",
                       fontFamily: "'Space Grotesk', sans-serif",

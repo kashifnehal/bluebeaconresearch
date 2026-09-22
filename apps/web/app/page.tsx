@@ -108,24 +108,24 @@ export default async function Home(props: {
           <Logo className="h-8" />
         </div>
         <nav className="hidden md:flex items-center gap-10">
-          <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#features">How it works</Link>
-          <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#pricing">Pricing</Link>
-          <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="/accuracy">Accuracy</Link>
+          <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#features">How it works</Link>
+          <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#pricing">Pricing</Link>
+          <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="/accuracy">Accuracy</Link>
         </nav>
         <div className="flex items-center gap-8">
           {user ? (
             <Link
               href="/dashboard"
-              className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
+              className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[12px] md:text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
             >
               Dashboard
             </Link>
           ) : (
             <>
-              <Link className="font-label text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-white transition-colors" href="/login">Sign in</Link>
+              <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-white transition-colors" href="/login">Sign in</Link>
               <Link
                 href="/signup"
-                className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
+                className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[12px] md:text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"
               >
                 Sign up
               </Link>
@@ -146,7 +146,7 @@ export default async function Home(props: {
           <div className="relative z-10 text-center max-w-5xl mx-auto">
             <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-surface-container-high/60 rounded-full border border-primary/20 mb-10 backdrop-blur-sm">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-              <span className="font-label text-[9px] font-black uppercase tracking-[0.2em] text-primary">Live — monitoring active global conflicts</span>
+              <span className="font-label text-[12px] md:text-[9px] font-black uppercase tracking-[0.2em] text-primary">Live — monitoring active global conflicts</span>
             </div>
             <h1 className="text-6xl md:text-8xl lg:text-[120px] font-extrabold tracking-tighter leading-[0.85] mb-10 text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
               High-fidelity geopolitical intelligence <br/>
@@ -163,7 +163,7 @@ export default async function Home(props: {
                 Sign up
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </Link>
-              <a className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 hover:text-on-surface flex items-center gap-2 transition-colors group" href="#live">
+              <a className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 hover:text-on-surface flex items-center gap-2 transition-colors group" href="#live">
                 View live signals
                 <span className="material-symbols-outlined text-sm group-hover:translate-y-1 transition-transform">south</span>
               </a>
@@ -176,13 +176,13 @@ export default async function Home(props: {
           <div className="max-w-[1440px] mx-auto">
             <div className="mb-14 flex items-end justify-between">
               <div>
-                <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Latest signal</p>
+                <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Latest signal</p>
                 <h3 className="text-4xl font-headline font-extrabold tracking-tight text-white mb-2">Live research feed</h3>
                 <p className="text-on-surface-variant max-w-lg font-medium">The most recent signal from the collector pipeline. New events are ingested on a regular schedule, typically every 15–30 minutes — not in real time.</p>
               </div>
               {homepageStats.totalSignals != null ? (
                 <div className="text-right hidden md:block">
-                  <span className="font-mono text-[9px] text-on-surface-variant/40 font-bold uppercase tracking-widest">{formatSignalsTracked(homepageStats.totalSignals)}</span>
+                  <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/40 font-bold uppercase tracking-widest">{formatSignalsTracked(homepageStats.totalSignals)}</span>
                 </div>
               ) : null}
             </div>
@@ -195,10 +195,10 @@ export default async function Home(props: {
                   {latestSignal ? (
                     <>
                       <div className="flex flex-wrap items-center gap-6 mb-10">
-                        <span className={`px-4 py-1.5 font-label text-[9px] font-extrabold uppercase tracking-widest rounded-md ${latestSignal.severity >= 8 ? 'bg-error-container text-on-error-container' : 'bg-primary-container text-on-primary-container'}`}>
+                        <span className={`px-4 py-1.5 font-label text-[12px] md:text-[9px] font-extrabold uppercase tracking-widest rounded-md ${latestSignal.severity >= 8 ? 'bg-error-container text-on-error-container' : 'bg-primary-container text-on-primary-container'}`}>
                           {latestSignal.severity >= 8 ? 'Critical Alert' : 'Active Signal'}
                         </span>
-                        <span className="font-mono text-[10px] text-on-surface-variant/40 font-medium uppercase tracking-widest">{new Date(latestSignal.created_at).toUTCString()}</span>
+                        <span className="font-mono text-[12px] md:text-[10px] text-on-surface-variant/40 font-medium uppercase tracking-widest">{new Date(latestSignal.created_at).toUTCString()}</span>
                       </div>
                       
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
@@ -210,8 +210,8 @@ export default async function Home(props: {
                           <div className="flex flex-wrap gap-4">
                             {latestSignal.commodity_impacts?.map((impact, idx) => (
                               <div key={idx} className="bg-surface-container-lowest border border-outline-variant/20 px-4 py-3 rounded-lg group/pill hover:border-primary/40 transition-colors">
-                                <p className="font-mono text-[10px] text-white font-bold uppercase tracking-widest mb-1">{impact.asset}</p>
-                                <p className="font-label text-[8px] text-primary font-black uppercase tracking-widest">{impact.direction}</p>
+                                <p className="font-mono text-[12px] md:text-[10px] text-white font-bold uppercase tracking-widest mb-1">{impact.asset}</p>
+                                <p className="font-label text-[12px] md:text-[8px] text-primary font-black uppercase tracking-widest">{impact.direction}</p>
                               </div>
                             ))}
                           </div>
@@ -228,12 +228,12 @@ export default async function Home(props: {
                           <div className="relative z-10 text-center">
                             <div className="flex items-center justify-center gap-2 mb-4">
                               <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
-                              <span className="font-label text-[10px] uppercase tracking-[0.2em] font-black text-on-surface">Classification confidence</span>
+                              <span className="font-label text-[12px] md:text-[10px] uppercase tracking-[0.2em] font-black text-on-surface">Classification confidence</span>
                             </div>
                             <div className="text-6xl font-mono text-primary font-extrabold tracking-tighter">
                               {Math.round(latestSignal.confidence * 100)}%
                             </div>
-                            <p className="mt-3 font-label text-[8px] text-on-surface-variant uppercase tracking-widest font-bold">Uncertainty for this assessment — not a hit rate</p>
+                            <p className="mt-3 font-label text-[12px] md:text-[8px] text-on-surface-variant uppercase tracking-widest font-bold">Uncertainty for this assessment — not a hit rate</p>
                             <div className="w-full bg-surface-container-high h-2 mt-6 rounded-full overflow-hidden max-w-[240px] mx-auto">
                               <div className="bg-primary h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(111,251,190,0.5)]" style={{ width: `${latestSignal.confidence * 100}%` }}></div>
                             </div>
@@ -288,7 +288,7 @@ export default async function Home(props: {
         <section className="px-10 py-24 bg-surface-container-lowest border-b border-outline-variant/10" id="track-record">
           <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-8">
-              <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Source Verification</p>
+              <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Source Verification</p>
               <h2 className="text-3xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-4">We publish the track record</h2>
               <p className="text-on-surface/60 leading-relaxed font-medium max-w-2xl">
                 Directional outcomes are scored from real price data after a 48-hour checkpoint, with methodology and sample size on a public page. That page is the proof point — not a homepage accuracy percentage.
@@ -321,16 +321,16 @@ export default async function Home(props: {
                 { title: "Pro", price: "$199", features: ["Full REST/WS API", "5-year price history", "Backtesting Lab", "Multi-user access"] }
               ].map((tier, i) => (
                 <div key={i} className={`p-10 rounded-3xl border ${tier.featured ? 'bg-surface-container border-primary/40 shadow-2xl shadow-primary/10' : 'bg-surface-container-high border-outline-variant/10'}`}>
-                  <p className="font-label text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-4">{tier.title}</p>
+                  <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-4">{tier.title}</p>
                   <div className="text-4xl font-mono text-white mb-8 font-extrabold">{tier.price}<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
                   <ul className="space-y-4 mb-10">
                     {tier.features.map((f, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
+                      <li key={idx} className="flex items-center gap-3 text-[12px] md:text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
                         <span className="material-symbols-outlined text-primary text-xs">check</span> {f}
                       </li>
                     ))}
                   </ul>
-                  <Link href="/signup" className={`w-full block py-4 text-center rounded-xl font-label text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
+                  <Link href="/signup" className={`w-full block py-4 text-center rounded-xl font-label text-[12px] md:text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
                     Get started
                   </Link>
                 </div>
@@ -347,37 +347,37 @@ export default async function Home(props: {
               <Logo className="h-6" />
               <span className="text-lg font-extrabold tracking-tighter uppercase font-headline text-white">Blue Beacon</span>
             </div>
-            <p className="text-[9px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-[0.2em]">
+            <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-[0.2em]">
               © {new Date().getFullYear()} Blue Beacon Research.
             </p>
           </div>
           <div className="space-y-8">
-            <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Product</h6>
+            <h6 className="font-label text-[12px] md:text-[10px] uppercase font-black tracking-widest text-on-surface/40">Product</h6>
             <ul className="space-y-4">
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/dashboard">Dashboard</Link></li>
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/map">Global Map</Link></li>
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/alerts">Signals</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/dashboard">Dashboard</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/map">Global Map</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/alerts">Signals</Link></li>
             </ul>
           </div>
           <div className="space-y-8">
-            <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Research</h6>
+            <h6 className="font-label text-[12px] md:text-[10px] uppercase font-black tracking-widest text-on-surface/40">Research</h6>
             <ul className="space-y-4">
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/accuracy">Accuracy</Link></li>
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/backtesting">Backtesting Lab</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/accuracy">Accuracy</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/backtesting">Backtesting Lab</Link></li>
               <li>
-                <Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase flex items-center gap-1" href="/terms">
-                  Terms <span className="text-[8px] text-primary lowercase font-mono">(full docs coming soon)</span>
+                <Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase flex items-center gap-1" href="/terms">
+                  Terms <span className="text-[12px] md:text-[8px] text-primary lowercase font-mono">(full docs coming soon)</span>
                 </Link>
               </li>
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/privacy">Privacy</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/privacy">Privacy</Link></li>
             </ul>
           </div>
           <div className="space-y-8">
-            <h6 className="font-label text-[10px] uppercase font-black tracking-widest text-on-surface/40">Account</h6>
+            <h6 className="font-label text-[12px] md:text-[10px] uppercase font-black tracking-widest text-on-surface/40">Account</h6>
             <ul className="space-y-4">
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/login">Sign in</Link></li>
-              <li><Link className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/status">System Status</Link></li>
-              <li><a className="text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="mailto:support@bluebeaconresearch.com">Support</a></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/login">Sign in</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/status">System Status</Link></li>
+              <li><a className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="mailto:support@bluebeaconresearch.com">Support</a></li>
             </ul>
           </div>
         </div>

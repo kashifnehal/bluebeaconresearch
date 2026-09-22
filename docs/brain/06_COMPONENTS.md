@@ -27,6 +27,14 @@ This document presents a complete inventory of all UI components in `apps/web/co
 
 ## 2. Layout Components (`apps/web/components/layout`)
 
+### `PublicHeader.tsx` — added 2026-09-23 (#186 Phase 2)
+
+Server component. Props: `{ badge: string }`. Renders the logged-out public-page chrome (logo → wordmark → badge on the left, "Terminal →" link on the right) used by `app/accuracy/page.tsx` and `app/status/page.tsx`. Both files previously inlined an identical `h-16 … px-8 flex items-center justify-between` header; extraction removed the duplication and their now-orphaned `Link` / `Logo` imports.
+
+Mobile-critical classes: `px-4 md:px-8` · `min-w-0` on the left group · `truncate` on the wordmark `<Link>` · `shrink-0` on `Logo` and the Terminal link · `hidden md:inline` on the badge span · `min-h-[44px] md:min-h-0` on the Terminal link. Measured 360px overflow before/after: `/accuracy` 111px → 0px, `/status` 117px → 0px.
+
+
+
 ### 2.1 `Sidebar.tsx`
 - **Purpose**: Primary vertical terminal navigation sidebar. Below `md` it is an off-canvas drawer (`useUIStore.mobileSidebarOpen`); at `md`+ always visible (#133). Brand text "Blue Beacon Research" is a `<Link href="/dashboard">` (2026-09-18); ALPHA badge is not linked. Footer Help goes to `/help` (#155), not the HelpModal.
 - **Props**: None.

@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { ACCURACY_LOAD_ERROR } from "@/lib/user-error-copy";
 
 // #121 frontend half — public track-record page. Reads only the pre-computed
@@ -76,9 +75,9 @@ function fmtMove(v: number | null): string {
 function HeadlineStat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-lg border border-[#3c4a42] bg-[#131313] p-5">
-      <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a]">{label}</p>
+      <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a]">{label}</p>
       <p className="mt-2 font-mono text-3xl font-semibold text-[#e5e2e1]">{value}</p>
-      {hint ? <p className="mt-1 text-[11px] font-mono text-[#6b7a72]">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">{hint}</p> : null}
     </div>
   );
 }
@@ -121,25 +120,7 @@ export default async function AccuracyPage() {
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* Header — same public-page chrome as /status */}
-      <header className="h-16 border-b border-[#2a2a2a] px-8 flex items-center justify-between bg-[#000000]">
-        <div className="flex items-center gap-3">
-          <Logo className="h-6" />
-          <Link href="/" className="font-extrabold text-sm tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Blue Beacon Research
-          </Link>
-          <span className="text-[10px] text-[#4edea3] font-mono px-2 py-0.5 border border-[#3c4a42] bg-[#131313]">
-            TRACK RECORD
-          </span>
-        </div>
-        <Link
-          href="/dashboard"
-          className="text-xs font-bold text-[#4edea3] hover:underline uppercase tracking-wider flex items-center gap-1"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          Terminal <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
-        </Link>
-      </header>
+      <PublicHeader badge="TRACK RECORD" />
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-8 py-16">
         <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -198,13 +179,13 @@ export default async function AccuracyPage() {
             {/* Volatile/neutral — kept separate, never blended into hit rate */}
             {data.overall.volatile_neutral_summary ? (
               <section className="mb-10 p-5 bg-[#131313] border border-[#3c4a42] rounded-lg">
-                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a] mb-2">
+                <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a] mb-2">
                   Volatile / neutral predictions (not scored as correct/incorrect)
                 </p>
                 <p className="text-sm text-[#e5e2e1] font-mono">
                   {data.overall.volatile_neutral_summary.total} predictions called &ldquo;volatile&rdquo; or &ldquo;neutral&rdquo; — {fmtPct(data.overall.volatile_neutral_summary.fraction_above_threshold)} of those saw an actual move of {data.overall.volatile_neutral_summary.threshold_pct}% or more in either direction within 48h.
                 </p>
-                <p className="mt-2 text-[11px] font-mono text-[#6b7a72]">
+                <p className="mt-2 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
                   These predictions have no single &ldquo;correct&rdquo; direction, so they are never counted
                   toward the hit rate above.
                 </p>
@@ -216,10 +197,10 @@ export default async function AccuracyPage() {
               <h2 className="text-xs font-bold text-[#86948a] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 By asset
               </h2>
-              <div className="overflow-hidden rounded-lg border border-[#3c4a42]">
-                <table className="w-full font-mono text-[13px]">
+              <div className="overflow-x-auto rounded-lg border border-[#3c4a42]">
+                <table className="w-full min-w-[520px] font-mono text-[13px]">
                   <thead>
-                    <tr className="bg-[#131313] text-left text-[10px] uppercase tracking-[0.2em] text-[#86948a]">
+                    <tr className="bg-[#131313] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[#86948a]">
                       <th className="px-4 py-2 font-medium">Asset</th>
                       <th className="px-4 py-2 text-right font-medium">Sample size</th>
                       <th className="px-4 py-2 text-right font-medium">Hit rate</th>
@@ -233,7 +214,7 @@ export default async function AccuracyPage() {
                   </tbody>
                 </table>
               </div>
-              <p className="text-[11px] font-mono text-[#6b7a72]">
+              <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
                 Assets with fewer than {data.min_sample_size}
                 {" "}
                 scored predictions show &ldquo;not enough history yet&rdquo; instead of a headline percentage, to
@@ -241,7 +222,7 @@ export default async function AccuracyPage() {
               </p>
             </section>
 
-            <p className="text-[10px] font-mono text-[#6b7a72]">
+            <p className="text-[12px] md:text-[10px] font-mono text-[#6b7a72]">
               Generated {new Date(data.generated_at).toISOString()} (UTC)
             </p>
           </>

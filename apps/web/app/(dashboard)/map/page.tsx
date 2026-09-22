@@ -731,7 +731,7 @@ export default function MapPage() {
       </div>
 
       <div
-        className="absolute bottom-2 left-2 z-20 text-[10px] text-on-surface-variant/80 px-2 py-1.5"
+        className="absolute bottom-2 left-2 z-20 text-[12px] md:text-[10px] text-on-surface-variant/80 px-2 py-1.5"
         suppressHydrationWarning
       >
         {BASEMAP_ATTRIBUTION}
@@ -740,12 +740,12 @@ export default function MapPage() {
       {fallback && (
         <div className="absolute bottom-12 left-2 z-30">
           <div
-            className="bg-yellow-600/95 text-black px-3 py-2 rounded shadow-md text-[11px] font-medium"
+            className="bg-yellow-600/95 text-black px-3 py-2 rounded shadow-md text-[12px] md:text-[11px] font-medium"
             suppressHydrationWarning
           >
             {feedDegradedCopy(fallbackReason)}
             {fallbackLastUpdated ? (
-              <span className="ml-2 text-[10px] text-black/80" suppressHydrationWarning>
+              <span className="ml-2 text-[12px] md:text-[10px] text-black/80" suppressHydrationWarning>
                 (updated{" "}
                 {safeFormatDistanceToNow(fallbackLastUpdated)} ago)
               </span>
@@ -774,7 +774,7 @@ export default function MapPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <div className="label text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
+              <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
                 Global Tension Index
               </div>
               <div className="relative group" ref={tensionInfoRef}>
@@ -791,7 +791,7 @@ export default function MapPage() {
                     undone by the hover that necessarily precedes a real click. */}
                 <div
                   role="tooltip"
-                  className={`absolute left-0 top-full mt-2 w-56 z-30 p-3 rounded-lg bg-surface-container-high border border-outline-variant/40 shadow-xl text-[10px] leading-relaxed text-on-surface-variant normal-case tracking-normal transition-opacity ${
+                  className={`absolute left-0 top-full mt-2 w-56 z-30 p-3 rounded-lg bg-surface-container-high border border-outline-variant/40 shadow-xl text-[12px] md:text-[10px] leading-relaxed text-on-surface-variant normal-case tracking-normal transition-opacity ${
                     tensionInfoOpen
                       ? "opacity-100 pointer-events-auto"
                       : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
@@ -805,7 +805,7 @@ export default function MapPage() {
               <span className="font-mono text-4xl font-bold text-on-surface">
                 {tensionMetrics.score}
               </span>
-              <span className="font-mono text-[9px] text-on-surface-variant/70">
+              <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70">
                 from {tensionMetrics.sampleSize} active signal{tensionMetrics.sampleSize === 1 ? "" : "s"}
               </span>
             </div>
@@ -821,7 +821,7 @@ export default function MapPage() {
                     />
                   ))}
                 </div>
-                <p className="font-mono text-[8px] text-on-surface-variant/50 mt-1 uppercase tracking-wider">
+                <p className="font-mono text-[12px] md:text-[8px] text-on-surface-variant/50 mt-1 uppercase tracking-wider">
                   Last 24h trend
                 </p>
               </div>
@@ -835,7 +835,7 @@ export default function MapPage() {
         </div>
         <div className="space-y-4 mb-8">
           <div>
-            <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
+            <div className="flex justify-between label text-[12px] md:text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
               <span>Cyber Warfare</span>
               <span className="font-mono text-primary">
                 {tensionMetrics.cyber}%
@@ -849,7 +849,7 @@ export default function MapPage() {
             </div>
           </div>
           <div>
-            <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
+            <div className="flex justify-between label text-[12px] md:text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
               <span>Kinetic Conflict</span>
               <span className="font-mono text-primary">
                 {tensionMetrics.kinetic}%
@@ -863,7 +863,7 @@ export default function MapPage() {
             </div>
           </div>
           <div>
-            <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
+            <div className="flex justify-between label text-[12px] md:text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
               <span>Diplomatic Friction</span>
               <span className="font-mono text-primary">
                 {tensionMetrics.diplomatic}%
@@ -878,7 +878,7 @@ export default function MapPage() {
           </div>
         </div>
         <div className="space-y-3" data-filtered-count={geolocatedSignals.length}>
-          <div className="label text-[10px] tracking-[0.2em] text-on-surface-variant mb-2 uppercase">
+          <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant mb-2 uppercase">
             Filters
           </div>
           <FilterBar
@@ -947,20 +947,20 @@ export default function MapPage() {
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`px-1.5 py-0.5 label text-[8px] border uppercase ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
+                      className={`px-1.5 py-0.5 label text-[12px] md:text-[8px] border uppercase ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
                     >
                       {isUrgent ? "URGENT" : "SIGNAL"}
                     </span>
-                    <span className="font-mono text-[9px] text-on-surface-variant">
+                    <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant">
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)}{" "}
                       ago
                     </span>
                     <FreshTag
                       createdAt={signal.createdAt}
-                      className="font-mono text-[9px] text-primary"
+                      className="font-mono text-[12px] md:text-[9px] text-primary"
                     />
                   </div>
-                  <p className="text-[11px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                  <p className="text-[12px] md:text-[11px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2 group-hover:text-primary transition-colors">
                     {signal.title}
                   </p>
                   <a
@@ -968,10 +968,10 @@ export default function MapPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="label text-[9px] text-primary inline-flex items-center gap-1 group-hover:underline"
+                    className="label text-[12px] md:text-[9px] text-primary inline-flex items-center gap-1 group-hover:underline"
                   >
                     VIEW DETAILS
-                    <span className="material-symbols-outlined text-[10px]">
+                    <span className="material-symbols-outlined text-[12px] md:text-[10px]">
                       arrow_forward
                     </span>
                   </a>
@@ -980,7 +980,7 @@ export default function MapPage() {
             })
           ) : (
             <div className="flex-1 flex items-center justify-center p-6 grayscale opacity-50">
-              <span className="label text-[10px] tracking-widest uppercase">
+              <span className="label text-[12px] md:text-[10px] tracking-widest uppercase">
                 No live stream data
               </span>
             </div>

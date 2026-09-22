@@ -28,7 +28,7 @@ export default function HelpPage() {
               <h2 className="text-lg font-bold text-white font-headline">{item.question}</h2>
               <p className="mt-3 text-sm text-on-surface/70 leading-relaxed">{item.answer}</p>
               {item.certaintyNote ? (
-                <p className="mt-3 text-[11px] font-mono text-on-surface/45 leading-relaxed">
+                <p className="mt-3 text-[12px] md:text-[11px] font-mono text-on-surface/45 leading-relaxed">
                   Note: {item.certaintyNote}
                 </p>
               ) : null}

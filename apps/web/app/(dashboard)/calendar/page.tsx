@@ -128,7 +128,7 @@ function ImpactBadge({ impact }: { impact: Impact }) {
   const meta = IMPACT_META[impact];
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 text-[9px] label font-bold uppercase tracking-widest rounded-sm border ${meta.className}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border ${meta.className}`}
       aria-label={`${meta.label} impact`}
     >
       <span aria-hidden="true">{meta.emoji}</span>
@@ -156,7 +156,7 @@ function EventTable({
             {["Date", timeHeader, "Country", "Event", "Impact", "Forecast", "Previous", "Actual"].map((h) => (
               <th
                 key={h}
-                className="label text-[9px] tracking-widest text-outline font-bold uppercase py-2.5 px-3 whitespace-nowrap"
+                className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase py-2.5 px-3 whitespace-nowrap"
               >
                 {h}
               </th>
@@ -170,13 +170,13 @@ function EventTable({
               data-testid="calendar-event-row"
               className="hover:bg-surface-bright/10 transition-colors"
             >
-              <td className="py-3 px-3 mono text-[11px] text-on-surface/70 whitespace-nowrap">
+              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">
                 {formatEventDate(e, timeZone)}
               </td>
-              <td className="py-3 px-3 mono text-[11px] text-on-surface/70 whitespace-nowrap" title={e.timeNote}>
+              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap" title={e.timeNote}>
                 {formatEventTime(e, timeZone)}
               </td>
-              <td className="py-3 px-3 text-[11px] text-on-surface/70 whitespace-nowrap">{e.country}</td>
+              <td className="py-3 px-3 text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">{e.country}</td>
               <td className="py-3 px-3 text-sm font-bold text-on-surface">
                 <a
                   href={e.sourceUrl}
@@ -192,9 +192,9 @@ function EventTable({
               <td className="py-3 px-3">
                 <ImpactBadge impact={e.impact} />
               </td>
-              <td className="py-3 px-3 mono text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
-              <td className="py-3 px-3 mono text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
-              <td className="py-3 px-3 mono text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
+              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
+              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
+              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
             </tr>
           ))}
         </tbody>
@@ -215,7 +215,7 @@ function CalendarFilters({
   onTimeZoneChange: (next: TimeZoneMode) => void;
 }) {
   const fieldClass = "flex items-center gap-2";
-  const labelClass = "text-[10px] uppercase tracking-wider shrink-0";
+  const labelClass = "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
   const labelStyle = { color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" } as const;
   const patch = (partial: Partial<CalendarFilterValue>) => onChange({ ...filters, ...partial });
 
@@ -301,7 +301,7 @@ function CalendarFilters({
                 data-testid={`calendar-timezone-${opt.id}`}
                 aria-pressed={selected}
                 onClick={() => onTimeZoneChange(opt.id)}
-                className="px-3 py-1.5 text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
                   backgroundColor: selected ? "#4edea3" : "#201f1f",
@@ -366,7 +366,7 @@ export default function CalendarPage() {
       {/* Countdown to next high-impact event — prominent, persistent */}
       <section className="bg-surface-container rounded-lg border border-primary/30 shadow-xl p-6 mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <span className="label text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
+          <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
             Next High-Impact Event
           </span>
           {nextHighImpact ? (
@@ -382,7 +382,7 @@ export default function CalendarPage() {
         </div>
         {nextHighImpact && (
           <div className="text-right">
-            <span className="label text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
+            <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
               Countdown
             </span>
             <Countdown target={eventDateTime(nextHighImpact)} />
@@ -397,7 +397,7 @@ export default function CalendarPage() {
         className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
       >
         <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30">
-          <span className="label text-[10px] tracking-widest text-outline font-bold uppercase">This Week</span>
+          <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">This Week</span>
         </div>
         <div className="p-2">
           <EventTable events={thisWeek} timeZone={timeZone} />
@@ -411,7 +411,7 @@ export default function CalendarPage() {
         className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
       >
         <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30">
-          <span className="label text-[10px] tracking-widest text-outline font-bold uppercase">
+          <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">
             Upcoming ({upcoming.length})
           </span>
         </div>
@@ -420,7 +420,7 @@ export default function CalendarPage() {
         </div>
       </section>
 
-      <p className="text-[10px] text-on-surface/35 leading-relaxed max-w-3xl">
+      <p className="text-[12px] md:text-[10px] text-on-surface/35 leading-relaxed max-w-3xl">
         Dates are sourced directly from each institution's own published schedule (linked per event) as of{" "}
         {calendarData._meta.sourcedAt}, not a paid calendar API — this is a deliberate v1 choice, not a gap. Forecast
         / Previous / Actual show — because there is no live data feed behind them yet; Blue Beacon never fabricates

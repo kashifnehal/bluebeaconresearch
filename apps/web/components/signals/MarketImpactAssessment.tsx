@@ -32,7 +32,7 @@ function Part({
   return (
     <div className="space-y-1.5" data-part={label}>
       <div
-        className="text-[9px] font-black uppercase tracking-widest text-muted"
+        className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted"
         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
       >
         {label}
@@ -70,7 +70,7 @@ export function MarketImpactAssessment({
       <div className="flex items-center gap-2">
         {headingIcon}
         <span
-          className="text-[10px] font-black uppercase tracking-[0.2em] text-text-primary"
+          className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-text-primary"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           data-testid="market-impact-heading"
         >
@@ -80,7 +80,7 @@ export function MarketImpactAssessment({
 
       {preview ? (
         <p
-          className="text-[11px] leading-snug text-on-surface-variant"
+          className="text-[12px] md:text-[11px] leading-snug text-on-surface-variant"
           data-testid="market-impact-preview-note"
         >
           {PREVIEW_NOTE}{" "}
@@ -95,7 +95,7 @@ export function MarketImpactAssessment({
         <Part label="Source confirmation">
           <span
             data-testid="market-impact-source-confirmation"
-            className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[11px] font-medium text-text-secondary"
+            className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[12px] md:text-[11px] font-medium text-text-secondary"
             style={{ borderColor: "var(--border-subtle)" }}
           >
             {sourceConfirmation}
@@ -116,7 +116,7 @@ export function MarketImpactAssessment({
 
       {fallback ? (
         <p
-          className="text-[11px] leading-relaxed text-text-secondary"
+          className="text-[12px] md:text-[11px] leading-relaxed text-text-secondary"
           data-testid="market-impact-gpr-fallback"
         >
           {GPR_FALLBACK_SENTENCE}
@@ -147,7 +147,7 @@ export function MarketImpactAssessment({
                       {showPriceSubtext &&
                       priceInfo?.priceAtSignal != null &&
                       priceInfo?.currentPrice != null ? (
-                        <p className="pl-1 font-mono text-[9px] text-muted">
+                        <p className="pl-1 font-mono text-[12px] md:text-[9px] text-muted">
                           {formatPriceSinceFiredSubtext(
                             c.asset,
                             priceInfo.priceAtSignal,

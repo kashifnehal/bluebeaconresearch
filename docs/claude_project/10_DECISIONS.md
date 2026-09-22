@@ -638,3 +638,20 @@ credit (already an open item) means this path currently covers meaningful live t
 **Rationale:** Admin `email_confirm: true` is per-account. A global confirm-email off switch would weaken real signup. Client-editable metadata could self-flag and hide a real user from metrics.
 
 **Cross-tree mapping:** Recorded as **ADR 023** in `docs/brain/10_DECISIONS.md`.
+
+## D28: Mobile-first responsive baseline — 360px floor, phone is the base style (#186)
+
+**Decision:** Five standing rules for all UI work from 2026-09-23 onward.
+1. **360px is the design floor**, not 375px. The test matrix is 360 / 390 / 414 / 768 / 1024.
+2. **Base styles are the phone; breakpoint prefixes add desktop.** Never the reverse.
+3. **Form fields render at 16px or larger under 768px.** Hard constraint, enforced globally in `globals.css`.
+4. **No rendered text below 12px on phone widths.** Use `text-[12px] md:text-[Npx]` to keep the desktop size.
+5. **Tables scroll, they never clip.** Every `<table>` needs an `overflow-x-auto` wrapper, and no ancestor may carry `overflow-hidden` on the horizontal axis.
+
+Tailwind's default breakpoints (`sm` 640 / `md` 768 / `lg` 1024 / `xl` 1280) are **settled** — do not introduce custom ones.
+
+**Context:** The product was built desktop-only with a mobile shell bolted on: only 19 of 81 `.tsx` files carried any breakpoint prefix, 328 hardcoded font sizes were under 12px, and two public pages overflowed a 360px viewport by 111px and 117px. The founder could not use the site on their own phone.
+
+**Rationale:** 360px covers two of the top six real mobile resolutions worldwide (~12.4% combined); clearing it clears 390/393/414. The 16px input rule is a documented Mobile Safari behavior, not taste — below it, focusing a field zooms the viewport and strands the user. The 12px floor is an explicit product-quality judgement, **not** a WCAG requirement (WCAG sets no minimum font size; 1.4.4 only requires 200% resize without loss) — it is adopted because sub-10px type reads as a dashboard toy on a product selling research credibility. Keeping Tailwind's defaults avoids re-reasoning every existing responsive utility for no benefit.
+
+**Cross-tree mapping:** Recorded as **ADR 024** in `docs/brain/10_DECISIONS.md`.

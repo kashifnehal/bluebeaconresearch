@@ -90,7 +90,7 @@ export function TelegramConnect() {
 
   if (isLoading) {
     return (
-      <div className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
+      <div className="font-mono text-[12px] md:text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
         Checking Telegram link...
       </div>
     );
@@ -100,12 +100,12 @@ export function TelegramConnect() {
     return (
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-label text-[10px] font-bold uppercase">Telegram</p>
-          <p className="text-[10px] text-on-surface-variant">
+          <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">Telegram</p>
+          <p className="text-[12px] md:text-[10px] text-on-surface-variant">
             Connected — chat ID {status.telegramChatId}
           </p>
         </div>
-        <span className="px-2 py-0.5 text-[9px] label font-bold uppercase tracking-widest rounded-sm border bg-primary/10 border-primary/50 text-primary shrink-0">
+        <span className="px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border bg-primary/10 border-primary/50 text-primary shrink-0">
           Linked
         </span>
       </div>
@@ -116,15 +116,15 @@ export function TelegramConnect() {
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="font-label text-[10px] font-bold uppercase">Telegram</p>
-          <p className="text-[10px] text-on-surface-variant">
+          <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">Telegram</p>
+          <p className="text-[12px] md:text-[10px] text-on-surface-variant">
             Not connected — link your account to receive alerts in Telegram.
           </p>
         </div>
         <button
           onClick={() => generateCode.mutate()}
           disabled={generateCode.isPending}
-          className="bg-primary px-4 py-2 rounded text-black font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 shrink-0"
+          className="bg-primary px-4 py-2 rounded text-black font-bold text-[12px] md:text-[10px] uppercase tracking-widest disabled:opacity-50 shrink-0"
         >
           {generateCode.isPending ? "Generating..." : code ? "Regenerate Code" : "Connect Telegram"}
         </button>
@@ -132,21 +132,21 @@ export function TelegramConnect() {
 
       {code && !expired && (
         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded p-4 space-y-2">
-          <p className="text-[10px] text-on-surface-variant">
+          <p className="text-[12px] md:text-[10px] text-on-surface-variant">
             1. Open Telegram and search for <strong className="text-on-surface">@BlueBeaconResearchBot</strong>.
           </p>
-          <p className="text-[10px] text-on-surface-variant">2. Send this exact message to the bot:</p>
+          <p className="text-[12px] md:text-[10px] text-on-surface-variant">2. Send this exact message to the bot:</p>
           <code className="block bg-black/30 text-primary font-mono text-xs px-3 py-2 rounded select-all">
             /connect {code}
           </code>
-          <p className="text-[10px] text-on-surface-variant">
+          <p className="text-[12px] md:text-[10px] text-on-surface-variant">
             Waiting for confirmation — this updates automatically once linked. Code expires in 10 minutes.
           </p>
         </div>
       )}
 
       {code && expired && (
-        <p className="text-[10px] text-error">Code expired. Click Connect Telegram again to generate a new one.</p>
+        <p className="text-[12px] md:text-[10px] text-error">Code expired. Click Connect Telegram again to generate a new one.</p>
       )}
     </div>
   );

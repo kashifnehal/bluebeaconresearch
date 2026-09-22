@@ -11,6 +11,14 @@
 
 ## 1. LAYOUT COMPONENTS
 
+### PublicHeader (`components/layout/PublicHeader.tsx`) — added 2026-09-23 (#186 Phase 2)
+
+Shared chrome for the logged-out public pages `/accuracy` and `/status`, which previously carried a byte-identical copy of the same header and drifted independently. Takes one prop, `badge: string` ("TRACK RECORD" / "SYSTEM MONITOR").
+
+Responsive behavior (this is the whole reason it exists): `px-4 md:px-8`, `min-w-0` + `truncate` on the wordmark so it can shrink instead of wrapping to three lines, `shrink-0` on the logo and the Terminal link, the badge `hidden md:inline`, and `min-h-[44px] md:min-h-0` on the Terminal link for a thumb-sized tap target. Before extraction both pages overflowed 360px viewports by 111px and 117px.
+
+
+
 ### Sidebar (apps/web/components/layout/Sidebar.tsx)
 **Used in:** (dashboard)/layout.tsx
 **Fixed left, 256px wide. At `md`+ always visible. Below `md` an off-canvas drawer (`-translate-x-full` / `translate-x-0`) driven by `useUIStore.mobileSidebarOpen`, with a tap-outside backdrop. (#133, 2026-09-12)**

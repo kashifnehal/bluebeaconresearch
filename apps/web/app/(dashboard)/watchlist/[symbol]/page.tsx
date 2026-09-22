@@ -229,7 +229,7 @@ export default function WatchlistSymbolPage() {
         {/* Breadcrumb */}
         <button
           onClick={() => router.push("/watchlist")}
-          className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors mb-6"
+          className="group flex items-center gap-2 text-[12px] md:text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors mb-6"
         >
           <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">
             chevron_left
@@ -247,7 +247,7 @@ export default function WatchlistSymbolPage() {
               </p>
               {isFollowed && (
                 <span
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-sm font-label text-[9px] font-bold tracking-widest uppercase border border-primary/50 bg-primary/10 text-primary"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[9px] font-bold tracking-widest uppercase border border-primary/50 bg-primary/10 text-primary"
                   title="One of the assets you follow"
                 >
                   <span className="material-symbols-outlined text-[12px]">star</span>
@@ -302,7 +302,7 @@ export default function WatchlistSymbolPage() {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setChartRange(range.id)}
-                    className="px-3 py-1 rounded-sm font-label text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                    className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
                     style={{
                       backgroundColor: selected ? "#4edea3" : "transparent",
                       color: selected ? "#003824" : "#bbcac0",
@@ -316,7 +316,7 @@ export default function WatchlistSymbolPage() {
             </div>
           </div>
           {showYahooIncomplete && history5y?.availableFrom && (
-            <p className="text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
+            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
               Showing available history from{" "}
               {new Date(history5y.availableFrom).toLocaleDateString(undefined, {
                 month: "short",
@@ -326,11 +326,11 @@ export default function WatchlistSymbolPage() {
             </p>
           )}
           {chartLoading ? (
-            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
+            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
               {isFiveYearRange ? "Loading 5-year history…" : "Loading price history…"}
             </p>
           ) : chartData.length < 2 ? (
-            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
+            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
               {isFiveYearRange
                 ? "Not enough 5-year price history available for this symbol"
                 : "Not enough price history yet for a chart view"}
@@ -395,7 +395,7 @@ export default function WatchlistSymbolPage() {
               </ResponsiveContainer>
             </div>
           )}
-          <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
+          <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
             {activeRange.source === "db"
               ? "Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation."
               : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
@@ -408,11 +408,11 @@ export default function WatchlistSymbolPage() {
             Correlated Signals — Last {HISTORY_DAYS} Days
           </h2>
           {signalsLoading ? (
-            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
+            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
               Loading signals…
             </p>
           ) : events.length === 0 && signalsPage === 1 ? (
-            <p className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
+            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
               No signals flagged {symbol} impact in the last {HISTORY_DAYS} days
             </p>
           ) : (
@@ -436,11 +436,11 @@ export default function WatchlistSymbolPage() {
                         <CommodityChip asset={impact.asset} direction={impact.direction} confidence={impact.confidence} />
                       )}
                     </div>
-                    <p className="text-[9px] font-mono text-on-surface-variant uppercase tracking-widest mb-2">
+                    <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-widest mb-2">
                       {ev.country} · {safeFormatDistanceToNow(ev.eventDate ?? ev.createdAt, { addSuffix: true })} ·
                       Severity {ev.severity}
                     </p>
-                    <p className="text-[10px] font-mono text-on-surface-variant/80">
+                    <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/80">
                       {move.status === "too-recent" &&
                         "Signaled less than an hour ago — not enough time has passed to measure a price move yet."}
                       {move.status === "insufficient-data" &&

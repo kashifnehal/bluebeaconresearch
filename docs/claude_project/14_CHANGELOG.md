@@ -6,6 +6,21 @@
 
 ---
 
+## PHASE 51 — #186 RESPONSIVE FOUNDATIONS, PHASES 1+2 (2026-09-23)
+
+`apps/web` only. First ship of the mobile/tablet responsive rework.
+
+- **iOS input zoom fixed.** One `@media (max-width:767px)` rule in `globals.css` forces `input`/`select`/`textarea` to 16px. `!important` is required because the auth forms set `fontSize` via inline style objects. Mobile Safari zooms the viewport on focus below 16px.
+- **Sub-12px type floor.** All 328 hardcoded arbitrary sub-12px Tailwind sizes across 36 files rewritten to `text-[12px] md:text-[Npx]` — 12px phone floor, desktop unchanged.
+- **Table clipping.** `accuracy` and `admin/metrics` had `overflow-hidden` wrappers silently cutting off table columns on narrow screens → `overflow-x-auto` (+ `min-w-[520px]` on accuracy's 4-column table).
+- **Public header overflow.** New shared `components/layout/PublicHeader.tsx` replaces the duplicated header in `accuracy` and `status`. `/accuracy` 111px → 0px, `/status` 117px → 0px at 360px.
+
+Verified on the production build in a real browser at 360px, not on the dev server (which was serving a stale CSS chunk). Phases 3–6 — the 21 zero-responsive files, the map, the 768px tablet pass, tap targets, and the regression test — are **not** in this ship. Brain changelog: v0.84.0. Evidence: `docs/brain/LIVE_TODO.md`.
+
+**Known worst remaining:** `/alerts` overflows **335px** at 360px and `/map` renders **0% map** on a phone (two `w-80` panels occlude the viewport; `overflow-hidden` hides it from scroll metrics).
+
+---
+
 ## PHASE 50 — ACLED CLAIMS REMOVED FROM WEB COPY (2026-09-23)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.83.0.

@@ -189,7 +189,7 @@ export function SignalChatPanel({
           <div className="flex items-center gap-2">
             <MessageCircle size={14} className="text-primary-fixed-dim" />
             <span
-              className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-fixed-dim"
+              className="text-[12px] md:text-[11px] font-bold uppercase tracking-[0.16em] text-primary-fixed-dim"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               Ask About This Signal
@@ -215,7 +215,7 @@ export function SignalChatPanel({
         <div className="flex items-center gap-2">
           <MessageCircle size={14} className="text-primary-fixed-dim" />
           <span
-            className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-fixed-dim"
+            className="text-[12px] md:text-[11px] font-bold uppercase tracking-[0.16em] text-primary-fixed-dim"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Ask About This Signal
@@ -247,7 +247,7 @@ export function SignalChatPanel({
           className="max-h-[min(60vh,480px)] min-h-[200px] overflow-y-auto overflow-x-hidden px-4 py-5 space-y-5 @[400px]:px-5"
         >
           {isLoadingHistory ? (
-            <div className="flex items-center gap-2 text-primary-fixed-dim text-[11px] font-bold uppercase tracking-widest">
+            <div className="flex items-center gap-2 text-primary-fixed-dim text-[12px] md:text-[11px] font-bold uppercase tracking-widest">
               <span className="material-symbols-outlined text-lg animate-spin">
                 progress_activity
               </span>
@@ -324,7 +324,7 @@ export function SignalChatPanel({
           {isSending && (
             <div
               data-testid="signal-chat-loading"
-              className="flex items-center gap-2 text-primary-fixed-dim text-[11px] font-bold uppercase tracking-widest"
+              className="flex items-center gap-2 text-primary-fixed-dim text-[12px] md:text-[11px] font-bold uppercase tracking-widest"
             >
               <span className="material-symbols-outlined text-lg animate-spin">
                 progress_activity
@@ -410,7 +410,7 @@ function CitedAssistantReply({ content }: { content: string }) {
           className="border-t border-outline-variant/25 pt-2.5"
         >
           <p
-            className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-primary-fixed-dim"
+            className="mb-1.5 text-[12px] md:text-[10px] font-bold uppercase tracking-[0.14em] text-primary-fixed-dim"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Sources

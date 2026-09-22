@@ -52,14 +52,14 @@ function Stat({ label, value, hint }: { label: string; value: number | string; h
   return (
     <Card className="bg-[#131313] ring-[#3c4a42]/60">
       <CardHeader>
-        <CardTitle className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92]">
+        <CardTitle className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92]">
           {label}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="font-mono text-3xl font-semibold text-[#e5e2e1]">{value}</p>
         {hint ? (
-          <p className="mt-1 text-[10px] font-mono uppercase tracking-[0.15em] text-[#6b7a72]">{hint}</p>
+          <p className="mt-1 text-[12px] md:text-[10px] font-mono uppercase tracking-[0.15em] text-[#6b7a72]">{hint}</p>
         ) : null}
       </CardContent>
     </Card>
@@ -81,11 +81,11 @@ export default async function AdminMetricsPage() {
     <div className="min-h-screen bg-[#0e0e0e] px-6 py-10 text-[#e5e2e1]">
       <div className="mx-auto max-w-4xl space-y-8">
         <header className="space-y-1">
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#6b7a72]">
+          <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.3em] text-[#6b7a72]">
             Blue Beacon Research · Founder Console
           </p>
           <h1 className="font-mono text-xl font-semibold uppercase tracking-[0.15em]">Usage Metrics</h1>
-          <p className="text-[11px] font-mono text-[#8a9a92]">
+          <p className="text-[12px] md:text-[11px] font-mono text-[#8a9a92]">
             Signed in as {clients.user.email}
           </p>
         </header>
@@ -96,7 +96,7 @@ export default async function AdminMetricsPage() {
           </div>
         ) : (
           <>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-[#6b7a72]">
+            <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.15em] text-[#6b7a72]">
               Generated {new Date(metrics.generated_at).toISOString()} · windows are UTC
             </p>
 
@@ -113,13 +113,13 @@ export default async function AdminMetricsPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#8a9a92]">
+              <h2 className="text-[12px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#8a9a92]">
                 Events by type · last 7 days
               </h2>
-              <div className="overflow-hidden rounded-xl ring-1 ring-[#3c4a42]/60">
+              <div className="overflow-x-auto rounded-xl ring-1 ring-[#3c4a42]/60">
                 <table className="w-full font-mono text-[12px]">
                   <thead>
-                    <tr className="bg-[#131313] text-left text-[10px] uppercase tracking-[0.2em] text-[#6b7a72]">
+                    <tr className="bg-[#131313] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[#6b7a72]">
                       <th className="px-4 py-2 font-medium">Event type</th>
                       <th className="px-4 py-2 text-right font-medium">Count</th>
                     </tr>
@@ -148,7 +148,7 @@ export default async function AdminMetricsPage() {
 
         <Link
           href="/dashboard"
-          className="inline-block text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92] hover:text-[#e5e2e1]"
+          className="inline-block text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92] hover:text-[#e5e2e1]"
         >
           ← Back to dashboard
         </Link>

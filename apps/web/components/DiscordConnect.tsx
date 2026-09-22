@@ -165,7 +165,7 @@ export function DiscordConnect() {
 
   if (loading) {
     return (
-      <div className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
+      <div className="font-mono text-[12px] md:text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
         Checking Discord link...
       </div>
     );
@@ -176,12 +176,12 @@ export function DiscordConnect() {
       <div className="space-y-3" data-testid="discord-connect">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-label text-[10px] font-bold uppercase">Discord</p>
-            <p className="text-[10px] text-on-surface-variant">
+            <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">Discord</p>
+            <p className="text-[12px] md:text-[10px] text-on-surface-variant">
               Connected — webhook saved. Alerts will deliver to this channel.
             </p>
           </div>
-          <span className="px-2 py-0.5 text-[9px] label font-bold uppercase tracking-widest rounded-sm border bg-primary/10 border-primary/50 text-primary shrink-0">
+          <span className="px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border bg-primary/10 border-primary/50 text-primary shrink-0">
             Linked
           </span>
         </div>
@@ -190,7 +190,7 @@ export function DiscordConnect() {
             type="button"
             onClick={handleTest}
             disabled={testing}
-            className="bg-primary px-4 py-2 rounded text-black font-bold text-[10px] uppercase tracking-widest disabled:opacity-50"
+            className="bg-primary px-4 py-2 rounded text-black font-bold text-[12px] md:text-[10px] uppercase tracking-widest disabled:opacity-50"
           >
             {testing ? "Testing..." : "Test"}
           </button>
@@ -198,15 +198,15 @@ export function DiscordConnect() {
             type="button"
             onClick={handleClear}
             disabled={clearing}
-            className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface disabled:opacity-50"
+            className="px-4 py-2 text-[12px] md:text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface disabled:opacity-50"
           >
             {clearing ? "Disconnecting..." : "Disconnect"}
           </button>
           {testResult === "ok" && (
-            <span className="text-[10px] text-primary font-bold uppercase">Test delivered</span>
+            <span className="text-[12px] md:text-[10px] text-primary font-bold uppercase">Test delivered</span>
           )}
           {testResult === "fail" && (
-            <span className="text-[10px] text-error">{testError ?? "Test failed"}</span>
+            <span className="text-[12px] md:text-[10px] text-error">{testError ?? "Test failed"}</span>
           )}
         </div>
       </div>
@@ -216,8 +216,8 @@ export function DiscordConnect() {
   return (
     <div className="space-y-3" data-testid="discord-connect">
       <div>
-        <p className="font-label text-[10px] font-bold uppercase">Discord</p>
-        <p className="text-[10px] text-on-surface-variant">
+        <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">Discord</p>
+        <p className="text-[12px] md:text-[10px] text-on-surface-variant">
           Server Settings → Integrations → Webhooks → New Webhook → Copy Webhook URL
         </p>
       </div>
@@ -238,7 +238,7 @@ export function DiscordConnect() {
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="bg-primary px-4 py-2 rounded text-black font-bold text-[10px] uppercase tracking-widest disabled:opacity-50"
+          className="bg-primary px-4 py-2 rounded text-black font-bold text-[12px] md:text-[10px] uppercase tracking-widest disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save"}
         </button>
@@ -246,15 +246,15 @@ export function DiscordConnect() {
           type="button"
           onClick={handleTest}
           disabled={testing}
-          className="px-4 py-2 rounded border border-outline-variant/40 text-[10px] font-bold uppercase tracking-widest text-on-surface hover:border-primary/50 disabled:opacity-50"
+          className="px-4 py-2 rounded border border-outline-variant/40 text-[12px] md:text-[10px] font-bold uppercase tracking-widest text-on-surface hover:border-primary/50 disabled:opacity-50"
         >
           {testing ? "Testing..." : "Test"}
         </button>
         {testResult === "ok" && (
-          <span className="text-[10px] text-primary font-bold uppercase">Test delivered</span>
+          <span className="text-[12px] md:text-[10px] text-primary font-bold uppercase">Test delivered</span>
         )}
         {testResult === "fail" && (
-          <span className="text-[10px] text-error">{testError ?? "Test failed"}</span>
+          <span className="text-[12px] md:text-[10px] text-error">{testError ?? "Test failed"}</span>
         )}
       </div>
     </div>

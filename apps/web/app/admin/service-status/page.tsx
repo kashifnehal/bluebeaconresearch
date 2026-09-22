@@ -19,13 +19,13 @@ export default async function ServiceStatusPage() {
     <div className="min-h-screen bg-[#0e0e0e] px-6 py-10 text-[#e5e2e1]">
       <div className="mx-auto max-w-4xl space-y-8">
         <header className="space-y-1">
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#6b7a72]">
+          <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.3em] text-[#6b7a72]">
             Blue Beacon Research · Founder Console
           </p>
           <h1 className="font-mono text-xl font-semibold uppercase tracking-[0.15em]">
             Service Status
           </h1>
-          <p className="text-[11px] font-mono text-[#8a9a92]">
+          <p className="text-[12px] md:text-[11px] font-mono text-[#8a9a92]">
             Signed in as {clients.user.email} · Phase 1 (event log only, no charts)
           </p>
         </header>
@@ -34,7 +34,7 @@ export default async function ServiceStatusPage() {
 
         <Link
           href="/dashboard"
-          className="inline-block text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92] hover:text-[#e5e2e1]"
+          className="inline-block text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92] hover:text-[#e5e2e1]"
         >
           ← Back to dashboard
         </Link>

@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import { PublicHeader } from "@/components/layout/PublicHeader";
 import { getSystemChecks, type CheckStatus } from "@/lib/status-checks";
 
 export const metadata = {
@@ -27,26 +26,7 @@ export default async function StatusPage() {
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* Header */}
-      <header className="h-16 border-b border-[#2a2a2a] px-8 flex items-center justify-between bg-[#000000]">
-        <div className="flex items-center gap-3">
-          <Logo className="h-6" />
-          <Link href="/" className="font-extrabold text-sm tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Blue Beacon Research
-          </Link>
-          <span className="text-[10px] text-[#4edea3] font-mono px-2 py-0.5 border border-[#3c4a42] bg-[#131313]">
-            SYSTEM MONITOR
-          </span>
-        </div>
-
-        <Link
-          href="/dashboard"
-          className="text-xs font-bold text-[#4edea3] hover:underline uppercase tracking-wider flex items-center gap-1"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          Terminal <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
-        </Link>
-      </header>
+      <PublicHeader badge="SYSTEM MONITOR" />
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-8 py-16">

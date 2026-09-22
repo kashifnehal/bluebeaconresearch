@@ -301,7 +301,7 @@ export function CommandPalette() {
             className="flex-1 bg-transparent text-sm text-[#e5e2e1] outline-none placeholder:text-[#86948a]"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           />
-          <span className="rounded-sm border border-[#3c4a42] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#86948a]">
+          <span className="rounded-sm border border-[#3c4a42] px-1.5 py-0.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#86948a]">
             Esc
           </span>
         </div>
@@ -319,7 +319,7 @@ export function CommandPalette() {
               {groupedResults.map(({ group, items }) => (
                 <div key={group} className="mb-2 last:mb-0">
                   <div
-                    className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
+                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     {group}
@@ -348,7 +348,7 @@ export function CommandPalette() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
                           {item.sublabel && (
-                            <span className="block truncate text-[10px] text-[#86948a]">{item.sublabel}</span>
+                            <span className="block truncate text-[12px] md:text-[10px] text-[#86948a]">{item.sublabel}</span>
                           )}
                         </span>
                       </a>
@@ -370,7 +370,7 @@ export function CommandPalette() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
                           {item.sublabel && (
-                            <span className="block truncate text-[10px] text-[#86948a]">{item.sublabel}</span>
+                            <span className="block truncate text-[12px] md:text-[10px] text-[#86948a]">{item.sublabel}</span>
                           )}
                         </span>
                       </button>
@@ -381,7 +381,7 @@ export function CommandPalette() {
               {suggested.length > 0 && (
                 <div className="mb-2 last:mb-0 border-t border-[#2a2a2a] pt-2">
                   <div
-                    className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#4edea3]"
+                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#4edea3]"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     Suggested
@@ -409,7 +409,7 @@ export function CommandPalette() {
                             {item.label}
                           </span>
                           {item.sublabel && (
-                            <span className="block truncate text-[10px] text-[#86948a]">
+                            <span className="block truncate text-[12px] md:text-[10px] text-[#86948a]">
                               AI suggestion · {item.sublabel}
                             </span>
                           )}
@@ -422,7 +422,7 @@ export function CommandPalette() {
               {fallback.length > 0 && (
                 <div className="mb-2 last:mb-0 border-t border-[#2a2a2a] pt-2">
                   <div
-                    className="px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
+                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     Not sure? Try
@@ -457,17 +457,17 @@ export function CommandPalette() {
           )}
 
           {showAssistPending && (
-            <div className="px-2 py-2 text-[10px] uppercase tracking-widest text-[#86948a]">
+            <div className="px-2 py-2 text-[12px] md:text-[10px] uppercase tracking-widest text-[#86948a]">
               Looking for a suggestion...
             </div>
           )}
 
           {hasQuery && signalsFetching && (
-            <div className="px-2 py-2 text-[10px] uppercase tracking-widest text-[#86948a]">Searching signals...</div>
+            <div className="px-2 py-2 text-[12px] md:text-[10px] uppercase tracking-widest text-[#86948a]">Searching signals...</div>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-4 border-t border-[#2a2a2a] px-4 py-2 text-[9px] uppercase tracking-widest text-[#86948a]">
+        <div className="flex items-center justify-end gap-4 border-t border-[#2a2a2a] px-4 py-2 text-[12px] md:text-[9px] uppercase tracking-widest text-[#86948a]">
           <span>↑↓ Navigate</span>
           <span>↵ Select</span>
         </div>

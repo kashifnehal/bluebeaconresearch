@@ -25,7 +25,7 @@ export function MediaImpactTag({
   return (
     <span className="inline-flex max-w-full flex-col gap-1" data-testid="media-impact-tag">
       <span
-        className="inline-flex w-fit items-center rounded-sm border border-sky-400/40 bg-sky-400/10 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-sky-200"
+        className="inline-flex w-fit items-center rounded-sm border border-sky-400/40 bg-sky-400/10 px-1.5 py-0.5 text-[12px] md:text-[10px] font-black uppercase tracking-widest text-sky-200"
         title={hover}
         aria-label={hover}
       >
@@ -33,7 +33,7 @@ export function MediaImpactTag({
       </span>
       {expanded ? (
         <span
-          className="text-[11px] leading-snug text-on-surface-variant"
+          className="text-[12px] md:text-[11px] leading-snug text-on-surface-variant"
           data-testid="media-impact-detail"
         >
           {entity}. {short} Historical pattern only — not a forecast.

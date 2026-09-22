@@ -112,7 +112,7 @@ export default function EventDetailPage() {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center bg-app" style={{ backgroundColor: "var(--bg-app)" }}>
-        <span className="text-[10px] font-black uppercase tracking-widest text-muted">
+        <span className="text-[12px] md:text-[10px] font-black uppercase tracking-widest text-muted">
           Loading signal…
         </span>
       </div>
@@ -220,7 +220,7 @@ export default function EventDetailPage() {
       <nav className="px-8 pt-6 pb-2">
         <button
           onClick={() => router.back()}
-          className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted hover:text-accent transition-colors"
+          className="group flex items-center gap-2 text-[12px] md:text-[10px] font-black uppercase tracking-widest text-muted hover:text-accent transition-colors"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           <ChevronLeft
@@ -239,7 +239,7 @@ export default function EventDetailPage() {
               <div className="flex items-center gap-4 mb-4">
                 <div className="px-3 py-1 bg-accent/10 border border-accent/20 rounded-sm">
                   <span
-                    className="text-[10px] font-black uppercase tracking-widest text-accent"
+                    className="text-[12px] md:text-[10px] font-black uppercase tracking-widest text-accent"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     Signal ID: {signal.id.slice(0, 8)}
@@ -251,7 +251,7 @@ export default function EventDetailPage() {
                   caveat={signal.mediaImpactCaveat}
                   expanded
                 />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted">
+                <span className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-muted">
                   Acknowledge Status: ACTIVE
                 </span>
               </div>
@@ -267,7 +267,7 @@ export default function EventDetailPage() {
                 <div className="flex items-center gap-3">
                   <Clock size={16} className="text-accent" />
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted">
+                    <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
                       Published
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary">
@@ -283,7 +283,7 @@ export default function EventDetailPage() {
                 >
                   <Database size={16} className="text-accent" />
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted">
+                    <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
                       Verification
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary">
@@ -294,7 +294,7 @@ export default function EventDetailPage() {
                 <div className="flex items-center gap-3">
                   <MapPin size={16} className="text-accent" />
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-muted">
+                    <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
                       Location
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary uppercase">
@@ -337,8 +337,8 @@ export default function EventDetailPage() {
                   }}
                   className={
                     alertCta.variant === "severe"
-                      ? "h-11 bg-accent text-bg-app text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
-                      : "h-11 border border-border bg-transparent text-text-secondary text-[9px] font-black uppercase tracking-widest rounded-sm hover:bg-surface/40 transition-all"
+                      ? "h-11 bg-accent text-bg-app text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      : "h-11 border border-border bg-transparent text-text-secondary text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm hover:bg-surface/40 transition-all"
                   }
                   variant={alertCta.variant === "severe" ? "default" : "outline"}
                 >
@@ -348,7 +348,7 @@ export default function EventDetailPage() {
                   <Button
                     onClick={handleShare}
                     variant="outline"
-                    className="h-11 border-border text-[9px] font-black uppercase tracking-widest rounded-sm"
+                    className="h-11 border-border text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm"
                   >
                     <Share2 size={14} className="mr-2" /> SHARE
                   </Button>
@@ -361,7 +361,7 @@ export default function EventDetailPage() {
                           data-testid="event-record"
                           onClick={handleRecord}
                           variant="outline"
-                          className="h-11 border-border text-[9px] font-black uppercase tracking-widest rounded-sm"
+                          className="h-11 border-border text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm"
                         />
                       }
                     >
@@ -386,7 +386,7 @@ export default function EventDetailPage() {
                 <TabsTrigger
                   key={tab}
                   value={tab}
-                  className="bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[10px] font-black uppercase tracking-[0.3em] text-muted transition-all"
+                  className="bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted transition-all"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   {tab === "analysis" && <Shield size={14} className="mr-2" />}
@@ -401,7 +401,7 @@ export default function EventDetailPage() {
                 <div className="space-y-8">
                     <div className="prose prose-invert max-w-none">
                       <div
-                        className="text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
+                        className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
                         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                       >
                         Signal Summary
@@ -413,7 +413,7 @@ export default function EventDetailPage() {
 
                     <div>
                       <div
-                        className="text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
+                        className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
                         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                       >
                         Full Analyst Briefing
@@ -446,7 +446,7 @@ export default function EventDetailPage() {
                         className="group"
                       >
                         <summary
-                          className="mb-4 cursor-pointer text-[10px] font-black uppercase tracking-[0.2em] text-accent"
+                          className="mb-4 cursor-pointer text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Why this signal
@@ -460,7 +460,7 @@ export default function EventDetailPage() {
                     {signal.commodityImpacts.length > 0 && (
                       <div className="space-y-3">
                         <div
-                          className="text-[10px] font-black uppercase tracking-[0.2em] text-accent"
+                          className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Impact Breakdown
@@ -506,7 +506,7 @@ export default function EventDetailPage() {
                       >
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-bold text-text-primary">{h.title}</span>
-                          <span className="text-[9px] font-mono text-muted uppercase">
+                          <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
                             {h.country} · {h.eventDate ? safeFormatDistanceToNow(h.eventDate, { addSuffix: true }) : "unknown date"} · Severity {h.severity}
                           </span>
                         </div>
@@ -524,7 +524,7 @@ export default function EventDetailPage() {
                     <h3 className="text-sm font-black uppercase tracking-[0.3em] text-text-primary mb-2">
                       Not Enough Historical Data Yet
                     </h3>
-                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                    <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
                       Comparisons for this event type will appear as more signals are recorded.
                     </p>
                   </div>
@@ -539,7 +539,7 @@ export default function EventDetailPage() {
                 >
                   <EventLocationMap lng={mapLng} lat={mapLat} zoom={hasPreciseLocation ? 6 : 3} />
                   <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-sm">
-                    <span className="text-[9px] font-mono text-muted uppercase">
+                    <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
                       {hasPreciseLocation
                         ? "Precise coordinates"
                         : "Approximate location — precise coordinates unavailable for this event"}
@@ -561,10 +561,10 @@ export default function EventDetailPage() {
                         className="p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 cursor-pointer transition-all"
                       >
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-text-primary">
+                          <span className="text-[12px] md:text-[10px] font-black uppercase tracking-widest text-text-primary">
                             {s.title}
                           </span>
-                          <span className="text-[9px] font-mono text-muted uppercase">
+                          <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
                             {s.sourceLabel ?? "Unknown source"}
                             {s.publishedAt ? ` · ${safeFormatDistanceToNow(s.publishedAt, { addSuffix: true })}` : ""}
                           </span>
@@ -579,7 +579,7 @@ export default function EventDetailPage() {
                 ) : (
                   <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
                     <Database className="w-12 h-12 text-muted mb-6" />
-                    <p className="text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                    <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
                       No source articles are linked to this signal.
                     </p>
                   </div>
@@ -601,7 +601,7 @@ export default function EventDetailPage() {
             </h3>
 
             <div>
-              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">
                 Target Region
               </label>
               <input
@@ -612,7 +612,7 @@ export default function EventDetailPage() {
             </div>
 
             <div>
-              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">
                 Min Severity Threshold (1-10)
               </label>
               <input
@@ -626,10 +626,10 @@ export default function EventDetailPage() {
             </div>
 
             <div>
-              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">
                 Forex Pairs (optional)
               </label>
-              <p className="text-[10px] text-[#6b7674] mb-2">
+              <p className="text-[12px] md:text-[10px] text-[#6b7674] mb-2">
                 Leave empty to match on region alone. Any pair selected here also triggers this rule.
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -647,7 +647,7 @@ export default function EventDetailPage() {
                             : [...prev, f.symbol],
                         )
                       }
-                      className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
+                      className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
                           ? "bg-[#4edea3] text-[#003824] border-[#4edea3]"
                           : "bg-[#0e0e0e] text-[#86948a] border-[#3c4a42] hover:text-white"

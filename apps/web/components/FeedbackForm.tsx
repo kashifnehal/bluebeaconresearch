@@ -59,7 +59,7 @@ export function FeedbackForm() {
       <div className="space-y-2">
         <label
           htmlFor="feedback-message"
-          className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold"
+          className="font-label text-[12px] md:text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold"
         >
           Message
         </label>
@@ -78,7 +78,7 @@ export function FeedbackForm() {
       <div className="space-y-2">
         <label
           htmlFor="feedback-email"
-          className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold"
+          className="font-label text-[12px] md:text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold"
         >
           Email (optional)
         </label>
@@ -94,7 +94,7 @@ export function FeedbackForm() {
       <div className="space-y-2">
         <label
           htmlFor="feedback-page"
-          className="font-label text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold"
+          className="font-label text-[12px] md:text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold"
         >
           Page
         </label>

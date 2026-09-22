@@ -508,3 +508,27 @@ Admin `email_confirm: true` is per-account. A global confirm-email off switch wo
 
 ### Cross-tree mapping
 Recorded as **D27** in `docs/claude_project/10_DECISIONS.md`.
+
+## 25. ADR 024: Mobile-first responsive baseline — 360px floor, phone is the base style (#186)
+
+### Context
+
+BBR was built desktop-only with a mobile shell bolted on. Audited 2026-09-23: only **19 of 81** `.tsx` files under `apps/web/app` + `apps/web/components` carried any breakpoint prefix (`2xl:` used zero times); **328** hardcoded arbitrary font sizes were below 12px; auth form inputs computed to 14px; `/accuracy` and `/status` overflowed a 360px viewport by 111px and 117px; `/alerts` overflowed 335px; and `/map` rendered 0% map on a phone because two `w-80` overlay panels occlude the viewport. The app shell itself (off-canvas sidebar at `md`, correct viewport meta) was already correct and is not the problem.
+
+### Decision
+
+1. **360px is the design floor**, not 375px. Test matrix: 360 / 390 / 414 / 768 / 1024.
+2. **Base styles are the phone; breakpoint prefixes add desktop.** Never the reverse.
+3. **Form fields render at 16px or larger under 768px** — enforced globally by a single `@media (max-width:767px)` rule in `apps/web/app/globals.css`. That rule uses `!important` deliberately, because the auth pages apply `fontSize` through inline style objects that outrank normal stylesheet declarations.
+4. **No rendered text below 12px on phone widths.** Pattern: `text-[12px] md:text-[Npx]`.
+5. **Tables scroll, never clip.** `overflow-x-auto` wrapper required; no ancestor `overflow-hidden` on the horizontal axis.
+
+Tailwind default breakpoints are settled — do not add custom `screens`.
+
+### Rationale
+
+360px covers two of the top six real worldwide mobile resolutions (~12.4% combined); clearing 360 clears 390/393/414. The 16px input rule is documented Mobile Safari behavior — below it, focusing a field zooms the viewport and leaves the page off-centre; this is a technical constraint, not a preference. The 12px floor is explicitly a **product-quality judgement and not a standard**: WCAG sets no minimum font size (1.4.4 requires only 200% resize without loss of content or function). It is adopted because 328 uses of 8–11px type was the single most visible reason the site felt unusable on a phone, on a product whose pitch is research credibility. Keeping Tailwind's defaults avoids re-reasoning every existing responsive utility for no benefit and real regression risk — and the sidebar already breaks at `md` (768), which is the correct place.
+
+### Cross-tree mapping
+
+Recorded as **D28** in `docs/claude_project/10_DECISIONS.md`.

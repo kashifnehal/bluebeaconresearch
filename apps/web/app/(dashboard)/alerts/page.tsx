@@ -138,10 +138,10 @@ function CardSection({
   return (
     <div className="px-4 py-3 border-t border-outline-variant/10 first:border-t-0">
       <div className="flex items-center gap-2 mb-1.5">
-        <span className="w-4 h-4 shrink-0 rounded-sm bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center mono">
+        <span className="w-4 h-4 shrink-0 rounded-sm bg-primary/15 text-primary text-[12px] md:text-[9px] font-bold flex items-center justify-center mono">
           {step}
         </span>
-        <span className="label text-[9px] tracking-widest text-outline font-bold uppercase">{label}</span>
+        <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase">{label}</span>
       </div>
       <div className="pl-6">{children}</div>
     </div>
@@ -360,12 +360,12 @@ export default function AlertsPage() {
 
       {/* Rules Header + New Rule Action */}
       <section className="flex justify-between items-center py-4 border-y border-outline-variant/20 mb-8">
-        <span className="label text-[10px] tracking-widest text-outline font-bold uppercase">
+        <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">
           {rules.length > 0 ? `${rules.length} Alert Rule${rules.length === 1 ? "" : "s"}` : "No Alert Rules Yet"}
         </span>
         <button
           onClick={() => openSetAlertModal()}
-          className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer"
+          className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           + New Alert Rule
@@ -389,7 +389,7 @@ export default function AlertsPage() {
           </div>
           <button
             onClick={() => openSetAlertModal()}
-            className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
+            className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Set Up Your First Rule
@@ -424,7 +424,7 @@ export default function AlertsPage() {
                     <div className="flex items-center gap-3 mb-3">
                       <h3 className="text-lg font-bold font-headline text-on-surface truncate">{rule.name}</h3>
                       <span
-                        className={`px-2 py-0.5 text-[9px] label font-bold uppercase tracking-widest rounded-sm border shrink-0 ${
+                        className={`px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border shrink-0 ${
                           rule.is_active
                             ? "bg-primary/10 border-primary/50 text-primary"
                             : "bg-surface-variant border-outline-variant/30 text-on-surface-variant"
@@ -435,43 +435,43 @@ export default function AlertsPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="label text-[9px] text-outline uppercase font-bold">Region:</span>
+                        <span className="label text-[12px] md:text-[9px] text-outline uppercase font-bold">Region:</span>
                         {regions ? (
                           regions.map((r) => (
-                            <span key={r} className="mono text-[10px] text-on-surface font-bold uppercase">{r}</span>
+                            <span key={r} className="mono text-[12px] md:text-[10px] text-on-surface font-bold uppercase">{r}</span>
                           ))
                         ) : (
-                          <span className="mono text-[10px] text-on-surface/60 uppercase">All regions</span>
+                          <span className="mono text-[12px] md:text-[10px] text-on-surface/60 uppercase">All regions</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="label text-[9px] text-outline uppercase font-bold">Commodity:</span>
+                        <span className="label text-[12px] md:text-[9px] text-outline uppercase font-bold">Commodity:</span>
                         {commodities ? (
                           commodities.map((c) => (
-                            <span key={c} className="mono text-[10px] text-on-surface font-bold uppercase">{c}</span>
+                            <span key={c} className="mono text-[12px] md:text-[10px] text-on-surface font-bold uppercase">{c}</span>
                           ))
                         ) : (
-                          <span className="mono text-[10px] text-on-surface/60 uppercase">All commodities</span>
+                          <span className="mono text-[12px] md:text-[10px] text-on-surface/60 uppercase">All commodities</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="label text-[9px] text-outline uppercase font-bold">Forex:</span>
+                        <span className="label text-[12px] md:text-[9px] text-outline uppercase font-bold">Forex:</span>
                         {forexPairs ? (
                           forexPairs.map((f) => (
-                            <span key={f} className="mono text-[10px] text-on-surface font-bold uppercase">{f}</span>
+                            <span key={f} className="mono text-[12px] md:text-[10px] text-on-surface font-bold uppercase">{f}</span>
                           ))
                         ) : (
-                          <span className="mono text-[10px] text-on-surface/60 uppercase">All pairs</span>
+                          <span className="mono text-[12px] md:text-[10px] text-on-surface/60 uppercase">All pairs</span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="label text-[9px] text-outline uppercase font-bold">Channels:</span>
-                        <span className="mono text-[10px] text-on-surface font-bold uppercase">{channels.join(" · ")}</span>
+                        <span className="label text-[12px] md:text-[9px] text-outline uppercase font-bold">Channels:</span>
+                        <span className="mono text-[12px] md:text-[10px] text-on-surface font-bold uppercase">{channels.join(" · ")}</span>
                       </div>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className="label text-[9px] text-outline uppercase font-bold block">Last Triggered</span>
+                    <span className="label text-[12px] md:text-[9px] text-outline uppercase font-bold block">Last Triggered</span>
                     <span className="mono text-xs text-on-surface/70 font-bold">
                       {rule.last_triggered_at ? `${safeFormatDistanceToNow(rule.last_triggered_at)} ago` : "Never"}
                     </span>
@@ -481,10 +481,10 @@ export default function AlertsPage() {
                 {/* Alert threshold control — surfaced prominently, not buried in the "new rule" modal */}
                 <div className="px-6 py-4 bg-primary/[0.04] border-b border-outline-variant/10 flex items-center justify-between gap-4 flex-wrap">
                   <div>
-                    <span className="label text-[10px] tracking-widest text-primary font-bold uppercase block">
+                    <span className="label text-[12px] md:text-[10px] tracking-widest text-primary font-bold uppercase block">
                       Alert only above this threshold
                     </span>
-                    <span className="text-[11px] text-on-surface/60">
+                    <span className="text-[12px] md:text-[11px] text-on-surface/60">
                       This rule notifies you only when a matching signal reaches at least this severity (1–10).
                     </span>
                   </div>
@@ -502,7 +502,7 @@ export default function AlertsPage() {
                     <button
                       disabled={updateThreshold.isPending || threshold === rule.min_severity}
                       onClick={() => updateThreshold.mutate({ ruleId: rule.id, minSeverity: threshold })}
-                      className="px-4 py-2 bg-primary text-black text-[10px] font-bold uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
+                      className="px-4 py-2 bg-primary text-black text-[12px] md:text-[10px] font-bold uppercase tracking-widest rounded-sm disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
                     >
                       {threshold === rule.min_severity ? `Severity ${rule.min_severity}+` : "Save"}
                     </button>
@@ -510,7 +510,7 @@ export default function AlertsPage() {
                 </div>
 
                 <div className="p-4">
-                  <span className="label text-[9px] tracking-widest text-outline font-bold uppercase block mb-3 px-2">
+                  <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-3 px-2">
                     Recent Matches
                   </span>
                   {matches.length === 0 ? (
@@ -546,18 +546,18 @@ export default function AlertsPage() {
                                 >
                                   <div className="flex items-center gap-2 flex-wrap">
                                     {m.isBreaking && (
-                                      <span className="px-1.5 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm bg-error/15 text-error border border-error/40">
+                                      <span className="px-1.5 py-0.5 text-[12px] md:text-[8px] label font-bold uppercase tracking-widest rounded-sm bg-error/15 text-error border border-error/40">
                                         Breaking
                                       </span>
                                     )}
-                                    <span className="px-1.5 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm bg-surface-variant text-on-surface-variant border border-outline-variant/30">
+                                    <span className="px-1.5 py-0.5 text-[12px] md:text-[8px] label font-bold uppercase tracking-widest rounded-sm bg-surface-variant text-on-surface-variant border border-outline-variant/30">
                                       Severity {m.severity}
                                     </span>
-                                    <span className="mono text-[10px] text-outline font-bold">
+                                    <span className="mono text-[12px] md:text-[10px] text-outline font-bold">
                                       {safeFormatDistanceToNow(m.matchedAt)} ago
                                     </span>
                                     <span
-                                      className={`ml-auto px-2 py-0.5 text-[8px] label font-bold uppercase tracking-widest rounded-sm border ${
+                                      className={`ml-auto px-2 py-0.5 text-[12px] md:text-[8px] label font-bold uppercase tracking-widest rounded-sm border ${
                                         status === "failed"
                                           ? "bg-error-container/20 border-error/50 text-error"
                                           : status === "queued"
@@ -588,13 +588,13 @@ export default function AlertsPage() {
                                 ) : m.summary ? (
                                   <div>
                                     <p className="text-[13px] text-on-surface/80 leading-relaxed">{m.summary}</p>
-                                    <p className="mt-1.5 text-[10px] text-on-surface/45 italic">
+                                    <p className="mt-1.5 text-[12px] md:text-[10px] text-on-surface/45 italic">
                                       Deeper analyst commentary wasn&apos;t available for this signal — showing the
                                       event summary instead.
                                     </p>
                                   </div>
                                 ) : (
-                                  <p className="text-[11px] text-on-surface/45 italic">
+                                  <p className="text-[12px] md:text-[11px] text-on-surface/45 italic">
                                     No summary available for this signal yet.
                                   </p>
                                 )}
@@ -615,7 +615,7 @@ export default function AlertsPage() {
                                     ))}
                                   </div>
                                 ) : (
-                                  <p className="text-[11px] text-on-surface/45 italic">
+                                  <p className="text-[12px] md:text-[11px] text-on-surface/45 italic">
                                     No specific instruments were flagged for this event.
                                   </p>
                                 )}
@@ -635,7 +635,7 @@ export default function AlertsPage() {
                               {/* ── Persistent trust element: source link(s) ── */}
                               {m.sources.length > 0 && (
                                 <div className="px-4 py-2.5 border-t border-outline-variant/10 bg-surface-container/40 flex items-start gap-2 flex-wrap">
-                                  <span className="label text-[9px] tracking-widest text-outline font-bold uppercase mt-0.5">
+                                  <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase mt-0.5">
                                     Built from
                                   </span>
                                   <div className="flex flex-col gap-1">
@@ -657,7 +657,7 @@ export default function AlertsPage() {
                                             false,
                                           )
                                         }
-                                        className="text-[11px] text-primary hover:underline inline-flex items-center gap-1"
+                                        className="text-[12px] md:text-[11px] text-primary hover:underline inline-flex items-center gap-1"
                                       >
                                         <span className="material-symbols-outlined text-[13px]">open_in_new</span>
                                         <span className="truncate max-w-[420px]">
@@ -673,7 +673,7 @@ export default function AlertsPage() {
 
                             {/* Disclaimer — once per page, attached to the first card */}
                             {showDisclaimer && (
-                              <p className="mt-2 px-1 text-[10px] leading-relaxed text-on-surface/45">
+                              <p className="mt-2 px-1 text-[12px] md:text-[10px] leading-relaxed text-on-surface/45">
                                 {DISCLAIMER}
                               </p>
                             )}
@@ -706,7 +706,7 @@ export default function AlertsPage() {
             </h3>
 
             <div>
-              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">Target Region</label>
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">Target Region</label>
               <input
                 value={modalRegion}
                 onChange={(e) => setModalRegion(e.target.value)}
@@ -715,7 +715,7 @@ export default function AlertsPage() {
             </div>
 
             <div>
-              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">Min Severity Threshold (1-10)</label>
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">Min Severity Threshold (1-10)</label>
               <input
                 type="number"
                 min={1}
@@ -727,10 +727,10 @@ export default function AlertsPage() {
             </div>
 
             <div data-testid="alert-channel-checkboxes">
-              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">
                 Delivery Channels
               </label>
-              <p className="text-[10px] text-[#6b7674] mb-2">
+              <p className="text-[12px] md:text-[10px] text-[#6b7674] mb-2">
                 Alerts go only to the channels you select. Connect them in Settings first.
               </p>
               <div className="flex flex-col gap-2">
@@ -750,7 +750,7 @@ export default function AlertsPage() {
                       />
                       <span>{ch.label}</span>
                       <span
-                        className={`text-[9px] uppercase font-bold ${
+                        className={`text-[12px] md:text-[9px] uppercase font-bold ${
                           isConnected ? "text-[#4edea3]" : "text-[#86948a]"
                         }`}
                       >
@@ -763,10 +763,10 @@ export default function AlertsPage() {
             </div>
 
             <div>
-              <label className="text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">
                 Forex Pairs (optional)
               </label>
-              <p className="text-[10px] text-[#6b7674] mb-2">
+              <p className="text-[12px] md:text-[10px] text-[#6b7674] mb-2">
                 Leave empty to match on region alone. Any pair selected here also triggers this rule.
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -784,7 +784,7 @@ export default function AlertsPage() {
                             : [...prev, f.symbol],
                         )
                       }
-                      className={`px-2.5 py-1 text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
+                      className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
                           ? "bg-[#4edea3] text-[#003824] border-[#4edea3]"
                           : "bg-[#0e0e0e] text-[#86948a] border-[#3c4a42] hover:text-white"

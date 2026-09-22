@@ -9,6 +9,26 @@
 
 > ⚠️ UPDATED 2026-09-11 — the #104–#128 queue (parked as plans on 2026-09-11) is now tracked in **NUMBERED TICKETS** below. Shipped items use this file's existing close-out convention (strikethrough + **Done DATE**, same as S1/#86 and C3/#83). Per-commit evidence lives in `docs/brain/LIVE_TODO.md`, not here.
 
+> ⚠️ UPDATED 2026-09-23 — **#186 full responsive rework (mobile + tablet)** added. Phases 1+2 shipped (PHASE 51); Phases 0 and 3–6 remain open. Phase 0 is blocked on Claude Design authorization (`/design-login`). Live per-phase status: `docs/brain/LIVE_TODO.md`.
+
+---
+
+## #186 — FULL RESPONSIVE REWORK (MOBILE + TABLET)
+
+Design floor is **360px** (two of the top six real mobile resolutions worldwide). Test matrix: 360 / 390 / 414 / 768 / 1024. Tailwind default breakpoints kept — the sidebar already breaks correctly at `md`.
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| 1 | iOS input zoom, sub-12px type floor, table clipping | ✅ Done 2026-09-23 (PHASE 51) |
+| 2 | Public header overflow → shared `PublicHeader` | ✅ Done 2026-09-23 (PHASE 51) |
+| 0 | Design decisions: map, signal card, 768px tablet | 🤔 Blocked — Claude Design not authorized |
+| 3 | 21 zero-responsive files (19/81 have any breakpoint) | ⚪ Not started |
+| 4 | 768px tablet pass (sidebar on, 512px left) | ⚪ Not started, never measured |
+| 5 | 44×44 tap targets on phone | ⚪ Not started |
+| 6 | Playwright overflow regression test | ⚪ Not started |
+
+Worst known offenders: `/alerts` **335px** overflow at 360px; `/map` renders **0% map** on a phone.
+
 ---
 
 ## NUMBERED TICKETS (#104–#128) — live queue

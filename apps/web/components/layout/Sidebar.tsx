@@ -66,7 +66,7 @@ export function Sidebar() {
             </span>
           </Link>
           <span
-            className="text-[10px] px-1.5 py-0.5 border"
+            className="text-[12px] md:text-[10px] px-1.5 py-0.5 border"
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               borderColor: "#4edea3",
@@ -116,7 +116,7 @@ export function Sidebar() {
                 <span>{item.label}</span>
                 {item.showBadge && unreadCount > 0 && (
                   <span
-                    className="ml-auto text-[8px] font-bold px-1.5 py-0.5"
+                    className="ml-auto text-[12px] md:text-[8px] font-bold px-1.5 py-0.5"
                     style={{
                       backgroundColor: "#7f2927",
                       color: "#ff9993",
@@ -137,7 +137,7 @@ export function Sidebar() {
         className="mt-auto p-6 border-t space-y-2"
         style={{ borderColor: "#3c4a42", backgroundColor: "#0e0e0e" }}
       >
-        <div className="text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#4edea3" }}>
+        <div className="text-[12px] md:text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#4edea3" }}>
           Node: BB-ALPHA-09
         </div>
         <Link

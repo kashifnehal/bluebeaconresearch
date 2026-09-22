@@ -41,19 +41,19 @@ export function Pagination({
         type="button"
         onClick={() => canPrev && onPageChange(page - 1)}
         disabled={!canPrev}
-        className="inline-flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-white/10 text-white/60 transition-colors hover:text-white hover:border-white/25 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        className="inline-flex items-center gap-1 px-3 py-1.5 text-[12px] md:text-[10px] font-bold uppercase tracking-widest border border-white/10 text-white/60 transition-colors hover:text-white hover:border-white/25 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
       >
         <span className="material-symbols-outlined text-sm">chevron_left</span>
         Prev
       </button>
-      <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 font-mono">
+      <span className="text-[12px] md:text-[10px] font-bold uppercase tracking-widest text-white/40 font-mono">
         Page {page} of {pageCount}
       </span>
       <button
         type="button"
         onClick={() => canNext && onPageChange(page + 1)}
         disabled={!canNext}
-        className="inline-flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-white/10 text-white/60 transition-colors hover:text-white hover:border-white/25 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        className="inline-flex items-center gap-1 px-3 py-1.5 text-[12px] md:text-[10px] font-bold uppercase tracking-widest border border-white/10 text-white/60 transition-colors hover:text-white hover:border-white/25 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
       >
         Next
         <span className="material-symbols-outlined text-sm">chevron_right</span>
