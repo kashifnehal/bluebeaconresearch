@@ -890,7 +890,7 @@ Important current paths (corrected 2026-09-20 — several 09-16 paths did not ex
 - `apps/web/app/page.tsx` — public landing
 - `apps/web/components/CommandPalette.tsx`
 - `apps/web/app/(auth)/login/page.tsx`
-- `apps/web/middleware.ts`
+- `apps/web/proxy.ts`
 - `apps/backend/src/services/claude.service.ts` — not `claude.ts`
 - `apps/backend/src/services/acled.service.ts`
 - `apps/backend/src/workers/gdelt-collector.ts` / `rss-collector.ts` / `gnews-collector.ts` / `acled-collector.ts`
@@ -1194,7 +1194,7 @@ Relevant web paths:
 
 - `apps/web/lib/auth.ts`
 - `apps/web/app/login/page.tsx`
-- `apps/web/middleware.ts`
+- `apps/web/proxy.ts`
 
 Auth/session behavior needs to be audited carefully if UI appears to show a sign-in state while the user is already authenticated.
 

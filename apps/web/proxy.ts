@@ -67,7 +67,7 @@ function logAuthCheckError(err: unknown, phase: "failed" | "background") {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── Gate: if project is NOT ready, block everything except /login, /signup, /auth, /api, and static assets ──

@@ -6,6 +6,16 @@
 
 ---
 
+## PHASE 52 — NEXT 16 `middleware.ts` → `proxy.ts` RENAME (2026-09-23)
+
+`apps/web` only. Next 16.2.0 deprecated the `middleware` file convention in favour of `proxy`, and `next build` auto-applies the codemod — so the rename kept reappearing after every build and risked being committed accidentally inside unrelated work. Done deliberately instead, as its own commit.
+
+`git mv apps/web/middleware.ts apps/web/proxy.ts` plus the exported function name. Supabase SSR session logic, the `isProjectReady` gate, and the `matcher` config are byte-identical. Backend `apps/backend/src/middleware/auth.ts` is a different thing entirely and is untouched.
+
+**Verified both gate directions on the production build against a live signed-in session:** anonymous `/dashboard` + `/alerts` → 307 `/login` (identical to the pre-rename baseline); public `/`, `/login`, `/accuracy` → 200; signed-in `/dashboard`, `/watchlist`, `/alerts` all admitted with `sb-` cookies present. Build registers `ƒ Proxy (Middleware)`; deprecation warning gone. Held uncommitted until observed, because this file caused the 2026-08-28 site-wide outage. Brain changelog: v0.85.0.
+
+---
+
 ## PHASE 51 — #186 RESPONSIVE FOUNDATIONS, PHASES 1+2 (2026-09-23)
 
 `apps/web` only. First ship of the mobile/tablet responsive rework.
