@@ -68,7 +68,7 @@ export default function DashboardPage() {
         if (cancelled || !d) return;
         if (typeof d.sourcesLast24h !== "number" || typeof d.rssFeedCount !== "number") return;
         setCoverageLine(
-          `Last 24h: signals from ${d.sourcesLast24h} sources across ${d.rssFeedCount} RSS feeds + GNews + GDELT + ACLED.`,
+          `Last 24h: signals from ${d.sourcesLast24h} sources across ${d.rssFeedCount} RSS feeds + GNews + GDELT.`,
         );
       })
       .catch(() => {});

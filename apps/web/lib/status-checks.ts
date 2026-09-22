@@ -93,7 +93,7 @@ async function checkGlobalMap(): Promise<SystemCheck> {
 }
 
 async function checkDataPipeline(): Promise<SystemCheck> {
-  const detail = "GDELT, ACLED, GNews & Price Sync Collector Workers";
+  const detail = "GDELT, GNews & Price Sync Collector Workers";
 
   // Reuses the same tracking /api/ingestion/status already relies on (Redis
   // `pipeline:last_run`, falling back to the newest `raw_events` row) instead of
