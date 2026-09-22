@@ -1,10 +1,17 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-23 (PHASE 49).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-23 (PHASE 50).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 50 — ACLED CLAIMS REMOVED FROM WEB COPY (2026-09-23)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.83.0.
+
+- Homepage "How it works" card, dashboard coverage line, and `/status` pipeline-check detail no longer name ACLED as an active source — it's confirmed inactive in production (no credentials configured).
+- `apps/backend`'s real ACLED integration code and the founder-only `/admin/service-status` page (already honest) are untouched.
 
 ## PHASE 49 — BACKTESTING FABRICATED-ENGINE + ACCURACY-STAT REMOVAL (2026-09-23)
 

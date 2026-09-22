@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-23 (v0.82.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-23 (v0.83.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.83.0 — ACLED claims removed from web copy (2026-09-23, `9772bcc`)
+
+`apps/web` only, three strings. ACLED is confirmed inactive in production (no credentials configured — `ACLED_EMAIL`/`ACLED_PASSWORD` unset, per the open-items table). Removed the false "active source" claim from: `app/page.tsx` homepage "01. Event Detection" card ("Public sources such as ACLED and GNews are scanned..." → "...such as GNews are scanned..."); `app/(dashboard)/dashboard/page.tsx` `coverageLine` template string (dropped trailing "+ ACLED"); `lib/status-checks.ts` `checkDataPipeline()` detail string (dropped "ACLED, "). `apps/backend`'s real ACLED integration (`acled.service.ts`, `acled-collector.ts`) is untouched — working code, just missing credentials, stays as-is until the founder activates it. Founder-only `/admin/service-status` (`ServiceStatusClient.tsx`) already showed ACLED honestly as never-run/no-data and was left alone. This also made the `08_CURRENT_STATUS.md` #126 description of the old coverage-line string stale; corrected in place.
 
 ### v0.82.0 — Backtesting fabricated-engine + accuracy-stat removal (2026-09-23, `4651f6c`)
 

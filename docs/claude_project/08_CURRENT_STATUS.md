@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-09-23 (backtesting honesty fix).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live status banners as of 2026-09-23 (ACLED copy honesty fix).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+
+> ⚠️ UPDATED 2026-09-23 (ACLED claims removed from web copy) — ACLED is confirmed inactive in production (no credentials configured — see `ACLED collector requires credentials | Open` row below). Homepage "How it works" copy, the dashboard coverage line, and the `/status` pipeline-check detail no longer claim it as an active source. Backend integration code and the founder-only `/admin/service-status` page (already honest) are untouched. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.83.0. This tree: PHASE 50.
 
 > ⚠️ UPDATED 2026-09-23 (backtesting fabricated-engine + accuracy-stat removal) — Backtesting Lab no longer shows the fabricated "GENESIS-X_V4" engine name / "15 years" claim, and the fixed 71% `accuracyPct` stat is gone end to end (API + UI). `isDemo` disclaimer and `Math.sin`-based demo math unchanged; a real backtesting engine is still backlog C1 / #171, not started. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.82.0. This tree: PHASE 49.
 

@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-23 (backtesting fabricated-engine + accuracy-stat removal)
+Last updated: 2026-09-23 (ACLED claims removed from web copy)
+
+> ⚠️ UPDATED 2026-09-23 (ACLED claims removed from web copy) — ACLED is confirmed inactive in production (no credentials configured; see `ACLED collector requires credentials` in the open-items table below). Removed the false "active source" claim from three `apps/web` strings: homepage "How it works" card copy (`app/page.tsx`), the dashboard coverage line (`app/(dashboard)/dashboard/page.tsx`), and the `/status` pipeline-check detail string (`lib/status-checks.ts`). `apps/backend`'s real ACLED collector code (`acled.service.ts`, `acled-collector.ts`) is untouched — it stays dormant until credentials are set, not removed. Founder-only `/admin/service-status` (`ServiceStatusClient.tsx`) was already honest (shows ACLED as never-run) and is untouched. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.83.0.
 
 > ⚠️ UPDATED 2026-09-23 (backtesting fabricated-engine + accuracy-stat removal) — `apps/web/app/(dashboard)/backtesting/page.tsx` + `apps/web/app/api/backtesting/route.ts`. Removed always-visible "GENESIS-X_V4" engine name + "15 years of geo-political volatility markers" claim (no real engine/dataset behind either) and the fixed 71% `accuracyPct` stat (API `mockResult()` + UI stat tile, both types). `isDemo` disclaimer and `Math.sin`-based demo point math untouched. Real backtesting engine remains backlog C1 / #171, not started. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.82.0.
 
@@ -243,7 +245,7 @@ outcomes — now skipped and logged instead. Frontend `/accuracy` page shipped
 
 `apps/web` (+ `RSS_FEED_COUNT` export on the RSS collector). Full record: `14_CHANGELOG.md` v0.43.0, `LIVE_TODO.md`.
 
-- **#126** — `Fresh Xm` on feed/map signal cards from `created_at`. Coverage line on the Intelligence Feed queries distinct last-24h outlets and states the configured 13 RSS feeds + GNews + GDELT + ACLED.
+- **#126** — `Fresh Xm` on feed/map signal cards from `created_at`. Coverage line on the Intelligence Feed queries distinct last-24h outlets and states the configured 13 RSS feeds + GNews + GDELT. (ACLED dropped from this string 2026-09-23 — it's confirmed inactive in production, no credentials configured; see `LIVE_TODO.md`.)
 - **#127 calendar half** — importance / country / category / timezone filters on `/calendar`. Map layers still gated.
 
 ## Signal quick-view slide-over (2026-09-11)
