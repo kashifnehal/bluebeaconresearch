@@ -20,7 +20,53 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 
 ## Live-status sync protocol (docs catch-up)
 
-A `LIVE_TODO.md` line is not enough. After a status-changing ship, update the canonical trio (`docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`) **and** the topic files the change actually touched — API → both `05_API.md`, schema → `docs/brain/04_DATABASE.md` + note in `docs/claude_project/04_DATABASE.md` + `16_MIGRATION_CHECKLIST.md`, Claude prompt/method → `docs/claude_project/18_AI_ENGINE.md`, UI component → both `06_COMPONENTS.md`. Full topic→file map lives in `AGENTS.md` protocol item 7. Same commit as the code when possible; never leave the other session reading a world without the new endpoint/table/prompt.
+This repo is the only channel between this session and a separate Claude research/strategy session (outside this IDE, in a business-planning tool) that does market research, planning, and independent verification of what ships. That session reads `docs/brain/` and `docs/claude_project/` **read-only** and cannot push here — if a doc isn't updated, it has no way to know the task happened. Treat every doc update below as non-optional, not "when convenient."
+
+1. Every status-changing task ends with a `docs/brain/LIVE_TODO.md` update, in the **same commit** as the code change (or its own docs-only commit if it's a decision with no code).
+2. A real decision (a standing rule, a positioning call, a "never do X") goes into **both** `docs/claude_project/10_DECISIONS.md` and `docs/brain/10_DECISIONS.md`, in their existing Context/Decision/Rationale format. A not-yet-decided backlog idea does not go in either decisions file — it's a `LIVE_TODO.md` priority-queue line, nothing more.
+3. Nothing gets written as done/shipped/closed in `LIVE_TODO.md` (or anywhere else) without a real commit SHA next to it.
+4. Re-read `docs/brain/LIVE_TODO.md` fresh before touching anything that another session might have an opinion on (pricing, positioning, legal/compliance, a flagged founder decision) — never rely on this conversation's own memory of what it says.
+5. Keep deep research/rationale OUT of this repo. `LIVE_TODO.md` and `10_DECISIONS.md` hold the terse, current, actionable version — the conclusion and a pointer, not the essay.
+6. A shipped item's `LIVE_TODO.md` entry is not sufficient by itself. `docs/claude_project/09_BACKLOG.md`, `docs/claude_project/08_CURRENT_STATUS.md`, and `docs/claude_project/14_CHANGELOG.md` (the canonical trio) must reflect it too — same commit as the `LIVE_TODO.md` update, not a separate catch-up pass. If the item was still listed as open in `LIVE_TODO.md`'s priority-queue section, strike or retarget that line in the **same** commit — a closed, verified entry plus a still-open queue line is a contradiction.
+7. **Topic → file map** — update the matching pair in BOTH trees when the change actually touches that topic (terse, existing-file convention, not an essay):
+   - New/changed Fastify or Next.js API route → `docs/claude_project/05_API.md` **and** `docs/brain/05_API.md`
+   - New table, column, index, RLS policy, or migration → `docs/brain/04_DATABASE.md` (authoritative schema) **and** a pointer/note in `docs/claude_project/04_DATABASE.md`; also append the filename to `docs/brain/16_MIGRATION_CHECKLIST.md` if a migration was applied
+   - New/changed Claude method or system prompt → `docs/claude_project/18_AI_ENGINE.md` (canonical prompt/model spec)
+   - New/changed React component on a product surface → `docs/claude_project/06_COMPONENTS.md` **and** `docs/brain/06_COMPONENTS.md`
+   - A standing rule ("never do X") → both `10_DECISIONS.md` files (Context/Decision/Rationale) — see item 2. A shipped ticket is not automatically a decision.
+   - None of the above apply (e.g. this session's copy/UI-honesty fix) → say so explicitly in the report rather than silently skipping.
+
+## Status honesty
+
+- **"Closed, verified" means the required check actually completed.** If Playwright/browser auth failed, an MCP tool was missing, or you only got a partial pass, write `could not verify` plus the blocker — do not move the item into Closed, verified.
+- **Never invent or inflate verification evidence.** Don't describe a screenshot, login, or test-account walkthrough unless that run actually finished. A partial pass on one item is not a pass on all items in the same task.
+- **`git commit --amend` is off-limits unless the user explicitly asks.** Never amend to insert a self-referential SHA into a doc.
+
+## Task completion report
+
+When a task is done — shipped, closed, or blocked — the final message to the user is a detailed, standalone report, not a one-liner, a SHA-only note, or "docs were updated." Scale length to the task, but don't skip a section by assuming the user remembers the whole conversation. Required sections:
+
+1. **Outcome** — shipped / blocked / partial. Ticket/backlog number if any. Commit SHA(s) if committed; say plainly if nothing was committed.
+2. **What changed** — each fix or feature in plain language: what was wrong, what it does now.
+3. **Files touched** — code paths, grouped by `apps/web` vs `apps/backend` vs docs.
+4. **Diagnosis** — any "check before assuming" finding (e.g. a value that looked broken but was a real flat/zero, a stale doc claim that didn't match the code).
+5. **Docs** — list every `docs/brain/` and `docs/claude_project/` file updated per the sync protocol above, and any topic file that was skipped, with why (no new route / table / prompt / decision).
+6. **Verification** — what actually ran (tests, grep, SQL, curl, browser, type-check) and its result. Honest gaps: say "could not verify" plus the blocker rather than implying a check happened.
+7. **What's next** — queued leftovers or follow-ups, and explicit non-goals/gaps/blockers for this ship.
+
+Example of too-thin (not acceptable) vs. the expected shape:
+
+```
+❌ Done. Commit abc123. Docs updated.
+
+✅ #137 shipped on main (`46264b2`).
+   Chat history: typed 401/403/5xx/network copy.
+   Price subtext: live latest-row fetch; USOIL +0.0% was a real flat.
+   Docs: brain LIVE_TODO / 08 / 14 / 06; claude_project 09 / 08 / 14 / 06.
+   Skipped 05_API / 04_DATABASE / 18_AI_ENGINE / 10_DECISIONS — no route, table, prompt, or standing rule.
+   Tests: 9/9 signal-display.test.ts; tsc clean. Not browser-walked.
+   What's next: #138 copy catalog and #139 pipeline audit are queued, not started this ship.
+```
 
 ## Standing rules (do not re-litigate)
 
