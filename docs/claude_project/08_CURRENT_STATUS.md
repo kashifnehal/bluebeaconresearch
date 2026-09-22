@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-09-21 (#178/#179).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live status banners as of 2026-09-23 (backtesting honesty fix).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+
+> ⚠️ UPDATED 2026-09-23 (backtesting fabricated-engine + accuracy-stat removal) — Backtesting Lab no longer shows the fabricated "GENESIS-X_V4" engine name / "15 years" claim, and the fixed 71% `accuracyPct` stat is gone end to end (API + UI). `isDemo` disclaimer and `Math.sin`-based demo math unchanged; a real backtesting engine is still backlog C1 / #171, not started. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.82.0. This tree: PHASE 49.
 
 > ⚠️ UPDATED 2026-09-21 (#178 + #179) — list `GET /api/signals` maps `novelty` / `sourceConfirmation` / `materialityReasoning` (same as `:id`). Map popup shows null-hidden source-confirmation label instead of `{n}% confidence`. Still unread: `relevance` / `materiality_pass`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.81.0. This tree: PHASE 48.
 >

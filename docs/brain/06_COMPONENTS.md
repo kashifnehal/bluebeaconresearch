@@ -151,6 +151,12 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Purpose:** first-time pulsing hints (not the Joyride ProductTour). `overlay: false`; seen keys `bbr_hint_seen_*` in localStorage.
 - **Also:** persistent hover tooltip on event-detail RECORD (`RECORD_BUTTON_TOOLTIP`) matching `handleRecord()` → `bb.saved_signals`. No Record control in Backtesting Lab.
 
+### 3.9 Backtesting Lab (`app/(dashboard)/backtesting/page.tsx` + `api/backtesting/route.ts`) (2026-09-23, `4651f6c`)
+- **Purpose:** scenario simulator over `Math.sin`-based synthetic demo points — not a real backtesting engine, no real historical dataset. `isDemo: true` banner always shown on mock results.
+- **Fixed:** removed always-visible fabricated "GENESIS-X_V4" engine name + "Processing 15 years of geo-political volatility markers" copy (existed independent of the `isDemo` banner). Removed the fixed `accuracyPct` stat (71%, hardcoded, never varied) end to end — API `mockResult()` and the UI "ACCURACY RATE" tile. Stats grid is now 4 tiles (Total Events / Avg Move % / Max Deviation / Min Deviation), was 5.
+- **Kept:** `avgMovePct` / `maxMovePct` / `minMovePct` and the per-row `correct` (movePct > 0) indicator — these read as simulation output, not a claimed track record.
+- **Not done this ship:** a real backtesting engine with real historical data — tracked as backlog #171, needs its own research pass first.
+
 ---
 
 ## 4. Primitives & UI Component Suite (`apps/web/components/ui`)

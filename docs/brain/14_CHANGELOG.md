@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-21 (v0.81.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-23 (v0.82.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.82.0 — Backtesting fabricated-engine + accuracy-stat removal (2026-09-23, `4651f6c`)
+
+`apps/web/app/(dashboard)/backtesting/page.tsx` + `apps/web/app/api/backtesting/route.ts` only. The Backtesting Lab panel always showed a fabricated "GENESIS-X_V4" engine name and "Processing 15 years of geo-political volatility markers" — independent of the `isDemo` disclaimer, with no real engine or dataset behind either. Replaced with "Scenario Simulator" / "Hypothetical Event Impact" copy that makes no engine-name or year-count claim. Also removed the fixed `accuracyPct` (hardcoded 71%, never varies) end to end — `Result`/`BacktestResult` types, `mockResult()`, and the "ACCURACY RATE" stat tile — since a fixed accuracy number next to a disclaimer still reads as a track record. Stats grid 5→4 columns. `avgMovePct`/`maxMovePct`/`minMovePct` and the per-row `correct` indicator kept (clearly illustrative simulation output). `Math.sin`-based demo point generation untouched — real backtesting engine is backlog C1 / #171, not started, needs its own research pass.
 
 ### v0.81.0 — #178 list materiality fields + #179 map popup source confirmation (2026-09-21)
 

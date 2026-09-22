@@ -1,10 +1,18 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-21 (PHASE 48).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-23 (PHASE 49).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 49 — BACKTESTING FABRICATED-ENGINE + ACCURACY-STAT REMOVAL (2026-09-23)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.82.0.
+
+- Removed the always-visible fabricated "GENESIS-X_V4" engine name and "15 years of geo-political volatility markers" claim from the Backtesting Lab panel — replaced with honest "Scenario Simulator" framing.
+- Removed the fixed, never-varying 71% `accuracyPct` stat end to end (API + UI) — it implied a real track record next to the demo-mode disclaimer.
+- A real backtesting engine over real historical data remains unbuilt (backlog C1 / #171) — this was a data-honesty fix, not new capability.
 
 ## PHASE 48 — #178 LIST MATERIALITY FIELDS + #179 MAP POPUP SOURCE CONFIRMATION (2026-09-21)
 

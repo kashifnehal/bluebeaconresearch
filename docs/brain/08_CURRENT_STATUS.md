@@ -1,8 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live technical status as of 2026-09-21.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
+> **📍 Doc status — live technical status as of 2026-09-23.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-21 (#178/#179 list + map source confirmation)
+Last updated: 2026-09-23 (backtesting fabricated-engine + accuracy-stat removal)
+
+> ⚠️ UPDATED 2026-09-23 (backtesting fabricated-engine + accuracy-stat removal) — `apps/web/app/(dashboard)/backtesting/page.tsx` + `apps/web/app/api/backtesting/route.ts`. Removed always-visible "GENESIS-X_V4" engine name + "15 years of geo-political volatility markers" claim (no real engine/dataset behind either) and the fixed 71% `accuracyPct` stat (API `mockResult()` + UI stat tile, both types). `isDemo` disclaimer and `Math.sin`-based demo point math untouched. Real backtesting engine remains backlog C1 / #171, not started. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.82.0.
 
 > ⚠️ UPDATED 2026-09-21 (#178 + #179) — list `GET /api/signals` maps `novelty` / `sourceConfirmation` / `materialityReasoning` (same parsers as `:id`). Map popup replaces raw `{n}% confidence` with null-hidden `sourceConfirmationLabel`. Still unread: `relevance` / `materiality_pass`. Evidence: `LIVE_TODO.md`. Brain changelog: `docs/brain/14_CHANGELOG.md` v0.81.0.
 

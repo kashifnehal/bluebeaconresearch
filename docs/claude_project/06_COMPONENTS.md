@@ -451,6 +451,10 @@ export default function PageName() {
 }
 ```
 
+### BacktestingPage (`apps/web/app/(dashboard)/backtesting/page.tsx` + `apps/web/app/api/backtesting/route.ts`) (2026-09-23, `4651f6c`)
+
+Scenario simulator, not a real backtesting engine — mock results only (`Math.sin`-based demo points), `isDemo: true` banner always shown. Fixed 2026-09-23: the panel previously named a fabricated "GENESIS-X_V4" engine and claimed "Processing 15 years of geo-political volatility markers" regardless of the disclaimer state; now reads "Scenario Simulator" / "Hypothetical Event Impact" with no invented engine name or year count. Also dropped the hardcoded `accuracyPct` (71%, fixed, never varied) stat end to end — it implied a track record even next to a disclaimer. Remaining stats (avg/max/min move %) are kept as illustrative simulation output. A real backtesting engine over real historical data is backlog #171, not yet started.
+
 ---
 
 ## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)
