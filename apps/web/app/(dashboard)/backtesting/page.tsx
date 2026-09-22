@@ -6,7 +6,6 @@ import { SELECT_CLASSES } from "@/lib/utils";
 
 type BacktestResult = {
   totalEvents: number;
-  accuracyPct: number;
   avgMovePct: number;
   maxMovePct: number;
   minMovePct: number;
@@ -205,14 +204,15 @@ export default function BacktestingPage() {
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                   <span className="font-label text-[10px] text-primary tracking-widest uppercase font-bold">
-                    Active Historical Engine
+                    Scenario Simulator
                   </span>
                 </div>
                 <h2 className="text-2xl font-bold font-mono text-on-surface">
-                  GENESIS-X_V4
+                  Hypothetical Event Impact
                 </h2>
                 <p className="text-[10px] text-on-surface-variant font-mono uppercase tracking-widest mt-1">
-                  Processing 15 years of geo-political volatility markers
+                  Explore how a hypothetical event might move a commodity,
+                  based on illustrative patterns
                 </p>
               </div>
             </div>
@@ -327,9 +327,9 @@ export default function BacktestingPage() {
         {isLoading && !results && (
           <div
             data-testid="backtest-skeleton"
-            className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
           >
-            {[...Array(5)].map((_, i) => (
+            {[...Array(4)].map((_, i) => (
               <div
                 key={i}
                 className="h-24 rounded-xl bg-surface-container/40 border border-outline-variant/10 animate-pulse"
@@ -358,7 +358,7 @@ export default function BacktestingPage() {
               </div>
             )}
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {[
                 {
                   label: "TOTAL EVENTS",
@@ -366,14 +366,9 @@ export default function BacktestingPage() {
                   color: "text-on-surface",
                 },
                 {
-                  label: "ACCURACY RATE",
-                  value: `${results.accuracyPct}%`,
-                  color: "text-primary",
-                },
-                {
                   label: "AVG MOVE %",
                   value: `${results.avgMovePct}%`,
-                  color: "text-on-surface",
+                  color: "text-primary",
                 },
                 {
                   label: "MAX DEVIATION",

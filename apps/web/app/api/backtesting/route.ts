@@ -14,7 +14,6 @@ const schema = z.object({
 
 type Result = {
   totalEvents: number;
-  accuracyPct: number;
   avgMovePct: number;
   maxMovePct: number;
   minMovePct: number;
@@ -42,7 +41,6 @@ function cacheKey(p: z.infer<typeof schema>) {
 
 function mockResult(p: z.infer<typeof schema>): Result {
   const totalEvents = 14;
-  const accuracyPct = 71;
   const avgMovePct = 3.2;
   const maxMovePct = 9.1;
   const minMovePct = -6.4;
@@ -65,7 +63,6 @@ function mockResult(p: z.infer<typeof schema>): Result {
   }));
   return {
     totalEvents,
-    accuracyPct,
     avgMovePct,
     maxMovePct,
     minMovePct,
