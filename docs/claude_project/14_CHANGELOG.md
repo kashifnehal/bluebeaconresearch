@@ -6,6 +6,22 @@
 
 ---
 
+## PHASE 64 — #186 PHASE 7: READABILITY REGRESSIONS FOUND, DOCS ONLY, NOTHING SHIPPED (2026-09-24)
+
+Docs only — no code shipped this phase. Founder pushed back on PHASE 63's `/dashboard` fix by pasting a direct screenshot comparison against the Stitch mock; the comparison showed the "fixed" (non-overflowing) row was visually near-useless — headlines truncate to ~8-10 characters. Correcting the record: PHASE 63's `/dashboard` claim should not have been read as "done."
+
+An attempted fix (`line-clamp-2` on the headline + a mobile-only region chip) was written, tested live, and **reverted** — confirmed via `getComputedStyle`/`getBoundingClientRect` (not a stale dev-server issue) that the headline box was genuinely 2 lines tall but only 59px wide, because the region chip added more competing content to the same crowded line rather than freeing room. Real fix needs the headline on its own full-width line (`flex-col` restructure), not a wrap-in-place tweak — documented precisely in `docs/brain/LIVE_TODO.md` so the next session doesn't retry the same approach.
+
+Applying the same harder look elsewhere found two more real, previously-missed bugs: `/alerts`' own rule names truncate identically ("News — Middle East — Severity 6+" → "News ..."), and `/calendar`'s event table shows Date/Time/Country by default with the event name (the actually-important column) scrolled off-screen.
+
+Separately, all 14 Stitch mocks were opened and visually compared against live pages for the first time this session (previously relied on a prior session's summary) — cross-checked against `21_PROJECT_BRIEFING.md`'s positioning, pricing, and competitor table. Most pages match well; three specific, business-grounded UI additions are recommended (not yet approved): a per-row price-impact chip on `/dashboard`, a match-count sparkline on `/alerts`, and a day-picker strip on `/calendar`. Explicitly rejected: the mock's fabricated stats/AI branding (already covered by D29) plus anything that reads as "competing with WorldMonitor on breadth" rather than reinforcing BBR's named differentiators (personalized alerts, backtesting, price).
+
+New standing rule: **D30/ADR 026** — mobile UI verification requires a nested-overflow DOM walk *and* visual inspection of a real screenshot; a passing size check does not mean a screen is readable.
+
+Full detail, exact diagnosis, and the complete per-page Stitch-comparison table: `docs/brain/LIVE_TODO.md` and `docs/brain/HANDOFF_186_PHASE6.md`.
+
+---
+
 ## PHASE 63 — #186: REAL OVERFLOW BUGS FOUND AFTER FOUNDER REPORT, VERIFICATION METHOD FIXED (2026-09-23)
 
 `apps/web` only, `className`-only. Founder reported still seeing horizontal-scroll issues on `localhost:3100` despite PHASE 59-62's "0px overflow" claims. Investigated with real screenshots (not just JS metrics) and found the gap: **every prior phase's overflow check used only `document.documentElement.scrollWidth`, which cannot see a real, spec-defined CSS quirk** — any container with `overflow-y: auto` (the main scroll wrapper on 7+ pages) auto-computes `overflow-x: auto` too, creating an invisible nested scroll region.

@@ -554,3 +554,26 @@ Stitch has no visibility into this project's data-honesty history — it designs
 ### Cross-tree mapping
 
 Recorded as **D29** in `docs/claude_project/10_DECISIONS.md`.
+
+## 27. ADR 026: Mobile UI verification requires real screenshots + a nested-overflow check — neither alone is sufficient (#186)
+
+### Context
+
+Every #186 phase through PHASE 61 verified mobile layouts using only `document.documentElement.scrollWidth - clientWidth`. On 2026-09-23 the founder reported still seeing horizontal-scroll issues on pages already marked "0px overflow, verified." Investigation (PHASE 63) found the real gap: any container using `overflow-y-auto` (the main content wrapper on most dashboard-layout pages: `/dashboard`, `/settings`, `/backtesting`, `/watchlist`, `/watchlist/[symbol]`, `/events/[id]`, `/map`) auto-computes `overflow-x: auto` on itself too, per the CSS Overflow spec ("if one axis is set to something other than visible, the other is forced to auto rather than left ambiguous"). That creates a second, invisible, independently-scrollable region nested inside the page that never shows up in the document-level number — real content can overflow it by 100+ px while the page reports a clean 0.
+
+A second, separate gap surfaced immediately after: PHASE 63 fixed `/dashboard`'s nested overflow (headline got `min-w-0 truncate`), and the fix was correctly verified as non-overflowing — but a side-by-side screenshot against the Stitch mock showed the result was visually useless: headlines truncated to ~8–10 characters ("North Kore...", "Deal or destr..."). Applying the same harder look to `/alerts` and `/calendar` — pages previously verified "fine" — found two more instances of the identical failure: an alert rule's configured name truncating to "News ...", and the economic calendar's event table showing Date/Time/Country by default with the event name itself (the 4th column) scrolled off-screen, requiring a swipe to discover what an event even is.
+
+### Decision
+
+Two standing additions to mobile UI verification, both required for every #186 phase and any future mobile work:
+
+1. **Check nested overflow, not just the document.** Walk the DOM for any element with computed `overflow-x: auto`/`scroll` whose own `el.scrollWidth > el.clientWidth`, in addition to the document-level check.
+2. **Inspect a real rendered screenshot before calling anything "done."** A passing size/overflow check proves nothing is clipped or scrolling invisibly — it does not prove the screen is legible. Truncated headlines, tables with their most important column scrolled off by default, and similarly "technically fine, actually useless" layouts only show up by looking.
+
+### Rationale
+
+Both gaps share one root cause: treating "does not overflow" as equivalent to "is usable." An element can pass every automated width/overflow check and still be illegible. Fixing overflow without checking layout usability is how a bug report gets closed while the actual product gets worse — exactly what happened to `/dashboard` in this pass.
+
+### Cross-tree mapping
+
+Recorded as **D30** in `docs/claude_project/10_DECISIONS.md`.

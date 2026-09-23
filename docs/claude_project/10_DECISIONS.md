@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural & Product Decision Log
 
-> **📍 Doc status — current as of 2026-09-20 for standing rules.** Latest ADRs through D26 / ADR 022 (`media_impact_watchlist`) plus #146 test-account exclusion. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-24 for standing rules.** Latest ADRs through D30 / ADR 026 (mobile UI verification method). Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Format: Decision → Context → Options considered → Choice → Rationale → Trade-offs**
@@ -670,3 +670,15 @@ Also decided as part of this same pass:
 **Rationale:** Stitch has no access to this project's data-honesty history or standing rules — it designed from whatever screenshots it was given, with no way to know which claims had already been retracted. The palette and typography ARE trustworthy (verified token-identical to `apps/web/tailwind.config.ts` / `globals.css` — see the superseded notice atop both `07_DESIGN_SYSTEM.md` files), so discarding the mocks entirely would waste real design value. Separating "how it's arranged" from "what it says" lets the team use the good half without re-litigating "no fabricated data in the UI" on every screen.
 
 **Cross-tree mapping:** Recorded as **ADR 025** in `docs/brain/10_DECISIONS.md`.
+
+## D30: Mobile UI verification requires real screenshots + a nested-overflow check — neither alone is sufficient (#186)
+
+**Decision:** Two standing additions to how #186 (and any future mobile UI work) is verified, both non-negotiable going forward:
+1. **`document.documentElement.scrollWidth - clientWidth` is not sufficient on its own.** Every check must also walk the DOM for any element with computed `overflow-x: auto`/`scroll` whose own `scrollWidth > clientWidth` — any container using `overflow-y-auto` (the main scroll wrapper on most dashboard-layout pages) auto-computes `overflow-x: auto` too per the CSS Overflow spec, hiding real overflow from the document-level number entirely.
+2. **A "0px overflow" or "structurally matches the mock" result is not the same as "looks right."** Real screenshots must be inspected, not just measured — `getBoundingClientRect()`/`scrollWidth` checks confirm nothing is clipped or scrolling invisibly, but they cannot catch a title truncated to 8 characters, a table whose most important column is scrolled off by default, or a layout that's technically non-overflowing but unreadable. Both a size check and a rendered screenshot are required before calling any screen "done."
+
+**Context:** PHASE 61's tap-target pass and every phase before it verified using only `document.documentElement.scrollWidth`. The founder reported still seeing real horizontal-scroll problems after that was called "0px, verified" (PHASE 63) — the nested-overflow check found two real, pre-existing bugs the document-level check had never been able to see (`/dashboard`'s feed rows, `/settings`'s 5th tab). Separately, after PHASE 63 shipped a fix for `/dashboard`'s overflow, a side-by-side screenshot comparison against the Stitch mock showed the "fixed" row was technically non-overflowing but visually useless — headlines truncated to ~8–10 characters ("North Kore...", "Deal or destr..."). The same harder look, applied retroactively to `/alerts` and `/calendar`, found two more real instances of the same failure mode: an alert rule's own name truncated to "News ...", and the economic calendar's event table showing Date/Time/Country by default with the actual event name scrolled off-screen as the 4th column. All three were previously reported "closed" or "fine" on the strength of a structural/overflow check alone.
+
+**Rationale:** These two gaps are the same root cause — treating "does not overflow" as equivalent to "is usable." A element can pass every automated width check while still being illegible. Fixing overflow without checking layout usability produces exactly the `/dashboard` regression: solving the bug report while making the actual product worse.
+
+**Cross-tree mapping:** Recorded as **ADR 026** in `docs/brain/10_DECISIONS.md`.
