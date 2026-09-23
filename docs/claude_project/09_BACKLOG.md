@@ -37,7 +37,9 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 
 **7 routes have no Stitch mock**: `/verify`, `/confirm`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms`, `/help`. Four sit directly in the signup/recovery flow a brand-new user walks first. No mocks will be commissioned for these — Phase 5 gives them the same treatment as their nearest mocked analog (`/verify`/`/confirm`/`/forgot-password`/`/reset-password` inherit `login`/`signup`'s layout; `/privacy`/`/terms`/`/help` just need single-column padding + the existing type floor, no new layout decision). Naming this explicitly so these 7 aren't silently skipped when the file-by-file phase wraps up.
 
-`/map` is fixed (PHASE 57) — 0% → 100% map visible on a phone, plus a real pre-existing `MapSignalPopup` bug (negative width below ~416px) fixed along the way. `/alerts` is fixed (PHASE 55); its 183px overflow at exactly 768px is a known, tracked Phase 6 item, not a regression. Remaining: Phase 5 (~20 unresponsive files) and Phase 6 (768px tablet pass).
+`/map` is fixed (PHASE 57) — 0% → 100% map visible on a phone, plus a real pre-existing `MapSignalPopup` bug (negative width below ~416px) fixed along the way. `/alerts` is fixed (PHASE 55); its 183px overflow at exactly 768px is a known, tracked Phase 6 item, not a regression.
+
+**All 24 routes under `apps/web/app` have been checked at least once** (fixed, or confirmed already mobile-safe) as of 2026-09-23 — see `docs/brain/HANDOFF_186_PHASE5.md` for the full per-page table. Remaining: the 44×44 tap-target sweep (only the homepage footer identified so far, fix not yet applied) and Phase 6 (768px tablet pass — only `/alerts` and `/calendar` actually measured at that width).
 
 ---
 
