@@ -6,6 +6,20 @@
 
 ---
 
+## PHASE 61 — #186 PHASE 5B (TAP-TARGET): SHARED-COMPONENT FIXES + FULL 24-PAGE DISCOVERY SWEEP (2026-09-23)
+
+`apps/web` only. Ran the 44×44 JS-snippet sweep (from the handoff) across all 23 remaining pages at 360px, corrected to exclude off-canvas elements (the first pass falsely flagged the closed mobile sidebar drawer's links — they're `translate`d off-canvas, not `display:none`, so they report real but unreachable bounding-box sizes). Found violations on ~20 of 24 pages. Founder scoped this pass to the shared components that clear the most pages per fix:
+
+- `TopBar.tsx` notification bell + avatar (24×30, 32×32 → 44×44 hit area on every authenticated page) — restructured so the unread-badge dot stays anchored to the icon and the visible avatar size is unchanged; verified correct at 360px and reverting exactly at 1440px.
+- `PublicHeader.tsx` logo link (17×20 → 44px tall on `/status`/`/accuracy`).
+- 5 auth pages (login/signup/verify/forgot-password/reset-password): password eye-toggle buttons, "Forgot password?" link, "Resend email"/"Send reset link" CTA buttons.
+
+Deliberately left alone: "Sign up"/"Sign in"-style links embedded in a sentence (WCAG 2.5.5 exempts inline text links from the 44×44 minimum).
+
+**Deferred, not forgotten:** ~13 per-page dense controls (filter `<select>`s, desk-toggle buttons, commodity chips, range-window buttons, etc.) across dashboard/alerts/watchlist/calendar/watchlist-symbol/map/backtesting/settings/help/admin — full itemized list in `docs/brain/LIVE_TODO.md`. All 24 routes reconfirmed 0px horizontal overflow — no new overflow regressions. `tsc --noEmit` clean.
+
+---
+
 ## PHASE 60 — #186 PHASE 5B (TAP-TARGET): HOMEPAGE FOOTER LINKS FIXED TO 44×44PX (2026-09-23)
 
 `apps/web/app/page.tsx` only, `className`-only. Continuation of PHASE 59's paused tap-target work. The handoff document claimed the footer's shared className occurred 9 times; re-counted at session start and found **10** — the `/terms` link carries the same string as a prefix of a longer className, undercounted by a naive `grep -c`. Fixed all 10 with `min-h-[44px]` (plus `inline-flex items-center` on the 9 simple links). Verified live in-browser: all 10 links measured 44px tall at 360px (were 15px), 0px horizontal overflow at 360px and 1440px, no visual regression on desktop, `tsc --noEmit` clean.

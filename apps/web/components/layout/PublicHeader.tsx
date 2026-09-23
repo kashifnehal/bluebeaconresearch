@@ -8,7 +8,7 @@ export function PublicHeader({ badge }: { badge: string }) {
         <Logo className="h-6 shrink-0" />
         <Link
           href="/"
-          className="font-extrabold text-sm tracking-tight text-white uppercase truncate"
+          className="font-extrabold text-sm tracking-tight text-white uppercase truncate inline-flex items-center min-h-[44px] md:min-h-0"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Blue Beacon Research

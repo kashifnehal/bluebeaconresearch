@@ -357,7 +357,8 @@ function SignupForm() {
                 onBlur={(e) => { e.target.style.borderBottomColor = C.outlineVariant; }}
               />
               <button type="button" onClick={() => setShowPassword((s) => !s)}
-                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.onSurfaceVariant, padding: 0 }}>
+                className="p-[13px] md:p-0"
+                style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: C.onSurfaceVariant }}>
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>

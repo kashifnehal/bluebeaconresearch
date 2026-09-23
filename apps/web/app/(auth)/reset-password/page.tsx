@@ -177,7 +177,7 @@ function ResetPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-outline"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-outline p-[13px] md:p-0"
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>

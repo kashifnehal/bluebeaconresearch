@@ -405,6 +405,7 @@ function LoginForm() {
               <Link
                 href="/forgot-password"
                 tabIndex={6}
+                className="inline-flex items-center min-h-[44px] md:min-h-0"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
                   fontSize: "11px",
@@ -433,6 +434,7 @@ function LoginForm() {
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
                 tabIndex={4}
+                className="p-[13px] md:p-0"
                 style={{
                   position: "absolute",
                   right: "8px",
@@ -442,7 +444,6 @@ function LoginForm() {
                   border: "none",
                   cursor: "pointer",
                   color: C.onSurfaceVariant,
-                  padding: 0,
                 }}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}

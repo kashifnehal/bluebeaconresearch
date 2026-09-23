@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
         {error ? <p className="mt-4 text-danger text-sm">{error}</p> : null}
 
         <Button
-          className="mt-6 w-full h-10 bg-accent hover:bg-accent-hover text-white"
+          className="mt-6 w-full h-11 bg-accent hover:bg-accent-hover text-white"
           disabled={!email || isLoading}
           onClick={send}
         >

@@ -171,7 +171,7 @@ export function VerifyClient() {
             variant="outline"
             onClick={resend}
             disabled={!email || isLoading || cooldown > 0}
-            className="w-full h-10 bg-transparent border-outline-variant text-on-surface hover:bg-surface-container-high"
+            className="w-full h-11 bg-transparent border-outline-variant text-on-surface hover:bg-surface-container-high"
           >
             {isLoading
               ? "Sending..."

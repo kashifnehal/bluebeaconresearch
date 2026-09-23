@@ -152,7 +152,7 @@ export function TopBar() {
             {/* Notification Bell Button */}
             <button
               onClick={() => setNotifOpen(!notifOpen)}
-              className="relative transition-colors shrink-0"
+              className="flex items-center justify-center transition-colors shrink-0 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
               style={{
                 color: "#bbcac0",
                 background: "none",
@@ -167,15 +167,17 @@ export function TopBar() {
               }}
               title="Notifications"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "24px" }}
-              >
-                notifications
+              <span className="relative inline-flex">
+                <span
+                  className="material-symbols-outlined"
+                  style={{ fontSize: "24px" }}
+                >
+                  notifications
+                </span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ee7d77] animate-pulse" />
+                )}
               </span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ee7d77] animate-pulse" />
-              )}
             </button>
 
             {/* Help Button. Hidden below md — reachable from the mobile
@@ -239,20 +241,29 @@ export function TopBar() {
 
               <button
                 onClick={() => setAvatarOpen(!avatarOpen)}
-                className="flex items-center justify-center font-bold border rounded-sm transition-all"
+                className="flex items-center justify-center transition-all min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
                 style={{
-                  width: "32px",
-                  height: "32px",
-                  fontSize: "10px",
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  backgroundColor: avatarOpen ? "#4edea3" : "#2a2a2a",
-                  borderColor: "#3c4a42",
-                  color: avatarOpen ? "#003824" : "#4edea3",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
                   cursor: "pointer",
                 }}
                 title="User Menu"
               >
-                {user?.initials || "GS"}
+                <span
+                  className="flex items-center justify-center font-bold border rounded-sm"
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    fontSize: "10px",
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    backgroundColor: avatarOpen ? "#4edea3" : "#2a2a2a",
+                    borderColor: "#3c4a42",
+                    color: avatarOpen ? "#003824" : "#4edea3",
+                  }}
+                >
+                  {user?.initials || "GS"}
+                </span>
               </button>
             </div>
 
