@@ -342,10 +342,10 @@ export default function AlertsPage() {
   });
 
   return (
-    <div className="ml-[256px] mr-[260px] mt-16 p-8 min-h-screen bg-surface-container-lowest text-on-surface">
+    <div className="md:ml-[256px] md:mr-[260px] mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
       {/* Header Section */}
-      <section className="flex justify-between items-end mb-8">
-        <div>
+      <section className="flex flex-wrap justify-between items-end gap-4 mb-8">
+        <div className="min-w-0">
           <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Alert Rules & Signals</h1>
           <p className="text-on-surface/60 mt-2 font-body font-medium">What you asked to be told about — your rules, and the signals that actually matched them.</p>
         </div>
@@ -660,7 +660,7 @@ export default function AlertsPage() {
                                         className="text-[12px] md:text-[11px] text-primary hover:underline inline-flex items-center gap-1"
                                       >
                                         <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                                        <span className="truncate max-w-[420px]">
+                                        <span className="truncate max-w-[220px] md:max-w-[420px]">
                                           {s.sourceLabel ? `${s.sourceLabel} — ` : ""}
                                           {s.title}
                                         </span>

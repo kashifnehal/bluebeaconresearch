@@ -345,7 +345,7 @@ export default function CalendarPage() {
   }, [now, filters]);
 
   return (
-    <div className="ml-[256px] mr-[260px] mt-16 p-8 min-h-screen bg-surface-container-lowest text-on-surface">
+    <div className="md:ml-[256px] md:mr-[260px] mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
       <section className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Economic Calendar</h1>

@@ -6,6 +6,16 @@
 
 ---
 
+## PHASE 55 — #186 PHASE 2: `/alerts` + `/calendar` MOBILE OVERFLOW FIXED (2026-09-23)
+
+`apps/web` only, `className`-only edits (audited before commit — zero logic/handler/data changes).
+
+The original diagnosis (TopBar search box `flex-1`/`min-width:auto`) was wrong — those `min-w-0` fixes measured zero effect. Real cause, found by scanning the live DOM for the actual rightmost-extending element: `alerts/page.tsx` and `calendar/page.tsx` both had a hardcoded `ml-[256px] mr-[260px]` on the page's own wrapper, duplicating the shared layout's sidebar margin, unconditionally on every viewport including phones with no sidebar at all. Gated both behind `md:`. A second bug in `alerts/page.tsx`'s header row (title + tab-switcher pill, no wrap) caused a narrow-band 33px residual at exactly 390px — fixed with `flex-wrap`.
+
+`/alerts`: 0px overflow at 360/390/414/1024/1440; 183px at 768 is pre-existing (Phase 6 tablet-squeeze territory, not touched). `/calendar`: 0px at all six widths. `/dashboard` + `/watchlist` re-verified with no regression. Full detail + an honest workflow-correction note (repeated session sign-outs were self-inflicted by unnecessary server restarts, not real token expiry) in `docs/brain/LIVE_TODO.md`.
+
+---
+
 ## PHASE 54 — #186 PHASE 1: COPY INTEGRITY + STITCH MOCKS ANALYSIS (2026-09-23)
 
 `apps/web` + docs only. First ship of the re-planned #186 responsive rework (Stitch mobile mocks at `docs/stitch_mobile/`, commit `d10626b`, analyzed and adopted as **layout references only** — see D29/ADR 025).

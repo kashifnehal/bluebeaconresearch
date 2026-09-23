@@ -89,7 +89,7 @@ export function TopBar() {
         }}
       >
         {/* Left: hamburger (mobile) + Search Bar */}
-        <div className="flex items-center gap-4 flex-1">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
           <button
             type="button"
             className="md:hidden transition-colors shrink-0"
@@ -114,7 +114,7 @@ export function TopBar() {
               menu
             </span>
           </button>
-          <div className="relative w-full max-w-md">
+          <div className="relative w-full max-w-md min-w-0">
             <span
               className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
               style={{ fontSize: "16px", color: "#86948a" }}
@@ -141,12 +141,15 @@ export function TopBar() {
         </div>
 
         {/* Right: Icons + User Avatar */}
-        <div className="flex items-center gap-6">
-          <div className="flex gap-4 items-center">
-            {/* Connect-a-channel (Telegram). Distinct from the alerts bell. */}
+        <div className="flex items-center gap-2 md:gap-6 shrink-0">
+          <div className="flex gap-2 md:gap-4 items-center">
+            {/* Connect-a-channel (Telegram). Distinct from the alerts bell.
+                Hidden below md — same flow is reachable from Settings
+                (TelegramConnect/DiscordConnect), which the mobile drawer
+                links to, so nothing is lost, just decluttered at 360-414px. */}
             <button
               onClick={() => setNotificationConnectOpen(!notificationConnectOpen)}
-              className="relative transition-colors"
+              className="relative transition-colors hidden md:block"
               style={{
                 color: "#bbcac0",
                 background: "none",
@@ -173,7 +176,7 @@ export function TopBar() {
             {/* Notification Bell Button */}
             <button
               onClick={() => setNotifOpen(!notifOpen)}
-              className="relative transition-colors"
+              className="relative transition-colors shrink-0"
               style={{
                 color: "#bbcac0",
                 background: "none",
@@ -199,10 +202,12 @@ export function TopBar() {
               )}
             </button>
 
-            {/* Help Button */}
+            {/* Help Button. Hidden below md — reachable from the mobile
+                drawer's Help link (Sidebar footer) and from the avatar
+                dropdown's Help item, both of which remain visible. */}
             <button
               onClick={() => setHelpOpen(true)}
-              className="transition-colors"
+              className="transition-colors hidden md:block"
               style={{
                 color: "#bbcac0",
                 background: "none",
@@ -227,6 +232,7 @@ export function TopBar() {
           </div>
 
           <div
+            className="hidden md:block"
             style={{ width: "1px", height: "32px", backgroundColor: "#3c4a42" }}
           />
 
