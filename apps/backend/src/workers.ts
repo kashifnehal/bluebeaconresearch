@@ -91,6 +91,21 @@ if (process.env.INGESTION_INTERVAL_CRON && INGESTION_CRON !== process.env.INGEST
   );
 }
 
+const DEFAULT_RECONCILIATION_CRON = "*/30 * * * *";
+const RECONCILIATION_CRON =
+  process.env.RECONCILIATION_INTERVAL_CRON && cron.validate(process.env.RECONCILIATION_INTERVAL_CRON)
+    ? process.env.RECONCILIATION_INTERVAL_CRON
+    : DEFAULT_RECONCILIATION_CRON;
+
+if (
+  process.env.RECONCILIATION_INTERVAL_CRON &&
+  RECONCILIATION_CRON !== process.env.RECONCILIATION_INTERVAL_CRON
+) {
+  console.warn(
+    `[workers] RECONCILIATION_INTERVAL_CRON="${process.env.RECONCILIATION_INTERVAL_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_RECONCILIATION_CRON}"`,
+  );
+}
+
 async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
   const [gdelt, gnews, rss, prices] = await Promise.allSettled([
     runGdeltCollectorOnce(),
@@ -179,9 +194,11 @@ async function main() {
 
   // Reconciliation: a transient failure between the raw_events insert and the
   // signals insert can orphan a news item forever, since the dedup check only looks
-  // at raw_events.external_id. Every 30 min, catch anything older than the same
-  // window with no matching signal and re-attempt classification.
-  cron.schedule("*/30 * * * *", async () => {
+  // at raw_events.external_id. Every 30 min (RECONCILIATION_INTERVAL_CRON, default
+  // */30 * * * *), catch anything older than the same window with no matching signal
+  // and re-attempt classification.
+  app.log.info({ schedule: RECONCILIATION_CRON }, "workers: reconciliation cron schedule");
+  cron.schedule(RECONCILIATION_CRON, async () => {
     try {
       const res = await reconcileOrphanedRawEventsOnce();
       if (res.orphaned > 0) {
