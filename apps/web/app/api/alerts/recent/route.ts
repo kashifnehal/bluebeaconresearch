@@ -68,10 +68,18 @@ export async function GET(req: NextRequest) {
       .select("id, title, raw_data")
       .in("id", rawEventIds);
     for (const re of rawEvents ?? []) {
+      // `raw_data.source` isn't a consistent shape across collectors: NewsAPI/GNews write
+      // it as an object (`{ id, name, url, country }`), while others write a plain string.
+      // Coercing the object straight into a template literal renders "[object Object]".
+      const rawSource = (re as any).raw_data?.source;
+      const sourceLabel =
+        (typeof rawSource === "string" ? rawSource : rawSource?.name) ??
+        (re as any).raw_data?.domain ??
+        null;
       sourcesByRawEventId.set(re.id, {
         title: (re as any).title ?? "Untitled source",
         url: (re as any).raw_data?.url ?? null,
-        sourceLabel: (re as any).raw_data?.source ?? (re as any).raw_data?.domain ?? null,
+        sourceLabel,
       });
     }
   }

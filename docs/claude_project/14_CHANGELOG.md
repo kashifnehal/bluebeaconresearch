@@ -16,6 +16,10 @@ Fix: `classifyEvent()` (`claude.service.ts`) now also returns a `country` field 
 
 No DB migration — same `signals.country`/`lat`/`lng` columns, just a different value winning at write time. Docs corrected in the same commit: `16_DATA_PIPELINE.md` §2.1 previously described a CSV Event Export pipeline (`ActionGeo_*`, Goldstein scale, `lastupdate.txt`) that doesn't match `gdelt-collector.ts`'s actual DOC 2.0 "artlist" JSON API — replaced with the real field list (`url, title, seendate, socialimage, domain, language, sourcecountry`). `18_AI_ENGINE.md` §2 documents the new `country` field in the classification prompt/schema. Full detail: `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md` v0.87.0.
 
+## PHASE 66 — ALERTS "BUILT FROM [object Object]" BUG FIXED (2026-09-24)
+
+`apps/web/app/api/alerts/recent/route.ts` — the "Built from" source citation on `/alerts` match cards rendered the literal text "[object Object]" instead of a source name for any match whose underlying `raw_events.raw_data.source` came from an object-shaped collector (NewsAPI/GNews write `{id, name, url, country}`; others write a plain string). The route's `sourceLabel` build used `raw_data.source ?? raw_data.domain`, which picked the truthy object over the intended string. Reproduced and confirmed fixed on the standing test account, rule "News — Middle East — Severity 6+" — full trace in `docs/brain/LIVE_TODO.md` / `docs/brain/14_CHANGELOG.md` v0.87.1. Not a one-off: 426 of 519 non-null `raw_data.source` rows in production are object-shaped.
+
 ---
 
 ## PHASE 64 — #186 PHASE 7: READABILITY REGRESSIONS FOUND, DOCS ONLY, NOTHING SHIPPED (2026-09-24)
