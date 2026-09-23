@@ -45,7 +45,7 @@ export const COLLECTOR_HEALTH_UNAVAILABLE =
  * (rate-limit, db-error, handler-exception) — never interpolate it.
  */
 export const FEED_DEGRADED_COPY =
-  "The live signal feed couldn't refresh — showing the last available data.";
+  "The signal feed couldn't refresh — showing the last available data.";
 
 const TECHNICAL_FRAGMENTS = [
   SUPABASE_CLIENT_UNAVAILABLE_TECHNICAL,

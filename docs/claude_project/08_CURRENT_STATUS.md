@@ -106,7 +106,9 @@
 
 > ⚠️ UPDATED 2026-09-21 (homepage stats count via response body) — `getHomepageStats()` uses a non-HEAD exact `signals` count so "N signals tracked" is in the response body; failures log the full Postgrest error. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.80.0. This tree: PHASE 47.
 
-Last updated: 2026-09-21 (homepage stats count via response body)
+> ⚠️ UPDATED 2026-09-23 ("LIVE"/"real-time" copy honesty sweep) — `apps/web` copy-only. Every UI string implying instant updates (collectors run roughly every 30 minutes, not instantly) now says so: homepage hero badge/links, dashboard subtitle + signal-stream badge + sidebar label, map page's "Live Intelligence" panel, HelpModal, ProductTour, the feed-degraded error banner. `/status` page also lost a fabricated "WebSocket" claim (no such route exists). Left unchanged: the Accuracy page's "live track record" link, the pricing page's "Live signal feed" tier claim (business copy, not rewritten), `/status`'s meta description (accurate), `IngestionStatusBanner`'s "Live ingestion" (the one genuinely real-time-accurate label). `apps/backend/src/lib/search-catalog.ts` now has a stale quote of the retired badge text — flagged as a follow-up, out of this task's `apps/web`-only scope. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.86.0. This tree: PHASE 53.
+
+Last updated: 2026-09-23 ("LIVE"/"real-time" copy honesty sweep)
 
 ---
 

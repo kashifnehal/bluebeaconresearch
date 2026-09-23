@@ -1,10 +1,22 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-23 (PHASE 50).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-23 (PHASE 53).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 53 — "LIVE"/"REAL-TIME" COPY HONESTY SWEEP (2026-09-23)
+
+> Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.86.0.
+
+`apps/web` only, copy-only. Collectors check for new articles roughly every 30 minutes, not instantly, so every UI string that implied instant/real-time delivery was replaced with "updates roughly every 30 minutes" framing (or the misleading word dropped where it didn't fit): homepage hero badge and links, dashboard subtitle + "LIVE DATA FEED ON" signal-stream badge + sidebar "REAL-TIME SYNTHESIS", the map page's "Live Intelligence" panel and its labels, the Help modal, the onboarding tour, and the feed-degraded error banner.
+
+The `/status` page's Intelligence Feed check also lost a fabricated "WebSocket" claim alongside the "live" fix — no WebSocket route exists anywhere in `apps/backend`.
+
+Deliberately left unchanged: the Accuracy page's "live track record" link (different sense — ongoing, not instant), the pricing page's "Live signal feed" tier claim (business copy; whether the paid tier is actually undelayed vs. the ~30min baseline is unverified, not rewritten here), `/status`'s meta description (accurate — that page runs its checks fresh per request), and `IngestionStatusBanner`'s "Live ingestion" label (the one place in the product that's genuinely real-time-accurate).
+
+**Known follow-up:** `apps/backend/src/lib/search-catalog.ts` still quotes the retired "LIVE DATA FEED ON" badge text — this task was explicitly scoped to `apps/web`.
 
 ## PHASE 52 — NEXT 16 `middleware.ts` → `proxy.ts` RENAME (2026-09-23)
 

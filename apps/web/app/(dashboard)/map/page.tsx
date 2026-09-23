@@ -901,11 +901,11 @@ export default function MapPage() {
       )}
 
       {!streamCollapsed && (
-      <aside aria-label="Live intelligence stream" className="absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex flex-col">
+      <aside aria-label="Intelligence stream" className="absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex flex-col">
         <button
           onClick={() => setStreamCollapsed(true)}
           className="absolute -left-3 top-6 w-6 h-6 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors"
-          aria-label="Collapse live intelligence panel"
+          aria-label="Collapse intelligence panel"
         >
           <span className="material-symbols-outlined text-[14px]">chevron_right</span>
         </button>
@@ -913,7 +913,7 @@ export default function MapPage() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="label text-xs tracking-[0.2em] font-bold text-on-surface uppercase">
-              Live Intelligence
+              Intelligence Stream
             </span>
           </div>
           <IngestionStatusBanner />
@@ -981,7 +981,7 @@ export default function MapPage() {
           ) : (
             <div className="flex-1 flex items-center justify-center p-6 grayscale opacity-50">
               <span className="label text-[12px] md:text-[10px] tracking-widest uppercase">
-                No live stream data
+                No stream data
               </span>
             </div>
           )}
@@ -991,7 +991,7 @@ export default function MapPage() {
               isLoading={isFetchingNextPage}
               onClick={handleLoadMoreSidebar}
               loadedCount={liveItems.length}
-              endLabel="End of live stream"
+              endLabel="End of stream"
             />
           )}
         </div>
@@ -1011,7 +1011,7 @@ export default function MapPage() {
         <button
           onClick={() => setStreamCollapsed(false)}
           className="absolute top-8 right-8 w-10 h-10 rounded-full bg-surface-container glass border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors z-10"
-          aria-label="Expand live intelligence panel"
+          aria-label="Expand intelligence panel"
         >
           <span className="material-symbols-outlined text-[16px]">chevron_left</span>
         </button>

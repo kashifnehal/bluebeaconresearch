@@ -108,7 +108,7 @@ export function HelpModal() {
               3. Using the Global Map
             </h3>
             <p className="text-xs text-[#bbcac0] leading-relaxed mb-2">
-              Click any pulsating red/emerald dot on the map overlay to view real-time incident details, spatial coordinates, and intelligence streams.
+              Click any pulsating red/emerald dot on the map overlay to view incident details, spatial coordinates, and intelligence streams.
             </p>
             <p className="text-xs text-[#bbcac0] leading-relaxed">
               <strong className="text-white">Global Tension Index:</strong> Composite score derived from regional conflict density, kinetic strikes, and maritime disruption metrics.

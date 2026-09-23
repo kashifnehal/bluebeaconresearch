@@ -33,7 +33,7 @@ function getUpstashRedis() {
 }
 
 async function checkIntelligenceFeed(): Promise<SystemCheck> {
-  const detail = "REST API & WebSocket live data feed";
+  const detail = "REST API, updates roughly every 30 minutes";
   const supabase = getAdminSupabase();
   if (!supabase) return { name: "Intelligence Feed", status: "Unknown", detail };
 

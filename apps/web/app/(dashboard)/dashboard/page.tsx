@@ -192,7 +192,7 @@ export default function DashboardPage() {
             className="text-[14px] mt-1"
             style={{ color: "#acabaa", fontFamily: "'Inter', sans-serif" }}
           >
-            Real-time global signal monitoring
+            Global signal monitoring, updates roughly every 30 minutes
           </p>
           {coverageLine ? (
             <p
@@ -733,7 +733,7 @@ export default function DashboardPage() {
                     fontFamily: "'JetBrains Mono', monospace",
                   }}
                 >
-                  LIVE DATA FEED ON
+                  UPDATES ROUGHLY EVERY 30 MIN
                 </span>
               </div>
               <div
@@ -891,7 +891,7 @@ export default function DashboardPage() {
                 fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
-              REAL-TIME SYNTHESIS
+              SYNTHESIS — UPDATES ~30 MIN
             </div>
           </div>
 

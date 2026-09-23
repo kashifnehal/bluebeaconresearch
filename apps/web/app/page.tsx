@@ -146,7 +146,7 @@ export default async function Home(props: {
           <div className="relative z-10 text-center max-w-5xl mx-auto">
             <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-surface-container-high/60 rounded-full border border-primary/20 mb-10 backdrop-blur-sm">
               <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-              <span className="font-label text-[12px] md:text-[9px] font-black uppercase tracking-[0.2em] text-primary">Live — monitoring active global conflicts</span>
+              <span className="font-label text-[12px] md:text-[9px] font-black uppercase tracking-[0.2em] text-primary">Monitoring active global conflicts — updates roughly every 30 minutes</span>
             </div>
             <h1 className="text-6xl md:text-8xl lg:text-[120px] font-extrabold tracking-tighter leading-[0.85] mb-10 text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
               High-fidelity geopolitical intelligence <br/>
@@ -164,7 +164,7 @@ export default async function Home(props: {
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </Link>
               <a className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 hover:text-on-surface flex items-center gap-2 transition-colors group" href="#live">
-                View live signals
+                View recent signals
                 <span className="material-symbols-outlined text-sm group-hover:translate-y-1 transition-transform">south</span>
               </a>
             </div>
@@ -177,7 +177,7 @@ export default async function Home(props: {
             <div className="mb-14 flex items-end justify-between">
               <div>
                 <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Latest signal</p>
-                <h3 className="text-4xl font-headline font-extrabold tracking-tight text-white mb-2">Live research feed</h3>
+                <h3 className="text-4xl font-headline font-extrabold tracking-tight text-white mb-2">Recent research feed</h3>
                 <p className="text-on-surface-variant max-w-lg font-medium">The most recent signal from the collector pipeline. New events are ingested on a regular schedule, typically every 15–30 minutes — not in real time.</p>
               </div>
               {homepageStats.totalSignals != null ? (

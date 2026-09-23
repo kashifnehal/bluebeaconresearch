@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-23 (v0.83.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-23 (v0.86.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.86.0 — "LIVE"/"real-time" copy honesty sweep (2026-09-23)
+
+`apps/web` only, copy/text-only, no logic change. Collectors check for new articles roughly every 30 minutes, not instantly — grepped the whole tree case-insensitively for standalone "LIVE" and "real-time"/"real time" and replaced anything implying instant delivery with "updates roughly every 30 minutes" framing (or dropped the misleading word where a full cadence phrase didn't fit). **Homepage** (`app/page.tsx`): hero badge, "View live signals" link, "Live research feed" heading (which sat right above a paragraph that already correctly said "not in real time" — the heading now agrees with it). **Dashboard** (`app/(dashboard)/dashboard/page.tsx`): subtitle, the "LIVE DATA FEED ON" signal-stream badge (already flagged as misleading in `lib/help-faq.ts`'s own FAQ answer), sidebar "REAL-TIME SYNTHESIS". **Map page**: "Live Intelligence" panel + its aria-labels + stream labels. **Help/onboarding**: `HelpModal.tsx`, `ProductTour.tsx` first tour step. **Error copy**: `lib/user-error-copy.ts` `FEED_DEGRADED_COPY`. **Status page** (`lib/status-checks.ts`): Intelligence Feed detail also dropped a fabricated "WebSocket" claim — grepped `apps/backend` and confirmed no WebSocket route exists anywhere in the product. `lib/help-faq.ts` and a `Sidebar.tsx` accessibility comment updated in the same commit so neither quotes a retired label. Deliberately left unchanged: the Accuracy page's "live track record" link (different sense — ongoing, not instant), the pricing page's "Live signal feed" tier claim (business copy; no code found implementing the paired "Delayed Feed (4h)" claim either, so left as an open question rather than rewritten), `/status`'s meta description (accurate — that page runs its checks fresh per request), `IngestionStatusBanner`'s "Live ingestion" (the one label that's actually real-time-accurate). `apps/backend/src/lib/search-catalog.ts` still has the retired "LIVE DATA FEED ON" quote — out of this `apps/web`-only task's scope, needs a follow-up. **Verified:** full re-grep after edits — every remaining hit is a code comment, an already-honest string, or a deliberately-left-unchanged item. `tsc --noEmit` clean; `apps/web` test suite (incl. `help-faq.test.ts`) all passing. Not browser-walked — copy-only, no rendering-behavior risk. Evidence: `docs/brain/LIVE_TODO.md`.
 
 ### v0.83.0 — ACLED claims removed from web copy (2026-09-23, `9772bcc`)
 

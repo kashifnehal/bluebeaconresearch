@@ -43,7 +43,7 @@ export function Sidebar() {
       />
     )}
     {/* Labelled <aside> so it's distinguishable from the map page's own <aside>
-        ("Live intelligence stream") — axe `landmark-unique`, /map. Keeping it a
+        ("Intelligence stream") — axe `landmark-unique`, /map. Keeping it a
         landmark (vs. a bare <div>) is what keeps the logo/help/logout content
         inside a landmark region (axe `region`). */}
     <aside

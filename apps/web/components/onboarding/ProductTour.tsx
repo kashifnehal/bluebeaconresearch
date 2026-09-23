@@ -11,7 +11,7 @@ const DASHBOARD_STEPS: Step[] = [
   {
     target: '[data-tour="feed-header"]',
     content:
-      "This is your live signal feed. New geopolitical and macro events that could affect markets you care about show up here as they're confirmed.",
+      "This is your signal feed. New geopolitical and macro events that could affect markets you care about show up here as they're confirmed.",
     disableBeacon: true,
     placement: "bottom",
   },
