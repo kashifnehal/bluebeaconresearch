@@ -58,7 +58,7 @@ export function LoadMoreButton({
         onClick={onClick}
         disabled={isLoading}
         aria-busy={isLoading}
-        className="inline-flex items-center gap-2 px-5 py-2 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border border-white/10 text-white/60 transition-colors hover:text-white hover:border-white/25 disabled:opacity-50 disabled:cursor-wait cursor-pointer"
+        className="inline-flex items-center gap-2 px-5 py-2 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border border-white/10 text-white/60 transition-colors hover:text-white hover:border-white/25 disabled:opacity-50 disabled:cursor-wait cursor-pointer min-h-[44px] md:min-h-0"
       >
         {isLoading ? (
           <>

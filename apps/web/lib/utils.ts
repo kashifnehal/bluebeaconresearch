@@ -45,7 +45,7 @@ export function safeFormatDistanceToNow(
  * handling) while making the rendering consistent, per the design-system audit.
  */
 export const SELECT_CLASSES =
-  "bg-surface-container-high border border-outline-variant rounded-md px-3 py-2 text-xs font-mono uppercase tracking-wide text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none cursor-pointer appearance-none";
+  "bg-surface-container-high border border-outline-variant rounded-md px-3 py-2 text-xs font-mono uppercase tracking-wide text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/40 outline-none cursor-pointer appearance-none min-h-[44px] md:min-h-0";
 
 export function formatRegionLabel(region?: string | null): string {
   if (!region) return "Global";

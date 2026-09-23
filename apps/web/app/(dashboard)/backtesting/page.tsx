@@ -293,7 +293,7 @@ export default function BacktestingPage() {
                       key={h}
                       type="button"
                       onClick={() => setHorizon(h)}
-                      className={`flex-1 px-4 py-1.5 text-[12px] md:text-[10px] font-black font-label rounded-md transition-all ${horizon === h ? "bg-primary text-black" : "text-on-surface-variant hover:text-on-surface"}`}
+                      className={`flex-1 px-4 py-1.5 text-[12px] md:text-[10px] font-black font-label rounded-md transition-all inline-flex items-center justify-center min-h-[44px] md:min-h-0 ${horizon === h ? "bg-primary text-black" : "text-on-surface-variant hover:text-on-surface"}`}
                     >
                       {h}
                     </button>

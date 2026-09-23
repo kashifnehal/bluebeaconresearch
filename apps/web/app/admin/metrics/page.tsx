@@ -148,7 +148,7 @@ export default async function AdminMetricsPage() {
 
         <Link
           href="/dashboard"
-          className="inline-block text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92] hover:text-[#e5e2e1]"
+          className="inline-flex items-center min-h-[44px] md:min-h-0 text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92] hover:text-[#e5e2e1]"
         >
           ← Back to dashboard
         </Link>

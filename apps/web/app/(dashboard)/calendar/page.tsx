@@ -301,7 +301,7 @@ function CalendarFilters({
                 data-testid={`calendar-timezone-${opt.id}`}
                 aria-pressed={selected}
                 onClick={() => onTimeZoneChange(opt.id)}
-                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
                   backgroundColor: selected ? "#4edea3" : "#201f1f",

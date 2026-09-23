@@ -229,3 +229,14 @@ body {
     display: none;
   }
 }
+
+/* #186 Phase 5b tap-target sweep: the zoom in/out buttons above default to
+   MapLibre's own 29x29 size, under the 44x44 minimum. Only worth fixing on
+   the mobile widths where these buttons are actually visible (see rule
+   above) — desktop already hides them, so no need to touch that size. */
+@media (max-width: 767px) {
+  .map-page-root .maplibregl-ctrl-group button {
+    width: 44px;
+    height: 44px;
+  }
+}

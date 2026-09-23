@@ -229,7 +229,7 @@ export default function WatchlistSymbolPage() {
         {/* Breadcrumb */}
         <button
           onClick={() => router.push("/watchlist")}
-          className="group flex items-center gap-2 text-[12px] md:text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors mb-6"
+          className="group flex items-center gap-2 text-[12px] md:text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors mb-6 min-h-[44px] md:min-h-0"
         >
           <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">
             chevron_left
@@ -302,7 +302,7 @@ export default function WatchlistSymbolPage() {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setChartRange(range.id)}
-                    className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                    className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                     style={{
                       backgroundColor: selected ? "#4edea3" : "transparent",
                       color: selected ? "#003824" : "#bbcac0",

@@ -171,7 +171,7 @@ export default function SettingsPage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 font-label text-xs tracking-widest transition-colors uppercase font-bold ${
+              className={`pb-4 font-label text-xs tracking-widest transition-colors uppercase font-bold inline-flex items-end min-h-[44px] md:min-h-0 ${
                 activeTab === tab
                   ? "text-primary border-b-2 border-primary"
                   : "text-outline hover:text-on-surface"

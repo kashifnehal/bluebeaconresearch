@@ -141,7 +141,7 @@ export function FilterBar({
                           ? "bg-primary text-on-primary"
                           : "bg-surface-container/20"
                       }`
-                    : "px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
+                    : "px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 }
                 style={
                   stacked

@@ -350,9 +350,9 @@ export default function AlertsPage() {
           <p className="text-on-surface/60 mt-2 font-body font-medium">What you asked to be told about — your rules, and the signals that actually matched them.</p>
         </div>
         <div className="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant/10">
-          <button onClick={() => router.push("/dashboard")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer">Feed</button>
-          <button onClick={() => router.push("/watchlist")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer">Watchlist</button>
-          <button onClick={() => router.push("/backtesting")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer">Lab</button>
+          <button onClick={() => router.push("/dashboard")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Feed</button>
+          <button onClick={() => router.push("/watchlist")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Watchlist</button>
+          <button onClick={() => router.push("/backtesting")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Lab</button>
         </div>
       </section>
 
@@ -365,7 +365,7 @@ export default function AlertsPage() {
         </span>
         <button
           onClick={() => openSetAlertModal()}
-          className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer"
+          className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           + New Alert Rule

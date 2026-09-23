@@ -250,7 +250,7 @@ export default function DashboardPage() {
               <button
                 onClick={() => setPersonalized((v) => !v)}
                 aria-pressed={personalized}
-                className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer flex items-center gap-2"
+                className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer flex items-center gap-2 min-h-[44px] md:min-h-0"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
                   backgroundColor: personalized ? "#4edea3" : "#201f1f",
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                 data-testid={`desk-${id}`}
                 aria-pressed={selected}
                 onClick={() => applyDesk(id)}
-                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
                   backgroundColor: selected ? "#4edea3" : "#201f1f",

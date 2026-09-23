@@ -114,7 +114,7 @@ export default function ServiceStatusClient() {
               setLeafIdx(0);
               resetView();
             }}
-            className={`rounded-md px-3 py-1.5 text-[12px] md:text-[11px] font-mono uppercase tracking-[0.15em] ${
+            className={`rounded-md px-3 py-1.5 text-[12px] md:text-[11px] font-mono uppercase tracking-[0.15em] inline-flex items-center min-h-[44px] md:min-h-0 ${
               i === groupIdx
                 ? "bg-[#1c2620] text-[#e5e2e1] ring-1 ring-[#3c4a42]"
                 : "text-[#8a9a92] hover:text-[#e5e2e1]"
@@ -134,7 +134,7 @@ export default function ServiceStatusClient() {
               setLeafIdx(i);
               resetView();
             }}
-            className={`rounded-md px-3 py-1.5 text-[12px] md:text-[11px] font-mono ${
+            className={`rounded-md px-3 py-1.5 text-[12px] md:text-[11px] font-mono inline-flex items-center min-h-[44px] md:min-h-0 ${
               i === leafIdx
                 ? "bg-[#131313] text-[#e5e2e1] ring-1 ring-[#3c4a42]/60"
                 : "text-[#6b7a72] hover:text-[#e5e2e1]"
@@ -154,7 +154,7 @@ export default function ServiceStatusClient() {
                 setRssFeed(e.target.value);
                 resetView();
               }}
-              className="rounded-md border border-[#333] bg-[#131313] px-2 py-1.5 font-mono text-[12px] text-[#e5e2e1]"
+              className="rounded-md border border-[#333] bg-[#131313] px-2 py-1.5 font-mono text-[12px] text-[#e5e2e1] min-h-[44px] md:min-h-0"
             >
               {RSS_FEEDS.map((f) => (
                 <option key={f} value={f}>
@@ -166,7 +166,7 @@ export default function ServiceStatusClient() {
           <button
             onClick={onLoad}
             disabled={pending}
-            className="rounded-md bg-[#1c2620] px-4 py-1.5 font-mono text-[12px] md:text-[11px] uppercase tracking-[0.15em] text-[#e5e2e1] ring-1 ring-[#3c4a42] hover:bg-[#24312a] disabled:opacity-50"
+            className="rounded-md bg-[#1c2620] px-4 py-1.5 font-mono text-[12px] md:text-[11px] uppercase tracking-[0.15em] text-[#e5e2e1] ring-1 ring-[#3c4a42] hover:bg-[#24312a] disabled:opacity-50 inline-flex items-center min-h-[44px] md:min-h-0"
           >
             {pending ? "Loading…" : "Load data"}
           </button>

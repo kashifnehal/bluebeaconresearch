@@ -28,7 +28,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 | 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE), new `MobileTabBar.tsx` | ✅ Done 2026-09-23 (PHASE 56) |
 | 4 | Map → bottom sheet on mobile; fixed a real pre-existing popup bug too | ✅ Done 2026-09-23 (PHASE 57) |
 | 5a | 4 pages with the same critical bug as Phase 2 (`settings`/`backtesting`/`watchlist`/`watchlist/[symbol]`, worse severity), `ALPHA` badge + 1 military-clearance string removed | ✅ Done 2026-09-23 (PHASE 58) |
-| 5b | `/events/[id]` tab-clipping bug fixed; homepage footer (10 links) + `TopBar`/`PublicHeader`/5 auth-page tap-targets fixed; full 24-page tap-target discovery sweep run | 🟡 Partial 2026-09-23 (PHASE 59/60/61) — ~13 per-page dense-control fixes deliberately deferred, see LIVE_TODO |
+| 5b | `/events/[id]` tab-clipping bug fixed; full 44×44 tap-target sweep complete — shared components + all per-page dense controls (selects, chips, toggles, range buttons) across all 24 pages | ✅ Done 2026-09-23 (PHASE 59/60/61/62) |
 | 6 | 768px tablet pass (sidebar on, 512px left, never measured) | ⚪ Not started |
 
 **No Playwright / new test infra** (founder decision, 2026-09-23) — manual multi-width verification per phase instead. `DesignSync` (Claude Design) is authorized but unused for this work — the mocks already exist in-repo.
@@ -39,7 +39,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 
 `/map` is fixed (PHASE 57) — 0% → 100% map visible on a phone, plus a real pre-existing `MapSignalPopup` bug (negative width below ~416px) fixed along the way. `/alerts` is fixed (PHASE 55); its 183px overflow at exactly 768px is a known, tracked Phase 6 item, not a regression.
 
-**All 24 routes under `apps/web/app` have been checked at least once** (fixed, or confirmed already mobile-safe) as of 2026-09-23 — see `docs/brain/HANDOFF_186_PHASE5.md` for the full per-page table. **44×44 tap-target sweep: discovery complete, shared-component fixes shipped 2026-09-23 (PHASE 61)** — homepage footer, `TopBar`, `PublicHeader`, and the 5 auth pages fixed. ~13 per-page dense controls (filter selects, chips, desk toggles, range buttons — full list in `docs/brain/LIVE_TODO.md`) found but deliberately deferred, scoped out of this pass by founder decision. Phase 6 (768px tablet pass) also still open — only `/alerts` and `/calendar` actually measured at that width.
+**All 24 routes under `apps/web/app` have been checked at least once** (fixed, or confirmed already mobile-safe) as of 2026-09-23 — see `docs/brain/HANDOFF_186_PHASE5.md` for the full per-page table. **44×44 tap-target sweep: fully closed 2026-09-23 (PHASE 59-62)** — homepage footer, `TopBar`, `PublicHeader`, all 5 auth pages, and every per-page dense control (filter selects via the shared `SELECT_CLASSES`, desk/toggle/range buttons, watchlist chips + remove buttons, map's MapLibre zoom controls, admin tabs) fixed — full breakdown in `docs/brain/LIVE_TODO.md`. Left alone on purpose: inline sentence links (WCAG 2.5.5 exempt), Driver.js's onboarding beacon, MapLibre's attribution link. Phase 6 (768px tablet pass) is the only remaining open item — only `/alerts` and `/calendar` actually measured at that width.
 
 ---
 

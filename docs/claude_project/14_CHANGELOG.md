@@ -6,6 +6,18 @@
 
 ---
 
+## PHASE 62 — #186 PHASE 5B (TAP-TARGET): PER-PAGE DENSE CONTROLS, SWEEP FULLY CLOSED (2026-09-23)
+
+`apps/web` only, 16 files, all `className`/CSS-only. Closes the ~13-item deferred list from PHASE 61. One shared fix (`lib/utils.ts`'s `SELECT_CLASSES` constant) cleared every filter `<select>` across 5 pages at once. Per-page: dashboard (desk buttons, My Feed toggle), alerts (nav buttons, New Alert Rule), watchlist (commodity chips, remove buttons, Force Refresh), calendar (UTC/Local), `/watchlist/[symbol]` (back button, chart-range buttons), `/backtesting` (horizon buttons), `/settings` (section tabs), `/help` (Send Feedback), admin (back links, service-status tabs/Load data). `/map`'s MapLibre zoom controls fixed via a mobile-scoped CSS override (not touching library internals) — desktop untouched since they're already desktop-hidden by design.
+
+**New verification standard applied this pass** (founder instruction, mid-session): every fix checked two ways — size AND an actual interaction (click/select and confirm the resulting state change), not size alone. Two elements were deliberately left un-fixed after investigation: a Driver.js onboarding-hint beacon (third-party, transient, self-dismissing) and MapLibre's own attribution link (required third-party attribution).
+
+**Hit and resolved a real dev-environment issue mid-pass:** after editing all 16 files, several pages served stale pre-edit markup (one, `/backtesting`, threw a hydration-mismatch error on every load) even on hard reload — root-caused to Turbopack returning `304 Not Modified` for changed files' JS chunks on a **freshly-started** server (not the earlier orphaned-process issue — this was a fresh restart still missing some file-watch events). Fixed by killing the server, clearing `.next/cache/{webpack,turbopack}`, and restarting; confirmed resolved via `read_network_requests` (chunks recompiled) and a flat console-error count across repeat navigations. Full detail: `docs/brain/LIVE_TODO.md`.
+
+`tsc --noEmit` clean. **#186 Phase 5b (tap-target sweep) is now fully closed** — all 24 pages, shared components and per-page dense controls alike.
+
+---
+
 ## PHASE 61 — #186 PHASE 5B (TAP-TARGET): SHARED-COMPONENT FIXES + FULL 24-PAGE DISCOVERY SWEEP (2026-09-23)
 
 `apps/web` only. Ran the 44×44 JS-snippet sweep (from the handoff) across all 23 remaining pages at 360px, corrected to exclude off-canvas elements (the first pass falsely flagged the closed mobile sidebar drawer's links — they're `translate`d off-canvas, not `display:none`, so they report real but unreachable bounding-box sizes). Found violations on ~20 of 24 pages. Founder scoped this pass to the shared components that clear the most pages per fix:

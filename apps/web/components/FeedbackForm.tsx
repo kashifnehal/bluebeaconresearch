@@ -108,7 +108,7 @@ export function FeedbackForm() {
       <button
         type="submit"
         disabled={submitting || submitted}
-        className={`bg-primary hover:bg-primary-container text-black px-8 py-3 font-label text-xs font-bold tracking-widest rounded-sm transition-all ${
+        className={`bg-primary hover:bg-primary-container text-black px-8 py-3 font-label text-xs font-bold tracking-widest rounded-sm transition-all inline-flex items-center justify-center min-h-[44px] ${
           submitting || submitted ? "opacity-50 cursor-not-allowed" : ""
         }`}
       >

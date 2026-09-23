@@ -225,7 +225,7 @@ export function MobileTensionSheet({
               onOpenFilters();
             }}
             aria-label="Open filters"
-            className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center"
+            className="w-11 h-11 rounded-full bg-surface-container flex items-center justify-center"
           >
             <span className="material-symbols-outlined text-[18px]">tune</span>
           </button>

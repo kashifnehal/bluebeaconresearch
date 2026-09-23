@@ -413,7 +413,7 @@ export function WatchlistClient() {
                             : `Add ${c.label} to watchlist`
                         }
                         onClick={() => handleToggleChip(c.symbol)}
-                        className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                        className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                         style={{
                           backgroundColor: active ? "#4edea3" : "transparent",
                           color: active ? "#003824" : "#bbcac0",
@@ -459,7 +459,7 @@ export function WatchlistClient() {
                   type="button"
                   onClick={() => handleRemove(sym)}
                   aria-label={`Remove ${label} from watchlist`}
-                  className="absolute right-4 top-4 z-20 text-on-surface-variant hover:text-error transition-colors p-1"
+                  className="absolute right-4 top-4 z-20 text-on-surface-variant hover:text-error transition-colors p-[13px] md:p-1"
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
                 </button>
@@ -554,7 +554,7 @@ export function WatchlistClient() {
                 </div>
                 <button
                   onClick={() => refetch()}
-                  className="text-primary hover:text-primary-container font-label text-[12px] md:text-[10px] uppercase tracking-widest font-bold transition-colors cursor-pointer"
+                  className="text-primary hover:text-primary-container font-label text-[12px] md:text-[10px] uppercase tracking-widest font-bold transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 >
                   Force Refresh
                 </button>
