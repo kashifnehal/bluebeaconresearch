@@ -73,57 +73,60 @@
 
 ### 2.1 GDELT (Global Database of Events, Language, and Tone)
 
-**URL:** http://data.gdeltproject.org/gdeltv2/lastupdate.txt
-**Format:** CSV, pipe-delimited
-**Update frequency:** Every 15 minutes
-**Cost:** Free, no API key required
-**Volume:** 300–500 events per 15-minute file
+**API:** `https://api.gdeltproject.org/api/v2/doc/doc` — DOC 2.0 "artlist" mode.
+Confirmed against gdelt-collector.ts (#188, 2026-09-24): this collector calls the
+DOC 2.0 article-list endpoint, **not** the CSV Event Export product a previous
+version of this doc described — there is no `lastupdate.txt`/CSV download step,
+no Goldstein scale, and no `ActionGeo_*` fields anywhere in this pipeline.
+**Format:** JSON (`mode=artlist`)
+**Update frequency:** Every 15 minutes (ingestion cron cycle)
+**Cost:** Free, no API key, no authenticated tier
+**Volume:** Up to 50 articles per run (`maxrecords=50`)
 
-**Key fields extracted:**
+**Query (URL-encoded):**
 ```
-GLOBALEVENTID      → external_id
-Day                → event_date
-Actor1CountryCode  → actor1_country
-Actor2CountryCode  → actor2_country
-EventCode          → event_type (CAMEO code)
-GoldsteinScale     → goldstein_scale (severity proxy: -10 to +10)
-NumArticles        → sources_count
-AvgTone            → sentiment proxy
-ActionGeo_CountryCode → country (2-letter ISO)
-ActionGeo_Lat      → lat
-ActionGeo_Long     → lng
-ActionGeo_FullName → location_name
-SourceURL          → source_url (for verification)
+(conflict OR war OR sanctions OR military OR oil OR stock market OR trade OR inflation OR fed OR earnings) sourcelang:eng
 ```
+
+**Fields the DOC 2.0 artlist response actually returns:**
+```
+url          → external_id (base64'd) + source_url
+title        → title
+seendate     → event_date
+socialimage  → (unused)
+domain       → (unused)
+language     → defense-in-depth English filter (title-language check already
+                narrows via sourcelang:eng, this is a second check on the field)
+sourcecountry → raw_events.country — the PUBLISHING OUTLET's country, NOT the
+                event's location (a US outlet covering a Middle East story
+                tags sourcecountry "US"). Kept as the raw/internal value; the
+                displayed "country" on signals now comes from Claude's own
+                classification of the article text instead (see #188 below
+                and 18_AI_ENGINE.md).
+```
+There is no `GLOBALEVENTID`, `Actor1/2CountryCode`, `EventCode`, `GoldsteinScale`,
+`NumArticles`, `AvgTone`, or `ActionGeo_*` in this response — those fields belong
+to GDELT's separate Event Export CSV product, which this collector does not call.
 
 **GDELT collection logic (gdelt-collector.ts):**
 ```typescript
-// Step 1: Fetch the lastupdate.txt to get the latest CSV URL
-const lastUpdateRes = await fetch('http://data.gdeltproject.org/gdeltv2/lastupdate.txt')
-const lines = (await lastUpdateRes.text()).trim().split('\n')
-const csvUrl = lines[0].split(' ')[2] // e.g. http://data.gdeltproject.org/gdeltv2/20260811080000.export.CSV.zip
-
-// Step 2: Download and unzip the CSV
-// Step 3: Parse CSV rows
-// Step 4: Apply relevance pre-filter
-// Step 5: Map Goldstein scale to severity (0-10):
-function goldsteinToSeverity(gs: number): number {
-  if (gs <= -7) return 9  // Armed conflict, mass destruction
-  if (gs <= -5) return 8  // Military strikes
-  if (gs <= -3) return 7  // Significant threats
-  if (gs <= -1) return 6  // Minor tensions
-  if (gs < 2)  return 5   // Neutral
-  return 4                 // Cooperative events (low relevance)
-}
-// Step 6: Upsert to raw_events with ON CONFLICT DO NOTHING
-// Step 7: Queue new events in ai-classification BullMQ queue
+// Single GET to the DOC 2.0 artlist endpoint above (sourcelang:eng, maxrecords=50, sort=DateDesc)
+// Filter: article.language !== "english" excluded, then isRelevantEvent(title)
+// Insert raw_events with country = sourcecountry (raw/internal value, kept as-is)
+// classifyEvent() (Claude) derives its own `country` field from the article
+// text — that classifier-derived country, not sourcecountry, is what
+// geo-resolver.ts and gdelt-collector.ts now use for the signal's map
+// coordinates and displayed country (#188)
 ```
 
 **Known GDELT issues:**
-- Contains non-geopolitical events (sports, entertainment with "conflict" tone)
-- Country field often NULL — requires lat/lng reverse geocoding or title NLP to extract
-- Same event reported multiple times across the 15-minute window → deduplication critical
-- Goldstein scale is not perfectly correlated with market impact — AI re-scoring is necessary
+- `sourcecountry` is the publishing outlet's country, not necessarily where the
+  event happened — this misled the displayed signal country/map pin until #188
+  (fix: Claude's classification step now extracts the event's actual country
+  from the article text; see 18_AI_ENGINE.md)
+- Contains non-geopolitical events (sports, entertainment with "conflict" tone) — filtered by `isRelevantEvent`
+- No article summary/body in this response — filtering and classification both work title-only for GDELT
+- Keyless DOC API has no SLA; a 429 can reflect an IP-level block (shared Railway egress IP) lasting up to ~15 min
 
 ---
 

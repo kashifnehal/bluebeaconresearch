@@ -196,6 +196,7 @@ export async function runGdeltCollectorOnce() {
 
       const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
         title,
+        classification.country,
         country,
         classification.region
       );
@@ -208,7 +209,14 @@ export async function runGdeltCollectorOnce() {
         title,
         eventType: "news",
         eventDate,
-        country: formatCountryName(country),
+        // #188 — `country` here (a.sourcecountry) is the PUBLISHING OUTLET's
+        // country, not the event's location (a US outlet covering a Middle
+        // East story has sourcecountry "US"). classification.country is
+        // Claude's own read of the article and is what should actually be
+        // displayed; sourcecountry stays as the raw_events.country value
+        // (kept above) and only remains a fallback here for when Claude
+        // genuinely couldn't tell.
+        country: formatCountryName(classification.country ?? country),
         lat: resolvedLat,
         lng: resolvedLng,
         freshness: "realtime",

@@ -92,7 +92,18 @@ const REGION_MAP: Record<string, [number, number]> = {
   "global": [10.0000, 25.0000],
 };
 
-export function resolveGeoCoords(title: string, country?: string | null, region?: string | null): { lat: number; lng: number } {
+// #188 — `classifierCountry` (Claude's own read of the article, from
+// ClassificationResult.country) now outranks `sourceCountry` (a raw
+// collector-supplied value — for GDELT this is the PUBLISHING OUTLET's
+// country, not the event's location; for RSS/GNews it's always null).
+// `sourceCountry` stays as the fallback for when the classifier genuinely
+// couldn't tell (null) rather than being removed outright.
+export function resolveGeoCoords(
+  title: string,
+  classifierCountry?: string | null,
+  sourceCountry?: string | null,
+  region?: string | null,
+): { lat: number; lng: number } {
   let hash = 0;
   for (let i = 0; i < (title || "").length; i++) {
     hash = (hash << 5) - hash + title.charCodeAt(i);
@@ -102,7 +113,8 @@ export function resolveGeoCoords(title: string, country?: string | null, region?
   const jitterLng = (((Math.abs(hash) >> 2) % 100) / 100 - 0.5) * 4;
 
   const titleLower = (title || "").toLowerCase();
-  const countryLower = (country || "").toLowerCase().trim();
+  const classifierCountryLower = (classifierCountry || "").toLowerCase().trim();
+  const sourceCountryLower = (sourceCountry || "").toLowerCase().trim();
   const regionLower = (region || "").toLowerCase().trim();
 
   // Title keywords
@@ -122,8 +134,13 @@ export function resolveGeoCoords(title: string, country?: string | null, region?
     return { lat: 31.0461 + jitterLat, lng: 34.8516 + jitterLng };
   }
 
-  if (countryLower && COUNTRY_MAP[countryLower]) {
-    const [cLng, cLat] = COUNTRY_MAP[countryLower];
+  if (classifierCountryLower && COUNTRY_MAP[classifierCountryLower]) {
+    const [cLng, cLat] = COUNTRY_MAP[classifierCountryLower];
+    return { lat: cLat + jitterLat, lng: cLng + jitterLng };
+  }
+
+  if (sourceCountryLower && COUNTRY_MAP[sourceCountryLower]) {
+    const [cLng, cLat] = COUNTRY_MAP[sourceCountryLower];
     return { lat: cLat + jitterLat, lng: cLng + jitterLng };
   }
 

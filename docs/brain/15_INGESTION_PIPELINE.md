@@ -107,6 +107,8 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 
 **Rate limits:** HTTP 429 common → **30-second retry** once per run.  
 **Filter:** `isRelevantEvent(title)` — title only (GDELT often has no summary).
+**Fields (DOC 2.0 artlist response):** `url, title, seendate, socialimage, domain, language, sourcecountry` — no `ActionGeo_*`/Goldstein/CAMEO fields exist in this response; those belong to GDELT's separate Event Export CSV product, which this collector doesn't call (confirmed #188, 2026-09-24; `docs/claude_project/16_DATA_PIPELINE.md` §2.1 previously claimed otherwise).
+**Country caveat (#188):** `sourcecountry` is the publishing outlet's country, not the event's location — `raw_events.country` keeps it as the raw value, but the classifier's own `country` field (see `18_AI_ENGINE.md`) is what's now used for the signal's displayed country and map coordinates.
 
 ---
 

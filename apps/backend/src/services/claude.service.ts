@@ -101,6 +101,15 @@ export type ClassificationResult = {
   isBreaking: boolean;
   summary: string;
   region: string;
+  // #188 — the specific country Claude judged the event to have physically
+  // happened in (from reading the article), separate from `region` above.
+  // Introduced because GDELT's raw_events.country is really the PUBLISHING
+  // OUTLET's country (its `sourcecountry` field), not the event's location —
+  // a US outlet covering a Middle East story previously showed "United
+  // States" as the signal's country on cards/map/event page. This field is
+  // what geo-resolver.ts and the collectors now prefer for a real per-event
+  // location; null when the article genuinely doesn't make it clear.
+  country: string | null;
   // Which path actually produced this result — 'claude' only when a real Anthropic
   // API call succeeded and parsed cleanly, 'heuristic' whenever classifyEvent() fell
   // back to heuristicClassify() (no client, API error, or bad JSON). Callers write
@@ -313,6 +322,7 @@ export class ClaudeService {
           `  "isBreaking": boolean,\n` +
           `  "summary": string (max 120 chars),\n` +
           `  "region": string,\n` +
+          `  "country": the specific country where this event physically happened, based on reading the article — a real country name (e.g. "Iran", "Ukraine"), never a region bucket or the name of the outlet/publication reporting it. Return null if the article's own text genuinely doesn't make the location clear.,\n` +
           `  "relevance": a float 0.0-1.0 — how central is the named commodity/currency/entity/geography to what actually happened in this story (not just mentioned in passing)? A story about "World Trade Center" mentioning "trade" in the name only should score near 0; a story where a named commodity is the actual subject of the event should score high.,\n` +
           `  "novelty": a float 0.0-1.0 — does this story contain information a market participant would not already know? Score LOW (near 0) for a story that only reminds the reader of an already-public, previously-known schedule, date, or routine recurring event, with no new claim, statement, or data attached (e.g. "the Fed meets next Wednesday," "USDA releases its report on the 12th," with nothing else reported). Score HIGH for a story that reports a new fact, statement, data point, or claim — including an unconfirmed or rumored one — that a reader could not already have known. Do not score this based on whether the underlying event has already happened or is confirmed — an unconfirmed but newly-reported claim about a future event scores HIGH on novelty; a reminder about a known future event scores LOW, regardless of how big that event will be.,\n` +
           `  "eventCategory": one of exactly "armed_conflict_security"|"supply_disruption_logistics"|"sanctions_trade_policy"|"production_output_decision"|"central_bank_monetary_policy"|"scheduled_economic_data"|"official_statement_commentary"|"elections_political_transition"|"other_market_relevant",\n` +
@@ -366,6 +376,7 @@ export class ClaudeService {
         parsed.relevance = this.sanitizeUnitFloat(parsed.relevance);
         parsed.novelty = this.sanitizeUnitFloat(parsed.novelty);
         parsed.eventCategory = this.sanitizeEventCategory(parsed.eventCategory);
+        parsed.country = this.sanitizeCountry(parsed.country);
         parsed.marketMechanism = this.sanitizeMarketMechanism(parsed.marketMechanism);
         parsed.isPreview = parsed.isPreview === true;
         parsed.sourceConfirmation = this.sanitizeSourceConfirmation(parsed.sourceConfirmation);
@@ -635,6 +646,10 @@ export class ClaudeService {
       isBreaking,
       summary: title.slice(0, 120),
       region,
+      // No real read of the article text on this path — same reasoning as
+      // relevance/novelty/eventCategory/marketMechanism/sourceConfirmation
+      // below, this can't be meaningfully derived by keyword-regex alone.
+      country: null,
       classificationMethod: "heuristic",
       // relevance/novelty/eventCategory/marketMechanism/sourceConfirmation
       // deliberately omitted (left undefined -> written as null) — see the
@@ -713,6 +728,17 @@ export class ClaudeService {
   private sanitizeEventCategory(value: unknown): EventCategory | null {
     const str = String(value ?? "").trim() as EventCategory;
     return ClaudeService.EVENT_CATEGORIES.has(str) ? str : null;
+  }
+
+  // #188 — country is free text (world naming/spelling varies too much for a
+  // fixed allowlist, unlike eventCategory/sourceConfirmation above), so this
+  // mirrors sanitizeMarketMechanism's discipline instead: reject non-answers
+  // Claude sometimes returns in place of a real null, cap length defensively.
+  private sanitizeCountry(value: unknown): string | null {
+    if (value === null || value === undefined) return null;
+    const str = String(value).trim();
+    if (!str || /^(null|unknown|unclear|n\/a|none)$/i.test(str)) return null;
+    return str.slice(0, 100);
   }
 
   private sanitizeSourceConfirmation(value: unknown): SourceConfirmation | null {

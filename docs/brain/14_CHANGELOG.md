@@ -1,12 +1,34 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-23 (v0.86.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-24 (v0.87.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.87.0 — #188 classifier-extraction country fix (2026-09-24)
+
+`apps/backend` only. Follow-up to the Phase 1/2 investigation (`claude/188_...md` §3, its Cursor report). GDELT-sourced signals were showing the publishing outlet's country as if it were the event's location: GDELT's DOC 2.0 `sourcecountry` field names the country of the outlet reporting a story, not where the event happened, and `gdelt-collector.ts` wrote it straight into the signal's displayed `country` and used it (via `geo-resolver.ts`) to place the map pin — a US outlet covering a Middle East story showed "United States" on the card and map.
+
+**Fix:** `classifyEvent()` (`claude.service.ts`) gains a `country: string | null` field on `ClassificationResult` — the specific country Claude judges the event to have physically happened in, based on reading the article text (a real country name, not the `region` bucket it already returns; null if genuinely unclear). New `sanitizeCountry()` mirrors `sanitizeMarketMechanism()`'s discipline (free text, not an enum like `sanitizeEventCategory()` — country naming varies too much for an allowlist): rejects empty/"null"/"unknown"/"unclear"/"n/a"/"none", caps at 100 chars. Heuristic fallback (no real article read) always sets `country: null`.
+
+`geo-resolver.ts`'s `resolveGeoCoords()` signature changed from `(title, country, region)` to `(title, classifierCountry, sourceCountry, region)` — priority order is now title chokepoint keywords → classifier country → raw source-country fallback → region bucket → global jitter (was: title → source-country → region → global, no classifier input existed before this).
+
+**Call sites updated:** `gdelt-collector.ts` (the actual bug — `country: formatCountryName(classification.country ?? country)`, was `formatCountryName(country)` where `country = a.sourcecountry`); `rss-collector.ts` and `gnews-collector.ts` (both already unconditionally passed `country: formatCountryName(null)` — i.e. always "Global" — since neither RSS nor GNews articles carry a per-article country; now use `formatCountryName(classification.country)`, a real improvement over always-"Global"); `reconciliation.ts` (recovers orphaned `raw_events` from *any* source on a 30-min cron, so a recovered GDELT orphan hit the identical sourcecountry bug — `country: formatCountryName(classification.country ?? raw.country)`, was `countryLabel` computed pre-classification straight from `raw.country`).
+
+**`acled-collector.ts` deliberately left unmodified** — checked and confirmed its `country`/`latitude`/`longitude` come from ACLED's own per-incident data (a structured conflict-event database with real location fields), not an outlet's country the way GDELT's `sourcecountry` is. Routing ACLED through the classifier's text-derived guess would replace more-reliable structured data with an LLM guess — a regression, not a fix. This is the same call this codebase already made once before for lat/lng geocoding specifically (see v0.30.0 below: "`acled-collector.ts` checked and confirmed already correct (real lat/lng from ACLED's own API) — left untouched").
+
+**Frontend:** no changes needed — verified every read site (`signal.country`/`s.country`/`ev.country`/`h.country` across `app/(dashboard)/dashboard`, `events/[id]`, `map`, `watchlist/[symbol]`, `backtesting`, and the `/api/signals*` routes) reads the same `signals.country` column the backend now writes correctly; the fix is entirely upstream of these read sites.
+
+**No DB migration** — same `signals.country`/`lat`/`lng` columns already exist, this only changes which value wins when populating them.
+
+**Docs corrected in the same commit:** `docs/claude_project/16_DATA_PIPELINE.md` §2.1 and this file's own §2.3 (`15_INGESTION_PIPELINE.md`) both needed a fields correction — `docs/claude_project/16_DATA_PIPELINE.md` previously described a completely different, non-existent CSV Event Export pipeline for this collector (`ActionGeo_CountryCode`/`ActionGeo_Lat`/`ActionGeo_Long`/`ActionGeo_FullName`, `GoldsteinScale`, a `lastupdate.txt` CSV download step) — confirmed this session that `gdelt-collector.ts` actually calls the DOC 2.0 "artlist" JSON API instead, whose response only has `url, title, seendate, socialimage, domain, language, sourcecountry`. `docs/claude_project/18_AI_ENGINE.md` §2 documents the new `country` field in the classification prompt/schema, following its existing "⚠️ UPDATED" annotation convention.
+
+**Verification:** `tsc --noEmit -p apps/backend` clean. `apps/backend`'s test suite (`claude.service.test.ts` — the only suite touching `classifyEvent()`) passes unchanged; no test asserted on the full `ClassificationResult` object shape, so the new field didn't need test updates. Not live-browser-verified (per `CLAUDE.md` session-efficiency guidance: this is backend data-correctness/ingestion-logic, not a rendering/UI-interaction bug, and there's no live GDELT article in hand to run an actual classification against in this session) — could not verify a real end-to-end classification produces a correct `country` for a live article; the sanitizer/priority-order logic itself is exercised by the passing unit tests and by direct code reading of all 5 call sites, not by a live Claude call.
+
+---
 
 ### v0.86.0 — "LIVE"/"real-time" copy honesty sweep (2026-09-23)
 

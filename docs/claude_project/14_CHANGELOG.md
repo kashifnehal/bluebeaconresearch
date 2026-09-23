@@ -6,6 +6,18 @@
 
 ---
 
+## PHASE 65 — #188 CLASSIFIER-EXTRACTION COUNTRY FIX (2026-09-24)
+
+`apps/backend` only. Follow-up to the Phase 1/2 investigation (`claude/188_...md` §3): GDELT-sourced signals were showing the publishing outlet's country as if it were the event's location — GDELT's DOC 2.0 `sourcecountry` field is the country of the outlet reporting the story, not where the event happened, but `gdelt-collector.ts` was writing it straight into the signal's displayed `country` and using it to place the map pin.
+
+Fix: `classifyEvent()` (`claude.service.ts`) now also returns a `country` field — the specific country Claude judges the event to have physically happened in, read from the article text, sanitized by a new `sanitizeCountry()` (free text, not an enum). `geo-resolver.ts`'s `resolveGeoCoords()` gained a 4th parameter and now prioritizes title chokepoint keywords → classifier country → raw source-country fallback → region bucket → global jitter (previously: title → source-country → region → global, with no classifier input at all). `gdelt-collector.ts` (the actual bug), `rss-collector.ts` and `gnews-collector.ts` (both already always passed `country: null` here since neither source carries a per-article country — now use the classifier's real read instead of hardcoding "Global"), and `reconciliation.ts` (recovers orphaned `raw_events` from any source, so the same GDELT-sourcecountry bug reached it too) were all updated.
+
+**`acled-collector.ts` deliberately left unchanged** — its `country`/`latitude`/`longitude` are real per-incident ACLED data, not an outlet's country, so routing it through the classifier's guess would be a regression. This matches a conclusion this codebase already reached once before for lat/lng geocoding specifically (v0.30.0 below: "`acled-collector.ts` checked and confirmed already correct... left untouched").
+
+No DB migration — same `signals.country`/`lat`/`lng` columns, just a different value winning at write time. Docs corrected in the same commit: `16_DATA_PIPELINE.md` §2.1 previously described a CSV Event Export pipeline (`ActionGeo_*`, Goldstein scale, `lastupdate.txt`) that doesn't match `gdelt-collector.ts`'s actual DOC 2.0 "artlist" JSON API — replaced with the real field list (`url, title, seendate, socialimage, domain, language, sourcecountry`). `18_AI_ENGINE.md` §2 documents the new `country` field in the classification prompt/schema. Full detail: `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md` v0.87.0.
+
+---
+
 ## PHASE 64 — #186 PHASE 7: READABILITY REGRESSIONS FOUND, DOCS ONLY, NOTHING SHIPPED (2026-09-24)
 
 Docs only — no code shipped this phase. Founder pushed back on PHASE 63's `/dashboard` fix by pasting a direct screenshot comparison against the Stitch mock; the comparison showed the "fixed" (non-overflowing) row was visually near-useless — headlines truncate to ~8-10 characters. Correcting the record: PHASE 63's `/dashboard` claim should not have been read as "done."

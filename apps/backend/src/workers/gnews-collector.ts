@@ -186,6 +186,7 @@ export async function runGnewsCollectorOnce() {
 
       const { lat: resolvedLat, lng: resolvedLng } = resolveGeoCoords(
         rawEventPayload.title,
+        classification.country,
         rawEventPayload.country,
         classification.region
       );
@@ -198,7 +199,10 @@ export async function runGnewsCollectorOnce() {
         title: rawEventPayload.title,
         eventType: rawEventPayload.event_type,
         eventDate: rawEventPayload.event_date,  // article publish time shown in UI
-        country: formatCountryName(null),
+        // rawEventPayload.country is always null (GNews articles carry no
+        // per-article country) — classification.country (Claude's read of
+        // the article) is the only real per-event location available here.
+        country: formatCountryName(classification.country),
         lat: resolvedLat,
         lng: resolvedLng,
         freshness: "cached",

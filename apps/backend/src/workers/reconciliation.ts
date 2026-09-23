@@ -129,7 +129,14 @@ export async function reconcileOrphanedRawEventsOnce() {
           severity: classification.severity,
           confidence: classification.confidence,
           event_type: eventTypeLabel,
-          country: countryLabel,
+          // #188 — countryLabel (computed above, before classification, from
+          // raw.country) is right for RSS/GNews (null -> "Global") and ACLED
+          // (a real per-event country already), but wrong for a recovered
+          // GDELT orphan: raw.country there is sourcecountry, the publishing
+          // outlet's country, not the event's location. Prefer Claude's own
+          // read of the article; fall back to the raw value only when the
+          // classifier genuinely couldn't tell.
+          country: formatCountryName(classification.country ?? raw.country),
           region: classification.region,
           lat: null,
           lng: null,
