@@ -312,7 +312,7 @@ export default function AccessLimitedModal({
               textTransform: "uppercase",
             }}
           >
-            SEC_LVL: ALPHA
+            STATUS: LIMITED
           </span>
         </div>
       </div>

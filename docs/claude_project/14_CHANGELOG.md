@@ -6,6 +6,20 @@
 
 ---
 
+## PHASE 58 — #186 PHASE 5A: 4 MORE PAGES WITH THE SAME CRITICAL BUG (2026-09-23)
+
+`apps/web` only. Grepped the whole codebase for the exact bug pattern that caused Phase 2's `/alerts`/`/calendar` overflow (`fixed`/margin values in raw pixels, unguarded by `md:`) instead of re-auditing file by file — found the byte-identical wrapper `fixed inset-0 left-[256px] right-[260px] top-16 ... p-10` unconditionally in `settings/page.tsx`, `backtesting/page.tsx`, `watchlist/WatchlistClient.tsx`, and `watchlist/[symbol]/page.tsx`.
+
+**This was worse than the original bug**, not the same severity: screenshotted before the fix, content rendered in a narrow sliver with most text truncated and a large dead zone covering half the screen, because the fixed left/right offsets left near-zero usable width at 360px. Same fix as Phase 2 — gate every desktop value behind `md:` so `>=768px` is byte-identical to before.
+
+Two more bugs in the same investigation: `WatchlistClient.tsx`'s header row had the same unwrapped title-vs-control shape as the original `/alerts` bug (fixed with `flex-wrap`), and its floating add button used a desktop-tuned offset that didn't account for the new mobile tab bar (screenshotted as a barely-visible sliver before the fix).
+
+Also this batch: the `ALPHA` status badge removed from the sidebar (founder decision), and one genuine military-clearance-style string (`SEC_LVL: ALPHA`) replaced with copy that actually describes the modal. Confirmed six shadcn/ui primitives are dead code (zero importers) and six more files — including all 6 auth pages — are already mobile-safe despite carrying zero Tailwind breakpoint prefixes, so no changes were made to them.
+
+Verified live at 360px and 1440px with real signed-in data on all four pages; full detail in `docs/brain/LIVE_TODO.md`.
+
+---
+
 ## PHASE 57 — #186 PHASE 4: MAP BOTTOM SHEET — 0% → 100% MAP VISIBLE ON MOBILE (2026-09-23)
 
 `apps/web` only. Fixes the single worst mobile bug in the product plus a real pre-existing bug found along the way.

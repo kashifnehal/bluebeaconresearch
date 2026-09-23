@@ -65,16 +65,6 @@ export function Sidebar() {
               Blue Beacon Research
             </span>
           </Link>
-          <span
-            className="text-[12px] md:text-[10px] px-1.5 py-0.5 border"
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              borderColor: "#4edea3",
-              color: "#4edea3",
-            }}
-          >
-            ALPHA
-          </span>
         </div>
 
         {/* Navigation */}
