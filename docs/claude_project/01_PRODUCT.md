@@ -278,7 +278,7 @@ Restore when first paying customer asks to subscribe.
 - "Terminal Sentinel v2.4.0-STABLE" — cosmetic branding, displays username
 
 **Main Content:**
-1. Page title: "Intelligence Feed" + subtitle "Real-time global signal monitoring"
+1. Page title: "Intelligence Feed" + subtitle "Global signal monitoring, updates roughly every 30 minutes" (changed from "Real-time global signal monitoring" — collectors run on a ~30min cadence, not instant — `599e5fa`, 2026-09-23)
 2. Tab filters: "ALL SIGNALS" (active) | "HIGH RISK" (severity ≥ 8 filter)
 3. Breaking alert banner: Shows if severity ≥ 9 signal in last 4 hours (red background, pulsing siren icon, title)
 4. Featured signal card (large, full width) — most recent or highest severity
