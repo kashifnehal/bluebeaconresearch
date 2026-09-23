@@ -12,6 +12,7 @@ import { SignalQuickView } from "@/components/signals/SignalQuickView";
 import { FreshTag } from "@/components/signals/FreshTag";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
+import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
@@ -806,17 +807,19 @@ export default function DashboardPage() {
                         >
                           {item.title}
                         </div>
-                        <div
-                          className="text-[12px] px-2 py-0.5 border shrink-0"
-                          style={{
-                            color: "#4edea3",
-                            backgroundColor: "rgba(78,222,163,0.1)",
-                            borderColor: "rgba(78,222,163,0.2)",
-                            fontFamily: "'JetBrains Mono', monospace",
-                          }}
-                        >
-                          {Math.round(item.confidence * 100)}% CONFIDENCE
-                        </div>
+                        {sourceConfirmationLabel(item.sourceConfirmation) != null && (
+                          <div
+                            className="text-[12px] px-2 py-0.5 border shrink-0"
+                            style={{
+                              color: "#4edea3",
+                              backgroundColor: "rgba(78,222,163,0.1)",
+                              borderColor: "rgba(78,222,163,0.2)",
+                              fontFamily: "'JetBrains Mono', monospace",
+                            }}
+                          >
+                            {sourceConfirmationLabel(item.sourceConfirmation)}
+                          </div>
+                        )}
                         <span
                           className="material-symbols-outlined text-lg shrink-0 group-hover:translate-x-1 transition-transform"
                           style={{ color: "#86948a" }}

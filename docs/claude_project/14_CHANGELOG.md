@@ -6,6 +6,19 @@
 
 ---
 
+## PHASE 54 — #186 PHASE 1: COPY INTEGRITY + STITCH MOCKS ANALYSIS (2026-09-23)
+
+`apps/web` + docs only. First ship of the re-planned #186 responsive rework (Stitch mobile mocks at `docs/stitch_mobile/`, commit `d10626b`, analyzed and adopted as **layout references only** — see D29/ADR 025).
+
+- **Backtesting footer** (`app/(dashboard)/backtesting/page.tsx`) — dropped three fabricated claims (`SYSTEM HASH`, `LATENCY: 12ms`, `DATA INTEGRITY: 100% Verified`) that survived the earlier PHASE 49 cleanup of this same file.
+- **Dashboard feed badge** (`app/(dashboard)/dashboard/page.tsx`) — the real-but-inconsistent `{n}% CONFIDENCE` pill replaced with the same source-confirmation label `MapSignalPopup` already uses, for one consistent language app-wide.
+- **Design system declared.** Both `07_DESIGN_SYSTEM.md` files marked superseded (neither matched shipped reality). `docs/stitch_mobile/tactical_intelligence_terminal/DESIGN.md` is now canonical — verified token-identical to live `tailwind.config.ts`/`globals.css`.
+- **New standing rule (D29/ADR 025):** Stitch mocks provide geometry, never copy, since they were generated from a pre-cleanup snapshot and reintroduce previously-removed fabrications. Also locked: drop `ALPHA` badge, drop military-roleplay copy, mobile tab bar is FEED/MAP/ALERTS/WATCHLIST/MORE.
+
+Verified: `tsc --noEmit` + `next build` clean, full `apps/web` test suite passing, production build checked at 360px/1440px. Evidence + one honest verification gap: `docs/brain/LIVE_TODO.md`. Remaining phases (TopBar overflow, mobile tab bar, map bottom sheet, remaining screens, tablet pass) not started — founder decision: no Playwright/new test infra for this work, manual multi-width verification per phase instead.
+
+---
+
 ## PHASE 53 — "LIVE"/"REAL-TIME" COPY HONESTY SWEEP (2026-09-23)
 
 > Narrative summary for this tree. Full technical detail: `docs/brain/14_CHANGELOG.md` v0.86.0.

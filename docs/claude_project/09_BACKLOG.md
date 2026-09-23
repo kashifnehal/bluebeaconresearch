@@ -15,17 +15,22 @@
 
 ## #186 — FULL RESPONSIVE REWORK (MOBILE + TABLET)
 
-Design floor is **360px** (two of the top six real mobile resolutions worldwide). Test matrix: 360 / 390 / 414 / 768 / 1024. Tailwind default breakpoints kept — the sidebar already breaks correctly at `md`.
+**Re-planned 2026-09-23** around the Stitch mobile mocks (`docs/stitch_mobile/`, commit `d10626b`) as layout references — see D29/ADR 025 in `10_DECISIONS.md`. **The phase numbers below replace an earlier plan's numbering** (an earlier "Phase 1+2" covered the iOS-zoom/type-floor/public-header work; that work is complete and is folded into "Foundations, already shipped" below rather than kept as Phase 1/2, to avoid two different things both being called "Phase 1" in this doc).
+
+Design floor is **360px** (two of the top six real mobile resolutions worldwide). Test matrix: 360 / 390 / 414 / 768 / 1024 / **1440 desktop** (added — every phase is checked against desktop too, per founder instruction that desktop must not regress). Tailwind default breakpoints kept — the sidebar already breaks correctly at `md`.
+
+**Foundations, already shipped (pre-dates the re-plan):** iOS input zoom, 328-occurrence sub-12px type floor, 2 table-clipping fixes, public `/accuracy`+`/status` header → shared `PublicHeader` (PHASE 51, `10ade7a`).
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| 1 | iOS input zoom, sub-12px type floor, table clipping | ✅ Done 2026-09-23 (PHASE 51) |
-| 2 | Public header overflow → shared `PublicHeader` | ✅ Done 2026-09-23 (PHASE 51) |
-| 0 | Design decisions: map, signal card, 768px tablet | 🤔 Blocked — Claude Design not authorized |
-| 3 | 21 zero-responsive files (19/81 have any breakpoint) | ⚪ Not started |
-| 4 | 768px tablet pass (sidebar on, 512px left) | ⚪ Not started, never measured |
-| 5 | 44×44 tap targets on phone | ⚪ Not started |
-| 6 | Playwright overflow regression test | ⚪ Not started |
+| 1 | Copy integrity (backtesting footer, dashboard confidence badge) + design-system declaration | ✅ Done 2026-09-23 (PHASE 54) |
+| 2 | TopBar mobile overflow fix — resolves `/alerts` 335px overflow app-wide | ⚪ Not started |
+| 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE) | ⚪ Not started |
+| 4 | Map → bottom sheet on mobile (reuses existing panel collapse state) | ⚪ Not started |
+| 5 | Remaining 21 zero-responsive files + `ALPHA` badge/military-copy removal + 44×44 tap targets | ⚪ Not started |
+| 6 | 768px tablet pass (sidebar on, 512px left, never measured) | ⚪ Not started |
+
+**No Playwright / new test infra** (founder decision, 2026-09-23) — manual multi-width verification per phase instead. `DesignSync` (Claude Design) is authorized but unused for this work — the mocks already exist in-repo.
 
 Worst known offenders: `/alerts` **335px** overflow at 360px; `/map` renders **0% map** on a phone.
 

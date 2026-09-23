@@ -516,13 +516,9 @@ export default function BacktestingPage() {
         )}
       </div>
 
-      {/* Footer / System Integrity */}
-      <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[12px] md:text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
-        <div>BLUE BEACON RESEARCH SYSTEM HASH: 88F9-AX21-KL88</div>
-        <div className="flex gap-8">
-          <span>LATENCY: 12ms</span>
-          <span>DATA INTEGRITY: 100% Verified</span>
-        </div>
+      {/* Footer */}
+      <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-center items-center text-[12px] md:text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
+        <div>BLUE BEACON RESEARCH</div>
       </footer>
     </div>
   );

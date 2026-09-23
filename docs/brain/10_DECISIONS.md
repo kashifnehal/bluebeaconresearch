@@ -532,3 +532,25 @@ Tailwind default breakpoints are settled — do not add custom `screens`.
 ### Cross-tree mapping
 
 Recorded as **D28** in `docs/claude_project/10_DECISIONS.md`.
+
+## 26. ADR 025: Stitch mobile mocks are layout references only — never copy their strings (#186)
+
+### Context
+
+`docs/stitch_mobile/` (commit `d10626b`, 15 screen folders + `tactical_intelligence_terminal/DESIGN.md`) provides Stitch-generated mobile mockups intended as reference for the #186 responsive rework. Read and cross-checked against live code 2026-09-23. Palette is token-identical to `apps/web/tailwind.config.ts` / `globals.css`: `surface-container-lowest #0E0E0E`, `surface #131313`, `surface-container #201F1F`, `surface-container-high #2A2A2A`, `primary #6FFBBE`, `on-surface #E5E2E1`, `outline-variant #3C4A42` all confirmed matching. One typo found: DESIGN.md §5 gives `primary-container` as `#4EDE93`; the live token is `#4EDEA3` — live wins.
+
+The mocks were generated from a pre-cleanup snapshot. Of 11 fabricated strings checked against current `apps/web` source, 10 are confirmed **absent** (removed by `4651f6c` and the same-day copy-integrity/ACLED-honesty commits): `GENESIS-X_V4`, `Processing 15 years of…`, the fixed 71% `accuracyPct`, `Sub-second synthesis of geopolitical volatility pulses`, `40-Year Intel Archive`, `Encrypted Support`, `Beacon Stream`, `ESTABLISH INTEL LINK`, `AUTHORIZE FULL ACCESS`, and ACLED presented as an active source. The mocks further introduce content never true in this product: explicit price targets (`$99.66 → $102.44`), a `BULLISH SPIKE` directional call, invented infrastructure metrics (per-screen latency figures, `99.82% SLA`, `2.1% packet loss`, a Frankfurt DC-02 failover node — the real stack is Vercel + Railway), untracked commodities (rare earths, freight insurance, vessel tracking — outside the approved asset allowlist), `SENTINEL AI SYNTHESIS` / `AUTONOMOUS AGENT ACTIVE` AI branding, and a military-operator register (`SECURITY CLEARANCE: TIER-1 STRATEGIC`, `CALL-SIGN`, `TACTICAL COMMS ADDRESS`, `.mil` placeholder emails, footer branding itself as `GEOSIGNAL PRO TACTICAL COMMAND SYSTEM` — not even this product's name).
+
+### Decision
+
+Treat `docs/stitch_mobile/` as a **layout and geometry reference only.** Implementation takes structure (spacing, panel/sheet arrangement, icon choices, component composition) from the mocks; copy, numbers, and claims come exclusively from live code and real APIs. No string from any `code.html` is copied into the product verbatim.
+
+Also decided in the same pass: drop the `ALPHA` badge (does not reflect current status); keep the terminal-atmosphere copy (`NODE: BB-ALPHA-09`-style, mono data, status chrome — serves the "Bloomberg-grade" pitch) but drop the military-roleplay copy listed above, everywhere; mobile bottom tab bar is **FEED / MAP / ALERTS / WATCHLIST / MORE**, promoting ALERTS over the mock's WATCHLIST/BACKTEST ordering because it carries a live unread-count badge that would otherwise have no mobile surface.
+
+### Rationale
+
+Stitch has no visibility into this project's data-honesty history — it designs from whatever screenshots it receives and cannot know which claims were already retracted for being false. The visual system itself (color, type, elevation-by-tonal-shift, no-line/no-pill rules) is independently verified against shipped tokens and is genuine design value worth keeping. Separating "how" from "what" lets the rework use the validated half without re-litigating "never fabricate data in the UI" (an existing hard rule) on every single screen.
+
+### Cross-tree mapping
+
+Recorded as **D29** in `docs/claude_project/10_DECISIONS.md`.

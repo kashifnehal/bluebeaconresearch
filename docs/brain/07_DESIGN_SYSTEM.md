@@ -1,6 +1,6 @@
 # 07_DESIGN_SYSTEM.md — Terminal Design Tokens & UI Specs
 
-> **📍 Doc status — topic/historical file.** Live UI: both `06_COMPONENTS.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — SUPERSEDED 2026-09-23.** This is an earlier Stitch snapshot with hex values that no longer match `apps/web/globals.css`. The canonical design system is now **`docs/stitch_mobile/tactical_intelligence_terminal/DESIGN.md`** (verified token-identical to live `tailwind.config.ts`/`globals.css` — see `docs/claude_project/10_DECISIONS.md` ADR for the one corrected typo). Live UI: both `06_COMPONENTS.md`. `claude/23_TODO.md` is not in this repo.
 
 This document defines the visual design system, color tokens, typography scales, glassmorphism specs, component primitives, animations, and icons for Blue Beacon Research.
 

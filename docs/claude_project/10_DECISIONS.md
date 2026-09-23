@@ -655,3 +655,18 @@ Tailwind's default breakpoints (`sm` 640 / `md` 768 / `lg` 1024 / `xl` 1280) are
 **Rationale:** 360px covers two of the top six real mobile resolutions worldwide (~12.4% combined); clearing it clears 390/393/414. The 16px input rule is a documented Mobile Safari behavior, not taste — below it, focusing a field zooms the viewport and strands the user. The 12px floor is an explicit product-quality judgement, **not** a WCAG requirement (WCAG sets no minimum font size; 1.4.4 only requires 200% resize without loss) — it is adopted because sub-10px type reads as a dashboard toy on a product selling research credibility. Keeping Tailwind's defaults avoids re-reasoning every existing responsive utility for no benefit.
 
 **Cross-tree mapping:** Recorded as **ADR 024** in `docs/brain/10_DECISIONS.md`.
+
+## D29: Stitch mobile mocks are layout references only — never copy their strings (#186)
+
+**Decision:** `docs/stitch_mobile/` (commit `d10626b`) is a **geometry and layout reference for the mobile rework, not a content or data source.** Every screen implementation takes its structure (spacing, component arrangement, panel/sheet patterns, icon choices) from the mocks and its **copy, numbers, and claims exclusively from live code and real APIs.** Never copy a string out of a `code.html` file into the product.
+
+Also decided as part of this same pass:
+- `ALPHA` badge / tier labelling: **remove** — does not reflect current product status.
+- Terminal-atmosphere copy (`NODE: BB-ALPHA-09`, mono data, dense status chrome) stays — it serves the "Bloomberg-grade" positioning. Military-roleplay copy (`SECURITY CLEARANCE`, `CALL-SIGN`, `TACTICAL COMMS ADDRESS`, `ASSIGNED DIVISION`, `.mil` placeholders, `GEOSIGNAL PRO TACTICAL COMMAND SYSTEM`) does not, and is dropped everywhere it appears in the mobile build-out. Product name in every surface is exactly **"Blue Beacon Research."**
+- Mobile bottom tab bar order: **FEED / MAP / ALERTS / WATCHLIST / MORE** (not the mock's FEED/MAP/WATCHLIST/BACKTEST/MORE) — ALERTS is promoted because it carries a live unread-count badge that would otherwise be invisible on mobile; BACKTESTING moves into MORE as an occasional-use tool.
+
+**Context:** The mocks were generated from a pre-cleanup snapshot of the app and independently verified (2026-09-23) to reintroduce copy that had already been deliberately removed days earlier for being false — the fabricated `GENESIS-X_V4` engine name, the fixed 71% accuracy stat, `Sub-second synthesis…`, `40-Year Intel Archive`, and ACLED-as-active claims are all confirmed absent from live code but present verbatim in the mocks. The mocks additionally introduce content that was never true: explicit price targets, a `BULLISH SPIKE` directional call, invented infra metrics (latency, SLA, packet loss, a Frankfurt failover DC), untracked commodities (rare earths, freight insurance), and `SENTINEL AI SYNTHESIS` branding.
+
+**Rationale:** Stitch has no access to this project's data-honesty history or standing rules — it designed from whatever screenshots it was given, with no way to know which claims had already been retracted. The palette and typography ARE trustworthy (verified token-identical to `apps/web/tailwind.config.ts` / `globals.css` — see the superseded notice atop both `07_DESIGN_SYSTEM.md` files), so discarding the mocks entirely would waste real design value. Separating "how it's arranged" from "what it says" lets the team use the good half without re-litigating "no fabricated data in the UI" on every screen.
+
+**Cross-tree mapping:** Recorded as **ADR 025** in `docs/brain/10_DECISIONS.md`.

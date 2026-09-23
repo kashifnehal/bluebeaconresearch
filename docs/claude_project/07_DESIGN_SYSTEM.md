@@ -1,6 +1,6 @@
 # 07_DESIGN_SYSTEM.md — Visual Design System
 
-> **📍 Doc status — topic/historical file.** Live UI: both `06_COMPONENTS.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — SUPERSEDED 2026-09-23.** Neither this file nor `docs/brain/07_DESIGN_SYSTEM.md` matches shipped reality (this one describes a `#10B981` green-accent palette the app never shipped; the brain copy is an earlier Stitch snapshot with mismatched hex values). The canonical design system is now **`docs/stitch_mobile/tactical_intelligence_terminal/DESIGN.md`** — its palette is token-identical to the live `apps/web/tailwind.config.ts` / `globals.css` (`#0E0E0E` / `#131313` / `#201F1F` / `#2A2A2A` / `#6FFBBE` / `#E5E2E1` / `#3C4A42` all verified matching). One correction to that doc: its §5 lists `primary-container` as `#4EDE93`; the live token is `#4EDEA3` — live code wins. Live UI: both `06_COMPONENTS.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Theme: Dark-first terminal aesthetic. Bloomberg meets modern SaaS.**
