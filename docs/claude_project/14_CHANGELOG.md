@@ -6,6 +6,18 @@
 
 ---
 
+## PHASE 59 — #186 PHASE 5B (PARTIAL): `/events/[id]` TAB-CLIPPING BUG (2026-09-23)
+
+`apps/web` only. A genuine functionality-loss bug, not a design-fit question: the event detail page's ANALYSIS/HISTORICAL/MAP/SOURCES tab row had no responsive handling, and at 360–390px its content width exceeded the viewport — the "sources" tab was silently clipped out of reach, not scrollable, not visible, completely unusable on a phone. Fixed with `overflow-x-auto` on the tab list; verified by actually scrolling to and clicking the previously-unreachable tab and confirming its content panel switched.
+
+Also fixed: the PUBLISHED/VERIFICATION/LOCATION meta row crammed 3 columns into ~100px each at 360px, wrapping badly — now `grid-cols-1 sm:grid-cols-3`.
+
+`/admin/metrics` and 4 overlay components (`ProductTour`, `FeatureHints`, `NotificationConnectPrompt`, `NotificationConnectModal`) checked and confirmed already mobile-safe — no changes needed.
+
+**Session paused for a context handoff before Phase 5b finished.** In progress, not yet applied: a 44×44 tap-target fix for the homepage footer links (identified, same `min-h-[44px]` pattern used elsewhere this phase). See `docs/brain/LIVE_TODO.md` and the handoff doc for exact continuation point.
+
+---
+
 ## PHASE 58 — #186 PHASE 5A: 4 MORE PAGES WITH THE SAME CRITICAL BUG (2026-09-23)
 
 `apps/web` only. Grepped the whole codebase for the exact bug pattern that caused Phase 2's `/alerts`/`/calendar` overflow (`fixed`/margin values in raw pixels, unguarded by `md:`) instead of re-auditing file by file — found the byte-identical wrapper `fixed inset-0 left-[256px] right-[260px] top-16 ... p-10` unconditionally in `settings/page.tsx`, `backtesting/page.tsx`, `watchlist/WatchlistClient.tsx`, and `watchlist/[symbol]/page.tsx`.

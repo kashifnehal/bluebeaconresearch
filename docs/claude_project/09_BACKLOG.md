@@ -28,7 +28,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 | 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE), new `MobileTabBar.tsx` | ✅ Done 2026-09-23 (PHASE 56) |
 | 4 | Map → bottom sheet on mobile; fixed a real pre-existing popup bug too | ✅ Done 2026-09-23 (PHASE 57) |
 | 5a | 4 pages with the same critical bug as Phase 2 (`settings`/`backtesting`/`watchlist`/`watchlist/[symbol]`, worse severity), `ALPHA` badge + 1 military-clearance string removed | ✅ Done 2026-09-23 (PHASE 58) |
-| 5b | Remaining unresponsive files (auth pages + most shared UI confirmed already safe or dead code — see LIVE_TODO) + 44×44 tap targets | ⚪ Not started |
+| 5b | `/events/[id]` tab-clipping bug fixed (real functionality loss, not cosmetic); `/admin/metrics` + 4 overlay components confirmed already safe | 🟡 Partial 2026-09-23 (PHASE 59) — tap-target sweep in progress, see LIVE_TODO |
 | 6 | 768px tablet pass (sidebar on, 512px left, never measured) | ⚪ Not started |
 
 **No Playwright / new test infra** (founder decision, 2026-09-23) — manual multi-width verification per phase instead. `DesignSync` (Claude Design) is authorized but unused for this work — the mocks already exist in-repo.

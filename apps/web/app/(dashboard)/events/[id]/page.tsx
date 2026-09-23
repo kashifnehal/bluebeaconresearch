@@ -261,7 +261,7 @@ export default function EventDetailPage() {
               </h1>
 
               <div
-                className="grid grid-cols-3 gap-6 p-6 rounded-lg bg-surface/30 border"
+                className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-6 rounded-lg bg-surface/30 border"
                 style={{ borderColor: "var(--border-subtle)" }}
               >
                 <div className="flex items-center gap-3">
@@ -278,7 +278,7 @@ export default function EventDetailPage() {
                   </div>
                 </div>
                 <div
-                  className="flex items-center gap-3 border-x px-6"
+                  className="flex items-center gap-3 sm:border-x px-0 sm:px-6"
                   style={{ borderColor: "rgba(255,255,255,0.05)" }}
                 >
                   <Database size={16} className="text-accent" />
@@ -378,15 +378,22 @@ export default function EventDetailPage() {
 
           {/* ── Deep Dive Analysis ─────────────────────────────────── */}
           <Tabs defaultValue="analysis" className="w-full">
+            {/* overflow-x-auto + shrink-0 on each trigger: at 360px this row's
+                intrinsic content width (4 tabs × padding/tracking + gaps) exceeds
+                the viewport and was silently clipping "sources" out of reach
+                entirely rather than causing scroll — found live, not from a
+                Stitch mock. Horizontal scroll is the standard mobile pattern for
+                a tab row that doesn't fit; desktop has ample room so it never
+                triggers there. */}
             <TabsList
-              className="bg-surface/30 border-b w-full justify-start rounded-none h-auto p-0 gap-8"
+              className="bg-surface/30 border-b w-full justify-start rounded-none h-auto p-0 gap-4 md:gap-8 overflow-x-auto flex-nowrap"
               style={{ borderColor: "var(--border-subtle)" }}
             >
               {["analysis", "historical", "map", "sources"].map((tab) => (
                 <TabsTrigger
                   key={tab}
                   value={tab}
-                  className="bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted transition-all"
+                  className="shrink-0 bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted transition-all"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   {tab === "analysis" && <Shield size={14} className="mr-2" />}
