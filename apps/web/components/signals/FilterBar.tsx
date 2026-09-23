@@ -35,7 +35,9 @@ export function FilterBar({
   const patch = (partial: Partial<FilterBarValue>) =>
     onChange({ ...value, ...partial });
 
-  const fieldClass = stacked ? "flex flex-col gap-1" : "flex items-center gap-2";
+  const fieldClass = stacked
+    ? "flex flex-col gap-1"
+    : "flex flex-col gap-1 md:flex-row md:items-center md:gap-2";
   const labelClass = stacked
     ? "label text-[12px] md:text-[10px] text-on-surface-variant uppercase tracking-wider"
     : "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";

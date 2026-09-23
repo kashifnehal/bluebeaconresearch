@@ -768,7 +768,7 @@ export default function DashboardPage() {
                             false,
                           )
                         }
-                        className="flex min-w-0 flex-1 items-center gap-6"
+                        className="flex min-w-0 flex-1 items-center gap-2 md:gap-6"
                       >
                         <div
                           className="w-2 h-2 rounded-full shrink-0"
@@ -778,7 +778,7 @@ export default function DashboardPage() {
                           }}
                         />
                         <div
-                          className="w-20 text-[12px] shrink-0"
+                          className="w-16 md:w-20 text-[12px] shrink-0"
                           style={{
                             color: "#86948a",
                             fontFamily: "'JetBrains Mono', monospace",
@@ -794,12 +794,14 @@ export default function DashboardPage() {
                             color: "#4edea3",
                           }}
                         />
-                        <MediaImpactTag
-                          entity={item.mediaImpactEntity}
-                          caveat={item.mediaImpactCaveat}
-                        />
+                        <span className="hidden md:inline-flex">
+                          <MediaImpactTag
+                            entity={item.mediaImpactEntity}
+                            caveat={item.mediaImpactCaveat}
+                          />
+                        </span>
                         <div
-                          className="flex-1 font-semibold transition-colors group-hover:text-[#4edea3]"
+                          className="flex-1 min-w-0 truncate font-semibold transition-colors group-hover:text-[#4edea3]"
                           style={{
                             color: "#e5e2e1",
                             fontFamily: "'Inter', sans-serif",
@@ -809,7 +811,7 @@ export default function DashboardPage() {
                         </div>
                         {sourceConfirmationLabel(item.sourceConfirmation) != null && (
                           <div
-                            className="text-[12px] px-2 py-0.5 border shrink-0"
+                            className="hidden md:block text-[12px] px-2 py-0.5 border shrink-0"
                             style={{
                               color: "#4edea3",
                               backgroundColor: "rgba(78,222,163,0.1)",

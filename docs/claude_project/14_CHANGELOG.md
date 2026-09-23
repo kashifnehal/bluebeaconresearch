@@ -6,6 +6,20 @@
 
 ---
 
+## PHASE 63 — #186: REAL OVERFLOW BUGS FOUND AFTER FOUNDER REPORT, VERIFICATION METHOD FIXED (2026-09-23)
+
+`apps/web` only, `className`-only. Founder reported still seeing horizontal-scroll issues on `localhost:3100` despite PHASE 59-62's "0px overflow" claims. Investigated with real screenshots (not just JS metrics) and found the gap: **every prior phase's overflow check used only `document.documentElement.scrollWidth`, which cannot see a real, spec-defined CSS quirk** — any container with `overflow-y: auto` (the main scroll wrapper on 7+ pages) auto-computes `overflow-x: auto` too, creating an invisible nested scroll region.
+
+**Two real bugs found and fixed, both pre-existing (confirmed via `git log`, neither caused by this session's earlier tap-target commits):**
+1. `/dashboard`'s feed rows — up to 150px of content (including the trailing "go to event" chevron) pushed off-screen, reachable only by an undiscoverable swipe inside one row, because the headline `<div>` had no `min-w-0` and couldn't shrink. Fixed with `min-w-0 truncate` on the headline, hid two supplementary badges (`MediaImpactTag`, source-confirmation) on mobile (both remain fully visible on the event's own detail page — nothing deleted), and tightened row spacing. Also fixed in the same investigation: `FilterBar.tsx`'s non-stacked field layout (dashboard-only) never stacked label-above-control on mobile — now does, matching the pattern `/map`'s sidebar already used safely.
+2. `/settings`'s section tabs — `TABS` has 5 entries but PHASE 61's tap-target pass only ever measured the 4 visible at 360px; `DATA` was already off-screen. Fixed with `overflow-x-auto` + `shrink-0` per tab, the same intentional horizontal-scroll-region pattern already used by `/accuracy` and `/calendar`'s data tables.
+
+**Full 24-page re-sweep with the corrected method** (walks every element, not just the document): clean everywhere else — the only other hits were `/accuracy`'s and `/calendar`'s own tables, confirmed as the correct, intentional mobile-table pattern, not bugs. Verified per the new two-check standard (size AND interaction): dashboard's buttons/select still fire correctly, settings' tabs still switch content, both re-confirmed pixel-identical on desktop. `tsc --noEmit` clean.
+
+**Process fix:** `09_BACKLOG.md`'s manual pre-merge checklist now requires the nested-overflow walk, not just the document-level check, for all future #186 phases.
+
+---
+
 ## PHASE 62 — #186 PHASE 5B (TAP-TARGET): PER-PAGE DENSE CONTROLS, SWEEP FULLY CLOSED (2026-09-23)
 
 `apps/web` only, 16 files, all `className`/CSS-only. Closes the ~13-item deferred list from PHASE 61. One shared fix (`lib/utils.ts`'s `SELECT_CLASSES` constant) cleared every filter `<select>` across 5 pages at once. Per-page: dashboard (desk buttons, My Feed toggle), alerts (nav buttons, New Alert Rule), watchlist (commodity chips, remove buttons, Force Refresh), calendar (UTC/Local), `/watchlist/[symbol]` (back button, chart-range buttons), `/backtesting` (horizon buttons), `/settings` (section tabs), `/help` (Send Feedback), admin (back links, service-status tabs/Load data). `/map`'s MapLibre zoom controls fixed via a mobile-scoped CSS override (not touching library internals) — desktop untouched since they're already desktop-hidden by design.

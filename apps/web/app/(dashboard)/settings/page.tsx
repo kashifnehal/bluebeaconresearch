@@ -166,12 +166,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex gap-8 mb-10 border-b border-outline-variant/20">
+        <div className="flex gap-4 md:gap-8 mb-10 border-b border-outline-variant/20 overflow-x-auto">
           {TABS.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 font-label text-xs tracking-widest transition-colors uppercase font-bold inline-flex items-end min-h-[44px] md:min-h-0 ${
+              className={`shrink-0 pb-4 font-label text-xs tracking-widest transition-colors uppercase font-bold inline-flex items-end min-h-[44px] md:min-h-0 ${
                 activeTab === tab
                   ? "text-primary border-b-2 border-primary"
                   : "text-outline hover:text-on-surface"
