@@ -28,7 +28,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 | 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE), new `MobileTabBar.tsx` | ✅ Done 2026-09-23 (PHASE 56) |
 | 4 | Map → bottom sheet on mobile; fixed a real pre-existing popup bug too | ✅ Done 2026-09-23 (PHASE 57) |
 | 5a | 4 pages with the same critical bug as Phase 2 (`settings`/`backtesting`/`watchlist`/`watchlist/[symbol]`, worse severity), `ALPHA` badge + 1 military-clearance string removed | ✅ Done 2026-09-23 (PHASE 58) |
-| 5b | `/events/[id]` tab-clipping bug fixed (real functionality loss, not cosmetic); `/admin/metrics` + 4 overlay components confirmed already safe | 🟡 Partial 2026-09-23 (PHASE 59) — tap-target sweep in progress, see LIVE_TODO |
+| 5b | `/events/[id]` tab-clipping bug fixed (real functionality loss, not cosmetic); `/admin/metrics` + 4 overlay components confirmed already safe; homepage footer tap-targets fixed (10, not 9 — see LIVE_TODO) | 🟡 Partial 2026-09-23 (PHASE 59/60) — 23-page tap-target sweep still not started, see LIVE_TODO |
 | 6 | 768px tablet pass (sidebar on, 512px left, never measured) | ⚪ Not started |
 
 **No Playwright / new test infra** (founder decision, 2026-09-23) — manual multi-width verification per phase instead. `DesignSync` (Claude Design) is authorized but unused for this work — the mocks already exist in-repo.
@@ -39,7 +39,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 
 `/map` is fixed (PHASE 57) — 0% → 100% map visible on a phone, plus a real pre-existing `MapSignalPopup` bug (negative width below ~416px) fixed along the way. `/alerts` is fixed (PHASE 55); its 183px overflow at exactly 768px is a known, tracked Phase 6 item, not a regression.
 
-**All 24 routes under `apps/web/app` have been checked at least once** (fixed, or confirmed already mobile-safe) as of 2026-09-23 — see `docs/brain/HANDOFF_186_PHASE5.md` for the full per-page table. Remaining: the 44×44 tap-target sweep (only the homepage footer identified so far, fix not yet applied) and Phase 6 (768px tablet pass — only `/alerts` and `/calendar` actually measured at that width).
+**All 24 routes under `apps/web/app` have been checked at least once** (fixed, or confirmed already mobile-safe) as of 2026-09-23 — see `docs/brain/HANDOFF_186_PHASE5.md` for the full per-page table. Remaining: the 44×44 tap-target sweep (homepage footer's 10 links fixed 2026-09-23 PHASE 60; the other 23 pages not yet swept) and Phase 6 (768px tablet pass — only `/alerts` and `/calendar` actually measured at that width).
 
 ---
 

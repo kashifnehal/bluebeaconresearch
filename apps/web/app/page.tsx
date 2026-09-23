@@ -354,30 +354,30 @@ export default async function Home(props: {
           <div className="space-y-8">
             <h6 className="font-label text-[12px] md:text-[10px] uppercase font-black tracking-widest text-on-surface/40">Product</h6>
             <ul className="space-y-4">
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/dashboard">Dashboard</Link></li>
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/map">Global Map</Link></li>
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/alerts">Signals</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/dashboard">Dashboard</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/map">Global Map</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/alerts">Signals</Link></li>
             </ul>
           </div>
           <div className="space-y-8">
             <h6 className="font-label text-[12px] md:text-[10px] uppercase font-black tracking-widest text-on-surface/40">Research</h6>
             <ul className="space-y-4">
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/accuracy">Accuracy</Link></li>
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/backtesting">Backtesting Lab</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/accuracy">Accuracy</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/backtesting">Backtesting Lab</Link></li>
               <li>
-                <Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase flex items-center gap-1" href="/terms">
+                <Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] flex items-center gap-1" href="/terms">
                   Terms <span className="text-[12px] md:text-[8px] text-primary lowercase font-mono">(full docs coming soon)</span>
                 </Link>
               </li>
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/privacy">Privacy</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/privacy">Privacy</Link></li>
             </ul>
           </div>
           <div className="space-y-8">
             <h6 className="font-label text-[12px] md:text-[10px] uppercase font-black tracking-widest text-on-surface/40">Account</h6>
             <ul className="space-y-4">
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/login">Sign in</Link></li>
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="/status">System Status</Link></li>
-              <li><a className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase" href="mailto:support@bluebeaconresearch.com">Support</a></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/login">Sign in</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/status">System Status</Link></li>
+              <li><a className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="mailto:support@bluebeaconresearch.com">Support</a></li>
             </ul>
           </div>
         </div>

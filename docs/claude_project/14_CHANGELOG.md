@@ -6,6 +6,16 @@
 
 ---
 
+## PHASE 60 — #186 PHASE 5B (TAP-TARGET): HOMEPAGE FOOTER LINKS FIXED TO 44×44PX (2026-09-23)
+
+`apps/web/app/page.tsx` only, `className`-only. Continuation of PHASE 59's paused tap-target work. The handoff document claimed the footer's shared className occurred 9 times; re-counted at session start and found **10** — the `/terms` link carries the same string as a prefix of a longer className, undercounted by a naive `grep -c`. Fixed all 10 with `min-h-[44px]` (plus `inline-flex items-center` on the 9 simple links). Verified live in-browser: all 10 links measured 44px tall at 360px (were 15px), 0px horizontal overflow at 360px and 1440px, no visual regression on desktop, `tsc --noEmit` clean.
+
+**Environment note, not a product bug:** verification was initially blocked by a stale orphaned `next dev` process (leftover from the prior session) whose file watcher had stopped picking up edits — confirmed via both live DOM measurement and a raw `curl` of its server HTML. Killed and restarted; fix then verified correctly.
+
+Remaining: the same 44×44 sweep across the other 23 pages, and Phase 6 (768px tablet pass). See `docs/brain/LIVE_TODO.md` for full detail.
+
+---
+
 ## PHASE 59 — #186 PHASE 5B (PARTIAL): `/events/[id]` TAB-CLIPPING BUG (2026-09-23)
 
 `apps/web` only. A genuine functionality-loss bug, not a design-fit question: the event detail page's ANALYSIS/HISTORICAL/MAP/SOURCES tab row had no responsive handling, and at 360–390px its content width exceeded the viewport — the "sources" tab was silently clipped out of reach, not scrollable, not visible, completely unusable on a phone. Fixed with `overflow-x-auto` on the tab list; verified by actually scrolling to and clicking the previously-unreachable tab and confirming its content panel switched.
