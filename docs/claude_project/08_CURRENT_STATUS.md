@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-09-23 (#186 Phase 3: mobile bottom tab bar).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live status banners as of 2026-09-23 (#186 Phase 4: map 0%→100% visible on mobile).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+
+> ⚠️ UPDATED 2026-09-23 (#186 Phase 4) — `/map` went from 0% to 100% visible on a phone: the two desktop side panels were previously unconditional at every viewport (that was the actual bug), now gated `hidden md:block`/`hidden md:flex` behind a new `md:hidden` `MobileTensionSheet`. Real pre-existing bug also fixed: `MapSignalPopup`'s width formula went negative below ~416px, so tapping a marker on any phone already did nothing — verified desktop positioning math is provably unchanged (same container-relative offset at 1440px). New mobile-only zoom buttons added (founder-approved addition beyond parity — no scroll-wheel on phones). A founder-directed critical review of the Stitch mock against real page functionality preceded implementation — caught a fabricated latency stat and a mismatched feed-card style in the mock, neither was copied. Evidence: `docs/brain/LIVE_TODO.md`. This tree: PHASE 57.
 
 > ⚠️ UPDATED 2026-09-23 (#186 Phase 3) — New `MobileTabBar.tsx` (`md:hidden`): FEED/MAP/ALERTS/WATCHLIST/MORE. MORE opens the existing `Sidebar` drawer — no new nav surface, nothing duplicated. `TopBar`'s mobile hamburger removed as redundant. This is the first #186 phase that changes what the app looks like, not just fixes an overflow bug. Verified at 390px and 1440px (desktop bar `display:none`, zero shift). Evidence: `docs/brain/LIVE_TODO.md`. This tree: PHASE 56.
 

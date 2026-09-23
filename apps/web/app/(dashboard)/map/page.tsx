@@ -10,6 +10,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { MapSignalPopup } from "@/components/map/MapSignalPopup";
+import { MobileTensionSheet } from "@/components/map/MobileTensionSheet";
 import { FilterBar } from "@/components/signals/FilterBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
@@ -155,6 +156,11 @@ export default function MapPage() {
   const [tensionInfoOpen, setTensionInfoOpen] = useState(false);
   const tensionInfoRef = useRef<HTMLDivElement | null>(null);
   const [streamCollapsed, setStreamCollapsed] = useState(false);
+  // Mobile-only (md:hidden) presentation state — the desktop filters/stream
+  // panels above are the source of truth for their own data; these two only
+  // control which UI is shown on a phone, no new data or business logic.
+  const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
   const [popupSignal, setPopupSignal] = useState<Signal | null>(null);
 
@@ -310,8 +316,17 @@ export default function MapPage() {
         try {
           // Add compact attribution control (OpenStreetMap credit)
           map.addControl(new maplib.AttributionControl({ compact: true }));
+          // Mobile-only zoom buttons (founder decision, #186 Phase 4) — phones have
+          // no scroll-wheel, so pinch is otherwise the only zoom affordance. Hidden
+          // at md+ via globals.css (`.map-page-root .maplibregl-ctrl-bottom-right`)
+          // so desktop is visually unchanged; no locate/geolocate control added, no
+          // existing feature reads the user's location.
+          map.addControl(
+            new maplib.NavigationControl({ showCompass: false }),
+            "bottom-right",
+          );
         } catch (err) {
-          // Non-fatal: continue without attribution control if it fails
+          // Non-fatal: continue without these controls if they fail
           console.warn("[map] addControl failed", err);
         }
 
@@ -701,7 +716,7 @@ export default function MapPage() {
   }, [tensionHistorySignals]);
 
   return (
-    <div className="relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
+    <div className="map-page-root relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
       {/* Visually hidden — the page is a full-bleed map with no visible title slot,
           but it still needs a level-one heading (axe `page-has-heading-one`, /map). */}
       <h1 className="sr-only">Global tension map</h1>
@@ -762,8 +777,10 @@ export default function MapPage() {
         />
       )}
 
+      {/* Desktop-only: below md this floats over the whole map (there's no
+          room for a w-80 side panel on a phone), replaced by MobileTensionSheet. */}
       {!filtersCollapsed && (
-      <section className="absolute top-8 left-8 z-20 w-80 glass rounded-xl p-6 border-l-2 border-primary/40">
+      <section className="hidden md:block absolute top-8 left-8 z-20 w-80 glass rounded-xl p-6 border-l-2 border-primary/40">
         <button
           onClick={() => setFiltersCollapsed(true)}
           className="absolute -right-3 top-6 w-6 h-6 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors"
@@ -893,15 +910,16 @@ export default function MapPage() {
       {filtersCollapsed && (
         <button
           onClick={() => setFiltersCollapsed(false)}
-          className="absolute top-8 left-8 w-10 h-10 rounded-full bg-surface-container glass border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors z-10"
+          className="hidden md:flex absolute top-8 left-8 w-10 h-10 rounded-full bg-surface-container glass border border-outline-variant/30 items-center justify-center hover:bg-primary/20 transition-colors z-10"
           aria-label="Expand filters panel"
         >
           <span className="material-symbols-outlined text-[16px]">chevron_right</span>
         </button>
       )}
 
+      {/* Desktop-only, same reasoning as the filters section above. */}
       {!streamCollapsed && (
-      <aside aria-label="Intelligence stream" className="absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex flex-col">
+      <aside aria-label="Intelligence stream" className="hidden md:flex absolute top-0 right-0 h-full w-80 glass border-l border-outline-variant/30 flex-col">
         <button
           onClick={() => setStreamCollapsed(true)}
           className="absolute -left-3 top-6 w-6 h-6 rounded-full bg-surface-container border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors"
@@ -1010,11 +1028,60 @@ export default function MapPage() {
       {streamCollapsed && (
         <button
           onClick={() => setStreamCollapsed(false)}
-          className="absolute top-8 right-8 w-10 h-10 rounded-full bg-surface-container glass border border-outline-variant/30 flex items-center justify-center hover:bg-primary/20 transition-colors z-10"
+          className="hidden md:flex absolute top-8 right-8 w-10 h-10 rounded-full bg-surface-container glass border border-outline-variant/30 items-center justify-center hover:bg-primary/20 transition-colors z-10"
           aria-label="Expand intelligence panel"
         >
           <span className="material-symbols-outlined text-[16px]">chevron_left</span>
         </button>
+      )}
+
+      <MobileTensionSheet
+        expanded={mobileSheetExpanded}
+        onToggleExpanded={() => setMobileSheetExpanded((v) => !v)}
+        onOpenFilters={() => setMobileFiltersOpen(true)}
+        tensionMetrics={tensionMetrics}
+        tensionHistory={tensionHistory}
+        liveItems={liveItems}
+        isLoading={isLoading}
+        isError={isError}
+        selectedSignalId={selectedSignalId}
+        onSelectSignal={handleFeedSelect}
+        canLoadMore={canLoadMoreSidebar}
+        isFetchingMore={isFetchingNextPage}
+        onLoadMore={handleLoadMoreSidebar}
+        onOpenTerminal={() => router.push("/dashboard")}
+      />
+
+      {mobileFiltersOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
+          <button
+            type="button"
+            aria-label="Close filters"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileFiltersOpen(false)}
+          />
+          <div className="relative bg-surface-container-lowest rounded-t-2xl p-6 max-h-[85vh] overflow-y-auto border-t border-outline-variant/30">
+            <div className="flex items-center justify-between mb-4">
+              <span className="label text-xs tracking-[0.2em] text-on-surface-variant uppercase">
+                Filters
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(false)}
+                aria-label="Close filters"
+                className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+            <FilterBar
+              layout="stack"
+              value={filters}
+              onChange={setFilters}
+              extraRegions={signals.map((s) => s.region)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -24,11 +24,17 @@ export function MapSignalPopup({
 
   return (
     <>
+      {/* offsetLeft only matters at md+, where the desktop filters panel can occupy the
+          left side of the map. Below md that panel never renders (map/page.tsx hides it),
+          so the backdrop/popup use plain full-width mobile positioning instead — passing
+          offsetLeft through inline `left` at every breakpoint would otherwise make the
+          popup `min(22rem, 100vw-26rem)` wide, which is negative (invisible/off-screen)
+          on any phone viewport. Desktop pixel values are unchanged. */}
       <button
         type="button"
         aria-label="Close event details"
-        className="absolute inset-y-0 right-0 z-30 bg-black/20"
-        style={{ left: offsetLeft }}
+        className="fixed inset-0 md:absolute md:inset-y-0 md:left-[var(--popup-offset)] md:right-0 z-30 bg-black/20"
+        style={{ "--popup-offset": offsetLeft } as React.CSSProperties}
         onClick={onClose}
       />
       <div
@@ -36,8 +42,8 @@ export function MapSignalPopup({
         aria-modal="true"
         aria-labelledby="map-event-title"
         data-testid="map-event-popup"
-        className="absolute z-40 top-24 w-[min(22rem,calc(100vw-26rem))] max-h-[min(70vh,32rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline-variant/40 bg-[#131313] p-4 shadow-2xl"
-        style={{ left: `calc(${offsetLeft} + 1rem)` }}
+        className="fixed md:absolute left-4 right-4 md:left-[calc(var(--popup-offset)+1rem)] md:right-auto top-24 w-auto md:w-[min(22rem,calc(100vw-26rem))] max-h-[min(70vh,32rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline-variant/40 bg-[#131313] p-4 shadow-2xl z-40"
+        style={{ "--popup-offset": offsetLeft } as React.CSSProperties}
       >
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex flex-wrap items-center gap-2 min-w-0">

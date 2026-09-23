@@ -6,6 +6,20 @@
 
 ---
 
+## PHASE 57 — #186 PHASE 4: MAP BOTTOM SHEET — 0% → 100% MAP VISIBLE ON MOBILE (2026-09-23)
+
+`apps/web` only. Fixes the single worst mobile bug in the product plus a real pre-existing bug found along the way.
+
+**Founder-directed critical review before implementing:** did a full functional inventory of `/map` and checked the Stitch mock against it rather than reskinning blind. The mock omits the 24h tension sparkline (kept anyway — real functionality, not optional), invents a fabricated `LATENCY ~5M` stat (not included), and shows feed-card badges from a different page's design that don't match this page's real data shape (kept the real card format). Founder approved one deliberate addition beyond parity: mobile-only +/- zoom buttons (MapLibre `NavigationControl`), since phones have no scroll-wheel.
+
+New `components/map/MobileTensionSheet.tsx` — `md:hidden`, tap-to-expand, owns no data (pure prop pass-through from `map/page.tsx`'s existing state). The two desktop panels, previously unconditional at *every* viewport (the actual cause of 0% map visibility on phones), now gate behind `hidden md:block`/`hidden md:flex`.
+
+**Bonus fix, independent of the sheet work:** `MapSignalPopup.tsx` had a real bug — its width formula went negative below ~416px viewport, so tapping any map marker on a phone already did nothing. Fixed via a CSS custom property so desktop math is provably unchanged (verified the exact same `24rem+1rem` container-relative offset survives at 1440px).
+
+Verified live at 390px with real signed-in data: map 0%→100% visible, zoom controls work, popup opens correctly with real signal data, cluster-zoom and point-tap handlers (untouched logic) confirmed still firing. Desktop 1440px confirmed byte-identical. Full detail + a verification-technique note (canvas click testing via the React fiber tree) in `docs/brain/LIVE_TODO.md`.
+
+---
+
 ## PHASE 56 — #186 PHASE 3: MOBILE BOTTOM TAB BAR (2026-09-23)
 
 `apps/web` only. First piece of the rework that actually looks like the Stitch design rather than a bug fix.

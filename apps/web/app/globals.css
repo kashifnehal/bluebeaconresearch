@@ -219,3 +219,13 @@ body {
 .maplibregl-popup-anchor-right .maplibregl-popup-tip {
   border-left-color: #131313 !important;
 }
+
+/* Mobile-only zoom buttons on /map (#186 Phase 4) — added for phones, which have
+   no scroll-wheel. Scoped to .map-page-root so it can't affect any other MapLibre
+   instance (e.g. EventLocationMap.tsx, which never adds a bottom-right control
+   anyway, so this rule is inert there regardless). */
+@media (min-width: 768px) {
+  .map-page-root .maplibregl-ctrl-bottom-right {
+    display: none;
+  }
+}

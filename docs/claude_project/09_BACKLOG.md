@@ -26,7 +26,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 | 1 | Copy integrity (backtesting footer, dashboard confidence badge) + design-system declaration | ✅ Done 2026-09-23 (PHASE 54) |
 | 2 | `/alerts` + `/calendar` mobile overflow fixed (root cause was page-level duplicate margins, not TopBar) | ✅ Done 2026-09-23 (PHASE 55) |
 | 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE), new `MobileTabBar.tsx` | ✅ Done 2026-09-23 (PHASE 56) |
-| 4 | Map → bottom sheet on mobile (reuses existing panel collapse state) | ⚪ Not started |
+| 4 | Map → bottom sheet on mobile; fixed a real pre-existing popup bug too | ✅ Done 2026-09-23 (PHASE 57) |
 | 5 | Remaining 21 zero-responsive files + `ALPHA` badge/military-copy removal + 44×44 tap targets | ⚪ Not started |
 | 6 | 768px tablet pass (sidebar on, 512px left, never measured) | ⚪ Not started |
 
@@ -36,7 +36,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 
 **7 routes have no Stitch mock**: `/verify`, `/confirm`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms`, `/help`. Four sit directly in the signup/recovery flow a brand-new user walks first. No mocks will be commissioned for these — Phase 5 gives them the same treatment as their nearest mocked analog (`/verify`/`/confirm`/`/forgot-password`/`/reset-password` inherit `login`/`signup`'s layout; `/privacy`/`/terms`/`/help` just need single-column padding + the existing type floor, no new layout decision). Naming this explicitly so these 7 aren't silently skipped when the file-by-file phase wraps up.
 
-Worst known remaining offender: `/map` renders **0% map** on a phone (Phase 4). `/alerts` is fixed (PHASE 55); its 183px overflow at exactly 768px is a known, tracked Phase 6 item, not a regression.
+`/map` is fixed (PHASE 57) — 0% → 100% map visible on a phone, plus a real pre-existing `MapSignalPopup` bug (negative width below ~416px) fixed along the way. `/alerts` is fixed (PHASE 55); its 183px overflow at exactly 768px is a known, tracked Phase 6 item, not a regression. Remaining: Phase 5 (~20 unresponsive files) and Phase 6 (768px tablet pass).
 
 ---
 

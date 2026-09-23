@@ -393,6 +393,12 @@ Founding member banner above cards:
 
 ## 4. MAP COMPONENTS
 
+### MobileTensionSheet (`components/map/MobileTensionSheet.tsx`) — added 2026-09-23 (#186 Phase 4)
+
+`md:hidden` bottom sheet, replaces the two always-mounted desktop panels below `md` (they were previously unconditional at every viewport, which is why two `w-80` panels used to occlude the entire map on a phone). Tap-to-expand peek header (score, sample size, 24h sparkline, filter icon, chevron) plus an expanded body reusing the exact same tension-bar and intelligence-stream JSX as the desktop panels — owns no data of its own, `map/page.tsx` passes everything down as props. The filter icon opens a separate `md:hidden` bottom modal wrapping the same `<FilterBar>` component the desktop panel uses (verified safe to mount twice — `FilterBar` is a pure controlled component, no internal state). New MapLibre `NavigationControl` (+/- zoom, mobile-only, `bottom-right`, hidden at `md:` via `globals.css`) added alongside the existing `AttributionControl` — justified because phones have no scroll-wheel; no locate control added, no feature in the app reads geolocation.
+
+**Doc correction:** the `GlobalTensionIndex` entry below describes a component that does not exist as a separate file — `grep`/`find` confirm no `GlobalTensionIndex.tsx` anywhere in the repo. That whole panel (score, bars, filters) is inline JSX inside `app/(dashboard)/map/page.tsx`'s `MapPage` component, not a standalone component. Leaving the description below as a content reference (it's accurate about what renders) but flagging the file path as stale rather than silently rewriting a section outside this phase's scope.
+
 ### GlobalTensionIndex (apps/web/components/map/GlobalTensionIndex.tsx)
 **Left panel on /map page**
 

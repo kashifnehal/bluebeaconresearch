@@ -143,9 +143,14 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 
 - Inline in the filters panel, not a separate component. Click the "i" to pin `tensionInfoOpen`; `mousedown` outside the button+tooltip closes it (TopBar dropdown pattern). CSS `group-hover` preview unchanged. Tooltip copy stays the existing methodology sentence — no formula.
 
-### 3.5d `MapSignalPopup.tsx` (#179)
+### 3.5e `MobileTensionSheet.tsx` (new, #186 Phase 4, 2026-09-23)
+
+`md:hidden` bottom sheet on `/map`. Owns zero data or business logic — every prop (`tensionMetrics`, `tensionHistory`, `liveItems`, `selectedSignalId`, `onSelectSignal`, pagination callbacks) is passed straight through from `map/page.tsx`'s existing state, the same state the desktop panels already read. Two purely presentational local booleans added to `MapPage` for this: `mobileSheetExpanded` (peek vs. expanded) and `mobileFiltersOpen` (a separate `md:hidden` modal wrapping the same `<FilterBar>` desktop uses). Desktop panels (`filtersCollapsed`/`streamCollapsed` sections) gained `hidden md:block` / `hidden md:flex` so they never mount below `md` — previously unconditional at every viewport, which is why two `w-80` panels used to occlude the entire map on a phone (0% of the map was visible). New `NavigationControl` (+/- zoom) added to the map's `initMap` effect, mobile-only via a `globals.css` rule scoped to `.map-page-root .maplibregl-ctrl-bottom-right` — desktop keeps only its pre-existing `AttributionControl`.
+
+### 3.5d `MapSignalPopup.tsx` (#179, mobile fix #186 Phase 4)
 
 - Header badge is `sourceConfirmationLabel` (Official statement / Reported claim / Speculative / unconfirmed), hidden when `sourceConfirmation` is null. Raw `{n}% confidence` removed. Depends on #178 list-endpoint mapping.
+- **Pre-existing mobile bug fixed 2026-09-23:** the popup and its backdrop used `offsetLeft` (a desktop-only value depending on whether the left filters panel is collapsed) as an unconditional inline `left` style at every breakpoint. Below ~416px viewport width the width formula `min(22rem, calc(100vw-26rem))` evaluates negative, making the popup invisible/off-screen — tapping any map marker on a phone did nothing useful. Fixed with a CSS custom property (`--popup-offset`, set once via `style`) referenced only inside `md:`-scoped Tailwind arbitrary values, so `offsetLeft` still drives desktop positioning exactly as before (verified: 1440px click landed the popup at the same container-relative `24rem + 1rem` offset, `position:absolute`, width `22rem`) while mobile gets plain `left-4 right-4` / `fixed` positioning instead. No prop or logic change — `offsetLeft`'s value and meaning are untouched.
 
 ### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
 - **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
