@@ -6,7 +6,7 @@
 
 ---
 
-## PHASE 65 — #188 CLASSIFIER-EXTRACTION COUNTRY FIX (2026-09-24)
+## PHASE 65 — #188 CLASSIFIER-EXTRACTION COUNTRY FIX (2026-09-24, `50ff7cf`)
 
 `apps/backend` only. Follow-up to the Phase 1/2 investigation (`claude/188_...md` §3): GDELT-sourced signals were showing the publishing outlet's country as if it were the event's location — GDELT's DOC 2.0 `sourcecountry` field is the country of the outlet reporting the story, not where the event happened, but `gdelt-collector.ts` was writing it straight into the signal's displayed `country` and using it to place the map pin.
 

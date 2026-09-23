@@ -8,7 +8,7 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.87.0 — #188 classifier-extraction country fix (2026-09-24)
+### v0.87.0 — #188 classifier-extraction country fix (2026-09-24, `50ff7cf`)
 
 `apps/backend` only. Follow-up to the Phase 1/2 investigation (`claude/188_...md` §3, its Cursor report). GDELT-sourced signals were showing the publishing outlet's country as if it were the event's location: GDELT's DOC 2.0 `sourcecountry` field names the country of the outlet reporting a story, not where the event happened, and `gdelt-collector.ts` wrote it straight into the signal's displayed `country` and used it (via `geo-resolver.ts`) to place the map pin — a US outlet covering a Middle East story showed "United States" on the card and map.
 
