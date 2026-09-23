@@ -6,6 +6,12 @@
 
 ---
 
+## PHASE 65 — ALERTS "BUILT FROM [object Object]" BUG FIXED (2026-09-24, this commit)
+
+`apps/web/app/api/alerts/recent/route.ts` — the "Built from" source citation on `/alerts` match cards rendered the literal text "[object Object]" instead of a source name for any match whose underlying `raw_events.raw_data.source` came from an object-shaped collector (NewsAPI/GNews write `{id, name, url, country}`; others write a plain string). The route's `sourceLabel` build used `raw_data.source ?? raw_data.domain`, which picked the truthy object over the intended string. Reproduced and confirmed fixed on the standing test account, rule "News — Middle East — Severity 6+" — full trace in `docs/brain/LIVE_TODO.md` / `docs/brain/14_CHANGELOG.md` v0.87.0. Not a one-off: 426 of 519 non-null `raw_data.source` rows in production are object-shaped.
+
+---
+
 ## PHASE 64 — #186 PHASE 7: READABILITY REGRESSIONS FOUND, DOCS ONLY, NOTHING SHIPPED (2026-09-24)
 
 Docs only — no code shipped this phase. Founder pushed back on PHASE 63's `/dashboard` fix by pasting a direct screenshot comparison against the Stitch mock; the comparison showed the "fixed" (non-overflowing) row was visually near-useless — headlines truncate to ~8-10 characters. Correcting the record: PHASE 63's `/dashboard` claim should not have been read as "done."
