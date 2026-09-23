@@ -32,6 +32,10 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 
 **No Playwright / new test infra** (founder decision, 2026-09-23) — manual multi-width verification per phase instead. `DesignSync` (Claude Design) is authorized but unused for this work — the mocks already exist in-repo.
 
+**Manual pre-merge checklist** (since there's no automated regression test): before any #186 commit, check every touched route at 360 / 390 / 414 / 768 / 1024 / **1440** with `document.documentElement.scrollWidth - document.documentElement.clientWidth` — must be 0 at every width. This is a process substitute for the declined Playwright suite, not new infra; it costs one line of JS per width and catches the same class of regression a human would otherwise miss between sessions.
+
+**7 routes have no Stitch mock**: `/verify`, `/confirm`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms`, `/help`. Four sit directly in the signup/recovery flow a brand-new user walks first. No mocks will be commissioned for these — Phase 5 gives them the same treatment as their nearest mocked analog (`/verify`/`/confirm`/`/forgot-password`/`/reset-password` inherit `login`/`signup`'s layout; `/privacy`/`/terms`/`/help` just need single-column padding + the existing type floor, no new layout decision). Naming this explicitly so these 7 aren't silently skipped when the file-by-file phase wraps up.
+
 Worst known offenders: `/alerts` **335px** overflow at 360px; `/map` renders **0% map** on a phone.
 
 ---

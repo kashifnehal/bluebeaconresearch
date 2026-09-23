@@ -25,7 +25,7 @@ Treat the UI as a series of nested physical layers. Use the following tokens to 
 
 ### Glass & Gradient Rule
 On map-heavy screens or complex data visualizations, use **Glassmorphism** for floating overlays. Apply a 20px backdrop-blur to a 60% opaque `surface` color. This ensures the map data remains visible as a "ghost" under the UI, maintaining spatial awareness.
-- **Signature Gradient:** For primary Action Buttons or Critical Data Points, use a linear gradient from `primary` (#6FFBBE) to `primary-container` (#4EDE93) at a 135° angle to add "neon" depth.
+- **Signature Gradient:** For primary Action Buttons or Critical Data Points, use a linear gradient from `primary` (#6FFBBE) to `primary-container` (#4EDEA3) at a 135° angle to add "neon" depth. [Corrected 2026-09-23 — originally read #4EDE93, a typo; live `tailwind.config.ts` confirms #4EDEA3, matching every other reference to this token in this file.]
 
 ---
 
@@ -77,6 +77,10 @@ Forbid divider lines between rows. Instead, use a subtle background hover state 
 A 2px tall horizontal bar placed at the top of a card, using the `primary` or `error` color to signal the health of the data within that module at a glance.
 
 ---
+
+## 5a. Mobile Tap-Target Exception (added 2026-09-23)
+
+This system's density principle ("DO keep layouts tight... users value information density over breathing room," §6) reads in tension with WCAG 2.2 SC 2.5.5's 44×44px target-size guidance for phone widths. Resolution: **density governs the visible box; the tap target does not have to match it.** Give every interactive element on a phone width a hit area of at least 44×44px that can extend past its rendered visual bounds (extra padding, a pseudo-element, or a negative-margin hit-slop), rather than inflating the row's visible height. A 13px-tall label can still sit inside a 44px-tall tappable row. This keeps the tactical density intact while meeting the target-size floor — treat it as settled, not something to re-decide per screen.
 
 ## 6. Do's and Don'ts
 
