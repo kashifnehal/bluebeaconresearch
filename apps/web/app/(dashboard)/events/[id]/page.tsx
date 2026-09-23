@@ -287,7 +287,8 @@ export default function EventDetailPage() {
                       Verification
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary">
-                      {signal.sourcesCount} High-Integrity Sources
+                      {signal.sourcesCount} High-Integrity{" "}
+                      {signal.sourcesCount === 1 ? "Source" : "Sources"}
                     </span>
                   </div>
                 </div>

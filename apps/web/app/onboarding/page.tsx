@@ -622,7 +622,7 @@ export default function OnboardingPage() {
             color: "#e5e2e1",
           }}
         >
-          TIMESTAMP: 2024-05-21T14:48:02Z<br />
+          TIMESTAMP: {new Date().toISOString()}<br />
           COORDS: 40.7128° N, 74.0060° W
         </div>
       </div>
