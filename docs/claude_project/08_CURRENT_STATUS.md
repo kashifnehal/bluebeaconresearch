@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-09-23 (#186 Phase 2: `/alerts` + `/calendar` overflow fixed).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+> **📍 Doc status — live status banners as of 2026-09-23 (#186 Phase 3: mobile bottom tab bar).** Full technical matrix: `docs/brain/08_CURRENT_STATUS.md`. `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo.
+
+> ⚠️ UPDATED 2026-09-23 (#186 Phase 3) — New `MobileTabBar.tsx` (`md:hidden`): FEED/MAP/ALERTS/WATCHLIST/MORE. MORE opens the existing `Sidebar` drawer — no new nav surface, nothing duplicated. `TopBar`'s mobile hamburger removed as redundant. This is the first #186 phase that changes what the app looks like, not just fixes an overflow bug. Verified at 390px and 1440px (desktop bar `display:none`, zero shift). Evidence: `docs/brain/LIVE_TODO.md`. This tree: PHASE 56.
 
 > ⚠️ UPDATED 2026-09-23 (#186 Phase 2) — `/alerts`' 335px mobile overflow and `/calendar`'s equivalent are fixed. Root cause was **not** the TopBar (the original theory) — both pages had a hardcoded `ml-[256px] mr-[260px]` on their own wrapper, duplicating the shared layout's sidebar margin unconditionally on every viewport. Gated behind `md:`; desktop unchanged. `/alerts` is 0px overflow everywhere except a pre-existing, tracked 183px at exactly 768px (Phase 6 territory). `/calendar` is 0px at all widths. All edits are `className`-only — audited before commit, zero logic changed. Evidence + a workflow-correction note: `docs/brain/LIVE_TODO.md`. This tree: PHASE 55.
 

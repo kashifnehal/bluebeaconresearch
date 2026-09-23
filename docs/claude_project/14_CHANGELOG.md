@@ -6,6 +6,16 @@
 
 ---
 
+## PHASE 56 — #186 PHASE 3: MOBILE BOTTOM TAB BAR (2026-09-23)
+
+`apps/web` only. First piece of the rework that actually looks like the Stitch design rather than a bug fix.
+
+New `components/layout/MobileTabBar.tsx` — fixed bottom nav, `md:hidden`: FEED / MAP / ALERTS (unread badge) / WATCHLIST / MORE. MORE opens the existing off-canvas drawer (`Sidebar`'s, via `useUIStore.mobileSidebarOpen`) instead of a second nav surface — Calendar/Backtesting/Settings/Help/Logout are unchanged, still in the drawer. Icon names and active-route logic copied verbatim from `Sidebar.tsx` so mobile and desktop never drift independently. `TopBar.tsx`'s mobile hamburger removed as redundant with MORE. `<main>` gained mobile-only bottom padding to clear the fixed bar.
+
+Verified live at 390px (correct active-state color per route, real unread badge, drawer opens/closes via the MORE button) and at 1440px (bar `display:none`, zero layout shift). Full detail + a tooling note (an input-simulation flake vs. a real bug, resolved by verifying the click handler directly) in `docs/brain/LIVE_TODO.md`.
+
+---
+
 ## PHASE 55 — #186 PHASE 2: `/alerts` + `/calendar` MOBILE OVERFLOW FIXED (2026-09-23)
 
 `apps/web` only, `className`-only edits (audited before commit — zero logic/handler/data changes).

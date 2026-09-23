@@ -25,7 +25,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 |-------|-------|--------|
 | 1 | Copy integrity (backtesting footer, dashboard confidence badge) + design-system declaration | ✅ Done 2026-09-23 (PHASE 54) |
 | 2 | `/alerts` + `/calendar` mobile overflow fixed (root cause was page-level duplicate margins, not TopBar) | ✅ Done 2026-09-23 (PHASE 55) |
-| 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE) | ⚪ Not started |
+| 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE), new `MobileTabBar.tsx` | ✅ Done 2026-09-23 (PHASE 56) |
 | 4 | Map → bottom sheet on mobile (reuses existing panel collapse state) | ⚪ Not started |
 | 5 | Remaining 21 zero-responsive files + `ALPHA` badge/military-copy removal + 44×44 tap targets | ⚪ Not started |
 | 6 | 768px tablet pass (sidebar on, 512px left, never measured) | ⚪ Not started |

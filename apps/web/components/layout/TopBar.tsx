@@ -16,7 +16,6 @@ export function TopBar() {
     setNotifOpen,
     unreadCount,
     setHelpOpen,
-    setMobileSidebarOpen,
     notificationConnectOpen,
     setNotificationConnectOpen,
     setCommandPaletteOpen,
@@ -88,32 +87,9 @@ export function TopBar() {
           borderBottom: "1px solid #2a2a2a",
         }}
       >
-        {/* Left: hamburger (mobile) + Search Bar */}
+        {/* Search Bar. Mobile nav is MobileTabBar's "More" tab now (below
+            md), which opens the same drawer this hamburger used to. */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <button
-            type="button"
-            className="md:hidden transition-colors shrink-0"
-            style={{
-              color: "#bbcac0",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-            }}
-            onClick={() => setMobileSidebarOpen(true)}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
-            }}
-            aria-label="Open navigation"
-            title="Open navigation"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>
-              menu
-            </span>
-          </button>
           <div className="relative w-full max-w-md min-w-0">
             <span
               className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"

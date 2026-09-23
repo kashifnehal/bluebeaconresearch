@@ -35,6 +35,10 @@ Mobile-critical classes: `px-4 md:px-8` · `min-w-0` on the left group · `trunc
 
 
 
+### `MobileTabBar.tsx` — added 2026-09-23 (#186 Phase 3)
+
+Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — mounted once from `(dashboard)/layout.tsx` alongside `Sidebar`/`TopBar`. Five slots: FEED `/dashboard`, MAP `/map`, ALERTS `/alerts` (badge from `useUIStore.unreadCount`, same source `Sidebar` uses), WATCHLIST `/watchlist`, and a MORE button that calls `useUIStore.setMobileSidebarOpen(true)` — opens `Sidebar`'s existing off-canvas drawer rather than a second nav surface, so CALENDAR/BACKTESTING/SETTINGS/Help/Logout stay reachable without duplicating them. Active-route highlighting: `pathname === item.href || pathname.startsWith(`${item.href}/`)`, same pattern `Sidebar.tsx`'s `NAV.map` uses. Icon names (`rss_feed`/`public`/`notifications_active`/`visibility`) are copied verbatim from `Sidebar.tsx`'s `NAV` array so desktop and mobile iconography never drift independently. `<main>` in `(dashboard)/layout.tsx` gained `pb-[60px] md:pb-0` so page content clears the fixed bar's height. `TopBar.tsx`'s mobile hamburger (`md:hidden`, opened the same drawer) was deleted in the same change as now-redundant.
+
 ### 2.1 `Sidebar.tsx`
 - **Purpose**: Primary vertical terminal navigation sidebar. Below `md` it is an off-canvas drawer (`useUIStore.mobileSidebarOpen`); at `md`+ always visible (#133). Brand text "Blue Beacon Research" is a `<Link href="/dashboard">` (2026-09-18); ALPHA badge is not linked. Footer Help goes to `/help` (#155), not the HelpModal.
 - **Props**: None.
