@@ -45,7 +45,7 @@ export function IngestionStatusBanner() {
 
   return (
     <div
-      className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded border px-4 py-2.5 text-[12px] md:text-[11px] tracking-wide"
+      className="mb-4 md:mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded border px-4 py-2.5 text-[12px] md:text-[11px] tracking-wide"
       style={{
         fontFamily: "'Space Grotesk', sans-serif",
         backgroundColor: notHealthy ? "#2a1f1f" : "#1a2420",

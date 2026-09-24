@@ -44,9 +44,12 @@ export function FilterBar({
   const labelStyle = stacked
     ? undefined
     : { color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" };
+  // Bar layout: full width on mobile so each select fills its grid cell (a long option
+  // label like "East Asia / Korean Peninsula" was otherwise forcing the closed <select>
+  // wide enough to break 3-across packing); back to auto/natural width at md+, unchanged.
   const selectClass = stacked
     ? `w-full ${SELECT_CLASSES}`
-    : SELECT_CLASSES;
+    : `w-full md:w-auto ${SELECT_CLASSES}`;
 
   return (
     <div
@@ -55,7 +58,7 @@ export function FilterBar({
         className ??
         (stacked
           ? "space-y-3"
-          : "flex flex-wrap gap-3 items-center")
+          : "grid grid-cols-3 gap-3 items-end md:flex md:flex-wrap md:items-center")
       }
     >
       <div className={fieldClass}>
@@ -122,7 +125,7 @@ export function FilterBar({
         </select>
       </div>
 
-      <div className={fieldClass}>
+      <div className={`${fieldClass} ${stacked ? "" : "col-span-3 md:col-span-1"}`}>
         <span className={labelClass} style={labelStyle}>
           Time range
         </span>

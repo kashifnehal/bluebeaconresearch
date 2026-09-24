@@ -269,7 +269,7 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 mb-8" role="group" aria-label="Saved views">
+        <div className="flex flex-wrap gap-2 mb-5 md:mb-8" role="group" aria-label="Saved views">
           {(Object.keys(DESK_PRESETS) as DeskPresetId[]).map((id) => {
             const preset = DESK_PRESETS[id];
             const selected = deskMatchesFilters(id, filters);
@@ -768,66 +768,73 @@ export default function DashboardPage() {
                             false,
                           )
                         }
-                        className="flex min-w-0 flex-1 items-center gap-2 md:gap-6"
+                        className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center md:gap-6"
                       >
-                        <div
-                          className="w-2 h-2 rounded-full shrink-0"
-                          style={{
-                            backgroundColor:
-                              item.severity >= 8 ? "#ee7d77" : "#4edea3",
-                          }}
-                        />
-                        <div
-                          className="w-16 md:w-20 text-[12px] shrink-0"
-                          style={{
-                            color: "#86948a",
-                            fontFamily: "'JetBrains Mono', monospace",
-                          }}
-                        >
-                          {safeFormatDistanceToNow(item.eventDate ?? item.createdAt)}
-                        </div>
-                        <FreshTag
-                          createdAt={item.createdAt}
-                          className="text-[12px] md:text-[11px] shrink-0"
-                          style={{
-                            fontFamily: "'JetBrains Mono', monospace",
-                            color: "#4edea3",
-                          }}
-                        />
-                        <span className="hidden md:inline-flex">
-                          <MediaImpactTag
-                            entity={item.mediaImpactEntity}
-                            caveat={item.mediaImpactCaveat}
-                          />
-                        </span>
-                        <div
-                          className="flex-1 min-w-0 truncate font-semibold transition-colors group-hover:text-[#4edea3]"
-                          style={{
-                            color: "#e5e2e1",
-                            fontFamily: "'Inter', sans-serif",
-                          }}
-                        >
-                          {item.title}
-                        </div>
-                        {sourceConfirmationLabel(item.sourceConfirmation) != null && (
+                        {/* Metadata: its own row on mobile so it never competes with the headline for width */}
+                        <div className="flex items-center gap-2 md:gap-6 md:shrink-0">
                           <div
-                            className="hidden md:block text-[12px] px-2 py-0.5 border shrink-0"
+                            className="w-2 h-2 rounded-full shrink-0"
                             style={{
-                              color: "#4edea3",
-                              backgroundColor: "rgba(78,222,163,0.1)",
-                              borderColor: "rgba(78,222,163,0.2)",
+                              backgroundColor:
+                                item.severity >= 8 ? "#ee7d77" : "#4edea3",
+                            }}
+                          />
+                          <div
+                            className="w-16 md:w-20 text-[12px] shrink-0"
+                            style={{
+                              color: "#86948a",
                               fontFamily: "'JetBrains Mono', monospace",
                             }}
                           >
-                            {sourceConfirmationLabel(item.sourceConfirmation)}
+                            {safeFormatDistanceToNow(item.eventDate ?? item.createdAt)}
                           </div>
-                        )}
-                        <span
-                          className="material-symbols-outlined text-lg shrink-0 group-hover:translate-x-1 transition-transform"
-                          style={{ color: "#86948a" }}
-                        >
-                          chevron_right
-                        </span>
+                          <FreshTag
+                            createdAt={item.createdAt}
+                            className="text-[12px] md:text-[11px] shrink-0"
+                            style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              color: "#4edea3",
+                            }}
+                          />
+                          <span className="hidden md:inline-flex">
+                            <MediaImpactTag
+                              entity={item.mediaImpactEntity}
+                              caveat={item.mediaImpactCaveat}
+                            />
+                          </span>
+                        </div>
+
+                        {/* Headline: full row width on mobile (2-line clamp); single-line truncate at md+, unchanged */}
+                        <div className="flex items-center gap-2 md:min-w-0 md:flex-1 md:gap-6">
+                          <div
+                            className="flex-1 min-w-0 line-clamp-2 md:truncate md:line-clamp-none font-semibold transition-colors group-hover:text-[#4edea3]"
+                            style={{
+                              color: "#e5e2e1",
+                              fontFamily: "'Inter', sans-serif",
+                            }}
+                          >
+                            {item.title}
+                          </div>
+                          {sourceConfirmationLabel(item.sourceConfirmation) != null && (
+                            <div
+                              className="hidden md:block text-[12px] px-2 py-0.5 border shrink-0"
+                              style={{
+                                color: "#4edea3",
+                                backgroundColor: "rgba(78,222,163,0.1)",
+                                borderColor: "rgba(78,222,163,0.2)",
+                                fontFamily: "'JetBrains Mono', monospace",
+                              }}
+                            >
+                              {sourceConfirmationLabel(item.sourceConfirmation)}
+                            </div>
+                          )}
+                          <span
+                            className="material-symbols-outlined text-lg shrink-0 group-hover:translate-x-1 transition-transform"
+                            style={{ color: "#86948a" }}
+                          >
+                            chevron_right
+                          </span>
+                        </div>
                       </a>
                       <button
                         type="button"
