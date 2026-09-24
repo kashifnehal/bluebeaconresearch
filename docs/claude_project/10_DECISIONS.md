@@ -682,3 +682,13 @@ Also decided as part of this same pass:
 **Rationale:** These two gaps are the same root cause — treating "does not overflow" as equivalent to "is usable." A element can pass every automated width check while still being illegible. Fixing overflow without checking layout usability produces exactly the `/dashboard` regression: solving the bug report while making the actual product worse.
 
 **Cross-tree mapping:** Recorded as **ADR 026** in `docs/brain/10_DECISIONS.md`.
+
+## D31: No Light Theme — Day Mode Control Removed, Not Built Out (Settings > Appearance)
+
+**Decision:** Do not build light mode. The "Day Mode" card in Settings > Appearance is removed; the page now shows a single static, always-selected "Trader (Default)" dark-theme card with no `useTheme`/`next-themes` dependency.
+
+**Context:** "Day Mode" called `next-themes`' `setTheme("light")`, but no `<ThemeProvider>` was ever mounted anywhere in the app, so `useTheme()` fell back to a no-op stub — clicking it did nothing, and the card's own `theme === "light"` selected-state check was permanently false too. That alone would have been a small fix, but a deeper check found the real blocker: `globals.css` has a complete `[data-theme="light"]` CSS-variable block, but `tailwind.config.ts`'s "STITCH GENERATED EXACT TOKENS" block redefines the same class names the app actually uses (`bg-surface-container`, `text-on-surface`, etc. — roughly 50 files across the app, plus 21 files with literal `text-white`) as hardcoded hex values, fully disconnected from those variables. Making light mode real would require re-pointing Tailwind color classes across the whole app, not a settings-page fix.
+
+**Rationale:** Per the standing rule against shipping non-functional UI as if real, and the scope-discipline rule against a UI task growing into unscoped infra work, a dead control that looks interactive is worse than removing it. Founder confirmed this directly (2026-09-24) instead of defaulting to building the feature out.
+
+**Cross-tree mapping:** Recorded as **ADR 027** in `docs/brain/10_DECISIONS.md`.
