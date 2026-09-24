@@ -770,8 +770,11 @@ export default function DashboardPage() {
                         }
                         className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center md:gap-6"
                       >
-                        {/* Metadata: its own row on mobile so it never competes with the headline for width */}
-                        <div className="flex items-center gap-2 md:gap-6 md:shrink-0">
+                        {/* Metadata: its own row on mobile so it never competes with the headline for width.
+                            flex-wrap so MediaImpactTag (previously hidden below md) drops to its own line
+                            on narrow screens instead of being cut off — dot/timestamp/FreshTag are shrink-0
+                            and always stay on the first line. */}
+                        <div className="flex flex-wrap items-center gap-2 md:gap-6 md:shrink-0">
                           <div
                             className="w-2 h-2 rounded-full shrink-0"
                             style={{
@@ -796,12 +799,10 @@ export default function DashboardPage() {
                               color: "#4edea3",
                             }}
                           />
-                          <span className="hidden md:inline-flex">
-                            <MediaImpactTag
-                              entity={item.mediaImpactEntity}
-                              caveat={item.mediaImpactCaveat}
-                            />
-                          </span>
+                          <MediaImpactTag
+                            entity={item.mediaImpactEntity}
+                            caveat={item.mediaImpactCaveat}
+                          />
                         </div>
 
                         {/* Headline: full row width on mobile (2-line clamp); single-line truncate at md+, unchanged */}
@@ -817,7 +818,7 @@ export default function DashboardPage() {
                           </div>
                           {sourceConfirmationLabel(item.sourceConfirmation) != null && (
                             <div
-                              className="hidden md:block text-[12px] px-2 py-0.5 border shrink-0"
+                              className="text-[12px] px-2 py-0.5 border shrink-0"
                               style={{
                                 color: "#4edea3",
                                 backgroundColor: "rgba(78,222,163,0.1)",

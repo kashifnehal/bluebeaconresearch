@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Signal } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { FreshTag } from "@/components/signals/FreshTag";
@@ -55,11 +56,38 @@ export function MobileTensionSheet({
   onLoadMore: () => void;
   onOpenTerminal: () => void;
 }) {
+  const [tensionInfoOpen, setTensionInfoOpen] = useState(false);
+
   return (
     <div className="md:hidden fixed inset-x-0 bottom-[60px] z-30 flex flex-col">
       {expanded && (
         <div className="flex-1 overflow-y-auto bg-surface-container-lowest/95 backdrop-blur-md border-t border-x border-outline-variant/30 rounded-t-2xl px-4 pt-2 pb-4 max-h-[calc(75vh-60px)]">
           <div className="w-10 h-1 rounded-full bg-outline-variant/40 mx-auto mb-4" />
+
+          <div className="flex items-center gap-1.5 mb-3">
+            <span className="label text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
+              Tension Breakdown
+            </span>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setTensionInfoOpen((v) => !v)}
+                aria-label="About the Global Tension Index"
+                aria-expanded={tensionInfoOpen}
+                className="flex items-center justify-center w-5 h-5 rounded-full text-on-surface-variant/60 hover:text-primary transition-colors"
+              >
+                <span className="material-symbols-outlined text-[14px] leading-none">info</span>
+              </button>
+              {tensionInfoOpen && (
+                <div
+                  role="tooltip"
+                  className="absolute left-0 top-full mt-2 w-56 z-30 p-3 rounded-lg bg-surface-container-high border border-outline-variant/40 shadow-xl text-[11px] leading-relaxed text-on-surface-variant normal-case tracking-normal"
+                >
+                  Composite score derived from regional conflict density, kinetic strikes, and maritime disruption metrics.
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="space-y-3 mb-6">
             <div>

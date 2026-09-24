@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOutAndRedirect } from "@/lib/supabase";
 import { useUIStore } from "@/store/useUIStore";
 
@@ -20,10 +20,20 @@ const NAV: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { unreadCount, mobileSidebarOpen, setMobileSidebarOpen } = useUIStore();
+  const router = useRouter();
+  const { unreadCount, mobileSidebarOpen, setMobileSidebarOpen, startTour } = useUIStore();
 
   async function handleLogout() {
     await signOutAndRedirect();
+  }
+
+  // Mobile-only equivalent of TopBar's "Help & Guidance" replay-tour button
+  // (hidden md:block there, since desktop has its own trigger) — without this,
+  // a mobile user who dismissed or completed the tour had no way to see it again.
+  function handleReplayTour() {
+    setMobileSidebarOpen(false);
+    startTour();
+    if (pathname !== "/dashboard") router.push("/dashboard");
   }
 
   // Close the off-canvas drawer after a navigation so it doesn't stay over
@@ -143,6 +153,16 @@ export function Sidebar() {
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>help</span>
           Help
         </Link>
+        <button
+          onClick={handleReplayTour}
+          className="md:hidden flex items-center gap-2 w-full text-left transition-colors"
+          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: "rgba(229,226,225,0.6)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#e5e2e1"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(229,226,225,0.6)"; }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>replay</span>
+          Replay Tour
+        </button>
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 w-full text-left transition-colors"
