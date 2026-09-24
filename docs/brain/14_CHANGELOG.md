@@ -8,6 +8,16 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.92.0 — Vercel Ignored Build Step: fixed silent deploy-skip on docs-commit-after-code-commit (2026-09-24, `acac825`)
+
+`apps/web/vercel.json` only. The old `ignoreCommand` (`git diff --quiet HEAD^ HEAD -- ...`) only ever compared the newest commit against its own immediate parent. This repo's own standing workflow always follows a real code commit with a docs-only sync commit (per `CLAUDE.md`'s sync protocol) — when that happened, Vercel evaluated the ignore check against the docs commit's diff alone, saw no relevant change, and silently canceled the deploy, so the code commit underneath never got its own build attempt. Confirmed this happened twice in the same thread (`38dfe8b`, `e1b0942`): production had been serving `235112e` — a commit pre-dating this entire thread — despite everything since being pushed to `main`.
+
+**Fix:** switched to Vercel's own recommended pattern for Turborepo monorepos, `npx turbo-ignore --fallback=HEAD^1`, which diffs against `$VERCEL_GIT_PREVIOUS_SHA` (the last successfully deployed commit) instead of the immediate git parent, so cumulative changes across a run of commits are never missed. `--fallback=HEAD^1` covers the first-deploy / no-previous-SHA case, matching Vercel's documented default.
+
+**Not yet verified:** whether production has actually redeployed onto a post-`235112e` commit since this fix landed — no Vercel deployment-log check has been run this session.
+
+---
+
 ### v0.91.0 — #186 Phase 6: 768px tablet pass closed, real overflow on 6 pages fixed (2026-09-24, `e1b0942`)
 
 `apps/web` only. Swept 22 of 23 verifiable routes at 768px (onboarding excluded per standing policy) with the dual-check method (`scrollWidth` + nested-overflow walk). Found one shared architectural bug on 6 pages: `backtesting`, `settings`, `watchlist`, and `watchlist/[symbol]` each built a redundant `md:fixed` wrapper reserving an unjustified `right-[260px]` gap with no matching right-panel content anywhere — the shared `(dashboard)/layout.tsx` already handles the sidebar offset correctly via `md:ml-[256px]` on a normal-flow div, and these 4 pages re-implemented it worse. `alerts` and `calendar` made the identical mistake via `md:mr-[260px]`; `alerts` additionally doubled its left margin on top of the shared layout's own. Invisible at 1440px (plenty of room regardless); at 768px it left as little as ~190px of real content width. This is also why `calendar`'s desktop table appeared to need 777px of internal scroll — previously assumed normal table behavior, actually a symptom of the same bug (table itself is fine, its container was pathological).
