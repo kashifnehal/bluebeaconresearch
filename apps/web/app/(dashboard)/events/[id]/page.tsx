@@ -256,7 +256,7 @@ export default function EventDetailPage() {
                 </span>
               </div>
 
-              <h1 className="text-5xl font-black text-text-primary tracking-tighter leading-[0.9] mb-8">
+              <h1 className="text-3xl leading-[1.05] mb-4 md:text-5xl md:leading-[0.9] md:mb-8 font-black text-text-primary tracking-tighter">
                 {signal.title}
               </h1>
 
