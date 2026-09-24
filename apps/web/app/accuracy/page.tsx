@@ -115,6 +115,41 @@ function AssetRow({
   );
 }
 
+// Mobile: a 520px-wide, horizontally-scrolling table hides the "not enough history"
+// message and the 4th column off-screen by default (same root cause as the old
+// /calendar bug — real content sitting outside a table's default scroll position).
+// Stacked cards instead; desktop table below is untouched.
+function AssetCard({
+  asset,
+  summary,
+  minSampleSize,
+}: {
+  asset: string;
+  summary: AssetSummary;
+  minSampleSize: number;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-3">
+      <span className="font-mono text-sm text-[#e5e2e1]">{asset}</span>
+      {summary.not_enough_history ? (
+        <span className="font-mono text-[11px] uppercase tracking-wider text-[#86948a] text-right">
+          Not enough history yet (min {minSampleSize})
+        </span>
+      ) : (
+        <div className="text-right">
+          <div className="font-mono text-sm text-[#e5e2e1]">
+            {fmtPct(summary.hit_rate)}{" "}
+            <span className="text-[#6b7a72] text-xs">· {summary.sample_size_note} scored</span>
+          </div>
+          <div className="font-mono text-[11px] text-[#6b7a72]">
+            avg move {fmtMove(summary.avg_move_when_correct)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default async function AccuracyPage() {
   const data = await loadAccuracy();
 
@@ -197,7 +232,12 @@ export default async function AccuracyPage() {
               <h2 className="text-xs font-bold text-[#86948a] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 By asset
               </h2>
-              <div className="overflow-x-auto rounded-lg border border-[#3c4a42]">
+              <div className="md:hidden rounded-lg border border-[#3c4a42] divide-y divide-[#2a2a2a] px-4">
+                {Object.entries(data.by_asset).map(([asset, summary]) => (
+                  <AssetCard key={asset} asset={asset} summary={summary} minSampleSize={data.min_sample_size} />
+                ))}
+              </div>
+              <div className="hidden md:block overflow-x-auto rounded-lg border border-[#3c4a42]">
                 <table className="w-full min-w-[520px] font-mono text-[13px]">
                   <thead>
                     <tr className="bg-[#131313] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[#86948a]">
