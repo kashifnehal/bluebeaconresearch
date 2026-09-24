@@ -97,7 +97,7 @@ export default async function AdminMetricsPage() {
         ) : (
           <>
             <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.15em] text-[#6b7a72]">
-              Generated {new Date(metrics.generated_at).toISOString()} · windows are UTC
+              Generated {new Date(metrics.generated_at).toISOString()} · all time windows are UTC
             </p>
 
             <section className="grid grid-cols-2 gap-4 sm:grid-cols-3">
