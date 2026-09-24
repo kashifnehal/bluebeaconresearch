@@ -132,7 +132,9 @@
 
 > ⚠️ UPDATED 2026-09-23 ("LIVE"/"real-time" copy honesty sweep) — `apps/web` copy-only. Every UI string implying instant updates (collectors run roughly every 30 minutes, not instantly) now says so: homepage hero badge/links, dashboard subtitle + signal-stream badge + sidebar label, map page's "Live Intelligence" panel, HelpModal, ProductTour, the feed-degraded error banner. `/status` page also lost a fabricated "WebSocket" claim (no such route exists). Left unchanged: the Accuracy page's "live track record" link, the pricing page's "Live signal feed" tier claim (business copy, not rewritten), `/status`'s meta description (accurate), `IngestionStatusBanner`'s "Live ingestion" (the one genuinely real-time-accurate label). `apps/backend/src/lib/search-catalog.ts` now has a stale quote of the retired badge text — flagged as a follow-up, out of this task's `apps/web`-only scope. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.86.0. This tree: PHASE 53.
 
-Last updated: 2026-09-23 ("LIVE"/"real-time" copy honesty sweep)
+> ⚠️ UPDATED 2026-09-24 (Day Mode dead-control removal) — `apps/web` only. Settings > Appearance's "Day Mode" card was a permanent no-op: `useTheme()` (`next-themes`) had no `<ThemeProvider>` mounted anywhere in the app, so `setTheme("light")` did nothing. Real light mode would need more than a provider anyway — `tailwind.config.ts`'s hardcoded-hex color tokens (used across ~50 files) are disconnected from the unused `[data-theme="light"]` CSS variables already sitting in `globals.css`. Founder chose to remove the dead card rather than build an app-wide light theme; Appearance now shows one static, always-selected "Trader (Default)" card. See D31 / ADR 027 in `10_DECISIONS.md`. Backlog C4 rejected, see `09_BACKLOG.md`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.88.0.
+
+Last updated: 2026-09-24 (Day Mode dead-control removal, Settings > Appearance)
 
 ---
 

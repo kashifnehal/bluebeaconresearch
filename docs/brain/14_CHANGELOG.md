@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-24 (v0.87.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-24 (v0.88.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.88.0 — Day Mode dead-control removal, Settings > Appearance (2026-09-24, `f2d0d6d`)
+
+`apps/web` only, `app/(dashboard)/settings/page.tsx`. Founder reported clicking "Day Mode" in Settings > Appearance did nothing — `document.documentElement`'s class never changed from `"h-full antialiased dark"`. Root cause: `useTheme()` (`next-themes`) was called with no `<ThemeProvider>` ever mounted anywhere in the app (`app/providers.tsx`, `app/layout.tsx`) — without a provider `next-themes` falls back to a stub context (`setTheme` a no-op, `theme` always `undefined`), so both `setTheme("light")` and the card's own `theme === "light"` selected-state/checkmark logic were permanently inert. `app/layout.tsx` also hardcodes `<html className="... dark" data-theme="dark">` and an inline `style={{ backgroundColor: "#0e0e0e" }}` on `<body>`, independent of any React state, which would have fought a working switch too.
+
+A deeper check ruled out "just add a ThemeProvider" as the fix: `globals.css` (lines 77-116) has a complete `[data-theme="light"]` CSS-variable block, but `tailwind.config.ts`'s later "STITCH GENERATED EXACT TOKENS" color block redefines the exact same class names the app's markup actually uses (`bg-surface-container` in 26 files, `text-on-surface` in 28, `background`/`primary`/etc., plus 21 files with literal `text-white`) as hardcoded hex strings, fully disconnected from the CSS variables. The light-mode CSS variables are dead code — nothing in the app's real markup reads them. Making Day Mode actually re-theme the app would mean re-pointing Tailwind color classes across roughly 50 files, not a settings-page fix.
+
+**Decision (founder, 2026-09-24 — see ADR 027 / D31):** remove the dead control rather than build out light mode. **Fix:** `useTheme` import and `theme`/`setTheme` hook call removed from `page.tsx`; the "Day Mode" card block deleted; the remaining "Trader (Default)" card is now static (`grid-cols-1`, single card, always shows its selected border/checkmark, no `onClick`). Backlog item C4 ("Populate settings Appearance tab") marked rejected in `09_BACKLOG.md`, not shipped.
+
+**Verification:** `tsc --noEmit` clean (whole `apps/web` project, zero errors). Live-browser-verified per `CLAUDE.md`'s UI-interaction-bug exception to the Playwright-restriction guidance: signed into the standing test account, navigated to Settings > Appearance, confirmed only the single "Trader (Default)" card renders with its checkmark always showing and no dead second option; no console errors.
+
+---
 
 ### v0.87.0 — #188 classifier-extraction country fix (2026-09-24, `50ff7cf`)
 

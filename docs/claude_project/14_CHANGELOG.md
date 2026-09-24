@@ -1,8 +1,20 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-23 (PHASE 53).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 66).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 66 — DAY MODE DEAD-CONTROL REMOVAL, SETTINGS > APPEARANCE (2026-09-24, `f2d0d6d`)
+
+`apps/web` only, `app/(dashboard)/settings/page.tsx`. Founder reported clicking "Day Mode" in Settings > Appearance did nothing — no class or color change. Root cause: `useTheme()` (`next-themes`) was called with no `<ThemeProvider>` mounted anywhere in the app, so it fell back to a no-op stub — `setTheme("light")` did nothing, and the card's own `theme === "light"` selected-state check was permanently false too. `app/layout.tsx` also hardcodes the dark theme on `<html>`/`<body>` independent of any state.
+
+A deeper check found real light mode isn't a small fix either: `globals.css` has a complete, unused `[data-theme="light"]` CSS-variable block, but `tailwind.config.ts`'s hardcoded-hex "STITCH GENERATED EXACT TOKENS" color block — the classes the app's markup actually uses (`bg-surface-container`, `text-on-surface`, etc. across ~50 files) — is fully disconnected from it. Building real light mode would mean re-pointing Tailwind color classes app-wide, not a settings-page fix.
+
+**Decision (founder, 2026-09-24 — see D31 / ADR 027):** remove the dead "Day Mode" card rather than build light mode out. Appearance now shows a single static, always-selected "Trader (Default)" card; `useTheme` import removed from the page. Backlog C4 marked rejected in `09_BACKLOG.md`.
+
+**Verified:** `tsc --noEmit` clean. Live-browser-checked (UI-interaction-bug exception) — signed into the standing test account, confirmed only the one real theme card renders, always selected, no dead option, no console errors. Full detail: `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md` v0.88.0.
 
 ---
 

@@ -577,3 +577,21 @@ Both gaps share one root cause: treating "does not overflow" as equivalent to "i
 ### Cross-tree mapping
 
 Recorded as **D30** in `docs/claude_project/10_DECISIONS.md`.
+
+## 28. ADR 027: No light theme — Day Mode control removed, not built out (Settings > Appearance)
+
+### Context
+
+`app/(dashboard)/settings/page.tsx`'s "Theme Engine" section had two cards: "Trader (Default)" (dark) and "Day Mode" (light), each calling `next-themes`' `setTheme()`. Founder reported clicking "Day Mode" did nothing — `document.documentElement`'s class never changed. Investigation found `useTheme()` was called with no `<ThemeProvider>` ever mounted anywhere in the tree (`app/providers.tsx`, `app/layout.tsx`) — `next-themes` falls back to a stub context (`setTheme` a no-op, `theme` always `undefined`) with no provider, so both `setTheme("light")` and the card's own `theme === "light"` selected-state check were permanently inert. `app/layout.tsx` also hardcodes `<html className="... dark" data-theme="dark">` and an inline `style={{ backgroundColor: "#0e0e0e" }}` on `<body>`, independent of any React state. Deeper problem found on top of that: `globals.css` does have a complete `[data-theme="light"]` CSS-variable block (lines 77-116), but `tailwind.config.ts`'s later "STITCH GENERATED EXACT TOKENS" block redefines the same class names the app actually uses (`bg-surface-container`, `text-on-surface`, `background`, `primary`, etc. — 26/28/1 file hits respectively, plus 21 files with literal `text-white`) as hardcoded hex strings, completely disconnected from those CSS variables. The light-mode CSS variables are dead code; nothing in the app's real markup reads them. Making light mode actually work would mean re-pointing Tailwind color classes across roughly 50 files app-wide, not a settings-page fix.
+
+### Decision
+
+Do not build light mode. Removed the "Day Mode" card entirely; Settings > Appearance now shows a single static, always-selected "Trader (Default)" card with no `useTheme`/`next-themes` dependency. `next-themes` itself is left in place (still used by `components/ui/sonner.tsx`, out of this task's scope) but is no longer imported by the settings page.
+
+### Rationale
+
+Per `CLAUDE.md`'s standing rule against shipping non-functional UI as if real, and its scope-discipline rule (a UI task should not grow into unscoped infra work), a dead control that looks interactive is worse than no control — and building a real light theme is an app-wide design-token rewrite, not a bug fix. Founder confirmed this directly (2026-09-24) rather than defaulting to "build it out."
+
+### Cross-tree mapping
+
+Recorded as **D31** in `docs/claude_project/10_DECISIONS.md`.
