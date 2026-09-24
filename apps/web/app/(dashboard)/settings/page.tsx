@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import {
   ACCOUNT_CONNECT_ERROR,
@@ -24,7 +23,6 @@ const TABS = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("ACCOUNT");
-  const { theme, setTheme } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -269,35 +267,24 @@ export default function SettingsPage() {
                 <label className="font-label text-[12px] md:text-[10px] tracking-widest text-on-surface-variant uppercase font-extrabold">
                   Theme Engine
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Dark Theme */}
-                  <div
-                    onClick={() => setTheme("dark")}
-                    className={`relative p-6 rounded-xl border-2 cursor-pointer group overflow-hidden transition-all ${
-                      theme === "dark" || theme === "system"
-                        ? "bg-surface-container border-primary shadow-lg shadow-primary/5"
-                        : "bg-surface-container/40 border-outline-variant/20 hover:border-on-surface-variant/40"
-                    }`}
-                  >
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Dark Theme — the only theme BBR currently supports */}
+                  <div className="relative p-6 rounded-xl border-2 group overflow-hidden bg-surface-container border-primary shadow-lg shadow-primary/5">
                     <div className="flex justify-between items-start mb-12 relative z-10">
                       <div>
                         <p className="font-headline font-bold text-sm text-on-surface text-white">
                           Trader (Default)
                         </p>
-                        <p
-                          className={`font-mono text-[12px] md:text-[10px] uppercase font-bold tracking-widest ${theme === "dark" ? "text-primary" : "text-on-surface-variant"}`}
-                        >
+                        <p className="font-mono text-[12px] md:text-[10px] uppercase font-bold tracking-widest text-primary">
                           DARK_EMERALD_OPTIMIZED
                         </p>
                       </div>
-                      {(theme === "dark" || theme === "system") && (
-                        <span
-                          className="material-symbols-outlined text-primary"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          check_circle
-                        </span>
-                      )}
+                      <span
+                        className="material-symbols-outlined text-primary"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        check_circle
+                      </span>
                     </div>
                     <div className="space-y-2 relative z-10">
                       <div className="h-2 w-full bg-surface-container-high rounded-full"></div>
@@ -306,53 +293,6 @@ export default function SettingsPage() {
                     <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
                       <span className="material-symbols-outlined text-8xl text-on-surface text-white">
                         dark_mode
-                      </span>
-                    </div>
-                  </div>
-                  {/* Light Theme */}
-                  <div
-                    onClick={() => setTheme("light")}
-                    className={`relative p-6 rounded-xl border-2 cursor-pointer group overflow-hidden transition-all ${
-                      theme === "light"
-                        ? "bg-white border-primary shadow-lg shadow-primary/5"
-                        : "bg-surface-container-lowest border-outline-variant/20 hover:border-on-surface-variant/40"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-12 relative z-10">
-                      <div>
-                        <p
-                          className={`font-headline font-bold text-sm ${theme === "light" ? "text-black" : "text-white"}`}
-                        >
-                          Day Mode
-                        </p>
-                        <p
-                          className={`font-mono text-[12px] md:text-[10px] uppercase font-bold tracking-widest ${theme === "light" ? "text-primary" : "text-on-surface-variant"}`}
-                        >
-                          HIGH_VISIBILITY_SURFACE
-                        </p>
-                      </div>
-                      {theme === "light" && (
-                        <span
-                          className="material-symbols-outlined text-primary"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          check_circle
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-2 relative z-10">
-                      <div
-                        className={`h-2 w-full rounded-full ${theme === "light" ? "bg-black/5" : "bg-outline-variant/20"}`}
-                      ></div>
-                      <div
-                        className={`h-2 w-2/3 rounded-full opacity-60 ${theme === "light" ? "bg-black/5" : "bg-outline-variant/20"}`}
-                      ></div>
-                    </div>
-                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <span
-                        className={`material-symbols-outlined text-8xl ${theme === "light" ? "text-black" : "text-white"}`}
-                      >
-                        light_mode
                       </span>
                     </div>
                   </div>
