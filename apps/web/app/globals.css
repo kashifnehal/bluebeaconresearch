@@ -220,6 +220,29 @@ body {
   border-left-color: #131313 !important;
 }
 
+/* Zoom in/out control: match app dark theme instead of maplibre-gl.css's
+   hardcoded white .maplibregl-ctrl-group background. !important is needed
+   here for the same chunk-load-order reason as the popup override above.
+   filter:invert(1) recolors the vendor icon's hardcoded #333 fill without
+   duplicating its SVG data URI here. */
+.maplibregl-ctrl-group {
+  background-color: var(--bg-container) !important;
+  box-shadow: 0 0 0 1px var(--border), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--border) !important;
+}
+
+.maplibregl-ctrl-group button:not(:disabled):hover {
+  background-color: var(--bg-elevated) !important;
+}
+
+.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,
+.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+
 /* Mobile-only zoom buttons on /map (#186 Phase 4) — added for phones, which have
    no scroll-wheel. Scoped to .map-page-root so it can't affect any other MapLibre
    instance (e.g. EventLocationMap.tsx, which never adds a bottom-right control
