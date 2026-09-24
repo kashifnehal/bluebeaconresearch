@@ -421,8 +421,8 @@ export default function AlertsPage() {
               >
                 <div className="p-6 flex justify-between items-start gap-6 border-b border-outline-variant/10 bg-surface-container-high/30">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-lg font-bold font-headline text-on-surface truncate">{rule.name}</h3>
+                    <div className="flex flex-col items-start gap-2 mb-3 md:flex-row md:items-center md:gap-3">
+                      <h3 className="text-lg font-bold font-headline text-on-surface md:min-w-0 md:truncate">{rule.name}</h3>
                       <span
                         className={`px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border shrink-0 ${
                           rule.is_active
