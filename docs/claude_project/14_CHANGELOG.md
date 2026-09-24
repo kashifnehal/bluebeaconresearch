@@ -1,12 +1,12 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 66).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 67).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
 
-## PHASE 66 — DAY MODE DEAD-CONTROL REMOVAL, SETTINGS > APPEARANCE (2026-09-24, `f2d0d6d`)
+## PHASE 67 — DAY MODE DEAD-CONTROL REMOVAL, SETTINGS > APPEARANCE (2026-09-24, `f2d0d6d`)
 
 `apps/web` only, `app/(dashboard)/settings/page.tsx`. Founder reported clicking "Day Mode" in Settings > Appearance did nothing — no class or color change. Root cause: `useTheme()` (`next-themes`) was called with no `<ThemeProvider>` mounted anywhere in the app, so it fell back to a no-op stub — `setTheme("light")` did nothing, and the card's own `theme === "light"` selected-state check was permanently false too. `app/layout.tsx` also hardcodes the dark theme on `<html>`/`<body>` independent of any state.
 
