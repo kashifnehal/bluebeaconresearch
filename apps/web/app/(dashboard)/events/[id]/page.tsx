@@ -605,7 +605,7 @@ export default function EventDetailPage() {
           />
           <div className="relative bg-[#131313] border border-[#3c4a42] rounded-lg p-6 w-full max-w-md z-50 text-white space-y-4">
             <h3 className="text-lg font-bold text-[#4edea3]">
-              Configure Sentinel Alert Threshold
+              Configure Alert Threshold
             </h3>
 
             <div>

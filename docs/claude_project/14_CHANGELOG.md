@@ -1,6 +1,6 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 67).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 68).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
@@ -17,6 +17,10 @@ A deeper check found real light mode isn't a small fix either: `globals.css` has
 **Verified:** `tsc --noEmit` clean. Live-browser-checked (UI-interaction-bug exception) — signed into the standing test account, confirmed only the one real theme card renders, always selected, no dead option, no console errors. Full detail: `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md` v0.88.0.
 
 ---
+
+## PHASE 68 — REMAINING SENTINEL/AI-TOOL BRANDING REMOVED (2026-09-24)
+
+`apps/web` only, copy/branding-only, D29/ADR 025 enforcement (no new decision — the "never call it an AI tool"/no-Sentinel exclusion already existed). 3 remaining instances: dashboard right-sidebar "SENTINEL" widget → "SYSTEM STATUS", "Autonomous monitoring active..." copy rewritten, hardcoded always-"Operational" status line removed (fabricated — the page's real `IngestionStatusBanner` already covers this honestly); `events/[id]/page.tsx`'s "Configure Sentinel Alert Threshold" modal title → "Configure Alert Threshold" (matches the separately-fixed `alerts/page.tsx` instance); `TopBar.tsx`'s loading-state fallback name/email ("Terminal Sentinel" / "sentinel@bluebeacon.com") → neutral "Account" / blank. A second, independent session fixed the same `events/[id]` modal and a different TopBar fallback — reconciled to keep this result; see `docs/brain/LIVE_TODO.md`. `proxy.ts:160`'s "sentinel" code comment (a CS sentinel value, unrelated) left alone. Docs corrected: `01_PRODUCT.md`, `07_DESIGN_SYSTEM.md`, `06_COMPONENTS.md` no longer describe "Terminal Sentinel v2.4.0-STABLE" as current branding. Full detail: `docs/brain/LIVE_TODO.md` "Closed, verified".
 
 ## PHASE 65 — #188 CLASSIFIER-EXTRACTION COUNTRY FIX (2026-09-24, `50ff7cf`)
 

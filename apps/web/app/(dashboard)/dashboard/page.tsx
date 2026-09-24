@@ -927,21 +927,15 @@ export default function DashboardPage() {
                     fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
-                  SENTINEL
+                  SYSTEM STATUS
                 </span>
               </div>
               <div
                 className="text-xs leading-relaxed mb-2"
                 style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
               >
-                Autonomous monitoring active across configured intelligence
-                nodes.
-              </div>
-              <div
-                className="text-[12px] font-bold mb-1"
-                style={{ color: "#4edea3" }}
-              >
-                System status: Operational
+                Signal collection and classification across configured
+                regions and sources.
               </div>
               <a
                 href="/status"
