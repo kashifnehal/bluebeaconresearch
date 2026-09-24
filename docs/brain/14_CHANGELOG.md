@@ -8,7 +8,7 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.88.0 — Remaining Sentinel/AI-tool branding removed (2026-09-24, commit PENDING)
+### v0.88.0 — Remaining Sentinel/AI-tool branding removed (2026-09-24, `53987e6`)
 
 `apps/web` only, copy/branding-only, D29/ADR 025 enforcement (no new decision). 3 remaining instances found by grep: dashboard right-sidebar "SENTINEL" widget (renamed "SYSTEM STATUS", "Autonomous monitoring active across configured intelligence nodes." rewritten to "Signal collection and classification across configured regions and sources.", and its hardcoded always-"Operational" status line removed as fabricated — the page's real `IngestionStatusBanner` already covers this honestly); `events/[id]/page.tsx`'s "Configure Sentinel Alert Threshold" modal title renamed "Configure Alert Threshold" (matches the separately-fixed `alerts/page.tsx` instance); `TopBar.tsx`'s no-session/loading fallback name+email ("Terminal Sentinel" / "sentinel@bluebeacon.com") replaced with a neutral "Account" / blank. `proxy.ts:160`'s "sentinel" (a CS sentinel-value comment) deliberately left alone. Full detail: `LIVE_TODO.md` "Closed, verified".
 
