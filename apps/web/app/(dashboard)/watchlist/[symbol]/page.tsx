@@ -224,7 +224,7 @@ export default function WatchlistSymbolPage() {
     activeRange.source === "yahoo" && activeRange.id !== "6M";
 
   return (
-    <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-[260px] md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
+    <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
       <div className="max-w-[1440px] mx-auto">
         {/* Breadcrumb */}
         <button

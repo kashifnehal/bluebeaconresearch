@@ -294,7 +294,7 @@ export function WatchlistClient() {
   };
 
   return (
-    <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-[260px] md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
+    <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
       <div className="max-w-[1440px] mx-auto">
         {/* Dropdown + category chips (#145): one first-time Driver.js hint. */}
         <div id="bbr-hint-watchlist-chips" data-hint="watchlist_chips">
@@ -573,7 +573,7 @@ export function WatchlistClient() {
             el.focus();
           }
         }}
-        className="fixed bottom-[76px] right-4 md:bottom-8 md:right-[292px] w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_30px_rgba(111,251,190,0.4)] flex items-center justify-center group z-50 transition-all hover:scale-110 active:scale-95 shadow-lg cursor-pointer"
+        className="fixed bottom-[76px] right-4 md:bottom-10 md:right-10 w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_30px_rgba(111,251,190,0.4)] flex items-center justify-center group z-50 transition-all hover:scale-110 active:scale-95 shadow-lg cursor-pointer"
       >
         <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-500">
           add

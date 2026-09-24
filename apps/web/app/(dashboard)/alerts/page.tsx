@@ -342,7 +342,7 @@ export default function AlertsPage() {
   });
 
   return (
-    <div className="md:ml-[256px] md:mr-[260px] mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
+    <div className="mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
       {/* Header Section */}
       <section className="flex flex-wrap justify-between items-end gap-4 mb-8">
         <div className="min-w-0">
@@ -660,7 +660,7 @@ export default function AlertsPage() {
                                         className="text-[12px] md:text-[11px] text-primary hover:underline inline-flex items-center gap-1"
                                       >
                                         <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                                        <span className="truncate max-w-[220px] md:max-w-[420px]">
+                                        <span className="truncate max-w-[220px] md:max-w-[280px] lg:max-w-[420px]">
                                           {s.sourceLabel ? `${s.sourceLabel} — ` : ""}
                                           {s.title}
                                         </span>
