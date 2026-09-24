@@ -156,7 +156,9 @@ export default function BacktestingPage() {
             <h2 className="font-label text-[#4EDEA3] text-[12px] md:text-[10px] font-black tracking-[0.2em] uppercase">
               Popular Simulations
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Mobile: horizontal swipe row so the 6 cards don't force ~900px of vertical scroll
+                before the config panel below is reachable. Desktop: unchanged 2-col grid. */}
+            <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory md:grid md:grid-cols-2 md:overflow-visible">
               {POPULAR.map((p) => (
                 <div
                   key={p.title}
@@ -178,7 +180,7 @@ export default function BacktestingPage() {
                     setFrom(fromStr);
                     setTo(toDate);
                   }}
-                  className="bg-surface-container/40 p-4 border border-outline-variant/10 hover:border-primary/50 transition-all cursor-pointer group rounded-lg"
+                  className="w-[78%] max-w-[260px] shrink-0 snap-start md:w-auto md:max-w-none md:shrink bg-surface-container/40 p-4 border border-outline-variant/10 hover:border-primary/50 transition-all cursor-pointer group rounded-lg"
                 >
                   <p className="text-sm font-bold text-on-surface mb-2 leading-tight group-hover:text-primary transition-colors">
                     {p.title}
