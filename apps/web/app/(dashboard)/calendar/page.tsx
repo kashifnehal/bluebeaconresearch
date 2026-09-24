@@ -149,57 +149,102 @@ function EventTable({
   }
   const timeHeader = timeZone === "utc" ? "Time (UTC)" : "Time (local)";
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-outline-variant/20">
-            {["Date", timeHeader, "Country", "Event", "Impact", "Forecast", "Previous", "Actual"].map((h) => (
-              <th
-                key={h}
-                className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase py-2.5 px-3 whitespace-nowrap"
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-outline-variant/10">
-          {events.map((e) => (
-            <tr
-              key={e.id}
-              data-testid="calendar-event-row"
-              className="hover:bg-surface-bright/10 transition-colors"
+    <>
+      {/* Mobile: stacked cards — a table's column order can't put "Event" (the thing that matters)
+          ahead of Country without pushing Date/Time off, so mobile gets its own layout: event name
+          as the heading, everything else as supporting rows. Desktop keeps the unchanged table below. */}
+      <div className="md:hidden divide-y divide-outline-variant/10">
+        {events.map((e) => (
+          <div key={e.id} data-testid="calendar-event-card" className="py-3 px-1">
+            <a
+              href={e.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors inline-flex items-start gap-1.5 text-sm font-bold text-on-surface"
+              title={`Source: ${e.sourceLabel}`}
             >
-              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">
-                {formatEventDate(e, timeZone)}
-              </td>
-              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap" title={e.timeNote}>
-                {formatEventTime(e, timeZone)}
-              </td>
-              <td className="py-3 px-3 text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">{e.country}</td>
-              <td className="py-3 px-3 text-sm font-bold text-on-surface">
-                <a
-                  href={e.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors inline-flex items-center gap-1.5"
-                  title={`Source: ${e.sourceLabel}`}
+              {e.event}
+              <span className="material-symbols-outlined text-[13px] text-on-surface/30 mt-0.5 shrink-0">open_in_new</span>
+            </a>
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="text-[12px] text-on-surface/70">{e.country}</span>
+              <ImpactBadge impact={e.impact} />
+              <span className="mono text-[12px] text-on-surface/70">{formatEventDate(e, timeZone)}</span>
+              <span className="mono text-[12px] text-on-surface/70" title={e.timeNote}>{formatEventTime(e, timeZone)}</span>
+            </div>
+            {(e.forecast != null || e.previous != null || e.actual != null) && (
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                <div>
+                  <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Forecast</div>
+                  <div className="mono text-[12px] text-on-surface/40">{e.forecast ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Previous</div>
+                  <div className="mono text-[12px] text-on-surface/40">{e.previous ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Actual</div>
+                  <div className="mono text-[12px] text-on-surface/40">{e.actual ?? "—"}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: unchanged table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-outline-variant/20">
+              {["Date", timeHeader, "Country", "Event", "Impact", "Forecast", "Previous", "Actual"].map((h) => (
+                <th
+                  key={h}
+                  className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase py-2.5 px-3 whitespace-nowrap"
                 >
-                  {e.event}
-                  <span className="material-symbols-outlined text-[13px] text-on-surface/30">open_in_new</span>
-                </a>
-              </td>
-              <td className="py-3 px-3">
-                <ImpactBadge impact={e.impact} />
-              </td>
-              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
-              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
-              <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
+                  {h}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/10">
+            {events.map((e) => (
+              <tr
+                key={e.id}
+                data-testid="calendar-event-row"
+                className="hover:bg-surface-bright/10 transition-colors"
+              >
+                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">
+                  {formatEventDate(e, timeZone)}
+                </td>
+                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap" title={e.timeNote}>
+                  {formatEventTime(e, timeZone)}
+                </td>
+                <td className="py-3 px-3 text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">{e.country}</td>
+                <td className="py-3 px-3 text-sm font-bold text-on-surface">
+                  <a
+                    href={e.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                    title={`Source: ${e.sourceLabel}`}
+                  >
+                    {e.event}
+                    <span className="material-symbols-outlined text-[13px] text-on-surface/30">open_in_new</span>
+                  </a>
+                </td>
+                <td className="py-3 px-3">
+                  <ImpactBadge impact={e.impact} />
+                </td>
+                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
+                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
+                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
