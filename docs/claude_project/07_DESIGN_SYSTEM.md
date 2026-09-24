@@ -402,7 +402,7 @@ In landing page: large, 22px, font-semibold
 These are design choices that reinforce the "intelligence terminal" feel:
 - "Node: BB-ALPHA-09" in sidebar footer
 - "SECURE NODE: BB-ALPHA-09 • V4.22.0" on login page
-- "Terminal Sentinel v2.4.0-STABLE" in dashboard topbar
+- "v2.4.0-STABLE" version tag in dashboard topbar (the "Terminal Sentinel" loading-state fallback name was removed 2026-09-24 — AI-tool branding, see D29/ADR 025 — topbar now falls back to "Account")
 - "GENESIS-X_V4" on backtesting page
 - "ACCESS_POINT: BB-ALPHA-09 | ENCRYPTION: AES-256 | SESSION_ID: xxxx" in settings footer
 - Coordinates display (cosmetic, fake) on onboarding background

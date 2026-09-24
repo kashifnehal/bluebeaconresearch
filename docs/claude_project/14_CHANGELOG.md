@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 66 — REMAINING SENTINEL/AI-TOOL BRANDING REMOVED (2026-09-24, commit PENDING)
+
+`apps/web` only, copy/branding-only, D29/ADR 025 enforcement (no new decision — the "never call it an AI tool"/no-Sentinel exclusion already existed). 3 remaining instances: dashboard right-sidebar "SENTINEL" widget → "SYSTEM STATUS", "Autonomous monitoring active..." copy rewritten, hardcoded always-"Operational" status line removed (fabricated — the page's real `IngestionStatusBanner` already covers this honestly); `events/[id]/page.tsx`'s "Configure Sentinel Alert Threshold" modal title → "Configure Alert Threshold" (matches the separately-fixed `alerts/page.tsx` instance); `TopBar.tsx`'s loading-state fallback name/email ("Terminal Sentinel" / "sentinel@bluebeacon.com") → neutral "Account" / blank. `proxy.ts:160`'s "sentinel" code comment (a CS sentinel value, unrelated) left alone. Docs corrected: `01_PRODUCT.md`, `07_DESIGN_SYSTEM.md`, `06_COMPONENTS.md` no longer describe "Terminal Sentinel v2.4.0-STABLE" as current branding. Full detail: `docs/brain/LIVE_TODO.md` "Closed, verified".
+
 ## PHASE 65 — #188 CLASSIFIER-EXTRACTION COUNTRY FIX (2026-09-24, `50ff7cf`)
 
 `apps/backend` only. Follow-up to the Phase 1/2 investigation (`claude/188_...md` §3): GDELT-sourced signals were showing the publishing outlet's country as if it were the event's location — GDELT's DOC 2.0 `sourcecountry` field is the country of the outlet reporting the story, not where the event happened, but `gdelt-collector.ts` was writing it straight into the signal's displayed `country` and using it to place the map pin.

@@ -275,7 +275,7 @@ Restore when first paying customer asks to subscribe.
   - SHOULD: dropdown with Profile / Settings / Sign Out
   - Sign Out → supabase.auth.signOut() → /login
   - CURRENT STATUS: NOT WORKING
-- "Terminal Sentinel v2.4.0-STABLE" — cosmetic branding, displays username
+- "v2.4.0-STABLE" version tag, next to the real user's name (or "Account" as a neutral loading-state fallback — the prior "Terminal Sentinel" fallback was AI-tool-sounding branding, removed 2026-09-24 per D29/ADR 025)
 
 **Main Content:**
 1. Page title: "Intelligence Feed" + subtitle "Global signal monitoring, updates roughly every 30 minutes" (changed from "Real-time global signal monitoring" — collectors run on a ~30min cadence, not instant — `599e5fa`, 2026-09-23)

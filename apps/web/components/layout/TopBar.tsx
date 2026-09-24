@@ -49,8 +49,8 @@ export function TopBar() {
         setUser({ name, email, initials: initials.toUpperCase() });
       } else {
         setUser({
-          name: "Terminal Sentinel",
-          email: "sentinel@bluebeacon.com",
+          name: "Account",
+          email: "",
           initials: "GS",
         });
       }
@@ -226,7 +226,7 @@ export function TopBar() {
                     letterSpacing: "0.05em",
                   }}
                 >
-                  {user?.name || "Terminal Sentinel"}
+                  {user?.name || "Account"}
                 </div>
                 <div
                   style={{
@@ -278,7 +278,7 @@ export function TopBar() {
                     {user?.name || "Terminal User"}
                   </p>
                   <p className="text-[12px] md:text-[10px] text-[#86948a] font-mono truncate">
-                    {user?.email || "sentinel@bluebeacon.com"}
+                    {user?.email || ""}
                   </p>
                 </div>
 

@@ -73,7 +73,7 @@ Contains:
    - onClick: toggles user dropdown
    - Dropdown: user name, email, divider, Help link (`/help`), Settings link, Sign Out button
 
-5. **"Terminal Sentinel v2.4.0-STABLE" + username** — cosmetic brand text, top right
+5. **Real username + "v2.4.0-STABLE" version tag** — top right (loading-state fallback name is "Account", not real branding — the prior "Terminal Sentinel" fallback was removed 2026-09-24 per D29/ADR 025)
 
 ---
 
