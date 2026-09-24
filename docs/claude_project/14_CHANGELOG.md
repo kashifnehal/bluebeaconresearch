@@ -18,7 +18,7 @@ A deeper check found real light mode isn't a small fix either: `globals.css` has
 
 ---
 
-## PHASE 68 — REMAINING SENTINEL/AI-TOOL BRANDING REMOVED (2026-09-24)
+## PHASE 68 — REMAINING SENTINEL/AI-TOOL BRANDING REMOVED (2026-09-24, `3526000`)
 
 `apps/web` only, copy/branding-only, D29/ADR 025 enforcement (no new decision — the "never call it an AI tool"/no-Sentinel exclusion already existed). 3 remaining instances: dashboard right-sidebar "SENTINEL" widget → "SYSTEM STATUS", "Autonomous monitoring active..." copy rewritten, hardcoded always-"Operational" status line removed (fabricated — the page's real `IngestionStatusBanner` already covers this honestly); `events/[id]/page.tsx`'s "Configure Sentinel Alert Threshold" modal title → "Configure Alert Threshold" (matches the separately-fixed `alerts/page.tsx` instance); `TopBar.tsx`'s loading-state fallback name/email ("Terminal Sentinel" / "sentinel@bluebeacon.com") → neutral "Account" / blank. A second, independent session fixed the same `events/[id]` modal and a different TopBar fallback — reconciled to keep this result; see `docs/brain/LIVE_TODO.md`. `proxy.ts:160`'s "sentinel" code comment (a CS sentinel value, unrelated) left alone. Docs corrected: `01_PRODUCT.md`, `07_DESIGN_SYSTEM.md`, `06_COMPONENTS.md` no longer describe "Terminal Sentinel v2.4.0-STABLE" as current branding. Full detail: `docs/brain/LIVE_TODO.md` "Closed, verified".
 

@@ -20,7 +20,7 @@ A deeper check ruled out "just add a ThemeProvider" as the fix: `globals.css` (l
 
 ---
 
-### v0.89.0 — Remaining Sentinel/AI-tool branding removed (2026-09-24)
+### v0.89.0 — Remaining Sentinel/AI-tool branding removed (2026-09-24, `3526000`)
 
 `apps/web` only, copy/branding-only, D29/ADR 025 enforcement (no new decision). 3 remaining instances found by grep: dashboard right-sidebar "SENTINEL" widget (renamed "SYSTEM STATUS", "Autonomous monitoring active across configured intelligence nodes." rewritten to "Signal collection and classification across configured regions and sources.", and its hardcoded always-"Operational" status line removed as fabricated — the page's real `IngestionStatusBanner` already covers this honestly); `events/[id]/page.tsx`'s "Configure Sentinel Alert Threshold" modal title renamed "Configure Alert Threshold" (matches the separately-fixed `alerts/page.tsx` instance); `TopBar.tsx`'s no-session/loading fallback name+email ("Terminal Sentinel" / "sentinel@bluebeacon.com") replaced with a neutral "Account" / blank. A second, independent session fixed the *same* `alerts/page.tsx` + `events/[id]/page.tsx` modal-title string and a *different* TopBar fallback ("Terminal User"/"guest@bluebeacon.com") — reconciled by keeping this session's `events/[id]`/TopBar result (already committed first) and taking only the other session's unique `alerts/page.tsx` fix; see the reconciliation note in `LIVE_TODO.md`. `proxy.ts:160`'s "sentinel" (a CS sentinel-value comment) deliberately left alone. Full detail: `LIVE_TODO.md` "Closed, verified".
 
