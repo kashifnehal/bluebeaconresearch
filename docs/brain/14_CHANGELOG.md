@@ -8,6 +8,16 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.91.0 — #186 Phase 6: 768px tablet pass closed, real overflow on 6 pages fixed (2026-09-24, `e1b0942`)
+
+`apps/web` only. Swept 22 of 23 verifiable routes at 768px (onboarding excluded per standing policy) with the dual-check method (`scrollWidth` + nested-overflow walk). Found one shared architectural bug on 6 pages: `backtesting`, `settings`, `watchlist`, and `watchlist/[symbol]` each built a redundant `md:fixed` wrapper reserving an unjustified `right-[260px]` gap with no matching right-panel content anywhere — the shared `(dashboard)/layout.tsx` already handles the sidebar offset correctly via `md:ml-[256px]` on a normal-flow div, and these 4 pages re-implemented it worse. `alerts` and `calendar` made the identical mistake via `md:mr-[260px]`; `alerts` additionally doubled its left margin on top of the shared layout's own. Invisible at 1440px (plenty of room regardless); at 768px it left as little as ~190px of real content width. This is also why `calendar`'s desktop table appeared to need 777px of internal scroll — previously assumed normal table behavior, actually a symptom of the same bug (table itself is fine, its container was pathological).
+
+**Fix:** `right-[260px]` → `right-0` (4 files); `md:mr-[260px]` removed + duplicate `md:ml-[256px]` removed on `alerts` (2 files). Also: `watchlist`'s floating "+" button was anchored to the old dead-space boundary, moved to the real content edge (`md:right-10`); `alerts`' "Built from" source-citation link needed a tablet-tier `max-w` since 420px still didn't fit the newly-correct ~430px available. One near-miss caught pre-ship: an early pass copied `md:mt-0` onto `alerts` from the other 4 files' pattern, which would have left its always-fixed `TopBar` with nothing clearing it at desktop — `alerts` stays normal-flow, unlike the other 4 which switch to `md:fixed` with `md:top-16`. Caught by checking `TopBar.tsx`'s actual positioning before trusting the copy-paste.
+
+**Verification:** `tsc --noEmit` clean. All 6 pages re-checked at 375/768/1440px — 0px document overflow at 768px across every route, no visual regression at 1440px (screenshot-compared), `TopBar` clearance confirmed correct after the near-miss correction. Settings' 5th tab (42px past the tab strip at 768px) is not a bug — its `overflow-x-auto` already makes it reachable by scroll. Full diagnosis: `LIVE_TODO.md`.
+
+---
+
 ### v0.90.0 — #186 button/link parity audit: 3 desktop-only controls fixed on mobile (2026-09-24, `38dfe8b`)
 
 `apps/web` only. Founder pivot: stop comparing mobile against the Stitch mocks, verify every interactive control that exists on **desktop** also exists and works on **mobile** — parity, not redesign. Grepped `app/` + `components/` for every Tailwind responsive-hide pattern (`hidden md:`/`lg:`/`sm:`) — the only mechanism this codebase uses to remove elements below a breakpoint — 16 instances found, each traced to source. 4 real gaps found:

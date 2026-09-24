@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-24 (#186 button/link parity audit — 3 fixed)
+Last updated: 2026-09-24 (#186 Phase 6 closed — 768px tablet pass, 6 pages fixed)
+
+> ⚠️ UPDATED 2026-09-24 (#186 Phase 6, 768px tablet pass closed) — Swept 22 of 23 verifiable routes at 768px (onboarding excluded per standing policy). Found one shared bug on 6 pages (`backtesting`/`settings`/`watchlist`/`watchlist/[symbol]`/`alerts`/`calendar`): each built a redundant wrapper reserving an unjustified `right-[260px]` gap with no matching content — invisible at 1440px, but left as little as ~190px real width at 768px. `alerts` additionally doubled its left margin. Also explains `calendar`'s 777px apparent table-scroll (container was pathological, not the table). Fixed all 6; also repositioned `watchlist`'s stranded floating "+" button and widened `alerts`' source-citation link's tablet max-width. One near-miss (a copy-pasted class would've broken `alerts`' desktop TopBar clearance) caught before shipping. `tsc --noEmit` clean; all 6 re-verified at 375/768/1440px. Full detail: `LIVE_TODO.md`, `14_CHANGELOG.md` v0.91.0.
 
 > ⚠️ UPDATED 2026-09-24 (#186 button/link parity audit, 3/4 gaps fixed) — Founder pivot away from Stitch-mock comparison: verify every control on desktop also exists and works on mobile. Grepped every `hidden md:/lg:/sm:` instance app-wide (16 total, all traced). Fixed: Replay Tour had no mobile trigger (`Sidebar.tsx`), map's tension-index explainer tooltip was desktop-only (`MobileTensionSheet.tsx`), `MediaImpactTag`+source-confirmation badge hidden on mobile dashboard stream rows (`dashboard/page.tsx`). Quick View modal flagged as a design call, not auto-fixed. Also corrected a prior-session mistake — the map's Kinetic/Cyber/Diplomatic breakdown was reported "needs building" when it was already shipped. `tsc --noEmit` clean, all 3 fixes verified by live interaction + desktop computed-style equivalence at 1440px. Full detail: `LIVE_TODO.md`, `14_CHANGELOG.md` v0.90.0.
 

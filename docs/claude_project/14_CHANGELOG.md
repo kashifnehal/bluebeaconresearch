@@ -1,8 +1,16 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 68).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 69).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 69 — #186 PHASE 6: 768PX TABLET PASS CLOSED, REAL OVERFLOW ON 6 PAGES FIXED (2026-09-24, `e1b0942`)
+
+`apps/web` only. Swept 22 of 23 verifiable routes at 768px (onboarding excluded per standing policy). Found one shared bug on 6 pages: `backtesting`/`settings`/`watchlist`/`watchlist/[symbol]` each built a redundant `md:fixed` wrapper reserving an unjustified `right-[260px]` gap with no matching content — the shared layout already handles the sidebar offset correctly. `alerts`/`calendar` made the same mistake via `md:mr-[260px]`; `alerts` also doubled its left margin. Invisible at 1440px, but left as little as ~190px real width at 768px — also explains why `calendar`'s table appeared to need 777px of internal scroll (container was pathological, not the table). Fixed all 6; also repositioned `watchlist`'s floating "+" button (was anchored to the old dead space) and widened `alerts`' source-citation link's tablet-tier max-width. One near-miss caught pre-ship: a copy-pasted `md:mt-0` would have broken `alerts`' `TopBar` clearance at desktop (it stays normal-flow, unlike the other 4 pages) — caught by checking `TopBar.tsx`'s actual positioning first.
+
+**Verified:** `tsc --noEmit` clean; all 6 pages re-checked at 375/768/1440px, 0px overflow at 768px, no desktop regression. Full detail: `docs/brain/14_CHANGELOG.md` v0.91.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 
