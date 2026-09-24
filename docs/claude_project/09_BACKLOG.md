@@ -11,6 +11,8 @@
 
 > ⚠️ UPDATED 2026-09-23 — **#186 full responsive rework (mobile + tablet)** added. Phases 1+2 shipped (PHASE 51); Phases 0 and 3–6 remain open. Phase 0 is blocked on Claude Design authorization (`/design-login`). Live per-phase status: `docs/brain/LIVE_TODO.md`.
 
+> ⚠️ UPDATED 2026-09-24 — **#186 Phases 7 and 8 both closed.** Only Phase 6 (768px tablet pass) and the 3 recommended-not-approved Stitch builds remain open. See the table below and `docs/brain/LIVE_TODO.md` for full per-bug diagnosis/fix/verification.
+
 ---
 
 ## #186 — FULL RESPONSIVE REWORK (MOBILE + TABLET)
@@ -28,9 +30,10 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 | 3 | Mobile bottom tab bar (FEED/MAP/ALERTS/WATCHLIST/MORE), new `MobileTabBar.tsx` | ✅ Done 2026-09-23 (PHASE 56) |
 | 4 | Map → bottom sheet on mobile; fixed a real pre-existing popup bug too | ✅ Done 2026-09-23 (PHASE 57) |
 | 5a | 4 pages with the same critical bug as Phase 2 (`settings`/`backtesting`/`watchlist`/`watchlist/[symbol]`, worse severity), `ALPHA` badge + 1 military-clearance string removed | ✅ Done 2026-09-23 (PHASE 58) |
-| 5b | `/events/[id]` tab-clipping bug fixed; full 44×44 tap-target sweep complete — shared components + all per-page dense controls (selects, chips, toggles, range buttons) across all 24 pages; overflow verification method fixed (nested-overflow check, ADR 026) | ✅ Done 2026-09-23 (PHASE 59-63) — **⚠️ see Phase 7: the `/dashboard` overflow fix shipped here was insufficient, see below** |
+| 5b | `/events/[id]` tab-clipping bug fixed; full 44×44 tap-target sweep complete — shared components + all per-page dense controls (selects, chips, toggles, range buttons) across all 24 pages; overflow verification method fixed (nested-overflow check, ADR 026) | ✅ Done 2026-09-23 (PHASE 59-63) — the `/dashboard` overflow fix shipped here was later found insufficient (readable ≠ overflow-free) and properly fixed under Phase 7, see row above |
 | 6 | 768px tablet pass (sidebar on, 512px left, never measured) | ⚪ Not started |
-| 7 | Readability regressions found via real screenshots + full 14-mock Stitch review (not just overflow checks) — `/dashboard` feed rows, `/alerts` rule-name truncation, `/calendar` table column order; 3 specific Stitch-inspired builds recommended, not yet approved | 🔴 **Open — nothing fixed yet.** Full detail + diagnosis in `docs/brain/LIVE_TODO.md` |
+| 7 | Readability regressions found via real screenshots + full 14-mock Stitch review — `/dashboard` feed rows, `/alerts` rule-name truncation, `/calendar` table column order (→ mobile stacked cards) | ✅ Done 2026-09-24 (`ec3e6b4`/`1f44534`/`2c46df9`) |
+| 8 | Same pattern found on 3 more pages by a stricter, full-scroll-through review: homepage density + CTA-overlap regression, `/backtesting` simulations row, `/accuracy` table (same off-screen-column bug as old `/calendar`); plus `/events/[id]` headline, `/admin/metrics` copy, `/dashboard` filter-bar density | ✅ Done 2026-09-24 (`473ac8d`/`0d2796c`/`5644617`/`2386b69`/`7500953`/`ec3e6b4`) |
 
 **No Playwright / new test infra** (founder decision, 2026-09-23) — manual multi-width verification per phase instead. `DesignSync` (Claude Design) is authorized but unused for this work — the mocks already exist in-repo.
 
@@ -42,7 +45,7 @@ Design floor is **360px** (two of the top six real mobile resolutions worldwide)
 
 **All 24 routes under `apps/web/app` have been checked at least once** (fixed, or confirmed already mobile-safe) as of 2026-09-23 — see `docs/brain/HANDOFF_186_PHASE5.md` for the full per-page table. **44×44 tap-target sweep: fully closed 2026-09-23 (PHASE 59-62)** — homepage footer, `TopBar`, `PublicHeader`, all 5 auth pages, and every per-page dense control (filter selects via the shared `SELECT_CLASSES`, desk/toggle/range buttons, watchlist chips + remove buttons, map's MapLibre zoom controls, admin tabs) fixed — full breakdown in `docs/brain/LIVE_TODO.md`. Left alone on purpose: inline sentence links (WCAG 2.5.5 exempt), Driver.js's onboarding beacon, MapLibre's attribution link.
 
-**Two open items remain, not one.** Phase 6 (768px tablet pass) — only `/alerts` and `/calendar` actually measured at that width, the other 22 routes untouched. **Phase 7 (new, 2026-09-24)** — real screenshots + a full Stitch-mock review (all 14 mocks actually opened, not inferred from a prior summary) found that "0px overflow, verified" was not the same as "readable": `/dashboard`'s feed-row headlines truncate to ~8-10 characters, `/alerts`' own rule names truncate the same way, and `/calendar`'s event table hides the event name off-screen by default. None of these are fixed — see `docs/brain/LIVE_TODO.md`'s Phase 7 entry for exact diagnosis (including a reverted, non-working attempted fix on `/dashboard`, so the next session doesn't retry the same approach) and three specific Stitch-inspired builds recommended but not yet approved.
+**Phases 7 and 8 are both closed as of 2026-09-24** — see the table above and `docs/brain/LIVE_TODO.md` for full diagnosis/fix/verification per bug, including the reverted, non-working attempted fix tried on `/dashboard` before the real one (kept in the record so it isn't retried). **What's actually still open in #186:** Phase 6 (768px tablet pass — only `/alerts` and `/calendar` have ever been measured at that width, the other 22 routes untouched) and the 3 Stitch-inspired builds recommended in the Phase 7 diagnosis (dashboard price-impact chip, alerts match-count sparkline, calendar day-picker strip) — grounded in `21_PROJECT_BRIEFING.md`'s positioning, but not yet founder-approved to build.
 
 ---
 

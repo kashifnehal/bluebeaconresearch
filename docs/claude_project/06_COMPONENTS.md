@@ -493,8 +493,12 @@ Renders, always together (never a bare percentage): overall hit rate, avg move
 when correct, and sample size (3 `HeadlineStat` cards); a `volatile_neutral_summary`
 box kept visually and semantically separate from the hit-rate cards; a permanent,
 non-dismissible past-performance disclaimer near the top (no dismiss button, no
-localStorage state); a per-asset table (`AssetRow`) with a "not enough history yet"
-cell in place of hit rate/avg-move for any asset below `min_sample_size`; and the
+localStorage state); a per-asset table (`AssetRow`, `hidden md:block`) with a "not
+enough history yet" cell in place of hit rate/avg-move for any asset below
+`min_sample_size` — desktop only, 2026-09-24 (`5644617`), since a 520px-wide table
+was pushing that message and the avg-move column off-screen on a 311px viewport;
+mobile gets a stacked-card equivalent (`AssetCard`, `md:hidden`, same data, no table);
+and the
 plain-language date range ("Based on N signals scored between … and …"). Contains
 **no** "top signals"/"best calls" highlight list anywhere — a hard product rule, not
 a style choice, per the #121 spec.
