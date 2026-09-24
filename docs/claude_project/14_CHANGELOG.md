@@ -6,6 +6,14 @@
 
 ---
 
+## PHASE 68 — #186 BUTTON/LINK PARITY AUDIT: 3 DESKTOP-ONLY CONTROLS FIXED ON MOBILE (2026-09-24, `38dfe8b`)
+
+`apps/web` only. Founder pivot away from Stitch-mock comparison: verify every interactive control on **desktop** also exists and works on **mobile** — parity, not redesign. Grepped every Tailwind responsive-hide instance (`hidden md:/lg:/sm:`, 16 total app-wide) and traced each to source. 4 real gaps found, 3 fixed: Replay Tour had no mobile trigger (added to `Sidebar.tsx`'s mobile drawer), the map's tension-index explainer tooltip was desktop-only (added to `MobileTensionSheet.tsx`), and `MediaImpactTag` + source-confirmation badge were hidden on mobile dashboard stream rows despite being available on desktop (un-hid both, added `flex-wrap` so the badge drops to its own line instead of overflowing on narrow screens). The 4th — a Quick View modal replaced by full navigation on mobile — was flagged as a design call rather than auto-fixed. Also corrected a prior-session mistake: the map's Kinetic/Cyber/Diplomatic tension breakdown was reported as "needs building" when it was already shipped, just behind a tap-to-expand sheet that pass hadn't opened.
+
+**Verified:** `tsc --noEmit` clean; all 3 fixes tested by live interaction, not just presence; desktop equivalence confirmed by computed style at 1440px. Full diagnosis, the disambiguation gotcha (two elements sharing one `aria-label`), and the stale-dev-server snag (confirmed via direct `fetch()` diff, one restart fixed it): `docs/brain/14_CHANGELOG.md` v0.90.0, `docs/brain/LIVE_TODO.md`.
+
+---
+
 ## PHASE 67 — DAY MODE DEAD-CONTROL REMOVAL, SETTINGS > APPEARANCE (2026-09-24, `f2d0d6d`)
 
 `apps/web` only, `app/(dashboard)/settings/page.tsx`. Founder reported clicking "Day Mode" in Settings > Appearance did nothing — no class or color change. Root cause: `useTheme()` (`next-themes`) was called with no `<ThemeProvider>` mounted anywhere in the app, so it fell back to a no-op stub — `setTheme("light")` did nothing, and the card's own `theme === "light"` selected-state check was permanently false too. `app/layout.tsx` also hardcodes the dark theme on `<html>`/`<body>` independent of any state.

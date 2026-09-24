@@ -41,6 +41,7 @@ Sections:
 - Bottom section:
   - "Node: BB-ALPHA-09" text (cosmetic)
   - Help link → `/help` (#155 FAQ + feedback form)
+  - Replay Tour button (`md:hidden`, added 2026-09-24 #186) — mobile-only equivalent of `TopBar`'s desktop-only "Help & Guidance" icon; calls `useUIStore.startTour()` and navigates to `/dashboard` if elsewhere, same as `HelpModal`'s `handleReplayTour`
   - Logout button → supabase.auth.signOut()
 
 Active state detection: usePathname() from next/navigation.
@@ -396,6 +397,8 @@ Founding member banner above cards:
 ### MobileTensionSheet (`components/map/MobileTensionSheet.tsx`) — added 2026-09-23 (#186 Phase 4)
 
 `md:hidden` bottom sheet, replaces the two always-mounted desktop panels below `md` (they were previously unconditional at every viewport, which is why two `w-80` panels used to occlude the entire map on a phone). Tap-to-expand peek header (score, sample size, 24h sparkline, filter icon, chevron) plus an expanded body reusing the exact same tension-bar and intelligence-stream JSX as the desktop panels — owns no data of its own, `map/page.tsx` passes everything down as props. The filter icon opens a separate `md:hidden` bottom modal wrapping the same `<FilterBar>` component the desktop panel uses (verified safe to mount twice — `FilterBar` is a pure controlled component, no internal state). New MapLibre `NavigationControl` (+/- zoom, mobile-only, `bottom-right`, hidden at `md:` via `globals.css`) added alongside the existing `AttributionControl` — justified because phones have no scroll-wheel; no locate control added, no feature in the app reads geolocation.
+
+**2026-09-24 (#186 button/link parity audit):** added an ⓘ "About the Global Tension Index" tap-to-toggle info button + tooltip above the three breakdown bars, mirroring the desktop panel's identical explainer (`map/page.tsx`'s `tensionInfoOpen` state) — the desktop panel has one, this sheet previously didn't. Local `useState` inside `MobileTensionSheet`, not lifted to props, since it's presentational-only state. Note for anyone querying the DOM: the desktop panel's own info button shares the exact same `aria-label="About the Global Tension Index"` — always disambiguate by `offsetParent`/visibility, not just the selector, or you'll grab the hidden desktop instance.
 
 **Doc correction:** the `GlobalTensionIndex` entry below describes a component that does not exist as a separate file — `grep`/`find` confirm no `GlobalTensionIndex.tsx` anywhere in the repo. That whole panel (score, bars, filters) is inline JSX inside `app/(dashboard)/map/page.tsx`'s `MapPage` component, not a standalone component. Leaving the description below as a content reference (it's accurate about what renders) but flagging the file path as stale rather than silently rewriting a section outside this phase's scope.
 
