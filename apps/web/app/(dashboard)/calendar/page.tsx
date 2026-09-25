@@ -364,30 +364,111 @@ function CalendarFilters({
   );
 }
 
+function DayStrip({
+  days,
+  selectedDay,
+  onSelectDay,
+}: {
+  days: { date: string; weekday: string; dayNum: string; count: number }[];
+  selectedDay: string | null;
+  onSelectDay: (date: string | null) => void;
+}) {
+  return (
+    <div data-testid="calendar-day-strip" className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+      {days.map((d) => {
+        const selected = d.date === selectedDay;
+        return (
+          <button
+            key={d.date}
+            type="button"
+            data-testid="calendar-day-strip-button"
+            data-date={d.date}
+            aria-pressed={selected}
+            onClick={() => onSelectDay(selected ? null : d.date)}
+            className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 min-w-[56px] shrink-0 border rounded-md transition-colors cursor-pointer min-h-[44px]"
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              backgroundColor: selected ? "#4edea3" : "#201f1f",
+              color: selected ? "#005f40" : "#bbcac0",
+              borderColor: selected ? "#4edea3" : "#3c4a42",
+            }}
+          >
+            <span className="text-[10px] font-bold uppercase tracking-widest">{d.weekday}</span>
+            <span className="text-sm font-bold">{d.dayNum}</span>
+            <span className="text-[9px] opacity-70">{d.count > 0 ? d.count : "—"}</span>
+          </button>
+        );
+      })}
+      {selectedDay && (
+        <button
+          type="button"
+          data-testid="calendar-day-strip-show-all"
+          onClick={() => onSelectDay(null)}
+          className="ml-1 px-3 py-2 text-[12px] font-bold uppercase tracking-widest border rounded-md shrink-0 min-h-[44px] cursor-pointer transition-colors"
+          style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            backgroundColor: "#201f1f",
+            color: "#bbcac0",
+            borderColor: "#3c4a42",
+          }}
+        >
+          Show all
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function CalendarPage() {
   const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState<CalendarFilterValue>(EMPTY_CALENDAR_FILTERS);
   const [timeZone, setTimeZone] = useState<TimeZoneMode>("utc");
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   useEffect(() => setMounted(true), []);
 
   // `now` used for the this-week split; recomputed on mount only (not every
   // second — only the countdown itself needs second-level ticking).
   const now = mounted ? new Date() : null;
 
-  const { thisWeek, upcoming, nextHighImpact } = useMemo(() => {
-    if (!now) return { thisWeek: [] as CalendarEvent[], upcoming: [] as CalendarEvent[], nextHighImpact: null as CalendarEvent | null };
+  const { thisWeek, upcoming, nextHighImpact, weekDays, selectedDayEvents } = useMemo(() => {
+    if (!now) {
+      return {
+        thisWeek: [] as CalendarEvent[],
+        upcoming: [] as CalendarEvent[],
+        nextHighImpact: null as CalendarEvent | null,
+        weekDays: [] as { date: string; weekday: string; dayNum: string; count: number }[],
+        selectedDayEvents: [] as CalendarEvent[],
+      };
+    }
     const { start, end } = getWeekRangeUTC(now);
     const thisWeek: CalendarEvent[] = [];
     const upcoming: CalendarEvent[] = [];
+    const filteredEvents: CalendarEvent[] = [];
     for (const e of EVENTS) {
       if (!eventMatchesCalendarFilters(e, filters)) continue;
+      filteredEvents.push(e);
       const dt = eventDateTime(e);
       if (dt >= start && dt < end) thisWeek.push(e);
       else if (dt >= end) upcoming.push(e);
     }
     const nextHighImpact = EVENTS.find((e) => e.impact === "high" && eventDateTime(e).getTime() > now.getTime()) ?? null;
-    return { thisWeek, upcoming, nextHighImpact };
-  }, [now, filters]);
+
+    // Same Mon-Sun span as getWeekRangeUTC, so the day strip can never
+    // disagree with what "This Week" considers the current week.
+    const weekDays: { date: string; weekday: string; dayNum: string; count: number }[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+      const date = d.toISOString().slice(0, 10);
+      const weekday = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" });
+      const dayNum = String(d.getUTCDate());
+      const count = filteredEvents.filter((e) => e.date === date).length;
+      weekDays.push({ date, weekday, dayNum, count });
+    }
+
+    const selectedDayEvents = selectedDay ? filteredEvents.filter((e) => e.date === selectedDay) : [];
+
+    return { thisWeek, upcoming, nextHighImpact, weekDays, selectedDayEvents };
+  }, [now, filters, selectedDay]);
 
   return (
     <div className="mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
@@ -435,35 +516,72 @@ export default function CalendarPage() {
         )}
       </section>
 
-      {/* This week */}
-      <section
-        data-testid="calendar-this-week"
-        data-event-count={thisWeek.length}
-        className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
-      >
-        <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30">
-          <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">This Week</span>
-        </div>
-        <div className="p-2">
-          <EventTable events={thisWeek} timeZone={timeZone} />
-        </div>
-      </section>
+      {mounted && (
+        <DayStrip days={weekDays} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+      )}
 
-      {/* Upcoming (rest of the calendar's window) */}
-      <section
-        data-testid="calendar-upcoming"
-        data-event-count={upcoming.length}
-        className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
-      >
-        <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30">
-          <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">
-            Upcoming ({upcoming.length})
-          </span>
-        </div>
-        <div className="p-2">
-          <EventTable events={upcoming} timeZone={timeZone} />
-        </div>
-      </section>
+      {selectedDay ? (
+        <section
+          data-testid="calendar-selected-day"
+          data-event-count={selectedDayEvents.length}
+          className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
+        >
+          <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30 flex items-center justify-between gap-3">
+            <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">
+              {new Date(`${selectedDay}T00:00:00Z`).toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                timeZone: "UTC",
+              })}{" "}
+              ({selectedDayEvents.length})
+            </span>
+            <button
+              type="button"
+              data-testid="calendar-selected-day-show-all"
+              onClick={() => setSelectedDay(null)}
+              className="text-[11px] font-bold uppercase tracking-widest text-primary hover:underline cursor-pointer shrink-0"
+            >
+              Show all
+            </button>
+          </div>
+          <div className="p-2">
+            <EventTable events={selectedDayEvents} timeZone={timeZone} />
+          </div>
+        </section>
+      ) : (
+        <>
+          {/* This week */}
+          <section
+            data-testid="calendar-this-week"
+            data-event-count={thisWeek.length}
+            className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
+          >
+            <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30">
+              <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">This Week</span>
+            </div>
+            <div className="p-2">
+              <EventTable events={thisWeek} timeZone={timeZone} />
+            </div>
+          </section>
+
+          {/* Upcoming (rest of the calendar's window) */}
+          <section
+            data-testid="calendar-upcoming"
+            data-event-count={upcoming.length}
+            className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
+          >
+            <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30">
+              <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">
+                Upcoming ({upcoming.length})
+              </span>
+            </div>
+            <div className="p-2">
+              <EventTable events={upcoming} timeZone={timeZone} />
+            </div>
+          </section>
+        </>
+      )}
 
       <p className="text-[12px] md:text-[10px] text-on-surface/35 leading-relaxed max-w-3xl">
         Dates are sourced directly from each institution's own published schedule (linked per event) as of{" "}
