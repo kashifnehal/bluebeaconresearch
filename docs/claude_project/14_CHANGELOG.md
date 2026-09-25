@@ -1,8 +1,16 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-24 (PHASE 69).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 70).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 70 — #186 `/WATCHLIST` MOBILE FAB-OVERLAP FIX + PICKER COLLAPSE (2026-09-25, `58720a8`)
+
+`apps/web` only. The mobile re-verification pass's real finding: `WatchlistClient.tsx`'s floating "+" (`position:fixed`) visually overlapped scrolling commodity cards on mobile. Fixed by removing the FAB on mobile (kept on desktop) and adding a header "+ Add Asset" button next to the page title, both breakpoints, 44px touch target, matching the Stitch mock's placement. Also collapsed 3 overlapping ways to add an asset (My Commodities/Show All toggle, ADD COMMODITY dropdown, per-category chips) down to just the dropdown, which already covered commodities and forex.
+
+**Verified:** Playwright at 375px (no scroll-position overlap, full add/remove round trip, button measured 44px tall) and 1440px (desktop FAB + header button both present, single picker only). `tsc --noEmit` clean. Full detail: `docs/brain/14_CHANGELOG.md` v0.93.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 

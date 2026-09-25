@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-24 (v0.88.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-25 (v0.93.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.93.0 — #186 `/watchlist` mobile FAB-overlap fix + 3-mechanism picker collapse (2026-09-25, `58720a8`)
+
+`apps/web` only. The `claude/MOBILE_AUDIT_FULL_2026-09-24.md` re-verification pass's real finding: `WatchlistClient.tsx`'s floating "+" (`position:fixed bottom-[76px] right-4`) visually overlapped scrolling commodity cards on mobile — confirmed and screenshotted, not a broken tap target.
+
+**Fix:** removed the FAB on mobile (`hidden md:flex`; desktop FAB kept at `md:bottom-10 md:right-10`), added a header "+ Add Asset" button next to the page `<h1>` on both breakpoints (`min-h-[44px]`, matches `docs/stitch_mobile/mobile_commodity_watchlist/screen.png`'s placement exactly). Both buttons call one new shared handler, `openAddCommodityPicker()`, which scrolls/focuses the ADD COMMODITY `<select>` — no duplicated open-picker logic between them.
+
+Also collapsed the page's 3 overlapping ways to add an asset (founder-flagged) down to 1: removed the #89 "My Commodities"/"Show All" toggle and the #145 per-category chip row, keeping only the ADD COMMODITY dropdown — it already listed every commodity **and** forex pair (`[...COMMODITIES, ...FOREX_PAIRS]`), so nothing was lost on the forex side. `lib/feature-hints.ts`'s `watchlist_chips` Driver.js hint copy updated to stop referencing chips (id/anchor unchanged, now wraps the header).
+
+**Verification:** Playwright at 375px — header button visible pre-scroll (top: 204px), full scroll through the card list with no fixed element overlapping card content at any position, `+ Add Asset` → select Gold → card appeared → removed, full round trip. Button measured `height: 44`. At 1440px — desktop FAB and header button both present, single dropdown only, no leftover toggle/chips. `tsc --noEmit` clean. Full diagnosis: `LIVE_TODO.md`.
+
+---
 
 ### v0.92.0 — Vercel Ignored Build Step: fixed silent deploy-skip on docs-commit-after-code-commit (2026-09-24, `acac825`)
 

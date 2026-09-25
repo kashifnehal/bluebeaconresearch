@@ -161,10 +161,11 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 - **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page.
 - **Methodology**: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115. #144: worker stores 1h/4h/24h/48h; this page still reads 48h only (no horizon selector).
 
-### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19)
-- **List:** first paint with no selections shows `COMMODITIES` cards; category chips toggle add/remove (dropdown kept). Live `/api/prices` + history sparkline only.
+### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19; picker collapsed + mobile FAB removed #186, 2026-09-25)
+- **List:** first paint with no selections shows `COMMODITIES` cards. Live `/api/prices` + history sparkline only.
+- **Add mechanism (2026-09-25):** was 3 overlapping ways in (My Commodities/Show All toggle, ADD COMMODITY dropdown, per-category chip rows) — collapsed to just the ADD COMMODITY `<select>`, which already listed every commodity and forex pair (`[...COMMODITIES, ...FOREX_PAIRS]`). A header "+ Add Asset" button (next to the `<h1>`, 44px touch target, both breakpoints) and the desktop-only FAB (`hidden md:flex`) both call the same `openAddCommodityPicker()` handler that scrolls/focuses that select. The mobile FAB was removed outright — it was `position:fixed` and visually overlapped scrolling card content (confirmed via Playwright screenshots, `claude/MOBILE_AUDIT_FULL_2026-09-24.md`).
 - **Detail:** one price chart, range buttons 1M / 6M / 1Y / 3Y / 5Y. 1M from the 90-day DB series; longer ranges from Yahoo weekly `history-5y`. Honest 5Y empty/incomplete copy unchanged.
-- **2026-09-19:** one Driver.js Feature Hint on the dropdown + chip area (`data-hint="watchlist_chips"`). See 3.8.
+- **2026-09-19:** one Driver.js Feature Hint, now anchored to the header block (`data-hint="watchlist_chips"`, id unchanged — chips it originally described are gone). See 3.8.
 
 ### 3.8 `FeatureHints.tsx` (2026-09-19)
 - **Purpose:** first-time pulsing hints (not the Joyride ProductTour). `overlay: false`; seen keys `bbr_hint_seen_*` in localStorage.
