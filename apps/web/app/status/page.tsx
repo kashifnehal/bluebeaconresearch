@@ -61,7 +61,7 @@ export default async function StatusPage() {
 
           <div className="divide-y divide-[#2a2a2a] border border-[#3c4a42] bg-[#131313] rounded-lg">
             {systems.map((sys) => (
-              <div key={sys.name} className="p-5 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors">
+              <div key={sys.name} className="p-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between hover:bg-[#1a1a1a] transition-colors">
                 <div>
                   <h3 className="font-bold text-sm text-[#e5e2e1]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                     {sys.name}

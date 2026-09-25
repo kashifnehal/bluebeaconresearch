@@ -143,11 +143,13 @@ export function MarketImpactAssessment({
                         direction={c.direction}
                         confidence={c.confidence}
                         size="md"
+                        label="Predicted"
                       />
                       {showPriceSubtext &&
                       priceInfo?.priceAtSignal != null &&
                       priceInfo?.currentPrice != null ? (
                         <p className="pl-1 font-mono text-[12px] md:text-[9px] text-muted">
+                          <span className="font-black uppercase tracking-widest">Since signal:</span>{" "}
                           {formatPriceSinceFiredSubtext(
                             c.asset,
                             priceInfo.priceAtSignal,

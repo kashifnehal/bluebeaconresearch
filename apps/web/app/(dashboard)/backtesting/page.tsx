@@ -153,9 +153,14 @@ export default function BacktestingPage() {
         <div className="grid grid-cols-12 gap-8 mb-12">
           {/* Left Column: Popular Backtests */}
           <section className="col-span-12 lg:col-span-5 space-y-4">
-            <h2 className="font-label text-[#4EDEA3] text-[12px] md:text-[10px] font-black tracking-[0.2em] uppercase">
-              Popular Simulations
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-label text-[#4EDEA3] text-[12px] md:text-[10px] font-black tracking-[0.2em] uppercase">
+                Popular Simulations
+              </h2>
+              <span className="font-label text-on-surface-variant/60 text-[12px] md:text-[9px] font-black tracking-[0.2em] uppercase md:hidden">
+                Swipe →
+              </span>
+            </div>
             {/* Mobile: horizontal swipe row so the 6 cards don't force ~900px of vertical scroll
                 before the config panel below is reachable. Desktop: unchanged 2-col grid. */}
             <div className="flex overflow-x-auto gap-3 snap-x snap-mandatory md:grid md:grid-cols-2 md:overflow-visible">

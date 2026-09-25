@@ -195,6 +195,7 @@ function SignupForm() {
   const pw = form.watch("password");
   const score = passwordScore(pw ?? "");
   const scoreColors = ["#ffb4ab", "#ffb4ab", "#f4fed3", "#4edea3", "#4edea3"];
+  const scoreLabels = ["Weak", "Weak", "Fair", "Strong", "Strong"];
 
   const inputStyle = {
     width: "100%",
@@ -368,6 +369,11 @@ function SignupForm() {
                 <div key={i} style={{ height: "2px", flex: 1, borderRadius: "2px", backgroundColor: i <= score ? scoreColors[score] : "rgba(60,74,66,0.3)", transition: "background-color 0.3s" }} />
               ))}
             </div>
+            {pw ? (
+              <p style={{ marginTop: "6px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: scoreColors[score] }}>
+                Password strength: {scoreLabels[score]}
+              </p>
+            ) : null}
             {form.formState.errors.password && (
               <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'JetBrains Mono', monospace" }}>
                 {form.formState.errors.password.message}

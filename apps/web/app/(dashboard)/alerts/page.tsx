@@ -349,11 +349,13 @@ export default function AlertsPage() {
           <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Alert Rules & Signals</h1>
           <p className="text-on-surface/60 mt-2 font-body font-medium">What you asked to be told about — your rules, and the signals that actually matched them.</p>
         </div>
-        <div className="flex bg-surface-container-low p-1 rounded-lg border border-outline-variant/10">
-          <button onClick={() => router.push("/dashboard")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Feed</button>
-          <button onClick={() => router.push("/watchlist")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Watchlist</button>
-          <button onClick={() => router.push("/backtesting")} className="px-6 py-2 text-on-surface/60 text-xs label font-bold uppercase tracking-wider hover:text-on-surface transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Lab</button>
-        </div>
+        <nav aria-label="Other views" className="flex items-center gap-2 text-xs label font-bold uppercase tracking-wider">
+          <button onClick={() => router.push("/dashboard")} className="text-on-surface/60 hover:text-on-surface hover:underline transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Feed</button>
+          <span className="text-on-surface/30" aria-hidden="true">/</span>
+          <button onClick={() => router.push("/watchlist")} className="text-on-surface/60 hover:text-on-surface hover:underline transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Watchlist</button>
+          <span className="text-on-surface/30" aria-hidden="true">/</span>
+          <button onClick={() => router.push("/backtesting")} className="text-on-surface/60 hover:text-on-surface hover:underline transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Lab</button>
+        </nav>
       </section>
 
       <IngestionStatusBanner />

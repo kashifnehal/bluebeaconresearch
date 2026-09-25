@@ -2,17 +2,20 @@
 
 import { useState } from "react";
 
-export const WELCOME_DEMO_SRC = "/onboarding/welcome-demo.gif";
+// No recorded demo asset exists yet — keep this empty (rather than pointing at a
+// nonexistent file) so the component falls straight to its graceful-fallback text
+// instead of firing a 404. Set this to a real .gif/.mp4/.webm/.ogg path once one ships.
+export const WELCOME_DEMO_SRC = "";
 
 function isVideoSrc(src: string) {
   return /\.(mp4|webm|ogg)(\?|$)/i.test(src);
 }
 
 function WelcomeDemoMedia({ src }: { src: string }) {
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(!src);
   const video = isVideoSrc(src);
 
-  if (failed) {
+  if (failed || !src) {
     return (
       <div
         className="flex aspect-video w-full items-center justify-center border border-[#3c4a42] bg-[#1c1b1b] text-center text-sm text-[#86948a]"
