@@ -691,7 +691,12 @@ These are Next.js API routes, not the Fastify backend. They act as a thin proxy/
 apps/web/app/api/
 ├── signals/route.ts          → reads Supabase directly (NOT a Fastify proxy — corrected
 │                                2026-09-20; own filters/search/sort, same as [id] below)
-├── signals/[id]/route.ts     → event-detail payload (reads Supabase directly)
+├── signals/[id]/route.ts     → event-detail payload (reads Supabase directly). 2026-09-25:
+│                                `sources` now ordered oldest-first with `domain` (Timeline
+│                                tab); new `relatedEvents[]` (same country + overlapping
+│                                commodity, placeholder 7-day window anchored to this
+│                                event's own event_date, reinforcing/conflicting/mixed
+│                                label) — see `docs/brain/05_API.md` for the full note
 ├── signals/[id]/chat/route.ts → #111 BFF: GET+POST, forwards the caller's Supabase
 │                                session as Bearer to Fastify `/v1/signals/:id/chat`
 │                                (same auth-forwarding pattern as telegram/connect-code)

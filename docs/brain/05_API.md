@@ -93,6 +93,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Description**: Fetches granular single signal details and raw news source references.
 - **Auth**: Required.
 - **Consumers**: Event Deep-Dive page (`/events/[id]`).
+> ⚠️ UPDATED 2026-09-25 — response gains two fields, both bundled into the same payload (no separate round-trip, consistent with `historicalComparisons`/`pricesAtSignal` already living here): `sources` is now ordered oldest-first (`event_date` ?? parsed `raw_data.seendate` ?? `created_at`) and each entry carries `domain` (`raw_data.domain`) — powers the renamed "timeline" tab. New `relatedEvents[]`: other `signals` sharing this row's `country` AND at least one `commodity_impacts[].asset`, `event_date` within a placeholder 7 days *of this event's own `event_date`* (not wall-clock now — an old event must still be able to show related events), excluding anything already folded into this signal's own `raw_event_ids`. Each entry carries a `reinforcing`/`conflicting`/`mixed` label from comparing `direction` per shared asset — no numeric relevance score. Both windows/thresholds are explicitly placeholders (see `apps/web/app/api/signals/[id]/route.ts` comments, `04_DATABASE.md`).
 
 #### `GET /api/signals/:id/chat` and `POST /api/signals/:id/chat` (#111, `9f2aada` web / `dcdc877` Fastify)
 

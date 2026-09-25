@@ -1,8 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 75).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 76).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 76 — Event-detail Timeline + Related Events, tightened signal merge (2026-09-25, `d67ae2b`)
+
+`apps/backend` + `apps/web`. Two existing merge mechanisms confirmed (`title-prefilter.ts` exact-title pre-classification skip, `signal-merge.ts` post-classification Jaccard-on-summary merge — `novelty-hint.ts` is not a merge trigger, only a classification input). `signal-merge.ts`'s `SIMILARITY_THRESHOLD` lowered 0.55 → 0.33 after a real missed merge (two "US strikes Iranian oil tankers" signals scored 0.333); evidence-checked against a live 4,343-pair sample so the lowered threshold doesn't collide with real false positives — it did at the raw threshold (two unrelated low-materiality signals sharing only "no geopolitical or financial market implications" boilerplate also scored 0.333), fixed by stopwording that boilerplate rather than raising the threshold. No Anthropic API call added to the matching path. `/api/signals/:id` gains an oldest-first `sources[]` with `domain` (renamed "timeline" tab) and new `relatedEvents[]` (same country + overlapping commodity, placeholder 7-day window anchored to the event's own date, reinforcing/conflicting/mixed label — new "related events" tab). Both new thresholds are explicit placeholders. Full detail: `docs/brain/14_CHANGELOG.md` v0.99.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 

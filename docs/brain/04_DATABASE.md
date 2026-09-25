@@ -56,7 +56,7 @@ Extends `auth.users(id)` with billing tier and user settings.
 ### Table 2: `signals`
 Stores LLM-synthesized geopolitical intelligence and asset impact data.
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)
-- `raw_event_ids` (`uuid[]`, NOT NULL, default `'{}'`)
+- `raw_event_ids` (`uuid[]`, NOT NULL, default `'{}'`) — two independent mechanisms append to it: `title-prefilter.ts` (pre-classification, exact normalized-title + same-source + 45min window, deliberately narrow — the literal same-article-refetched case) and `signal-merge.ts`'s `insertOrMergeSignal()` (post-classification; candidate must share `region` exactly + be country-compatible + fall within an 8h `event_date` window of the target, then `Jaccard(summary tokens) >= SIMILARITY_THRESHOLD`). `SIMILARITY_THRESHOLD` was 0.55, lowered to **0.33** 2026-09-25 after a real missed merge (two "US strikes Iranian oil tankers" articles scored 0.333, below the old 0.55 bar); lowering the raw threshold alone collided with real false positives at the same score (two unrelated low-materiality signals sharing only boilerplate "No geopolitical or financial market implications" disclaimer text), fixed by adding those boilerplate terms to the matcher's `STOPWORDS` set rather than raising the threshold back up. Both `0.33` and `MATCH_WINDOW_HOURS=8` remain placeholders, not tuned production constants — re-derive with more volume. Full rationale lives in `signal-merge.ts`'s header comment, not duplicated here (see live-status sync protocol in `CLAUDE.md`: terse pointer, not the essay).
 - `title` (`text`, NOT NULL)
 - `summary` (`text`, NOT NULL)
 - `ai_analysis` (`text`, nullable) — severity ≥7 Sonnet briefing, populated by `generateSignalAnalysis()`

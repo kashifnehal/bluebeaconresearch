@@ -196,6 +196,17 @@ Usage instances:
 - Calendar (no events): Calendar icon + "No high-impact events today"
 - events/[id] (not found): Search icon + "Signal not found" + "Return to feed" link
 
+> ⚠️ UPDATED 2026-09-25 — `events/[id]/page.tsx` Deep Dive tab row gains a 5th tab. The
+> existing "sources" tab (value unchanged, so any deep link keeps working) is now
+> visibly labeled "timeline": same source-article list, now oldest-first with the
+> outlet domain shown, backed by `/api/signals/:id`'s reordered `sources`. New
+> "related events" tab: reads the same route's new `relatedEvents[]`, each row linking
+> to that event's own page with country, shared commodity ticker(s), and a
+> reinforcing/conflicting/mixed badge; empty state reads "No related events found."
+> instead of hiding the tab. `SignalQuickView.tsx` (the drawer) is intentionally
+> untouched — it only shows a briefing excerpt + "View full details" link, and defers
+> everything else (sources, historical, related) to this full page.
+
 ---
 
 ## 2. SIGNAL COMPONENTS

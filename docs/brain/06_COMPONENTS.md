@@ -131,6 +131,12 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 - **#137**: empty analyst-briefing copy is severity-gated (`emptyBriefingCopy(..., "compact")`), not "restoring capacity."
 - **#143**: "Commodity impacts" section replaced by `MarketImpactAssessment`.
 - **2026-09-20**: header no longer shows a raw `{n}% confidence` badge (#140 leftover). Source confirmation, when present on the Signal, is already in `MarketImpactAssessment` below.
+- **2026-09-25**: deliberately NOT extended with Timeline/Related Events — stays a briefing-excerpt-only preview, defers everything else to `events/[id]/page.tsx` via "View full details".
+
+### 3.5 `events/[id]/page.tsx` Deep Dive tabs (2026-09-25)
+- Tab row: analysis / historical / map / "timeline" (tab value stays `sources` — same underlying data, deep links unaffected) / related events (new).
+- Timeline: `/api/signals/:id`'s `sources[]`, now sorted oldest-first (`event_date` ?? parsed `raw_data.seendate` ?? `created_at`), each row shows `domain`, headline linked to the source `url`, relative timestamp. Single-entry case still renders the section (not hidden).
+- Related Events: same route's new `relatedEvents[]` — other signals sharing `country` AND an overlapping `commodity_impacts` asset within a placeholder 7-day window anchored to *this* event's own `event_date`. Each row: headline (links to that event's page), country, shared commodity ticker(s), reinforcing/conflicting/mixed badge from comparing `direction` per shared asset. No numeric score. Empty state shown explicitly, not hidden.
 
 ### 3.5 `SignalChatPanel.tsx` (#111, `9f2aada`; visual pass 2026-09-12)
 - **Purpose**: Follow-up questions about **this** signal only, on the event detail page.

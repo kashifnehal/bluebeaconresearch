@@ -51,7 +51,7 @@ Extends `auth.users(id)` with billing tier and user settings.
 ### Table 2: `signals`
 Stores LLM-synthesized military/geopolitical intelligence and asset impact data.
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)
-- `raw_event_ids` (`uuid[]`, NOT NULL, default `'{}'`)
+- `raw_event_ids` (`uuid[]`, NOT NULL, default `'{}'`) — populated by `signal-merge.ts`'s cross-source matcher (region-exact + country-compatible + Jaccard-on-summary >= 0.33 within an 8h window; both are placeholders re-derived 2026-09-25 against a real missed merge + a live false-positive check, not tuned constants — see `17_SIGNAL_ENGINE.md` / `signal-merge.ts` comments) and by the narrower pre-classification exact-title prefilter (`title-prefilter.ts`)
 - `title` (`text`, NOT NULL)
 - `summary` (`text`, NOT NULL)
 - `ai_analysis` (`text`, nullable)
