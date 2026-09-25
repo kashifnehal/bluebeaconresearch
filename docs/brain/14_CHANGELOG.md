@@ -1,12 +1,18 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-25 (v0.94.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-25 (v0.97.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.97.0 — Alerts: 14-day per-rule match-trend chart (2026-09-25, `f019cb9`)
+
+`apps/web` only. New small trend chart under each rule's name on `/alerts` showing real matched-signal counts per day over a fixed 14-day window. New `GET /api/alerts/rule-stats` (RLS-scoped `supabaseAuth`, same pattern as `/api/alert-rules`/`/api/alerts/recent`) runs two column-only `alerts_sent` queries — `rule_id, signal_id, created_at` for the last 14 days, and `rule_id, signal_id` all-time — rather than pulling full match/signal records just to count them, deduping by `signal_id` per rule/day server-side since one signal can produce multiple `alerts_sent` rows (one per delivery channel), matching how the page's own `matchesByRule` already defines "a match." New `components/alerts/AlertRuleTrendChart.tsx`: `AlertRuleTrendChart` (Recharts `BarChart`, one bar/day, "N matches this week" summary from the last 7 of the 14 days, shown at all breakpoints) and `AlertRuleTrendEmptyState` ("Not enough history yet"). `isTrendSparse(totalMatches, ruleCreatedAt)` renders the empty state instead of a near-empty chart when a rule has under 3 all-time matches or is under 7 days old — both fixed v1 constants, not configurable. Checked `apps/backend/src/routes/alerts.ts` (Fastify `/v1/alerts/*`) before adding a route: it's dead from the frontend's perspective — `/alerts` and its API routes talk to Supabase directly via RLS-scoped Next.js routes, never the Fastify alerts routes — so the new aggregation follows the Next.js pattern instead of extending Fastify. **Verified:** `tsc --noEmit` clean across `apps/web`. Direct SQL against `evavcgfmemwryggdkjmx` (the standing test account) confirmed the endpoint's exact aggregation logic by hand: rule `f818f035-…` (27 all-time matches, created 18 days ago) — manual `date_trunc('day', created_at)` + `count(distinct signal_id)` over the 14-day window returned 5/6/1 matches on three separate days, summing to 12, matching the 12-match total computed the same way; rule `70207cfc-…` (4 all-time matches, created 11 days ago) has all 4 within the 14-day window. Both rules clear the sparse-history gate (≥3 matches, ≥7 days old) and would render the real chart, not the empty state. No rule in the live database currently has <3 matches or is <7 days old, so the empty-state render path was verified by code inspection (the two `isTrendSparse` conditions) rather than an observed live example — noted as an honest verification gap. No live-browser walkthrough: this is a data-correctness question (do the numbers match reality), not a visual/rendering bug, so it stayed on the direct-SQL path per the token-discipline Playwright carve-out.
+
+---
 
 ### v0.96.0 — Calendar day-strip filter (2026-09-25, `82257fc`)
 

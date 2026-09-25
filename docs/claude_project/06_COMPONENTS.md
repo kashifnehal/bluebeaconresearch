@@ -115,6 +115,9 @@ On open: marks all alerts as read (via API), resets unread_count badge.
 ### Alerts create-rule modal (`(dashboard)/alerts/page.tsx`)
 Channel checkboxes for Telegram / Discord / Slack. `modalChannels` defaults to whichever of `telegram_chat_id` / `discord_webhook_url` / `slack_webhook_url` are present on the current user's `user_channels` row, else `["telegram"]`.
 
+### AlertRuleTrendChart (apps/web/components/alerts/AlertRuleTrendChart.tsx, new 2026-09-25, `f019cb9`)
+Small 14-day real match-count trend under each rule's name on `/alerts`, fed by `GET /api/alerts/rule-stats` (see `05_API.md`). Recharts `BarChart`, one bar per day, plus a "N matches this week" summary number (last 7 of the 14 days) shown at all breakpoints — day labels are desktop-only via the tooltip, mobile keeps the bar shape + the summary number rather than dropping the chart. `isTrendSparse(totalMatches, ruleCreatedAt)` gates an `AlertRuleTrendEmptyState` ("Not enough history yet") instead of a near-empty chart when a rule has fewer than 3 all-time matches or is less than 7 days old — both fixed thresholds, no per-rule config in this v1. All counts are real `alerts_sent` data; nothing here is fabricated or estimated.
+
 ### NotificationConnectPrompt (apps/web/components/NotificationConnectPrompt.tsx)
 **Mounted in:** (dashboard)/layout.tsx
 **Shows** after `NOTIFICATION_PROMPT_AFTER_SIGNALS` (3) signal-detail mounts this session, if `notification_prompt_dismissed_at` is null and Telegram is not already connected (`/api/telegram/status`). Compact non-blocking card. "Not now" updates the user's own `profiles` row.

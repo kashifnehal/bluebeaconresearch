@@ -1,8 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 71).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 74).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 74 — Alerts: 14-day per-rule match-trend chart (2026-09-25, `f019cb9`)
+
+`apps/web` only. Small trend chart under each rule's name on `/alerts` — real matched-signal counts per day, fixed 14-day window, "N matches this week" summary. New `GET /api/alerts/rule-stats` runs two lightweight (column-only, not full-record) `alerts_sent` aggregation queries rather than the page's existing capped 100-row match fetch, deduped by signal so multi-channel deliveries of one signal count once. Rules with fewer than 3 all-time matches or under 7 days old show "Not enough history yet" instead of a near-empty chart. Confirmed the Fastify `/v1/alerts` routes are unused by the frontend before adding anything — the aggregation follows the existing Next.js/RLS pattern instead. Full detail: `docs/brain/14_CHANGELOG.md` v0.97.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 

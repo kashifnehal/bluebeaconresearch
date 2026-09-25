@@ -422,6 +422,10 @@ Returns last 10 alerts sent to the user (for notification bell panel). Auth requ
 
 > ⚠️ UPDATED 2026-09-09 (#87 phase 3, `a102e68`) — `alert_rules` gained a `forex_pairs text[]` column mirroring `commodities`. The alert dispatcher matches a rule when its `forex_pairs` overlap a signal's `currency_pair_impacts`, OR'd with the commodity match; the daily digest folds `user_preferences.forex_pairs` into the same single containment OR. `GET /api/alerts/recent` now also joins `currency_pair_impacts`; the create-rule modal on `/alerts` and each event page carries a 6-pair forex multi-select. No `equity_tickers` — equity stays gated (ADR 013 / D17).
 
+#### GET /api/alerts/rule-stats (Next.js, `apps/web/app/api/alerts/rule-stats/route.ts`, 2026-09-25, `f019cb9`)
+
+New route, RLS-scoped `supabaseAuth` client (same pattern as `/api/alert-rules` and `/api/alerts/recent`), added for the `/alerts` page's per-rule 14-day match-trend chart. Two column-only queries against `alerts_sent` (never full match/signal records): a 14-day window (`rule_id, signal_id, created_at`) and an all-time window (`rule_id, signal_id`), both deduped by `signal_id` per rule/day server-side since one signal can have multiple `alerts_sent` rows (one per delivery channel). Returns `{ stats: [{ ruleId, totalMatches, dailyCounts: [{date, count}] }] }`, one fixed 14-day array per rule the user has ever had matches for. No new table/column — reuses existing `alerts_sent` shape.
+
 #### GET /v1/alerts/accuracy
 Returns 30-day signal accuracy stats. Auth required.
 

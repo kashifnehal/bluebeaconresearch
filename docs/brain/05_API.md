@@ -152,6 +152,10 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 > create-rule modal there carries a 6-pair forex multi-select. No
 > `equity_tickers` — equity stays gated (ADR 013 / D17).
 
+#### `GET /api/alerts/rule-stats` (Next.js, `apps/web/app/api/alerts/rule-stats/route.ts`, new 2026-09-25, `f019cb9`)
+
+- **Description**: Per-rule 14-day match-trend aggregation for the `/alerts` page's new trend chart under each rule's name. RLS-scoped `supabaseAuth` client, same as `/api/alert-rules`/`/api/alerts/recent`. Runs two column-only `alerts_sent` queries (`rule_id, signal_id, created_at` for the last 14 days; `rule_id, signal_id` all-time) rather than pulling full match/signal records just to count them, deduping by `signal_id` per rule/day server-side (one signal can produce multiple `alerts_sent` rows, one per delivery channel — matches how `matchesByRule` on the page itself already defines "a match"). Returns `{ stats: [{ ruleId, totalMatches, dailyCounts: [{date: "YYYY-MM-DD", count}] }] }` for every rule with at least one all-time match; the frontend gates a "not enough history yet" empty state when `totalMatches < 3` or the rule is `< 7` days old (`components/alerts/AlertRuleTrendChart.tsx`). No new table/column.
+
 ---
 
 ### 2.3 Backtesting Suite Endpoint

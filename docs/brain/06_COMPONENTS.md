@@ -116,6 +116,13 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 - **Purpose**: The event-detail / quick-view impact box, relabeled **MARKET IMPACT ASSESSMENT** (was PROJECTED IMPACT). Named parts from #141/#142 columns: source confirmation + novelty (2026-09-20; hidden when null), market mechanism, affected markets (CommodityChip, confidence-free since #140), direction, event category, reused `MediaImpactTag`. Empty mechanism + empty impact lists → exact Caldara & Iacoviello 2022 fallback sentence (no live GPR number). `is_preview` → calendar note + `/calendar` link. **#202:** the `CommodityChip` in Affected market(s) now passes `label="Predicted"`, and the `formatPriceSinceFiredSubtext` line right below it got a prefixed "Since signal:" caption — the two numbers can legitimately disagree (that's the point of tracking accuracy) and previously had nothing distinguishing which was the static prediction vs. the live measured move. Underlying values/logic untouched.
 - **Parents**: `events/[id]/page.tsx`, `SignalQuickView.tsx`.
 
+### 3.3c `AlertRuleTrendChart.tsx` (apps/web/components/alerts/AlertRuleTrendChart.tsx, new 2026-09-25, `f019cb9`)
+- **Purpose**: 14-day real per-day match-count trend rendered under each rule's name on `/alerts`. `AlertRuleTrendChart` (Recharts `BarChart`, one bar/day + a "N matches this week" summary from the last 7 of the 14 days) and `AlertRuleTrendEmptyState` ("Not enough history yet", used when a rule fails the sparse-history gate).
+- **Data**: `GET /api/alerts/rule-stats` (see `05_API.md`) — two column-only `alerts_sent` queries deduped by `signal_id` per rule/day, not the page's own full match-history fetch, which is capped at 100 rows across all rules and would undercount older/quieter rules.
+- **Gate**: exported `isTrendSparse(totalMatches, ruleCreatedAt)` — true (renders the empty state instead of the chart) when `totalMatches < 3` or the rule is `< 7` days old. Both are fixed v1 constants (`MIN_MATCHES_FOR_TREND`, `MIN_RULE_AGE_DAYS`), not user-configurable.
+- **Mobile**: keeps the bar shape + summary number at all widths; only the tooltip's per-day date label is desktop-only (hover/tap), per the mobile-verification bar that a fix/feature can't just look right at desktop width.
+- **Parent**: `(dashboard)/alerts/page.tsx`, one instance per rule card, keyed off `ruleStatsById` (a `Map` built from the query result, looked up by `rule.id`).
+
 ### 3.4 `SignalQuickView.tsx` (#122)
 - **Purpose**: Desktop-only right-half slide-over preview of a feed row.
 - **Parent**: Intelligence Feed stream.
