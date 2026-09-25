@@ -6,6 +6,12 @@
 
 ---
 
+## PHASE 73 — Calendar day-strip filter (2026-09-25, `82257fc`)
+
+`apps/web` only. `/calendar`'s "This Week" section could show "No events in this range" while real events sat in "Upcoming" just past the Mon-Sun window boundary. Added a 7-button day strip above the event list, built from the same `getWeekRangeUTC()` boundary "This Week" already uses (no second week-boundary definition); tapping a day filters the already-loaded event list to that date (This Week/Upcoming replaced by one "Events on <date>" section), tapping the active day again or "Show all" restores the normal split. No new backend query. Full detail: `docs/brain/14_CHANGELOG.md` v0.96.0, `docs/brain/LIVE_TODO.md`.
+
+---
+
 ## PHASE 72 — Homepage headline replaced (2026-09-25, pending commit)
 
 `apps/web` only, copy-only. Hero headline changed from "High-fidelity geopolitical intelligence → actionable trading signals." to "Geopolitical intelligence for markets that matter." — this old phrase had been flagged live in `docs/brain/LIVE_TODO.md` despite being previously reported as rejected. Root-layout SEO meta description updated to match; the homepage's own separate page-level meta description was already different and untouched. Subtext line under the headline unchanged. Full detail: `docs/brain/14_CHANGELOG.md` v0.95.0, `docs/brain/LIVE_TODO.md`.

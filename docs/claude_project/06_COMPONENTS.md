@@ -479,6 +479,10 @@ export default function PageName() {
 
 Scenario simulator, not a real backtesting engine — mock results only (`Math.sin`-based demo points), `isDemo: true` banner always shown. Fixed 2026-09-23: the panel previously named a fabricated "GENESIS-X_V4" engine and claimed "Processing 15 years of geo-political volatility markers" regardless of the disclaimer state; now reads "Scenario Simulator" / "Hypothetical Event Impact" with no invented engine name or year count. Also dropped the hardcoded `accuracyPct` (71%, fixed, never varied) stat end to end — it implied a track record even next to a disclaimer. Remaining stats (avg/max/min move %) are kept as illustrative simulation output. A real backtesting engine over real historical data is backlog #171, not yet started.
 
+### CalendarPage (`apps/web/app/(dashboard)/calendar/page.tsx`) (2026-09-25)
+
+Added a 7-day tappable day strip (Mon–Sun, reusing the existing `getWeekRangeUTC` boundary so it can never disagree with the "This Week" section) above the event list. Fixes the case where "This Week" shows "No events in this range" while real events sit just outside it in "Upcoming" — tapping a day filters the full (already-loaded, no new API call) event list down to just that date, replacing the This Week/Upcoming split with a single "Events on <date>" section; tapping the active day again, or a "Show all" control, restores the normal split view. No new backend query.
+
 ---
 
 ## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)

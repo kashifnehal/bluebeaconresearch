@@ -177,6 +177,12 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 - **Kept:** `avgMovePct` / `maxMovePct` / `minMovePct` and the per-row `correct` (movePct > 0) indicator — these read as simulation output, not a claimed track record.
 - **Not done this ship:** a real backtesting engine with real historical data — tracked as backlog #171, needs its own research pass first.
 
+### 3.10 CalendarPage (`app/(dashboard)/calendar/page.tsx`) (2026-09-25)
+- **Purpose:** day-strip filter above the event list. 7 buttons (Mon–Sun) built from the same `getWeekRangeUTC(now)` call the "This Week" section already used — no second week-boundary definition.
+- **Interaction:** tap a day → full (already-loaded) `EVENTS` list filtered to that `date`, This Week/Upcoming sections replaced by one "Events on <date>" section + "Show all" control; tap the active day again or "Show all" → back to the normal split. `selectedDay` is plain `useState<string | null>`, computed alongside `thisWeek`/`upcoming` in the existing `useMemo`.
+- **Why:** "This Week" can legitimately show "No events in this range" while real events sit in "Upcoming" just past the window boundary — the day strip gives a decisive per-day view instead of requiring a scroll.
+- No new backend query — reuses `EVENTS` (from `data/economic-calendar.json`) already loaded for the page.
+
 ---
 
 ## 4. Primitives & UI Component Suite (`apps/web/components/ui`)
