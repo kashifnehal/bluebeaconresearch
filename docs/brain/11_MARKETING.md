@@ -21,7 +21,7 @@ This document specifies the marketing strategy, value proposition, landing page 
 
 ### Hero Section Copy
 
-- **Headline**: "High-fidelity geopolitical intelligence → actionable trading signals."
+- **Headline**: "Geopolitical intelligence for markets that matter." (updated 2026-09-25, was "High-fidelity geopolitical intelligence → actionable trading signals.")
 - **Subheadline**: "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders"
 - **Live Status Pill**: `Live — monitoring active global conflicts` (Pulsing green indicator).
 - **Primary CTA**: "Start Free" (`/signup`) / "Get Early Access" (Opens Waitlist Modal when `isProjectReady` is gated).
@@ -40,6 +40,6 @@ This document specifies the marketing strategy, value proposition, landing page 
 ## 3. Search Engine Optimization (SEO) & OpenGraph Setup
 
 - **Metadata Title**: `Blue Beacon Research | Tactical Market Intelligence`
-- **Meta Description**: `High-fidelity geopolitical intelligence → actionable trading signals.`
+- **Meta Description**: `Geopolitical intelligence for markets that matter.` (updated 2026-09-25, same replace as the headline)
 - **Semantic HTML**: `<h1>` tag in hero section, `<header>`, `<main>`, `<section>`, `<footer>` structure.
 - **Sitemap & Robots**: `apps/web/app/sitemap.ts` and `apps/web/app/robots.ts` generate standard XML sitemap and search engine crawler instructions.

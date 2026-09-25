@@ -149,8 +149,7 @@ export default async function Home(props: {
               <span className="font-label text-[12px] md:text-[9px] font-black uppercase tracking-[0.2em] text-primary">Monitoring active global conflicts — updates roughly every 30 minutes</span>
             </div>
             <h1 className="text-4xl leading-[1.05] mb-6 md:text-8xl md:leading-[0.85] md:mb-10 lg:text-[120px] font-extrabold tracking-tighter text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
-              High-fidelity geopolitical intelligence <br/>
-              <span className="text-primary italic">→ actionable trading signals.</span>
+              Geopolitical intelligence for markets that matter.
             </h1>
             <p className="text-on-surface/60 text-base mb-8 md:text-xl max-w-2xl mx-auto md:mb-12 leading-relaxed font-medium">
               Blue Beacon Research — Geopolitical Intelligence for Commodity Traders

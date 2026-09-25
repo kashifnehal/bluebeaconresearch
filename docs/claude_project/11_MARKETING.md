@@ -9,7 +9,7 @@
 ## 1. BRAND IDENTITY
 
 **Name:** Blue Beacon Research
-**Tagline:** "High-fidelity geopolitical intelligence → actionable trading signals."
+**Tagline:** "Geopolitical intelligence for markets that matter." (updated 2026-09-25, was "High-fidelity geopolitical intelligence → actionable trading signals.")
 **Subheadline (landing hero `<p>`, 2026-09-20 / #174):** "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders"
 **Elevator pitch:** "We convert global conflicts, sanctions, and policy shifts into structured market signals — delivered to your Telegram before markets open, for 1/40th the cost of Bloomberg."
 

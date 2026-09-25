@@ -167,7 +167,7 @@ They give you headlines in seconds. BBR gives you analysis in 2 minutes. We are 
 - "Research" = positions us as a research firm, not a tech startup or AI tool
 
 **Tagline Options Used:**
-- "High-fidelity geopolitical intelligence → actionable trading signals."
+- "Geopolitical intelligence for markets that matter." (updated 2026-09-25, was "High-fidelity geopolitical intelligence → actionable trading signals.")
 - "Intelligence before markets move."
 - "The signal, not the noise."
 

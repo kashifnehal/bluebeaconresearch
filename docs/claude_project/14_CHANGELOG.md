@@ -6,6 +6,12 @@
 
 ---
 
+## PHASE 72 — Homepage headline replaced (2026-09-25, pending commit)
+
+`apps/web` only, copy-only. Hero headline changed from "High-fidelity geopolitical intelligence → actionable trading signals." to "Geopolitical intelligence for markets that matter." — this old phrase had been flagged live in `docs/brain/LIVE_TODO.md` despite being previously reported as rejected. Root-layout SEO meta description updated to match; the homepage's own separate page-level meta description was already different and untouched. Subtext line under the headline unchanged. Full detail: `docs/brain/14_CHANGELOG.md` v0.95.0, `docs/brain/LIVE_TODO.md`.
+
+---
+
 ## PHASE 71 — #202/#203/#204/#205/#206/#199, SIX INDEPENDENT MOBILE-POLISH FIXES (2026-09-25, `0701bf8`)
 
 `apps/web` only. Six small, unrelated fixes: **#202** labeled the event-detail predicted-direction chip vs. the live price-move sentence beside it ("Predicted" / "Since signal:") so the two no longer read as contradicting each other — they can legitimately disagree, that's the point of tracking accuracy. **#203** restyled the `/alerts` Feed/Watchlist/Lab row from pill/tab styling (which promised in-page filtering it didn't do) to plain breadcrumb-style nav links — it still just navigates to the 3 other pages. **#204** added a mobile-only "Swipe →" hint to `/backtesting`'s Popular Simulations row, which cut off at the screen edge at 375px with no affordance. **#205** added a text label (Weak/Fair/Strong) under signup's password-strength bar, using its existing computed score. **#206 (row-crowding half only)** fixed `/status` subsystem rows sitting flush against their status badge when detail text wrapped to 2 lines at 375px — badge now drops to its own line below `sm:`; the separate uptime-sparkline idea is still open. **#199** removed a dead `/onboarding/welcome-demo.gif` reference that fired a console 404 on every Replay Tour open — the graceful fallback text was already correct, just reached via a failed request; now reached directly.

@@ -7,7 +7,7 @@ import AccessLimitedModalWrapper from "@/components/AccessLimitedModalWrapper";
 
 export const metadata: Metadata = {
   title: "Blue Beacon Research",
-  description: "Conflict intelligence → actionable trading signals.",
+  description: "Geopolitical intelligence for markets that matter.",
 };
 
 export default function RootLayout({

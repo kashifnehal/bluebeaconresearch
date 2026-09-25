@@ -30,7 +30,7 @@ Every feature exists to serve this loop. Features that don't serve this loop sho
 
 **Layout sections (top to bottom):**
 1. **Navigation bar** — Logo left, "Tactical Modules" + "Access Tiers" center, "Sign In" + "Start Free" right
-2. **Hero section** — "High-fidelity geopolitical intelligence → actionable trading signals." with live status badge "LIVE — Monitoring active global conflicts"
+2. **Hero section** — "Geopolitical intelligence for markets that matter." (updated 2026-09-25, was "High-fidelity geopolitical intelligence → actionable trading signals.") with live status badge "LIVE — Monitoring active global conflicts"
 3. **Live signal preview** — Shows actual latest signal from the database (blurred below fold), CTA: "AUTHORIZE FULL ACCESS →" goes to /signup
 4. **How it works section** — 3 steps: Event Detection → AI Synthesis → Tactical Uplink
 5. **Access Tiers (pricing)** — 3 tiers visible: $0 Monitor, $49 Analyst, $199 Pro
