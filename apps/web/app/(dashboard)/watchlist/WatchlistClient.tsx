@@ -20,8 +20,6 @@ const WATCHLIST_ASSETS = [...COMMODITIES, ...FOREX_PAIRS];
 // once they load (#89 / #107). Forex stays addable via the dropdown.
 const DEFAULT_WATCHLIST = COMMODITIES.map((c) => c.symbol);
 
-const COMMODITY_CATEGORY_ORDER = ["energy", "metals", "agriculture"] as const;
-
 const WATCHLIST_STORAGE_KEY = "bbr.watchlist.v1";
 
 type StoredWatchlist = {
@@ -168,7 +166,6 @@ export function WatchlistClient() {
       ),
     [myPrefs?.commodities, myPrefs?.forexPairs],
   );
-  const allSymbols = useMemo(() => WATCHLIST_ASSETS.map((a) => a.symbol), []);
   const touchedRef = useRef(false);
 
   useEffect(() => {
@@ -239,11 +236,6 @@ export function WatchlistClient() {
     (watch.length === DEFAULT_WATCHLIST.length &&
       DEFAULT_WATCHLIST.every((s) => watch.includes(s)));
 
-  const showingMyCommodities =
-    prefSymbols.length > 0 &&
-    watch.length === prefSymbols.length &&
-    prefSymbols.every((s) => watch.includes(s));
-
   // watchlist_viewed — recurring usage event (once per page-session), feeds
   // DAU/WAU and 7-day usage counts on /admin/metrics.
   useEffect(() => {
@@ -287,19 +279,27 @@ export function WatchlistClient() {
     setWatch((w) => w.filter((x) => x !== sym));
   };
 
-  const handleToggleChip = (sym: string) => {
-    touchedRef.current = true;
-    setIsSuggested(false);
-    setWatch((p) => (p.includes(sym) ? p.filter((x) => x !== sym) : [...p, sym]));
+  // Shared by the header "+ Add Asset" button and the desktop FAB — both just
+  // surface the one remaining add mechanism (the ADD COMMODITY select) rather
+  // than duplicating a picker.
+  const openAddCommodityPicker = () => {
+    const el = document.querySelector<HTMLSelectElement>(
+      "select[aria-label='Add commodity to watchlist']",
+    );
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.focus();
+    }
   };
 
   return (
     <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
       <div className="max-w-[1440px] mx-auto">
-        {/* Dropdown + category chips (#145): one first-time Driver.js hint. */}
+        {/* Header + ADD COMMODITY (#145 / #186 mobile-overlap fix): one
+            first-time Driver.js hint anchored to the header area. */}
         <div id="bbr-hint-watchlist-chips" data-hint="watchlist_chips">
         {/* Page Header */}
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-1 h-6 bg-primary"></div>
@@ -307,9 +307,20 @@ export function WatchlistClient() {
                 Asset Monitoring
               </p>
             </div>
-            <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">
-              Commodity Watchlist
-            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-4xl font-headline font-extrabold tracking-tight text-on-surface">
+                Commodity Watchlist
+              </h1>
+              <button
+                type="button"
+                onClick={openAddCommodityPicker}
+                aria-label="Add asset to watchlist"
+                className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-sm bg-primary text-[#003824] font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase cursor-pointer transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(111,251,190,0.3)]"
+              >
+                <span className="material-symbols-outlined text-lg">add</span>
+                Add Asset
+              </button>
+            </div>
             {showingSuggested && (
               <p
                 data-testid="watchlist-suggested-banner"
@@ -317,45 +328,6 @@ export function WatchlistClient() {
               >
                 Suggested for you — remove anything you don&apos;t need.
               </p>
-            )}
-            {prefSymbols.length > 0 && (
-              <div className="mt-4 flex items-center gap-2">
-                <span className="font-label text-[12px] md:text-[10px] text-on-surface-variant tracking-widest uppercase">
-                  View
-                </span>
-                <button
-                  onClick={() => {
-                    touchedRef.current = true;
-                    setIsSuggested(false);
-                    setWatch(prefSymbols);
-                  }}
-                  aria-pressed={showingMyCommodities}
-                  className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
-                  style={{
-                    backgroundColor: showingMyCommodities ? "#4edea3" : "transparent",
-                    color: showingMyCommodities ? "#003824" : "#bbcac0",
-                    borderColor: showingMyCommodities ? "#4edea3" : "#3c4a42",
-                  }}
-                >
-                  My Commodities
-                </button>
-                <button
-                  onClick={() => {
-                    touchedRef.current = true;
-                    setIsSuggested(false);
-                    setWatch(allSymbols);
-                  }}
-                  aria-pressed={!showingMyCommodities}
-                  className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
-                  style={{
-                    backgroundColor: !showingMyCommodities ? "#4edea3" : "transparent",
-                    color: !showingMyCommodities ? "#003824" : "#bbcac0",
-                    borderColor: !showingMyCommodities ? "#4edea3" : "#3c4a42",
-                  }}
-                >
-                  Show All
-                </button>
-              </div>
             )}
           </div>
           <div className="flex items-center gap-4">
@@ -385,49 +357,6 @@ export function WatchlistClient() {
               </span>
             </div>
           </div>
-        </div>
-
-        {/* One-click commodity chips — additive to the dropdown. Grouped by
-            the shared COMMODITIES category so a new user can add/remove
-            without opening ADD COMMODITY. */}
-        <div className="mb-8" data-testid="watchlist-commodity-chips">
-          {COMMODITY_CATEGORY_ORDER.map((category) => {
-            const chips = COMMODITIES.filter((c) => c.category === category);
-            if (chips.length === 0) return null;
-            return (
-              <div key={category} className="mb-3 last:mb-0">
-                <p className="font-label text-[12px] md:text-[10px] text-on-surface-variant tracking-widest uppercase mb-2">
-                  {category}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {chips.map((c) => {
-                    const active = watch.includes(c.symbol);
-                    return (
-                      <button
-                        key={c.symbol}
-                        type="button"
-                        aria-pressed={active}
-                        aria-label={
-                          active
-                            ? `Remove ${c.label} from watchlist`
-                            : `Add ${c.label} to watchlist`
-                        }
-                        onClick={() => handleToggleChip(c.symbol)}
-                        className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
-                        style={{
-                          backgroundColor: active ? "#4edea3" : "transparent",
-                          color: active ? "#003824" : "#bbcac0",
-                          borderColor: active ? "#4edea3" : "#3c4a42",
-                        }}
-                      >
-                        {c.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
         </div>
 
         </div>
@@ -564,16 +493,13 @@ export function WatchlistClient() {
         </div>
       </div>
 
-      {/* Global Floating Action */}
+      {/* Desktop-only floating action — the mobile FAB was removed (#186):
+          it sat position:fixed over scrolling card content. The header
+          "+ Add Asset" button now covers this action on mobile. */}
       <button
-        onClick={() => {
-          const el = document.querySelector("select");
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth" });
-            el.focus();
-          }
-        }}
-        className="fixed bottom-[76px] right-4 md:bottom-10 md:right-10 w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_30px_rgba(111,251,190,0.4)] flex items-center justify-center group z-50 transition-all hover:scale-110 active:scale-95 shadow-lg cursor-pointer"
+        onClick={openAddCommodityPicker}
+        aria-label="Add asset to watchlist"
+        className="hidden md:flex fixed md:bottom-10 md:right-10 w-14 h-14 bg-primary text-black rounded-full shadow-[0_0_30px_rgba(111,251,190,0.4)] items-center justify-center group z-50 transition-all hover:scale-110 active:scale-95 shadow-lg cursor-pointer"
       >
         <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-500">
           add

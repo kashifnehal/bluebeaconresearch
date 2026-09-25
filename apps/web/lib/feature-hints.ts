@@ -22,7 +22,7 @@ export const FEATURE_HINTS: FeatureHintDef[] = [
     selector: '[data-hint="watchlist_chips"]',
     title: "Add markets from here",
     description:
-      "Tap a category chip to add or remove that market, or pick a specific asset from ADD COMMODITY. Your list is saved to your account.",
+      "Use + Add Asset or the ADD COMMODITY list to track a new market or forex pair. Your list is saved to your account.",
   },
   {
     id: "dashboard_filters",
