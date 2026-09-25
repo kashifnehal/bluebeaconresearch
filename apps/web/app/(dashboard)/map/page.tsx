@@ -32,6 +32,46 @@ import {
   type FilterBarValue,
 } from "@/lib/signal-filters";
 
+// Recenter control (#204-style feature request): MapLibre ships zoom via
+// NavigationControl but has no built-in "reset view" control, so this
+// implements the same IControl interface and reuses map.easeTo() — the
+// same camera method already used for feed-select navigation below —
+// rather than hand-rolling camera math.
+class RecenterControl {
+  private _map: MapLibreMapLike | undefined;
+  private _container!: HTMLDivElement;
+
+  onAdd(map: MapLibreMapLike) {
+    this._map = map;
+    this._container = document.createElement("div");
+    this._container.className = "maplibregl-ctrl maplibregl-ctrl-group map-recenter-ctrl";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("aria-label", "Recenter map");
+    button.title = "Recenter map";
+    button.style.display = "flex";
+    button.style.alignItems = "center";
+    button.style.justifyContent = "center";
+    button.style.color = "#bbcac0";
+    button.innerHTML =
+      '<span class="material-symbols-outlined" style="font-size:16px;line-height:1;">my_location</span>';
+    button.addEventListener("click", () => {
+      map.easeTo({ center: DEFAULT_MAP_CENTER, zoom: DEFAULT_MAP_ZOOM });
+    });
+    this._container.appendChild(button);
+    return this._container;
+  }
+
+  onRemove() {
+    this._container.parentNode?.removeChild(this._container);
+    this._map = undefined;
+  }
+}
+
+type MapLibreMapLike = {
+  easeTo: (options: { center: [number, number]; zoom: number }) => void;
+};
+
 function signalFromMapProps(props: Record<string, unknown>): Signal | null {
   const id = typeof props.id === "string" ? props.id : "";
   if (!id) return null;
@@ -325,6 +365,10 @@ export default function MapPage() {
             new maplib.NavigationControl({ showCompass: false }),
             "bottom-right",
           );
+          // Recenter control — unlike the zoom buttons above, this isn't
+          // breakpoint-gated (see .map-recenter-ctrl override in globals.css),
+          // so it shows on both mobile and desktop.
+          map.addControl(new RecenterControl(), "bottom-right");
         } catch (err) {
           // Non-fatal: continue without these controls if they fail
           console.warn("[map] addControl failed", err);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
@@ -24,6 +25,53 @@ import {
   type FilterBarValue,
 } from "@/lib/signal-filters";
 import type { Signal } from "@blue-beacon-research/shared";
+
+// Same shape/lookup already used by PriceTicker and the watchlist pages — reusing
+// the existing /api/prices 24h-change calculation here rather than adding a new one.
+type LatestPrice = {
+  symbol: string;
+  change_pct_24h?: number;
+  changePct24h?: number;
+};
+
+/** The signal's primary asset (commodity first, then forex pair) matched against the
+ * latest-prices lookup. Null when no asset can be confidently associated. */
+function signalPriceMovePct(signal: Signal, prices: LatestPrice[]): { asset: string; pct: number } | null {
+  const asset = signal.commodityImpacts?.[0]?.asset ?? signal.currencyPairImpacts?.[0]?.asset;
+  if (!asset) return null;
+  const price = prices.find((p) => p.symbol === asset);
+  if (!price) return null;
+  return { asset, pct: price.change_pct_24h ?? price.changePct24h ?? 0 };
+}
+
+function SignalRowPriceChip({ signal, prices }: { signal: Signal; prices: LatestPrice[] }) {
+  const move = signalPriceMovePct(signal, prices);
+  if (!move) {
+    return (
+      <span
+        className="text-[12px] md:text-[11px] shrink-0"
+        style={{ color: "#86948a", fontFamily: "'JetBrains Mono', monospace" }}
+        aria-label="No associated price data"
+      >
+        —
+      </span>
+    );
+  }
+  const isUp = move.pct >= 0;
+  return (
+    <span
+      className="text-[12px] md:text-[11px] shrink-0"
+      style={{
+        color: isUp ? "#4edea3" : "#ee7d77",
+        fontFamily: "'JetBrains Mono', monospace",
+      }}
+      title={`${move.asset} 24h change`}
+    >
+      {move.asset} {isUp ? "+" : ""}
+      {move.pct.toFixed(1)}%
+    </span>
+  );
+}
 
 export default function DashboardPage() {
   // "My Feed" (#81) — opt-in narrowing to the commodities/regions the user follows.
@@ -52,6 +100,18 @@ export default function DashboardPage() {
     window: filters.window,
   });
   const { tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
+
+  // Per-row price-impact chip (dashboard-only addition) — reuses the same
+  // /api/prices 24h-change endpoint PriceTicker/watchlist already fetch.
+  const { data: pricesData } = useQuery({
+    queryKey: ["prices"],
+    queryFn: async () => {
+      const res = await fetch("/api/prices");
+      return (await res.json()) as { prices: LatestPrice[] };
+    },
+    refetchInterval: 60_000,
+  });
+  const latestPrices = pricesData?.prices ?? [];
 
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
@@ -803,6 +863,7 @@ export default function DashboardPage() {
                             entity={item.mediaImpactEntity}
                             caveat={item.mediaImpactCaveat}
                           />
+                          <SignalRowPriceChip signal={item} prices={latestPrices} />
                         </div>
 
                         {/* Headline: full row width on mobile (2-line clamp); single-line truncate at md+, unchanged */}

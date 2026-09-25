@@ -83,6 +83,69 @@ function formatEventDate(e: CalendarEvent, timeZone: TimeZoneMode): string {
   });
 }
 
+function icsEscape(text: string): string {
+  return text.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+}
+
+function icsDateTimeUTC(d: Date): string {
+  return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function icsDateOnly(d: Date): string {
+  return d.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+/** One-time .ics export of whatever events are passed in — not a live sync, since
+ * there's no feed to keep it updated against. Caller is responsible for passing
+ * only the currently filtered/visible set. */
+function eventsToIcs(events: CalendarEvent[]): string {
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Blue Beacon Research//Economic Calendar//EN",
+    "CALSCALE:GREGORIAN",
+  ];
+  const dtstamp = icsDateTimeUTC(new Date());
+  for (const e of events) {
+    lines.push("BEGIN:VEVENT");
+    lines.push(`UID:${e.id}@bluebeaconresearch.com`);
+    lines.push(`DTSTAMP:${dtstamp}`);
+    if (e.time) {
+      lines.push(`DTSTART:${icsDateTimeUTC(eventDateTime(e))}`);
+      lines.push("DURATION:PT30M");
+    } else {
+      const start = new Date(`${e.date}T00:00:00Z`);
+      const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+      lines.push(`DTSTART;VALUE=DATE:${icsDateOnly(start)}`);
+      lines.push(`DTEND;VALUE=DATE:${icsDateOnly(end)}`);
+    }
+    lines.push(`SUMMARY:${icsEscape(`${e.event} (${e.country})`)}`);
+    const descriptionParts = [
+      e.forecast != null ? `Forecast: ${e.forecast}` : null,
+      e.previous != null ? `Previous: ${e.previous}` : null,
+      e.actual != null ? `Actual: ${e.actual}` : null,
+      `Source: ${e.sourceLabel}`,
+    ].filter((p): p is string => p != null);
+    lines.push(`DESCRIPTION:${icsEscape(descriptionParts.join("\n"))}`);
+    if (e.sourceUrl) lines.push(`URL:${e.sourceUrl}`);
+    lines.push("END:VEVENT");
+  }
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}
+
+function downloadEventsAsIcs(events: CalendarEvent[]) {
+  const blob = new Blob([eventsToIcs(events)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "blue-beacon-economic-calendar.ics";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 /** Monday 00:00 UTC through the following Monday 00:00 UTC containing `now`. */
 function getWeekRangeUTC(now: Date): { start: Date; end: Date } {
   const day = now.getUTCDay(); // 0 = Sunday
@@ -470,9 +533,14 @@ export default function CalendarPage() {
     return { thisWeek, upcoming, nextHighImpact, weekDays, selectedDayEvents };
   }, [now, filters, selectedDay]);
 
+  // Whatever the page is currently showing below — the day-strip drill-down when
+  // active, otherwise This Week + Upcoming — so the export always matches what's
+  // on screen, not the full unfiltered dataset.
+  const exportableEvents = selectedDay ? selectedDayEvents : [...thisWeek, ...upcoming];
+
   return (
     <div className="mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
-      <section className="flex justify-between items-end mb-8">
+      <section className="flex justify-between items-end mb-8 gap-4 flex-wrap">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Economic Calendar</h1>
           <p className="text-on-surface/60 mt-2 font-body font-medium">
@@ -480,6 +548,23 @@ export default function CalendarPage() {
             tracks.
           </p>
         </div>
+        <button
+          type="button"
+          data-testid="calendar-export-ics"
+          disabled={exportableEvents.length === 0}
+          onClick={() => downloadEventsAsIcs(exportableEvents)}
+          title="Downloads the events currently shown below as a one-time .ics file — it won't stay in sync with future updates."
+          className="shrink-0 px-4 py-2.5 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center gap-2"
+          style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            backgroundColor: "#201f1f",
+            color: "#4edea3",
+            borderColor: "#3c4a42",
+          }}
+        >
+          <span className="material-symbols-outlined text-[16px]">download</span>
+          Export to Calendar ({exportableEvents.length})
+        </button>
       </section>
 
       <CalendarFilters
