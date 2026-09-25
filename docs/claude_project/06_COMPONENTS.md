@@ -276,7 +276,7 @@ Format: "SEV [N]" in small, or "[N]" in large variant.
 ---
 
 ### CommodityChip (apps/web/components/signals/CommodityChip.tsx)
-Props: `{ asset: string, direction: Direction, confidence: number, size?: 'sm' | 'md' }`
+Props: `{ asset: string, direction: Direction, confidence: number, size?: 'sm' | 'md', label?: string }`
 
 Direction color map:
 ```
@@ -287,14 +287,16 @@ neutral:  bg-secondary      text-muted      "NGAS –"
 ```
 
 Both sizes show ticker + direction arrow only. Classifier `confidence` is not visible text (it is the model's self-reported tagging confidence, not a price-direction probability). `aria-label` still includes "model classification confidence {n}%".
-Shape: rounded-full pill.
+Shape: rounded-full pill. **#202 (2026-09-25):** optional `label` prop renders a small uppercase caption above the pill; unset everywhere except `MarketImpactAssessment`'s "Predicted" usage below.
 
 ---
 
-### MarketImpactAssessment (apps/web/components/signals/MarketImpactAssessment.tsx) — #143
+### MarketImpactAssessment (apps/web/components/signals/MarketImpactAssessment.tsx) — #143, #202
 **Used in:** event detail aside (`events/[id]/page.tsx`) and `SignalQuickView`. Relabel of the old PROJECTED IMPACT / "Commodity impacts" box — not a new product surface.
 
 Named parts, populated from #141/#142 signal fields: Source confirmation (`official` → "Official statement", `reported` → "Reported claim", `speculative` → "Speculative / unconfirmed"), Novelty (UI buckets only: ≥0.7 "New development", ≥0.3 "Partial update", else "Mostly a repeat/reminder"), Market mechanism (`marketMechanism`), Affected market(s) (existing `commodityImpacts` + `currencyPairImpacts` via `CommodityChip`), Direction, Event category (9-value enum → display name, e.g. `armed_conflict_security` → "Armed Conflict & Security"), Media-Impact tag (reuses `MediaImpactTag` when `mediaImpactEntity` is set). Source confirmation and novelty render nothing when null — no N/A. When mechanism is null and both impact lists are empty, the box shows the exact sourced Caldara & Iacoviello (2022) fallback sentence — not a live GPR number. `isPreview` adds a small note with a link to `/calendar`. No raw classifier-confidence percent in this box.
+
+**#202 (2026-09-25):** the model's static predicted-direction chip and the live "price move since fired" sentence sat next to each other with nothing labeling which was which — they can legitimately disagree (that's the whole point of tracking accuracy) but read as a contradiction. Fix is copy-only: `CommodityChip` gets `label="Predicted"`, the price subtext gets a "Since signal:" prefix. Neither number's underlying computation changed.
 
 Event-detail ANALYSIS tab also has a "Why this signal" `<details>` (below Full Analyst Briefing) when `materialityReasoning` is non-null — raw classifier reasoning, not invented uncertainty copy. SignalQuickView header no longer shows `{n}% confidence`.
 

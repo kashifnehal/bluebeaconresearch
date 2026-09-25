@@ -109,11 +109,11 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 
 ### 3.3 `CommodityChip.tsx`
 - **Purpose**: Small pill tag indicating affected physical commodity asset and market impact direction.
-- **Props**: `{ asset: string; direction: Direction; confidence: number; size?: 'sm' | 'md' }`
-- **Styling**: Pill tag with directional arrow. Both sizes show ticker + arrow only (#140). Classifier `confidence` stays on the prop for gating / `aria-label` ("model classification confidence {n}%"); it is not visible text and is not a price-direction probability.
+- **Props**: `{ asset: string; direction: Direction; confidence: number; size?: 'sm' | 'md'; label?: string }`
+- **Styling**: Pill tag with directional arrow. Both sizes show ticker + arrow only (#140). Classifier `confidence` stays on the prop for gating / `aria-label` ("model classification confidence {n}%"); it is not visible text and is not a price-direction probability. **#202 (2026-09-25):** optional `label` prop renders a small uppercase caption above the pill (used as "Predicted" in `MarketImpactAssessment`'s Affected market(s) section, so the static classification-time chip reads distinctly from the live "Since signal" price-move sentence beside it) — omitted everywhere else, no visual change to alerts/watchlist/historical-tab usages.
 
-### 3.3b `MarketImpactAssessment.tsx` (#143; #143 leftover 2026-09-20)
-- **Purpose**: The event-detail / quick-view impact box, relabeled **MARKET IMPACT ASSESSMENT** (was PROJECTED IMPACT). Named parts from #141/#142 columns: source confirmation + novelty (2026-09-20; hidden when null), market mechanism, affected markets (CommodityChip, confidence-free since #140), direction, event category, reused `MediaImpactTag`. Empty mechanism + empty impact lists → exact Caldara & Iacoviello 2022 fallback sentence (no live GPR number). `is_preview` → calendar note + `/calendar` link.
+### 3.3b `MarketImpactAssessment.tsx` (#143; #143 leftover 2026-09-20; #202 label 2026-09-25)
+- **Purpose**: The event-detail / quick-view impact box, relabeled **MARKET IMPACT ASSESSMENT** (was PROJECTED IMPACT). Named parts from #141/#142 columns: source confirmation + novelty (2026-09-20; hidden when null), market mechanism, affected markets (CommodityChip, confidence-free since #140), direction, event category, reused `MediaImpactTag`. Empty mechanism + empty impact lists → exact Caldara & Iacoviello 2022 fallback sentence (no live GPR number). `is_preview` → calendar note + `/calendar` link. **#202:** the `CommodityChip` in Affected market(s) now passes `label="Predicted"`, and the `formatPriceSinceFiredSubtext` line right below it got a prefixed "Since signal:" caption — the two numbers can legitimately disagree (that's the point of tracking accuracy) and previously had nothing distinguishing which was the static prediction vs. the live measured move. Underlying values/logic untouched.
 - **Parents**: `events/[id]/page.tsx`, `SignalQuickView.tsx`.
 
 ### 3.4 `SignalQuickView.tsx` (#122)

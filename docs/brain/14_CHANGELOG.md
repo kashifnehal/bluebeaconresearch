@@ -1,12 +1,20 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-25 (v0.93.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-25 (v0.94.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.94.0 — #202/#203/#204/#205/#206/#199, six independent mobile-polish fixes (2026-09-25, `0701bf8`)
+
+`apps/web` only. Six small, unrelated UI fixes from a single audit pass, each touching its own file. **#202:** `MarketImpactAssessment.tsx`'s Affected market(s) section shows a `CommodityChip` (the model's static predicted direction) right next to a live "price since fired" sentence — the two can legitimately disagree (that's the whole point of tracking accuracy) but read as a contradiction with no label. Added an optional `label` prop to `CommodityChip.tsx` (unset everywhere else), passed as `label="Predicted"` here, plus a "Since signal:" prefix on the price subtext; neither value's computation changed. **#203:** `alerts/page.tsx`'s Feed/Watchlist/Lab row used pill/tab styling with no active-state highlight even though it actually navigates away (to `/dashboard`/`/watchlist`/`/backtesting`) rather than filtering in place — restyled as breadcrumb-style text links so it stops visually promising filtering it doesn't do; no real in-page filtering added. **#204:** `backtesting/page.tsx`'s "Popular Simulations" horizontal-scroll row had no swipe affordance at 375px (the second card visibly cuts off) — added a `md:hidden` "Swipe →" label beside the section header; scroll behavior itself untouched. **#205:** `signup/page.tsx`'s 4-segment password-strength bar computed a real score but showed no text — added a label mapping the existing `passwordScore()` value to Weak/Fair/Strong, shown once typing starts. **#206 (row-crowding half only):** `status/page.tsx`'s subsystem rows used `flex items-center justify-between` with no wrap, so a badge sat flush (0px gap, confirmed) against 2-line-wrapped detail text — restructured to `flex-col` below `sm:` (badge drops to its own line) and the original row layout at `sm:`+; plain `flex-wrap` wouldn't have forced a break since the text could already shrink-wrap without the row overflowing. The uptime-sparkline half of #206 is untouched. **#199:** `WelcomeTourStep.tsx` referenced a nonexistent `/onboarding/welcome-demo.gif`, firing a console 404 on every Replay Tour open even though the `onError` fallback already covered it visually. `WELCOME_DEMO_SRC` is now `""`, and the component treats an empty src as pre-failed so it never attempts the request; swap in a real path once an asset ships.
+
+**Verified:** `tsc --noEmit` clean; `pnpm --filter web test` — all `CommodityChip.test.tsx`/`MarketImpactAssessment.test.tsx` cases pass, including the two price-subtext cases. `eslint` on the 7 touched files shows only pre-existing issues at untouched lines. No live-browser walkthrough — none of these six are visual/rendering bugs under the token-discipline policy's Playwright carve-out. Full detail: `docs/brain/LIVE_TODO.md`, `docs/claude_project/14_CHANGELOG.md` PHASE 71.
+
+---
 
 ### v0.93.0 — #186 `/watchlist` mobile FAB-overlap fix + 3-mechanism picker collapse (2026-09-25, `58720a8`)
 
