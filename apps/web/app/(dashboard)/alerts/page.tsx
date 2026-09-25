@@ -16,6 +16,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
+import { AlertRuleTrendChart, AlertRuleTrendEmptyState, isTrendSparse, type DailyCount } from "@/components/alerts/AlertRuleTrendChart";
 
 type AlertRule = {
   id: string;
@@ -191,6 +192,25 @@ export default function AlertsPage() {
     queryKey: ["user-channels", "connected"],
     queryFn: fetchConnectedChannels,
   });
+
+  // Per-rule 14-day match-count trend for the small chart under each rule's name —
+  // a backend aggregation (distinct-signal counts per day, plus an all-time total for
+  // the sparse-history gate), not the full match history the page already fetches above.
+  const { data: ruleStatsData } = useQuery({
+    queryKey: ["alerts", "rule-stats"],
+    queryFn: async () => {
+      const res = await fetch("/api/alerts/rule-stats");
+      if (!res.ok) throw new Error("Failed to fetch alert rule stats");
+      return (await res.json()) as { stats: { ruleId: string; totalMatches: number; dailyCounts: DailyCount[] }[] };
+    },
+    refetchInterval: 30_000,
+  });
+
+  const ruleStatsById = useMemo(() => {
+    const map = new Map<string, { totalMatches: number; dailyCounts: DailyCount[] }>();
+    for (const s of ruleStatsData?.stats ?? []) map.set(s.ruleId, s);
+    return map;
+  }, [ruleStatsData]);
 
   const rules = rulesData?.rules ?? [];
   const isLoading = rulesLoading || alertsLoading;
@@ -434,6 +454,15 @@ export default function AlertsPage() {
                       >
                         {rule.is_active ? "Active" : "Paused"}
                       </span>
+                    </div>
+                    <div className="mb-3">
+                      {(() => {
+                        const stats = ruleStatsById.get(rule.id);
+                        if (!stats || isTrendSparse(stats.totalMatches, rule.created_at)) {
+                          return <AlertRuleTrendEmptyState />;
+                        }
+                        return <AlertRuleTrendChart dailyCounts={stats.dailyCounts} />;
+                      })()}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
