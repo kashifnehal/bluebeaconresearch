@@ -1,12 +1,18 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-25 (v0.97.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-25 (v0.98.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.98.0 — Calendar export, map recenter, dashboard price chips (2026-09-25, `a8bace3`)
+
+`apps/web` only, three independent additions, none parity fixes. **Calendar:** "Export to Calendar" button on `/calendar` downloads whatever's currently filtered/visible (day-strip selection if active, else This Week + Upcoming, respecting the Importance/Country/Category/Timezone filters) as a one-time `.ics` file. New local `eventsToIcs`/`icsEscape`/`icsDateTimeUTC`/`icsDateOnly` helpers build a plain RFC5545 `VCALENDAR` string client-side (no library, no new backend endpoint — the events are already loaded page-side); timed events get `DURATION:PT30M`, untimed events (e.g. the OPEC report) export as all-day. Labeled honestly as a one-time download, not a sync. **Map:** new `RecenterControl` (implements MapLibre's `IControl`) added next to the existing `NavigationControl` zoom buttons on `/map`, calling `map.easeTo({ center: DEFAULT_MAP_CENTER, zoom: DEFAULT_MAP_ZOOM })` — the same camera method already used elsewhere on the page — to snap back to the default view. Unlike zoom (mobile-only by design, §v0.8x), this control shows on both mobile and desktop: the `globals.css` rule that previously hid the *entire* bottom-right control corner above `md` was narrowed to `.maplibregl-ctrl-group:not(.map-recenter-ctrl)` so only the zoom group stays desktop-hidden. **Dashboard:** every `/dashboard` Recent Signal Stream row gained a small 24h price-move chip (`ASSET +N.N%` or "—" when no asset matches) for its primary commodity/forex asset, reusing the existing `/api/prices` `change_pct_24h` lookup already used by `PriceTicker.tsx`/watchlist pages (same `useQuery(["prices"])` pattern) rather than a new price-lookup implementation or endpoint. **Verified:** `tsc --noEmit` clean; existing `apps/web` test suite (12 files) passes unchanged; `eslint` on all 3 touched pages shows only pre-existing, unrelated issues (confirmed identical problem count before/after via `git stash`). Live-browser (Playwright, standing test account) at both 375px and 1440px: dashboard chips render on all visible rows with no blank gaps and no headline-clamp regression; map recenter returns to the exact default view at both widths after a real pan+zoom (before/after screenshot comparison), and isn't obscured by the desktop intelligence-stream panel; calendar export downloaded a real `.ics` file, hand-inspected — 6 VEVENTs after applying an Importance=High filter (down from 7 unfiltered), correctly excluding the Medium-impact event, valid RFC5545 structure and escaping. **Honest gap:** the map CSS fix required a full dev-server restart with `.next` cache cleared — Turbopack's HMR did not pick up the rule change on file save alone, worth knowing if a future CSS-only change to this file appears not to take effect.
+
+---
 
 ### v0.97.0 — Alerts: 14-day per-rule match-trend chart (2026-09-25, `f019cb9`)
 

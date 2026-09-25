@@ -1,8 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 74).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 75).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 75 — Calendar export, map recenter, dashboard price chips (2026-09-25, `a8bace3`)
+
+`apps/web` only, three independent new features. Calendar: "Export to Calendar" downloads the currently filtered/visible events as a one-time `.ics` file (client-side RFC5545 generation, no new endpoint, no library). Map: recenter control next to the existing zoom buttons, using the page's existing `map.easeTo()` camera method; shown on both mobile and desktop (zoom stays mobile-only). Dashboard: small 24h price-move chip on every Recent Signal Stream row, reusing the existing `/api/prices` lookup. `tsc --noEmit` clean; full test suite passes; Playwright-verified at 375px and desktop (chips render with no layout regression; recenter returns to the exact default view after a real pan+zoom at both widths; exported `.ics` hand-inspected as valid and correctly filtered). Full detail: `docs/brain/14_CHANGELOG.md` v0.98.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 

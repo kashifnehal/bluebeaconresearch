@@ -486,6 +486,16 @@ Scenario simulator, not a real backtesting engine — mock results only (`Math.s
 
 Added a 7-day tappable day strip (Mon–Sun, reusing the existing `getWeekRangeUTC` boundary so it can never disagree with the "This Week" section) above the event list. Fixes the case where "This Week" shows "No events in this range" while real events sit just outside it in "Upcoming" — tapping a day filters the full (already-loaded, no new API call) event list down to just that date, replacing the This Week/Upcoming split with a single "Events on <date>" section; tapping the active day again, or a "Show all" control, restores the normal split view. No new backend query.
 
+**"Export to Calendar" .ics download (2026-09-25, `a8bace3`):** new header button exports whatever the page is currently showing (day-strip selection if active, else This Week + Upcoming) as a one-time `.ics` file — always respects the active Importance/Country/Category/Timezone filters. Pure client-side RFC5545 generation + `<a download>` Blob, no new endpoint, no library. Labeled as a one-time download, not a live sync. Full detail: `docs/brain/06_COMPONENTS.md` §3.10.
+
+### MapPage recenter control (`apps/web/app/(dashboard)/map/page.tsx`) (2026-09-25, `a8bace3`)
+
+New "recenter" button next to the existing zoom buttons, using MapLibre's `IControl` interface and the page's existing `map.easeTo()` camera method (no hand-rolled camera math) to snap back to the default view/zoom. Unlike the zoom buttons, this one shows on both mobile and desktop — required narrowing the `globals.css` rule that previously hid the entire bottom-right control corner above `md`. Verified at 375px and desktop via Playwright (pan/zoom, click recenter, confirm exact default view returns at both widths). Full detail: `docs/brain/06_COMPONENTS.md` §3.5f.
+
+### Dashboard price-move chip (`apps/web/app/(dashboard)/dashboard/page.tsx`) (2026-09-25, `a8bace3`)
+
+Every Recent Signal Stream row now shows a small 24h price-move chip for its primary asset (or "—" when none can be matched), reusing the same `/api/prices` lookup already used by `PriceTicker`/watchlist — no new price-lookup logic, no new endpoint. Full detail: `docs/brain/06_COMPONENTS.md` §3.1.
+
 ---
 
 ## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)
