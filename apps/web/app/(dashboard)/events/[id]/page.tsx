@@ -138,6 +138,7 @@ export default function EventDetailPage() {
 
   const sources = data.sources ?? [];
   const historicalComparisons = data.historicalComparisons ?? [];
+  const relatedEvents = data.relatedEvents ?? [];
   const pricesAtSignal = data.pricesAtSignal ?? [];
   const alertCta = eventAlertCta(signal.severity);
 
@@ -380,8 +381,8 @@ export default function EventDetailPage() {
           {/* ── Deep Dive Analysis ─────────────────────────────────── */}
           <Tabs defaultValue="analysis" className="w-full">
             {/* overflow-x-auto + shrink-0 on each trigger: at 360px this row's
-                intrinsic content width (4 tabs × padding/tracking + gaps) exceeds
-                the viewport and was silently clipping "sources" out of reach
+                intrinsic content width (tabs × padding/tracking + gaps) exceeds
+                the viewport and was silently clipping the last tab out of reach
                 entirely rather than causing scroll — found live, not from a
                 Stitch mock. Horizontal scroll is the standard mobile pattern for
                 a tab row that doesn't fit; desktop has ample room so it never
@@ -390,15 +391,25 @@ export default function EventDetailPage() {
               className="bg-surface/30 border-b w-full justify-start rounded-none h-auto p-0 gap-4 md:gap-8 overflow-x-auto flex-nowrap"
               style={{ borderColor: "var(--border-subtle)" }}
             >
-              {["analysis", "historical", "map", "sources"].map((tab) => (
+              {/* "sources" tab value kept as-is (not renamed to "timeline") so any
+                  existing deep links / analytics keyed to this tab value keep working
+                  — only the visible label changed, now that the underlying data is a
+                  real oldest-first timeline (raw_events ordered by publish time). */}
+              {[
+                { value: "analysis", label: "analysis" },
+                { value: "historical", label: "historical" },
+                { value: "map", label: "map" },
+                { value: "sources", label: "timeline" },
+                { value: "related", label: "related events" },
+              ].map((tab) => (
                 <TabsTrigger
-                  key={tab}
-                  value={tab}
+                  key={tab.value}
+                  value={tab.value}
                   className="shrink-0 bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted transition-all"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
-                  {tab === "analysis" && <Shield size={14} className="mr-2" />}
-                  {tab}
+                  {tab.value === "analysis" && <Shield size={14} className="mr-2" />}
+                  {tab.label}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -573,7 +584,7 @@ export default function EventDetailPage() {
                             {s.title}
                           </span>
                           <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
-                            {s.sourceLabel ?? "Unknown source"}
+                            {s.domain ?? s.sourceLabel ?? "Unknown source"}
                             {s.publishedAt ? ` · ${safeFormatDistanceToNow(s.publishedAt, { addSuffix: true })}` : ""}
                           </span>
                         </div>
@@ -589,6 +600,47 @@ export default function EventDetailPage() {
                     <Database className="w-12 h-12 text-muted mb-6" />
                     <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
                       No source articles are linked to this signal.
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* ── RELATED EVENTS TAB ───────────────────────────────── */}
+              <TabsContent value="related" className="m-0 outline-none">
+                {relatedEvents.length > 0 ? (
+                  <div className="space-y-3">
+                    {relatedEvents.map((r) => (
+                      <a
+                        key={r.id}
+                        href={`/events/${r.id}`}
+                        className="w-full text-left p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 transition-all"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-bold text-text-primary">{r.title}</span>
+                          <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
+                            {r.country ?? "Unknown"} · {r.eventDate ? safeFormatDistanceToNow(r.eventDate, { addSuffix: true }) : "unknown date"} ·{" "}
+                            {r.sharedCommodities.join(", ")}
+                          </span>
+                        </div>
+                        <span
+                          className={`shrink-0 px-2 py-1 rounded-sm text-[12px] md:text-[9px] font-black uppercase tracking-widest border ${
+                            r.matchLabel === "reinforcing"
+                              ? "text-accent border-accent/30 bg-accent/10"
+                              : r.matchLabel === "conflicting"
+                                ? "text-red-400 border-red-400/30 bg-red-400/10"
+                                : "text-muted border-border bg-surface/40"
+                          }`}
+                        >
+                          {r.matchLabel}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
+                    <Database className="w-12 h-12 text-muted mb-6" />
+                    <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                      No related events found.
                     </p>
                   </div>
                 )}

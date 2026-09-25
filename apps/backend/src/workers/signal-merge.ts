@@ -9,17 +9,29 @@ import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
  * *classified* article gets its own new `signals` row or gets folded into a recent
  * signal that independent classification says is plausibly the same real event.
  *
- * Thresholds tuned against real production `signals` data (2026-08-19 backtest, 500
- * most recent rows): same-event cross-source pairs (identical story, different outlet/
- * feed) cluster at Jaccard >= 0.6 even with real phrasing variance ("Kushner discusses
- * Gaza with Netanyahu" vs "Kushner sits with Netanyahu to talk Gaza" = 0.600). Below
- * ~0.45, same-region pairs start including genuinely different developments of a
- * multi-day story (e.g. an initial policy announcement vs. a same-topic follow-up
- * article ~13h later) rather than the same event — bias toward NOT merging (per task
- * restrictions) means the threshold sits above that ambiguous zone, not inside it.
+ * PLACEHOLDER, not a tuned production constant — re-derive once there's more volume.
+ * Re-checked 2026-09-25 against a real missed merge (signals 4c537435.../90b2c948...,
+ * both "US strikes on Iranian oil tankers", 0.55 threshold missed them at Jaccard
+ * 0.333 on the summary text) plus a live sample of 4,343 same-region/same-country/
+ * 8h-window signal pairs pulled from production (`evavcgfmemwryggdkjmx`). That sample
+ * showed the old 0.55 threshold was too strict (real duplicates — "Trump scales back
+ * South Korea military drills", "Kushner sits with Netanyahu to talk Gaza", "Former US
+ * Marine held in Russia... released" — score 0.38-0.55 and were never merging), but
+ * simply lowering the raw threshold to 0.33 (where the tanker pair sits) collides with
+ * real false positives at the *identical* score: two unrelated low-materiality signals
+ * ("Pete Alonso blasts 30th homer..." vs "NFC Staffer Knocks Dante Moore...") also
+ * scored exactly 0.333. Inspecting those false positives' actual summaries showed the
+ * collision wasn't real content overlap — both were boilerplate rejection text
+ * ("No geopolitical or financial market implications" / "Sports news event with no
+ * geopolitical or financial market implications") sharing generic disclaimer words.
+ * Adding those specific boilerplate terms to STOPWORDS below removes that collision
+ * (false-positive pairs drop to ~0.22 Jaccard) without touching real story overlap, so
+ * 0.33 was chosen as the lowered threshold. Below ~0.33, same-region pairs still start
+ * pulling in genuinely unrelated wire-service noise — bias toward NOT merging (per task
+ * restrictions) means we stop right at the evidence line, not past it.
  */
 const MATCH_WINDOW_HOURS = 8;
-const SIMILARITY_THRESHOLD = 0.55;
+const SIMILARITY_THRESHOLD = 0.33;
 const CANDIDATE_LIMIT = 25;
 
 const STOPWORDS = new Set([
@@ -28,6 +40,11 @@ const STOPWORDS = new Set([
   "over", "amid", "new", "says", "say", "said", "will", "has", "have", "had", "be",
   "been", "up", "down", "out", "into", "than", "more", "most", "not", "no", "but",
   "if", "while", "their", "his", "her",
+  // Materiality-gate boilerplate (#141) — low-materiality classifications reuse near-
+  // identical disclaimer phrasing ("No geopolitical or financial market implications")
+  // across wholly unrelated stories, which inflates Jaccard on generic words rather
+  // than real content. Confirmed live 2026-09-25 (see threshold rationale above).
+  "geopolitical", "financial", "market", "implications", "impact", "material",
 ]);
 
 function tokenize(text: string | null | undefined): Set<string> {
