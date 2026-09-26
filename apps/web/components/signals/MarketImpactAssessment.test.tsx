@@ -4,7 +4,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Signal } from "@blue-beacon-research/shared";
 
 import { MarketImpactAssessment } from "./MarketImpactAssessment";
-import { GPR_FALLBACK_SENTENCE, PREVIEW_NOTE } from "@/lib/market-impact-assessment";
+import {
+  GPR_FALLBACK_SENTENCE,
+  GRAIN_FALLBACK_SENTENCE,
+  MARKET_IMPACT_DISCLAIMER,
+  PREVIEW_NOTE,
+} from "@/lib/market-impact-assessment";
 
 function visibleText(html: string): string {
   return html
@@ -146,6 +151,61 @@ runTest("source confirmation and novelty render only when set, never as N/A", ()
   assert.equal(withoutGateText.includes("Source confirmation"), false);
   assert.equal(withoutGateText.includes("Novelty"), false);
   assert.equal(withoutGateText.includes("N/A"), false);
+});
+
+runTest("magnitude and time-horizon lines render when the asset clears the sample-size gate", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "OPEC+ output cut tightens crude supply.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232 },
+          timeHorizonLabel: "multi-day",
+        },
+      },
+    }),
+  );
+  const text = visibleText(html);
+  assert.match(html, /data-testid="market-impact-magnitude"/);
+  assert.match(html, /data-testid="market-impact-horizon"/);
+  assert.match(text, /historically moved USOIL by ~0\.97% within 24h/);
+  assert.match(text, /based on 1232 tracked BBR signals/);
+  assert.match(text, /multi-day/);
+  assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
+});
+
+runTest("not-enough-history fallback renders for a non-grain asset with no magnitude entry", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "Sanctions target a shipping route.",
+        commodityImpacts: [{ asset: "USDRUB", direction: "down", confidence: 0.6 }],
+      }),
+      marketImpactMagnitudes: {},
+    }),
+  );
+  const text = visibleText(html);
+  assert.equal(html.includes('data-testid="market-impact-magnitude"'), false);
+  assert.equal(html.includes('data-testid="market-impact-horizon"'), false);
+  assert.match(text, /Not enough tracked history for USDRUB yet\./);
+});
+
+runTest("grain fallback sentence renders for WHEAT/CORN with no magnitude entry, not the generic fallback", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "Export ban on grain shipments.",
+        commodityImpacts: [{ asset: "WHEAT", direction: "up", confidence: 0.7 }],
+      }),
+      marketImpactMagnitudes: {},
+    }),
+  );
+  const text = visibleText(html);
+  assert.equal(text.includes(GRAIN_FALLBACK_SENTENCE), true);
+  assert.equal(text.includes("Not enough tracked history"), false);
 });
 
 runTest("is_preview shows the calendar note and link", () => {

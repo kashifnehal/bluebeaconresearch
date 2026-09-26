@@ -81,8 +81,110 @@ export function noveltyLabel(value: number | null | undefined): string | null {
 export const GPR_FALLBACK_SENTENCE =
   "No direct commodity match. Broad geopolitical risk events like this have historically been associated with a 5-10% move in equity indices and reduced oil demand within the following weeks (Caldara & Iacoviello, 2022).";
 
+export const GRAIN_FALLBACK_SENTENCE =
+  "Geopolitical risk has been shown to raise long-run volatility in wheat, corn, soybean, and rice futures (Dai, Dai & Zhou, 2025, Journal of Futures Markets).";
+
+export const MARKET_IMPACT_DISCLAIMER =
+  "Historical pattern only — not a prediction or investment advice.";
+
+const GRAIN_ASSETS = new Set(["WHEAT", "CORN"]);
+
+export function isGrainAsset(asset: string): boolean {
+  return GRAIN_ASSETS.has(asset);
+}
+
 export const PREVIEW_NOTE =
   "This is a preview of a scheduled event, not the event itself — see the Economic Calendar for the confirmed schedule";
+
+// Duplicated from apps/backend/src/routes/accuracy.routes.ts's MIN_SAMPLE_SIZE —
+// same judgment call (below this many scored outcomes, a headline number is more
+// misleading than informative), kept identical rather than introducing a second
+// tunable threshold for the same underlying question.
+export const MARKET_IMPACT_MIN_SAMPLE_SIZE = 20;
+
+export type SignalOutcomeRow = {
+  asset: string;
+  checkpoint_hours: number;
+  actual_pct_change: number | null;
+};
+
+export type MarketImpactMagnitude = {
+  medianMovePct: number;
+  sampleSize: number;
+};
+
+export type TimeHorizonLabel = "within hours" | "within a day" | "multi-day";
+
+const TIME_HORIZON_CHECKPOINTS = [1, 4, 24, 48] as const;
+
+function timeHorizonLabelForCheckpoint(checkpointHours: number): TimeHorizonLabel {
+  if (checkpointHours === 24) return "within a day";
+  if (checkpointHours === 48) return "multi-day";
+  return "within hours";
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
+}
+
+/**
+ * Magnitude uses the median of |actual_pct_change|, not the mean: per-asset
+ * distributions are consistently right-skewed by a handful of large moves
+ * (e.g. WHEAT's 48h mean-abs move is ~2.3% vs a ~1.26% median on the live
+ * signal_outcomes data), so the mean overstates the typical move. Median is
+ * the robust choice.
+ */
+export function computeMarketImpactMagnitude(
+  rows: SignalOutcomeRow[],
+  asset: string,
+  checkpointHours: number,
+  minSampleSize: number = MARKET_IMPACT_MIN_SAMPLE_SIZE,
+): MarketImpactMagnitude | null {
+  const values = rows
+    .filter((r) => r.asset === asset && r.checkpoint_hours === checkpointHours)
+    .map((r) => r.actual_pct_change)
+    .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+
+  if (values.length < minSampleSize) return null;
+
+  return {
+    medianMovePct: median(values.map((v) => Math.abs(v))),
+    sampleSize: values.length,
+  };
+}
+
+/**
+ * Finds which of the 1h/4h/24h/48h checkpoints holds the largest typical
+ * |actual_pct_change| for this asset, considering only checkpoints that
+ * individually clear minSampleSize (an asset can clear the gate at 24h/48h
+ * before it has enough 1h/4h rows). Returns null if none clear the gate.
+ */
+export function deriveTimeHorizonLabel(
+  rows: SignalOutcomeRow[],
+  asset: string,
+  minSampleSize: number = MARKET_IMPACT_MIN_SAMPLE_SIZE,
+): TimeHorizonLabel | null {
+  let best: { checkpointHours: number; medianAbsPct: number } | null = null;
+
+  for (const checkpointHours of TIME_HORIZON_CHECKPOINTS) {
+    const magnitude = computeMarketImpactMagnitude(
+      rows,
+      asset,
+      checkpointHours,
+      minSampleSize,
+    );
+    if (!magnitude) continue;
+    if (!best || magnitude.medianMovePct > best.medianAbsPct) {
+      best = { checkpointHours, medianAbsPct: magnitude.medianMovePct };
+    }
+  }
+
+  return best ? timeHorizonLabelForCheckpoint(best.checkpointHours) : null;
+}
 
 const DIRECTION_LABELS: Record<Direction, string> = {
   up: "Up",

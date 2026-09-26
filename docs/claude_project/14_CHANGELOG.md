@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 84).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 85).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 85 — Market Impact Assessment: real historical magnitude + time-horizon (2026-09-26)
+
+Affected-market chips on event detail previously showed only a predicted direction, with no sense of how big or how fast that kind of move typically is. Each chip now gets a real line underneath, computed from the 12,483-row `signal_outcomes` table (no new table): "Events like this have historically moved {asset} by ~{median}% within 24h, based on {n} tracked BBR signals," plus a "played out within hours / within a day / multi-day" line, both gated at the same `MIN_SAMPLE_SIZE = 20` threshold `/v1/accuracy` already uses. Below the gate: "Not enough tracked history yet" for most assets, or a sourced Dai, Dai & Zhou (2025) grain-volatility citation specifically for WHEAT/CORN — no invented percentage. Uses the median, not the mean, of the historical move size: checked the real distribution first and found a consistent right skew (a few large moves inflate the mean; e.g. WHEAT's 48h mean move is nearly double its median), so the median was the deliberate, evidence-based choice, not a default. Caught and fixed a real undercounting bug during verification — an early version fetched outcome rows without pagination and silently truncated at the database layer's row cap, undercounting every asset; fixed by paging through the same way the accuracy endpoint already does for this same table. New standing disclaimer line: "Historical pattern only — not a prediction or investment advice." Audited for a hardcoded default-asset list shown regardless of the real signal — none found. Verified: full `apps/web` test suite green, type-check clean, and the real production numbers (USOIL ≈0.97%/1,232 signals, WHEAT ≈0.98%/263 signals, both "multi-day") checked directly against the database before shipping. Live-browser confirmed the feature at desktop and mobile widths on three real signals, including both the working case and the not-enough-history fallback; the grain-citation fallback was verified in tests only, not yet seen live (no current live WHEAT/CORN signal falls below the gate). Full detail: `docs/brain/14_CHANGELOG.md` v0.108.0.
 
 ## PHASE 84 — /map "0 total" fix: missing route guard, SUPABASE_SECRET_KEY fallback, ingestion cadence (2026-09-26)
 

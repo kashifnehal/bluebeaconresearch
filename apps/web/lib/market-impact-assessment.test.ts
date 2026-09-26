@@ -4,15 +4,21 @@ import type { EventCategory, Signal } from "@blue-beacon-research/shared";
 import {
   EVENT_CATEGORY_LABELS,
   GPR_FALLBACK_SENTENCE,
+  GRAIN_FALLBACK_SENTENCE,
+  MARKET_IMPACT_MIN_SAMPLE_SIZE,
   SOURCE_CONFIRMATION_LABELS,
+  computeMarketImpactMagnitude,
+  deriveTimeHorizonLabel,
   eventCategoryLabel,
   formatImpactDirections,
+  isGrainAsset,
   noveltyLabel,
   parseEventCategory,
   parseNovelty,
   parseSourceConfirmation,
   sourceConfirmationLabel,
   usesGprFallback,
+  type SignalOutcomeRow,
 } from "./market-impact-assessment";
 
 function runTest(name: string, fn: () => void) {
@@ -128,6 +134,94 @@ runTest("source confirmation maps the three enum values and rejects unknown", ()
   assert.equal(Object.keys(SOURCE_CONFIRMATION_LABELS).length, 3);
   assert.equal(parseSourceConfirmation("rumor"), null);
   assert.equal(sourceConfirmationLabel(null), null);
+});
+
+function outcomeRows(
+  asset: string,
+  checkpointHours: number,
+  values: number[],
+): SignalOutcomeRow[] {
+  return values.map((actual_pct_change) => ({
+    asset,
+    checkpoint_hours: checkpointHours,
+    actual_pct_change,
+  }));
+}
+
+runTest("market impact magnitude is gated at MIN_SAMPLE_SIZE (20)", () => {
+  const belowGate = outcomeRows("WHEAT", 24, new Array(19).fill(1));
+  assert.equal(computeMarketImpactMagnitude(belowGate, "WHEAT", 24), null);
+
+  const atGate = outcomeRows("WHEAT", 24, new Array(20).fill(1));
+  const result = computeMarketImpactMagnitude(atGate, "WHEAT", 24);
+  assert.ok(result);
+  assert.equal(result?.sampleSize, 20);
+  assert.equal(MARKET_IMPACT_MIN_SAMPLE_SIZE, 20);
+});
+
+runTest("magnitude uses median of |actual_pct_change|, robust to a single outlier", () => {
+  // 20 rows near ~1%, one 30% data-glitch-style outlier. Median should stay
+  // near 1%; a mean would be dragged up to nearly 2.5%.
+  const values = [...new Array(20).fill(1), 30];
+  const rows = outcomeRows("USOIL", 24, values);
+  const result = computeMarketImpactMagnitude(rows, "USOIL", 24);
+  assert.ok(result);
+  assert.equal(result?.sampleSize, 21);
+  assert.ok(result!.medianMovePct < 1.5, `expected median near 1%, got ${result?.medianMovePct}`);
+});
+
+runTest("magnitude is computed per asset/checkpoint, ignoring other rows", () => {
+  const rows = [
+    ...outcomeRows("USOIL", 24, new Array(25).fill(2)),
+    ...outcomeRows("WHEAT", 24, new Array(25).fill(5)),
+    ...outcomeRows("USOIL", 48, new Array(25).fill(9)),
+  ];
+  assert.equal(computeMarketImpactMagnitude(rows, "USOIL", 24)?.medianMovePct, 2);
+  assert.equal(computeMarketImpactMagnitude(rows, "WHEAT", 24)?.medianMovePct, 5);
+  assert.equal(computeMarketImpactMagnitude(rows, "USOIL", 48)?.medianMovePct, 9);
+});
+
+runTest("time-horizon label picks the checkpoint with the largest median move, gated per-checkpoint", () => {
+  // 24h/48h clear the gate; 1h/4h do not — the peak among 1h/4h (even if
+  // numerically larger) must not win because it can't clear the gate.
+  const rows = [
+    ...outcomeRows("USOIL", 1, new Array(5).fill(50)),
+    ...outcomeRows("USOIL", 4, new Array(5).fill(50)),
+    ...outcomeRows("USOIL", 24, new Array(25).fill(1)),
+    ...outcomeRows("USOIL", 48, new Array(25).fill(3)),
+  ];
+  assert.equal(deriveTimeHorizonLabel(rows, "USOIL"), "multi-day");
+});
+
+runTest("time-horizon label maps checkpoints to the three horizon buckets", () => {
+  assert.equal(
+    deriveTimeHorizonLabel(outcomeRows("USOIL", 1, new Array(25).fill(1)), "USOIL"),
+    "within hours",
+  );
+  assert.equal(
+    deriveTimeHorizonLabel(outcomeRows("USOIL", 24, new Array(25).fill(1)), "USOIL"),
+    "within a day",
+  );
+  assert.equal(
+    deriveTimeHorizonLabel(outcomeRows("USOIL", 48, new Array(25).fill(1)), "USOIL"),
+    "multi-day",
+  );
+});
+
+runTest("time-horizon label is null when no checkpoint clears the gate", () => {
+  const rows = outcomeRows("EURUSD", 24, new Array(19).fill(1));
+  assert.equal(deriveTimeHorizonLabel(rows, "EURUSD"), null);
+});
+
+runTest("grain fallback sentence is exact and cites Dai, Dai & Zhou without a specific percentage", () => {
+  assert.equal(isGrainAsset("WHEAT"), true);
+  assert.equal(isGrainAsset("CORN"), true);
+  assert.equal(isGrainAsset("USOIL"), false);
+  assert.equal(
+    GRAIN_FALLBACK_SENTENCE,
+    "Geopolitical risk has been shown to raise long-run volatility in wheat, corn, soybean, and rice futures (Dai, Dai & Zhou, 2025, Journal of Futures Markets).",
+  );
+  assert.equal(/%/.test(GRAIN_FALLBACK_SENTENCE), false);
 });
 
 runTest("novelty labels are UI buckets, not raw decimals", () => {

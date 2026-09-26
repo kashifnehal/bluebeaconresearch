@@ -174,6 +174,7 @@ export default function EventDetailPage() {
   const historicalComparisons = data.historicalComparisons ?? [];
   const relatedEvents = data.relatedEvents ?? [];
   const pricesAtSignal = data.pricesAtSignal ?? [];
+  const marketImpactMagnitudes = data.marketImpactMagnitudes ?? {};
   const alertCta = eventAlertCta(signal.severity);
 
   const hasPreciseLocation =
@@ -361,6 +362,7 @@ export default function EventDetailPage() {
                   pricesAtSignal={pricesAtSignal}
                   showPriceSubtext
                   headingIcon={<Target size={14} className="text-accent" />}
+                  marketImpactMagnitudes={marketImpactMagnitudes}
                 />
               </div>
 

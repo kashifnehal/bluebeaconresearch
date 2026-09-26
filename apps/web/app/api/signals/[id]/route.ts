@@ -4,10 +4,18 @@ import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import {
+  computeMarketImpactMagnitude,
+  deriveTimeHorizonLabel,
   parseEventCategory,
   parseNovelty,
   parseSourceConfirmation,
+  type MarketImpactMagnitude,
+  type SignalOutcomeRow,
+  type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
+
+const MARKET_IMPACT_CHECKPOINT_HOURS = 24;
+const OUTCOME_ROWS_PAGE_SIZE = 1000;
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -49,12 +57,18 @@ export type PriceAtSignal = {
   currentPriceDate: string | null;
 };
 
+export type MarketImpactAssessmentEntry = {
+  magnitude: MarketImpactMagnitude | null;
+  timeHorizonLabel: TimeHorizonLabel | null;
+};
+
 export type EventDetailResponse = {
   signal: Signal;
   sources: EventSource[];
   historicalComparisons: HistoricalComparison[];
   relatedEvents: RelatedEvent[];
   pricesAtSignal: PriceAtSignal[];
+  marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry>;
 };
 
 // Placeholder, not a tuned value — no usage data exists yet on how far back a
@@ -232,7 +246,9 @@ export async function GET(
   );
 
   const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
-  const currencyPairImpacts = (row.currency_pair_impacts ?? []) as Signal["currencyPairImpacts"];
+  const currencyPairImpacts = (row.currency_pair_impacts ?? []) as NonNullable<
+    Signal["currencyPairImpacts"]
+  >;
   const eventDate = row.event_date ?? row.created_at;
 
   const pricesAtSignal: PriceAtSignal[] = await Promise.all(
@@ -264,6 +280,50 @@ export async function GET(
       };
     }),
   );
+
+  const magnitudeAssets = [
+    ...new Set([
+      ...commodityImpacts.map((c) => c.asset),
+      ...currencyPairImpacts.map((c) => c.asset),
+    ]),
+  ];
+
+  let marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry> = {};
+  if (magnitudeAssets.length > 0) {
+    // PostgREST caps a single response at its configured max-rows (this project's
+    // signal_outcomes easily exceeds that per asset), so this must page through
+    // with .range() like accuracy.routes.ts's PAGE_SIZE loop — a single unranged
+    // .select() here would silently truncate and undercount every asset/checkpoint.
+    const rows: SignalOutcomeRow[] = [];
+    for (let from = 0; ; from += OUTCOME_ROWS_PAGE_SIZE) {
+      const { data: page, error: outcomeError } = await supabase
+        .from("signal_outcomes")
+        .select("asset, checkpoint_hours, actual_pct_change")
+        .in("asset", magnitudeAssets)
+        .not("actual_pct_change", "is", null)
+        .range(from, from + OUTCOME_ROWS_PAGE_SIZE - 1);
+
+      if (outcomeError) {
+        console.error("[signals/:id] signal_outcomes query error:", outcomeError.message);
+        break;
+      }
+      rows.push(...(page ?? []));
+      if (!page || page.length < OUTCOME_ROWS_PAGE_SIZE) break;
+    }
+    marketImpactMagnitudes = Object.fromEntries(
+      magnitudeAssets.map((asset) => [
+        asset,
+        {
+          magnitude: computeMarketImpactMagnitude(
+            rows,
+            asset,
+            MARKET_IMPACT_CHECKPOINT_HOURS,
+          ),
+          timeHorizonLabel: deriveTimeHorizonLabel(rows, asset),
+        } satisfies MarketImpactAssessmentEntry,
+      ]),
+    );
+  }
 
   const mediaImpactCaveats = await loadMediaImpactCaveats(supabase);
   const mediaImpactEntity =
@@ -318,6 +378,7 @@ export async function GET(
     historicalComparisons,
     relatedEvents,
     pricesAtSignal,
+    marketImpactMagnitudes,
   };
 
   return NextResponse.json(payload);

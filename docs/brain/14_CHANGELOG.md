@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-26 (v0.107.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-26 (v0.108.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.108.0 — Market Impact Assessment: real historical magnitude + time-horizon (2026-09-26)
+
+Prior state: the Affected-market chips on event detail showed a predicted direction with no sense of how big or how fast that kind of move typically is. New per-asset line under each chip, computed server-side in `GET /api/signals/:id` from the 12,483-row `signal_outcomes` table (no new table, no migration): "Events like this have historically moved {asset} by ~{median}% within 24h, based on {n} tracked BBR signals," plus a "played out {within hours / within a day / multi-day}" line from whichever of the 1h/4h/24h/48h checkpoints holds the largest median move among checkpoints that individually clear `MIN_SAMPLE_SIZE = 20` (duplicated from `apps/backend/src/routes/accuracy.routes.ts`, not re-exported — same judgment call, kept identical rather than a second tunable). Below the gate: "Not enough tracked history for {asset} yet." for most assets, or a new Dai, Dai & Zhou (2025, *Journal of Futures Markets*) grain-volatility citation (no invented percentage) specifically for WHEAT/CORN.
+
+**Median, not mean:** checked the live per-asset/checkpoint distribution first — every asset/checkpoint is right-skewed by a handful of large moves (e.g. WHEAT 48h: mean-abs ≈2.30% vs. median-abs ≈1.26%; USOIL 24h: mean-abs ≈1.33% vs. median-abs ≈0.97%), so a mean would systematically overstate the typical move. Median of `|actual_pct_change|` is the robust choice.
+
+**Real bug caught during verification, not shipped:** the first cut fetched `signal_outcomes` rows with a single unranged `.select()` — silently truncated at PostgREST's max-rows and undercounted every asset (USOIL alone has 4,900+ rows across its 4 checkpoints), producing a `null` magnitude for USOIL despite 1,232 real 24h rows. Fixed by paging with `.range()` in `OUTCOME_ROWS_PAGE_SIZE = 1000` batches — the same pattern `accuracy.routes.ts`'s `PAGE_SIZE` loop already uses for the same table.
+
+Pure aggregation (`computeMarketImpactMagnitude`, `deriveTimeHorizonLabel`) lives in `apps/web/lib/market-impact-assessment.ts`, unit-tested against synthetic outcome rows (gate boundary, outlier robustness, per-checkpoint gating, horizon-label mapping) without touching the DB; only the fetch itself is server-only, in the route handler, not a client-callable lib function. Audited the Market Impact Assessment UI for a hardcoded default-asset list shown regardless of the actual signal — none found; it already renders only `signal.commodityImpacts`/`currencyPairImpacts`. New `data-testid="market-impact-magnitude"` / `"market-impact-horizon"`, plus a standing disclaimer line ("Historical pattern only — not a prediction or investment advice.") rendered once per Affected-market(s) block. `SignalQuickView` isn't wired to the new prop (defaults to `{}` — still shows only the fallback/grain text there, no live numbers).
+
+**Verified:** `pnpm --filter web test` (13 new unit/component assertions, full suite green) + `tsc --noEmit` clean. Live query against production (`evavcgfmemwryggdkjmx`) confirmed real numbers before shipping: USOIL 24h median ≈0.97% (n=1,232), UKOIL 24h median ≈0.91% (n=576), NGAS 24h median ≈1.25% (n=325), WHEAT 24h median ≈0.98% (n=263) — all "multi-day" horizon (48h checkpoint has the largest median move for every asset checked); USDRUB (n=2) correctly fell below the gate. Live-browser (Playwright, standing test account) at 1366×900 and 375×812 on three real signals: a USOIL/UKOIL/NGAS signal showed all three real magnitude+horizon lines with no overflow at either width; a USDRUB signal showed the not-enough-history fallback for that asset. Did not get a live look at the grain fallback sentence — the only live WHEAT signal checked already clears the 24h gate (263 rows), so that branch is unit/component-tested only, not yet seen with real data in the browser.
 
 ### v0.107.0 — /map "0 total" fix: missing PROTECTED entry, SUPABASE_SECRET_KEY fallback, ingestion cadence (2026-09-26)
 

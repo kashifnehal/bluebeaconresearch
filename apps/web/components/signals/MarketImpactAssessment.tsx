@@ -6,13 +6,18 @@ import { CommodityChip } from "@/components/signals/CommodityChip";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import {
   GPR_FALLBACK_SENTENCE,
+  GRAIN_FALLBACK_SENTENCE,
+  MARKET_IMPACT_DISCLAIMER,
   PREVIEW_NOTE,
   collectMarketImpacts,
   eventCategoryLabel,
   formatImpactDirections,
+  isGrainAsset,
   noveltyLabel,
   sourceConfirmationLabel,
   usesGprFallback,
+  type MarketImpactMagnitude,
+  type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
 import { formatPriceSinceFiredSubtext } from "@/lib/signal-display";
 
@@ -42,16 +47,23 @@ function Part({
   );
 }
 
+export type MarketImpactAssessmentEntry = {
+  magnitude: MarketImpactMagnitude | null;
+  timeHorizonLabel: TimeHorizonLabel | null;
+};
+
 export function MarketImpactAssessment({
   signal,
   pricesAtSignal = [],
   showPriceSubtext = false,
   headingIcon,
+  marketImpactMagnitudes = {},
 }: {
   signal: Signal;
   pricesAtSignal?: MarketImpactPriceRow[];
   showPriceSubtext?: boolean;
   headingIcon?: ReactNode;
+  marketImpactMagnitudes?: Record<string, MarketImpactAssessmentEntry>;
 }) {
   const mechanism =
     typeof signal.marketMechanism === "string" && signal.marketMechanism.trim()
@@ -133,9 +145,12 @@ export function MarketImpactAssessment({
 
           {impacts.length > 0 ? (
             <Part label="Affected market(s)">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {impacts.map((c) => {
                   const priceInfo = pricesAtSignal.find((p) => p.asset === c.asset);
+                  const entry = marketImpactMagnitudes[c.asset];
+                  const magnitude = entry?.magnitude ?? null;
+                  const timeHorizonLabel = entry?.timeHorizonLabel ?? null;
                   return (
                     <div key={`${c.asset}-${c.direction}`} className="space-y-1">
                       <CommodityChip
@@ -157,9 +172,38 @@ export function MarketImpactAssessment({
                           )}
                         </p>
                       ) : null}
+                      {magnitude ? (
+                        <p
+                          data-testid="market-impact-magnitude"
+                          className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-text-secondary"
+                        >
+                          Events like this have historically moved {c.asset} by ~
+                          {magnitude.medianMovePct.toFixed(2)}% within 24h, based on{" "}
+                          {magnitude.sampleSize} tracked BBR signals.
+                        </p>
+                      ) : isGrainAsset(c.asset) ? (
+                        <p className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-text-secondary">
+                          {GRAIN_FALLBACK_SENTENCE}
+                        </p>
+                      ) : (
+                        <p className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-muted">
+                          Not enough tracked history for {c.asset} yet.
+                        </p>
+                      )}
+                      {magnitude && timeHorizonLabel ? (
+                        <p
+                          data-testid="market-impact-horizon"
+                          className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-muted"
+                        >
+                          Historically, moves like this have played out {timeHorizonLabel}.
+                        </p>
+                      ) : null}
                     </div>
                   );
                 })}
+                <p className="pl-1 text-[11px] leading-snug text-muted italic">
+                  {MARKET_IMPACT_DISCLAIMER}
+                </p>
               </div>
             </Part>
           ) : null}
