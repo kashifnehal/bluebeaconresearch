@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import calendarData from "@/data/economic-calendar.json";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -10,6 +10,7 @@ import {
   type CalendarFilterValue,
   type CalendarImpact,
 } from "@/lib/calendar-filters";
+import type { MarketImpactMagnitude, TimeHorizonLabel } from "@/lib/market-impact-assessment";
 
 type Impact = CalendarImpact;
 
@@ -32,6 +33,60 @@ type CalendarEvent = {
 };
 
 type TimeZoneMode = "utc" | "local";
+
+type CalendarMarketImpactEntry = {
+  magnitude: MarketImpactMagnitude | null;
+  timeHorizonLabel: TimeHorizonLabel | null;
+};
+
+// Which #227-tracked assets a calendar category's magnitude line should draw
+// from. Only categories with an obvious, direct commodity link are mapped —
+// e.g. NGAS is a #227-gated asset but nothing in this calendar is a
+// natural-gas-specific release, so it's deliberately absent here.
+const CATEGORY_ASSET_MAP: Record<string, string[]> = {
+  Energy: ["USOIL", "UKOIL"],
+  Agriculture: ["WHEAT", "CORN"],
+};
+
+const MAGNITUDE_ASSETS = [...new Set(Object.values(CATEGORY_ASSET_MAP).flat())];
+
+function magnitudeLinesForEvent(
+  category: string,
+  marketImpact: Record<string, CalendarMarketImpactEntry> | null,
+): string[] {
+  const assets = CATEGORY_ASSET_MAP[category];
+  if (!assets || !marketImpact) return [];
+  const lines: string[] = [];
+  for (const asset of assets) {
+    const entry = marketImpact[asset];
+    if (entry?.magnitude && entry.timeHorizonLabel) {
+      lines.push(
+        `Events like this have historically moved ${asset} by ~${entry.magnitude.medianMovePct.toFixed(2)}% within ${entry.timeHorizonLabel}, based on ${entry.magnitude.sampleSize} tracked BBR signals.`,
+      );
+    }
+  }
+  return lines;
+}
+
+function MagnitudeLines({ lines }: { lines: string[] }) {
+  if (lines.length === 0) return null;
+  return (
+    <>
+      {lines.map((line) => (
+        <p
+          key={line}
+          data-testid="calendar-magnitude-line"
+          className="text-[12px] md:text-[11px] leading-relaxed text-on-surface/60 italic"
+        >
+          {line}
+        </p>
+      ))}
+    </>
+  );
+}
+
+const OPTIONS_IV_NOTE =
+  "Options traders should note: implied volatility on these instruments typically rises heading into a scheduled release like this and falls sharply afterward (a ‘volatility crush’) — Wright (2021), NBER Working Paper 28306; Cboe and CME Group trader education.";
 
 const EVENTS = (calendarData.events as CalendarEvent[]).slice().sort((a, b) => {
   const ak = `${a.date}T${a.time ?? "00:00"}`;
@@ -204,9 +259,11 @@ function ImpactBadge({ impact }: { impact: Impact }) {
 function EventTable({
   events,
   timeZone,
+  marketImpact,
 }: {
   events: CalendarEvent[];
   timeZone: TimeZoneMode;
+  marketImpact: Record<string, CalendarMarketImpactEntry> | null;
 }) {
   if (events.length === 0) {
     return <p className="text-xs text-on-surface/50 px-2 py-6 italic text-center">No events in this range.</p>;
@@ -218,7 +275,9 @@ function EventTable({
           ahead of Country without pushing Date/Time off, so mobile gets its own layout: event name
           as the heading, everything else as supporting rows. Desktop keeps the unchanged table below. */}
       <div className="md:hidden divide-y divide-outline-variant/10">
-        {events.map((e) => (
+        {events.map((e) => {
+          const magnitudeLines = magnitudeLinesForEvent(e.category, marketImpact);
+          return (
           <div key={e.id} data-testid="calendar-event-card" className="py-3 px-1">
             <a
               href={e.sourceUrl}
@@ -252,8 +311,14 @@ function EventTable({
                 </div>
               </div>
             )}
+            {magnitudeLines.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <MagnitudeLines lines={magnitudeLines} />
+              </div>
+            )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Desktop: unchanged table */}
@@ -272,39 +337,50 @@ function EventTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/10">
-            {events.map((e) => (
-              <tr
-                key={e.id}
-                data-testid="calendar-event-row"
-                className="hover:bg-surface-bright/10 transition-colors"
-              >
-                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">
-                  {formatEventDate(e, timeZone)}
-                </td>
-                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap" title={e.timeNote}>
-                  {formatEventTime(e, timeZone)}
-                </td>
-                <td className="py-3 px-3 text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">{e.country}</td>
-                <td className="py-3 px-3 text-sm font-bold text-on-surface">
-                  <a
-                    href={e.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-primary transition-colors inline-flex items-center gap-1.5"
-                    title={`Source: ${e.sourceLabel}`}
-                  >
-                    {e.event}
-                    <span className="material-symbols-outlined text-[13px] text-on-surface/30">open_in_new</span>
-                  </a>
-                </td>
-                <td className="py-3 px-3">
-                  <ImpactBadge impact={e.impact} />
-                </td>
-                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
-                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
-                <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
-              </tr>
-            ))}
+            {events.map((e) => {
+              const magnitudeLines = magnitudeLinesForEvent(e.category, marketImpact);
+              return (
+              <Fragment key={e.id}>
+                <tr
+                  data-testid="calendar-event-row"
+                  className="hover:bg-surface-bright/10 transition-colors"
+                >
+                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">
+                    {formatEventDate(e, timeZone)}
+                  </td>
+                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap" title={e.timeNote}>
+                    {formatEventTime(e, timeZone)}
+                  </td>
+                  <td className="py-3 px-3 text-[12px] md:text-[11px] text-on-surface/70 whitespace-nowrap">{e.country}</td>
+                  <td className="py-3 px-3 text-sm font-bold text-on-surface">
+                    <a
+                      href={e.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                      title={`Source: ${e.sourceLabel}`}
+                    >
+                      {e.event}
+                      <span className="material-symbols-outlined text-[13px] text-on-surface/30">open_in_new</span>
+                    </a>
+                  </td>
+                  <td className="py-3 px-3">
+                    <ImpactBadge impact={e.impact} />
+                  </td>
+                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
+                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
+                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
+                </tr>
+                {magnitudeLines.length > 0 && (
+                  <tr className="bg-surface-bright/5">
+                    <td colSpan={8} className="px-3 pb-3 -mt-1 space-y-1">
+                      <MagnitudeLines lines={magnitudeLines} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -488,7 +564,24 @@ export default function CalendarPage() {
   const [filters, setFilters] = useState<CalendarFilterValue>(EMPTY_CALENDAR_FILTERS);
   const [timeZone, setTimeZone] = useState<TimeZoneMode>("utc");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [marketImpact, setMarketImpact] = useState<Record<string, CalendarMarketImpactEntry> | null>(null);
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/market-impact?assets=${MAGNITUDE_ASSETS.join(",")}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.magnitudes) setMarketImpact(data.magnitudes);
+      })
+      .catch(() => {
+        // No magnitude line is a reasonable degrade — the rest of the calendar
+        // (dates, filters, export) works fine without it.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // `now` used for the this-week split; recomputed on mount only (not every
   // second — only the countdown itself needs second-level ticking).
@@ -580,29 +673,39 @@ export default function CalendarPage() {
       />
 
       {/* Countdown to next high-impact event — prominent, persistent */}
-      <section className="bg-surface-container rounded-lg border border-primary/30 shadow-xl p-6 mb-8 flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
-            Next High-Impact Event
-          </span>
-          {nextHighImpact ? (
-            <>
-              <p className="text-lg font-bold text-on-surface">{nextHighImpact.event}</p>
-              <p className="text-xs text-on-surface/50 mt-0.5">
-                {nextHighImpact.country} · {formatEventDate(nextHighImpact, timeZone)} at {formatEventTime(nextHighImpact, timeZone)}
-              </p>
-            </>
-          ) : (
-            <p className="text-sm text-on-surface/50 italic">No upcoming high-impact events in this calendar's window.</p>
+      <section className="bg-surface-container rounded-lg border border-primary/30 shadow-xl p-6 mb-8">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
+              Next High-Impact Event
+            </span>
+            {nextHighImpact ? (
+              <>
+                <p className="text-lg font-bold text-on-surface">{nextHighImpact.event}</p>
+                <p className="text-xs text-on-surface/50 mt-0.5">
+                  {nextHighImpact.country} · {formatEventDate(nextHighImpact, timeZone)} at {formatEventTime(nextHighImpact, timeZone)}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-on-surface/50 italic">No upcoming high-impact events in this calendar's window.</p>
+            )}
+          </div>
+          {nextHighImpact && (
+            <div className="text-right">
+              <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
+                Countdown
+              </span>
+              <Countdown target={eventDateTime(nextHighImpact)} />
+            </div>
           )}
         </div>
         {nextHighImpact && (
-          <div className="text-right">
-            <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
-              Countdown
-            </span>
-            <Countdown target={eventDateTime(nextHighImpact)} />
-          </div>
+          <p
+            data-testid="calendar-iv-note"
+            className="mt-4 pt-4 border-t border-outline-variant/10 text-[12px] md:text-[11px] leading-relaxed text-on-surface/50"
+          >
+            {OPTIONS_IV_NOTE}
+          </p>
         )}
       </section>
 
@@ -636,7 +739,7 @@ export default function CalendarPage() {
             </button>
           </div>
           <div className="p-2">
-            <EventTable events={selectedDayEvents} timeZone={timeZone} />
+            <EventTable events={selectedDayEvents} timeZone={timeZone} marketImpact={marketImpact} />
           </div>
         </section>
       ) : (
@@ -651,7 +754,7 @@ export default function CalendarPage() {
               <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">This Week</span>
             </div>
             <div className="p-2">
-              <EventTable events={thisWeek} timeZone={timeZone} />
+              <EventTable events={thisWeek} timeZone={timeZone} marketImpact={marketImpact} />
             </div>
           </section>
 
@@ -667,7 +770,7 @@ export default function CalendarPage() {
               </span>
             </div>
             <div className="p-2">
-              <EventTable events={upcoming} timeZone={timeZone} />
+              <EventTable events={upcoming} timeZone={timeZone} marketImpact={marketImpact} />
             </div>
           </section>
         </>

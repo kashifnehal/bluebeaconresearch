@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 89).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 90).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 90 — Economic Calendar: EIA/USDA entries + #227 magnitude line + options-IV note (2026-09-27)
+
+Extends the already-shipped `#227` (Phases 1–2, PHASE 85/88) onto the Economic Calendar (`#86`) rather than reimplementing it. Added 8 real entries to the calendar's static JSON — EIA's Weekly Petroleum Status Report (5 releases, including the Columbus Day holiday shift) and USDA's Grain Stocks, Crop Production, and WASDE, all sourced from each institution's own public release calendar, new "Agriculture" category. Qualifying events (`Energy`/`Agriculture`) now show a per-asset historical-magnitude sentence, powered by a new asset-level `GET /api/market-impact` endpoint that reuses `#227`'s exact aggregation functions and the same `signal_outcomes` query (extracted to a shared helper, not duplicated) rather than a specific signal's data. A one-time, sourced educational note about pre/post-release options implied volatility (no invented IV number — BBR has no live options feed) sits on the Next High-Impact Event card. Verified: type-check clean, full existing test suite green and unchanged, live SQL confirms all 4 target assets clear the sample-size gate, live-browser Playwright check at 1366×900/768×1024/375×812 shows correct rendering with no overlap. Full detail: `docs/brain/14_CHANGELOG.md` v0.113.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 89 — Auth domain proxy: Cloudflare Worker + apps/web wiring (code shipped, not yet deployed) (2026-09-27)
 

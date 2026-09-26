@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-27 (v0.112.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-27 (v0.113.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.113.0 — Economic Calendar: EIA/USDA entries + #227 magnitude line + options-IV note (2026-09-27)
+
+`#227`'s Phase 1 (magnitude/time-horizon sentence, `v0.108.0`) and Phase 2 (historical-pattern chart, `v0.111.0`) were already shipped when this task started. This is a pure extension onto the Economic Calendar (`/calendar`, `#86`), not a reimplementation.
+
+**Data:** `apps/web/data/economic-calendar.json` gains 8 real entries beyond the original 10 — EIA's Weekly Petroleum Status Report (5 releases: 2026-09-30, 10-07, 10-15 [shifted to Thursday for the Columbus Day federal holiday], 10-21, 10-28 — sourced from `eia.gov/petroleum/supply/weekly/schedule.php`) and USDA's Grain Stocks + Small Grains Summary (2026-09-30) plus Crop Production + WASDE (both 2026-10-09 — sourced from NASS's 2026 Agricultural Statistics Board Calendar and usda.gov's WASDE page). New `"Agriculture"` category; `forecast`/`previous`/`actual` stay null per the existing convention; `_meta.sourcedAt` bumped to 2026-09-27.
+
+**No duplicated query:** the calendar needs an asset-level ("no specific signal") version of #227's magnitude data, so the `signal_outcomes` `.range()` paging loop was extracted out of `apps/web/app/api/signals/[id]/route.ts` into shared `apps/web/lib/signal-outcomes-server.ts` (`fetchSignalOutcomeRows`). Both that route and a new `GET /api/market-impact?assets=A,B,C` call it, then the unchanged `computeMarketImpactMagnitude`/`deriveTimeHorizonLabel`/`computeMarketImpactCheckpoints` from `market-impact-assessment.ts`.
+
+**UI:** `apps/web/app/(dashboard)/calendar/page.tsx` — a local `CATEGORY_ASSET_MAP` (`Energy` → USOIL/UKOIL, `Agriculture` → WHEAT/CORN; NGAS/XAUUSD excluded since no calendar category maps to either) drives a `data-testid="calendar-magnitude-line"` sentence per qualifying asset, fetched once client-side on mount and rendered in both the desktop table (new row under the event) and the mobile stacked card. A one-time sourced options-implied-volatility educational line (`data-testid="calendar-iv-note"` — Wright 2021, NBER Working Paper 28306; Cboe/CME trader education; deliberately no specific IV number, since BBR has no live options-data feed) is attached to the existing "Next High-Impact Event" card, following this app's existing pattern for one-time notes (attach to the first qualifying instance, not a dismiss-and-remember mechanic).
+
+**Verified:** `tsc --noEmit` clean; full pre-existing `apps/web` test suite green, unchanged. Live-checked `GET /api/market-impact` against production (`evavcgfmemwryggdkjmx`) — USOIL/UKOIL/WHEAT/CORN all clear `MIN_SAMPLE_SIZE=20`. Live-browser (Playwright, standing test account) at 1366×900, 768×1024, and 375×812: magnitude lines and the IV note render correctly with no overlap/truncation at any width. Full detail: `LIVE_TODO.md`, `06_COMPONENTS.md` §3.10, `05_API.md`.
 
 ### v0.112.0 — Auth domain proxy: Cloudflare Worker + apps/web wiring (code shipped, not yet deployed) (2026-09-27)
 

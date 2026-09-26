@@ -98,6 +98,12 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 > ⚠️ UPDATED 2026-09-27 (Phase 2 of #227 — historical-pattern chart) — each `marketImpactMagnitudes[asset]` entry gains `checkpoints: {checkpointHours, medianMovePct, sampleSize}[]` — one point per 1h/4h/24h/48h checkpoint that individually clears `MIN_SAMPLE_SIZE`, omitted (not zeroed) otherwise. **No new query**: computed from the same in-memory `rows` array the route already pages in for the 24h `magnitude`/`timeHorizonLabel` fields above. New pure `computeMarketImpactCheckpoints(rows, asset, minSampleSize)` in `market-impact-assessment.ts` calls the existing `computeMarketImpactMagnitude()` once per checkpoint. Consumed by the new `MarketImpactChart.tsx` — see `06_COMPONENTS.md` §3.3b.
 
+#### `GET /api/market-impact` (new, 2026-09-27 — #227 calendar integration)
+
+- **Description**: Asset-level counterpart to `GET /api/signals/:id`'s per-signal `marketImpactMagnitudes` block, for surfaces that want "how has [asset] historically moved" without a specific signal in hand — first consumer is the Economic Calendar (`/calendar`). Query param `assets` (comma-separated, e.g. `?assets=USOIL,UKOIL,WHEAT,CORN`) → `{ magnitudes: Record<asset, { magnitude, timeHorizonLabel, checkpoints }> }`, same shape as the per-signal block. **No new query logic**: the `signal_outcomes` `.range()` paging loop was extracted out of `signals/[id]/route.ts` into a shared `fetchSignalOutcomeRows()` in new `apps/web/lib/signal-outcomes-server.ts`; both routes call it, then the same `computeMarketImpactMagnitude`/`deriveTimeHorizonLabel`/`computeMarketImpactCheckpoints` from `market-impact-assessment.ts`.
+- **Auth**: Same policy as `signals/:id` — required in production, open in dev.
+- **Consumers**: `/calendar` (`CalendarPage`) — see `06_COMPONENTS.md` §3.10.
+
 #### `GET /api/signals/:id/chat` and `POST /api/signals/:id/chat` (#111, `9f2aada` web / `dcdc877` Fastify)
 
 - **Description**: Per-signal follow-up chat, grounded **only** in that signal's own data. Next.js BFF at `apps/web/app/api/signals/[id]/chat/route.ts` resolves the caller's Supabase session and forwards `Authorization: Bearer` to Fastify `GET|POST /v1/signals/:id/chat`. The panel never talks to Fastify from the browser.

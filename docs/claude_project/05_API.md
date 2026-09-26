@@ -198,6 +198,7 @@ Returns 5 most recent signals. Used by landing page live preview and dashboard r
 > ⚠️ UPDATED 2026-09-26 (market-impact magnitude/time-horizon) — `GET /api/signals/:id` response gains `marketImpactMagnitudes`, one entry per named commodity/currency-pair asset: a median-of-`|actual_pct_change|` 24h magnitude + sample size from `signal_outcomes`, gated at `MIN_SAMPLE_SIZE = 20` (same constant as `/v1/accuracy`), plus a "within hours"/"within a day"/"multi-day" label from whichever checkpoint (1h/4h/24h/48h) shows the largest median move among checkpoints that individually clear the gate. List `GET /api/signals` does not get this field. Full detail: `docs/brain/05_API.md`.
 
 > ⚠️ UPDATED 2026-09-27 (Phase 2 of #227 — historical-pattern chart) — each `marketImpactMagnitudes[asset]` entry also gains `checkpoints`, the same per-checkpoint median move/sample-size at every 1h/4h/24h/48h checkpoint that clears the gate (not just 24h) — no new DB query, computed from the row set the route already fetches. Full detail: `docs/brain/05_API.md`.
+> ⚠️ NEW 2026-09-27 (#227 calendar integration) — new `GET /api/market-impact?assets=A,B,C` gives the same magnitude/time-horizon shape at the **asset** level (no signal ID needed), for the Economic Calendar. Reuses the same `signal_outcomes` paging query (extracted to a shared `fetchSignalOutcomeRows()`) and the same pure functions as this route — not a duplicate query. Full detail: `docs/brain/05_API.md`.
 > ⚠️ UPDATED 2026-09-20 (search-quality fix) — the `search` param row above was removed: this Fastify route's actual zod query schema never had one (confirmed reading `apps/backend/src/routes/signals.ts`) — that row was aspirational, not real. Command-palette-style text search only exists on the Next.js BFF `/api/signals` (§6 below), which reads Supabase directly rather than proxying here (also corrected below — a stale claim this ship found). New `sort=relevance` blends recency+severity in application code (`rank_score = severity / (hours_since_created_at + 2)^1.8`, `apps/backend/src/lib/relevance-rank.ts`) over a candidate window (existing filters still apply), then slices the requested page — added for parity with the BFF route's new relevance sort, though nothing currently calls it on this Fastify surface.
 
 **Response 200:**
@@ -708,6 +709,11 @@ apps/web/app/api/
 ├── signals/[id]/chat/route.ts → #111 BFF: GET+POST, forwards the caller's Supabase
 │                                session as Bearer to Fastify `/v1/signals/:id/chat`
 │                                (same auth-forwarding pattern as telegram/connect-code)
+├── market-impact/route.ts    → #227 calendar integration (2026-09-27): GET ?assets=A,B,C,
+│                                asset-level magnitude/time-horizon/checkpoints, reusing
+│                                signals/[id]/route.ts's exact query (shared
+│                                lib/signal-outcomes-server.ts) and pure functions — see
+│                                `docs/brain/05_API.md`
 ├── signals/attribution/route.ts → #207/#228 chart attribution (2026-09-26, revised
 │                                2026-09-27): reads Supabase directly (no Fastify
 │                                route — same reasoning as alerts/rule-stats). GET

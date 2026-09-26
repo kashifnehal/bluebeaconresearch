@@ -3,6 +3,7 @@ import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
+import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
 import {
   computeMarketImpactCheckpoints,
   computeMarketImpactMagnitude,
@@ -12,12 +13,10 @@ import {
   parseSourceConfirmation,
   type MarketImpactCheckpointPoint,
   type MarketImpactMagnitude,
-  type SignalOutcomeRow,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
 
 const MARKET_IMPACT_CHECKPOINT_HOURS = 24;
-const OUTCOME_ROWS_PAGE_SIZE = 1000;
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -293,26 +292,7 @@ export async function GET(
 
   let marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry> = {};
   if (magnitudeAssets.length > 0) {
-    // PostgREST caps a single response at its configured max-rows (this project's
-    // signal_outcomes easily exceeds that per asset), so this must page through
-    // with .range() like accuracy.routes.ts's PAGE_SIZE loop — a single unranged
-    // .select() here would silently truncate and undercount every asset/checkpoint.
-    const rows: SignalOutcomeRow[] = [];
-    for (let from = 0; ; from += OUTCOME_ROWS_PAGE_SIZE) {
-      const { data: page, error: outcomeError } = await supabase
-        .from("signal_outcomes")
-        .select("asset, checkpoint_hours, actual_pct_change")
-        .in("asset", magnitudeAssets)
-        .not("actual_pct_change", "is", null)
-        .range(from, from + OUTCOME_ROWS_PAGE_SIZE - 1);
-
-      if (outcomeError) {
-        console.error("[signals/:id] signal_outcomes query error:", outcomeError.message);
-        break;
-      }
-      rows.push(...(page ?? []));
-      if (!page || page.length < OUTCOME_ROWS_PAGE_SIZE) break;
-    }
+    const rows = await fetchSignalOutcomeRows(supabase, magnitudeAssets);
     marketImpactMagnitudes = Object.fromEntries(
       magnitudeAssets.map((asset) => [
         asset,
