@@ -1,8 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 77).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 78).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 78 — Severity-primary feed ranking, skeleton loaders, breadcrumbs, country flags, trimmed drawer (2026-09-26, `20e0050`)
+
+`apps/web` only, combined batch: claude/229 Part A, claude/230 (Tasks 1/5/9/10), claude/226 (Tasks 1/2). The Intelligence Feed's default sort was quietly recency-first, not severity-first as its own code comment claimed — fixed, and the visibility floor raised to severity 6 (low-severity noise like "gold IRA"/"corn breeding" stories no longer shows at all, not just ranked lower). Added a numeric severity badge to the dashboard hero card. Added shaped skeleton loaders to 5 real gaps (event detail, settings, watchlist drill-down chart/signals, watchlist sparkline) beyond the one page named in the brief. New shared `Breadcrumbs` component on all 10 `(dashboard)` pages; fixed a real layout bug it exposed on the event-detail page (content was rendering underneath the fixed header). New country-flag-emoji lookup applied to the event-detail header and the live dashboard country displays — the originally-named `SignalCard.tsx` turned out to be unused dead code, so the fix was extended to where the feature is actually visible. Trimmed the quick-view drawer to a fixed 6-section order, dropping filler (novelty, GPR-fallback prose, direction summary) it had been pulling in from the full shared market-impact component. Verified: full type-check + test suite + build clean; live-browser pass at 390px/1440px across 6 pages. Full detail: `docs/brain/14_CHANGELOG.md` v0.101.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 

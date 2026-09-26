@@ -1,6 +1,6 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
-> **📍 Doc status — current as of 2026-09-20** for CommandPalette (header-unified + last-resort fallback), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26** for `Breadcrumbs.tsx` (new), CommandPalette (header-unified + last-resort fallback), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
 
 **Framework:** Next.js 16 + React 18 + TypeScript
 **Component library:** Shadcn/ui (Radix UI primitives)
@@ -144,6 +144,9 @@ Close: X button or click outside overlay.
 
 ### Help page (`apps/web/app/(dashboard)/help/page.tsx`) + `FeedbackForm.tsx` (#155)
 Logged-in `/help` (middleware-protected). 10 FAQ answers from `lib/help-faq.ts` (current classifier / materiality / accuracy / LIVE behavior). Form fields: message, optional email, read-only page context. POST `/api/feedback` → `feedback_submissions`. No live chat.
+
+### Breadcrumbs (apps/web/components/layout/Breadcrumbs.tsx) — added 2026-09-26 (claude/230)
+Chevron-separated trail (`{label, href?}[]`), last segment non-clickable and truncates on mobile instead of overflowing. On all 10 `(dashboard)` pages; on `/map` it's an absolutely-positioned overlay pill (full-bleed canvas page, no chrome header) instead of inline content. Replaced a plain "Back to X" button on `events/[id]`/`watchlist/[symbol]`. See `docs/brain/06_COMPONENTS.md` §2.5 for the pre-existing header-overlap layout bug this surfaced and fixed on `events/[id]`.
 
 ---
 

@@ -1,6 +1,6 @@
 # 06_COMPONENTS.md — React & React Native Component Inventory
 
-> **📍 Doc status — current as of 2026-09-20** for CommandPalette (header-unified + last-resort fallback), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26** for `Breadcrumbs.tsx` (new), CommandPalette (header-unified + last-resort fallback), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
 
 This document presents a complete inventory of all UI components in `apps/web/components` and `apps/mobile/components`, detailing component props, parent/child relationships, hooks, internal state, dependencies, and styling rules.
 
@@ -79,6 +79,12 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 ### 2.4 `FeedbackForm.tsx` (#155)
 - **Purpose**: Help-page bug/feedback form (message, optional email, read-only page context). POST `/api/feedback`. Not live chat.
 - **Parent**: `(dashboard)/help/page.tsx`
+
+### 2.5 `Breadcrumbs.tsx` — added 2026-09-26 (claude/230 Task 9)
+- **Purpose**: Chevron-separated navigation trail (`{label, href?}[]`), last segment non-clickable and `truncate`/`min-w-0` so a long event title ellipsizes on mobile instead of overflowing. `data-testid="breadcrumbs"`.
+- **Props**: `{ items: { label: string; href?: string }[]; className?: string }`.
+- **Parent**: near the top of all 10 pages under `apps/web/app/(dashboard)` (dashboard, map, watchlist, watchlist/[symbol], alerts, backtesting, calendar, events/[id], settings, help). On `/map` it's an absolutely-positioned overlay (`top-3 left-3`, backdrop pill) since the page is a full-bleed canvas with no chrome header; every other page sits inline near the top of normal content flow.
+- **Note**: replaced a single non-trail "Back to X" button on `events/[id]/page.tsx` and `watchlist/[symbol]/page.tsx`. Adding it to `events/[id]/page.tsx` exposed a pre-existing layout bug — that page's root wrapper had no top offset for the fixed 64px `TopBar`, so the old back-button (and initially the new breadcrumb) rendered hidden underneath it at all widths; fixed with `pt-16`, matching the convention every sibling `(dashboard)` page already used.
 
 ---
 

@@ -1,6 +1,6 @@
 # 05_API.md — Complete API Reference
 
-> **📍 Doc status — current as of 2026-09-20** for `/docs`, `sort=relevance`, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** a public developer portal. Registers only when `NODE_ENV` is `development` or `test`. Live production previously returned 200 + OpenAPI JSON with no auth. Global Fastify rate limit in code is 60/min in-memory (`apps/backend/src/app.ts`), not the 100/min Redis figures below (those are stale planning numbers).
 >
@@ -690,7 +690,12 @@ These are Next.js API routes, not the Fastify backend. They act as a thin proxy/
 ```
 apps/web/app/api/
 ├── signals/route.ts          → reads Supabase directly (NOT a Fastify proxy — corrected
-│                                2026-09-20; own filters/search/sort, same as [id] below)
+│                                2026-09-20; own filters/search/sort, same as [id] below).
+│                                2026-09-26: default `sort=severity` fixed to genuinely
+│                                order severity-first (`severity desc, created_at desc`)
+│                                — was recency-first (`event_date desc, severity desc,
+│                                created_at desc`) despite its own inline comment; see
+│                                `docs/brain/05_API.md` for the full note
 ├── signals/[id]/route.ts     → event-detail payload (reads Supabase directly). 2026-09-25:
 │                                `sources` now ordered oldest-first with `domain` (Timeline
 │                                tab); new `relatedEvents[]` (same country + overlapping

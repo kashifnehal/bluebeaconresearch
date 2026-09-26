@@ -1,6 +1,6 @@
 # 05_API.md — Fastify REST API Architecture & OpenAPI Specifications
 
-> **📍 Doc status — current as of 2026-09-20** for `/docs`, `sort=relevance`, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** public. It registers only when `NODE_ENV` is `development` or `test`. Production previously served unauthenticated OpenAPI at `https://api.bluebeaconresearch.com/docs`. Auth hook no longer skips `/docs` in production. Global rate limit remains `@fastify/rate-limit` 60/min in-memory (see `apps/backend/src/app.ts`).
 >
@@ -37,7 +37,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
     - `7d` → published within the last 7 days.
     - `active` → currently active signals regardless of publish age.
   - `search` (`string`, optional, min 3 chars): `ilike` OR across `title`/`summary`/`country`/`event_type`. Previously undocumented — added here alongside `sort` below.
-  - `sort` (`string`, optional, default `"severity"`): `"severity"` (actually `event_date desc, severity desc, created_at desc` — recency-first despite the name; not changed by this ship, flagged here since it was found undocumented), `"newest"` (`event_date desc, created_at desc`), `"confidence"`, or **`"relevance"`** (new — recency+severity blend, see below).
+  - `sort` (`string`, optional, default `"severity"`): `"severity"` — **fixed 2026-09-26 (claude/229/86, commit `20e0050`)**: genuinely `severity desc, created_at desc` now. It had been `event_date desc, severity desc, created_at desc` (recency-first despite the name) since before this doc first flagged it as undocumented-but-unchanged; the `sort=relevance` candidate pre-fetch kept that recency-first order deliberately, and a shared ternary branch had conflated the two. `"newest"` (`event_date desc, created_at desc`), `"confidence"`, or **`"relevance"`** (recency+severity blend, see below) are unaffected.
   - `limit` (`number`, default `50`, max `100`).
   - `offset` (`number`, default `0`).
   - `page` (`number`, default `1`): page-based pagination; response carries a real `nextCursor` (`String(page+1)` or `null`) and `total`.
