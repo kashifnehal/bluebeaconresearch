@@ -31,8 +31,10 @@ const claude = new ClaudeService();
 // sourcelang:eng — product is English-first (see 10_DECISIONS.md); without this,
 // GDELT's global query returns articles in whatever language the source published in
 // (confirmed live: Azerbaijani and French titles reaching the feed unfiltered).
+// maxrecords=250 (was 50) — GDELT's own documented maximum for the DOC API, per
+// their project blog; free, keyless, zero additional cost. claude/237.
 const GDELT_API_URL =
-  "https://api.gdeltproject.org/api/v2/doc/doc?query=(conflict+OR+war+OR+sanctions+OR+military+OR+oil+OR+stock+market+OR+trade+OR+inflation+OR+fed+OR+earnings)+sourcelang:eng&mode=artlist&maxrecords=50&format=json&sort=DateDesc";
+  "https://api.gdeltproject.org/api/v2/doc/doc?query=(conflict+OR+war+OR+sanctions+OR+military+OR+oil+OR+stock+market+OR+trade+OR+inflation+OR+fed+OR+earnings)+sourcelang:eng&mode=artlist&maxrecords=250&format=json&sort=DateDesc";
 
 // GDELT's DOC API is keyless with no authenticated tier, and a 429 can reflect an
 // IP-level block lasting up to ~15 min (shared Railway egress IP, not our own request
@@ -190,6 +192,8 @@ export async function runGdeltCollectorOnce() {
           title,
           source: "gdelt",
           classification,
+          supabase,
+          rawEventId,
         });
         continue;
       }

@@ -14,9 +14,11 @@ type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
  * This only catches the literal same-article-refetched case. ALL THREE must hold:
  *   1. Normalized title is an EXACT match (case / whitespace / punctuation folded)
  *      — not "similar", identical.
- *   2. Same `raw_events.source` value. GNews and RSS both write source='newsapi',
- *      so a cross-post between those two counts as "same/adjacent source"; GDELT is
- *      its own bucket and never matches against 'newsapi'.
+ *   2. Same-or-adjacent `raw_events.source` value. GNews writes 'newsapi' and RSS
+ *      writes 'rss' (claude/237 — previously both wrote 'newsapi', conflating the
+ *      two); a cross-post between those two still counts as "same/adjacent source"
+ *      via NEWS_SOURCE_GROUP below. GDELT/ACLED/manual are each their own bucket
+ *      and never match against the newsapi/rss group.
  *   3. The prior row was collected within PREFILTER_WINDOW_MINUTES. Collectors run
  *      every 15 min and classify inline right after insert, so a real re-fetch of
  *      the identical article reappears on the next run or two. 45 min = 3 collector
@@ -30,6 +32,14 @@ type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
 const PREFILTER_WINDOW_MINUTES = 45;
 const PREFILTER_CANDIDATE_LIMIT = 50;
 const PREFILTER_MIN_NORMALIZED_LEN = 12;
+
+// GNews ('newsapi') and RSS ('rss') commonly carry the same wire-service article —
+// treat them as one bucket for the exact-title match below. Every other source
+// stays its own bucket.
+const NEWS_SOURCE_GROUP = ["newsapi", "rss"];
+function sourceGroupFor(source: string): string[] {
+  return NEWS_SOURCE_GROUP.includes(source) ? NEWS_SOURCE_GROUP : [source];
+}
 
 function normalizeTitle(title: string | null | undefined): string {
   if (!title) return "";
@@ -65,7 +75,7 @@ export async function tryTitlePreFilterSkip(params: {
   const { data: recent, error } = await supabase
     .from("raw_events")
     .select("id, title, created_at")
-    .eq("source", source)
+    .in("source", sourceGroupFor(source))
     .neq("id", rawEventId)
     .gte("created_at", windowStart)
     .order("created_at", { ascending: false })

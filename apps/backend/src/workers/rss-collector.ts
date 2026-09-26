@@ -65,6 +65,13 @@ const RSS_FEEDS: RssFeed[] = [
 
 export const RSS_FEED_COUNT = RSS_FEEDS.length;
 
+// TEMPORARY (claude/237) — remove after ~24-48h once the finance-tier yield data
+// is captured. Goal: find out, with real per-feed numbers, why the 6 finance-tier
+// feeds (NYT/BBC/Guardian Business, MarketWatch, WSJ Markets, Investing.com) yield
+// almost no new raw_events despite fetching 10-51 items successfully every cycle,
+// when claude/237 found only 1-3 finance-tier items/day landing across all 6 combined.
+type FeedDiag = { fetched: number; tooOld: number; filteredIrrelevant: number; duplicate: number; new: number };
+
 export async function runRssCollectorOnce() {
   const supabase = getSupabaseAdmin();
 
@@ -73,6 +80,11 @@ export async function runRssCollectorOnce() {
   let feedsOk = 0;
   let feedsFailed = 0;
   const failedFeeds: string[] = [];
+
+  const feedDiag: Record<string, FeedDiag> = {};
+  for (const feed of RSS_FEEDS) {
+    feedDiag[feed.label] = { fetched: 0, tooOld: 0, filteredIrrelevant: 0, duplicate: 0, new: 0 };
+  }
 
   for (const feed of RSS_FEEDS) {
     const feedStartedAt = Date.now();
@@ -88,11 +100,15 @@ export async function runRssCollectorOnce() {
       );
       for (const item of parsed.items ?? []) {
         if (!item.link || !item.title) continue;
+        feedDiag[feed.label].fetched++;
         const pubDate = item.isoDate || item.pubDate
           ? new Date(item.isoDate ?? item.pubDate ?? "").toISOString()
           : new Date().toISOString();
 
-        if (Date.now() - new Date(pubDate).getTime() > MAX_ARTICLE_AGE_MS) continue;
+        if (Date.now() - new Date(pubDate).getTime() > MAX_ARTICLE_AGE_MS) {
+          feedDiag[feed.label].tooOld++;
+          continue;
+        }
 
         allItems.push({
           title: item.title.slice(0, 280),
@@ -144,6 +160,7 @@ export async function runRssCollectorOnce() {
   for (const item of items) {
     if (!isRelevantEvent(item.title, item.summary, item.tier)) {
       filtered++;
+      feedDiag[item.label].filteredIrrelevant++;
       continue;
     }
 
@@ -157,11 +174,15 @@ export async function runRssCollectorOnce() {
 
     if (existing.data?.id) {
       duplicates++;
+      feedDiag[item.label].duplicate++;
       continue;
     }
 
     const rawEventPayload = {
-      source: "newsapi" as const,
+      // claude/237 — was "newsapi" (GNews's ingest path); mislabeled RSS rows as
+      // GNews. 'rss' is its own raw_events.source value as of migration
+      // 20260926053910_raw_events_source_add_rss.
+      source: "rss" as const,
       external_id: externalId,
       title: item.title,
       summary: item.summary || null,
@@ -184,12 +205,14 @@ export async function runRssCollectorOnce() {
       continue;
     }
     inserted++;
+    feedDiag[item.label].new++;
 
     const rawEventId = insert.data.id as string;
 
     // Pre-classification near-duplicate skip (#95 item 1a) — see title-prefilter.ts.
-    // GNews and RSS both write source='newsapi', so this also catches an article
-    // cross-posted between the two feeds within the window.
+    // GNews ('newsapi') and RSS ('rss') are grouped as adjacent sources there, so
+    // this also catches an article cross-posted between the two feeds within the
+    // window.
     const pre = await tryTitlePreFilterSkip({
       supabase,
       collectorLabel: "RSS",
@@ -228,6 +251,8 @@ export async function runRssCollectorOnce() {
           title: rawEventPayload.title,
           source: rawEventPayload.source,
           classification,
+          supabase,
+          rawEventId,
         });
         continue;
       }
@@ -285,6 +310,16 @@ export async function runRssCollectorOnce() {
     } catch (e: any) {
       console.error("[RSS] Classification/signal insert failed:", e.message);
     }
+  }
+
+  // TEMPORARY (claude/237) — one line per feed, see FeedDiag comment above. Remove
+  // this block (and the feedDiag tracking above) after ~24-48h once captured.
+  for (const feed of RSS_FEEDS) {
+    const d = feedDiag[feed.label];
+    console.log(
+      `[RSS-DIAG] feed="${feed.label}" tier=${feed.tier} fetched=${d.fetched} tooOld=${d.tooOld} ` +
+        `filteredIrrelevant=${d.filteredIrrelevant} duplicate=${d.duplicate} new=${d.new}`,
+    );
   }
 
   // A run is "ok" only if at most half the configured feeds threw. 2 consecutive

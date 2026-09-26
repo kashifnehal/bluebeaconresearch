@@ -180,6 +180,8 @@ export async function runGnewsCollectorOnce() {
           title: rawEventPayload.title,
           source: rawEventPayload.source,
           classification,
+          supabase,
+          rawEventId,
         });
         continue;
       }

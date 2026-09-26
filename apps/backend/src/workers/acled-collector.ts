@@ -113,6 +113,8 @@ export async function runAcledCollectorOnce() {
           title,
           source: "acled",
           classification,
+          supabase,
+          rawEventId,
         });
         continue;
       }

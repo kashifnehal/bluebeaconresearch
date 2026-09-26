@@ -36,6 +36,11 @@ export async function reconcileOrphanedRawEventsOnce() {
     .from("raw_events")
     .select("id, title, summary, country, event_type, event_date, created_at")
     .lt("created_at", cutoff)
+    // claude/237 — a row already stamped materiality_checked_at was already
+    // resolved (rejected) by whichever collector or reconciliation run first
+    // classified it. Excluding it here regardless of age is what stops the
+    // repeat-rejection loop (previously: reclassified every 30 min for 12h).
+    .is("materiality_checked_at", null)
     .order("created_at", { ascending: false })
     .limit(BATCH_LIMIT);
 
@@ -116,6 +121,8 @@ export async function reconcileOrphanedRawEventsOnce() {
           title: raw.title ?? "Untitled event",
           source: "reconciliation",
           classification,
+          supabase,
+          rawEventId: raw.id as string,
         });
         continue;
       }

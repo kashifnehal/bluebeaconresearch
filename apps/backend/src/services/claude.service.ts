@@ -504,8 +504,17 @@ export class ClaudeService {
       confidence: number;
     }> = [];
 
-    const isSafeHaven =
-      /\b(gold|safe[- ]haven|safe haven asset|safe-haven asset)\b/i.test(text);
+    // claude/237 (BBR Claude Project) — bare "gold" was firing on non-market stories
+    // (a real production example: a "gold IRA" retirement-savings ad/article). Only
+    // count it when a real safe-haven phrase is present, or "gold" co-occurs with an
+    // actual market-context word — never on the bare word alone.
+    const hasSafeHavenPhrase = /\bsafe[- ]haven( asset)?\b/i.test(text);
+    const hasBareGold = /\bgold\b/i.test(text);
+    const hasGoldMarketContext =
+      /\b(?:price|prices|market|bullion|ounce|xau|reserves?|central bank|etf|futures)\b/i.test(
+        text,
+      );
+    const isSafeHaven = hasSafeHavenPhrase || (hasBareGold && hasGoldMarketContext);
     const oilSignal =
       /\b(?:crude|opec|tanker|hormuz|pipeline|refinery|oil price|crude price|oil production|oil shipment|oil export|oil import|oil supply|oil demand)\b/i.test(
         text,
@@ -514,10 +523,21 @@ export class ClaudeService {
       /\b(?:natural gas|ng|lng|nord stream|pipeline|gas prices|gas supply|gas demand|gas export|gas import|gas fields?|gas shipments?)\b/i.test(
         text,
       );
-    const wheatSignal =
-      /\b(?:grain|wheat|corn|agriculture|food|black sea|crop|shipments?)\b/i.test(
+    // claude/237 (BBR Claude Project) — bare "corn" was firing on non-market stories
+    // (a real production example: a "corn breeding" agronomy/research article, not a
+    // supply/price event). "corn" alone no longer fires; it must co-occur with a
+    // market/production context word. The other grain keywords are unaffected — only
+    // "corn" was reported as the false-positive trigger.
+    const grainKeywordSignal =
+      /\b(?:grain|wheat|agriculture|food|black sea|crop|shipments?)\b/i.test(
         text,
       );
+    const cornWithMarketContext =
+      /\bcorn\b/i.test(text) &&
+      /\b(?:price|prices|futures|harvest|exports?|imports?|shortage|supply|usda|bushels?)\b/i.test(
+        text,
+      );
+    const wheatSignal = grainKeywordSignal || cornWithMarketContext;
 
     if (oilSignal) {
       commodityImpacts.push({
