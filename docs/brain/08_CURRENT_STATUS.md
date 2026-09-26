@@ -197,7 +197,11 @@ Fixes shipped:
    responses. Historical rows best-effort backfilled via a separate
    `classification_method_inferred` flag (confidence-pattern match only): 1,722
    rows marked `heuristic`/inferred, 1,124 left `NULL` (unknown) rather than
-   guessed. Isolated `isRelevantEvent()` pre-filter (`lib/relevance-filter.ts`)
+   guessed. **The severity-6 cap itself was not backfilled to pre-2026-09-12
+   rows until #240 (2026-09-26, `314a501`)** — 462 `heuristic` rows still had
+   `severity > 6` (400 also `is_breaking`); migration
+   `20260926130000_backfill_heuristic_severity_cap.sql` capped them, verified
+   0 remaining via direct SQL. Isolated `isRelevantEvent()` pre-filter (`lib/relevance-filter.ts`)
    was confirmed to gate entry into `classifyEvent()` uniformly for both the
    real-Claude and heuristic paths — it is not a contributor to this specific
    bug, no change made there.

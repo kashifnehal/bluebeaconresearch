@@ -1,10 +1,18 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 79).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 81).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 81 — Map cluster/point clicks wired to Intelligence Stream, fake Tension Index dropped (2026-09-26, `73bcd34`)
+
+`apps/web` only. Clicking a map cluster now populates the Intelligence Stream sidebar with every signal in it and nudges the zoom-in target toward a more balanced split; clicking a single point does the same for just that signal. Added a "SHOW ALL" control to clear back to the normal feed. Could not fully verify the cluster-zoom-refinement path live — the underlying MapLibre cluster-inspection calls hang in this dev environment (pre-existing, not introduced here); flagged in `LIVE_TODO.md`. Checked the event-detail page's Map tab for a suspected mount-hidden bug — not present, no change needed. Also replaced the fabricated 0-99 "Global Tension Index" score (a keyword-regex-guessed formula) with a real count of active severity-8+ signals. Full detail: `docs/brain/14_CHANGELOG.md` v0.104.0.
+
+## PHASE 80 — Backfill: cap stale heuristic-classified severity scores (2026-09-26, `314a501`)
+
+`supabase/migrations` only, #240. The 2026-09-12 heuristic severity-6 cap was never backfilled to existing rows — 462 `signals` rows still had `severity > 6` (400 also `is_breaking`). Backfilled and verified 0 remaining. `raw_events` has no equivalent score column. Full detail: `docs/brain/14_CHANGELOG.md` v0.103.0.
 
 ## PHASE 79 — RSS feed roster: EIA added, UN News/USDA evaluated and rejected (2026-09-26, `b44088d`)
 

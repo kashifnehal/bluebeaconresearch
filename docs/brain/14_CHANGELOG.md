@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-26 (v0.102.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-26 (v0.104.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.104.0 — Map cluster/point clicks wired to Intelligence Stream, fake Tension Index dropped (2026-09-26, `73bcd34`)
+
+`apps/web` only. Map page (`app/(dashboard)/map/page.tsx`) cluster click now populates the Intelligence Stream sidebar with every signal in the cluster via `source.getClusterLeaves(clusterId, Infinity, 0, cb)`, and refines the flyTo zoom target toward ~5 children via `getClusterChildren` (capped at 2 adjustment attempts, falls back to `getClusterExpansionZoom()`'s own result). Clicking an unclustered point does the same for just that one signal, for consistency with cluster clicks. Added `data-testid="map-cluster-click"` on the map container and a "SHOW ALL" control (desktop panel + `MobileTensionSheet`) to clear the selection back to the normal feed. Verified live (Playwright, both desktop and mobile widths): single-point click populates the sidebar and shows the popup correctly; "SHOW ALL" clears it. **Could not fully verify the cluster-leaves/zoom-refinement path end-to-end** — direct calls to `source.getClusterExpansionZoom()` / `getClusterLeaves()` / `getClusterChildren()` against a live cluster in this dev environment hang indefinitely and never invoke their callback, reproducible in isolation. This pre-dates this change (the original cluster-click zoom handler already called `getClusterExpansionZoom` the same way) — not something introduced here. Unclear whether this is specific to this sandboxed test harness (cross-origin Worker network access) or a genuine production defect; flagged in `LIVE_TODO.md` for follow-up, not fixed as part of this ship.
+
+Also checked the event-detail page's Map tab (`app/(dashboard)/events/[id]/page.tsx`, `components/signals/EventLocationMap.tsx`) for a suspected "kept mounted but hidden via CSS" bug — not present: Base UI's `Tabs.Panel` unmounts inactive panels by default (`keepMounted` not set anywhere in this file), confirmed via DOM inspection (`panelCount: 1`) and a live screenshot showing the map rendering correctly with real tiles after repeated tab switches. No code change needed there.
+
+Separately, removed the fabricated 0-99 "Global Tension Index" score and its cyber/kinetic/diplomatic keyword-regex percentage breakdown (`map/page.tsx`, `components/map/MobileTensionSheet.tsx`, `components/HelpModal.tsx`) — a `Math.min(99, Math.round(50 + (kinetic*3 + cyber*2 + diplomatic)*1.5))` formula guessed from `eventType`/`title` regex matches, plus a duplicate 24h trend sparkline using the same fake formula. Replaced with a real tally: count of currently active `severity >= 8` signals, the same threshold already used live for `isUrgent` in this file and in `dashboard/page.tsx`/`NotificationPanel.tsx`. `SignalCard.tsx` was explicitly not used as a threshold reference — confirmed dead code, not imported anywhere in the live app. Verified live at desktop and mobile widths: panel now reads "N high-severity events active, of M total".
+
+### v0.103.0 — Backfill: cap stale heuristic-classified severity scores (2026-09-26, `314a501`)
+
+`supabase/migrations` only, #240. The 2026-09-12 heuristic severity-6 cap (`Math.min(severity, 6)` in `claude.service.ts`) only applied to classifications going forward — never backfilled to existing rows. Migration `20260926130000_backfill_heuristic_severity_cap.sql` set `severity = 6, is_breaking = false` on all `signals` rows where `classification_method = 'heuristic' AND severity > 6` (462 rows, 400 also `is_breaking`). `raw_events` has no independent severity/materiality score column (only the `materiality_checked_at` timestamp marker), so no equivalent update was needed there. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP; verified 0 remaining rows via direct SQL count.
 
 ### v0.102.0 — RSS feed roster: EIA added, UN News/USDA evaluated and rejected (2026-09-26, `b44088d`)
 
