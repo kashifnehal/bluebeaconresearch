@@ -3,6 +3,14 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { track as trackVercelAnalyticsServer } from "@vercel/analytics/server";
 import { isProjectReady } from "@/lib/flags";
+import {
+  MAX_SESSIONS_PER_USER,
+  decodeSessionIdClaim,
+  deriveDeviceLabel,
+  oldestSessionToEvict,
+  selectStaleSessionIds,
+  type SessionRow,
+} from "@/lib/session-tracking";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -104,6 +112,44 @@ export async function GET(request: NextRequest) {
           }
         } catch {
           // Instrumentation must never block or fail the auth callback.
+        }
+
+        // Session-cap bookkeeping (max MAX_SESSIONS_PER_USER concurrent logins) —
+        // see lib/session-tracking.ts for the eviction rule and its documented
+        // lazy-enforcement (~1hr worst case) limitation. Never block the callback.
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          const sessionId = session ? decodeSessionIdClaim(session.access_token) : null;
+          if (sessionId) {
+            const deviceLabel = deriveDeviceLabel(request.headers.get("user-agent"));
+            const { data: existingSessions } = await supabase
+              .from("user_sessions")
+              .select("id, created_at, last_seen_at")
+              .eq("user_id", user.id)
+              .order("created_at", { ascending: true });
+            const rows: SessionRow[] = existingSessions ?? [];
+
+            const staleIds = selectStaleSessionIds(rows, new Date());
+            if (staleIds.length > 0) {
+              await supabase.from("user_sessions").delete().in("id", staleIds);
+            }
+            const remaining = rows.filter((r) => !staleIds.includes(r.id));
+
+            const toEvict = oldestSessionToEvict(remaining, MAX_SESSIONS_PER_USER);
+            if (toEvict) {
+              await supabase.from("user_sessions").delete().eq("id", toEvict.id);
+            }
+
+            await supabase.from("user_sessions").insert({
+              user_id: user.id,
+              session_id: sessionId,
+              device_label: deviceLabel,
+            });
+          }
+        } catch {
+          // Session tracking must never block or fail the auth callback.
         }
       }
     }

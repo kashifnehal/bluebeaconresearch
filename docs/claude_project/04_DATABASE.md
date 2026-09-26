@@ -169,4 +169,6 @@ CREATE INDEX idx_raw_events_dedup ON public.raw_events (external_id, source);
 7. **`006_onboarding_schema_fix.sql`**: Onboarding wizard state column updates.
 8. **`007_waitlist.sql`**: Gated waitlist submission schema.
 
+> ⚠️ UPDATED 2026-09-27 — new table `user_sessions` (session-cap tracking, migration `20260927100000_user_sessions.sql`) added to schema; **NOT yet applied to the live DB** — blocked by Claude Code's own production-deploy safety gate this session, founder action needed. Full detail: `docs/brain/04_DATABASE.md` Table 18e, `docs/brain/16_MIGRATION_CHECKLIST.md`.
+
 > ⚠️ UPDATED 2026-08-19 — this migration list is stale; `supabase/migrations/` now goes through 012: `008_fix_source_constraint.sql`, `009_signals_event_date.sql`, `010_add_product_tour_flag.sql`, `011_rls_remediation.sql`, and `20260817220713_consolidate_user_channels_rls.sql` / `20260817220714_reliability_indexes_parts_2_4.sql` (applied to the live DB 2026-08-19, verified via Supabase Advisors) have since landed. Also, `production_schema.sql` (a separate, inaccurate schema doc that only described 4 of 17 real tables) was deleted 2026-08-19 — `supabase/migrations/*.sql` is now the only accurate schema source.

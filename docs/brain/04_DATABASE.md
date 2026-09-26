@@ -278,6 +278,17 @@ In-app Help/FAQ feedback and bug reports. Not live chat. Chose a table over Rese
 - `created_at` (`timestamptz`, NOT NULL, default now())
 - RLS on: authenticated insert/select own rows (`user_id = auth.uid()`). No update/delete policies. Service-role reads all.
 
+### Table 18e: `user_sessions` (fresh task, no ticket number, migration `20260927100000_user_sessions.sql`) — **⚠️ migration written, NOT yet applied to the live DB**
+Session-cap bookkeeping (max `MAX_SESSIONS_PER_USER` = 2 concurrent logins). Written by `apps/web/app/api/auth/register-session/route.ts` (password login) and inline in `apps/web/app/auth/callback/route.ts` (Google OAuth) after a successful sign-in; see `apps/web/lib/session-tracking.ts` for the eviction logic. Row-only eviction — deleting a row does not revoke the JWT that session already holds (no raw tokens are stored server-side to revoke with); GoTrue validates access tokens locally without a per-request revocation check, so an evicted session keeps working until its access token naturally expires (1h default) and only loses access on its next refresh. `last_seen_at` is only set at insert time today — nothing touches it per-request (deliberately: a per-request write here would repeat the exact middleware-on-every-route mistake behind the 2026-08-28 auth outage), so the 30-day cleanup bounds on time-since-login, not true idle time.
+- `id` (`uuid`, PK, default `gen_random_uuid()`)
+- `user_id` (`uuid`, NOT NULL, FK → `auth.users.id` ON DELETE CASCADE)
+- `session_id` (`text`, NOT NULL — decoded from the JWT's `session_id` claim)
+- `device_label` (`text`, nullable — heuristic "Browser on OS" string from `User-Agent`)
+- `created_at` / `last_seen_at` (`timestamptz`, NOT NULL, default `now()`)
+- **Index**: `(user_id, created_at)`
+- **RLS**: authenticated select/insert/delete own rows (`user_id = auth.uid()`) — lets the login routes' RLS-scoped fallback client work if service-role isn't configured in an environment.
+- **Blocked:** Claude Code's own production-deploy safety gate denied the `apply_migration` MCP call for this table (`[Production Deploy]`) this session. Founder needs to apply `supabase/migrations/20260927100000_user_sessions.sql` directly (SQL editor or CLI) or grant that MCP permission. Until applied, both write paths above fail their inserts silently (try/catch-wrapped — login itself is unaffected) and no session cap is actually enforced live.
+
 **Known drift corrected 2026-08-27** — the previous version of this section stated these, all of which were wrong against the live DB:
 - `alert_rules.channels` default was documented as `'{telegram}'`; it is actually `'{email}'`. This is the most misleading of the set, since it describes what a newly created rule does by default.
 - `profiles` was missing `product_tour_completed`; `signals` was missing both `event_date` and `shipping_proximity`; `alert_rules` was missing `frequency`, `created_at`, `updated_at`, and `last_triggered_at`.

@@ -239,3 +239,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 #### `POST /api/feedback` (Next.js, `apps/web/app/api/feedback/route.ts`, #155)
 
 - **Description**: Authenticated Help-page feedback/bug report. Body `{ message, email?, pageContext? }`. Inserts into `feedback_submissions` with the caller's `user_id` (RLS own-row). Returns `{ ok: true }`. 401 if signed out. Not live chat. Not Resend.
+
+#### `POST /api/auth/register-session` (Next.js, `apps/web/app/api/auth/register-session/route.ts`, fresh task, no ticket number, 2026-09-27)
+
+- **Description**: Session-cap bookkeeping, called right after a successful password login (also inlined server-side in `auth/callback/route.ts` for Google OAuth). Decodes the `session_id` claim from the caller's JWT, derives a `device_label` from `User-Agent`, deletes any of that user's `user_sessions` rows older than 30 days, evicts the single oldest row if the user is already at `MAX_SESSIONS_PER_USER` (2), then inserts the new row. 401 if signed out; otherwise always `{ ok: true|false }` — never blocks login on failure. Eviction is row-only (see Table 18e, `04_DATABASE.md`) — it cannot force-revoke the evicted session's already-issued JWT. **`user_sessions` migration not yet applied to the live DB** — this route's writes currently fail silently until it is (see `16_MIGRATION_CHECKLIST.md`).

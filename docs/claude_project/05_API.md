@@ -731,7 +731,19 @@ apps/web/app/api/
 │   └── test/route.ts → Authenticated one-off Discord webhook ping
 │                          (`{ webhookUrl }` → `{ ok: true }` / `{ ok: false, error }`).
 │                          Server-side fetch only; URL must be a Discord webhook host.
-└── feedback/route.ts     → #155 authenticated POST. Body `{ message, email?, pageContext? }`
-                               writes `feedback_submissions` (RLS own-row insert). `{ ok: true }`.
-                               401 if signed out. Not live chat. Not Resend.
+├── feedback/route.ts     → #155 authenticated POST. Body `{ message, email?, pageContext? }`
+│                              writes `feedback_submissions` (RLS own-row insert). `{ ok: true }`.
+│                              401 if signed out. Not live chat. Not Resend.
+└── auth/
+    └── register-session/route.ts → fresh task, no ticket number, 2026-09-27. Authenticated
+                               POST called after password login (also inlined in
+                               auth/callback/route.ts for Google OAuth). Session-cap
+                               bookkeeping: decodes the JWT's session_id claim, derives a
+                               device_label from User-Agent, deletes user_sessions rows
+                               >30 days stale, evicts the single oldest row if already at
+                               MAX_SESSIONS_PER_USER (2), inserts the new row. Row-only
+                               eviction — cannot force-revoke the evicted JWT (Supabase's
+                               documented lazy-enforcement lag, up to its ~1h access-token
+                               lifetime). **user_sessions migration not yet applied to the
+                               live DB** — see `docs/brain/16_MIGRATION_CHECKLIST.md`.
 ```

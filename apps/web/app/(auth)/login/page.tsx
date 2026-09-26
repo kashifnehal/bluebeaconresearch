@@ -114,6 +114,14 @@ function LoginForm() {
         throw signInError;
       }
 
+      // Session-cap bookkeeping (max concurrent logins) — see
+      // lib/session-tracking.ts. Best-effort: must never block or fail login.
+      try {
+        await fetch("/api/auth/register-session", { method: "POST" });
+      } catch {
+        // Ignore — same as other non-critical post-login instrumentation.
+      }
+
       // Full navigation (window.location.href, not router.push/replace) — required so
       // middleware sees the auth cookie on the very next request, same SSR-cookie rule
       // already applied to the post-signup redirect.
