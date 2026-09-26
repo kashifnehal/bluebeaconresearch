@@ -74,6 +74,8 @@ Ingested news articles and military incident logs before AI processing.
 - `source` (`text`, NOT NULL, check: `gdelt`, `acled`, `newsapi`)
 
 > ⚠️ UPDATED 2026-08-19 — this check constraint is stale; migration `008_fix_source_constraint.sql` added `gnews` and `manual` to the allowed list (the original constraint was silently rejecting all GNews collector inserts).
+
+> ⚠️ UPDATED 2026-09-26 (claude/237) — `rss` added to the check constraint; `rss-collector.ts` was mislabeling its own rows `newsapi` (GNews's value), making the two indistinguishable. New nullable `materiality_checked_at` column stops reconciliation.ts re-asking Claude about an already-rejected row forever (previously every 30min for 12h — 23 repeat calls/article). Full detail: `docs/brain/04_DATABASE.md` Table 3, `docs/brain/14_CHANGELOG.md`.
 - `external_id` (`text`, nullable)
 - `title` / `summary` / `country` (`text`)
 - `lat` / `lng` (`double precision`)

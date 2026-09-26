@@ -92,6 +92,9 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 - `20260919210000_search_content_embeddings.sql` — Cmd+K search assist. `CREATE EXTENSION vector` (was listed, not installed); table `search_content_embeddings` (`vector(256)`, HNSW cosine, RLS on / no policies); RPC `match_search_content` granted to `service_role` only. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `search_content_embeddings`. Verified: `pg_extension` vector 0.8.0 in `extensions`; columns + `relrowsecurity=true`; Security Advisor lists the table on the existing `rls_enabled_no_policy` INFO list next to `anthropic_daily_usage` (intentional).
 - `20260919220000_feedback_submissions.sql` — #155. Table `feedback_submissions` (`user_id` → profiles, `message` 10–4000, optional `email` / `page_context`). RLS insert/select own. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `feedback_submissions`. Verified: columns + `relrowsecurity`; Security Advisor does **not** list this table under `rls_enabled_no_policy` (policies exist).
 
+- `20260926053739_raw_events_materiality_checked_at.sql` — claude/237. Nullable `raw_events.materiality_checked_at timestamptz` + partial index (`WHERE materiality_checked_at IS NULL`). Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `raw_events_materiality_checked_at`. Verified via `information_schema.columns`.
+- `20260926053910_raw_events_source_add_rss.sql` — claude/237. `raw_events_source_check` extended to add `'rss'` (was `gdelt`/`acled`/`newsapi`/`gnews`/`manual`) — `rss-collector.ts` was writing `source: "newsapi"` (GNews's value), conflating the two. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `raw_events_source_add_rss`. Verified via `pg_get_constraintdef`.
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.

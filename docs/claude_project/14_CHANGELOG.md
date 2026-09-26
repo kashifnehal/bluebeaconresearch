@@ -1,8 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-25 (PHASE 76).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 77).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 77 — Ingestion pipeline cleanup: heuristic false positives, reconciliation waste, RSS mislabel, GDELT limit (2026-09-26, `3d5e244`)
+
+`apps/backend` only, five fixes from claude/237. Heuristic-fallback classifier (used only when the real Claude API is down) no longer flags bare "gold"/"corn" as commodity signals without real market context — two production false positives ("gold IRA", "corn breeding") motivated this; the real Claude-based materiality gate is untouched. `reconciliation.ts` no longer re-asks Claude about a `raw_events` row it already rejected once — new nullable `materiality_checked_at` column stops the previous every-30-min-for-12h repeat loop (confirmed: 23 repeat calls per rejected article, 251 Claude calls in one day almost entirely repeats). RSS collector was mislabeling its own rows with GNews's `source` value (`newsapi`) — now writes `rss`; the cross-source dedup check that relied on the shared value was updated to keep working. GDELT's `maxrecords` raised 50 → 250 (their documented max, free). Temporary per-feed RSS yield diagnostic added (removed after 24-48h) — early data already shows most feeds (not only finance-tier) returning ~100% "too old" items per cycle; needs the full window to conclude. Verified live against `evavcgfmemwryggdkjmx`: schema changes confirmed, stamping confirmed working end-to-end on a live post-deploy rejection cycle, no new runtime errors. Full detail: `docs/brain/14_CHANGELOG.md` v0.100.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 
