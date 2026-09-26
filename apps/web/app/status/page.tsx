@@ -1,4 +1,5 @@
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { getSystemChecks, type CheckStatus } from "@/lib/status-checks";
 
 export const metadata = {
@@ -93,6 +94,7 @@ export default async function StatusPage() {
       <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[#86948a] font-mono">
         Blue Beacon Research Operational Dashboard • Automated Health Protocol
       </footer>
+      <LegalDisclaimerFooter />
     </div>
   );
 }

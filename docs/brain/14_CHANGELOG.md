@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-26 (v0.104.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-26 (v0.105.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.105.0 — Site-wide legal disclaimer footer (2026-09-26)
+
+`apps/web` only. New `components/layout/LegalDisclaimerFooter.tsx` — server component, no props, `data-testid="legal-disclaimer-footer"`, muted small `font-mono` styling matching the existing `/status`/`/accuracy` footer treatment. Renders the standing not-investment-advice / not-a-registered-adviser disclaimer text. Mounted in `(dashboard)/layout.tsx` (below `<main>`, wrapped in a `pb-[60px] md:pb-0` div so it clears the fixed `MobileTabBar` on mobile) so it appears on every page under the `(dashboard)` route group. No shared public layout file exists outside `(dashboard)` — the only two pages that render `PublicHeader.tsx` (`app/status/page.tsx`, `app/accuracy/page.tsx`) each render it directly instead. Verified: `tsc --noEmit` clean, `pnpm build` clean. Live-browser-checked (Playwright, standing test account) at 390px and 1366px on both `/dashboard` and `/status` — renders correctly, no overlap with the fixed mobile tab bar.
 
 ### v0.104.0 — Map cluster/point clicks wired to Intelligence Stream, fake Tension Index dropped (2026-09-26, `73bcd34`)
 

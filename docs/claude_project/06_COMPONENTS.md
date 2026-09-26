@@ -23,6 +23,10 @@ Responsive behavior (this is the whole reason it exists): `px-4 md:px-8`, `min-w
 
 Fixed bottom navigation bar, `md:hidden`, rendered from `(dashboard)/layout.tsx` alongside `Sidebar`/`TopBar`. Five slots: **Feed** (`/dashboard`), **Map** (`/map`), **Alerts** (`/alerts`, unread badge — same `unreadCount` as `Sidebar`), **Watchlist** (`/watchlist`), **More** (opens the existing off-canvas drawer via `useUIStore`'s `mobileSidebarOpen`, same drawer `Sidebar` already renders — Calendar/Backtesting/Settings/Help/Logout all live there, not duplicated into the tab bar). Reuses `Sidebar`'s exact Material Symbols icon names so mobile and desktop share iconography. All 5 tap targets are ≥44px tall. `TopBar`'s old mobile hamburger button was removed in the same change — it opened the identical drawer, now redundant with More.
 
+### LegalDisclaimerFooter (`components/layout/LegalDisclaimerFooter.tsx`) — added 2026-09-26
+
+Site-wide legal disclaimer footer (not-investment-advice / not-a-registered-adviser language), no props, `data-testid="legal-disclaimer-footer"`, muted small `font-mono` text matching the existing `/status` and `/accuracy` footer styling. Rendered in `(dashboard)/layout.tsx` (below `<main>`, so it appears on every page in that route group) and directly in `app/status/page.tsx` + `app/accuracy/page.tsx` — the two pages that render `PublicHeader`; there's no shared public layout wrapping them to add it to instead.
+
 ### Sidebar (apps/web/components/layout/Sidebar.tsx)
 **Used in:** (dashboard)/layout.tsx
 **Fixed left, 256px wide. At `md`+ always visible. Below `md` an off-canvas drawer (`-translate-x-full` / `translate-x-0`) driven by `useUIStore.mobileSidebarOpen`, with a tap-outside backdrop. (#133, 2026-09-12)**

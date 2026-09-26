@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 81).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 82).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 82 — Site-wide legal disclaimer footer (2026-09-26)
+
+`apps/web` only. New `LegalDisclaimerFooter` component renders the standing not-investment-advice / not-a-registered-adviser disclaimer, styled to match the existing `/status`/`/accuracy` footer treatment. Mounted on every page under the `(dashboard)` route group (via the shared layout) and directly on `/status` + `/accuracy`, the only two pages using `PublicHeader` — no shared public layout exists outside `(dashboard)` to route through instead. Verified: type-check + build clean; live-checked at mobile and desktop widths on the standing test account. Full detail: `docs/brain/14_CHANGELOG.md` v0.105.0.
 
 ## PHASE 81 — Map cluster/point clicks wired to Intelligence Stream, fake Tension Index dropped (2026-09-26, `73bcd34`)
 

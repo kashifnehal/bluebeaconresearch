@@ -4,6 +4,7 @@ import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { ProductTour } from "@/components/onboarding/ProductTour";
 import { FeatureHints } from "@/components/onboarding/FeatureHints";
 import { NotificationConnectPrompt } from "@/components/NotificationConnectPrompt";
+import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 
 export default function DashboardLayout({
   children,
@@ -28,6 +29,9 @@ export default function DashboardLayout({
         <main className="flex-1 pb-[60px] md:pb-0" style={{ backgroundColor: "#0e0e0e" }}>
           {children}
         </main>
+        <div className="pb-[60px] md:pb-0">
+          <LegalDisclaimerFooter />
+        </div>
       </div>
       <MobileTabBar />
     </div>

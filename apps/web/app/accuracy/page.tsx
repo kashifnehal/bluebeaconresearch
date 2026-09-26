@@ -1,4 +1,5 @@
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { ACCURACY_LOAD_ERROR } from "@/lib/user-error-copy";
 
 // #121 frontend half — public track-record page. Reads only the pre-computed
@@ -272,6 +273,7 @@ export default async function AccuracyPage() {
       <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[#86948a] font-mono">
         Blue Beacon Research — Not investment advice.
       </footer>
+      <LegalDisclaimerFooter />
     </div>
   );
 }
