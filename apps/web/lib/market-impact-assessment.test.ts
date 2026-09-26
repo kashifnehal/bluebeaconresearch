@@ -7,6 +7,7 @@ import {
   GRAIN_FALLBACK_SENTENCE,
   MARKET_IMPACT_MIN_SAMPLE_SIZE,
   SOURCE_CONFIRMATION_LABELS,
+  computeMarketImpactCheckpoints,
   computeMarketImpactMagnitude,
   deriveTimeHorizonLabel,
   eventCategoryLabel,
@@ -211,6 +212,28 @@ runTest("time-horizon label maps checkpoints to the three horizon buckets", () =
 runTest("time-horizon label is null when no checkpoint clears the gate", () => {
   const rows = outcomeRows("EURUSD", 24, new Array(19).fill(1));
   assert.equal(deriveTimeHorizonLabel(rows, "EURUSD"), null);
+});
+
+runTest("checkpoint chart data skips any checkpoint that doesn't individually clear the gate", () => {
+  const rows = [
+    ...outcomeRows("USOIL", 1, new Array(5).fill(4)), // below gate
+    ...outcomeRows("USOIL", 4, new Array(25).fill(2)),
+    ...outcomeRows("USOIL", 24, new Array(30).fill(1)),
+    // no 48h rows at all
+  ];
+  const points = computeMarketImpactCheckpoints(rows, "USOIL");
+  assert.deepEqual(
+    points.map((p) => p.checkpointHours),
+    [4, 24],
+  );
+  assert.equal(points.find((p) => p.checkpointHours === 4)?.medianMovePct, 2);
+  assert.equal(points.find((p) => p.checkpointHours === 4)?.sampleSize, 25);
+  assert.equal(points.find((p) => p.checkpointHours === 24)?.medianMovePct, 1);
+});
+
+runTest("checkpoint chart data is empty (not zeros) when nothing clears the gate", () => {
+  const rows = outcomeRows("EURUSD", 24, new Array(19).fill(1));
+  assert.deepEqual(computeMarketImpactCheckpoints(rows, "EURUSD"), []);
 });
 
 runTest("grain fallback sentence is exact and cites Dai, Dai & Zhou without a specific percentage", () => {

@@ -1,12 +1,26 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-27 (v0.109.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-27 (v0.111.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.111.0 — Market Impact Assessment: historical-pattern chart, Phase 2 of #227 (2026-09-27)
+
+Small collapsed-by-default event-time bar chart added next to Phase 1's magnitude sentence (`v0.108.0`) on `events/[id]/page.tsx`'s Affected-market chips — X-axis the 1h/4h/24h/48h checkpoints, Y-axis the median `|actual_pct_change|` at that checkpoint for the signal's real asset, skipping any checkpoint that doesn't individually clear `MIN_SAMPLE_SIZE = 20` (no 0/null bar rendered). Uses `recharts`, already the app's chart library (`AlertRuleTrendChart.tsx`, the watchlist symbol-page price chart) — no new dependency.
+
+**No new DB query.** `GET /api/signals/:id` already pages the full `signal_outcomes` table for the named assets with `.range()` to avoid PostgREST's max-rows truncation (see v0.108.0); this phase reuses that same in-memory `rows` array. New pure `computeMarketImpactCheckpoints(rows, asset, minSampleSize)` in `apps/web/lib/market-impact-assessment.ts` calls the existing `computeMarketImpactMagnitude()` once per checkpoint (1/4/24/48) instead of once at a fixed 24h, returning only the checkpoints that clear the gate. `GET /api/signals/:id`'s response gains `marketImpactMagnitudes[asset].checkpoints: {checkpointHours, medianMovePct, sampleSize}[]`.
+
+New `apps/web/components/signals/MarketImpactChart.tsx` — a `BarChart` with `LabelList` value labels and an `XAxis` of checkpoint labels; colors and tooltip styling (`#4edea3` fill, `#131313` tooltip background, 10-11px monospace) match the existing `AlertRuleTrendChart.tsx`/watchlist-chart conventions rather than introducing a new palette.
+
+**Collapsed by default.** The chart sits inside a native `<details>`/`<summary>` (`data-testid="market-impact-chart-toggle"` on the summary, `data-testid="market-impact-chart"` on the chart container) — the same disclosure element already used for "why this signal" lower on the same page, not a new accordion component. The standing disclaimer line ("Historical pattern only — not a prediction or investment advice.") sits outside the `<details>`, so it stays visible whether the chart is expanded or collapsed.
+
+**Phase 1 untouched.** `MIN_SAMPLE_SIZE`, `computeMarketImpactMagnitude`, `deriveTimeHorizonLabel`, and the magnitude/time-horizon sentence text are all unchanged; all 20 pre-existing assertions across `market-impact-assessment.test.ts` and `MarketImpactAssessment.test.tsx` still pass unmodified.
+
+**Verified:** `tsc --noEmit` clean across `apps/web`; full `apps/web` test suite green, including 4 new assertions (2 lib-level: a checkpoint is skipped, not zeroed, when it doesn't clear the gate; the full set is empty, not full of zeros, when nothing clears it — and 2 component-level: the chart is collapsed by default with the disclaimer still visible; no toggle renders when an asset has zero qualifying checkpoints). Live SQL against production (`evavcgfmemwryggdkjmx`) found 6 assets (USOIL, UKOIL, NGAS, CORN, WHEAT, XAUUSD) clearing the gate at all 4 checkpoints. Live-browser (Playwright, standing test account) on a real signal (`6c0aea42-0f21-495e-9b22-5a885d67a0fa`, USOIL + UKOIL impacts) at 1366×900, 768×1024, and 375×812: chart renders collapsed by default; expanding shows 4 correctly-labeled, increasing bars (UKOIL: 0.1%/0.3%/0.9%/1.7% at 1h/4h/24h/48h) with no label overlap or truncation at any width; the disclaimer line remained visible in both states.
 
 ### v0.110.0 — Concurrent-session cap (max 2/user) (2026-09-27)
 

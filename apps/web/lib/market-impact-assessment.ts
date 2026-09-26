@@ -163,6 +163,42 @@ export function computeMarketImpactMagnitude(
  * individually clear minSampleSize (an asset can clear the gate at 24h/48h
  * before it has enough 1h/4h rows). Returns null if none clear the gate.
  */
+export type MarketImpactCheckpointPoint = {
+  checkpointHours: number;
+  medianMovePct: number;
+  sampleSize: number;
+};
+
+/**
+ * Same per-checkpoint magnitudes deriveTimeHorizonLabel already loops over
+ * internally, but exposed as the full set (not just whichever checkpoint
+ * wins) for the Phase 2 event-time chart. Skips any checkpoint that doesn't
+ * individually clear minSampleSize rather than emitting a 0/null point.
+ */
+export function computeMarketImpactCheckpoints(
+  rows: SignalOutcomeRow[],
+  asset: string,
+  minSampleSize: number = MARKET_IMPACT_MIN_SAMPLE_SIZE,
+): MarketImpactCheckpointPoint[] {
+  const points: MarketImpactCheckpointPoint[] = [];
+  for (const checkpointHours of TIME_HORIZON_CHECKPOINTS) {
+    const magnitude = computeMarketImpactMagnitude(
+      rows,
+      asset,
+      checkpointHours,
+      minSampleSize,
+    );
+    if (magnitude) {
+      points.push({
+        checkpointHours,
+        medianMovePct: magnitude.medianMovePct,
+        sampleSize: magnitude.sampleSize,
+      });
+    }
+  }
+  return points;
+}
+
 export function deriveTimeHorizonLabel(
   rows: SignalOutcomeRow[],
   asset: string,

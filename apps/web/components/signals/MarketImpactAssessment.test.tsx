@@ -177,6 +177,53 @@ runTest("magnitude and time-horizon lines render when the asset clears the sampl
   assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
 });
 
+runTest("historical-pattern chart is collapsed by default behind a toggle, disclaimer stays visible", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "OPEC+ output cut tightens crude supply.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232 },
+          timeHorizonLabel: "multi-day",
+          checkpoints: [
+            { checkpointHours: 24, medianMovePct: 0.97, sampleSize: 1232 },
+            { checkpointHours: 48, medianMovePct: 1.4, sampleSize: 900 },
+          ],
+        },
+      },
+    }),
+  );
+  assert.match(html, /data-testid="market-impact-chart-toggle"/);
+  assert.match(html, /data-testid="market-impact-chart"/);
+  // <details> with no `open` attribute renders collapsed by default.
+  assert.equal(/<details(?![^>]*\sopen)[^>]*class="group[^"]*"/.test(html), true);
+  const text = visibleText(html);
+  assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
+});
+
+runTest("no chart toggle renders when the asset has no checkpoint data", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "OPEC+ output cut tightens crude supply.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232 },
+          timeHorizonLabel: "multi-day",
+          checkpoints: [],
+        },
+      },
+    }),
+  );
+  assert.equal(html.includes('data-testid="market-impact-chart-toggle"'), false);
+  assert.equal(html.includes('data-testid="market-impact-chart"'), false);
+});
+
 runTest("not-enough-history fallback renders for a non-grain asset with no magnitude entry", () => {
   const html = renderToStaticMarkup(
     createElement(MarketImpactAssessment, {

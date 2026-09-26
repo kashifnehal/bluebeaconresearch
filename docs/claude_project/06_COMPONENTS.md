@@ -325,6 +325,8 @@ Event-detail ANALYSIS tab also has a "Why this signal" `<details>` (below Full A
 
 > ⚠️ UPDATED 2026-09-26 (market-impact magnitude/time-horizon) — each Affected-market chip on `events/[id]/page.tsx` now shows a real historical-magnitude line ("Events like this have historically moved {asset} by ~{median}% within 24h, based on {n} tracked BBR signals") plus a time-horizon line ("within hours" / "within a day" / "multi-day"), computed server-side in `GET /api/signals/:id` from `signal_outcomes`, gated at `MIN_SAMPLE_SIZE = 20` (same constant as `/v1/accuracy`). Below the gate: "Not enough tracked history for {asset} yet." for most assets, or a Dai/Dai & Zhou (2025) grain-volatility citation specifically for WHEAT/CORN. Uses the median (not mean) of `|actual_pct_change|` — the live distribution is right-skewed enough that the mean overstates a typical move. New standing disclaimer line under Affected market(s): "Historical pattern only — not a prediction or investment advice." `SignalQuickView` doesn't wire the new data yet (still shows only the fallback text there). Full detail: `docs/brain/06_COMPONENTS.md` §3.3b, `docs/brain/05_API.md`.
 
+> ⚠️ UPDATED 2026-09-27 (Phase 2 of #227 — historical-pattern chart) — new `MarketImpactChart.tsx` component: a small `recharts` bar chart of the same per-checkpoint (1h/4h/24h/48h) median % move Phase 1 already computes, rendered next to the magnitude sentence behind a collapsed-by-default `<details>` toggle. No new dependency, no new DB query. Full detail: `docs/brain/06_COMPONENTS.md` §3.3b, `docs/brain/05_API.md`.
+
 ---
 
 ### BreakingAlertBanner (apps/web/components/signals/BreakingAlertBanner.tsx)

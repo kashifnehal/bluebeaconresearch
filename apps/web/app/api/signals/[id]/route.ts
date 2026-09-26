@@ -4,11 +4,13 @@ import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import {
+  computeMarketImpactCheckpoints,
   computeMarketImpactMagnitude,
   deriveTimeHorizonLabel,
   parseEventCategory,
   parseNovelty,
   parseSourceConfirmation,
+  type MarketImpactCheckpointPoint,
   type MarketImpactMagnitude,
   type SignalOutcomeRow,
   type TimeHorizonLabel,
@@ -60,6 +62,7 @@ export type PriceAtSignal = {
 export type MarketImpactAssessmentEntry = {
   magnitude: MarketImpactMagnitude | null;
   timeHorizonLabel: TimeHorizonLabel | null;
+  checkpoints: MarketImpactCheckpointPoint[];
 };
 
 export type EventDetailResponse = {
@@ -320,6 +323,7 @@ export async function GET(
             MARKET_IMPACT_CHECKPOINT_HOURS,
           ),
           timeHorizonLabel: deriveTimeHorizonLabel(rows, asset),
+          checkpoints: computeMarketImpactCheckpoints(rows, asset),
         } satisfies MarketImpactAssessmentEntry,
       ]),
     );

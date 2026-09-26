@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Signal } from "@blue-beacon-research/shared";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
+import { MarketImpactChart } from "@/components/signals/MarketImpactChart";
 import {
   GPR_FALLBACK_SENTENCE,
   GRAIN_FALLBACK_SENTENCE,
@@ -16,6 +17,7 @@ import {
   noveltyLabel,
   sourceConfirmationLabel,
   usesGprFallback,
+  type MarketImpactCheckpointPoint,
   type MarketImpactMagnitude,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
@@ -50,6 +52,7 @@ function Part({
 export type MarketImpactAssessmentEntry = {
   magnitude: MarketImpactMagnitude | null;
   timeHorizonLabel: TimeHorizonLabel | null;
+  checkpoints?: MarketImpactCheckpointPoint[];
 };
 
 export function MarketImpactAssessment({
@@ -197,6 +200,19 @@ export function MarketImpactAssessment({
                         >
                           Historically, moves like this have played out {timeHorizonLabel}.
                         </p>
+                      ) : null}
+                      {magnitude && entry?.checkpoints && entry.checkpoints.length > 0 ? (
+                        <details className="group pl-1">
+                          <summary
+                            data-testid="market-impact-chart-toggle"
+                            className="cursor-pointer select-none text-[11px] md:text-[10px] font-bold uppercase tracking-wide text-accent"
+                          >
+                            View historical pattern
+                          </summary>
+                          <div className="mt-2">
+                            <MarketImpactChart checkpoints={entry.checkpoints} />
+                          </div>
+                        </details>
                       ) : null}
                     </div>
                   );
