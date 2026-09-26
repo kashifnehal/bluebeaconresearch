@@ -8,14 +8,9 @@ import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type TensionMetrics = {
-  cyber: number;
-  kinetic: number;
-  diplomatic: number;
-  score: number;
+  highSeverityCount: number;
   sampleSize: number;
 };
-
-type TensionHistoryBucket = { score: number | null; label: string };
 
 type GeoSignal = Signal & { lat: number; lng: number };
 
@@ -30,7 +25,6 @@ export function MobileTensionSheet({
   onToggleExpanded,
   onOpenFilters,
   tensionMetrics,
-  tensionHistory,
   liveItems,
   isLoading,
   isError,
@@ -40,12 +34,13 @@ export function MobileTensionSheet({
   isFetchingMore,
   onLoadMore,
   onOpenTerminal,
+  clusterFilterCount,
+  onClearClusterFilter,
 }: {
   expanded: boolean;
   onToggleExpanded: () => void;
   onOpenFilters: () => void;
   tensionMetrics: TensionMetrics;
-  tensionHistory: TensionHistoryBucket[];
   liveItems: GeoSignal[];
   isLoading: boolean;
   isError: boolean;
@@ -55,6 +50,8 @@ export function MobileTensionSheet({
   isFetchingMore: boolean;
   onLoadMore: () => void;
   onOpenTerminal: () => void;
+  clusterFilterCount: number | null;
+  onClearClusterFilter: () => void;
 }) {
   const [tensionInfoOpen, setTensionInfoOpen] = useState(false);
 
@@ -66,13 +63,13 @@ export function MobileTensionSheet({
 
           <div className="flex items-center gap-1.5 mb-3">
             <span className="label text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
-              Tension Breakdown
+              High-Severity Activity
             </span>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setTensionInfoOpen((v) => !v)}
-                aria-label="About the Global Tension Index"
+                aria-label="About this count"
                 aria-expanded={tensionInfoOpen}
                 className="flex items-center justify-center w-5 h-5 rounded-full text-on-surface-variant/60 hover:text-primary transition-colors"
               >
@@ -83,41 +80,17 @@ export function MobileTensionSheet({
                   role="tooltip"
                   className="absolute left-0 top-full mt-2 w-56 z-30 p-3 rounded-lg bg-surface-container-high border border-outline-variant/40 shadow-xl text-[11px] leading-relaxed text-on-surface-variant normal-case tracking-normal"
                 >
-                  Composite score derived from regional conflict density, kinetic strikes, and maritime disruption metrics.
+                  A live count of active signals currently rated severity 8 or higher — not a synthesized score.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="space-y-3 mb-6">
-            <div>
-              <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                <span>Cyber Warfare</span>
-                <span className="font-mono text-primary">{tensionMetrics.cyber}%</span>
-              </div>
-              <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${tensionMetrics.cyber}%` }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                <span>Kinetic Conflict</span>
-                <span className="font-mono text-primary">{tensionMetrics.kinetic}%</span>
-              </div>
-              <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${tensionMetrics.kinetic}%` }} />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between label text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
-                <span>Diplomatic Friction</span>
-                <span className="font-mono text-primary">{tensionMetrics.diplomatic}%</span>
-              </div>
-              <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-                <div className="h-full bg-primary" style={{ width: `${tensionMetrics.diplomatic}%` }} />
-              </div>
-            </div>
-          </div>
+          <p className="font-mono text-[13px] text-on-surface mb-6">
+            <span className="text-xl font-bold">{tensionMetrics.highSeverityCount}</span>{" "}
+            high-severity event{tensionMetrics.highSeverityCount === 1 ? "" : "s"} active, of{" "}
+            {tensionMetrics.sampleSize} total
+          </p>
 
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -126,7 +99,20 @@ export function MobileTensionSheet({
                 Intelligence Stream
               </span>
             </div>
+            {clusterFilterCount != null && (
+              <button
+                onClick={onClearClusterFilter}
+                className="label text-[10px] text-primary hover:underline shrink-0"
+              >
+                SHOW ALL
+              </button>
+            )}
           </div>
+          {clusterFilterCount != null && (
+            <p className="text-[11px] text-on-surface-variant -mt-2 mb-3">
+              Showing {clusterFilterCount} signal{clusterFilterCount === 1 ? "" : "s"} from map selection
+            </p>
+          )}
 
           <div className="space-y-3">
             {isLoading || isError ? (
@@ -224,27 +210,16 @@ export function MobileTensionSheet({
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
           <div className="text-left min-w-0">
             <div className="label text-[9px] tracking-[0.2em] text-on-surface-variant uppercase">
-              Global Tension
+              High-Severity Activity
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-mono text-xl font-bold text-on-surface">{tensionMetrics.score}</span>
+              <span className="font-mono text-xl font-bold text-on-surface">{tensionMetrics.highSeverityCount}</span>
               <span className="font-mono text-[9px] text-on-surface-variant/70 truncate">
-                {tensionMetrics.sampleSize} active
+                of {tensionMetrics.sampleSize} active
               </span>
             </div>
           </div>
         </div>
-        {tensionHistory.some((b) => b.score != null) && (
-          <div className="flex items-end gap-[2px] h-5 shrink-0" aria-hidden>
-            {tensionHistory.map((b, i) => (
-              <div
-                key={i}
-                className={`w-1 rounded-sm ${b.score != null ? "bg-primary/50" : "bg-surface-container-high"}`}
-                style={{ height: b.score != null ? `${Math.max(15, (b.score / 99) * 100)}%` : "20%" }}
-              />
-            ))}
-          </div>
-        )}
         <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"

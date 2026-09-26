@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import type { Signal, CommodityImpact } from "@blue-beacon-research/shared";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow } from "@/lib/utils";
@@ -72,6 +71,73 @@ class RecenterControl {
 type MapLibreMapLike = {
   easeTo: (options: { center: [number, number]; zoom: number }) => void;
 };
+
+type GeoSignal = Signal & { lat: number; lng: number };
+
+// Refines a cluster's expansion zoom so the resulting split is closer to
+// ~5 pieces (avoids landing on a zoom that just reveals one giant
+// sub-cluster, or blows straight past clustering into a scatter of
+// individual points). Supercluster's public API only exposes
+// `getClusterChildren` (the fixed next-level breakdown of a cluster, not a
+// per-zoom count), so a literal "recompute count at the stepped zoom" isn't
+// available — the >8 branch approximates a deeper look by summing the
+// grandchildren of any child that is itself a cluster; the <3 branch has no
+// analogous parent-lookup API to check a shallower level, so it applies a
+// single step and stops. Capped at 2 zoom-level adjustment attempts total;
+// falls back to `baseZoom` whenever nothing better is found.
+function refineClusterZoom(
+  source: any,
+  clusterId: number,
+  baseZoom: number,
+  callback: (zoom: number) => void,
+) {
+  if (!source || typeof source.getClusterChildren !== "function") {
+    callback(baseZoom);
+    return;
+  }
+
+  source.getClusterChildren(clusterId, (err: any, children: any[]) => {
+    if (err || !children || (children.length >= 3 && children.length <= 8)) {
+      callback(baseZoom);
+      return;
+    }
+
+    if (children.length < 3) {
+      // Attempt 1 of 2 — no parent-lookup API to re-check a shallower level.
+      callback(baseZoom - 1);
+      return;
+    }
+
+    // children.length > 8 — attempt 1: look one level deeper by summing the
+    // grandchildren of every child that is itself a cluster.
+    const subClusters = children.filter((c: any) => c.properties?.cluster);
+    if (subClusters.length === 0) {
+      callback(baseZoom + 1);
+      return;
+    }
+
+    let pending = subClusters.length;
+    let total = children.length - subClusters.length;
+    subClusters.forEach((c: any) => {
+      source.getClusterChildren(
+        c.properties.cluster_id,
+        (err2: any, grandchildren: any[]) => {
+          pending -= 1;
+          if (!err2 && grandchildren) total += grandchildren.length;
+          if (pending === 0) {
+            // Attempt 2 of 2 — if still far off, step once more; otherwise
+            // settle on the attempt-1 zoom.
+            if (total > 8) {
+              callback(baseZoom + 2);
+            } else {
+              callback(baseZoom + 1);
+            }
+          }
+        },
+      );
+    });
+  });
+}
 
 function signalFromMapProps(props: Record<string, unknown>): Signal | null {
   const id = typeof props.id === "string" ? props.id : "";
@@ -175,7 +241,7 @@ export default function MapPage() {
                   : true),
       );
   }, [filterPool, filters]);
-  const geolocatedSignalsRef = useRef<Signal[]>([]);
+  const geolocatedSignalsRef = useRef<GeoSignal[]>([]);
   geolocatedSignalsRef.current = geolocatedSignals;
   // Stream list now shares the exact same filtered set as the map markers —
   // previously it always showed the unfiltered feed regardless of active filters.
@@ -183,9 +249,14 @@ export default function MapPage() {
   // next API page once the loaded feed is exhausted. Only the sidebar list grows
   // — the map markers keep rendering the full `geolocatedSignals` set as before.
   const [sidebarCount, setSidebarCount] = useState(6);
-  const liveItems = geolocatedSignals.slice(0, sidebarCount);
+  // Set when a map cluster or unclustered point is clicked — narrows the
+  // Intelligence Stream sidebar to just that cluster/point's signals instead
+  // of the full filtered feed. `null` means "showing the normal feed."
+  const [clusterStreamSignals, setClusterStreamSignals] = useState<GeoSignal[] | null>(null);
+  const liveItems = clusterStreamSignals ?? geolocatedSignals.slice(0, sidebarCount);
   const canLoadMoreSidebar =
-    sidebarCount < geolocatedSignals.length || hasNextPage;
+    clusterStreamSignals == null &&
+    (sidebarCount < geolocatedSignals.length || hasNextPage);
   const handleLoadMoreSidebar = () => {
     setSidebarCount((c) => c + 6);
     if (sidebarCount + 6 >= geolocatedSignals.length && hasNextPage) {
@@ -216,6 +287,8 @@ export default function MapPage() {
     setPopupSignal(null);
     setSelectedSignalId(null);
   };
+
+  const clearClusterStream = () => setClusterStreamSignals(null);
 
   // Same mousedown-outside pattern as TopBar's avatar dropdown: click the "i"
   // to pin the tooltip; click anywhere else (not the button or tooltip) to close.
@@ -512,14 +585,37 @@ export default function MapPage() {
               } as any);
             }
 
-            // Click handlers: clusters -> zoom, points -> popup
+            // Click handlers: clusters -> zoom + populate Intelligence Stream, points -> popup + populate Intelligence Stream
             map.on("click", "clusters", (e: any) => {
               const features = map.queryRenderedFeatures(e.point, {
                 layers: ["clusters"],
               });
               const cluster = features[0];
               const clusterId = cluster.properties.cluster_id;
+              const coords = (cluster.geometry as any).coordinates;
               const source: any = map.getSource("signals");
+
+              // Populate the Intelligence Stream sidebar with every signal in
+              // this cluster, not just the zoomed-to viewport.
+              if (source && typeof source.getClusterLeaves === "function") {
+                source.getClusterLeaves(
+                  clusterId,
+                  Infinity,
+                  0,
+                  (leafErr: any, leaves: any[]) => {
+                    if (leafErr || !leaves) return;
+                    const ids = new Set(
+                      leaves
+                        .map((f: any) => f.properties?.id)
+                        .filter(Boolean),
+                    );
+                    setClusterStreamSignals(
+                      geolocatedSignalsRef.current.filter((s) => ids.has(s.id)),
+                    );
+                  },
+                );
+              }
+
               if (
                 source &&
                 typeof source.getClusterExpansionZoom === "function"
@@ -528,13 +624,13 @@ export default function MapPage() {
                   clusterId,
                   (err: any, zoom: number) => {
                     if (err) return;
-                    const coords = (cluster.geometry as any).coordinates;
-                    map.easeTo({ center: coords, zoom });
+                    refineClusterZoom(source, clusterId, zoom, (finalZoom) => {
+                      map.easeTo({ center: coords, zoom: finalZoom });
+                    });
                   },
                 );
               } else {
                 // Fallback: zoom in a couple of levels
-                const coords = (cluster.geometry as any).coordinates;
                 map.easeTo({ center: coords, zoom: map.getZoom() + 2 });
               }
             });
@@ -545,15 +641,29 @@ export default function MapPage() {
               if (!feat) return;
               const props = feat.properties || {};
               const live = geolocatedSignalsRef.current.find((s) => s.id === props.id);
-              const signal = live ?? signalFromMapProps(props);
-              if (signal) openPopupForSignal(signal);
+              if (live) {
+                openPopupForSignal(live);
+                // Same sidebar-population behavior as a cluster click, for
+                // consistency — just a single signal.
+                setClusterStreamSignals([live]);
+                return;
+              }
+              const signal = signalFromMapProps(props);
+              if (signal) {
+                openPopupForSignal(signal);
+                const [lng, lat] = getSignalCoordinates(signal);
+                setClusterStreamSignals([{ ...signal, lat, lng }]);
+              }
             });
 
             map.on("click", (e: any) => {
               const hits = map.queryRenderedFeatures(e.point, {
                 layers: ["unclustered-point", "clusters"],
               });
-              if (hits.length === 0) closePopup();
+              if (hits.length === 0) {
+                closePopup();
+                clearClusterStream();
+              }
             });
 
             // Change cursor on hover
@@ -610,6 +720,10 @@ export default function MapPage() {
   // Only sets React state here — Effect below (keyed on `geolocatedSignals`) is the single
   // writer to the map source, so there's no race between this fetch and the live feed.
   useEffect(() => {
+    setClusterStreamSignals(null);
+  }, [filters]);
+
+  useEffect(() => {
     let cancelled = false;
     async function fetchFiltered() {
       try {
@@ -660,105 +774,20 @@ export default function MapPage() {
     }
   }, [geolocatedSignals, router]);
 
-  // Compute Global Tension Index components from liveSignals
+  // Real tally, not a synthesized index (#backlog fix — the prior version derived
+  // a fabricated 0-99 "tension score" plus cyber/kinetic/diplomatic percentages
+  // from a keyword-regex guess at eventType/title, which is exactly the kind of
+  // invented UI content the project treats as a bug (see CLAUDE.md "Never
+  // fabricate data in the UI"). This counts real signals against the same
+  // severity >= 8 threshold already used live elsewhere in this file (see
+  // `isUrgent` below) and in the dashboard/notification panel.
   const tensionMetrics = useMemo(() => {
-    let cyber = 0;
-    let kinetic = 0;
-    let diplomatic = 0;
-
-    for (const s of liveSignals) {
-      const t = (s.eventType || "").toLowerCase();
-      const title = (s.title || "").toLowerCase();
-
-      if (/cyber|hack|drone|tech|ai|digital|network|telecom|satellite/i.test(t + " " + title)) {
-        cyber += 1;
-      } else if (/military|navy|troops|strike|attack|missile|war|ship|tanker|border|conflict|weapon|defense/i.test(t + " " + title)) {
-        kinetic += 1;
-      } else if (/sanction|diplom|bank|trade|market|tariff|opec|bond|fund|asset|deal|negotiation|talks|economy/i.test(t + " " + title)) {
-        diplomatic += 1;
-      } else {
-        kinetic += 1;
-      }
-    }
-
-    const total = Math.max(1, cyber + kinetic + diplomatic);
+    const highSeverityCount = liveSignals.filter((s) => s.severity >= 8).length;
     return {
-      cyber: Math.round((cyber / total) * 100),
-      kinetic: Math.round((kinetic / total) * 100),
-      diplomatic: Math.round((diplomatic / total) * 100),
-      score: Math.min(99, Math.round(50 + (kinetic * 3 + cyber * 2 + diplomatic) * 1.5)),
+      highSeverityCount,
       sampleSize: liveSignals.length,
     };
   }, [liveSignals]);
-
-  // Tension Index trend sparkline (last 24h) — a separate, real-data-only fetch, not a
-  // refactor of tensionMetrics above. Uses its own chronologically-sorted signal fetch
-  // (existing /api/signals?window=24h, now with an optional ?limit= override so a 24h
-  // window isn't starved by the feed's default severity-sorted cap of 20) bucketed into
-  // 3h windows. scoreSignalBucket() intentionally duplicates the scoring formula from
-  // tensionMetrics rather than sharing code with it, so that block stays untouched.
-  const TENSION_HISTORY_BUCKETS = 8;
-  const TENSION_HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
-
-  const { data: tensionHistorySignals } = useQuery({
-    queryKey: ["tension-history-signals"],
-    queryFn: async () => {
-      const res = await fetch("/api/signals?window=24h&sort=newest&limit=100");
-      if (!res.ok) return [] as Signal[];
-      const json = (await res.json()) as { signals?: Signal[] };
-      return json.signals ?? [];
-    },
-    staleTime: 5 * 60_000,
-    refetchInterval: 5 * 60_000,
-  });
-
-  function scoreSignalBucket(bucket: Signal[]): number | null {
-    if (bucket.length === 0) return null;
-    let cyber = 0;
-    let kinetic = 0;
-    let diplomatic = 0;
-    for (const s of bucket) {
-      const t = (s.eventType || "").toLowerCase();
-      const title = (s.title || "").toLowerCase();
-      if (/cyber|hack|drone|tech|ai|digital|network|telecom|satellite/i.test(t + " " + title)) {
-        cyber += 1;
-      } else if (/military|navy|troops|strike|attack|missile|war|ship|tanker|border|conflict|weapon|defense/i.test(t + " " + title)) {
-        kinetic += 1;
-      } else if (/sanction|diplom|bank|trade|market|tariff|opec|bond|fund|asset|deal|negotiation|talks|economy/i.test(t + " " + title)) {
-        diplomatic += 1;
-      } else {
-        kinetic += 1;
-      }
-    }
-    return Math.min(99, Math.round(50 + (kinetic * 3 + cyber * 2 + diplomatic) * 1.5));
-  }
-
-  const tensionHistory = useMemo(() => {
-    const rows = tensionHistorySignals ?? [];
-    const bucketMs = TENSION_HISTORY_WINDOW_MS / TENSION_HISTORY_BUCKETS;
-    const bucketHours = bucketMs / 3_600_000;
-    const buckets: Signal[][] = Array.from({ length: TENSION_HISTORY_BUCKETS }, () => []);
-    const now = Date.now();
-
-    for (const s of rows) {
-      const t = new Date(s.eventDate ?? s.createdAt).getTime();
-      const age = now - t;
-      if (!Number.isFinite(t) || age < 0 || age > TENSION_HISTORY_WINDOW_MS) continue;
-      const idx = Math.min(TENSION_HISTORY_BUCKETS - 1, Math.floor(age / bucketMs));
-      buckets[idx].push(s); // idx 0 = most recent bucket
-    }
-
-    // Reverse so index 0 is oldest — renders left (oldest) to right (most recent).
-    return [...buckets].reverse().map((bucket, i) => {
-      const idxFromNow = TENSION_HISTORY_BUCKETS - 1 - i;
-      const hoursAgoLo = Math.round(idxFromNow * bucketHours);
-      const hoursAgoHi = Math.round((idxFromNow + 1) * bucketHours);
-      return {
-        score: scoreSignalBucket(bucket),
-        label: `${hoursAgoLo}–${hoursAgoHi}h ago`,
-      };
-    });
-  }, [tensionHistorySignals]);
 
   return (
     <div className="map-page-root relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
@@ -772,7 +801,11 @@ export default function MapPage() {
         />
       </div>
       <div className="absolute inset-0">
-        <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+        <div
+          ref={mapContainerRef}
+          data-testid="map-cluster-click"
+          className="absolute inset-0 w-full h-full"
+        />
         <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />
 
         {mapError && (
@@ -843,13 +876,13 @@ export default function MapPage() {
           <div>
             <div className="flex items-center gap-1.5 mb-1">
               <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
-                Global Tension Index
+                High-Severity Activity
               </div>
               <div className="relative group" ref={tensionInfoRef}>
                 <button
                   type="button"
                   onClick={() => setTensionInfoOpen((v) => !v)}
-                  aria-label="About the Global Tension Index"
+                  aria-label="About this count"
                   className="flex items-center justify-center w-3.5 h-3.5 rounded-full text-on-surface-variant/60 hover:text-primary transition-colors"
                 >
                   <span className="material-symbols-outlined text-[13px] leading-none">info</span>
@@ -865,35 +898,18 @@ export default function MapPage() {
                       : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
                   }`}
                 >
-                  Composite score derived from regional conflict density, kinetic strikes, and maritime disruption metrics.
+                  A live count of active signals currently rated severity 8 or higher — not a synthesized score.
                 </div>
               </div>
             </div>
             <div className="flex items-baseline gap-2">
               <span className="font-mono text-4xl font-bold text-on-surface">
-                {tensionMetrics.score}
+                {tensionMetrics.highSeverityCount}
               </span>
               <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70">
-                from {tensionMetrics.sampleSize} active signal{tensionMetrics.sampleSize === 1 ? "" : "s"}
+                high-severity event{tensionMetrics.highSeverityCount === 1 ? "" : "s"} active, of {tensionMetrics.sampleSize} total
               </span>
             </div>
-            {tensionHistory.some((b) => b.score != null) && (
-              <div className="mt-2">
-                <div className="flex items-end gap-[3px] h-6" aria-label="Tension index trend, last 24 hours">
-                  {tensionHistory.map((b, i) => (
-                    <div
-                      key={i}
-                      title={b.score != null ? `${b.label}: ${b.score}` : `${b.label}: not enough data`}
-                      className={`flex-1 rounded-sm ${b.score != null ? "bg-primary/50" : "bg-surface-container-high"}`}
-                      style={{ height: b.score != null ? `${Math.max(12, (b.score / 99) * 100)}%` : "15%" }}
-                    />
-                  ))}
-                </div>
-                <p className="font-mono text-[12px] md:text-[8px] text-on-surface-variant/50 mt-1 uppercase tracking-wider">
-                  Last 24h trend
-                </p>
-              </div>
-            )}
           </div>
           <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/20">
             <span className="material-symbols-outlined text-primary">
@@ -901,51 +917,7 @@ export default function MapPage() {
             </span>
           </div>
         </div>
-        <div className="space-y-4 mb-8">
-          <div>
-            <div className="flex justify-between label text-[12px] md:text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
-              <span>Cyber Warfare</span>
-              <span className="font-mono text-primary">
-                {tensionMetrics.cyber}%
-              </span>
-            </div>
-            <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary"
-                style={{ width: `${tensionMetrics.cyber}%` }}
-              />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between label text-[12px] md:text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
-              <span>Kinetic Conflict</span>
-              <span className="font-mono text-primary">
-                {tensionMetrics.kinetic}%
-              </span>
-            </div>
-            <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary"
-                style={{ width: `${tensionMetrics.kinetic}%` }}
-              />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between label text-[12px] md:text-[10px] text-on-surface-variant mb-1.5 uppercase tracking-wider">
-              <span>Diplomatic Friction</span>
-              <span className="font-mono text-primary">
-                {tensionMetrics.diplomatic}%
-              </span>
-            </div>
-            <div className="h-1 bg-surface-container-high rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary"
-                style={{ width: `${tensionMetrics.diplomatic}%` }}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="space-y-3" data-filtered-count={geolocatedSignals.length}>
+        <div className="space-y-3 mb-8" data-filtered-count={geolocatedSignals.length}>
           <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant mb-2 uppercase">
             Filters
           </div>
@@ -985,6 +957,19 @@ export default function MapPage() {
               Intelligence Stream
             </span>
           </div>
+          {clusterStreamSignals != null && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-on-surface-variant">
+                Showing {clusterStreamSignals.length} signal{clusterStreamSignals.length === 1 ? "" : "s"} from map selection
+              </span>
+              <button
+                onClick={clearClusterStream}
+                className="label text-[10px] text-primary hover:underline shrink-0"
+              >
+                SHOW ALL
+              </button>
+            </div>
+          )}
           <IngestionStatusBanner />
         </div>
 
@@ -1091,7 +1076,6 @@ export default function MapPage() {
         onToggleExpanded={() => setMobileSheetExpanded((v) => !v)}
         onOpenFilters={() => setMobileFiltersOpen(true)}
         tensionMetrics={tensionMetrics}
-        tensionHistory={tensionHistory}
         liveItems={liveItems}
         isLoading={isLoading}
         isError={isError}
@@ -1101,6 +1085,8 @@ export default function MapPage() {
         isFetchingMore={isFetchingNextPage}
         onLoadMore={handleLoadMoreSidebar}
         onOpenTerminal={() => router.push("/dashboard")}
+        clusterFilterCount={clusterStreamSignals?.length ?? null}
+        onClearClusterFilter={clearClusterStream}
       />
 
       {mobileFiltersOpen && (

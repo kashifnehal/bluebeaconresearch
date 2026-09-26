@@ -111,7 +111,7 @@ export function HelpModal() {
               Click any pulsating red/emerald dot on the map overlay to view incident details, spatial coordinates, and intelligence streams.
             </p>
             <p className="text-xs text-[#bbcac0] leading-relaxed">
-              <strong className="text-white">Global Tension Index:</strong> Composite score derived from regional conflict density, kinetic strikes, and maritime disruption metrics.
+              <strong className="text-white">High-severity activity:</strong> A live count of active signals currently rated severity 8 or higher — not a synthesized index.
             </p>
           </div>
 
