@@ -47,12 +47,18 @@ const RSS_FEEDS: RssFeed[] = [
   { url: "https://www.france24.com/en/rss", label: "France24", tier: "world" },
   { url: "https://rss.dw.com/rdf/rss-en-world", label: "DW World", tier: "world" },
   { url: "https://www.theguardian.com/world/rss", label: "Guardian World", tier: "world" },
-  // UN News (https://news.un.org/feed/subscribe/en/news/all/rss.xml) removed
-  // 2026-08-28 (#63): it always responds with gzip-encoded bytes even when the
-  // client doesn't negotiate compression, which rss-parser's HTTP client doesn't
-  // decode — so parseURL() throws "Non-whitespace before first tag" on every run,
-  // from every IP. It contributed 1 row in its entire lifetime. Re-add only with
-  // a manual fetch + decompress path if UN coverage is wanted back.
+  { url: "https://www.eia.gov/rss/press_rss.xml", label: "EIA Press Releases", tier: "world" },
+  // UN News (https://news.un.org/feed/subscribe/en/news/all/rss.xml) — re-evaluated
+  // 2026-09-26 (claude/rss-feed-additions), still not added: server unconditionally
+  // gzips the response (content-encoding: gzip, confirmed via raw magic bytes 1f8b)
+  // even when the client doesn't negotiate compression, and rss-parser's HTTP client
+  // doesn't decode it — parseURL() throws "Non-whitespace before first tag" on every
+  // run, from every IP. Same failure as the original 2026-08-28 removal (#63). Re-add
+  // only with a manual fetch + decompress path if UN coverage is wanted back.
+  // USDA Latest News (https://www.usda.gov/rss/latest-releases.xml) — evaluated
+  // 2026-09-26, not added: Akamai (server: AkamaiGHost) returns a hard 403 on every
+  // request regardless of User-Agent/Accept headers — this is bot-fingerprinting
+  // (likely TLS/IP-based), not a header issue, so it won't be fixed by header changes.
   // ── Finance / markets (lighter filter — only hard-exclude sports/celebrity) ──
   { url: "https://feeds.bbci.co.uk/news/business/rss.xml", label: "BBC Business", tier: "finance" },
   { url: "https://www.theguardian.com/business/rss", label: "Guardian Business", tier: "finance" },
