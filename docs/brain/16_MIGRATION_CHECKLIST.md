@@ -94,6 +94,7 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 
 - `20260926053739_raw_events_materiality_checked_at.sql` — claude/237. Nullable `raw_events.materiality_checked_at timestamptz` + partial index (`WHERE materiality_checked_at IS NULL`). Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `raw_events_materiality_checked_at`. Verified via `information_schema.columns`.
 - `20260926053910_raw_events_source_add_rss.sql` — claude/237. `raw_events_source_check` extended to add `'rss'` (was `gdelt`/`acled`/`newsapi`/`gnews`/`manual`) — `rss-collector.ts` was writing `source: "newsapi"` (GNews's value), conflating the two. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `raw_events_source_add_rss`. Verified via `pg_get_constraintdef`.
+- `20260926130000_backfill_heuristic_severity_cap.sql` — #240. Backfill: `signals` rows with `classification_method = 'heuristic' AND severity > 6` set to `severity = 6, is_breaking = false` (the 2026-09-12 cap in `claude.service.ts` was never applied retroactively). `raw_events` has no independent severity/materiality score column, so no equivalent update was needed there. Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `backfill_heuristic_severity_cap`. Verified: 462 rows affected (400 also `is_breaking`); post-migration count of `severity > 6` heuristic rows = 0.
 
 ## Cross-references
 
