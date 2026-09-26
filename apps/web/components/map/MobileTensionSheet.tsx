@@ -86,7 +86,7 @@ export function MobileTensionSheet({
             </div>
           </div>
 
-          <p className="font-mono text-[13px] text-on-surface mb-6">
+          <p className="font-mono text-[13px] text-on-surface mb-6" data-testid="map-signal-count">
             <span className="text-xl font-bold">{tensionMetrics.highSeverityCount}</span>{" "}
             high-severity event{tensionMetrics.highSeverityCount === 1 ? "" : "s"} active, of{" "}
             {tensionMetrics.sampleSize} total

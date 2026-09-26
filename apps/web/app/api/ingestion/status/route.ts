@@ -10,7 +10,18 @@ type PipelineRunStatus = {
   nextFetchEstimate: string;
   collectors: Record<string, unknown>;
   totals: { inserted: number; signals: number; fetched: number };
+  // Real cron cadence in minutes, self-reported by the backend (buildPipelineStatus)
+  // from its own INGESTION_INTERVAL_CRON. Only present on the "redis" source path —
+  // the raw_events-inference fallback below has no way to know the real cadence.
+  intervalMinutes?: number;
 };
+
+// Used only when pipeline:last_run is unavailable and lastFetchedAt/nextFetchEstimate
+// must be inferred from raw_events instead. Matches the current real production
+// cadence (Railway's INGESTION_INTERVAL_CRON, confirmed via service_health_events
+// timestamps landing on :00/:30). Update this if that cron cadence changes and no
+// "redis" source is available to self-report it.
+const FALLBACK_INTERVAL_MINUTES = 30;
 
 function getUpstashRedis() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -45,7 +56,8 @@ export async function GET() {
   // apps/backend/src/lib/pipeline-status.ts). Per-collector health is unknowable.
   if (!status) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Accept either key name — see lib/supabase-server.ts for why.
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
     if (supabaseUrl && serviceKey) {
       const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
       const { data } = await supabase
@@ -59,7 +71,9 @@ export async function GET() {
         const lastFetchedAt = data.created_at as string;
         status = {
           lastFetchedAt,
-          nextFetchEstimate: new Date(new Date(lastFetchedAt).getTime() + 15 * 60 * 1000).toISOString(),
+          nextFetchEstimate: new Date(
+            new Date(lastFetchedAt).getTime() + FALLBACK_INTERVAL_MINUTES * 60 * 1000,
+          ).toISOString(),
           collectors: {},
           totals: { inserted: 0, signals: 0, fetched: 0 },
         };
@@ -78,7 +92,7 @@ export async function GET() {
 
   return NextResponse.json({
     status,
-    cronIntervalMinutes: 15,
+    cronIntervalMinutes: status?.intervalMinutes ?? FALLBACK_INTERVAL_MINUTES,
     degraded,
     reason,
   });

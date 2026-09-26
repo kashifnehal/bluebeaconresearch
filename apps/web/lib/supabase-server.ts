@@ -44,7 +44,11 @@ export async function getRouteSupabaseClients(): Promise<RouteSupabaseClients | 
     data: { user },
   } = await supabaseAuth.auth.getUser();
 
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // SUPABASE_SECRET_KEY is Supabase's newer key-naming scheme; Vercel has
+  // been migrated to it while Railway still uses the legacy name. Accept
+  // either so a privileged client is available regardless of which platform
+  // set which name (see SUPABASE_SERVICE_ROLE_KEY gap, 2026-09-26).
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
   const supabase = serviceKey
     ? createServiceClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
     : supabaseAuth;

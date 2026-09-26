@@ -40,7 +40,12 @@ export function IngestionStatusBanner() {
   const degraded = data?.degraded ?? false;
   const lastFetched = new Date(status.lastFetchedAt);
   const nextFetch = status.nextFetchEstimate ? new Date(status.nextFetchEstimate) : null;
-  const isStale = Date.now() - lastFetched.getTime() > 20 * 60 * 1000;
+  // Scales with the real cadence (cronIntervalMinutes) rather than a fixed 20 min —
+  // a fixed threshold shorter than the actual interval flagged "delayed" for the
+  // back half of every normal cycle. 1.5x gives one cycle's worth of slack before
+  // a real miss is flagged.
+  const cronIntervalMinutes = data?.cronIntervalMinutes ?? 15;
+  const isStale = Date.now() - lastFetched.getTime() > cronIntervalMinutes * 1.5 * 60 * 1000;
   const notHealthy = isStale || degraded;
 
   return (
@@ -100,7 +105,7 @@ export function IngestionStatusBanner() {
         </span>
       )}
 
-      <span className="opacity-70">Every {data?.cronIntervalMinutes ?? 15} min · RSS · GNews · GDELT</span>
+      <span className="opacity-70">Every {cronIntervalMinutes} min · RSS · GNews · GDELT</span>
     </div>
   );
 }

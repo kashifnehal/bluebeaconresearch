@@ -47,10 +47,24 @@ export type PipelineRunStatus = {
   consecutiveFailures?: Record<string, number>;
   lastSuccessAt?: Record<string, string>;
   alerted?: Record<string, boolean>;
+  // Real cron cadence in minutes, so /api/ingestion/status (apps/web) can display
+  // and evaluate "overdue" against the actual interval instead of a guess that
+  // drifts out of sync whenever INGESTION_INTERVAL_CRON changes.
+  intervalMinutes: number;
 };
 
 const REDIS_KEY = "pipeline:last_run";
-const CRON_INTERVAL_MS = 15 * 60 * 1000;
+const DEFAULT_INGESTION_INTERVAL_MINUTES = 15;
+
+// Mirrors workers.ts's own validation of INGESTION_INTERVAL_CRON, but only needs
+// the interval in minutes, not the full cron expression — only the common
+// "*/N * * * *" step form (the only form this env var has ever been set to) is
+// parsed; anything else falls back to the default rather than guessing.
+function getIngestionIntervalMinutes(): number {
+  const expr = process.env.INGESTION_INTERVAL_CRON;
+  const match = expr?.match(/^\*\/(\d+) \* \* \* \*$/);
+  return match ? Number(match[1]) : DEFAULT_INGESTION_INTERVAL_MINUTES;
+}
 const ZERO_YIELD_STREAK_KEY = "pipeline:consecutive_zero_yield";
 // 3 consecutive 15-min cycles with literally nothing fetched from any source is a
 // different signal than normal per-source degradation (rate limits, one feed 404ing) —
@@ -75,11 +89,14 @@ export function buildPipelineStatus(
     (collectors.gnews?.fetched ?? 0) +
     (collectors.gdelt?.fetched ?? 0);
 
+  const intervalMinutes = getIngestionIntervalMinutes();
+
   return {
     lastFetchedAt: finishedAt.toISOString(),
-    nextFetchEstimate: new Date(finishedAt.getTime() + CRON_INTERVAL_MS).toISOString(),
+    nextFetchEstimate: new Date(finishedAt.getTime() + intervalMinutes * 60 * 1000).toISOString(),
     collectors,
     totals: { inserted, signals, fetched },
+    intervalMinutes,
   };
 }
 

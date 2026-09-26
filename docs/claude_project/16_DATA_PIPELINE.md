@@ -79,7 +79,7 @@ DOC 2.0 article-list endpoint, **not** the CSV Event Export product a previous
 version of this doc described — there is no `lastupdate.txt`/CSV download step,
 no Goldstein scale, and no `ActionGeo_*` fields anywhere in this pipeline.
 **Format:** JSON (`mode=artlist`)
-**Update frequency:** Every 15 minutes (ingestion cron cycle)
+**Update frequency:** Every 30 minutes (ingestion cron cycle — `INGESTION_INTERVAL_CRON`, see `docs/brain/15_INGESTION_PIPELINE.md` §1)
 **Cost:** Free, no API key, no authenticated tier
 **Volume:** Up to 50 articles per run (`maxrecords=50`)
 
@@ -373,7 +373,7 @@ await fetch('https://exp.host/--/api/v2/push/send', {
 ## 5. PRICE SYNC PIPELINE
 
 **Worker:** price-syncer.ts
-**Cron:** Every 15 minutes (`*/15 * * * *`)
+**Cron:** Every 30 minutes (bundled in the ingestion cycle — `INGESTION_INTERVAL_CRON`, currently `*/30 * * * *`)
 **Data source:** Yahoo Finance (yahoo-finance2 npm package — unlimited, free)
 
 **Flow:**

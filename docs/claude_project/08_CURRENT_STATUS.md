@@ -173,14 +173,14 @@ Last updated: 2026-09-24 (Day Mode dead-control removal, Settings > Appearance)
 | Subsystem                           | Status              | Notes                                                                     |
 | :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
 | **Turborepo Monorepo Architecture** | ✅ Operational      | Clean monorepo structure                                                  |
-| **Next.js 16 Web App (Vercel)**     | ✅ Operational      | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
+| **Next.js 16 Web App (Vercel)**     | ✅ Operational      | `/api/signals` force-dynamic; server-side Supabase clients now accept `SUPABASE_SECRET_KEY` as a fallback for `SUPABASE_SERVICE_ROLE_KEY` (fixed 2026-09-26) |
 | **PostgreSQL Schema (Supabase)**    | ✅ Operational      | 9 migrations applied (including 009 event_date index)                     |
-| **Railway Workers (Cron)**          | ✅ Operational      | `sleepApplication: false`, heartbeat every 5m, collectors every 15m       |
+| **Railway Workers (Cron)**          | ✅ Operational      | `sleepApplication: false`, heartbeat every 5m, collectors every 30m       |
 | **Railway Backend (HTTP API)**      | ✅ Operational      | `api.bluebeaconresearch.com` healthcheck passing                          |
 | **RSS Real-Time Collector**         | ⚠️ Partial          | 14 feeds (7 world incl. EIA Press Releases + 7 finance); UN News/USDA evaluated 2026-09-26 and rejected (dead), Reuters never configured |
 | **GNews Ingestion**                 | ⚠️ Degraded         | Free tier — 1 query/run; mostly duplicates after initial ingest           |
 | **GDELT Ingestion**                 | ⚠️ Degraded         | HTTP 429 rate limits (GDELT is keyless, no auth tier exists); exponential backoff (60s/120s+jitter, 3 attempts) added 2026-08-22, replacing a flat 30s retry that often landed inside GDELT's own ~15min IP block window |
-| **Price Syncer (Yahoo Finance)**    | ✅ Operational      | 8 commodity prices every 15 min                                           |
+| **Price Syncer (Yahoo Finance)**    | ✅ Operational      | 8 commodity prices every 30 min                                           |
 | **Claude AI Classifier**            | ⚠️ Degraded         | Zero Anthropic credit — heuristic fallback active                         |
 | **Heuristic Fallback Classifier**   | ✅ Operational      | Dynamic confidence scoring (55%–90%) + word-boundary filtering            |
 | **Upstash Redis / BullMQ**          | ✅ Operational      | Fixed `rediss://` TLS protocol                                            |
@@ -206,7 +206,7 @@ Last updated: 2026-09-24 (Day Mode dead-control removal, Settings > Appearance)
 ## 3. How the Data Pipeline Works
 
 ```
-Railway workers (startup + every 15m)
+Railway workers (startup + every 30m)
   RSS (BBC, Al Jazeera, Guardian, NPR, France24, DW, EIA + finance feeds) + GNews + GDELT
         ↓
 isRelevantEvent() word-boundary filter — ~70% of articles filtered out
@@ -270,7 +270,7 @@ Pre-2026-09-12 the table tracked collectors/prices only. Prompt O added `recordS
 | GNews free tier quota                  | Open      | 1 query/run; mostly returns duplicates after initial ingest      |
 | Anthropic API credit exhausted         | High      | Heuristic fallback active                                        |
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
-| `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
+| `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Resolved (2026-09-26) | Vercel never had this exact name — it has `SUPABASE_SECRET_KEY` (Supabase's newer naming). Code now falls back to that name (`lib/supabase-server.ts` + 3 other call sites); no Vercel env change needed. See `LIVE_TODO.md`. |
 | Telegram alerts not working            | Open      | `TELEGRAM_BOT_TOKEN` not set in Railway                          |
 
 > ⚠️ UPDATED 2026-08-19 — the missing `TELEGRAM_BOT_TOKEN` is still true and still blocks Telegram delivery specifically, but this table's diagnosis was incomplete: as of 2026-08-18 it turned out alert dispatch to ALL channels (Telegram, Slack, webhook, push) had been completely non-functional due to a separate wiring bug — the `alert-dispatch` BullMQ queue was never fed, so nothing ever triggered dispatch even when other prerequisites were met. That's now fixed (collectors call `dispatchAlertsForSignal()` inline); Telegram itself still needs the bot token added.
@@ -309,7 +309,7 @@ If `created_at` advances but UI still shows old times → check `event_date` (pu
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-SUPABASE_SERVICE_ROLE_KEY=<service role key>   ← REQUIRED on Vercel for /api/signals
+SUPABASE_SERVICE_ROLE_KEY=<service role key>   ← Railway uses this name; Vercel has SUPABASE_SECRET_KEY instead — code accepts either (fixed 2026-09-26)
 ```
 
 ### Redis (Railway workers + backend)

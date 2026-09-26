@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural Decision Records (ADRs) & Trade-offs
 
-> **📍 Doc status — current as of 2026-09-20 for standing rules.** Latest ADRs through ADR 022 / D26 plus #146. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through ADR 028 / D32. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 This document records the foundational architectural decisions, framework selections, infrastructure trade-offs, underlying assumptions, and system risks for Blue Beacon Research.
 
@@ -595,3 +595,23 @@ Per `CLAUDE.md`'s standing rule against shipping non-functional UI as if real, a
 ### Cross-tree mapping
 
 Recorded as **D31** in `docs/claude_project/10_DECISIONS.md`.
+
+---
+
+## 29. ADR 028: `/map`'s full signal dataset stays behind login — no anon RLS policy on `signals`
+
+### Context
+
+Investigating a live "`/map` shows 0 total for every filter" report (2026-09-26) found the actual cause was `proxy.ts`'s `PROTECTED` list missing `/map` (fixed — see `LIVE_TODO.md`), not an RLS gap. The task brief also asked to consider adding an `anon`-role SELECT policy on `signals` as a "safety net," conditional on an existing public-facing signals view to match scope against. One does exist — the homepage (`app/page.tsx`) shows a single curated active signal plus a bare total count to logged-out visitors, via a service-role fallback client, not RLS.
+
+### Decision
+
+Did not add an anon RLS policy on `signals`. `/map` now requires login like every other dashboard-tier page. The homepage's narrow preview (1 signal + a count) is not the same visibility rule as the map's full ~2,961-row, fully-filterable dataset — granting broad `anon` SELECT to match the map's needs would expose the core paid product to logged-out visitors, which is a business/positioning decision, not a bug fix.
+
+### Rationale
+
+Per `CLAUDE.md`'s scope-discipline rule, a task naming a specific symptom ("`/map` shows 0") does not license expanding what's publicly accessible without that being asked for explicitly. If `/map` (or a subset of it) is ever meant to work as a public teaser the way the homepage does, that's a founder call on what exactly should be visible — not something to infer from "an RLS policy would technically fix the zero."
+
+### Cross-tree mapping
+
+Recorded as **D32** in `docs/claude_project/10_DECISIONS.md`.

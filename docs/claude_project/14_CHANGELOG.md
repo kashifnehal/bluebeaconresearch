@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 83).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 84).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 84 — /map "0 total" fix: missing route guard, SUPABASE_SECRET_KEY fallback, ingestion cadence (2026-09-26)
+
+Live `/map` showed "0 total" under every filter for logged-out visitors. Root cause: `apps/web/proxy.ts`'s `PROTECTED` route list was missing `/map` — every other dashboard-tier page requires a session, `/map` didn't, so an unauthenticated visitor loaded the page shell but `/api/signals` (which has always required `user` in production) silently returned nothing. Fixed by adding `/map` to `PROTECTED`. Confirmed via a real authenticated request (hand-built `@supabase/ssr` session cookie from the standing test account) that logged-in access was already fully correct (`total: 2961`, matching the live DB) — the RLS/service-key gap investigated alongside this was real but not the cause of the reported symptom. Separately fixed: Vercel's Supabase key is named `SUPABASE_SECRET_KEY` (newer naming), not the `SUPABASE_SERVICE_ROLE_KEY` name 4 `apps/web` call sites read with no fallback — added the fallback (same pattern as the existing `GNEWS_API_KEY`/`NEWS_API_KEY` fallback) rather than renaming anything on Vercel, since Railway still uses the old name. Did not add an anon RLS policy on `signals` for `/map` — the only existing public-facing signal view (the homepage) shows one curated signal + a count, not the full dataset; making the map itself public is a product decision, left for a founder call. Also fixed the ingestion-delayed banner false-alarming for the back half of every real cycle: three places assumed a 15-min cadence when production has run on 30 min for a while — the backend now self-reports the real interval (parsed from `INGESTION_INTERVAL_CRON`) instead of hardcoding it. Added `data-testid="map-signal-count"`. Verified: `tsc --noEmit` clean; local dev confirms the redirect and authenticated access; live-browser at desktop + mobile widths confirms the map renders real signals and the banner no longer false-alarms. Full detail: `docs/brain/14_CHANGELOG.md` v0.107.0.
 
 ## PHASE 83 — Chart attribution: "why did this happen" (#207/#228, Phase 1) (2026-09-26)
 

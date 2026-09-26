@@ -906,7 +906,10 @@ export default function MapPage() {
               <span className="font-mono text-4xl font-bold text-on-surface">
                 {tensionMetrics.highSeverityCount}
               </span>
-              <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70">
+              <span
+                className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70"
+                data-testid="map-signal-count"
+              >
                 high-severity event{tensionMetrics.highSeverityCount === 1 ? "" : "s"} active, of {tensionMetrics.sampleSize} total
               </span>
             </div>

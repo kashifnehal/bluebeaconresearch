@@ -1,6 +1,6 @@
 # 15_INGESTION_PIPELINE.md — News Ingestion Logic, Filters & Display Rules
 
-> **📍 Doc status — current as of 2026-09-26 for the RSS feed roster; 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for the RSS feed roster and ingestion cadence; 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
 
 This document describes **exactly** how Blue Beacon Research fetches news, filters it, stores it, and displays it on the dashboard. Read this before changing collectors or wondering why certain headlines appear (or don't).
 
@@ -9,7 +9,7 @@ This document describes **exactly** how Blue Beacon Research fetches news, filte
 ## 1. Pipeline Overview
 
 ```
-Railway workers (startup + every 15 min)
+Railway workers (startup + every 30 min)
   ├── RSS Collector      (14 feeds — world + finance)
   ├── GNews Collector    (1 API query, free tier)
   ├── GDELT Collector    (1 API query, global news index)
@@ -29,10 +29,10 @@ Railway workers (startup + every 15 min)
   /api/signals + /api/ingestion/status → Dashboard UI
 ```
 
-**Schedule:** `node-cron` every 15 minutes + immediate run on deploy.  
+**Schedule:** `node-cron`, interval set by `INGESTION_INTERVAL_CRON` (Railway env, default `*/15 * * * *`; production is currently `*/30 * * * *`) + immediate run on deploy. `buildPipelineStatus()` (`apps/backend/src/lib/pipeline-status.ts`) parses this at write time and stamps the real interval onto `pipeline:last_run.intervalMinutes`, so `/api/ingestion/status` and the banner never hardcode a cadence that can drift out of sync again (fixed 2026-09-26 — see `LIVE_TODO.md`).  
 **Last-fetched banner:** reads `pipeline:last_run` from Upstash Redis (fallback: newest `raw_events.created_at`).
 
-#121/#144's `outcome-tracker.ts` is **not** on this 15-min loop. It is a separate daily cron (`0 5 * * *`) that writes `signal_outcomes` at 1h/4h/24h/48h from already-stored signals + `commodity_prices`. `GET /v1/accuracy` still aggregates 48h only. Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Do not fold it into collectors.
+#121/#144's `outcome-tracker.ts` is **not** on this loop. It is a separate daily cron (`0 5 * * *`) that writes `signal_outcomes` at 1h/4h/24h/48h from already-stored signals + `commodity_prices`. `GET /v1/accuracy` still aggregates 48h only. Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Do not fold it into collectors.
 
 ---
 
@@ -41,7 +41,7 @@ Railway workers (startup + every 15 min)
 ### 2.1 RSS Collector (`rss-collector.ts`)
 
 **Auth:** None (public RSS/Atom feeds)  
-**Run interval:** Every 15 min + startup  
+**Run interval:** Every 30 min + startup (see §1 — `INGESTION_INTERVAL_CRON`)  
 **Article age window:** **4 hours** (articles older than 4h are skipped)  
 **Dedup key:** `rss-{base64(url)[0:32]}` in `raw_events.external_id`
 
@@ -74,7 +74,7 @@ Railway workers (startup + every 15 min)
 
 **Auth:** `GNEWS_API_KEY`  
 **API:** `https://gnews.io/api/v4/search`  
-**Free tier limit:** ~100 requests/day → **1 query per run** (~96/day at 15-min intervals)  
+**Free tier limit:** ~100 requests/day → **1 query per run** (~48/day at the current 30-min cadence)  
 **Max articles per run:** 10  
 **Sort:** `publishedAt` (newest first)  
 **Dedup key:** `gnews-{base64(url)[0:32]}`  
@@ -125,7 +125,7 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 
 **Source:** Yahoo Finance (`yahoo-finance2`)  
 **Symbols:** 8 commodities (WTI, Brent, Gold, NatGas, Wheat, Copper, Silver, Corn) + **6 forex pairs** (EURUSD, GBPUSD, USDJPY, USDCHF, USDRUB, USDCNY — Yahoo `<PAIR>=X` tickers) — the forex set added by #87 phase 1 (`a15e2fd`, 2026-09-09), synced in the same loop.  
-**Interval:** Every 15 min (bundled in ingestion cycle)  
+**Interval:** Every 30 min (bundled in ingestion cycle)  
 **Storage:** `commodity_prices` table (a generic symbol/price time-series despite the name) + Redis `prices:{SYMBOL}` (900s TTL)
 
 ---
@@ -235,9 +235,9 @@ After passing the filter and dedup check:
 | Field         | Source                                                                    |
 | :------------ | :------------------------------------------------------------------------ |
 | Last fetched  | `pipeline:last_run.lastFetchedAt` (Redis) or `max(raw_events.created_at)` |
-| Next run ~    | lastFetched + 15 min                                                      |
+| Next run ~    | lastFetched + `cronIntervalMinutes` (self-reported, see §1)              |
 | +N signals    | Last run `totals.signals`                                                 |
-| Stale warning | Red if last fetch > 20 min ago                                            |
+| Stale warning | Red if last fetch > 1.5× `cronIntervalMinutes` ago (was a hardcoded 20 min, which false-alarmed for the back half of every real 30-min cycle — fixed 2026-09-26) |
 
 ### 5.4 Featured card selection (`/alerts`, `/dashboard`)
 
@@ -280,7 +280,7 @@ High-severity (8+) stories dominate the hero card. New low-severity market news 
 
 ```
 startup:ingestion complete → collectors.rss.inserted: N
-ingestion-cycle complete   → every 15 min
+ingestion-cycle complete   → every 30 min
 workers:heartbeat          → every 5 min
 ```
 

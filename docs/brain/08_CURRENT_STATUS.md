@@ -603,15 +603,15 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
 - **Monorepo Build Status**: Turborepo build (`pnpm build --filter web`) passes with zero compilation or type-check errors.
   | :---------------------------------- | :------------------ | :------------------------------------------------------------------------ |
   | **Turborepo Monorepo Architecture** | ✅ Operational | Clean monorepo structure |
-  | **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel |
+  | **Next.js 16 Web App (Vercel)** | ✅ Operational | `/api/signals` force-dynamic; server-side Supabase clients now accept `SUPABASE_SECRET_KEY` as a fallback for `SUPABASE_SERVICE_ROLE_KEY` (fixed 2026-09-26) |
   | **PostgreSQL Schema (Supabase)** | ✅ Operational | 9 migrations applied (including 009 event_date index) |
   > ⚠️ UPDATED 2026-08-19 — Stale count. Migrations now run 000–012; `20260817220713_consolidate_user_channels_rls.sql` / `20260817220714_reliability_indexes_parts_2_4.sql` were applied to the live DB 2026-08-19 and Advisor-verified (see top-of-file summary and `04_DATABASE.md` §4).
-  | **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
+  | **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 30m |
   | **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
   | **RSS Real-Time Collector** | ⚠️ Partial | 14 feeds (BBC/Al Jazeera/NPR/France24/DW/Guardian World/EIA Press Releases + 7 finance feeds); UN News and USDA evaluated 2026-09-26, both dead (gzip-decode / Akamai 403) — not configured. Reuters never worked, not configured either. |
   | **GNews Ingestion** | ⚠️ Degraded | Free tier — 1 query/run; mostly duplicates after initial ingest |
   | **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits (GDELT is keyless, no auth tier exists); exponential backoff (60s/120s + jitter, 3 attempts) added 2026-08-22, replacing a flat 30s retry that often landed inside GDELT's own ~15min IP block window |
-  | **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 15 min |
+  | **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 30 min |
   | **Claude AI Classifier** | ⚠️ Degraded | Anthropic account usage limit reached (confirmed live 2026-09-26, regains access 2026-10-01) — heuristic fallback active |
   > ⚠️ UPDATED 2026-08-19 — Two separate issues found and resolved, one billing-only issue remains. (1) Both model IDs were retired by Anthropic (`claude-3-5-haiku-20241022` retired 2026-02-19, `claude-3-5-sonnet-20241022` retired 2025-10-28) — updated to `claude-haiku-4-5-20251001` and `claude-sonnet-5`, verified against live Anthropic docs. (2) `.env.local` (repo root, the one `apps/backend` actually reads) held a stale/invalid key while `apps/web/.env.local` had the correct one — a real cross-file mismatch, not just a funding issue; synced, verified live (error changed from `401 authentication_error: "API key is invalid"` to `400 invalid_request_error: "Your credit balance is too low"` — same error Railway's workers service already showed, confirming the key now matches everywhere). Remaining blocker is purely billing — see `14_CHANGELOG.md` v0.27.0.
   > ⚠️ UPDATED 2026-08-19 (later same day) — **Status upgraded: ✅ Operational.** Credits were funded ($5). Live Phase-1 launch QA (real signup, real API calls, not a code read) confirmed Haiku classification is genuinely live and high-quality — real `"type":"message"` response, real token usage, real AI-written summary, not the heuristic template. That same QA pass found Sonnet briefings were still 100% failing despite funded credits: `400 invalid_request_error: "temperature is deprecated for this model"` — `claude-sonnet-5` rejects the `temperature` param `generateAnalysis()` was still sending, so every severity≥7 signal silently fell through to the generic fallback text. Fixed by removing `temperature` from the one `claude-sonnet-5` call site (grepped the whole backend, confirmed only one exists); re-verified live with a real, clearly non-templated multi-paragraph briefing. **Not yet committed** — sitting in the working tree, same as any other change this session, for manual review/commit. Full detail: `14_CHANGELOG.md` v0.28.0.
@@ -638,7 +638,7 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
 ## 3. How the Data Pipeline Works
 
 ```
-Railway workers (startup + every 15m)
+Railway workers (startup + every 30m)
   RSS (BBC, Al Jazeera, Guardian, NPR, France24, DW, EIA + finance feeds) + GNews + GDELT
         ↓
 isRelevantEvent() word-boundary filter — ~70% of articles filtered out
@@ -709,7 +709,7 @@ Until 2026-09-12, `service_health_events` logged ingestion sources (`gdelt` / `g
 | Sonnet briefings failing on every severity≥7 signal (`temperature` param) | Fixed (2026-08-19, uncommitted) | `claude-sonnet-5` rejects `temperature` — removed from the one call site in `claude.service.ts`; real non-templated briefing confirmed live |
 | Security Advisor — no CRITICAL findings, one real actionable WARN | Checked 2026-08-19 | Leaked-password protection disabled (Auth) — cheap fix, not yet done. OTP-expiry WARN is the expected result of the deliberate 24h extension (Bug E, already documented). Three "RLS enabled, no policy" INFOs on `backtest_cache`/`raw_events`/`sanctions_entities` are correct-by-design (service-role-only tables) |
 | ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
-| `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Open      | Required for reliable `/api/signals` server reads                |
+| `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Resolved (2026-09-26) | Vercel never had this exact name — it has `SUPABASE_SECRET_KEY` (Supabase's newer naming). Code now falls back to that name (`lib/supabase-server.ts` + 3 other call sites); no Vercel env change needed. See `LIVE_TODO.md`. |
 | `RESEND_API_KEY` on Railway `workers` / digest prod cron path | Resolved + end-to-end confirmed (2026-09-07) | Key is on the service; a one-off prod verification ran the deployed worker's own digest cron (`DIGEST_CRON` briefly set to `15 3 * * *`, then reset to `0 6 * * *`), delivering a real email via the Railway key — Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, status delivered, distinct from the earlier manual test send. |
 | Alert dispatch never triggered (any channel) | Fixed (2026-08-18, `97b7c4b`) | Was a wiring gap upstream of credentials, not a config problem — see v0.20.0 in `14_CHANGELOG.md` |
 | Telegram alerts not working            | Open (narrowed) | Wiring fixed 2026-08-18; blocker now is only `TELEGRAM_BOT_TOKEN` not set in Railway |
@@ -771,7 +771,7 @@ If `created_at` advances but UI still shows old times → check `event_date` (pu
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://evavcgfmemwryggdkjmx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-SUPABASE_SERVICE_ROLE_KEY=<service role key>   ← REQUIRED on Vercel for /api/signals
+SUPABASE_SERVICE_ROLE_KEY=<service role key>   ← Railway uses this name; Vercel has SUPABASE_SECRET_KEY instead — code accepts either (fixed 2026-09-26)
 ```
 
 ### Redis (Railway workers + backend)

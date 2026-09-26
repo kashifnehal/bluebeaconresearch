@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural & Product Decision Log
 
-> **📍 Doc status — current as of 2026-09-24 for standing rules.** Latest ADRs through D30 / ADR 026 (mobile UI verification method). Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through D32 / ADR 028. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Format: Decision → Context → Options considered → Choice → Rationale → Trade-offs**
@@ -692,3 +692,15 @@ Also decided as part of this same pass:
 **Rationale:** Per the standing rule against shipping non-functional UI as if real, and the scope-discipline rule against a UI task growing into unscoped infra work, a dead control that looks interactive is worse than removing it. Founder confirmed this directly (2026-09-24) instead of defaulting to building the feature out.
 
 **Cross-tree mapping:** Recorded as **ADR 027** in `docs/brain/10_DECISIONS.md`.
+
+---
+
+## D32: `/map`'s full signal dataset stays behind login — no anon RLS policy on `signals`
+
+**Decision:** Did not add an `anon`-role SELECT RLS policy on `signals`. `/map` was added to `proxy.ts`'s protected-route list instead, so it now requires login like every other dashboard-tier page.
+
+**Context:** A live "`/map` shows 0 total for every filter" report (2026-09-26) turned out to be caused by `/map` missing from the protected-route list, not an RLS gap — a logged-in user's access was already fully correct. The investigation brief also floated an anon RLS policy as a possible safety net, conditional on an existing public-facing signals view to match scope against. One exists: the homepage shows a single curated active signal plus a bare count to logged-out visitors. That's a much narrower shape than the map's full, fully-filterable ~2,961-row dataset — matching it would mean exposing the core paid product without login.
+
+**Rationale:** Per the scope-discipline standing rule, a bug report about one symptom doesn't license expanding what's publicly accessible as a side effect of the fix. Whether any subset of `/map` should ever be a public teaser (like the homepage) is a founder/positioning call, not something to infer from "an RLS policy would technically make the zero go away."
+
+**Cross-tree mapping:** Recorded as **ADR 028** in `docs/brain/10_DECISIONS.md`.
