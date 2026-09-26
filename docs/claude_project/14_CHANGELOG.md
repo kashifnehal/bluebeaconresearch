@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 85).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 86).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 86 — Chart attribution revision: 10 results, broader relevance floor, non-causal copy (2026-09-27)
+
+`apps/web` only. Revision of the already-shipped PHASE 83 chart attribution feature — the scoring algorithm is untouched; only how many results show and the framing changed. Now returns up to 10 dated candidates instead of 3, and qualifies them by same-asset-OR-same-region-as-the-clicked-instrument rather than a minimum score, so a real same-region high-severity event in the 7-day window no longer gets silently hidden just because it didn't also match on direction or recency. Copy reframed throughout to stop implying any one item is "the" cause: the hover hint now reads "What happened around this time," and the results list gets a new header line — "News from the 7 days before this move, shown by severity — not a claim that any single one caused it." Each result now also shows its severity. The existing non-causal disclaimer beneath the list, and the no-match fallback message, are both unchanged. Verified: type-check and lint clean; a direct SQL replication of both the old and new logic against a real production signal confirmed the new version returns more results (10 vs. 3) from the same qualifying candidate set; live-browser confirmed the feature at three widths including mobile. Full detail: `docs/brain/14_CHANGELOG.md` v0.109.0.
 
 ## PHASE 85 — Market Impact Assessment: real historical magnitude + time-horizon (2026-09-26)
 

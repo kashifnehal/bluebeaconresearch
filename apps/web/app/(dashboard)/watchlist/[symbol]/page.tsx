@@ -32,7 +32,21 @@ const CHART_ATTRIBUTION_HINT_ID = "chart_attribution";
 // the same thing on both sides.
 const VOLATILITY_THRESHOLD_PCT = 3;
 
-type AttributionResult = { id: string; title: string; eventDate: string; hoursBefore: number };
+type AttributionResult = {
+  id: string;
+  title: string;
+  eventDate: string;
+  hoursBefore: number;
+  severity: number;
+};
+
+function formatTimeBefore(hoursBefore: number): string {
+  if (hoursBefore < 24) {
+    return `${hoursBefore} hour${hoursBefore === 1 ? "" : "s"} before this move`;
+  }
+  const days = Math.round(hoursBefore / 24);
+  return `${days} day${days === 1 ? "" : "s"} before this move`;
+}
 
 type Price = {
   symbol: string;
@@ -392,7 +406,7 @@ export default function WatchlistSymbolPage() {
           {showAttributionHint && !chartLoading && chartData.length >= 2 && (
             <p className="mb-3 flex items-center gap-1.5 text-[12px] md:text-[10px] font-mono text-primary/80 uppercase tracking-widest">
               <span className="material-symbols-outlined text-sm">info</span>
-              Hover or tap a point to see what may have driven this move
+              What happened around this time
             </p>
           )}
           {chartLoading ? (
@@ -517,6 +531,9 @@ export default function WatchlistSymbolPage() {
                 </p>
               ) : attributionResults && attributionResults.length > 0 ? (
                 <div className="space-y-2">
+                  <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/80 uppercase tracking-widest">
+                    News from the 7 days before this move, shown by severity — not a claim that any single one caused it.
+                  </p>
                   {attributionResults.map((r) => (
                     <a
                       key={r.id}
@@ -528,7 +545,7 @@ export default function WatchlistSymbolPage() {
                     >
                       <span className="block text-sm font-bold text-on-surface leading-snug">{r.title}</span>
                       <span className="block text-[12px] md:text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mt-1">
-                        {r.hoursBefore} hour{r.hoursBefore === 1 ? "" : "s"} before this move
+                        {formatTimeBefore(r.hoursBefore)} · Severity {r.severity}
                       </span>
                     </a>
                   ))}

@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-26 (v0.108.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-27 (v0.109.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.109.0 — Chart attribution revision: 10 results (was 3), same-asset-OR-same-region floor, non-causal copy (2026-09-27)
+
+Revision of the already-shipped #207/#228 chart attribution feature (v0.106.0/PHASE 83, commit `cb12e82`) — the scoring algorithm itself is unchanged; only truncation, the qualifying floor, and copy changed, per founder framing that the feature should read as "here's what happened nearby," not "here's the cause."
+
+**Result count:** `GET /api/signals/attribution` (`apps/web/app/api/signals/attribution/route.ts`) now returns up to 10 ranked candidates (`RESULT_LIMIT`, was 3).
+
+**Qualifying floor replaced:** the old `MIN_SCORE = 3` gate required an asset match plus at least one other scoring factor (direction/recency/severity) — an asset match alone, scoring exactly 3, never qualified. That silently excluded real, dated events. New floor: same asset **OR** same region as the clicked instrument, within the existing 7-day window. An asset like `USOIL` has no stored region of its own, so "same region" is inferred per-request — the region(s) of this window's actual asset-matched signals become the instrument's region set (`assetRegions`), and a same-region candidate without a direct asset tag now qualifies too. The four scoring weights (asset match 3, direction match 2, recency decay 2, severity/10 × 1) are unchanged and still used for ordering only, not gating. `severity` added to the response shape so the frontend can display it per result.
+
+**Frontend copy** (`watchlist/[symbol]/page.tsx`): trigger hint now "What happened around this time" (was "Hover or tap a point to see what may have driven this move" — implied a single explanation). Results list now has a header line above it, "News from the 7 days before this move, shown by severity — not a claim that any single one caused it." Each result now shows `formatTimeBefore()` output ("N hours" under 24h, else "N days") plus severity, still equal visual weight (no "top pick" styling — none existed before either). The existing "no clearly related event found" fallback and the "Time-window observation only — not a claim that this event caused the move." disclaimer are both unchanged, per instruction not to weaken the causation discipline.
+
+**Verified:** `tsc --noEmit` clean, `eslint` clean on both changed files (2 pre-existing unrelated `react-hooks/exhaustive-deps` warnings on lines 174/199, not touched by this change). Direct SQL against production (`evavcgfmemwryggdkjmx`) replicating both the old and new query/scoring logic for a real signal (USOIL, 2026-09-25 09:30 UTC, direction "up"): 12 candidates cleared the relevance floor under both old and new logic (no region-only matches for this particular example — the asset-match set already covered every qualifying candidate) — old logic truncated to 3, new logic returns all 10 it caps at. Live-browser (Playwright, standing test account) at 375px, 768px, and 1366px: trigger copy, 10 rendered results with correct "N before this move · Severity N" text, header line, disclaimer line, and zero horizontal overflow at any width, confirmed via DOM queries and a mobile screenshot.
 
 ### v0.108.0 — Market Impact Assessment: real historical magnitude + time-horizon (2026-09-26)
 
