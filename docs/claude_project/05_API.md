@@ -705,6 +705,12 @@ apps/web/app/api/
 ├── signals/[id]/chat/route.ts → #111 BFF: GET+POST, forwards the caller's Supabase
 │                                session as Bearer to Fastify `/v1/signals/:id/chat`
 │                                (same auth-forwarding pattern as telegram/connect-code)
+├── signals/attribution/route.ts → #207/#228 chart attribution (2026-09-26): reads
+│                                Supabase directly (no Fastify route — same reasoning
+│                                as alerts/rule-stats). GET ?asset&timestamp&direction
+│                                → up to 3 ranked signals from the 7-day window before
+│                                the point. Phase 1: DB-only heuristic scoring, no
+│                                external news, no LLM call. See `docs/brain/05_API.md`.
 ├── search/assist/route.ts    → Cmd+K assist BFF: POST, Bearer to Fastify `/v1/search/assist`
 ├── events/stream/route.ts    → SSE handler (polls Supabase directly)
 ├── prices/route.ts           → proxies GET /v1/prices

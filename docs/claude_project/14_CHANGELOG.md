@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 82).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 83).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 83 — Chart attribution: "why did this happen" (#207/#228, Phase 1) (2026-09-26)
+
+`apps/web` only. New `GET /api/signals/attribution` (no Fastify route — same reasoning as the alerts/rule-stats route: the frontend never calls Fastify `/v1/*` for this kind of thing) scores signals in the 7-day window before a chart point (asset match + direction match + recency decay + severity) and returns up to 3 ranked results; an asset match alone never qualifies on its own. DB-only heuristic — no external news search, no Anthropic/LLM call, explicitly Phase 1. The watchlist symbol page's price chart gained a hover/tap-to-click affordance on each point (`data-testid="chart-attribution-trigger"`) that calls the new endpoint and shows up to 3 results with a fixed "not a claim this caused the move" framing note, or an explicit no-match message. First-use explanatory banner reuses the existing `bbr_hint_seen_*` localStorage pattern rather than the Driver.js-based hint system. Verified live (Playwright, standing test account) at desktop and mobile widths — trigger, results, framing note, close button, and first-use banner all confirmed working; the true empty-results case was verified by threshold-math inspection, not observed live. Full detail: `docs/brain/14_CHANGELOG.md` v0.106.0.
 
 ## PHASE 82 — Site-wide legal disclaimer footer (2026-09-26)
 

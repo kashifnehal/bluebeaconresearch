@@ -22,6 +22,17 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { logUsageEvent } from "@/lib/funnel-events";
+import { isHintSeen, markHintSeen } from "@/lib/feature-hints";
+import type { Direction } from "@blue-beacon-research/shared";
+
+const CHART_ATTRIBUTION_HINT_ID = "chart_attribution";
+// A point's own day-over-day move is classified "volatile" rather than up/down
+// once it crosses this threshold — mirrors the language signals already use for
+// commodity_impacts.direction, so the attribution query's direction match means
+// the same thing on both sides.
+const VOLATILITY_THRESHOLD_PCT = 3;
+
+type AttributionResult = { id: string; title: string; eventDate: string; hoursBefore: number };
 
 type Price = {
   symbol: string;
@@ -97,6 +108,19 @@ function computeEventPriceMove(points: PricePoint[], eventIso: string) {
   };
 }
 
+function directionAtIndex(
+  chartData: { t: number; price: number }[],
+  index: number,
+): Direction {
+  const cur = chartData[index]?.price;
+  const prevIndex = index > 0 ? index - 1 : index + 1;
+  const prev = chartData[prevIndex]?.price;
+  if (cur == null || prev == null || prev === 0) return "up";
+  const pctChange = ((cur - prev) / prev) * 100;
+  if (Math.abs(pctChange) >= VOLATILITY_THRESHOLD_PCT) return "volatile";
+  return pctChange >= 0 ? "up" : "down";
+}
+
 export default function WatchlistSymbolPage() {
   const params = useParams<{ symbol: string }>();
   const symbol = decodeURIComponent(params.symbol || "").toUpperCase();
@@ -161,6 +185,7 @@ export default function WatchlistSymbolPage() {
   const history5yPoints = history5y?.points ?? [];
 
   const [signalsPage, setSignalsPage] = useState(1);
+  const [attributionPoint, setAttributionPoint] = useState<{ t: number; price: number } | null>(null);
   // Different commodity → back to page 1. React's documented "adjust state when a
   // prop changes during render" pattern (store the last-seen symbol in state),
   // which avoids both an effect round-trip and a ref write during render.
@@ -169,6 +194,7 @@ export default function WatchlistSymbolPage() {
     setTrackedSymbol(symbol);
     setSignalsPage(1);
     setChartRange("1M");
+    setAttributionPoint(null);
   }
 
   const {
@@ -200,6 +226,45 @@ export default function WatchlistSymbolPage() {
   useEffect(() => {
     logUsageEvent("watchlist_symbol_viewed", { symbol, is_forex: isForex }, "entity");
   }, [symbol, isForex]);
+
+  // #207/#228 chart attribution — "why did this happen" (Phase 1: DB-only, no
+  // external news fallback yet). First-use explanatory copy follows the same
+  // localStorage-seen-once convention as lib/feature-hints.ts's other hints.
+  const [showAttributionHint, setShowAttributionHint] = useState(false);
+  useEffect(() => {
+    setShowAttributionHint(!isHintSeen(CHART_ATTRIBUTION_HINT_ID));
+  }, []);
+
+  const [attributionResults, setAttributionResults] = useState<AttributionResult[] | null>(null);
+  const [attributionLoading, setAttributionLoading] = useState(false);
+  const [attributionError, setAttributionError] = useState(false);
+
+  async function handleChartPointClick(index: number) {
+    if (showAttributionHint) {
+      markHintSeen(CHART_ATTRIBUTION_HINT_ID);
+      setShowAttributionHint(false);
+    }
+    const point = chartData[index];
+    if (!point) return;
+    setAttributionPoint(point);
+    setAttributionResults(null);
+    setAttributionError(false);
+    setAttributionLoading(true);
+    try {
+      const direction = directionAtIndex(chartData, index);
+      const res = await fetch(
+        `/api/signals/attribution?asset=${encodeURIComponent(symbol)}&timestamp=${encodeURIComponent(new Date(point.t).toISOString())}&direction=${direction}`,
+      );
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const json = (await res.json()) as { results?: AttributionResult[] };
+      setAttributionResults(json.results ?? []);
+    } catch (err) {
+      console.warn("[watchlist-symbol] chart attribution fetch failed:", err);
+      setAttributionError(true);
+    } finally {
+      setAttributionLoading(false);
+    }
+  }
 
   const chartData = useMemo(() => {
     const source = activeRange.source === "db" ? points : history5yPoints;
@@ -324,6 +389,12 @@ export default function WatchlistSymbolPage() {
               — Yahoo does not have a full 5-year series for this symbol.
             </p>
           )}
+          {showAttributionHint && !chartLoading && chartData.length >= 2 && (
+            <p className="mb-3 flex items-center gap-1.5 text-[12px] md:text-[10px] font-mono text-primary/80 uppercase tracking-widest">
+              <span className="material-symbols-outlined text-sm">info</span>
+              Hover or tap a point to see what may have driven this move
+            </p>
+          )}
           {chartLoading ? (
             <Skeleton className="h-[340px] w-full rounded-lg" data-testid="price-chart-skeleton" />
           ) : chartData.length < 2 ? (
@@ -377,7 +448,30 @@ export default function WatchlistSymbolPage() {
                       fontSize: 11,
                     }}
                   />
-                  <Line type="monotone" dataKey="price" stroke="#6ffbbe" strokeWidth={2} dot={false} />
+                  <Line
+                    type="monotone"
+                    dataKey="price"
+                    stroke="#6ffbbe"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={(dotProps: { cx?: number; cy?: number; index?: number }) => {
+                      const { cx, cy, index } = dotProps;
+                      return (
+                        <g key={`attribution-dot-${index}`}>
+                          <circle cx={cx} cy={cy} r={5} fill="#6ffbbe" stroke="#003824" strokeWidth={1} />
+                          <circle
+                            data-testid="chart-attribution-trigger"
+                            cx={cx}
+                            cy={cy}
+                            r={16}
+                            fill="transparent"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => index !== undefined && handleChartPointClick(index)}
+                          />
+                        </g>
+                      );
+                    }}
+                  />
                   {activeRange.source === "db" &&
                     chartDomain &&
                     events.map((ev) => {
@@ -397,6 +491,58 @@ export default function WatchlistSymbolPage() {
               ? "Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation."
               : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
           </p>
+
+          {attributionPoint && (
+            <div className="mt-4 pt-4 border-t border-outline-variant/20">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-label text-[11px] font-bold tracking-widest text-on-surface uppercase">
+                  Why did this move happen?
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setAttributionPoint(null)}
+                  aria-label="Close"
+                  className="text-on-surface-variant hover:text-on-surface min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              </div>
+              {attributionLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-14 w-full rounded-lg" />
+                </div>
+              ) : attributionError ? (
+                <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest">
+                  Could not load related events for this point right now.
+                </p>
+              ) : attributionResults && attributionResults.length > 0 ? (
+                <div className="space-y-2">
+                  {attributionResults.map((r) => (
+                    <a
+                      key={r.id}
+                      href={`/events/${r.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="chart-attribution-result"
+                      className="block p-3 rounded-lg bg-black/20 border border-outline-variant/20 hover:border-primary/40 transition-colors"
+                    >
+                      <span className="block text-sm font-bold text-on-surface leading-snug">{r.title}</span>
+                      <span className="block text-[12px] md:text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mt-1">
+                        {r.hoursBefore} hour{r.hoursBefore === 1 ? "" : "s"} before this move
+                      </span>
+                    </a>
+                  ))}
+                  <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest pt-1">
+                    Time-window observation only — not a claim that this event caused the move.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest">
+                  No clearly related event found in BBR&apos;s tracked history for this window.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Correlated events timeline */}

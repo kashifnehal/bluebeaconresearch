@@ -106,6 +106,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | — | Header search = Cmd+K + last-resort fallback | — | **Done 2026-09-20** — TopBar search opens the existing command palette; in-page `searchQuery`/`searchSubmitted` path removed. Last-resort **"Not sure? Try"** → Intelligence Feed. Keywords expanded; backend catalog kept in sync. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.79.0/PHASE 46. |
 | — | Homepage "N signals tracked" count via response body | — | **Done 2026-09-21** — `getHomepageStats()` dropped `head: true` so the exact count is in the body; failures log the full Postgrest error. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.80.0/PHASE 47. |
 | ~~#175~~ | ~~Tension Index tooltip click-outside~~ | — | **Done 2026-09-20** — map `tensionInfoOpen` closes on outside mousedown; hover preview + methodology sentence unchanged. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.76.0/PHASE 43. |
+| ~~#207~~ / ~~#228~~ | ~~Chart attribution — "why did this happen"~~ | — | **Done 2026-09-26, Phase 1 (DB-only)** — new `GET /api/signals/attribution` heuristic-scores signals in the 7-day window before a chart point (asset + direction + recency + severity); watchlist symbol-page chart gained a hover/tap-to-click affordance per point showing up to 3 ranked results with a fixed non-causal framing note. No external news fallback, no LLM call — that's a later phase. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.106.0/PHASE 83. |
 
 ### Still open
 

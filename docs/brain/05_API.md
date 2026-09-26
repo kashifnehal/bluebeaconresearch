@@ -113,6 +113,21 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Consumers**: `CommandPalette` "Suggested" group only — never blended into Pages/Signals.
 - **See**: `18_AI_ENGINE.md` §3c.
 
+#### `GET /api/signals/attribution` (#207/#228 chart attribution, Phase 1 — 2026-09-26)
+
+- **Description**: "Why did this happen?" — given one chart point, returns up to 3 signals from the 7-day window before it that plausibly explain the move. **DB-only, no external news fallback, no LLM/Anthropic call.** Next.js route (`apps/web/app/api/signals/attribution/route.ts`); no Fastify route added (same reasoning as the alerts/rule-stats route — the frontend never talks to Fastify `/v1/*` for anything watchlist/signals-shaped, so this follows the direct-Supabase BFF pattern instead).
+- **Auth**: Same pattern as `/api/signals` — required in production, allowed unauthenticated in local/dev.
+- **Query Params** (all required):
+  - `asset` (`string`): ticker, e.g. `USOIL`. Validated `^[A-Z0-9]+$`.
+  - `timestamp` (`string`, ISO 8601): the chart point's own timestamp.
+  - `direction` (`"up"` | `"down"` | `"volatile"`): the move's direction at that point (frontend computes this from the adjacent chart point's pct change, `directionAtIndex()` in `watchlist/[symbol]/page.tsx`, ≥3% → `volatile`).
+- **Query shape**: `signals` where `event_date <= timestamp AND event_date >= timestamp - 7d`, and where `commodity_impacts`/`currency_pair_impacts` contains `asset` **OR** `event_category IS NOT NULL` (candidate-widening only — see scoring below, a category-only candidate can never actually qualify).
+- **Scoring** (in application code, not SQL): direct asset match = **3**, direction match on that asset's own impact entry = **2**, recency = **2 × (1 − hoursBefore / 168)** (linear decay across the 7-day window), severity = **severity/10 × 1**. Max 8. **`MIN_SCORE = 3`, filter is strictly `score > 3`** — an asset match alone scores exactly 3 and does not qualify; direction/recency/severity are each keyed to the matched asset's own impact entry, so none can contribute without a real asset match already present. This is what makes "asset match + at least one other factor" a hard requirement rather than a documented-only intention.
+- **Response `200 OK`**: `{ "results": [{ "id", "title", "eventDate", "hoursBefore" }] }` — top 3 by score, empty array if nothing clears `MIN_SCORE`. No score is returned to the client (ranking-internal only).
+- **Consumers**: `WatchlistSymbolPage` chart attribution panel only.
+- **Rendering contract** (frontend, not this endpoint): each result → `"[title] — N hours before this move"` + link to `/events/[id]`, with the fixed line "Time-window observation only — not a claim that this event caused the move." beneath the list. Empty `results` → "No clearly related event found in BBR's tracked history for this window."
+- **Not this phase**: no external news search, no LLM re-ranking or explanation generation — pure DB heuristic. A Phase 2 (external fallback) is out of scope here.
+
 ---
 
 ### 2.2 Alert Rules & Dispatch Endpoints
