@@ -1,6 +1,6 @@
 # 15_INGESTION_PIPELINE.md — News Ingestion Logic, Filters & Display Rules
 
-> **📍 Doc status — current as of 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for the RSS feed roster; 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
 
 This document describes **exactly** how Blue Beacon Research fetches news, filters it, stores it, and displays it on the dashboard. Read this before changing collectors or wondering why certain headlines appear (or don't).
 
@@ -53,7 +53,7 @@ Railway workers (startup + every 15 min)
 | France24                        | `world`   | Exclude spam + keyword match             |
 | DW World                        | `world`   | Exclude spam + keyword match             |
 | Guardian World                  | `world`   | Exclude spam + keyword match             |
-| UN News                         | `world`   | Exclude spam + keyword match             |
+| EIA Press Releases              | `world`   | Exclude spam + keyword match             |
 | **BBC Business**                | `finance` | **Only hard-exclude** (sports/celebrity) |
 | **Guardian Business**           | `finance` | **Only hard-exclude**                    |
 | **NYT Business**                | `finance` | **Only hard-exclude**                    |
@@ -63,6 +63,8 @@ Railway workers (startup + every 15 min)
 | **OilPrice.com**                | `finance` | **Only hard-exclude**                    |
 
 > **Reuters note:** Official Reuters RSS (`feeds.reuters.com`, `reuters.com/world/rss`) returns 401/404 from server environments. Replaced with **MarketWatch + WSJ Markets + NYT Business** as finance-grade alternatives.
+
+> **UN News / USDA note (2026-09-26):** Both evaluated as candidate `world`-tier additions, neither added — confirmed dead by a real fetch against production's exact parser config, not assumed. **UN News** (`news.un.org/feed/subscribe/en/news/all/rss.xml`) unconditionally gzips its response (`content-encoding: gzip`, confirmed via raw magic bytes) even without client compression negotiation; `rss-parser`'s HTTP client doesn't decode it, so `parseURL()` throws `"Non-whitespace before first tag"` on every run — the same failure that got it removed 2026-08-28 (#63); needs a manual fetch + gunzip decode path to ever re-add. **USDA Latest News** (`usda.gov/rss/latest-releases.xml`) returns a hard `403` from Akamai (`server: AkamaiGHost`) regardless of User-Agent/Accept headers — bot-fingerprinting, not a header problem, so it won't be fixed by header changes alone. **EIA Press Releases** (`eia.gov/rss/press_rss.xml`) was added successfully the same session — real `200`, 11 items fetched in the verification run.
 
 **Typical run stats:** `fetched: 80–150`, `filtered: 20–60`, `duplicates: 20–40`, `inserted: 0–5`
 

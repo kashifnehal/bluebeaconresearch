@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-26 (severity-primary feed ranking, skeleton loaders, breadcrumbs, country flags, trimmed drawer)
+Last updated: 2026-09-26 (RSS feed roster: EIA added, UN News/USDA evaluated and rejected)
+
+> ⚠️ UPDATED 2026-09-26 (RSS feed roster, closed) — `apps/backend` only, commit `b44088d`. Added **EIA Press Releases** (`eia.gov/rss/press_rss.xml`) as a `world`-tier feed, real-fetch verified (HTTP 200, 11 items, e.g. "EIA increases global oil production forecast after the opening of the Strait of Hormuz"). Evaluated and did **not** add two candidates that were briefed as likely additions: **UN News** (`news.un.org/…/rss.xml`) still unconditionally gzips its response and `rss-parser` can't decode it — the identical `"Non-whitespace before first tag"` failure that got it removed 2026-08-28 (#63), re-confirmed live via a real fetch + raw-byte check (gzip magic bytes `1f8b`), not assumed from the old removal note. **USDA Latest News** (`usda.gov/rss/latest-releases.xml`) returns a hard `403` from Akamai bot-fingerprinting regardless of headers — also real-fetch confirmed, not a transient blip (retested via direct `curl`). OFAC/Treasury sanctions RSS was not attempted — retired 2026-01-31 per Treasury's own notice, no replacement exists. `CONFIGURED_RSS_FEED_COUNT` (`packages/shared`) 13 → 14. Also corrected two stale claims found while touching this exact table: the "RSS Real-Time Collector" row and pipeline-diagram line both still named "UN News" and "Reuters" as working/configured feeds — neither has been in `RSS_FEEDS` for weeks; corrected to the real current roster. Full detail: `14_CHANGELOG.md` v0.102.0, `LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-09-26 (severity-primary feed ranking, skeleton loaders, breadcrumbs, country flags, trimmed drawer, closed, claude/229+230+226) — `apps/web` only, commit `20e0050`. Intelligence Feed's default sort was actually recency-primary despite its own comment claiming severity-primary — fixed to genuine `severity DESC, created_at DESC`; visibility floor raised `minSeverity` 1 → 6 (single source, feeds both the sort and the filter default); fixed a latent `filtersActive` bug the floor change would have triggered. Added a numeric `SeverityBadge` to the dashboard hero card. Added shaped `Skeleton` loaders to 5 real gaps (event-detail, settings, watchlist-symbol chart/signals, watchlist sparkline) — only 1 was named in the brief. New shared `Breadcrumbs` component on all 10 `(dashboard)` pages; fixed a real layout bug it exposed on `events/[id]/page.tsx` (content, including the old back-button, was rendering underneath the fixed header — missing `pt-16`). New `lib/country-flags.ts` applied to the event-detail header and the live dashboard country spots — the brief's named `SignalCard.tsx` turned out to be dead code (unused anywhere in the app), so the fix was extended to where it's actually visible. `SignalQuickView.tsx` (drawer) trimmed to a fixed 6-section order, dropping filler it had been inheriting from the full shared market-impact component. Verified: `tsc --noEmit` clean, full test suite passes, `pnpm build` clean; Playwright pass at 390px/1440px across 6 pages (standing test account). **Honest gap:** did not observe a live example of the drawer's fully-populated path (all optional sections present at once) in-session. Full detail: `14_CHANGELOG.md` v0.101.0, `LIVE_TODO.md`.
 
@@ -598,7 +600,7 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
   > ⚠️ UPDATED 2026-08-19 — Stale count. Migrations now run 000–012; `20260817220713_consolidate_user_channels_rls.sql` / `20260817220714_reliability_indexes_parts_2_4.sql` were applied to the live DB 2026-08-19 and Advisor-verified (see top-of-file summary and `04_DATABASE.md` §4).
   | **Railway Workers (Cron)** | ✅ Operational | `sleepApplication: false`, heartbeat every 5m, collectors every 15m |
   | **Railway Backend (HTTP API)** | ✅ Operational | `api.bluebeaconresearch.com` healthcheck passing |
-  | **RSS Real-Time Collector** | ⚠️ Partial | BBC, Al Jazeera, Guardian, NPR, UN News work; Reuters feed returns 404 |
+  | **RSS Real-Time Collector** | ⚠️ Partial | 14 feeds (BBC/Al Jazeera/NPR/France24/DW/Guardian World/EIA Press Releases + 7 finance feeds); UN News and USDA evaluated 2026-09-26, both dead (gzip-decode / Akamai 403) — not configured. Reuters never worked, not configured either. |
   | **GNews Ingestion** | ⚠️ Degraded | Free tier — 1 query/run; mostly duplicates after initial ingest |
   | **GDELT Ingestion** | ⚠️ Degraded | HTTP 429 rate limits (GDELT is keyless, no auth tier exists); exponential backoff (60s/120s + jitter, 3 attempts) added 2026-08-22, replacing a flat 30s retry that often landed inside GDELT's own ~15min IP block window |
   | **Price Syncer (Yahoo Finance)** | ✅ Operational | 8 commodity prices every 15 min |
@@ -629,7 +631,7 @@ dashboard stale-data banner wired, price staleness surfaced, two routes' DB-erro
 
 ```
 Railway workers (startup + every 15m)
-  RSS (BBC, Al Jazeera, Guardian, NPR, UN News) + GNews + GDELT
+  RSS (BBC, Al Jazeera, Guardian, NPR, France24, DW, EIA + finance feeds) + GNews + GDELT
         ↓
 isRelevantEvent() word-boundary filter — ~70% of articles filtered out
         ↓
@@ -690,7 +692,7 @@ Until 2026-09-12, `service_health_events` logged ingestion sources (`gdelt` / `g
 | Backend service (`api.bluebeaconresearch.com`) same sleep risk | Fixed (2026-08-19) | Mirrored the fix into `railway.json`: added `sleepApplication: false`, `restartPolicyType: ON_FAILURE`, `restartPolicyMaxRetries: 10`, `numReplicas: 1`. Low urgency pre-launch (founder-only traffic) but the failure mode is a real `502` on first request after 10 min idle, not just latency — cheap to close before real API customers or Telegram webhooks depend on it. Healthcheck path/settings untouched. Live "stayed Active after 10+ min idle" confirmation is a post-deploy follow-up, not verifiable synchronously. |
 | Wrong start command on workers service | Fixed     | `railway.workers.json` → `pnpm run start:workers`                |
 | UI timestamps look stale vs ingestion  | Explained | By design — shows `event_date`, not `created_at`                 |
-| Reuters RSS feed 404 on Railway        | Open      | `reutersagency.com` feed URL returns 404; other feeds compensate |
+| Reuters RSS feed 401/404               | Resolved (not configured) | Official Reuters RSS never worked from server environments; replaced with MarketWatch + WSJ Markets + NYT Business, not currently attempted at all — see `15_INGESTION_PIPELINE.md` §2.1 |
 | GDELT HTTP 429 rate limiting           | Open      | Exponential backoff added 2026-08-22 (60s/120s+jitter, 3 attempts); still open since GDELT offers no way to eliminate 429s outright (keyless, no paid tier) — may still fail during sustained blocks |
 | GNews free tier quota                  | Open      | 1 query/run; mostly returns duplicates after initial ingest      |
 | Anthropic API credit exhausted         | High      | Heuristic fallback active                                        |

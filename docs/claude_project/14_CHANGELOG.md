@@ -1,8 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 78).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-26 (PHASE 79).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
+
+---
+
+## PHASE 79 — RSS feed roster: EIA added, UN News/USDA evaluated and rejected (2026-09-26, `b44088d`)
+
+`apps/backend` + `packages/shared` only. Added **EIA Press Releases** as a new `world`-tier RSS feed — real-fetch verified live (HTTP 200, 11 items, including a real "Strait of Hormuz" oil-forecast headline). Two other candidates were evaluated and deliberately **not** added, each confirmed dead by an actual fetch rather than assumed from an old note: **UN News** still can't be decoded by the collector's RSS parser (server unconditionally gzips its response, the same failure that got this feed removed back on 2026-08-28); **USDA Latest News** hard-blocks every request with a bot-fingerprinting 403 (Akamai), unrelated to headers. **OFAC/Treasury** sanctions RSS wasn't attempted — retired 2026-01-31, no replacement exists. Configured-feed count 13 → 14. Also corrected stale mentions of "UN News" and "Reuters" as working feeds in this doc, `docs/brain/08_CURRENT_STATUS.md`, and the authoritative ingestion doc — neither has actually been configured for weeks. Full detail: `docs/brain/14_CHANGELOG.md` v0.102.0, `docs/brain/LIVE_TODO.md`.
 
 ---
 
