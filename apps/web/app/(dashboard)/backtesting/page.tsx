@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { COMMODITIES, REGIONS } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 type BacktestResult = {
   totalEvents: number;
@@ -133,6 +134,10 @@ export default function BacktestingPage() {
   return (
     <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
       <div className="max-w-[1440px] mx-auto">
+        <Breadcrumbs
+          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Backtesting" }]}
+          className="mb-4"
+        />
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-2">

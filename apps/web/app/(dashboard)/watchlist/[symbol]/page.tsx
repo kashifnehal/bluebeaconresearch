@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   ResponsiveContainer,
@@ -17,6 +17,8 @@ import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { Pagination } from "@/components/ui/Pagination";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { logUsageEvent } from "@/lib/funnel-events";
@@ -97,7 +99,6 @@ function computeEventPriceMove(points: PricePoint[], eventIso: string) {
 
 export default function WatchlistSymbolPage() {
   const params = useParams<{ symbol: string }>();
-  const router = useRouter();
   const symbol = decodeURIComponent(params.symbol || "").toUpperCase();
   // Resolve the symbol against commodities first, then forex pairs (#87) — a
   // followed forex pair (e.g. EURUSD) otherwise falls through to its raw code
@@ -226,16 +227,14 @@ export default function WatchlistSymbolPage() {
   return (
     <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
       <div className="max-w-[1440px] mx-auto">
-        {/* Breadcrumb */}
-        <button
-          onClick={() => router.push("/watchlist")}
-          className="group flex items-center gap-2 text-[12px] md:text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors mb-6 min-h-[44px] md:min-h-0"
-        >
-          <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">
-            chevron_left
-          </span>
-          Back to Watchlist
-        </button>
+        <Breadcrumbs
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Watchlist", href: "/watchlist" },
+            { label: meta?.label || symbol },
+          ]}
+          className="mb-6"
+        />
 
         {/* Header */}
         <div className="flex items-end justify-between mb-10">
@@ -326,9 +325,7 @@ export default function WatchlistSymbolPage() {
             </p>
           )}
           {chartLoading ? (
-            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
-              {isFiveYearRange ? "Loading 5-year history…" : "Loading price history…"}
-            </p>
+            <Skeleton className="h-[340px] w-full rounded-lg" data-testid="price-chart-skeleton" />
           ) : chartData.length < 2 ? (
             <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
               {isFiveYearRange
@@ -408,9 +405,11 @@ export default function WatchlistSymbolPage() {
             Correlated Signals — Last {HISTORY_DAYS} Days
           </h2>
           {signalsLoading ? (
-            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
-              Loading signals…
-            </p>
+            <div className="space-y-3" data-testid="signals-list-skeleton">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))}
+            </div>
           ) : events.length === 0 && signalsPage === 1 ? (
             <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
               No signals flagged {symbol} impact in the last {HISTORY_DAYS} days

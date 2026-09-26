@@ -42,10 +42,16 @@ export type FilterBarValue = {
   window: FeedWindow | null;
 };
 
+// minSeverity floor of 6 (claude/229 and claude/86 in the BBR Claude Project) is
+// the single visibility floor for the feed — it pairs with the severity-primary
+// sort in apps/web/app/api/signals/route.ts so low-severity noise (a "gold IRA
+// rollover" or "corn breeding" story) can neither rank above nor even appear
+// alongside a real severity-6+ signal. Don't add a second, separate floor
+// elsewhere; change this one value.
 export const DEFAULT_FILTERS: FilterBarValue = {
   commodity: null,
   region: null,
-  minSeverity: 1,
+  minSeverity: 6,
   window: null,
 };
 

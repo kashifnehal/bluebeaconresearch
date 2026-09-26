@@ -1,5 +1,6 @@
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { HELP_FAQ_ITEMS } from "@/lib/help-faq";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 export const metadata = {
   title: "Help — Blue Beacon Research",
@@ -10,6 +11,10 @@ export default function HelpPage() {
   return (
     <div className="p-8 md:p-10 min-h-screen bg-surface-container-lowest text-on-surface">
       <div className="max-w-3xl">
+        <Breadcrumbs
+          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Help" }]}
+          className="mb-4"
+        />
         <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">
           Help
         </h1>

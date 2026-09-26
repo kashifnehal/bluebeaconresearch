@@ -12,6 +12,7 @@ import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { MapSignalPopup } from "@/components/map/MapSignalPopup";
 import { MobileTensionSheet } from "@/components/map/MobileTensionSheet";
 import { FilterBar } from "@/components/signals/FilterBar";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { FreshTag } from "@/components/signals/FreshTag";
@@ -764,6 +765,12 @@ export default function MapPage() {
       {/* Visually hidden — the page is a full-bleed map with no visible title slot,
           but it still needs a level-one heading (axe `page-has-heading-one`, /map). */}
       <h1 className="sr-only">Global tension map</h1>
+      <div className="absolute top-3 left-3 z-30">
+        <Breadcrumbs
+          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Map" }]}
+          className="bg-black/50 backdrop-blur px-3 py-1.5 rounded-md"
+        />
+      </div>
       <div className="absolute inset-0">
         <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
         <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />

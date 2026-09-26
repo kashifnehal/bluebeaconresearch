@@ -325,7 +325,12 @@ export async function GET(req: NextRequest) {
     const isRelevanceSort = sort === "relevance";
     const RELEVANCE_CANDIDATE_LIMIT = 200;
 
-    // Sort: most recent articles first (within severity tier)
+    // Severity is the primary ranking signal for the default Intelligence Feed
+    // sort (claude/229 and claude/86 in the BBR Claude Project): highest-severity
+    // signals surface first, recency is only the tiebreaker within a severity
+    // value. This was previously ordering by event_date first (recency-primary),
+    // which let low-severity stories outrank a real severity-6+ story just for
+    // being newer — that was the actual bug, not a missing feature.
     query =
       sort === "newest"
         ? query
@@ -335,14 +340,20 @@ export async function GET(req: NextRequest) {
           ? query
               .order("confidence", { ascending: false })
               .order("event_date", { ascending: false })
-          : // Also used as the pre-sort for isRelevanceSort's candidate fetch —
-            // most-recent/highest-severity first is a reasonable ordering to take
-            // the top RELEVANCE_CANDIDATE_LIMIT rows from before the real
-            // recency+severity re-rank happens in application code below.
-            query
-              .order("event_date", { ascending: false })
-              .order("severity", { ascending: false })
-              .order("created_at", { ascending: false });
+          : isRelevanceSort
+            ? // Pre-sort for the candidate fetch only — most-recent/highest-severity
+              // first is a reasonable ordering to draw the top
+              // RELEVANCE_CANDIDATE_LIMIT rows from before the real
+              // recency+severity re-rank happens in application code below.
+              // Final order for this mode comes from sortByRelevance(), not this
+              // clause.
+              query
+                .order("event_date", { ascending: false })
+                .order("severity", { ascending: false })
+                .order("created_at", { ascending: false })
+            : query
+                .order("severity", { ascending: false })
+                .order("created_at", { ascending: false });
 
     const { data, error, count } = isRelevanceSort
       ? await query.limit(Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1))

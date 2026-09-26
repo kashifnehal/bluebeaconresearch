@@ -12,10 +12,13 @@ import { FilterBar } from "@/components/signals/FilterBar";
 import { SignalQuickView } from "@/components/signals/SignalQuickView";
 import { FreshTag } from "@/components/signals/FreshTag";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
+import { SeverityBadge } from "@/components/signals/SeverityBadge";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
+import { countryToFlagEmoji } from "@/lib/country-flags";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import {
   DEFAULT_FILTERS,
@@ -181,7 +184,7 @@ export default function DashboardPage() {
   const filtersActive =
     filters.commodity != null ||
     filters.region != null ||
-    filters.minSeverity > 1 ||
+    filters.minSeverity > DEFAULT_FILTERS.minSeverity ||
     filters.window != null;
   const canLoadMoreStream = streamCount < liveSignals.length || hasNextPage;
   const handleLoadMoreStream = () => {
@@ -241,6 +244,8 @@ export default function DashboardPage() {
         className="flex-1 overflow-y-auto"
         style={{ padding: "32px", maxWidth: "1440px", margin: "0 auto" }}
       >
+        <Breadcrumbs items={[{ label: "Dashboard" }]} className="mb-4" />
+
         {/* Header */}
         <div className="mb-10" data-tour="feed-header">
           <h1
@@ -448,6 +453,7 @@ export default function DashboardPage() {
                           ? "PRIORITY: CRITICAL"
                           : featured.eventType || "SIGNAL"}
                       </span>
+                      <SeverityBadge score={featured.severity} />
                       <MediaImpactTag
                         entity={featured.mediaImpactEntity}
                         caveat={featured.mediaImpactCaveat}
@@ -516,6 +522,11 @@ export default function DashboardPage() {
                               fontFamily: "'Inter', sans-serif",
                             }}
                           >
+                            {featured.country && countryToFlagEmoji(featured.country) ? (
+                              <span data-testid="country-flag" className="mr-1 normal-case">
+                                {countryToFlagEmoji(featured.country)}
+                              </span>
+                            ) : null}
                             {featured.country || "Global"}
                           </div>
                         </div>
@@ -614,6 +625,11 @@ export default function DashboardPage() {
                           />
                         </div>
                         <span className="text-[#4edea3] font-bold">
+                          {secondaryA.country && countryToFlagEmoji(secondaryA.country) ? (
+                            <span data-testid="country-flag" className="mr-1">
+                              {countryToFlagEmoji(secondaryA.country)}
+                            </span>
+                          ) : null}
                           {secondaryA.country}
                         </span>
                       </div>
@@ -716,6 +732,11 @@ export default function DashboardPage() {
                           />
                         </div>
                         <span className="text-[#4edea3] font-bold">
+                          {secondaryB.country && countryToFlagEmoji(secondaryB.country) ? (
+                            <span data-testid="country-flag" className="mr-1">
+                              {countryToFlagEmoji(secondaryB.country)}
+                            </span>
+                          ) : null}
                           {secondaryB.country}
                         </span>
                       </div>

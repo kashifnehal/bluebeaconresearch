@@ -1,31 +1,36 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import type { Signal } from "@blue-beacon-research/shared";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
-import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
-import { MarketImpactAssessment } from "@/components/signals/MarketImpactAssessment";
+import { CommodityChip } from "@/components/signals/CommodityChip";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
-import { emptyBriefingCopy } from "@/lib/signal-display";
+import {
+  collectMarketImpacts,
+  eventCategoryLabel,
+  sourceConfirmationLabel,
+} from "@/lib/market-impact-assessment";
 
-const EXCERPT_CHARS = 420;
-
-function excerptAnalysis(text: string): string {
-  const compact = text
-    .replace(/[*_`#]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (compact.length <= EXCERPT_CHARS) return compact;
-  const cut = compact.slice(0, EXCERPT_CHARS);
-  const boundary = Math.max(
-    cut.lastIndexOf(". "),
-    cut.lastIndexOf("? "),
-    cut.lastIndexOf("! "),
+function Part({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <div
+        className="text-[12px] md:text-[9px] font-black uppercase tracking-widest"
+        style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+      >
+        {label}
+      </div>
+      {children}
+    </div>
   );
-  const base = boundary >= 120 ? cut.slice(0, boundary + 1) : cut;
-  return `${base.trimEnd()}…`;
 }
 
+// Content order is deliberate (claude/226 Task 2 in the BBR Claude Project):
+// headline+summary, source confirmation, event category, severity+mechanism,
+// commodity/FX impact chips, then a link to the full event page — nothing
+// else. This is the fast-scan drawer, not a second copy of the full event
+// page; keep it to exactly these sections.
 export function SignalQuickView({
   signal,
   onClose,
@@ -34,7 +39,17 @@ export function SignalQuickView({
   onClose: () => void;
 }) {
   const open = signal != null;
-  const excerpt = signal?.aiAnalysis ? excerptAnalysis(signal.aiAnalysis) : null;
+  const sourceConfirmation = signal
+    ? sourceConfirmationLabel(signal.sourceConfirmation)
+    : null;
+  const category = signal ? eventCategoryLabel(signal.eventCategory) : null;
+  const mechanism =
+    signal &&
+    typeof signal.marketMechanism === "string" &&
+    signal.marketMechanism.trim()
+      ? signal.marketMechanism.trim()
+      : null;
+  const impacts = signal ? collectMarketImpacts(signal) : [];
 
   return (
     <SheetPrimitive.Root
@@ -56,13 +71,6 @@ export function SignalQuickView({
             <>
               <div className="flex items-start justify-between gap-4 border-b border-[#3c4a42] p-6">
                 <div className="min-w-0 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <SeverityBadge score={signal.severity} />
-                    <MediaImpactTag
-                      entity={signal.mediaImpactEntity}
-                      caveat={signal.mediaImpactCaveat}
-                    />
-                  </div>
                   <SheetPrimitive.Title
                     className="text-xl font-bold leading-tight"
                     style={{
@@ -72,6 +80,12 @@ export function SignalQuickView({
                   >
                     {signal.title}
                   </SheetPrimitive.Title>
+                  <SheetPrimitive.Description
+                    className="text-sm leading-relaxed"
+                    style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}
+                  >
+                    {signal.summary}
+                  </SheetPrimitive.Description>
                 </div>
                 <SheetPrimitive.Close
                   data-testid="signal-quick-view-close"
@@ -83,42 +97,52 @@ export function SignalQuickView({
               </div>
 
               <div className="flex-1 space-y-6 overflow-y-auto p-6">
-                <section>
-                  <MarketImpactAssessment signal={signal} />
-                </section>
+                {sourceConfirmation ? (
+                  <Part label="Source confirmation">
+                    <span
+                      data-testid="market-impact-source-confirmation"
+                      className="inline-flex items-center rounded-sm border border-[#3c4a42] px-2 py-0.5 text-[12px] md:text-[11px] font-medium"
+                      style={{ color: "#bbcac0" }}
+                    >
+                      {sourceConfirmation}
+                    </span>
+                  </Part>
+                ) : null}
 
-                <section>
-                  <h3
-                    className="mb-3 text-[12px] md:text-[10px] font-bold uppercase tracking-widest"
-                    style={{
-                      color: "#86948a",
-                      fontFamily: "'Space Grotesk', sans-serif",
-                    }}
-                  >
-                    Analyst briefing
-                  </h3>
-                  {excerpt ? (
-                    <SheetPrimitive.Description
-                      className="text-sm leading-relaxed"
-                      style={{
-                        color: "#bbcac0",
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      {excerpt}
-                    </SheetPrimitive.Description>
-                  ) : (
-                    <SheetPrimitive.Description
-                      className="text-sm leading-relaxed"
-                      style={{
-                        color: "#86948a",
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                    >
-                      {emptyBriefingCopy(signal.severity, "compact").text}
-                    </SheetPrimitive.Description>
-                  )}
-                </section>
+                {category ? (
+                  <Part label="Event category">
+                    <p className="text-[12px]" style={{ color: "#bbcac0" }}>
+                      {category}
+                    </p>
+                  </Part>
+                ) : null}
+
+                <Part label="Severity">
+                  <div className="flex items-center gap-3">
+                    <SeverityBadge score={signal.severity} />
+                    {mechanism ? (
+                      <p className="text-[12px] leading-relaxed" style={{ color: "#bbcac0" }}>
+                        {mechanism}
+                      </p>
+                    ) : null}
+                  </div>
+                </Part>
+
+                {impacts.length > 0 ? (
+                  <Part label="Market impact">
+                    <div className="flex flex-wrap gap-2">
+                      {impacts.map((c) => (
+                        <CommodityChip
+                          key={`${c.asset}-${c.direction}`}
+                          asset={c.asset}
+                          direction={c.direction}
+                          confidence={c.confidence}
+                          size="md"
+                        />
+                      ))}
+                    </div>
+                  </Part>
+                ) : null}
               </div>
 
               <div className="border-t border-[#3c4a42] p-6">
@@ -126,7 +150,7 @@ export function SignalQuickView({
                   href={`/events/${signal.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  data-testid="quick-view-full-details"
+                  data-testid="event-drawer-open-full-page"
                   onClick={() => {
                     logUsageEvent(
                       "signal_viewed",
@@ -134,14 +158,14 @@ export function SignalQuickView({
                       false,
                     );
                   }}
-                  className="inline-flex w-full items-center justify-center px-8 py-3 text-xs font-bold tracking-widest uppercase transition-all active:scale-95"
+                  className="inline-flex w-full items-center justify-center gap-2 px-8 py-3 text-xs font-bold tracking-widest uppercase transition-all active:scale-95"
                   style={{
                     backgroundColor: "#4edea3",
                     color: "#003824",
                     fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
-                  View full details
+                  Open full event page →
                 </a>
               </div>
             </>

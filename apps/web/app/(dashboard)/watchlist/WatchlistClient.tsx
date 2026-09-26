@@ -8,6 +8,8 @@ import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { logUsageEvent } from "@/lib/funnel-events";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 // Commodities + forex pairs (#87) share one watchlist. The forex entries carry
 // the same {symbol,label,unit,category} shape, so meta lookups, the add-asset
@@ -76,9 +78,14 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 
   if (isLoading) {
     return (
-      <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center">
-        Loading history…
-      </p>
+      <div
+        className="absolute inset-x-6 top-6 bottom-12 flex items-end gap-1"
+        data-testid="sparkline-skeleton"
+      >
+        {[40, 65, 50, 80, 55, 90, 60].map((h, i) => (
+          <Skeleton key={i} className="flex-1 rounded-t-sm" style={{ height: `${h}%` }} />
+        ))}
+      </div>
     );
   }
 
@@ -295,6 +302,10 @@ export function WatchlistClient() {
   return (
     <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
       <div className="max-w-[1440px] mx-auto">
+        <Breadcrumbs
+          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Watchlist" }]}
+          className="mb-4"
+        />
         {/* Header + ADD COMMODITY (#145 / #186 mobile-overlap fix): one
             first-time Driver.js hint anchored to the header area. */}
         <div id="bbr-hint-watchlist-chips" data-hint="watchlist_chips">

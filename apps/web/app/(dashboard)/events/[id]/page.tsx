@@ -9,7 +9,6 @@ import {
   MapPin,
   Share2,
   Bookmark,
-  ChevronLeft,
   Shield,
   Target,
   Zap,
@@ -24,6 +23,8 @@ import { EventLocationMap } from "@/components/signals/EventLocationMap";
 import { SignalChatPanel } from "@/components/signals/SignalChatPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import {
   Tooltip,
   TooltipContent,
@@ -39,6 +40,7 @@ import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/
 import { useUIStore } from "@/store/useUIStore";
 import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } from "@/lib/utils";
 import { getSignalCoordinates } from "@/lib/geo-coords";
+import { countryToFlagEmoji } from "@/lib/country-flags";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent } from "@/lib/funnel-events";
@@ -111,10 +113,41 @@ export default function EventDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center bg-app" style={{ backgroundColor: "var(--bg-app)" }}>
-        <span className="text-[12px] md:text-[10px] font-black uppercase tracking-widest text-muted">
-          Loading signal…
-        </span>
+      <div
+        className="h-full flex flex-col bg-app pt-16"
+        style={{ backgroundColor: "var(--bg-app)" }}
+        data-testid="event-detail-skeleton"
+      >
+        <nav className="px-8 pt-6 pb-2">
+          <Skeleton className="h-4 w-40" />
+        </nav>
+        <div className="flex-1 px-4 py-4 sm:p-8 sm:pt-4 overflow-y-auto">
+          <div className="mx-auto w-full max-w-[1280px]">
+            <header className="flex flex-col xl:flex-row gap-10 items-start mb-12">
+              <div className="flex-1 w-full">
+                <div className="flex items-center gap-4 mb-4">
+                  <Skeleton className="h-6 w-28" />
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-32" />
+                </div>
+                <Skeleton className="h-10 w-full max-w-2xl mb-4" />
+                <Skeleton className="h-10 w-full max-w-xl mb-8" />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-6 rounded-lg bg-surface/30 border" style={{ borderColor: "var(--border-subtle)" }}>
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <aside className="w-full xl:w-[320px] space-y-4">
+                <Skeleton className="h-48 w-full rounded-lg" />
+              </aside>
+            </header>
+            <div className="space-y-4">
+              <Skeleton className="h-32 w-full rounded-lg" />
+              <Skeleton className="h-64 w-full rounded-lg" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -136,6 +169,7 @@ export default function EventDetailPage() {
     );
   }
 
+  const countryFlag = signal.country ? countryToFlagEmoji(signal.country) : null;
   const sources = data.sources ?? [];
   const historicalComparisons = data.historicalComparisons ?? [];
   const relatedEvents = data.relatedEvents ?? [];
@@ -214,23 +248,19 @@ export default function EventDetailPage() {
 
   return (
     <div
-      className="h-full flex flex-col bg-app"
+      className="h-full flex flex-col bg-app pt-16"
       style={{ backgroundColor: "var(--bg-app)" }}
     >
       {/* ── Breadcrumbs ─────────────────────────────────────────── */}
-      <nav className="px-8 pt-6 pb-2">
-        <button
-          onClick={() => router.back()}
-          className="group flex items-center gap-2 text-[12px] md:text-[10px] font-black uppercase tracking-widest text-muted hover:text-accent transition-colors"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          <ChevronLeft
-            size={14}
-            className="group-hover:-translate-x-1 transition-transform"
-          />
-          Back to Command Center
-        </button>
-      </nav>
+      <div className="px-8 pt-6 pb-2">
+        <Breadcrumbs
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Events" },
+            { label: signal.title },
+          ]}
+        />
+      </div>
 
       <div className="flex-1 px-4 py-4 sm:p-8 sm:pt-4 overflow-y-auto">
         <div className="mx-auto w-full max-w-[1280px]">
@@ -300,6 +330,11 @@ export default function EventDetailPage() {
                       Location
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary uppercase">
+                      {countryFlag ? (
+                        <span data-testid="country-flag" className="mr-1 normal-case">
+                          {countryFlag}
+                        </span>
+                      ) : null}
                       {signal.country}
                     </span>
                   </div>

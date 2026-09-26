@@ -2,6 +2,7 @@
 
 import { MapPin, Bookmark } from "lucide-react";
 import { safeFormatDistanceToNow } from "@/lib/utils";
+import { countryToFlagEmoji } from "@/lib/country-flags";
 import type { Signal } from "@blue-beacon-research/shared";
 
 import { SeverityBadge } from "./SeverityBadge";
@@ -19,6 +20,7 @@ export function SignalCard({
   onClick?: () => void;
 }) {
   const isBreaking = signal.isBreaking || signal.severity >= 9;
+  const countryFlag = signal.country ? countryToFlagEmoji(signal.country) : null;
   const timeAgo = safeFormatDistanceToNow(
     signal.eventDate ?? signal.createdAt,
     { addSuffix: true },
@@ -81,6 +83,9 @@ export function SignalCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1 text-outline text-xs">
           <MapPin size={12} />
+          {countryFlag ? (
+            <span data-testid="country-flag">{countryFlag}</span>
+          ) : null}
           <span>{signal.country}</span>
         </div>
       </div>

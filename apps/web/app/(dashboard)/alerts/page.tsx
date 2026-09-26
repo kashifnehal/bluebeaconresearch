@@ -12,6 +12,7 @@ import { CommodityChip } from "@/components/signals/CommodityChip";
 import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Pagination } from "@/components/ui/Pagination";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
 import { track } from "@/lib/analytics";
@@ -363,6 +364,10 @@ export default function AlertsPage() {
 
   return (
     <div className="mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
+      <Breadcrumbs
+        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Alerts" }]}
+        className="mb-4"
+      />
       {/* Header Section */}
       <section className="flex flex-wrap justify-between items-end gap-4 mb-8">
         <div className="min-w-0">

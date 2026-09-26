@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { DiscordConnect } from "@/components/DiscordConnect";
 import { TelegramConnect } from "@/components/TelegramConnect";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 const TABS = [
   "ACCOUNT",
@@ -148,6 +150,10 @@ export default function SettingsPage() {
   return (
     <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
       <div className="max-w-[1440px] mx-auto">
+        <Breadcrumbs
+          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
+          className="mb-4"
+        />
         <div className="mb-8">
           <h1 className="font-headline font-extrabold text-4xl tracking-tighter mb-2 text-on-surface text-white">
             Settings
@@ -193,8 +199,15 @@ export default function SettingsPage() {
               </div>
               <div className="bg-surface-container p-8 rounded-lg border-t-2 border-primary shadow-xl">
                 {loading ? (
-                  <div className="h-48 flex items-center justify-center font-mono text-[12px] md:text-[10px] uppercase tracking-widest text-on-surface-variant animate-pulse">
-                    Accessing BB-PROFILE-BUFFER...
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8" data-testid="settings-profile-skeleton">
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
                   </div>
                 ) : (
                   <form

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import calendarData from "@/data/economic-calendar.json";
 import { SELECT_CLASSES } from "@/lib/utils";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import {
   EMPTY_CALENDAR_FILTERS,
   eventMatchesCalendarFilters,
@@ -540,6 +541,10 @@ export default function CalendarPage() {
 
   return (
     <div className="mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
+      <Breadcrumbs
+        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Calendar" }]}
+        className="mb-4"
+      />
       <section className="flex justify-between items-end mb-8 gap-4 flex-wrap">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Economic Calendar</h1>
