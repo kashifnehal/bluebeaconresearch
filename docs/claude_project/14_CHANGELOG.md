@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 86).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 89).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 89 — Auth domain proxy: Cloudflare Worker + apps/web wiring (code shipped, not yet deployed) (2026-09-27)
+
+New Cloudflare Worker forwards Supabase REST/Auth/Storage/Realtime traffic to the real project, rewriting the Host header, so once deployed to `auth.bluebeaconresearch.com` the Google OAuth screen and auth redirects show a BBR domain instead of the raw `*.supabase.co` project URL. CORS is restricted to BBR's real production and preview domains, never a wildcard. `apps/web`'s auth-flow clients (browser, server, email-auth, OAuth callback, middleware session check) now read the base URL through a new helper that prefers an optional `NEXT_PUBLIC_SUPABASE_AUTH_URL` and falls back to the raw project URL — so this ships with zero production behavior change; the service-role REST client stays on the raw URL regardless. Deliberately not a direct cutover, given the 2026-08-28 auth-path outage on record: the env var only gets set after the manual Cloudflare DNS/Worker, Google Cloud Console redirect-URI, and Supabase Auth allowlist steps are done independently and the full Google sign-in flow is re-verified in a preview deployment. None of those three dashboard steps, nor the live end-to-end test, were possible from this session (no Cloudflare/Google Cloud Console access). Verified: type-check and lint clean on every touched file. Full detail: `docs/brain/14_CHANGELOG.md` v0.112.0, ADR 029 in `10_DECISIONS.md`, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 88 — Market Impact Assessment: historical-pattern chart, Phase 2 of #227 (2026-09-27)
 

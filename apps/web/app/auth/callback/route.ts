@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { track as trackVercelAnalyticsServer } from "@vercel/analytics/server";
 import { isProjectReady } from "@/lib/flags";
+import { getSupabaseAuthUrl } from "@/lib/supabase-auth-url";
 import {
   MAX_SESSIONS_PER_USER,
   decodeSessionIdClaim,
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(new URL(targetPath, origin));
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    getSupabaseAuthUrl()!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {

@@ -87,6 +87,14 @@ Railway deploys two distinct services from the backend codebase:
 > 5. `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` prevents lockfile errors during Railway builds.
 > 6. Pre-deploy `npm run migrate` is a no-op in `package.json` — safe if left configured in Railway UI.
 
+## 6. Auth Domain Proxy (Cloudflare Worker in front of Supabase Auth)
+
+> ⚠️ ADDED 2026-09-27 — code shipped, **not yet deployed or live**. Full detail: `docs/brain/12_DEPLOYMENT.md` §6, `docs/brain/14_CHANGELOG.md` v0.111.0, ADR 029 in `10_DECISIONS.md`.
+
+A Cloudflare Worker (`infra/cloudflare/auth-proxy-worker.js`) will sit at `auth.bluebeaconresearch.com` and proxy all Supabase REST/Auth/Storage/Realtime traffic, rewriting the Host header, so OAuth screens and auth redirects show a BBR domain instead of the raw `*.supabase.co` project URL. CORS is restricted to BBR's real production and preview domains, never a wildcard. `apps/web` reads an optional `NEXT_PUBLIC_SUPABASE_AUTH_URL` for auth-flow clients only (falls back to the raw project URL when unset, so this ships with zero production behavior change). **Still needed, dashboard-only, no engineering:** (1) add the DNS record + bind the Worker in Cloudflare, (2) update the Google Cloud Console OAuth redirect URI, (3) add the new redirect URL to Supabase Auth's own allowlist, (4) test the full Google sign-in flow in a preview deployment before touching production. None of these were possible from this session — see `docs/brain/LIVE_TODO.md`.
+
+---
+
 ### Troubleshooting: "Dashboard shows old data after deploy"
 
 This is usually **not** a caching or Railway failure. Check in order:

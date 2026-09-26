@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
+import { getSupabaseAuthUrl } from "./supabase-auth-url";
 
 export type RouteSupabaseClients = {
   /** Cookie-scoped client bound to the request's own session — the only client that
@@ -28,12 +29,16 @@ export type RouteSupabaseClients = {
  * legitimately per route and is not something to collapse into one shared behavior.
  */
 export async function getRouteSupabaseClients(): Promise<RouteSupabaseClients | null> {
+  // REST/DB reads (the `supabase` client below) always use the raw project
+  // URL — only the auth-decision client (`supabaseAuth`) can be routed
+  // through the auth.bluebeaconresearch.com proxy. See lib/supabase-auth-url.ts.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const authUrl = getSupabaseAuthUrl();
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) return null;
+  if (!supabaseUrl || !authUrl || !supabaseAnonKey) return null;
 
   const cookieStore = await cookies();
-  const supabaseAuth = createServerClient(supabaseUrl, supabaseAnonKey, {
+  const supabaseAuth = createServerClient(authUrl, supabaseAnonKey, {
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: () => {},
@@ -59,7 +64,7 @@ export async function getRouteSupabaseClients(): Promise<RouteSupabaseClients | 
 export async function createClient() {
   const cookieStore = await cookies();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = getSupabaseAuthUrl();
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {

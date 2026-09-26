@@ -107,6 +107,27 @@ Railway deploys two distinct services from the backend codebase:
 
 ---
 
+## 6. Auth Domain Proxy (Cloudflare Worker in front of Supabase Auth)
+
+> ⚠️ ADDED 2026-09-27 — code shipped (Worker script + `apps/web` client wiring), **not yet deployed or live**. Nothing changes in production until the manual steps below are done and `NEXT_PUBLIC_SUPABASE_AUTH_URL` is actually set. Full detail: `14_CHANGELOG.md` v0.111.0, ADR 029 in `10_DECISIONS.md`, `LIVE_TODO.md`.
+
+**Why:** every OAuth consent screen and any auth redirect a user sees currently shows the raw Supabase project domain (`evavcgfmemwryggdkjmx.supabase.co`) instead of a BBR-owned domain — looks unpolished/untrustworthy on a "geopolitical intelligence SaaS" pitch, and ties the visible identity of the product to a hostname BBR doesn't control.
+
+**What it is:** a Cloudflare Worker (`infra/cloudflare/auth-proxy-worker.js`, config in `infra/cloudflare/wrangler.toml`) bound to `auth.bluebeaconresearch.com`. It forwards every request — REST (`/rest/v1/*`), Auth (`/auth/v1/*`), Storage (`/storage/v1/*`), and Realtime (`/realtime/v1/*` over WebSocket, via `WebSocketPair`) — to the real Supabase host, rewriting the Host header, with cookies/headers/body passed through unchanged. CORS is **not** a wildcard: `ALLOWED_ORIGINS` (exact) defaults to `https://bluebeaconresearch.com` / `https://www.bluebeaconresearch.com`, and `ALLOWED_ORIGIN_PATTERN` (regex) matches this project's actual Vercel preview naming (`bluebeaconresearch-<hash>-kashif-nehals-projects.vercel.app`) — both overridable via Worker vars, never opened to `*`.
+
+**`apps/web` wiring:** new `lib/supabase-auth-url.ts` returns `NEXT_PUBLIC_SUPABASE_AUTH_URL || NEXT_PUBLIC_SUPABASE_URL`. Every auth-flow client now reads through it — `lib/supabase.ts` (browser client), `lib/supabase-server.ts`'s `createClient()` and the `supabaseAuth` client inside `getRouteSupabaseClients()`, `lib/supabase-email-auth.ts`, `proxy.ts`'s middleware session check, and `app/auth/callback/route.ts`'s OAuth-code-exchange client. The **service-role REST client** inside `getRouteSupabaseClients()` (bypasses RLS) deliberately keeps the raw `NEXT_PUBLIC_SUPABASE_URL` — not routed through the public proxy. `NEXT_PUBLIC_SUPABASE_AUTH_URL` is optional and unset today, so this merge changes zero production behavior on its own; it only takes effect once someone sets that env var on Vercel, which should only happen after the manual steps below are done and the flow is verified end-to-end in a preview deployment.
+
+**Manual steps — need Cloudflare + Google Cloud Console + Supabase dashboard access, none of which this session has:**
+
+1. **Cloudflare DNS + Worker route.** Add `auth.bluebeaconresearch.com` as a DNS record in the Cloudflare zone for `bluebeaconresearch.com`, deploy the Worker (`wrangler deploy` from `infra/cloudflare/`, free tier is sufficient), then bind it to that hostname (uncomment the `routes` block in `wrangler.toml` once the zone/record exists, or bind via the dashboard).
+2. **Google Cloud Console.** In the OAuth 2.0 Client used for Google sign-in, change the Authorized redirect URI from `https://evavcgfmemwryggdkjmx.supabase.co/auth/v1/callback` to `https://auth.bluebeaconresearch.com/auth/v1/callback`.
+3. **Supabase Auth → URL Configuration → Redirect URLs.** Add `https://auth.bluebeaconresearch.com/auth/v1/callback` (and whatever else the flow needs) to the allowlist — Supabase rejects a code exchange whose redirect isn't allowlisted.
+4. Only after 1–3 are done: set `NEXT_PUBLIC_SUPABASE_AUTH_URL=https://auth.bluebeaconresearch.com` on a **preview** deployment first, run the full Google sign-in flow there (confirm the consent-screen/redirect domain is no longer the raw `*.supabase.co` host, and that an existing logged-in session still works through the proxy — cookies/session persistence), and only then set it on production.
+
+**Not done this session (blocked on the above):** the live end-to-end test — no Cloudflare account/DNS access, no Google Cloud Console access, and there is no live proxy yet to test against. See `LIVE_TODO.md`.
+
+---
+
 ### Troubleshooting: "Dashboard shows old data after deploy"
 
 This is usually **not** a caching or Railway failure. Check in order:

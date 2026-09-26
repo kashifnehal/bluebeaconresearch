@@ -1,12 +1,24 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-27 (v0.111.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-27 (v0.112.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.112.0 — Auth domain proxy: Cloudflare Worker + apps/web wiring (code shipped, not yet deployed) (2026-09-27)
+
+Fresh task, no ticket number. New Cloudflare Worker (`infra/cloudflare/auth-proxy-worker.js`, config `infra/cloudflare/wrangler.toml`) forwards REST (`/rest/v1/*`), Auth (`/auth/v1/*`), Storage (`/storage/v1/*`), and Realtime (`/realtime/v1/*`, over WebSocket via `WebSocketPair`) traffic to the real Supabase project (`evavcgfmemwryggdkjmx.supabase.co`), rewriting the Host header, cookies/headers/body forwarded unchanged. Bound (once deployed) to `auth.bluebeaconresearch.com`, so Google's OAuth consent screen and any auth redirect show a BBR domain instead of the raw `*.supabase.co` project URL. CORS is not a wildcard: `ALLOWED_ORIGINS` (exact) defaults to `bluebeaconresearch.com`/`www.`, `ALLOWED_ORIGIN_PATTERN` (regex) matches this project's real Vercel preview naming (`bluebeaconresearch-<hash>-kashif-nehals-projects.vercel.app`, confirmed via the Vercel MCP against `bluebeaconresearch-web`'s actual recent deployments) — both overridable via Worker vars, never `*`.
+
+**`apps/web` wiring:** new `lib/supabase-auth-url.ts` exports `getSupabaseAuthUrl()` = `NEXT_PUBLIC_SUPABASE_AUTH_URL || NEXT_PUBLIC_SUPABASE_URL`. Every client that makes GoTrue calls now reads through it: `lib/supabase.ts` (browser), `lib/supabase-server.ts`'s `createClient()` and the `supabaseAuth` client in `getRouteSupabaseClients()`, `lib/supabase-email-auth.ts`, `proxy.ts`'s middleware `getUser()` check, `app/auth/callback/route.ts`'s code-exchange client. `getRouteSupabaseClients()`'s service-role REST client (bypasses RLS) deliberately keeps the raw `NEXT_PUBLIC_SUPABASE_URL` — never routed through the public proxy.
+
+**Deliberately env-gated, not a direct cutover:** `NEXT_PUBLIC_SUPABASE_AUTH_URL` is optional and unset in every environment today, so this merge changes zero production auth behavior by itself. Given the 2026-08-28 auth-path outage already on record in this file/`08_CURRENT_STATUS.md`, an auth-path change here does not go live until the manual dashboard steps below are done independently and the full Google sign-in flow is re-verified in a preview deployment — never a direct swap straight to production.
+
+**Manual steps outside code (need Cloudflare, Google Cloud Console, and Supabase dashboard access — none available to this session):** (1) add `auth.bluebeaconresearch.com` as a DNS record in the Cloudflare zone and deploy/bind the Worker to it; (2) update the Google Cloud Console OAuth Client's Authorized redirect URI from the raw `evavcgfmemwryggdkjmx.supabase.co/auth/v1/callback` to `https://auth.bluebeaconresearch.com/auth/v1/callback`; (3) add that same URL to Supabase Auth → URL Configuration → Redirect URLs; (4) only then set `NEXT_PUBLIC_SUPABASE_AUTH_URL` on a preview deployment, run the full Google sign-in flow, confirm the redirect no longer shows the raw Supabase domain and that an existing session survives the proxy, and only then promote to production.
+
+**Not done this session:** the live end-to-end test (blocked — no live proxy exists yet and no dashboard access to any of the three platforms above). **Verified:** `tsc --noEmit` and `eslint` clean on every touched `apps/web` file. Full detail: `10_DECISIONS.md` ADR 029, `12_DEPLOYMENT.md` §6, `LIVE_TODO.md`.
 
 ### v0.111.0 — Market Impact Assessment: historical-pattern chart, Phase 2 of #227 (2026-09-27)
 

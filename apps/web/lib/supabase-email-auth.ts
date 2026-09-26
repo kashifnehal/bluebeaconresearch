@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseAuthUrl } from "./supabase-auth-url";
 
 // Shared client for every auth flow that emails the user a link they might open in a
 // different browser/device/in-app browser than the one that started the flow: password
@@ -24,7 +25,7 @@ let cached: SupabaseClient | null = null;
 
 export function getSupabaseEmailAuthClient(): SupabaseClient | null {
   if (cached) return cached;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = getSupabaseAuthUrl();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !anonKey) return null;
   cached = createClient(url, anonKey, {

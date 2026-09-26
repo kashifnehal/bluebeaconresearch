@@ -615,3 +615,21 @@ Per `CLAUDE.md`'s scope-discipline rule, a task naming a specific symptom ("`/ma
 ### Cross-tree mapping
 
 Recorded as **D32** in `docs/claude_project/10_DECISIONS.md`.
+
+## 30. ADR 029: Supabase Auth is proxied through a BBR-owned domain — never expose the raw `*.supabase.co` hostname in a user-visible auth flow
+
+### Context
+
+Google's OAuth consent/redirect flow, and any other auth redirect a user sees, showed the raw Supabase project domain (`evavcgfmemwryggdkjmx.supabase.co`) rather than a domain BBR controls — inconsistent with a paid "Bloomberg-grade" intelligence product's positioning, and ties the visible identity of the login flow to infrastructure BBR doesn't own.
+
+### Decision
+
+A Cloudflare Worker (`infra/cloudflare/auth-proxy-worker.js`) sits at `auth.bluebeaconresearch.com` and forwards Supabase REST/Auth/Storage/Realtime traffic to the real project, rewriting the Host header. `apps/web`'s auth-flow clients (browser, server, email-auth, OAuth callback, middleware session check) read the base URL through `lib/supabase-auth-url.ts`, which prefers an optional `NEXT_PUBLIC_SUPABASE_AUTH_URL` and falls back to the raw project URL — so shipping the code changes nothing until that var is actually set, after the proxy is live and the flow is re-verified in preview. The service-role REST client (bypasses RLS) is deliberately excluded and keeps using the raw project URL directly, not routed through the public-facing proxy. **Standing rule going forward: the Worker's CORS allowlist is never a wildcard** — it matches BBR's real production domains plus a regex scoped to this specific Vercel project/team's preview naming pattern, both overridable via Worker environment variables but never opened to `*`, since `Access-Control-Allow-Credentials: true` plus a wildcard origin would let any third-party site relay requests using a visitor's real session cookie.
+
+### Rationale
+
+Matches the existing `rediss://`-not-`redis://` and `window.location.href`-not-`router.push` class of "narrow, permanent infra rule" this file already tracks — a small wrong default here (a wildcard CORS origin on a credentialed auth proxy) is a real security hole, not a style nit. Env-var-gated rollout (rather than switching the URL directly) exists specifically because of the 2026-08-28 auth-path outage recorded elsewhere in this file/`08_CURRENT_STATUS.md`: changes to the auth path have already caused a site-wide incident once, so this one ships inert until the manual Cloudflare/Google/Supabase dashboard steps are independently done and the flow is verified end-to-end in a preview deployment, never flipped on directly in production.
+
+### Cross-tree mapping
+
+Recorded as **D33** in `docs/claude_project/10_DECISIONS.md`.

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isProjectReady } from "@/lib/flags";
+import { getSupabaseAuthUrl } from "@/lib/supabase-auth-url";
 
 // Routes that can be accessed when the project is not ready (Gate Active)
 const GATED_ALLOWED = [
@@ -108,7 +109,7 @@ export async function proxy(request: NextRequest) {
 
   const response = NextResponse.next();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = getSupabaseAuthUrl();
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {

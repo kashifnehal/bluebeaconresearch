@@ -704,3 +704,13 @@ Also decided as part of this same pass:
 **Rationale:** Per the scope-discipline standing rule, a bug report about one symptom doesn't license expanding what's publicly accessible as a side effect of the fix. Whether any subset of `/map` should ever be a public teaser (like the homepage) is a founder/positioning call, not something to infer from "an RLS policy would technically make the zero go away."
 
 **Cross-tree mapping:** Recorded as **ADR 028** in `docs/brain/10_DECISIONS.md`.
+
+## D33: Supabase Auth is proxied through a BBR-owned domain — never expose the raw `*.supabase.co` hostname in a user-visible auth flow
+
+**Decision:** A Cloudflare Worker at `auth.bluebeaconresearch.com` proxies Supabase's REST/Auth/Storage/Realtime traffic (Host-header rewrite) so OAuth screens and auth redirects show a BBR domain, never the raw project URL. `apps/web`'s auth-flow clients read the base URL through a helper that defaults to the raw URL until an env var is explicitly set post-verification — the service-role REST client is excluded and always uses the raw URL directly. **Standing rule:** the proxy's CORS allowlist is never a wildcard — exact production domains plus a regex scoped to this project's real Vercel preview naming pattern, since a wildcard origin combined with credentialed cookies would let any site relay requests using a visitor's session.
+
+**Context:** Google's OAuth consent/redirect flow visibly showed the raw Supabase project domain, inconsistent with the product's premium positioning and tying the login flow's visible identity to infrastructure BBR doesn't control.
+
+**Rationale:** Env-var-gated rollout (not a direct URL swap) is deliberate given the 2026-08-28 auth-path outage already on record — auth-path changes get verified end-to-end in preview before touching production, never flipped on directly.
+
+**Cross-tree mapping:** Recorded as **ADR 029** in `docs/brain/10_DECISIONS.md`.
