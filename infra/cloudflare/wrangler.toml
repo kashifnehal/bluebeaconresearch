@@ -6,11 +6,11 @@ compatibility_date = "2026-09-27"
 # auth.bluebeaconresearch.com must exist as a DNS record in the Cloudflare
 # zone for bluebeaconresearch.com before a route can bind to it. Once that
 # zone/record exists, uncomment and deploy:
-#
-# routes = [
-#   { pattern = "auth.bluebeaconresearch.com/*", custom_domain = true }
-# ]
-#
+
+routes = [
+  { pattern = "auth.bluebeaconresearch.com", custom_domain = true }
+]
+
 # See docs/brain/12_DEPLOYMENT.md §6 for the full manual checklist
 # (DNS record, Google Cloud Console OAuth redirect URI, Supabase Auth
 # redirect allowlist).
