@@ -9,7 +9,8 @@ export const revalidate = 0;
 
 const HISTORY_POINTS = 12;
 const MAX_DAYS = 90;
-const MAX_RANGE_POINTS = 2000;
+const RANGE_PAGE_SIZE = 1000;
+const MAX_RANGE_PAGES = 20;
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -57,22 +58,45 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  let query = supabase.from("commodity_prices").select("price, fetched_at").eq("symbol", symbol);
-
   if (days) {
     const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-    query = query.gte("fetched_at", cutoff).order("fetched_at", { ascending: true }).limit(MAX_RANGE_POINTS);
-  } else {
-    query = query.order("fetched_at", { ascending: false }).limit(HISTORY_POINTS);
+    // PostgREST silently caps any single response at its configured max-rows,
+    // so a single .limit() here would truncate to the OLDEST rows in the
+    // ascending window instead of the requested count — same bug class fixed
+    // in lib/signal-outcomes-server.ts (fetchSignalOutcomeRows). Page instead.
+    const rows: { price: number; fetched_at: string }[] = [];
+    for (let page = 0; page < MAX_RANGE_PAGES; page++) {
+      const from = page * RANGE_PAGE_SIZE;
+      const { data, error } = await supabase
+        .from("commodity_prices")
+        .select("price, fetched_at")
+        .eq("symbol", symbol)
+        .gte("fetched_at", cutoff)
+        .order("fetched_at", { ascending: true })
+        .range(from, from + RANGE_PAGE_SIZE - 1);
+
+      if (error || !data) {
+        return NextResponse.json({ points: [] });
+      }
+      rows.push(...data);
+      if (data.length < RANGE_PAGE_SIZE) break;
+    }
+
+    const points = rows.map((r) => ({ price: r.price, fetchedAt: r.fetched_at }));
+    return NextResponse.json({ points });
   }
 
-  const { data, error } = await query;
+  const { data, error } = await supabase
+    .from("commodity_prices")
+    .select("price, fetched_at")
+    .eq("symbol", symbol)
+    .order("fetched_at", { ascending: false })
+    .limit(HISTORY_POINTS);
 
   if (error || !data) {
     return NextResponse.json({ points: [] });
   }
 
-  const rows = days ? data : [...data].reverse();
-  const points = rows.map((r) => ({ price: r.price, fetchedAt: r.fetched_at as string }));
+  const points = [...data].reverse().map((r) => ({ price: r.price, fetchedAt: r.fetched_at as string }));
   return NextResponse.json({ points });
 }
