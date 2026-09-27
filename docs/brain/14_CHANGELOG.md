@@ -1,12 +1,22 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-27 (v0.113.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-28 (v0.116.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.116.0 — Claude-generated signal title (2026-09-28, `43190e0`)
+
+`apps/backend/src/services/claude.service.ts`'s `ClassificationResult` gains `title?: string | null`. `classifyEvent()`'s JSON-schema prompt now asks Claude for a short (~80 char) natural-English title in BBR's own plain-language house style — reusing the exact "short sentences, active voice, and explain jargon inline the first time it appears" phrasing already proven in `generateAnalysis()`/`chatAboutSignal()` — plus an explicit instruction not to sound like a literal machine translation: lightly tighten an already-English source title, or write a natural English title (not a word-for-word rendering) for a non-English source. This closes a real, previously-unaddressed quality gap: `signals.title` was always the raw source article's own title, passed in unchanged by every collector, including stiff comma-spaced GDELT machine-translation output (e.g. `"China , U . S . agree on constructive strategic stability based on respect , fairness and reciprocity"`).
+
+New `sanitizeTitle()` mirrors the existing `sanitizeMarketMechanism()` pattern exactly (null for null/undefined/empty/literal `"null"`, otherwise trim and cap — 200 chars here, generously above the ~80 char prompt target). `apps/backend/src/workers/signal-merge.ts`'s `insertOrMergeSignal()` now writes `title: classification.title?.trim() || title` on the first-insert path only; an escalation/duplicate merge never touches `title`, unchanged from before. `heuristicClassify()` (the no-Claude fallback) never sets `title`, so a heuristic-classified signal keeps the raw article title exactly as it did before this change — no behavior change on that path. None of the four collectors (`rss-collector.ts`, `gdelt-collector.ts`, `gnews-collector.ts`, `chart-attribution-backfill.service.ts`) needed changes; they still compute and pass a raw title, which is now only a fallback rather than the guaranteed value. No DB migration — `signals.title` was already an unconstrained text column.
+
+**Tests:** 2 new cases added to `claude.service.test.ts` — a mocked classifier response with a title (confirms trim + sanitize + pass-through) and one covering missing/empty/`"null"`/whitespace-only title values (confirms `sanitizeTitle()` returns clean `null` for all of them, so the `|| title` fallback in `signal-merge.ts` actually engages). Full `apps/backend` suite green; `tsc -p apps/backend/tsconfig.json --noEmit` clean.
+
+**Not verified: real Claude-produced title text.** A live `classifyEvent()` call was made against 2 real `raw_events` rows (the GDELT machine-translation example above, plus an English-source RSS title) specifically to see the actual new titles Claude would produce — both calls hit Anthropic's own pre-existing usage-cap error (`"You have reached your specified API usage limits. You will regain access on 2026-10-01"`, tracked separately, unrelated to this change) and fell through to `heuristicClassify()` as designed. That confirms the fallback wiring is correct (heuristic path left `title` unset, so the raw article title would have been kept), but the real classifier's title output for these two rows remains unverified until the cap resets 2026-10-01. Full per-commit evidence: `LIVE_TODO.md`. Prompt/schema detail: `docs/claude_project/18_AI_ENGINE.md` §2.
 
 ### v0.115.0 — Chart attribution GDELT backfill, Phase 2 (#207/#228) (2026-09-28)
 

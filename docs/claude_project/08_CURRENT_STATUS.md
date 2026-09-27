@@ -180,7 +180,9 @@
 
 > ⚠️ UPDATED 2026-09-24 (Day Mode dead-control removal) — `apps/web` only. Settings > Appearance's "Day Mode" card was a permanent no-op: `useTheme()` (`next-themes`) had no `<ThemeProvider>` mounted anywhere in the app, so `setTheme("light")` did nothing. Real light mode would need more than a provider anyway — `tailwind.config.ts`'s hardcoded-hex color tokens (used across ~50 files) are disconnected from the unused `[data-theme="light"]` CSS variables already sitting in `globals.css`. Founder chose to remove the dead card rather than build an app-wide light theme; Appearance now shows one static, always-selected "Trader (Default)" card. See D31 / ADR 027 in `10_DECISIONS.md`. Backlog C4 rejected, see `09_BACKLOG.md`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.88.0.
 
-Last updated: 2026-09-24 (Day Mode dead-control removal, Settings > Appearance)
+> ⚠️ UPDATED 2026-09-28 (Claude-generated signal title, `apps/backend` only, `43190e0`) — `classifyEvent()` now also asks Claude for a short, natural-English `signals.title` (plain-language, explicitly not a literal machine translation) instead of always using the raw source article's own title — closes a real quality gap on non-English GDELT/RSS sources. Heuristic (no-Claude) fallback is untouched; new signals keep the raw title exactly as before whenever Claude doesn't return one. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md`, `18_AI_ENGINE.md` §2.
+
+Last updated: 2026-09-28 (Claude-generated signal titles)
 
 ---
 

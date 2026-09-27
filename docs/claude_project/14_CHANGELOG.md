@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 91).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 93).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 93 — Claude-generated signal title (2026-09-28, `43190e0`)
+
+`classifyEvent()`'s prompt now also asks Claude for a short, natural-English `signals.title` — plain-language house style, explicitly instructed not to sound like a literal machine translation — rather than always using the raw source article's own title verbatim. Closes a real quality gap on non-English GDELT/RSS sources (stiff, comma-spaced machine-translated titles were previously shown as-is). New `sanitizeTitle()` mirrors the existing market-mechanism sanitizer; `signal-merge.ts` falls back to the raw title whenever Claude doesn't return one, and the no-Claude heuristic path is completely untouched, so nothing regresses there. No DB migration; no collector changes. 2 new tests added, full `apps/backend` suite + type-check clean. **Live-Claude title output unverified:** the account is mid-usage-cap (regains 2026-10-01) — a live test call against 2 real rows correctly fell through to the heuristic fallback instead of exercising the new prompt path. Full detail: `docs/brain/14_CHANGELOG.md` v0.116.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 92 — Chart attribution GDELT backfill, Phase 2 (#207/#228) (2026-09-28)
 

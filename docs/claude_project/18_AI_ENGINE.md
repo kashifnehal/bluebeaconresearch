@@ -47,6 +47,8 @@
 
 > ⚠️ UPDATED 2026-09-24 (#188) — `classifyEvent()` also asks for `country`: the specific country Claude judges the event to have physically happened in, read from the article text — a real country name, not a region bucket, null if genuinely unclear. Sanitized by `sanitizeCountry()` (free text, not an enum — rejects empty/"null"/"unknown"/"unclear"/"n/a"/"none", caps at 100 chars). Added because `raw_events.country` for GDELT is really `sourcecountry` — the publishing outlet's country, not the event's location — which was previously shown as the signal's country/map pin outright. `geo-resolver.ts` and the collectors now prefer this classifier-derived country over that raw value (see `16_DATA_PIPELINE.md` §2.1). Heuristic fallback always sets `country: null` — no real article read on that path.
 
+> ⚠️ UPDATED 2026-09-28 — `classifyEvent()` also asks for `title`: a short (~80 char) natural-English title in BBR's plain-language house style — active voice, no unexplained jargon, and explicitly instructed not to sound like a literal machine translation (lightly tighten an already-English source title; write a natural English title, not a word-for-word rendering, for a non-English source). Sanitized by `sanitizeTitle()` (same null/empty/"null" handling as `sanitizeMarketMechanism()`, capped at 200 chars). `signal-merge.ts`'s `insertOrMergeSignal()` uses `classification.title?.trim() || title` on first insert only — falls back to the raw source-article title whenever Claude doesn't produce one. Heuristic fallback never sets `title`, so heuristic-classified signals keep the raw article title, same as before this change.
+
 ```
 SYSTEM:
 You are an expert geopolitical analyst specializing in commodity market impact assessment.
