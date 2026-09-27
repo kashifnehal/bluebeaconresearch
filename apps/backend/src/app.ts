@@ -20,6 +20,7 @@ import { telegramRoutes } from "./routes/telegram.js";
 import { backtestingRoutes } from "./routes/backtesting.js";
 import { adminRoutes } from "./routes/admin.js";
 import { signalChatRoutes } from "./routes/signal-chat.routes.js";
+import { signalAttributionBackfillRoutes } from "./routes/signal-attribution-backfill.routes.js";
 import { accuracyRoutes } from "./routes/accuracy.routes.js";
 import { searchRoutes } from "./routes/search.routes.js";
 
@@ -75,6 +76,7 @@ export function buildApp() {
 
   app.register(signalsRoutes, { prefix: "/v1/signals" });
   app.register(signalChatRoutes, { prefix: "/v1/signals" });
+  app.register(signalAttributionBackfillRoutes, { prefix: "/v1/signals" });
   app.register(usersRoutes, { prefix: "/v1/users" });
   app.register(commoditiesRoutes, { prefix: "/v1/commodities" });
   app.register(apiKeysRoutes, { prefix: "/v1/api-keys" });

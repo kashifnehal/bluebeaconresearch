@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 
-const COMMODITIES = [
+export const COMMODITIES = [
   { symbol: "USOIL", label: "WTI Crude", unit: "USD/bbl", category: "energy" },
   { symbol: "UKOIL", label: "Brent Crude", unit: "USD/bbl", category: "energy" },
   { symbol: "XAUUSD", label: "Gold", unit: "USD/oz", category: "metals" },

@@ -714,3 +714,13 @@ Also decided as part of this same pass:
 **Rationale:** Env-var-gated rollout (not a direct URL swap) is deliberate given the 2026-08-28 auth-path outage already on record — auth-path changes get verified end-to-end in preview before touching production, never flipped on directly.
 
 **Cross-tree mapping:** Recorded as **ADR 029** in `docs/brain/10_DECISIONS.md`.
+
+## D34: Chart-attribution GDELT backfill — historical signals are excluded from new-signal alert dispatch, not hidden from the feed (#207/#228 Phase 2)
+
+**Decision:** A signal retroactively discovered via the GDELT historical-backfill path (`is_backfilled = true`) behaves exactly like any other signal — feed, chart attribution, search — except it never triggers `dispatchAlertsForSignal` ("new signal" Telegram/email/Discord alerts), on either a fresh insert or an escalation merge. Briefing generation (severity ≥ 7) still runs.
+
+**Context:** Phase 1 (`cb12e82`/`dc7dc45`) only explains chart moves from BBR's own DB. Phase 2 queries GDELT's historical archive when that lookup finds nothing and writes a real signal through the normal ingestion path. The task spec for this work cited a founder decision in a `claude/245_...md` file that does not exist anywhere in the repo — no record of it exists in this file or `LIVE_TODO.md` either. Made live in this session instead of guessing; flagged per the doc-precedence/citation-verification rule in `CLAUDE.md`.
+
+**Rationale:** A push alert about an event from weeks ago, triggered by a user simply clicking a chart point, would be actively misleading — "new signal" alerts exist specifically for timeliness. Suppressing only the dispatch (not the row) keeps the signal useful everywhere else it's supposed to be.
+
+**Cross-tree mapping:** Recorded as **ADR 030** in `docs/brain/10_DECISIONS.md`.

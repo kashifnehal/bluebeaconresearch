@@ -18,6 +18,44 @@ const RESULT_LIMIT = 10;
 // decay, 2), severity (1). Used only to rank/order candidates now — the
 // qualifying floor is "same asset OR same region" (see assetRegions below),
 // not a minimum score.
+type BackfillResult = {
+  id: string;
+  title: string;
+  eventDate: string;
+  hoursBefore: number;
+  severity: number;
+  backfilled: true;
+};
+
+// Phase 2 (#207/#228) — only called when the DB-first query below finds
+// nothing. Queries GDELT's own historical archive for this asset/window and
+// classifies the top candidates through apps/backend, writing through the
+// normal raw_events -> materiality gate -> signals path so a future click on
+// the same point hits the DB-first path instead. See
+// apps/backend/src/services/chart-attribution-backfill.service.ts.
+async function fetchBackfillResults(
+  asset: string,
+  timestampIso: string,
+  accessToken: string,
+): Promise<BackfillResult[]> {
+  const apiBase = process.env.API_URL?.replace(/\/$/, "");
+  if (!apiBase) return [];
+
+  try {
+    const params = new URLSearchParams({ asset, timestamp: timestampIso });
+    const res = await fetch(`${apiBase}/v1/signals/attribution-backfill?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const json = await res.json().catch(() => null);
+    return Array.isArray(json?.results) ? (json.results as BackfillResult[]) : [];
+  } catch (err) {
+    console.warn("[signals/attribution] backfill upstream fetch failed:", err);
+    return [];
+  }
+}
+
 type SignalRow = {
   id: string;
   title: string;
@@ -146,6 +184,32 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.score - a.score)
       .slice(0, RESULT_LIMIT)
       .map(({ id, title, eventDate, hoursBefore, severity }) => ({ id, title, eventDate, hoursBefore, severity }));
+
+    if (scored.length > 0) {
+      return NextResponse.json({ results: scored });
+    }
+
+    // Phase 2 fallback — only on a genuine zero-result DB-first miss, and only
+    // for a signed-in user (the backend endpoint requires auth same as any
+    // other /v1/signals route). Tightly rate-limited per user since this path
+    // calls a paid-adjacent classifier, unlike the plain DB read above.
+    if (user) {
+      try {
+        const rl = await rateLimitOrPass(`signals-attribution-backfill:${user.id}`, 5, 3600);
+        if (rl.success) {
+          const { data: sessionData } = await clients.supabaseAuth.auth.getSession();
+          const accessToken = sessionData.session?.access_token;
+          if (accessToken) {
+            const backfilled = await fetchBackfillResults(asset, timestampIso, accessToken);
+            if (backfilled.length > 0) {
+              return NextResponse.json({ results: backfilled });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[signals/attribution] backfill fallback failed, continuing:", err);
+      }
+    }
 
     return NextResponse.json({ results: scored });
   } catch (err) {

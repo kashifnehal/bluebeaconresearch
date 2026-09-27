@@ -38,6 +38,9 @@ type AttributionResult = {
   eventDate: string;
   hoursBefore: number;
   severity: number;
+  // Present + true only on a Phase 2 GDELT-backfill result (see
+  // app/api/signals/attribution/route.ts) — absent on a normal DB-first hit.
+  backfilled?: boolean;
 };
 
 function formatTimeBefore(hoursBefore: number): string {
@@ -540,7 +543,7 @@ export default function WatchlistSymbolPage() {
                       href={`/events/${r.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      data-testid="chart-attribution-result"
+                      data-testid={r.backfilled ? "chart-attribution-backfilled" : "chart-attribution-result"}
                       className="block p-3 rounded-lg bg-black/20 border border-outline-variant/20 hover:border-primary/40 transition-colors"
                     >
                       <span className="block text-sm font-bold text-on-surface leading-snug">{r.title}</span>

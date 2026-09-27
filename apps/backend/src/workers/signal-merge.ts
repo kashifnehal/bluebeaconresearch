@@ -120,6 +120,14 @@ export type InsertOrMergeParams = {
   // already-tracked story look freshly-breaking. Defaults to "cached" (the
   // conservative choice: never advances a timestamp) if a caller omits it.
   freshness?: SourceFreshness;
+  // Chart-attribution backfill only (see chart-attribution-backfill.service.ts).
+  // Founder decision 2026-09-28: a retroactively-discovered signal still appears
+  // in the ordinary feed and chart attribution, but must never trigger a "new
+  // signal" alert dispatch for an event that's actually days/weeks old. Stamps
+  // signals.is_backfilled on insert and suppresses this function's own escalation
+  // re-alert dispatch below; the caller is responsible for not dispatching on the
+  // "new" outcome either.
+  isBackfilled?: boolean;
 };
 
 export type InsertOrMergeResult = {
@@ -204,6 +212,7 @@ async function findMergeCandidate(
 export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<InsertOrMergeResult> {
   const { supabase, collectorLabel, rawEventId, classification, title, eventType, eventDate, country, lat, lng } = params;
   const freshness: SourceFreshness = params.freshness ?? "cached";
+  const isBackfilled = params.isBackfilled ?? false;
 
   const match = await findMergeCandidate(supabase, classification, country, eventDate);
 
@@ -245,6 +254,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
         materiality_pass: classification.materialityPass,
         materiality_reasoning: classification.materialityReasoning ?? null,
         media_impact_entity: classification.mediaImpactEntity ?? null,
+        is_backfilled: isBackfilled,
       })
       .select("id")
       .maybeSingle();
@@ -355,7 +365,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
   // can only ever be classified as crossing the threshold once — once the update
   // lands, the next read of this signal reflects the new severity, so a later
   // same-or-lower-severity article hits the duplicate branch instead, not escalation.
-  if (reAlert) {
+  if (reAlert && !isBackfilled) {
     try {
       const dispatchResult = await dispatchAlertsForSignal(match.id, { oldSeverity, newSeverity });
       console.log(`[${collectorLabel}] [${logTag}] alert dispatched for signal ${match.id}:`, dispatchResult);

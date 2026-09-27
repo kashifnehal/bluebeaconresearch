@@ -633,3 +633,21 @@ Matches the existing `rediss://`-not-`redis://` and `window.location.href`-not-`
 ### Cross-tree mapping
 
 Recorded as **D33** in `docs/claude_project/10_DECISIONS.md`.
+
+## 31. ADR 030: Chart-attribution GDELT backfill — historical signals are excluded from new-signal alert dispatch, not hidden from the feed (#207/#228 Phase 2)
+
+### Context
+
+Phase 1 (`cb12e82`/`dc7dc45`) answers "why did this move happen?" only from signals already in BBR's own DB. When that lookup finds nothing, Phase 2 queries GDELT's own historical archive for the clicked asset/window and, for classifier-confirmed-relevant results, writes a real signal through the normal `raw_events` → materiality gate → `signals` path (new `raw_events.source = 'chart-attribution-backfill'`, new `signals.is_backfilled` column). The task spec for this work cited a founder decision in `claude/245_...md §4` picking between two options for how these retroactively-discovered rows should behave — that file does not exist anywhere in the repo, and no record of the decision was found in this file or `LIVE_TODO.md` (matches a prior pattern of fabricated doc citations in this project — see `project_fabricated_citation_incident` in session memory). Rather than silently guessing, the choice was made live in this session and is recorded here for the first time.
+
+### Decision
+
+A backfilled row (`is_backfilled = true`) behaves exactly like any other signal — it appears in the ordinary feed, in chart attribution, in search — with one exception: it never triggers `dispatchAlertsForSignal` (Telegram/email/Discord "new signal" alerts), whether it lands as a brand-new signal or as an escalation merge into an existing one (`insertOrMergeSignal`'s `isBackfilled` param suppresses both call sites in `signal-merge.ts`; the "new" outcome's dispatch call is simply never made by the caller, `chart-attribution-backfill.service.ts`). `generateSignalAnalysis` (severity ≥ 7 briefing) still runs — that's product enrichment, not a notification.
+
+### Rationale
+
+A user clicking a chart point from three weeks ago and getting a push alert as if it just happened would be actively misleading — the entire point of "new signal" alerts is timeliness. Suppressing dispatch (not suppressing the row itself) keeps the signal honest and useful everywhere else: it still explains the chart move, still counts toward accuracy tracking, still shows up if someone searches for it. This is a narrow, mechanical rule in the same spirit as the `rediss://`/`window.location.href` class of standing infra rules this file tracks, not a business/pricing decision — flagged here per the doc-precedence and decision-recording protocol in `CLAUDE.md` specifically because the task that requested it pointed at a citation that turned out not to exist.
+
+### Cross-tree mapping
+
+Recorded as **D34** in `docs/claude_project/10_DECISIONS.md`.

@@ -245,6 +245,17 @@ Then: cheap relevance pre-check (heuristic, then a tiny Haiku call if needed). A
 
 ---
 
+#### GET /v1/signals/attribution-backfill  (#207/#228 chart attribution, Phase 2 — 2026-09-28)
+Only called server-to-server from `signals/attribution/route.ts`, only when its own DB-first lookup finds nothing. Auth required (`requireUser`). Query: `asset` (`^[A-Z0-9]+$`), `timestamp` (ISO 8601), both required.
+
+Queries GDELT's historical DOC 2.0 archive (`STARTDATETIME`/`ENDDATETIME`, same 7-day lookback) scoped to the asset's display name + ticker, classifies the top 3–5 candidates by proximity to the timestamp with the existing `ClaudeService.classifyEvent()` (no new prompt), discards anything not classifier-tagged to the requested asset, and writes survivors through the normal `raw_events` → materiality gate → `signals` path (`is_backfilled: true`).
+
+**Response 200:** `{ "results": [{ "id", "title", "eventDate", "hoursBefore", "severity", "backfilled": true }] }`, sorted by severity. Empty on no hits or any upstream error — never a 4xx/5xx on a GDELT/Anthropic failure.
+
+A backfilled signal deliberately never triggers `dispatchAlertsForSignal` (see D34 in `10_DECISIONS.md`) but otherwise behaves like any other signal. Draws from the **ingestion** Anthropic budget bucket (hardcoded inside `classifyEvent()`), not `chat`. Full detail, including the not-yet-applied migration this depends on, in `docs/brain/05_API.md`.
+
+---
+
 #### POST /v1/search/assist  (Cmd+K search assist, 2026-09-19)
 Auth required. Body: `{ "query": string }` (2–200 chars). RAG over `search_content_embeddings` (real page copy + #155 FAQ), then one Haiku sentence if cosine similarity clears the model threshold. Chat daily Anthropic budget (`isAnthropicBudgetAvailable("chat")` / `assertAnthropicBudget("chat")`). Below threshold or `NO_ANSWER` → `{ "status": "no_confident_answer" }` (200). Budget exceeded → `503 ai_temporarily_unavailable` with the same daily-limit message as #111. Next.js BFF: `app/api/search/assist/route.ts`. See `18_AI_ENGINE.md` §3c.
 
@@ -715,13 +726,16 @@ apps/web/app/api/
 │                                lib/signal-outcomes-server.ts) and pure functions — see
 │                                `docs/brain/05_API.md`
 ├── signals/attribution/route.ts → #207/#228 chart attribution (2026-09-26, revised
-│                                2026-09-27): reads Supabase directly (no Fastify
-│                                route — same reasoning as alerts/rule-stats). GET
+│                                2026-09-27): reads Supabase directly. GET
 │                                ?asset&timestamp&direction → up to 10 ranked signals
 │                                (was 3) from the 7-day window before the point,
 │                                qualifying on same-asset-OR-same-region rather than
 │                                a minimum score. Phase 1: DB-only heuristic scoring,
-│                                no external news, no LLM call. See `docs/brain/05_API.md`.
+│                                no external news, no LLM call. 2026-09-28 (Phase 2):
+│                                on a zero-result DB-first lookup, now forwards to
+│                                Fastify `GET /v1/signals/attribution-backfill` (below)
+│                                as Bearer, same pattern as signals/[id]/chat/route.ts.
+│                                See `docs/brain/05_API.md`.
 ├── search/assist/route.ts    → Cmd+K assist BFF: POST, Bearer to Fastify `/v1/search/assist`
 ├── events/stream/route.ts    → SSE handler (polls Supabase directly)
 ├── prices/route.ts           → proxies GET /v1/prices
