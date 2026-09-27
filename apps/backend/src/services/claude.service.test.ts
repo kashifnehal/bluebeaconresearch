@@ -743,6 +743,121 @@ async function main() {
   );
 
   runTest(
+    "classifyEvent keeps a sanitized title when Claude returns one",
+    async () => {
+      const promptService = new ClaudeService();
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => ({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  severity: 4,
+                  confidence: 0.6,
+                  commodityImpacts: [],
+                  currencyPairImpacts: [],
+                  isBreaking: false,
+                  title: "  Saudi pipeline blast halts crude exports  ",
+                  summary: "Test event",
+                  region: "global",
+                  relevance: 0.7,
+                  novelty: 0.6,
+                  eventCategory: "supply_disruption_logistics",
+                  marketMechanism: null,
+                  isPreview: false,
+                  sourceConfirmation: "reported",
+                  materialityPass: true,
+                  materialityReasoning: "matched a validated commodity impact",
+                  mediaImpactEntity: null,
+                }),
+              },
+            ],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const classification = await promptService.classifyEvent({
+          title: "Raw source article title",
+          summary: "Test summary",
+          event_type: "news",
+          country: "SA",
+          event_date: new Date().toISOString(),
+        });
+
+        assert.strictEqual(
+          classification.title,
+          "Saudi pipeline blast halts crude exports",
+        );
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
+    "classifyEvent returns a clean null title for missing/empty/literal-null responses",
+    async () => {
+      for (const titleValue of [undefined, "", "null", "   "]) {
+        const promptService = new ClaudeService();
+        (promptService as unknown as { client: unknown }).client = {
+          messages: {
+            create: async () => ({
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    severity: 3,
+                    confidence: 0.5,
+                    commodityImpacts: [],
+                    currencyPairImpacts: [],
+                    isBreaking: false,
+                    title: titleValue,
+                    summary: "Test event",
+                    region: "global",
+                    relevance: 0.5,
+                    novelty: 0.5,
+                    eventCategory: "other_market_relevant",
+                    marketMechanism: null,
+                    isPreview: false,
+                    sourceConfirmation: "reported",
+                    materialityPass: false,
+                    materialityReasoning: "no mechanism",
+                    mediaImpactEntity: null,
+                  }),
+                },
+              ],
+              usage: { input_tokens: 10, output_tokens: 20 },
+            }),
+          },
+        };
+
+        process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+        try {
+          const classification = await promptService.classifyEvent({
+            title: "Raw source article title",
+            summary: "Test summary",
+            event_type: "news",
+            country: "US",
+            event_date: new Date().toISOString(),
+          });
+
+          assert.strictEqual(
+            classification.title,
+            null,
+            `Expected null title for input ${JSON.stringify(titleValue)}, got: ${classification.title}`,
+          );
+        } finally {
+          delete process.env.ANTHROPIC_API_KEY;
+        }
+      }
+    },
+  );
+
+  runTest(
     "answerSearchAssist uses Haiku, the retrieved URL, and the no-buy/sell rule (mocked client)",
     async () => {
       const promptService = new ClaudeService();

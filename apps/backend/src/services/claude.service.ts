@@ -134,6 +134,7 @@ export type ClassificationResult = {
   eventCategory?: EventCategory | null;
   marketMechanism?: string | null;
   isPreview?: boolean;
+  title?: string | null;
   sourceConfirmation?: SourceConfirmation | null;
   // Required on both paths — this is the actual gate every collector checks
   // immediately after classifyEvent() returns (see lib/materiality-gate.ts).
@@ -320,6 +321,7 @@ export class ClaudeService {
           `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "isBreaking": boolean,\n` +
+          `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n` +
           `  "summary": string (max 120 chars),\n` +
           `  "region": string,\n` +
           `  "country": the specific country where this event physically happened, based on reading the article — a real country name (e.g. "Iran", "Ukraine"), never a region bucket or the name of the outlet/publication reporting it. Return null if the article's own text genuinely doesn't make the location clear.,\n` +
@@ -378,6 +380,7 @@ export class ClaudeService {
         parsed.eventCategory = this.sanitizeEventCategory(parsed.eventCategory);
         parsed.country = this.sanitizeCountry(parsed.country);
         parsed.marketMechanism = this.sanitizeMarketMechanism(parsed.marketMechanism);
+        parsed.title = this.sanitizeTitle(parsed.title);
         parsed.isPreview = parsed.isPreview === true;
         parsed.sourceConfirmation = this.sanitizeSourceConfirmation(parsed.sourceConfirmation);
         // materialityPass must be an explicit boolean true — any other value
@@ -774,6 +777,16 @@ export class ClaudeService {
     // Prompt asks for ~140 chars; capped generously higher rather than
     // truncating mid-sentence on a slightly-over response.
     return str.slice(0, 300);
+  }
+
+  /** Null when Claude returns null/undefined/the literal string "null" or empty. */
+  private sanitizeTitle(value: unknown): string | null {
+    if (value === null || value === undefined) return null;
+    const str = String(value).trim();
+    if (!str || /^null$/i.test(str)) return null;
+    // Prompt asks for ~80 chars; capped generously higher rather than
+    // truncating mid-sentence on a slightly-over response.
+    return str.slice(0, 200);
   }
 
   // Small number of retries with exponential backoff, only for errors that are

@@ -221,7 +221,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
       .from("signals")
       .insert({
         raw_event_ids: [rawEventId],
-        title,
+        title: classification.title?.trim() || title,
         summary: classification.summary,
         severity: classification.severity,
         confidence: classification.confidence,
