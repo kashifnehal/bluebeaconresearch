@@ -8,6 +8,16 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.114.0 — Fix `/api/prices/history` date-range pagination past PostgREST's 1000-row cap (2026-09-27)
+
+Live production bug: the watchlist symbol drill-down's 1M chart (`/watchlist/[symbol]`) was rendering up to a month stale. `apps/web/app/api/prices/history/route.ts`'s `days`-range branch queried `commodity_prices` ascending by `fetched_at` with a single `.limit(2000)` — PostgREST silently caps any single response at its own configured max-rows (1000) regardless of the requested `.limit()`, so the response was truncated to the **oldest** 1000 rows in the 90-day window, not the newest.
+
+**Fix:** page through in 1000-row batches via `.range()`, ascending, up to a 20-page (20,000-row) hard cap — same pattern as `fetchSignalOutcomeRows` in `lib/signal-outcomes-server.ts` (see `v0.113.0`). The sparkline path (no `days` param, `.limit(12)`) is untouched.
+
+**`history-5y/route.ts` confirmed unaffected:** it proxies an external Yahoo-backed backend endpoint (`API_URL/v1/prices/history-5y/:symbol`) and never queries `commodity_prices` directly — confirmed via `[symbol]/page.tsx`'s `CHART_RANGES`, where only `1M` has `source: "db"` (6M/1Y/3Y/5Y are all `source: "yahoo"`).
+
+**Verified live:** `commodity_prices` RLS only grants `SELECT` to `authenticated`, not `anon`, so verification used a real Supabase SSR session (via `createServerClient` + `signInWithPassword` against the standing test account, replayed as a cookie header with `curl` — no browser needed). `GET /api/prices/history?symbol=USOIL&days=90` now returns 2,479 points, newest `2026-09-27T19:30:00Z` (pre-fix: capped at 1,000 points, newest ~2026-08-28). `XAUUSD` returns 2,492 points, same newest timestamp. `tsc --noEmit` clean; full existing `apps/web` test suite green (no pre-existing test file for this route). Full detail: `LIVE_TODO.md`.
+
 ### v0.113.0 — Economic Calendar: EIA/USDA entries + #227 magnitude line + options-IV note (2026-09-27)
 
 `#227`'s Phase 1 (magnitude/time-horizon sentence, `v0.108.0`) and Phase 2 (historical-pattern chart, `v0.111.0`) were already shipped when this task started. This is a pure extension onto the Economic Calendar (`/calendar`, `#86`), not a reimplementation.

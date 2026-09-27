@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 90).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-27 (PHASE 91).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 91 — Fix `/api/prices/history` date-range pagination past PostgREST's 1000-row cap (2026-09-27, `192d569`)
+
+Live production bug: the watchlist symbol drill-down's 1M chart was rendering up to a month stale. Root cause: PostgREST silently caps any single response at its own configured max-rows (1000) regardless of a larger requested `.limit()`, and because the query sorted ascending, the truncated response was the *oldest* 1000 rows in the 90-day window, not the newest — same bug class already fixed once in the market-impact `signal_outcomes` query (PHASE 85). Fixed by paging in 1000-row batches instead of a single capped query. The 6M/1Y/3Y/5Y ranges were confirmed unaffected — they read from a separate Yahoo-backed endpoint, not this table. Verified live against production with an authenticated session: both a checked commodity and a checked forex symbol now return their full multi-thousand-row range with the newest point current to the last few hours, not weeks stale. Full detail: `docs/brain/14_CHANGELOG.md` v0.114.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 90 — Economic Calendar: EIA/USDA entries + #227 magnitude line + options-IV note (2026-09-27)
 
