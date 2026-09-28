@@ -48,6 +48,10 @@ const RSS_FEEDS: RssFeed[] = [
   { url: "https://rss.dw.com/rdf/rss-en-world", label: "DW World", tier: "world" },
   { url: "https://www.theguardian.com/world/rss", label: "Guardian World", tier: "world" },
   { url: "https://www.eia.gov/rss/press_rss.xml", label: "EIA Press Releases", tier: "world" },
+  { url: "https://www.federalreserve.gov/feeds/press_all.xml", label: "Federal Reserve", tier: "world" },
+  { url: "https://www.ecb.europa.eu/rss/press.xml", label: "ECB", tier: "world" },
+  { url: "https://www.bankofengland.co.uk/rss/news", label: "Bank of England", tier: "world" },
+  { url: "https://ustr.gov/rss.xml", label: "USTR", tier: "world" },
   // UN News (https://news.un.org/feed/subscribe/en/news/all/rss.xml) — re-evaluated
   // 2026-09-26 (claude/rss-feed-additions), still not added: server unconditionally
   // gzips the response (content-encoding: gzip, confirmed via raw magic bytes 1f8b)
@@ -56,9 +60,11 @@ const RSS_FEEDS: RssFeed[] = [
   // run, from every IP. Same failure as the original 2026-08-28 removal (#63). Re-add
   // only with a manual fetch + decompress path if UN coverage is wanted back.
   // USDA Latest News (https://www.usda.gov/rss/latest-releases.xml) — evaluated
-  // 2026-09-26, not added: Akamai (server: AkamaiGHost) returns a hard 403 on every
-  // request regardless of User-Agent/Accept headers — this is bot-fingerprinting
-  // (likely TLS/IP-based), not a header issue, so it won't be fixed by header changes.
+  // 2026-09-26, re-confirmed 2026-09-28 (claude/rss-feed-additions-2): Akamai
+  // (server: AkamaiGHost) returns a hard 403 "Access Denied" on every request
+  // regardless of User-Agent/Accept headers — this is bot-fingerprinting (likely
+  // TLS/IP-based), not a header issue. NOT added despite being on the requested
+  // add-list for this ticket; see commit message / task report for detail.
   // ── Finance / markets (lighter filter — only hard-exclude sports/celebrity) ──
   { url: "https://feeds.bbci.co.uk/news/business/rss.xml", label: "BBC Business", tier: "finance" },
   { url: "https://www.theguardian.com/business/rss", label: "Guardian Business", tier: "finance" },
@@ -67,6 +73,13 @@ const RSS_FEEDS: RssFeed[] = [
   { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", label: "WSJ Markets", tier: "finance" },
   { url: "https://www.investing.com/rss/news.rss", label: "Investing.com", tier: "finance" },
   { url: "https://oilprice.com/rss/main", label: "OilPrice", tier: "finance" },
+  { url: "https://www.rigzone.com/news/rss/rigzone_latest.aspx", label: "Rigzone", tier: "finance" },
+  { url: "https://www.mining.com/feed/", label: "Mining.com", tier: "finance" },
+  { url: "https://gcaptain.com/feed/", label: "gCaptain", tier: "finance" },
+  { url: "https://splash247.com/feed/", label: "Splash247", tier: "finance" },
+  { url: "https://www.hellenicshippingnews.com/feed/", label: "Hellenic Shipping News", tier: "finance" },
+  { url: "https://www.freightwaves.com/feed", label: "FreightWaves", tier: "finance" },
+  { url: "https://www.joc.com/rss.xml", label: "Journal of Commerce", tier: "finance" },
 ];
 
 export const RSS_FEED_COUNT = RSS_FEEDS.length;

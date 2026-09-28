@@ -182,9 +182,11 @@
 
 > ⚠️ UPDATED 2026-09-24 (Day Mode dead-control removal) — `apps/web` only. Settings > Appearance's "Day Mode" card was a permanent no-op: `useTheme()` (`next-themes`) had no `<ThemeProvider>` mounted anywhere in the app, so `setTheme("light")` did nothing. Real light mode would need more than a provider anyway — `tailwind.config.ts`'s hardcoded-hex color tokens (used across ~50 files) are disconnected from the unused `[data-theme="light"]` CSS variables already sitting in `globals.css`. Founder chose to remove the dead card rather than build an app-wide light theme; Appearance now shows one static, always-selected "Trader (Default)" card. See D31 / ADR 027 in `10_DECISIONS.md`. Backlog C4 rejected, see `09_BACKLOG.md`. Evidence: `docs/brain/LIVE_TODO.md`. Brain changelog: v0.88.0.
 
+> ⚠️ UPDATED 2026-09-28 (RSS feed roster expansion, `apps/backend` + `packages/shared`) — 11 new feeds added to `RSS_FEEDS`: 4 world-tier (Federal Reserve, ECB, Bank of England, USTR) + 7 finance-tier (Rigzone, Mining.com, gCaptain, Splash247, Hellenic Shipping News, FreightWaves, Journal of Commerce). `CONFIGURED_RSS_FEED_COUNT` 14 → 25. USDA was requested but excluded — curl-confirmed hard Akamai 403, matching the existing 2026-09-26 finding already in the code. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md`.
+
 > ⚠️ UPDATED 2026-09-28 (Claude-generated signal title, `apps/backend` only, `43190e0`) — `classifyEvent()` now also asks Claude for a short, natural-English `signals.title` (plain-language, explicitly not a literal machine translation) instead of always using the raw source article's own title — closes a real quality gap on non-English GDELT/RSS sources. Heuristic (no-Claude) fallback is untouched; new signals keep the raw title exactly as before whenever Claude doesn't return one. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md`, `18_AI_ENGINE.md` §2.
 
-Last updated: 2026-09-28 (Claude-generated signal titles)
+Last updated: 2026-09-28 (RSS roster expanded 14→25 feeds; Claude-generated signal titles)
 
 ---
 
@@ -197,7 +199,7 @@ Last updated: 2026-09-28 (Claude-generated signal titles)
 | **PostgreSQL Schema (Supabase)**    | ✅ Operational      | 9 migrations applied (including 009 event_date index)                     |
 | **Railway Workers (Cron)**          | ✅ Operational      | `sleepApplication: false`, heartbeat every 5m, collectors every 30m       |
 | **Railway Backend (HTTP API)**      | ✅ Operational      | `api.bluebeaconresearch.com` healthcheck passing                          |
-| **RSS Real-Time Collector**         | ⚠️ Partial          | 14 feeds (7 world incl. EIA Press Releases + 7 finance); UN News/USDA evaluated 2026-09-26 and rejected (dead), Reuters never configured |
+| **RSS Real-Time Collector**         | ⚠️ Partial          | 25 feeds (11 world incl. EIA/Fed/ECB/BoE/USTR + 14 finance); UN News/USDA evaluated (2026-09-26, re-confirmed 2026-09-28) and rejected (dead), Reuters never configured |
 | **GNews Ingestion**                 | ⚠️ Degraded         | Free tier — 1 query/run; mostly duplicates after initial ingest           |
 | **GDELT Ingestion**                 | ⚠️ Degraded         | HTTP 429 rate limits (GDELT is keyless, no auth tier exists); exponential backoff (60s/120s+jitter, 3 attempts) added 2026-08-22, replacing a flat 30s retry that often landed inside GDELT's own ~15min IP block window |
 | **Price Syncer (Yahoo Finance)**    | ✅ Operational      | 8 commodity prices every 30 min                                           |

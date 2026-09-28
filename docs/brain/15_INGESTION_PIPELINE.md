@@ -1,6 +1,6 @@
 # 15_INGESTION_PIPELINE.md — News Ingestion Logic, Filters & Display Rules
 
-> **📍 Doc status — current as of 2026-09-26 for the RSS feed roster and ingestion cadence; 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-28 for the RSS feed roster and ingestion cadence; 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
 
 This document describes **exactly** how Blue Beacon Research fetches news, filters it, stores it, and displays it on the dashboard. Read this before changing collectors or wondering why certain headlines appear (or don't).
 
@@ -10,7 +10,7 @@ This document describes **exactly** how Blue Beacon Research fetches news, filte
 
 ```
 Railway workers (startup + every 30 min)
-  ├── RSS Collector      (14 feeds — world + finance)
+  ├── RSS Collector      (25 feeds — world + finance)
   ├── GNews Collector    (1 API query, free tier)
   ├── GDELT Collector    (1 API query, global news index)
   ├── Price Syncer       (Yahoo Finance — 8 commodities + 6 forex pairs)
@@ -54,6 +54,10 @@ Railway workers (startup + every 30 min)
 | DW World                        | `world`   | Exclude spam + keyword match             |
 | Guardian World                  | `world`   | Exclude spam + keyword match             |
 | EIA Press Releases              | `world`   | Exclude spam + keyword match             |
+| Federal Reserve                 | `world`   | Exclude spam + keyword match             |
+| ECB                              | `world`   | Exclude spam + keyword match             |
+| Bank of England                 | `world`   | Exclude spam + keyword match             |
+| USTR                             | `world`   | Exclude spam + keyword match             |
 | **BBC Business**                | `finance` | **Only hard-exclude** (sports/celebrity) |
 | **Guardian Business**           | `finance` | **Only hard-exclude**                    |
 | **NYT Business**                | `finance` | **Only hard-exclude**                    |
@@ -61,10 +65,17 @@ Railway workers (startup + every 30 min)
 | **WSJ Markets** (Dow Jones RSS) | `finance` | **Only hard-exclude**                    |
 | **Investing.com**               | `finance` | **Only hard-exclude**                    |
 | **OilPrice.com**                | `finance` | **Only hard-exclude**                    |
+| **Rigzone**                     | `finance` | **Only hard-exclude**                    |
+| **Mining.com**                  | `finance` | **Only hard-exclude**                    |
+| **gCaptain**                    | `finance` | **Only hard-exclude**                    |
+| **Splash247**                   | `finance` | **Only hard-exclude**                    |
+| **Hellenic Shipping News**      | `finance` | **Only hard-exclude**                    |
+| **FreightWaves**                | `finance` | **Only hard-exclude**                    |
+| **Journal of Commerce**         | `finance` | **Only hard-exclude** (308→200 redirect to `/rssfeed`, parser follows it) |
 
 > **Reuters note:** Official Reuters RSS (`feeds.reuters.com`, `reuters.com/world/rss`) returns 401/404 from server environments. Replaced with **MarketWatch + WSJ Markets + NYT Business** as finance-grade alternatives.
 
-> **UN News / USDA note (2026-09-26):** Both evaluated as candidate `world`-tier additions, neither added — confirmed dead by a real fetch against production's exact parser config, not assumed. **UN News** (`news.un.org/feed/subscribe/en/news/all/rss.xml`) unconditionally gzips its response (`content-encoding: gzip`, confirmed via raw magic bytes) even without client compression negotiation; `rss-parser`'s HTTP client doesn't decode it, so `parseURL()` throws `"Non-whitespace before first tag"` on every run — the same failure that got it removed 2026-08-28 (#63); needs a manual fetch + gunzip decode path to ever re-add. **USDA Latest News** (`usda.gov/rss/latest-releases.xml`) returns a hard `403` from Akamai (`server: AkamaiGHost`) regardless of User-Agent/Accept headers — bot-fingerprinting, not a header problem, so it won't be fixed by header changes alone. **EIA Press Releases** (`eia.gov/rss/press_rss.xml`) was added successfully the same session — real `200`, 11 items fetched in the verification run.
+> **UN News / USDA note (2026-09-26, re-confirmed 2026-09-28):** Both evaluated as candidate `world`-tier additions, neither added — confirmed dead by a real fetch against production's exact parser config, not assumed. **UN News** (`news.un.org/feed/subscribe/en/news/all/rss.xml`) unconditionally gzips its response (`content-encoding: gzip`, confirmed via raw magic bytes) even without client compression negotiation; `rss-parser`'s HTTP client doesn't decode it, so `parseURL()` throws `"Non-whitespace before first tag"` on every run — the same failure that got it removed 2026-08-28 (#63); needs a manual fetch + gunzip decode path to ever re-add. **USDA Latest News** (`usda.gov/rss/latest-releases.xml`) returns a hard `403` from Akamai (`server: AkamaiGHost`) regardless of User-Agent/Accept headers — bot-fingerprinting, not a header problem, so it won't be fixed by header changes alone. Re-confirmed 2026-09-28 via direct curl when a task instruction claimed (incorrectly) that this URL was "live-verified" that day — it was not added despite being requested. **EIA Press Releases** (`eia.gov/rss/press_rss.xml`) was added successfully 2026-09-26 — real `200`, 11 items fetched in the verification run. **Federal Reserve / ECB / Bank of England / USTR** (world) and **Rigzone / Mining.com / gCaptain / Splash247 / Hellenic Shipping News / FreightWaves / Journal of Commerce** (finance) were added 2026-09-28, each curl-verified as real RSS 2.0 XML before being added.
 
 **Typical run stats:** `fetched: 80–150`, `filtered: 20–60`, `duplicates: 20–40`, `inserted: 0–5`
 
@@ -311,4 +322,4 @@ curl https://bluebeaconresearch.com/api/ingestion/status
 | **Reuters official API** | Premium finance feed     | Paid enterprise access            |
 | **Polygon.io**           | Real-time market news    | Paid                              |
 
-Current strategy: maximize free RSS (14 feeds) + GNews + GDELT before adding paid APIs.
+Current strategy: maximize free RSS (25 feeds) + GNews + GDELT before adding paid APIs.

@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 94).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 95, RSS roster — note: a separate PHASE 95 draft entry for other work is still uncommitted as of this writing and will be renumbered on its own commit).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 95 — RSS feed roster expanded 14→25, USDA excluded on 403 evidence (2026-09-28)
+
+Task asked to add 12 RSS feeds, claiming all were "live-verified today." A direct curl check (cheap, per session-efficiency rules) before adding found **USDA returns a hard Akamai 403**, matching a specific dated finding already recorded in the code from 2026-09-26 — the task's blanket claim didn't hold for that one URL, so it was excluded rather than added on trust. Added the other 11: 4 world-tier (Federal Reserve, ECB, Bank of England, USTR) + 7 finance-tier (Rigzone, Mining.com, gCaptain, Splash247, Hellenic Shipping News, FreightWaves, Journal of Commerce), tiers assigned by the file's existing government=world / trade-press=finance pattern. Also caught a second hardcoded feed count the task never mentioned — `packages/shared`'s `CONFIGURED_RSS_FEED_COUNT` doesn't auto-derive and needed a manual bump (14 → 25) alongside the array change. Full detail: `docs/brain/14_CHANGELOG.md` v0.119.0, `docs/brain/LIVE_TODO.md`. **Note:** numbered directly after PHASE 94 — a separate pending PHASE 95 draft (dead 24h feed filter / severity floor / blended sort / Anthropic usage-limit alert) was unrelated, uncommitted working-tree content at the time of this commit and was deliberately left out; expect it to land later under its own phase number.
 
 ## PHASE 94 — Concurrent-session cap enforcement gated behind `DEVICE_LIMIT_ENABLED` (2026-09-28, `8f0d991`)
 
