@@ -254,6 +254,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
         materiality_pass: classification.materialityPass,
         materiality_reasoning: classification.materialityReasoning ?? null,
         media_impact_entity: classification.mediaImpactEntity ?? null,
+        invalidation_condition: classification.invalidationCondition ?? null,
         is_backfilled: isBackfilled,
       })
       .select("id")

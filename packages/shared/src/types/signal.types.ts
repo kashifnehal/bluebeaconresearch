@@ -68,6 +68,13 @@ export interface Signal {
   novelty?: number | null;
   sourceConfirmation?: SourceConfirmation | null;
   materialityReasoning?: string | null;
+  // #216 — one-sentence, plain-language statement of what specific reported
+  // fact, if false/unconfirmed/different, would undercut this event's
+  // market-impact assessment. Null on pre-column rows and on heuristic
+  // classifications that never computed it. Surfaced in the UI on the event
+  // detail page's Analysis tab only (a deliberate scope decision — keeps the
+  // dense feed/card/drawer surfaces from growing another block of prose).
+  invalidationCondition?: string | null;
   createdAt: string; // when WE ingested it
   eventDate?: string; // when the article/event was PUBLISHED
   updatedAt?: string; // last updated time for this signal record

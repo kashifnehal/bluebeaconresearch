@@ -669,3 +669,21 @@ The task instructions for this work asked for the parking comment to cite "claud
 ### Cross-tree mapping
 
 Recorded as **D35** in `docs/claude_project/10_DECISIONS.md`.
+
+## 33. ADR 032: "What would change this assessment" (`invalidation_condition`) is shown on the event detail Analysis tab only — never SignalCard, the dashboard feed, or the quick-view drawer (#216)
+
+### Context
+
+The task instructions for this work cited "claude/229 Part D" as the source of the "Analysis tab only" scope restriction. `claude/229` is a real, closed prior task (2026-09-26, feed ranking/skeleton loaders/breadcrumbs/country flags), but every record of it in this repo refers only to "Part A" — no "Part D" appears anywhere (`docs/`, `git log --all`). Matches the same fabricated-citation pattern already flagged for `claude/232` (ADR 031/D35) and `claude/245` (ADR 030/D34), so the citation was dropped per the standing no-fabricated-citations rule.
+
+### Decision
+
+`classifyEvent()`'s new `invalidationCondition` field (a one-sentence, plain-language statement of what specific reported fact would undercut the event's market-impact read, grounded in the article's own claim, not a generic disclaimer or a probability score) is rendered in exactly one place: a labeled section on `events/[id]/page.tsx`'s Analysis tab (`data-testid="invalidation-condition"`). Not added to `SignalCard.tsx`, the dashboard feed, or `SignalQuickView.tsx`.
+
+### Rationale
+
+The Analysis-tab-only scope stands on its own merits regardless of the unverifiable citation: it's a deep-dive, analyst-briefing-style field (one sentence of reasoning, not a glanceable badge), and the dense card/feed/drawer surfaces have repeatedly had filler trimmed from them (see the 2026-09-26 drawer-trim entry) rather than grown. A second, separate task in this same batch (a point-in-time-integrity audit for the backtesting engine, cited to the same "claude/229" ticket) was dropped entirely rather than partially fabricated — see `LIVE_TODO.md` for that finding.
+
+### Cross-tree mapping
+
+Recorded as **D36** in `docs/claude_project/10_DECISIONS.md`.

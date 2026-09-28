@@ -62,6 +62,7 @@ type SignalRow = {
   novelty: number | null;
   source_confirmation: string | null;
   materiality_reasoning: string | null;
+  invalidation_condition: string | null;
 };
 
 export async function GET(req: NextRequest) {
@@ -473,6 +474,10 @@ export async function GET(req: NextRequest) {
         materialityReasoning:
           typeof r.materiality_reasoning === "string" && r.materiality_reasoning.trim()
             ? r.materiality_reasoning.trim()
+            : null,
+        invalidationCondition:
+          typeof r.invalidation_condition === "string" && r.invalidation_condition.trim()
+            ? r.invalidation_condition.trim()
             : null,
         createdAt: r.created_at,
         updatedAt: r.updated_at ?? undefined,

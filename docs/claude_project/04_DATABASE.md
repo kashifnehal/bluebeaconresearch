@@ -126,6 +126,8 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 > ⚠️ UPDATED 2026-09-11 (#121 backend half) — new table `signal_outcomes` (id, signal_id → signals, asset, predicted_direction, predicted_confidence, price_at_event, price_at_checkpoint, checkpoint_hours, actual_pct_change, actual_direction, is_directionally_correct, computed_at; unique `(signal_id, asset)`; index on `signal_id`; RLS public read, service-role write only). Applied live via `20260911190000_signal_outcomes.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 18. Permanent because `commodity_prices` is 90-day retained (D22 / ADR 018, `17_SIGNAL_ENGINE.md` §7). Prerequisite #53; quality context #115.
 >
 > ⚠️ UPDATED 2026-09-13 (#141) — eight `signals` columns: `relevance`, `novelty`, `event_category`, `market_mechanism`, `is_preview`, `source_confirmation`, `materiality_pass`, `materiality_reasoning`. Applied live via `20260913160000_signals_materiality_gate.sql`. `materiality_pass = false` skips the `signals` insert (raw_events kept). Full list: `docs/brain/04_DATABASE.md` Table 2.
+
+> ⚠️ UPDATED 2026-09-28 (#216) — `signals.invalidation_condition` (`text`, nullable): one-sentence "what would prove this signal wrong" statement from `classifyEvent()`, grounded in the article's own claim. Applied live via `20260928140000_signals_invalidation_condition.sql`. UI: event detail Analysis tab only (ADR 032). Full detail: `docs/brain/04_DATABASE.md` Table 2.
 >
 > ⚠️ UPDATED 2026-09-13 (#144) — unique key widened to `(signal_id, asset, checkpoint_hours)` so 1h/4h/24h/48h rows can coexist. Applied live via `20260913190000_signal_outcomes_checkpoint_unique.sql`. No new column. `GET /v1/accuracy` still reads only `checkpoint_hours = 48`.
 >

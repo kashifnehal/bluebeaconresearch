@@ -86,6 +86,7 @@ Stores LLM-synthesized geopolitical intelligence and asset impact data.
   - `source_confirmation` (`text`, nullable, CHECK: `official` | `reported` | `speculative`) — sourcing *type*, not truth
   - `materiality_pass` (`boolean`, NOT NULL, default `true`) — the actual insert gate
   - `materiality_reasoning` (`text`, nullable)
+- `invalidation_condition` (`text`, nullable) — #216, migration `20260928140000_signals_invalidation_condition.sql`, applied live. One-sentence, plain-language statement of what specific reported fact, if false/unconfirmed/different, would undercut the event's market-impact assessment — grounded in the article's own claim, not a generic disclaimer or a probability score. Null on pre-column rows and on heuristic-fallback classifications (no real article read to ground it in). UI: `events/[id]/page.tsx` Analysis tab only, never `SignalCard`/dashboard feed/quick-view drawer — see ADR 032/D36 in `10_DECISIONS.md`.
 
 ### Table 3: `raw_events`
 Ingested news articles and incident logs before classification.

@@ -455,6 +455,7 @@ async function main() {
         /no commodity\/currency impact and no watchlist match/,
       );
       assert.equal(classification.mediaImpactEntity ?? null, null);
+      assert.equal(classification.invalidationCondition ?? null, null);
     },
   );
 
@@ -534,6 +535,7 @@ async function main() {
                     materialityPass: false,
                     materialityReasoning: "no commodity/currency/watchlist mechanism",
                     mediaImpactEntity: null,
+                    invalidationCondition: "if the reported ceasefire breach is not independently confirmed",
                   }),
                 },
               ],
@@ -565,6 +567,7 @@ async function main() {
         assert.match(capturedUser, /"materialityPass"/);
         assert.match(capturedUser, /"materialityReasoning"/);
         assert.match(capturedUser, /"mediaImpactEntity"/);
+        assert.match(capturedUser, /"invalidationCondition"/);
         assert.match(capturedUser, /OPEC/);
         assert.match(capturedUser, /Elon Musk/);
         assert.equal(capturedUser.includes("Cathie Wood"), false);
@@ -581,6 +584,10 @@ async function main() {
         assert.strictEqual(classification.sourceConfirmation, "reported");
         assert.strictEqual(classification.materialityPass, false);
         assert.equal(classification.mediaImpactEntity ?? null, null);
+        assert.strictEqual(
+          classification.invalidationCondition,
+          "if the reported ceasefire breach is not independently confirmed",
+        );
       } finally {
         delete process.env.ANTHROPIC_API_KEY;
       }
@@ -709,6 +716,7 @@ async function main() {
                   sourceConfirmation: "definitely_true", // invalid -> null
                   materialityPass: "yes", // not a real boolean -> false (fail closed)
                   materialityReasoning: "",
+                  invalidationCondition: "null", // literal string "null" -> null
                 }),
               },
             ],
@@ -736,6 +744,7 @@ async function main() {
         // "yes" !== true -> fails closed, per the fail-closed comment in classifyEvent().
         assert.strictEqual(classification.materialityPass, false);
         assert.match(classification.materialityReasoning, /failed materiality gate/);
+        assert.strictEqual(classification.invalidationCondition, null);
       } finally {
         delete process.env.ANTHROPIC_API_KEY;
       }

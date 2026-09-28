@@ -351,6 +351,11 @@ export async function GET(
       row.materiality_reasoning.trim()
         ? row.materiality_reasoning.trim()
         : null,
+    invalidationCondition:
+      typeof row.invalidation_condition === "string" &&
+      row.invalidation_condition.trim()
+        ? row.invalidation_condition.trim()
+        : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? undefined,
     eventDate,

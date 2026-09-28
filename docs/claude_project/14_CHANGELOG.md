@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 96).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 97).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 97 — "What would prove this signal wrong" field (#216), Analysis tab only (2026-09-28)
+
+Two-part task. **Part 1 (point-in-time-integrity backtesting audit) dropped:** premise didn't hold — the backtesting engine has no database queries at all, both backend and web routes return synthetic mock data (already disclosed via `isDemo`), and a real engine is un-started backlog item C1/#171. Nothing to audit; writing a "verified point-in-time integrity" comment onto sine-wave demo data would itself have been fabricated-legitimacy. **Part 2 (`invalidation_condition`) shipped:** `classifyEvent()` gains a new field — one plain-language sentence naming the specific reported fact that, if false/unconfirmed/different, would undercut the event's market-impact assessment, grounded in the article's own claim. New `signals.invalidation_condition` column, applied live. Shown on `events/[id]/page.tsx`'s Analysis tab only (`data-testid="invalidation-condition"`), deliberately not on `SignalCard`/dashboard feed/`SignalQuickView`. Both this task's citations ("claude/229" for Part 1, "claude/229 Part D" for the Analysis-tab-only scope in Part 2) were checked and didn't verify — `claude/229` is real but unrelated (2026-09-26 feed-ranking work, "Part A" only, no "Part D" anywhere) — same fabricated-citation pattern as `claude/232`/`claude/245`. The scope restriction was kept anyway on its own merits and recorded as a real decision, D36/ADR 032. Verified: both packages' type-check clean, full backend + web test suites green (4 new/updated backend assertions), end-to-end DB→API wiring confirmed live via a real `GET /api/signals/:id` call. Live-browser (1440px/390px) confirmed no regression and correct layout via a client-side-only preview — a prod-DB write for a real-content screenshot was itself blocked by Claude Code's own shared-resource-modification guard. Full detail: `docs/brain/14_CHANGELOG.md` v0.120.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 96 — RSS feed roster expanded 14→25, USDA excluded on 403 evidence (2026-09-28)
 

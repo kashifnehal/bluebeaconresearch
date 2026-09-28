@@ -175,6 +175,16 @@ export type ClassificationResult = {
   // statement/commentary is attributable to a watchlist communicator.
   // Null when not applicable or when the model named something off-list.
   mediaImpactEntity?: string | null;
+  // #216 — one-sentence, plain-language statement of what specific fact this
+  // story itself reports that, if it turned out to be false, unconfirmed, or
+  // different, would undercut this event's market-impact assessment (e.g. "if
+  // the reported troop movement is not independently confirmed" or "if
+  // [entity] issues a denial"). Grounded in the article's own claim, not a
+  // generic disclaimer and not a probability/confidence score. Same
+  // optional/nullable reasoning as relevance/novelty/marketMechanism above —
+  // heuristicClassify() has no real read of the article to ground this in and
+  // leaves it unset.
+  invalidationCondition?: string | null;
 };
 
 export class ClaudeService {
@@ -364,7 +374,8 @@ export class ClaudeService {
           `  "sourceConfirmation": one of exactly "official"|"reported"|"speculative". "official" — a named official, institution, or government body making a direct, on-the-record statement, or an actual official release/decision. "reported" — a sourced claim attributed to named or unnamed sources ("sources say," "people familiar with the matter," a named outlet's own original reporting of a claim). "speculative" — commentary, analysis, or opinion guessing about a possible future event with no sourced claim behind it. Base this only on what the article itself states about its own sourcing — do not use this field to judge whether the claim is true, only what kind of claim it is.,\n` +
           `  "materialityPass": boolean — the outcome of the MATERIALITY GATE instruction above,\n` +
           `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important",\n` +
-          `  "mediaImpactEntity": the matched entity_name string from BBR's watchlist above if this story's statement or commentary is attributable to one of those entities, or null if not applicable. Return the exact entity_name from the list (never an alias, never a name that is not on the list). This field describes a sourced historical reaction pattern; it is not a forecast and not a trading recommendation.\n` +
+          `  "mediaImpactEntity": the matched entity_name string from BBR's watchlist above if this story's statement or commentary is attributable to one of those entities, or null if not applicable. Return the exact entity_name from the list (never an alias, never a name that is not on the list). This field describes a sourced historical reaction pattern; it is not a forecast and not a trading recommendation.,\n` +
+          `  "invalidationCondition": a single plain-language sentence naming the SPECIFIC fact this story reports that, if it turned out to be false, unconfirmed, or different, would undercut this event's market-impact assessment — grounded in a concrete claim the article itself makes (e.g. "if the reported drone strike on the refinery is not independently confirmed by a second source" or "if the ministry's denial of the ceasefire breach is verified"). Not a generic disclaimer ("if new information emerges") and not a probability or confidence score — name the actual fact at stake. Null only if the story makes no falsifiable factual claim to hang this on.\n` +
           `}`;
 
         const msg = await client.messages.create({
@@ -429,6 +440,9 @@ export class ClaudeService {
           (parsed as ClassificationResult & { mediaImpactEntity?: unknown })
             .mediaImpactEntity,
           watchlist,
+        );
+        parsed.invalidationCondition = this.sanitizeInvalidationCondition(
+          parsed.invalidationCondition,
         );
         const usage = usageFromMessage(msg);
         await recordAnthropicUsage({
@@ -733,9 +747,12 @@ export class ClaudeService {
       // below, this can't be meaningfully derived by keyword-regex alone.
       country: null,
       classificationMethod: "heuristic",
-      // relevance/novelty/eventCategory/marketMechanism/sourceConfirmation
-      // deliberately omitted (left undefined -> written as null) — see the
-      // Step 4 comment above this function's materiality-gate block.
+      // relevance/novelty/eventCategory/marketMechanism/sourceConfirmation/
+      // invalidationCondition deliberately omitted (left undefined -> written
+      // as null) — see the Step 4 comment above this function's
+      // materiality-gate block. invalidationCondition specifically needs a
+      // real read of the article's own claims to ground a falsifiable
+      // sentence in; keyword regex alone can't produce that honestly.
       isPreview: false,
       materialityPass,
       materialityReasoning,
@@ -836,6 +853,17 @@ export class ClaudeService {
     // Prompt asks for ~140 chars; capped generously higher rather than
     // truncating mid-sentence on a slightly-over response.
     return str.slice(0, 300);
+  }
+
+  /** Null when Claude returns null/undefined/the literal string "null" or empty. */
+  private sanitizeInvalidationCondition(value: unknown): string | null {
+    if (value === null || value === undefined) return null;
+    const str = String(value).trim();
+    if (!str || /^null$/i.test(str)) return null;
+    // No fixed char target in the prompt (a real falsifiable-fact sentence can
+    // run longer than marketMechanism's ~140 chars) — capped generously to
+    // stop a runaway response, not to fit a specific expected length.
+    return str.slice(0, 400);
   }
 
   /** Null when Claude returns null/undefined/the literal string "null" or empty. */

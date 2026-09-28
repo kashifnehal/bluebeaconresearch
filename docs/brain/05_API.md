@@ -5,6 +5,8 @@
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** public. It registers only when `NODE_ENV` is `development` or `test`. Production previously served unauthenticated OpenAPI at `https://api.bluebeaconresearch.com/docs`. Auth hook no longer skips `/docs` in production. Global rate limit remains `@fastify/rate-limit` 60/min in-memory (see `apps/backend/src/app.ts`).
 >
 > ⚠️ UPDATED 2026-09-13 (#138) — Fastify `/v1` unchanged. Next.js BFF `apiErrorLogged()` no longer forwards provider `.message` in the JSON `message` field (see `apps/web/lib/api-response.ts`).
+>
+> ⚠️ UPDATED 2026-09-28 (#216) — both `GET /api/signals` and `GET /api/signals/:id` now map a new `invalidationCondition` field (null-safe, same pattern as `marketMechanism`/`materialityReasoning`) from `signals.invalidation_condition`. Surfaced in the UI on the event detail Analysis tab only (ADR 032/D36).
 
 This document details every REST endpoint in `apps/backend/src/routes`, including HTTP methods, authentication requirements, rate limiting thresholds, request/response payload schemas, and client consumers.
 

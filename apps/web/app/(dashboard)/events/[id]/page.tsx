@@ -513,6 +513,20 @@ export default function EventDetailPage() {
                       </details>
                     ) : null}
 
+                    {signal.invalidationCondition ? (
+                      <div data-testid="invalidation-condition">
+                        <div
+                          className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        >
+                          What would change this assessment
+                        </div>
+                        <p className="text-base leading-relaxed text-text-secondary">
+                          {signal.invalidationCondition}
+                        </p>
+                      </div>
+                    ) : null}
+
                     {signal.commodityImpacts.length > 0 && (
                       <div className="space-y-3">
                         <div

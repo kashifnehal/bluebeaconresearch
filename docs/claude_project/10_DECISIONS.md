@@ -734,3 +734,13 @@ Also decided as part of this same pass:
 **Rationale:** The task asked for the parking comment to cite "claude/232 in the BBR Claude Project" — the same unverifiable reference already flagged in D34/ADR 030's history. Repo-wide search again found no such doc/ticket, so it was dropped per the no-fabricated-citations rule and replaced with the real decision date and toggle mechanism.
 
 **Cross-tree mapping:** Recorded as **ADR 031** in `docs/brain/10_DECISIONS.md`.
+
+## D36: "What would change this assessment" (`invalidation_condition`) is shown on the event detail Analysis tab only — never SignalCard, the dashboard feed, or the quick-view drawer (#216)
+
+**Decision:** `classifyEvent()`'s new `invalidationCondition` field (a one-sentence, plain-language statement of what specific reported fact would undercut the event's market-impact read, grounded in the article's own claim) is rendered in exactly one place: a labeled section on `events/[id]/page.tsx`'s Analysis tab (`data-testid="invalidation-condition"`). Not added to `SignalCard.tsx`, the dashboard feed, or `SignalQuickView.tsx`.
+
+**Context:** The task instructions for this work cited "claude/229 Part D" as the source of this scope restriction. `claude/229` is a real, closed prior task (2026-09-26, feed ranking/skeleton loaders/breadcrumbs/country flags — see ADR/changelog entries for that date) but every record of it in this repo refers only to "Part A"; no "Part D" appears anywhere (`docs/`, `git log --all`). Repo-wide search found no such doc/ticket, matching the same fabricated-citation pattern already flagged for `claude/232` (D35/ADR 031) and `claude/245` (D34/ADR 030) — so the citation was dropped per the standing no-fabricated-citations rule.
+
+**Rationale:** The Analysis-tab-only scope stands on its own merits regardless of the unverifiable citation: it's a deep-dive, analyst-briefing-style field (one sentence of reasoning, not a glanceable badge), and the dense card/feed/drawer surfaces have repeatedly had filler trimmed from them (see the 2026-09-26 drawer-trim entry) rather than grown. A second, separate task in this same batch (a point-in-time-integrity audit for the backtesting engine, cited to the same "claude/229" ticket) was dropped entirely rather than partially fabricated — see `LIVE_TODO.md` for that finding.
+
+**Cross-tree mapping:** Recorded as **ADR 032** in `docs/brain/10_DECISIONS.md`.
