@@ -39,6 +39,8 @@ function cacheKey(p: z.infer<typeof schema>) {
   return `${p.eventType}|${p.region}|${p.commodity}|${p.horizon}|${p.from ?? ""}|${p.to ?? ""}`;
 }
 
+// PARKED 2026-09-28 — fake data generator kept for reuse once a real
+// backtesting engine (#171) ships. Do not delete.
 function mockResult(p: z.infer<typeof schema>): Result {
   const totalEvents = 14;
   const avgMovePct = 3.2;
@@ -100,5 +102,7 @@ export async function POST(req: Request) {
   const value = mockResult(parsed.data);
   cache.set(key, { value, expiresAt: Date.now() + 24 * 60 * 60 * 1000 });
   // Mark mocked results as demo mode so the UI can show an explicit disclaimer banner.
+  // (#257: the web UI no longer renders these results at all, demo banner included —
+  // kept here untouched since the generator itself is parked, not removed.)
   return NextResponse.json({ ...value, isDemo: true });
 }

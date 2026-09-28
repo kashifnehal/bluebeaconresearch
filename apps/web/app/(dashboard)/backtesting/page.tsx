@@ -65,6 +65,11 @@ const POPULAR = [
   },
 ] as const;
 
+// PARKED 2026-09-28 (#257) — the results UI below renders Math.sin()-based
+// fake data from /api/backtesting. Keep this flag false and the JSX intact
+// until a real backtesting engine (#171) ships. Do not delete the block.
+const SHOW_DEMO_BACKTEST_RESULTS = false;
+
 export default function BacktestingPage() {
   const [eventType, setEventType] = useState<string>("");
   const [region, setRegion] = useState<string>("middle-east");
@@ -349,7 +354,25 @@ export default function BacktestingPage() {
             ))}
           </div>
         )}
-        {results && (
+        {!SHOW_DEMO_BACKTEST_RESULTS && results && (
+          <div
+            data-testid="backtest-honest-state"
+            className="flex flex-col items-center justify-center text-center py-20 px-8 bg-surface-container/40 border border-outline-variant/10 rounded-xl"
+          >
+            <span className="material-symbols-outlined text-5xl mb-4 text-on-surface-variant/40">
+              construction
+            </span>
+            <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">
+              Real Backtesting Not Yet Available
+            </p>
+            <p className="text-on-surface-variant max-w-md font-medium">
+              Real historical backtesting isn&apos;t available yet. We don&apos;t
+              want to show you results that aren&apos;t based on your actual
+              account data or real historical prices.
+            </p>
+          </div>
+        )}
+        {SHOW_DEMO_BACKTEST_RESULTS && results && (
           <div
             data-testid="backtest-results"
             data-commodity={applied?.commodity ?? commodity}
