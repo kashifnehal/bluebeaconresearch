@@ -52,6 +52,24 @@ const RSS_FEEDS: RssFeed[] = [
   { url: "https://www.ecb.europa.eu/rss/press.xml", label: "ECB", tier: "world" },
   { url: "https://www.bankofengland.co.uk/rss/news", label: "Bank of England", tier: "world" },
   { url: "https://ustr.gov/rss.xml", label: "USTR", tier: "world" },
+  { url: "https://rbi.org.in/pressreleases_rss.xml", label: "Reserve Bank of India", tier: "world" },
+  { url: "https://www.boj.or.jp/en/rss/whatsnew.xml", label: "Bank of Japan", tier: "world" },
+  { url: "https://www.eia.gov/rss/todayinenergy.xml", label: "EIA Today in Energy", tier: "world" },
+  // IMF News (https://www.imf.org/en/news/rss) — evaluated 2026-09-28 (#238):
+  // Akamai (server: AkamaiGHost) returns a hard 403 "Access Denied" on every
+  // request, same bot-fingerprinting pattern as the USDA feed above. NOT added.
+  // S&P Global Commodity Insights — evaluated 2026-09-28 (#238): every
+  // candidate path under spglobal.com/commodityinsights and
+  // spglobal.com/commodity-insights (rss-feed, rss-feed/oil,
+  // news-research/latest-news/rss, and the bare news-research/latest-news
+  // page itself) returns 403 (Akamai on some paths, a different WAF on
+  // others). No working feed found. NOT added.
+  // EIA "This Week in Petroleum"
+  // (https://www.eia.gov/petroleum/weekly/includes/week_in_petroleum_rss.xml)
+  // — evaluated 2026-09-28 (#238): resolves and returns real RSS 2.0, but the
+  // feed is stale (latest item dated 10/29/2025, ~11 months old as of this
+  // check) and every <pubDate> is malformed (literal "###################"
+  // instead of a date). NOT added — fails the "current dated items" bar.
   // UN News (https://news.un.org/feed/subscribe/en/news/all/rss.xml) — re-evaluated
   // 2026-09-26 (claude/rss-feed-additions), still not added: server unconditionally
   // gzips the response (content-encoding: gzip, confirmed via raw magic bytes 1f8b)

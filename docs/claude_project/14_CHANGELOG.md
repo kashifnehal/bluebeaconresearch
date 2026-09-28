@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 97).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 98).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 98 — RSS feed roster expanded 25→28, #238: RBI/BoJ/EIA Today-in-Energy added (2026-09-28)
+
+Pushed RSS coverage further toward the 50-100 feed target. Live-verified 5 candidates with the collector's real User-Agent, same bar as #255 (real RSS/Atom, current dated items, no listicle guessing). **Added, 3 world-tier:** Reserve Bank of India (press-releases feed, resolved off RBI's own RSS category page), Bank of Japan (found via a link on its homepage — no confirmed feed existed for BoJ before), EIA "Today in Energy" (a second, distinct EIA feed alongside the existing EIA Press Releases). **Rejected, 3:** IMF News (Akamai 403, same fingerprinting pattern as USDA). S&P Global Commodity Insights (403 on every path tried, both URL forms the domain uses — no working feed found). EIA "This Week in Petroleum" (a real feed, but dead in practice — newest item ~11 months old with malformed dates). `CONFIGURED_RSS_FEED_COUNT` 25 → 28. Full detail: `docs/brain/14_CHANGELOG.md` v0.121.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 97 — "What would prove this signal wrong" field (#216), Analysis tab only (2026-09-28)
 

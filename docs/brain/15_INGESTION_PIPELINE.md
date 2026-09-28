@@ -10,7 +10,7 @@ This document describes **exactly** how Blue Beacon Research fetches news, filte
 
 ```
 Railway workers (startup + every 30 min)
-  ├── RSS Collector      (25 feeds — world + finance)
+  ├── RSS Collector      (28 feeds — world + finance)
   ├── GNews Collector    (1 API query, free tier)
   ├── GDELT Collector    (1 API query, global news index)
   ├── Price Syncer       (Yahoo Finance — 8 commodities + 6 forex pairs)
@@ -58,6 +58,9 @@ Railway workers (startup + every 30 min)
 | ECB                              | `world`   | Exclude spam + keyword match             |
 | Bank of England                 | `world`   | Exclude spam + keyword match             |
 | USTR                             | `world`   | Exclude spam + keyword match             |
+| Reserve Bank of India            | `world`   | Exclude spam + keyword match             |
+| Bank of Japan                    | `world`   | Exclude spam + keyword match             |
+| EIA Today in Energy              | `world`   | Exclude spam + keyword match             |
 | **BBC Business**                | `finance` | **Only hard-exclude** (sports/celebrity) |
 | **Guardian Business**           | `finance` | **Only hard-exclude**                    |
 | **NYT Business**                | `finance` | **Only hard-exclude**                    |
@@ -352,4 +355,4 @@ curl https://bluebeaconresearch.com/api/ingestion/status
 | **Reuters official API** | Premium finance feed     | Paid enterprise access            |
 | **Polygon.io**           | Real-time market news    | Paid                              |
 
-Current strategy: maximize free RSS (25 feeds) + GNews + GDELT before adding paid APIs.
+Current strategy: maximize free RSS (28 feeds) + GNews + GDELT before adding paid APIs.
