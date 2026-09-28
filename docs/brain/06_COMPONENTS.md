@@ -216,11 +216,11 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - **Purpose:** first-time pulsing hints (not the Joyride ProductTour). `overlay: false`; seen keys `bbr_hint_seen_*` in localStorage.
 - **Also:** persistent hover tooltip on event-detail RECORD (`RECORD_BUTTON_TOOLTIP`) matching `handleRecord()` → `bb.saved_signals`. No Record control in Backtesting Lab.
 
-### 3.9 Backtesting Lab (`app/(dashboard)/backtesting/page.tsx` + `api/backtesting/route.ts`) (2026-09-23, `4651f6c`)
-- **Purpose:** scenario simulator over `Math.sin`-based synthetic demo points — not a real backtesting engine, no real historical dataset. `isDemo: true` banner always shown on mock results.
-- **Fixed:** removed always-visible fabricated "GENESIS-X_V4" engine name + "Processing 15 years of geo-political volatility markers" copy (existed independent of the `isDemo` banner). Removed the fixed `accuracyPct` stat (71%, hardcoded, never varied) end to end — API `mockResult()` and the UI "ACCURACY RATE" tile. Stats grid is now 4 tiles (Total Events / Avg Move % / Max Deviation / Min Deviation), was 5.
-- **Kept:** `avgMovePct` / `maxMovePct` / `minMovePct` and the per-row `correct` (movePct > 0) indicator — these read as simulation output, not a claimed track record.
-- **Not done this ship:** a real backtesting engine with real historical data — tracked as backlog #171, needs its own research pass first.
+### 3.9 Backtesting Lab (`app/(dashboard)/backtesting/page.tsx` + `api/backtesting/route.ts`) (2026-09-23, `4651f6c`; results UI disabled 2026-09-28, `18bde16`, #257)
+- **Purpose:** scenario simulator over `Math.sin`-based synthetic demo points — not a real backtesting engine, no real historical dataset.
+- **2026-09-28 (#257) — results UI disabled entirely.** The stats grid / chart-backed numbers / results table are now dead JSX, gated behind `const SHOW_DEMO_BACKTEST_RESULTS = false` in `page.tsx` (never deleted — parked for reuse once #171 ships). Submitting a query now shows a plain `data-testid="backtest-honest-state"` card: "Real historical backtesting isn't available yet. We don't want to show you results that aren't based on your actual account data or real historical prices." Query form (event type/region/commodity/horizon, Popular Simulations cards) unchanged and still functional. `route.ts`'s `mockResult()` + `isDemo: true` untouched, marked `PARKED 2026-09-28`.
+- **2026-09-23 fix (still relevant, results UI just no longer renders it):** removed always-visible fabricated "GENESIS-X_V4" engine name + "Processing 15 years of geo-political volatility markers" copy. Removed the fixed `accuracyPct` stat (71%, hardcoded, never varied) end to end.
+- **Not done this ship:** a real backtesting engine with real historical data — tracked as backlog #171, needs its own research pass first. Lookahead-bias/point-in-time-integrity auditing has nothing to audit until then (backlog #215).
 
 ### 3.10 CalendarPage (`app/(dashboard)/calendar/page.tsx`) (2026-09-25)
 - **Purpose:** day-strip filter above the event list. 7 buttons (Mon–Sun) built from the same `getWeekRangeUTC(now)` call the "This Week" section already used — no second week-boundary definition.

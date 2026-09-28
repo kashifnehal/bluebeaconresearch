@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 99).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 100).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 100 — #257: Backtesting Lab fake-results UI disabled (2026-09-28, `18bde16`)
+
+`apps/web` only. Founder-raised: Backtesting Lab is a first-class sidebar nav item, not a hidden page, and its results panel still rendered `Math.sin()`-based synthetic numbers/chart/table even after the 2026-09-23 pass (`4651f6c`) removed the fabricated "GENESIS-X_V4" engine name and hardcoded accuracy stat — the `isDemo` disclaimer alone wasn't judged sufficient. Fix: `page.tsx`'s existing results block is now gated behind a new `const SHOW_DEMO_BACKTEST_RESULTS = false` flag that always evaluates false — the stats grid/table JSX is kept intact, not deleted, commented as parked for reuse once #171 (real engine) ships. A sibling block renders instead: a plain "Real historical backtesting isn't available yet. We don't want to show you results that aren't based on your actual account data or real historical prices." card, no numbers, no chart. Query form (event/region/commodity/horizon selectors, Popular Simulations cards) unchanged and fully functional — only the "Run backtest" outcome changed. `api/backtesting/route.ts`'s `mockResult()` generator and `isDemo: true` flag left completely untouched, marked `PARKED 2026-09-28`. No lookahead-bias/point-in-time-integrity logic added — there's no real data to audit yet; stays with backlog #215 until #171 ships. Verified: `tsc --noEmit` clean. Not live-browser-tested — pure JSX-gating change, no new interaction logic. Full detail: `docs/brain/14_CHANGELOG.md` v0.123.0, `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/06_COMPONENTS.md` §3.9.
 
 ## PHASE 99 — ACLED collector activated; UI mentions restored (2026-09-28)
 

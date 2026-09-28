@@ -510,9 +510,9 @@ export default function PageName() {
 }
 ```
 
-### BacktestingPage (`apps/web/app/(dashboard)/backtesting/page.tsx` + `apps/web/app/api/backtesting/route.ts`) (2026-09-23, `4651f6c`)
+### BacktestingPage (`apps/web/app/(dashboard)/backtesting/page.tsx` + `apps/web/app/api/backtesting/route.ts`) (2026-09-23, `4651f6c`; results UI disabled 2026-09-28, `18bde16`, #257)
 
-Scenario simulator, not a real backtesting engine — mock results only (`Math.sin`-based demo points), `isDemo: true` banner always shown. Fixed 2026-09-23: the panel previously named a fabricated "GENESIS-X_V4" engine and claimed "Processing 15 years of geo-political volatility markers" regardless of the disclaimer state; now reads "Scenario Simulator" / "Hypothetical Event Impact" with no invented engine name or year count. Also dropped the hardcoded `accuracyPct` (71%, fixed, never varied) stat end to end — it implied a track record even next to a disclaimer. Remaining stats (avg/max/min move %) are kept as illustrative simulation output. A real backtesting engine over real historical data is backlog #171, not yet started.
+Scenario simulator, not a real backtesting engine — no real historical dataset. **As of 2026-09-28 (#257), the results panel no longer renders at all:** the stats grid/chart-backed numbers/results table are gated behind an always-false `SHOW_DEMO_BACKTEST_RESULTS` flag (JSX kept, parked for #171, not deleted). Running a query now shows a plain honest-state card instead — "Real historical backtesting isn't available yet..." — no fabricated numbers of any kind. Query form (event/region/commodity/horizon, Popular Simulations cards) unchanged and functional. API's `mockResult()` (`Math.sin`-based demo points) and `isDemo: true` flag are untouched under the hood, marked `PARKED 2026-09-28`, but the UI never shows them. This supersedes the 2026-09-23 fix (`4651f6c`), which had removed a fabricated "GENESIS-X_V4" engine name/"15 years" claim and the hardcoded 71% `accuracyPct` stat but still rendered the remaining `Math.sin`-based numbers — that gap is what #257 closes. A real backtesting engine over real historical data is backlog #171, not yet started; lookahead-bias auditing is backlog #215, nothing to audit until #171 exists.
 
 ### CalendarPage (`apps/web/app/(dashboard)/calendar/page.tsx`) (2026-09-25)
 

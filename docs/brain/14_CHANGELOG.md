@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-28 (v0.122.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-28 (v0.123.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.123.0 — #257: Backtesting Lab fake-results UI disabled (2026-09-28, `18bde16`)
+
+`apps/web` only. Founder-raised: Backtesting Lab is a first-class sidebar nav item (`components/layout/Sidebar.tsx` "BACKTESTING"), not a hidden page, and its results panel was still rendering `Math.sin()`-based synthetic numbers/chart/table even after the 2026-09-23 pass (`4651f6c`) stripped the fabricated "GENESIS-X_V4" engine name and hardcoded accuracy stat — the amber `isDemo` disclaimer alone wasn't judged sufficient. `page.tsx`'s existing `{results && (...)}` results block (stats grid, results table) is now gated behind a new `const SHOW_DEMO_BACKTEST_RESULTS = false` module-level flag that always evaluates false — the JSX itself is untouched, not deleted, commented `PARKED 2026-09-28 (#257)` for reuse once #171 (real engine) ships. A sibling `!SHOW_DEMO_BACKTEST_RESULTS && results && (...)` block renders instead: a plain `data-testid="backtest-honest-state"` card reading "Real historical backtesting isn't available yet. We don't want to show you results that aren't based on your actual account data or real historical prices." — no numbers, no chart. The query form (event type/region/commodity/horizon-horizon selectors, Popular Simulations cards) is unchanged and still fully functional; only the "Run backtest" outcome changed. `api/backtesting/route.ts`'s `mockResult()` generator and the `isDemo: true` flag are left completely untouched (still fetched, still computed, just never rendered), marked `// PARKED 2026-09-28 — fake data generator kept for reuse once a real backtesting engine (#171) ships. Do not delete.` No lookahead-bias/point-in-time-integrity logic was added — there's no real data to audit yet; that requirement stays attached to backlog #215 for whenever #171 ships, per explicit task scope. Verified: `tsc --noEmit` clean on both touched files. Not live-browser-tested — pure JSX-gating change (an always-false flag swapping which of two sibling conditional blocks renders), no new interaction/state logic; the `{results && (` / closing-paren structure was read manually to confirm the two blocks don't overlap or leave a dangling brace. Full detail: `LIVE_TODO.md`, `08_CURRENT_STATUS.md`, `06_COMPONENTS.md` §3.9.
 
 ### v0.122.0 — ACLED collector activated; 3 ACLED UI mentions restored (2026-09-28)
 
