@@ -1,12 +1,20 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-28 (v0.116.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-28 (v0.117.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.117.0 — Concurrent-session cap enforcement gated behind `DEVICE_LIMIT_ENABLED` (2026-09-28, commit pending)
+
+Task instructions asked for this work in `apps/backend`, citing "claude/232 in the BBR Claude Project" as prior research to reference — same fabricated citation already flagged for this exact feature in the original `LIVE_TODO.md` entry (2026-09-27) and again for a different feature at ADR 030/D34. Repo-wide `grep`/`git log --all` again found no such doc/ticket, so it was dropped per the no-fabricated-citations rule (see `project_fabricated_citation_incident` in session memory). The premise itself didn't hold either: this feature (`apps/web/lib/session-tracking.ts` + `register-session/route.ts` + `auth/callback/route.ts`) has no `apps/backend` code at all — confirmed by grep before writing anything.
+
+Bigger finding: a direct SQL check (`to_regclass('public.user_sessions')`) showed the table is **already live in production** — the migration that PHASE 87/v0.110.0 documented as blocked by Claude Code's own deploy gate was applied at some point without the docs being updated, so the 2-device eviction has been running unconditionally in prod with no way to turn it off short of a code revert. Fixed by adding `isDeviceLimitEnabled` to `apps/web/lib/flags.ts` (same exact-`"true"`-opt-in pattern as `isProjectReady`, no `NEXT_PUBLIC_` variant since it's server-only) and wrapping only the count-and-evict block — not the session-row insert, not the 30-day stale cleanup — in `if (isDeviceLimitEnabled)` at both call sites. Default is now disabled. Recorded as ADR 031/D35.
+
+**Verified:** `pnpm --filter web test` (83/83 green, including 2 new cases mirroring the flag-off/flag-on gate) + `pnpm --filter web type-check` clean; `apps/backend` untouched (confirmed via `git status`, its own type-check still clean). Not live-browser-verified — this is a backend/data-correctness change (eviction logic gated by an env read), verified via direct SQL + unit tests per the session-efficiency rules rather than a 3-browser Playwright login walkthrough. Env: `DEVICE_LIMIT_ENABLED=false` added to `apps/web/.env.example` and `12_DEPLOYMENT.md` §2. Full detail: `LIVE_TODO.md`, `10_DECISIONS.md` ADR 031.
 
 ### v0.116.0 — Claude-generated signal title (2026-09-28, `43190e0`)
 

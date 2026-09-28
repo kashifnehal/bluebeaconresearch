@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { track as trackVercelAnalyticsServer } from "@vercel/analytics/server";
-import { isProjectReady } from "@/lib/flags";
+import { isProjectReady, isDeviceLimitEnabled } from "@/lib/flags";
 import { getSupabaseAuthUrl } from "@/lib/supabase-auth-url";
 import {
   MAX_SESSIONS_PER_USER,
@@ -138,9 +138,13 @@ export async function GET(request: NextRequest) {
             }
             const remaining = rows.filter((r) => !staleIds.includes(r.id));
 
-            const toEvict = oldestSessionToEvict(remaining, MAX_SESSIONS_PER_USER);
-            if (toEvict) {
-              await supabase.from("user_sessions").delete().eq("id", toEvict.id);
+            // Two-device limit is parked (founder decision 2026-09-28). Set
+            // DEVICE_LIMIT_ENABLED=true in Vercel and redeploy to enable.
+            if (isDeviceLimitEnabled) {
+              const toEvict = oldestSessionToEvict(remaining, MAX_SESSIONS_PER_USER);
+              if (toEvict) {
+                await supabase.from("user_sessions").delete().eq("id", toEvict.id);
+              }
             }
 
             await supabase.from("user_sessions").insert({

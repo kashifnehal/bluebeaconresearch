@@ -651,3 +651,21 @@ A user clicking a chart point from three weeks ago and getting a push alert as i
 ### Cross-tree mapping
 
 Recorded as **D34** in `docs/claude_project/10_DECISIONS.md`.
+
+## 32. ADR 031: Concurrent-session cap defaults to disabled, opt-in via `DEVICE_LIMIT_ENABLED`
+
+### Context
+
+The 2-device concurrent-session cap (`apps/web/lib/session-tracking.ts`, shipped 2026-09-27) was documented as blocked on a migration Claude Code's production-deploy gate had denied. Verifying live via direct SQL during this task found the table already exists in production (`to_regclass('public.user_sessions')` resolves) and is being written to — the migration was applied at some point without the doc trio being updated, so eviction has been live and unconditional this whole time with no way to turn it off short of a code revert.
+
+### Decision
+
+Eviction (the count-at-cap check, deleting the oldest row, any future revoke attempt) is now gated behind `DEVICE_LIMIT_ENABLED`, read the same way `PROJECT_READY` is (`apps/web/lib/flags.ts`), enabled only when the value is exactly `"true"`. Default (unset) is disabled. Session-row insert and the 30-day stale-row cleanup are **not** gated — they keep running either way so device/session counts stay accurate for whenever enforcement is turned back on. No `NEXT_PUBLIC_` variant — the flag is read only in server route handlers, never client code.
+
+### Rationale
+
+The task instructions for this work asked for the parking comment to cite "claude/232 in the BBR Claude Project" — same unverifiable reference already flagged twice before (ADR 030/D34's `claude/245`, and the original `LIVE_TODO.md` session-cap entry). Repo-wide `grep`/`git log --all` again found no such doc/ticket; per the standing no-fabricated-citations rule the citation was dropped and the comment instead states the real founder-decision date and the real toggle mechanism. Separately, the task's own premise ("Main app: apps/backend") didn't hold — this feature has no backend code at all, confirmed by grep; the flag was added to `apps/web` instead, in the file and pattern actually in use there.
+
+### Cross-tree mapping
+
+Recorded as **D35** in `docs/claude_project/10_DECISIONS.md`.

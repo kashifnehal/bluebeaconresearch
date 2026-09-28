@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
+import { isDeviceLimitEnabled } from "@/lib/flags";
 import {
   MAX_SESSIONS_PER_USER,
   decodeSessionIdClaim,
@@ -46,10 +47,14 @@ export async function POST(req: NextRequest) {
   }
   const remaining = rows.filter((r) => !staleIds.includes(r.id));
 
-  const toEvict = oldestSessionToEvict(remaining, MAX_SESSIONS_PER_USER);
-  if (toEvict) {
-    // Row-only eviction — see the limitation comment in session-tracking.ts.
-    await supabase.from("user_sessions").delete().eq("id", toEvict.id);
+  // Two-device limit is parked (founder decision 2026-09-28). Set
+  // DEVICE_LIMIT_ENABLED=true in Vercel and redeploy to enable.
+  if (isDeviceLimitEnabled) {
+    const toEvict = oldestSessionToEvict(remaining, MAX_SESSIONS_PER_USER);
+    if (toEvict) {
+      // Row-only eviction — see the limitation comment in session-tracking.ts.
+      await supabase.from("user_sessions").delete().eq("id", toEvict.id);
+    }
   }
 
   await supabase.from("user_sessions").insert({

@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 93).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 94).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 94 — Concurrent-session cap enforcement gated behind `DEVICE_LIMIT_ENABLED` (2026-09-28, commit pending)
+
+The 2-device session cap (PHASE 87) turned out to be live in production with no off-switch: a direct SQL check found the `user_sessions` table already exists, meaning the migration once documented as blocked was applied without the docs catching up, and eviction has been running unconditionally. Fixed by gating the count-and-evict step (not the insert, not the stale-row cleanup) behind a new `DEVICE_LIMIT_ENABLED` flag, same opt-in pattern as `PROJECT_READY`, default disabled. Feature is entirely `apps/web` — a task instruction assuming `apps/backend` involvement didn't hold, confirmed by grep. Also declined to write a requested "claude/232" citation into the code comment — same fabricated-reference pattern already on record (PHASE 92/D34). Recorded as D35/ADR 031. Verified: full `apps/web` suite (83/83) + type-check clean on both packages; not live-browser-tested (data-correctness change, verified via SQL + unit tests per session-efficiency rules). Full detail: `docs/brain/14_CHANGELOG.md` v0.117.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 93 — Claude-generated signal title (2026-09-28, `43190e0`)
 

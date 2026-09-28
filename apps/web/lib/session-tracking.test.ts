@@ -66,6 +66,29 @@ runTest("under the cap, nothing is evicted", () => {
   assert.equal(oldestSessionToEvict(existing), null);
 });
 
+runTest("DEVICE_LIMIT_ENABLED off: a 3rd login does not evict any row", () => {
+  const existing = [
+    { id: "session-1-oldest", created_at: "2026-09-01T00:00:00.000Z", last_seen_at: "2026-09-01T00:00:00.000Z" },
+    { id: "session-2", created_at: "2026-09-10T00:00:00.000Z", last_seen_at: "2026-09-10T00:00:00.000Z" },
+  ];
+  // Mirrors the gate in register-session/route.ts and auth/callback/route.ts:
+  // oldestSessionToEvict is only consulted when the flag is on.
+  const deviceLimitEnabled = false;
+  const toEvict = deviceLimitEnabled ? oldestSessionToEvict(existing) : null;
+  assert.equal(toEvict, null);
+});
+
+runTest("DEVICE_LIMIT_ENABLED on: a 3rd login evicts the oldest row", () => {
+  const existing = [
+    { id: "session-1-oldest", created_at: "2026-09-01T00:00:00.000Z", last_seen_at: "2026-09-01T00:00:00.000Z" },
+    { id: "session-2", created_at: "2026-09-10T00:00:00.000Z", last_seen_at: "2026-09-10T00:00:00.000Z" },
+  ];
+  const deviceLimitEnabled = true;
+  const toEvict = deviceLimitEnabled ? oldestSessionToEvict(existing) : null;
+  assert.ok(toEvict);
+  assert.equal(toEvict!.id, "session-1-oldest");
+});
+
 runTest("flags sessions past the 30-day stale cutoff", () => {
   const now = new Date("2026-09-27T00:00:00.000Z");
   const rows = [

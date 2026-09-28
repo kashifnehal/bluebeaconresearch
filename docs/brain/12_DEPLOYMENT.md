@@ -45,6 +45,10 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
 - `GNEWS_API_KEY`: Global news article collector.
 - `ACLED_API_KEY` / `ACLED_API_EMAIL`: Verified military engagement data feed.
 
+### Session & Access Control
+
+- `DEVICE_LIMIT_ENABLED`: gates the 2-device concurrent-session cap (`apps/web/lib/session-tracking.ts`). Default is off (parked, founder decision 2026-09-28); set to exactly `true` in Vercel to enable eviction. Missing or any other value = disabled. `apps/web` only, not read by `apps/backend`.
+
 ### Alert Channels & Geospatial
 
 - `TELEGRAM_BOT_TOKEN`: Bot token for instant Telegram alert dispatch.

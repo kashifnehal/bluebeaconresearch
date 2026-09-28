@@ -724,3 +724,13 @@ Also decided as part of this same pass:
 **Rationale:** A push alert about an event from weeks ago, triggered by a user simply clicking a chart point, would be actively misleading — "new signal" alerts exist specifically for timeliness. Suppressing only the dispatch (not the row) keeps the signal useful everywhere else it's supposed to be.
 
 **Cross-tree mapping:** Recorded as **ADR 030** in `docs/brain/10_DECISIONS.md`.
+
+## D35: Concurrent-session cap defaults to disabled, opt-in via `DEVICE_LIMIT_ENABLED`
+
+**Decision:** Eviction in the 2-device concurrent-session cap is now gated behind a `DEVICE_LIMIT_ENABLED` env flag (`apps/web/lib/flags.ts`, same pattern as `PROJECT_READY`), enabled only when exactly `"true"`; default is disabled. Session-row insert and 30-day stale cleanup still run unconditionally either way.
+
+**Context:** This feature (shipped 2026-09-27) was documented as blocked on a migration Claude Code's deploy gate had denied. A direct SQL check during this task found the `user_sessions` table already live in production — the migration was applied without the docs being updated, so eviction had been running unconditionally with no off-switch. Feature has no `apps/backend` code at all, despite the task instructions assuming it did.
+
+**Rationale:** The task asked for the parking comment to cite "claude/232 in the BBR Claude Project" — the same unverifiable reference already flagged in D34/ADR 030's history. Repo-wide search again found no such doc/ticket, so it was dropped per the no-fabricated-citations rule and replaced with the real decision date and toggle mechanism.
+
+**Cross-tree mapping:** Recorded as **ADR 031** in `docs/brain/10_DECISIONS.md`.
