@@ -32,12 +32,15 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
   - `commodity` (`string`, optional, e.g. `USOIL`): Target symbol.
   - `region` (`string`, optional, e.g. `Middle East`).
   - `window` (`string`, optional): signal lifecycle filter. Allowed values:
-    - `latest` → fresh intelligence feed: `event_date >= 24h` or `is_active = true`.
+    - *(default, no `window` param)* → **fixed 2026-09-28**: real `event_date >= 24h` cutoff, full stop. Previously `event_date >= 24h OR is_active = true` — `is_active` is true on 100% of `signals` rows (no code path ever sets it false), so that OR made the 24h cutoff an unbounded no-op; every signal regardless of age matched.
+    - `latest` → same default 24h behavior described above (this value maps to the same unnamed-`window` branch).
     - `24h` → published within the last 24 hours only.
     - `7d` → published within the last 7 days.
-    - `active` → currently active signals regardless of publish age.
+    - `30d` → published within the last 30 days.
+    - `all` → no date restriction at all (explicit "show everything").
+    - `active` → currently active signals regardless of publish age (`is_active = true`, unaffected by the 2026-09-28 default-window fix).
   - `search` (`string`, optional, min 3 chars): `ilike` OR across `title`/`summary`/`country`/`event_type`. Previously undocumented — added here alongside `sort` below.
-  - `sort` (`string`, optional, default `"severity"`): `"severity"` — **fixed 2026-09-26 (claude/229/86, commit `20e0050`)**: genuinely `severity desc, created_at desc` now. It had been `event_date desc, severity desc, created_at desc` (recency-first despite the name) since before this doc first flagged it as undocumented-but-unchanged; the `sort=relevance` candidate pre-fetch kept that recency-first order deliberately, and a shared ternary branch had conflated the two. `"newest"` (`event_date desc, created_at desc`), `"confidence"`, or **`"relevance"`** (recency+severity blend, see below) are unaffected.
+  - `sort` (`string`, optional, default `"severity"`): **2026-09-28** — `"severity"` (the default, and any unrecognized value) now goes through the same recency+severity blend as `"relevance"` (`relevanceRankScore`, `apps/web/lib/signal-relevance-rank.ts`) — a candidate set is fetched, re-ranked in application code, then paginated, replacing the previous pure `severity desc, created_at desc` DB order. This was itself a fix (2026-09-26, claude/229/86, commit `20e0050`) of an earlier bug where the default was actually `event_date desc, severity desc, created_at desc` (recency-first despite the name). `"newest"` (`event_date desc, created_at desc`) and `"confidence"` remain the two pure, non-blended orders.
   - `limit` (`number`, default `50`, max `100`).
   - `offset` (`number`, default `0`).
   - `page` (`number`, default `1`): page-based pagination; response carries a real `nextCursor` (`String(page+1)` or `null`) and `total`.

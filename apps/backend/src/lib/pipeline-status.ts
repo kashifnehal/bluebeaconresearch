@@ -187,6 +187,50 @@ export async function markCollectorsAlerted(keys: string[]): Promise<void> {
   }
 }
 
+// claude/252 action step 3: dedup flag for the Anthropic usage-limit/credit-
+// exhaustion Sentry alert fired from claude.service.ts's classifyEvent() catch
+// block. Deliberately NOT folded into COLLECTOR_KEYS/`alerted` above — that
+// machinery is read-modify-written once per ingestion cycle (15-30 min) against
+// a single `pipeline:last_run` blob keyed by *cycle-level* consecutiveFailures
+// counts, and classifyEvent() is called many times per cycle (once per raw
+// event) — sharing that key would race the cycle's own write and isn't the
+// right shape (a usage-limit cap is a persistent on/off condition, not a
+// consecutive-failure count). A separate, simple flag with its own TTL is the
+// cleaner fit; same "flip true on alert, clear on recovery" idiom as
+// markCollectorsAlerted/recordPipelineRun above, just independently keyed.
+const ANTHROPIC_USAGE_LIMIT_ALERTED_KEY = "anthropic:usage_limit_alerted";
+const ANTHROPIC_USAGE_LIMIT_ALERTED_TTL_SECONDS = 86400;
+
+export async function isAnthropicUsageLimitAlerted(): Promise<boolean> {
+  const redis = getRedis();
+  if (!redis) return false;
+  try {
+    return (await redis.get(ANTHROPIC_USAGE_LIMIT_ALERTED_KEY)) === "true";
+  } catch (e: any) {
+    console.warn("[pipeline-status] anthropic usage-limit flag read failed:", e.message);
+    return false;
+  }
+}
+
+export async function setAnthropicUsageLimitAlerted(value: boolean): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+  try {
+    if (value) {
+      await redis.set(
+        ANTHROPIC_USAGE_LIMIT_ALERTED_KEY,
+        "true",
+        "EX",
+        ANTHROPIC_USAGE_LIMIT_ALERTED_TTL_SECONDS,
+      );
+    } else {
+      await redis.del(ANTHROPIC_USAGE_LIMIT_ALERTED_KEY);
+    }
+  } catch (e: any) {
+    console.warn("[pipeline-status] anthropic usage-limit flag write failed:", e.message);
+  }
+}
+
 async function trackZeroYieldStreak(
   status: PipelineRunStatus,
   redis: ReturnType<typeof getRedis>,

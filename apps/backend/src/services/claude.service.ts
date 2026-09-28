@@ -1,4 +1,5 @@
 import { Anthropic } from "@anthropic-ai/sdk";
+import * as Sentry from "@sentry/node";
 import { getEnv } from "../env.js";
 import {
   assertAnthropicBudget,
@@ -11,6 +12,10 @@ import {
 } from "../lib/chat-relevance.js";
 import { sanitizeCitedChatReply } from "../lib/cited-chat-reply.js";
 import { recordServiceHealth } from "../lib/service-health.js";
+import {
+  isAnthropicUsageLimitAlerted,
+  setAnthropicUsageLimitAlerted,
+} from "../lib/pipeline-status.js";
 import {
   formatWatchlistPromptBlock,
   getActiveWatchlist,
@@ -41,6 +46,32 @@ function trimToLastCompleteSentence(text: string): string {
   // +1 keeps the sentence-ending punctuation itself, drops the trailing space.
   return trimmed.slice(0, lastSentenceEnd + 1);
 }
+
+// claude/252 action step 3: an Anthropic Console-level usage-limit/credit-
+// exhaustion condition (as opposed to a transient 429/5xx/network error) is
+// unambiguously actionable — deterministic literal-substring match on
+// Anthropic's own two wordings for it, not a guess/regex. Pulled out as its
+// own function so it's directly unit-testable without needing a real/mocked
+// Anthropic client or Redis (see classifyEvent()'s catch block for how the
+// dedup flag around this is persisted).
+export function isAnthropicUsageLimitError(message: string | null | undefined): boolean {
+  const lower = String(message ?? "").toLowerCase();
+  return lower.includes("usage limit") || lower.includes("credit balance");
+}
+
+// In-process mirror of the persisted Redis flag, so a successful classifyEvent()
+// call — which happens many times per 15-30min ingestion cycle — only pays a
+// Redis round-trip to clear the flag when this process actually knows it set
+// it. Upstash quota is a genuinely scarce, previously-exhausted resource in
+// this codebase (see clients/redis.ts's own circuit breaker and
+// RATE_LIMIT_SAFE_MODE); an unconditional DEL on every single successful
+// classification would add a real, avoidable per-call cost to the hot path
+// for what's normally a no-op. Starts false on every process restart — worst
+// case, a cap that cleared then re-tripped within the same 24h TTL window
+// (see ANTHROPIC_USAGE_LIMIT_ALERTED_TTL_SECONDS) waits out the TTL instead of
+// re-alerting immediately, an acceptable tradeoff for not hitting Redis on
+// every classify call.
+let usageLimitAlertedLocally = false;
 
 const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 const SONNET_MODEL = "claude-sonnet-5";
@@ -411,6 +442,13 @@ export class ClaudeService {
           "classifyEvent",
           Date.now() - callStartedAt,
         );
+        // Re-arms the usage-limit alert (mirrors markCollectorsAlerted's "a
+        // healthy run clears the flag" idiom) — only touches Redis when this
+        // process actually knows it set the flag, see usageLimitAlertedLocally.
+        if (usageLimitAlertedLocally) {
+          await setAnthropicUsageLimitAlerted(false);
+          usageLimitAlertedLocally = false;
+        }
         return parsed;
       } catch (err: any) {
         console.warn(
@@ -422,6 +460,27 @@ export class ClaudeService {
           `classifyEvent: ${err?.message ?? "unknown error"}`,
           Date.now() - callStartedAt,
         );
+
+        // claude/252 action step 3: an Anthropic Console-level usage-limit/
+        // credit-exhaustion condition is unambiguously actionable and silently
+        // degrades every classification to heuristicClassify() until it
+        // clears — unlike a single transient 429/5xx/network error, which is
+        // normal fallback territory this catch block already handles the same
+        // way it always has (no retry added here; classifyEvent's own catch
+        // has never retried, and this task isn't asking it to start). Deduped
+        // via a persisted flag (see pipeline-status.ts) so this doesn't refire
+        // on every single classification call while the cap stays active —
+        // pages once per threshold-crossing, same as evaluateCollectorHealth
+        // in workers.ts.
+        if (isAnthropicUsageLimitError(err?.message) && !(await isAnthropicUsageLimitAlerted())) {
+          Sentry.captureMessage(
+            `[claude.service] classifyEvent() hit an Anthropic usage-limit/credit-exhaustion error — ` +
+              `every event is now classifying via heuristicClassify() until this clears: ${err?.message}`,
+            "error",
+          );
+          await setAnthropicUsageLimitAlerted(true);
+          usageLimitAlertedLocally = true;
+        }
       }
     }
 

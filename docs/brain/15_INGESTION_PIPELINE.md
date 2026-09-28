@@ -219,8 +219,9 @@ After passing the filter and dedup check:
 
 - `created_at` = first ingestion time into BBR
 - `updated_at` = last signal update time in the DB
-- dashboard default: signals with `event_date >= 24h` OR `is_active = true`
-- explicit window filters: `latest`, `24h`, `7d`, `active`
+- dashboard default: signals with `event_date >= 24h`, full stop (see below —
+  2026-09-28, the old `OR is_active = true` escape hatch was a no-op)
+- explicit window filters: `latest`, `24h`, `7d`, `30d`, `all`, `active`
 
 ### 5.1 API: `/api/signals`
 
@@ -228,9 +229,23 @@ After passing the filter and dedup check:
 | :----------- | :------------------------------------------------------------------ |
 | Auth         | Requires logged-in user                                             |
 | DB read      | Service role key (if set on Vercel)                                 |
-| Time window  | `event_date >= 24 hours ago` OR `is_active = true` (default/latest) |
-| Sort default | `event_date DESC`, then `severity DESC`                             |
+| Time window  | `event_date >= 24 hours ago`, full stop (default/no `window` param) |
+| Sort default | Blended recency+severity rank (`relevanceRankScore`, `lib/signal-relevance-rank.ts`) — same formula `sort=relevance` (command palette) always used, now also the main feed's default. `sort=newest`/`sort=confidence` are the two remaining pure-order modes. |
 | Cache        | `force-dynamic` — no Next.js cache                                  |
+
+**2026-09-28 fix:** `is_active` is true on 100% of `signals` rows (no code path
+ever sets it false) so the old default-window `event_date.gte.<24h> OR
+is_active.eq.true` clause matched every row regardless of age — the "24h
+default" was silently unbounded. Fixed to a real `event_date >= 24h` cutoff;
+`window=active` still filters on `is_active` explicitly for the callers that
+want it (`signal-merge.ts`'s own merge-candidate query, `alert-dispatcher.ts`,
+`digest-sender.ts` — all independent of this route). Separately, the default
+sort was pure `severity DESC` (with `created_at` only a same-severity
+tiebreak), which let an old high-severity signal permanently outrank a
+fresher lower-severity one; it now reuses the same `relevanceRankScore` blend
+`sort=relevance` already used, so recency is weighed against severity across
+the whole ranking, not just within ties. `signal-filters.ts`'s
+`DEFAULT_FILTERS.minSeverity` floor also dropped 6 → 4 in the same change.
 
 ### 5.2 Timestamp display
 
@@ -250,13 +265,28 @@ After passing the filter and dedup check:
 | +N signals    | Last run `totals.signals`                                                 |
 | Stale warning | Red if last fetch > 1.5× `cronIntervalMinutes` ago (was a hardcoded 20 min, which false-alarmed for the back half of every real 30-min cycle — fixed 2026-09-26) |
 
-### 5.4 Featured card selection (`/alerts`, `/dashboard`)
+### 5.4 Featured card selection (`/dashboard`)
 
 ```typescript
-featuredSignal = signals.find((s) => s.severity >= 8) || signals[0];
+featured = liveSignals.find((s) => s.severity >= 8) || liveSignals[0];
 ```
 
-High-severity (8+) stories dominate the hero card. New low-severity market news may appear in the stream but not as the featured headline.
+High-severity (8+) stories dominate the hero card, but `liveSignals` is now
+the same blended-rank list `/api/signals`'s default sort produces (see §5.1) —
+`.find()` returns the *highest-ranked* severity-8+ story, not just the first
+one chronologically, so this can no longer surface a stale severity-8 ahead of
+a fresher one the way a pure `severity DESC` order could. No separate hard
+recency cap was added here (2026-09-28 decision): the default dashboard view
+is already hard-bounded to `event_date >= 24h` by the §5.1 fix, so a
+month-old severity-8 cannot appear in `liveSignals` at all under the default
+window; a hard cap would only matter if the user explicitly widens the window
+(7d/30d/all), where the existing blend already favors recency correctly.
+Reads from the exact same `liveSignals` array as the rest of the feed — no
+separate query. (This section previously listed `/alerts` as a second caller
+of this pattern — checked while touching this doc: `/alerts/page.tsx` has no
+`severity >= 8`/featured-card selection at all, so that was stale; corrected.
+The pattern also independently exists on the homepage, `app/page.tsx`, and
+`/map` — both out of scope for this change, not touched.)
 
 ---
 

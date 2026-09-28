@@ -48,3 +48,4 @@ yarn-error.log*
 # Prospect/demo account passwords (emails are documented; secrets stay local)
 .demo-accounts.local.json
 **/.demo-accounts.local.json
+.audit-screenshots/

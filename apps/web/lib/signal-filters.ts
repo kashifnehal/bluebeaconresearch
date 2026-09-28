@@ -42,16 +42,18 @@ export type FilterBarValue = {
   window: FeedWindow | null;
 };
 
-// minSeverity floor of 6 (claude/229 and claude/86 in the BBR Claude Project) is
-// the single visibility floor for the feed — it pairs with the severity-primary
-// sort in apps/web/app/api/signals/route.ts so low-severity noise (a "gold IRA
-// rollover" or "corn breeding" story) can neither rank above nor even appear
-// alongside a real severity-6+ signal. Don't add a second, separate floor
-// elsewhere; change this one value.
+// minSeverity floor of 4 (lowered from 6, 2026-09-28) is the single visibility
+// floor for the feed — it pairs with the recency+severity blended sort in
+// apps/web/app/api/signals/route.ts (relevanceRankScore, lib/signal-relevance-rank.ts)
+// so low-severity noise (a "gold IRA rollover" or "corn breeding" story) can
+// neither rank above nor even appear alongside a real severity-4+ signal, while
+// no longer hiding genuinely material severity-4/5 stories the old floor of 6
+// excluded outright. Don't add a second, separate floor elsewhere; change this
+// one value.
 export const DEFAULT_FILTERS: FilterBarValue = {
   commodity: null,
   region: null,
-  minSeverity: 6,
+  minSeverity: 4,
   window: null,
 };
 

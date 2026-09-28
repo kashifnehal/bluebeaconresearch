@@ -309,28 +309,40 @@ export async function GET(req: NextRequest) {
       ).toISOString();
       query = query.gte("event_date", cutoff);
     } else {
-      // Default and "latest" behavior: preserve fresh intelligence while keeping
-      // ongoing active/developing events visible beyond 24h.
-      query = query.or(
-        `event_date.gte.${twentyFourHoursAgo},is_active.eq.true`,
-      );
+      // Default and "latest" behavior: a real 24h cutoff on event_date, full stop.
+      // Previously OR'd in `is_active.eq.true` as an "escalation window" escape
+      // hatch, but is_active is true on 100% of signals rows (confirmed live
+      // 2026-09-28 — no code path ever flips it false; see insertOrMergeSignal in
+      // apps/backend/src/workers/signal-merge.ts, which only ever writes
+      // is_active: true) so that OR made this filter an unbounded no-op — every
+      // signal regardless of age matched via is_active. `window=active` below is
+      // unaffected and still available for whatever surface wants that column
+      // specifically (signal-merge's own candidate query, alert-dispatcher,
+      // digest-sender all filter on is_active independently of this route).
+      query = query.gte("event_date", twentyFourHoursAgo);
     }
 
-    // sort=relevance (#command-palette search) blends recency+severity in
-    // application code (see lib/signal-relevance-rank.ts) rather than SQL, so
-    // it needs a candidate set fetched up front and re-ranked/sliced below —
-    // NOT the DB-level `.range()` paging the other sort modes use. Command
-    // palette is currently the only caller (limit=5, page 1); the main
-    // Intelligence Feed page's default sort is untouched (still "severity").
-    const isRelevanceSort = sort === "relevance";
-    const RELEVANCE_CANDIDATE_LIMIT = 200;
+    // Recency+severity blend (relevanceRankScore, lib/signal-relevance-rank.ts)
+    // applied in application code rather than SQL, so it needs a candidate set
+    // fetched up front and re-ranked/sliced below — NOT the DB-level `.range()`
+    // paging `sort=newest`/`sort=confidence` use. This used to be gated to
+    // `sort==="relevance"` only (the command palette's own opt-in), with the
+    // main Intelligence Feed's default ("severity", pure severity DESC then
+    // created_at DESC tiebreak) going through a separate branch below — that
+    // let a stale severity-9 signal permanently outrank a brand-new severity-5
+    // one, since recency only broke ties *within* the same severity value, not
+    // across them. 2026-09-28: every mode except the two explicit alternatives
+    // (`newest` = pure recency, `confidence` = classifier confidence) now goes
+    // through this same blended path, so the default feed gets it too.
+    const isRelevanceSort = sort !== "newest" && sort !== "confidence";
+    // 500 (matching this route's own existing rowLimit cap) comfortably covers
+    // a live count of signals clearing the new severity>=4 floor even at the
+    // widest fixed window this route serves (30d: 399 as of 2026-09-28,
+    // checked live against evavcgfmemwryggdkjmx) in a single fetch. The
+    // `Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1)` below still grows this
+    // per-page for deeper pagination (e.g. `window=all`, 2,371 candidates).
+    const RELEVANCE_CANDIDATE_LIMIT = 500;
 
-    // Severity is the primary ranking signal for the default Intelligence Feed
-    // sort (claude/229 and claude/86 in the BBR Claude Project): highest-severity
-    // signals surface first, recency is only the tiebreaker within a severity
-    // value. This was previously ordering by event_date first (recency-primary),
-    // which let low-severity stories outrank a real severity-6+ story just for
-    // being newer — that was the actual bug, not a missing feature.
     query =
       sort === "newest"
         ? query
@@ -340,20 +352,16 @@ export async function GET(req: NextRequest) {
           ? query
               .order("confidence", { ascending: false })
               .order("event_date", { ascending: false })
-          : isRelevanceSort
-            ? // Pre-sort for the candidate fetch only — most-recent/highest-severity
-              // first is a reasonable ordering to draw the top
-              // RELEVANCE_CANDIDATE_LIMIT rows from before the real
-              // recency+severity re-rank happens in application code below.
-              // Final order for this mode comes from sortByRelevance(), not this
-              // clause.
-              query
-                .order("event_date", { ascending: false })
-                .order("severity", { ascending: false })
-                .order("created_at", { ascending: false })
-            : query
-                .order("severity", { ascending: false })
-                .order("created_at", { ascending: false });
+          : // Pre-sort for the candidate fetch only — most-recent/highest-severity
+            // first is a reasonable ordering to draw the top
+            // RELEVANCE_CANDIDATE_LIMIT rows from before the real
+            // recency+severity re-rank happens in application code below.
+            // Final order for this mode comes from sortByRelevance(), not this
+            // clause.
+            query
+              .order("event_date", { ascending: false })
+              .order("severity", { ascending: false })
+              .order("created_at", { ascending: false });
 
     const { data, error, count } = isRelevanceSort
       ? await query.limit(Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1))
@@ -490,9 +498,16 @@ export async function GET(req: NextRequest) {
     // still possible (dedupe is per-page) but the client keys the merged feed by
     // signal id, so they don't render twice.
     // NOTE: for isRelevanceSort, `rows.length` is the fetched candidate-window
-    // size, not the page size — `hasMore`/`nextCursor` are therefore only
-    // approximate for relevance mode (fine today: command palette, the only
-    // caller, always requests page 1 and never pages through it).
+    // size, not the page size, and the query above re-requests
+    // `Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1)` fresh on every call —
+    // so this stays *exactly* correct (rows.length reaches the real `total`
+    // once the dynamic limit covers it, and `hasMore` flips false at that
+    // point), just at the cost of an ever-larger re-fetch on each successive
+    // page once a candidate set exceeds RELEVANCE_CANDIDATE_LIMIT. Acceptable
+    // for how deep either caller actually pages today (command palette: page 1
+    // only; the main Intelligence Feed's infinite scroll: real-world scroll
+    // depth against a 500+ candidate window is rare) — worth revisiting with
+    // real `.range()`-based paging only if that assumption stops holding.
     const total = count ?? rangeFrom + rows.length;
     const hasMore = rangeFrom + rows.length < total;
 

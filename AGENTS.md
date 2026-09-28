@@ -56,6 +56,7 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 - **Never fabricate data in the UI.** There's a known past incident of static/hardcoded content (fake "AI Prediction" quotes, decorative progress bars) shipped as if real — treat any such thing found in the codebase as a bug to remove, not a pattern to follow.
 - **Scope discipline.** A UI-only task previously scope-crept into adding unrelated Redis/Terraform/load-test infrastructure and had to be reverted (see `docs/brain/14_CHANGELOG.md` v0.13.0). Stay inside the files a task actually names; if something looks like it needs infra work outside that scope, stop and ask rather than building it.
 - **Never commit secrets.** `docs/brain/CLAUDE_CONTEXT.md` previously had live API keys (Anthropic, Supabase service role, Upstash) committed in plaintext — this has been cleaned up and pushed, but treat it as a hard rule going forward: credentials belong in `.env.local` / platform env vars only, never in a doc.
+- **Always end a finished task with a detailed standalone report.** Outcome, what changed, files touched, diagnosis, every `docs/brain/` + `docs/claude_project/` file updated (and any topic file skipped, with why), verification that actually ran, and what was not shipped. Do not close on a one-liner or "docs were updated." Template: `.cursor/rules/task-completion-report.mdc`.
 
 ## Session efficiency (token discipline — do not re-litigate)
 

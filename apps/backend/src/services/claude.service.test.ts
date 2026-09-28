@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { ClaudeService } from "./claude.service.js";
+import { ClaudeService, isAnthropicUsageLimitError } from "./claude.service.js";
 import {
   setWatchlistCacheForTests,
   type MediaImpactWatchlistEntry,
@@ -894,6 +894,40 @@ async function main() {
       } finally {
         delete process.env.ANTHROPIC_API_KEY;
       }
+    },
+  );
+
+  // claude/252 action step 3 — usage-limit/credit-exhaustion alert detection.
+  // Only the pure string-match predicate is unit-tested here; the Redis-backed
+  // dedup flag (isAnthropicUsageLimitAlerted/setAnthropicUsageLimitAlerted in
+  // pipeline-status.ts) is NOT exercised end-to-end — this test suite has no
+  // existing pattern for mocking ioredis (grepped: zero other test files touch
+  // clients/redis.js), and both functions already no-op safely when getRedis()
+  // returns null (the real behavior in this test env, no REDIS_URL set), so a
+  // dedup assertion here would just be asserting against a no-op. Said
+  // plainly rather than building new Redis-mocking infra for this one task, or
+  // claiming coverage that isn't real.
+  runTest(
+    "isAnthropicUsageLimitError matches Anthropic's real usage-limit and credit-balance wordings, case-insensitively, and rejects unrelated errors",
+    () => {
+      assert.equal(
+        isAnthropicUsageLimitError(
+          "You have reached your specified API usage limits. You will regain access on 2026-10-01 at 00:00 UTC",
+        ),
+        true,
+      );
+      assert.equal(
+        isAnthropicUsageLimitError("Your credit balance is too low to access the Anthropic API"),
+        true,
+      );
+      assert.equal(isAnthropicUsageLimitError("USAGE LIMIT reached"), true);
+      assert.equal(isAnthropicUsageLimitError("Credit Balance exhausted"), true);
+      assert.equal(isAnthropicUsageLimitError("rate limit exceeded, please retry"), false);
+      assert.equal(isAnthropicUsageLimitError("500 Internal Server Error"), false);
+      assert.equal(isAnthropicUsageLimitError("fetch failed: ECONNRESET"), false);
+      assert.equal(isAnthropicUsageLimitError(undefined), false);
+      assert.equal(isAnthropicUsageLimitError(null), false);
+      assert.equal(isAnthropicUsageLimitError(""), false);
     },
   );
 }
