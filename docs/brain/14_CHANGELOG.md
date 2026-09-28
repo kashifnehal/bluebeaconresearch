@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-28 (v0.121.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-28 (v0.122.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.122.0 — ACLED collector activated; 3 ACLED UI mentions restored (2026-09-28)
+
+Founder registered a free ACLED account and set `ACLED_EMAIL`/`ACLED_PASSWORD` on Railway's `workers` service (production), then redeployed. No code change was needed — `acled-collector.ts`/`acled.service.ts` were already fully written and wired into the ingestion cron (`workers.ts`), just waiting on credentials. **Confirmed live**, not just deployed: `service_health_events` shows `service=acled status=ok` at 2026-09-28 14:01:21 UTC — a real successful connection ("fetched 0 event(s)" that cycle, which is normal; ACLED's own data isn't real-time, unlike RSS/GDELT). Cost: $0 — ACLED's API is free, self-registered, no paid tier. Since it's now genuinely active, restored the 3 UI mentions removed 2026-09-23 (v0.83.0) while it was confirmed inactive: `apps/web/app/page.tsx` homepage "01. Event Detection" card ("Public sources such as ACLED and GNews..."), `apps/web/app/(dashboard)/dashboard/page.tsx` coverage line (`+ ACLED` appended), `apps/web/lib/status-checks.ts` `checkDataPipeline()` detail string ("GDELT, ACLED, GNews & Price Sync Collector Workers"). `08_CURRENT_STATUS.md` known-open-items table updated (both doc trees) from "Open" to "Resolved (2026-09-28)". Not touched: `apps/web/app/admin/service-status/ServiceStatusClient.tsx` (was already honest, now just reflects real data automatically). Full detail: `LIVE_TODO.md`.
 
 ### v0.121.0 — RSS feed roster expanded 25→28, #238: RBI/BoJ/EIA Today-in-Energy added, IMF/S&P Global/EIA Week-in-Petroleum rejected (2026-09-28)
 

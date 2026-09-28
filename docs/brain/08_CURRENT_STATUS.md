@@ -311,7 +311,7 @@ outcomes — now skipped and logged instead. Frontend `/accuracy` page shipped
 
 `apps/web` (+ `RSS_FEED_COUNT` export on the RSS collector). Full record: `14_CHANGELOG.md` v0.43.0, `LIVE_TODO.md`.
 
-- **#126** — `Fresh Xm` on feed/map signal cards from `created_at`. Coverage line on the Intelligence Feed queries distinct last-24h outlets and states the configured 13 RSS feeds + GNews + GDELT. (ACLED dropped from this string 2026-09-23 — it's confirmed inactive in production, no credentials configured; see `LIVE_TODO.md`.)
+- **#126** — `Fresh Xm` on feed/map signal cards from `created_at`. Coverage line on the Intelligence Feed queries distinct last-24h outlets and states the configured RSS feed count + GNews + GDELT + ACLED. (ACLED was dropped from this string 2026-09-23 while inactive; restored 2026-09-28 now that credentials are set and confirmed live — see `LIVE_TODO.md`.)
 - **#127 calendar half** — importance / country / category / timezone filters on `/calendar`. Map layers still gated.
 
 ## Signal quick-view slide-over (2026-09-11)
@@ -738,7 +738,7 @@ Until 2026-09-12, `service_health_events` logged ingestion sources (`gdelt` / `g
 | ⚠️ UPDATED 2026-08-19 (later) | Resolved | Credits funded, Haiku confirmed live via real QA. Sonnet briefings were still broken (`temperature` param rejected by `claude-sonnet-5`) — fixed, verified live, not yet committed. See Claude AI Classifier row above and `14_CHANGELOG.md` v0.28.0. |
 | Sonnet briefings failing on every severity≥7 signal (`temperature` param) | Fixed (2026-08-19, uncommitted) | `claude-sonnet-5` rejects `temperature` — removed from the one call site in `claude.service.ts`; real non-templated briefing confirmed live |
 | Security Advisor — no CRITICAL findings, one real actionable WARN | Checked 2026-08-19 | Leaked-password protection disabled (Auth) — cheap fix, not yet done. OTP-expiry WARN is the expected result of the deliberate 24h extension (Bug E, already documented). Three "RLS enabled, no policy" INFOs on `backtest_cache`/`raw_events`/`sanctions_entities` are correct-by-design (service-role-only tables) |
-| ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
+| ACLED collector requires credentials   | Resolved (2026-09-28) | `ACLED_EMAIL`/`ACLED_PASSWORD` set on Railway `workers` service, confirmed live: `service_health_events` shows `service=acled status=ok` at 14:01 UTC 2026-09-28 (real connection succeeds; that cycle fetched 0 events, which is normal — ACLED's own update cadence is not real-time). |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Resolved (2026-09-26) | Vercel never had this exact name — it has `SUPABASE_SECRET_KEY` (Supabase's newer naming). Code now falls back to that name (`lib/supabase-server.ts` + 3 other call sites); no Vercel env change needed. See `LIVE_TODO.md`. |
 | `RESEND_API_KEY` on Railway `workers` / digest prod cron path | Resolved + end-to-end confirmed (2026-09-07) | Key is on the service; a one-off prod verification ran the deployed worker's own digest cron (`DIGEST_CRON` briefly set to `15 3 * * *`, then reset to `0 6 * * *`), delivering a real email via the Railway key — Resend id `ffc24290-8ad1-4338-ac15-9c24707f60a1`, status delivered, distinct from the earlier manual test send. |
 | Alert dispatch never triggered (any channel) | Fixed (2026-08-18, `97b7c4b`) | Was a wiring gap upstream of credentials, not a config problem — see v0.20.0 in `14_CHANGELOG.md` |

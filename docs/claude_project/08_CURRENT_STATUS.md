@@ -297,7 +297,7 @@ Pre-2026-09-12 the table tracked collectors/prices only. Prompt O added `recordS
 | GDELT HTTP 429 rate limiting           | Open      | Exponential backoff added 2026-08-22 (60s/120s+jitter, 3 attempts); still open since GDELT offers no way to eliminate 429s outright (keyless, no paid tier) — may still fail during sustained blocks |
 | GNews free tier quota                  | Open      | 1 query/run; mostly returns duplicates after initial ingest      |
 | Anthropic API credit exhausted         | High      | Heuristic fallback active                                        |
-| ACLED collector requires credentials   | Open      | Set `ACLED_EMAIL` + `ACLED_PASSWORD` in Railway                  |
+| ACLED collector requires credentials   | Resolved (2026-09-28) | `ACLED_EMAIL`/`ACLED_PASSWORD` set on Railway `workers` service, confirmed live via `service_health_events`. |
 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel  | Resolved (2026-09-26) | Vercel never had this exact name — it has `SUPABASE_SECRET_KEY` (Supabase's newer naming). Code now falls back to that name (`lib/supabase-server.ts` + 3 other call sites); no Vercel env change needed. See `LIVE_TODO.md`. |
 | Telegram alerts not working            | Open      | `TELEGRAM_BOT_TOKEN` not set in Railway                          |
 

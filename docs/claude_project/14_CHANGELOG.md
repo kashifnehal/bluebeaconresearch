@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 98).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 99).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 99 — ACLED collector activated; UI mentions restored (2026-09-28)
+
+Founder set `ACLED_EMAIL`/`ACLED_PASSWORD` on Railway (free account, $0 cost) and redeployed. No code change needed — the integration was already fully built, just missing credentials. Confirmed genuinely live (not just deployed): a real successful ACLED connection logged in `service_health_events` at 14:01 UTC. Restored the 3 ACLED mentions in web copy that were removed 2026-09-23 while it was inactive (homepage, dashboard coverage line, `/status` page) — now accurate again. Full detail: `docs/brain/14_CHANGELOG.md` v0.122.0.
 
 ## PHASE 98 — RSS feed roster expanded 25→28, #238: RBI/BoJ/EIA Today-in-Energy added (2026-09-28)
 
