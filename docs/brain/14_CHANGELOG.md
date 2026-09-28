@@ -8,7 +8,7 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.117.0 — Concurrent-session cap enforcement gated behind `DEVICE_LIMIT_ENABLED` (2026-09-28, commit pending)
+### v0.117.0 — Concurrent-session cap enforcement gated behind `DEVICE_LIMIT_ENABLED` (2026-09-28, `8f0d991`)
 
 Task instructions asked for this work in `apps/backend`, citing "claude/232 in the BBR Claude Project" as prior research to reference — same fabricated citation already flagged for this exact feature in the original `LIVE_TODO.md` entry (2026-09-27) and again for a different feature at ADR 030/D34. Repo-wide `grep`/`git log --all` again found no such doc/ticket, so it was dropped per the no-fabricated-citations rule (see `project_fabricated_citation_incident` in session memory). The premise itself didn't hold either: this feature (`apps/web/lib/session-tracking.ts` + `register-session/route.ts` + `auth/callback/route.ts`) has no `apps/backend` code at all — confirmed by grep before writing anything.
 
