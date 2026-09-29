@@ -534,6 +534,10 @@ Every Recent Signal Stream row now shows a small 24h price-move chip for its pri
 
 Featured hero card now picks the API's `justIn[0]` (freshest signal) instead of the old hardcoded `severity >= 8` hunt, falling back to `liveSignals[0]` when there's no `justIn` split. New small text line (`data-testid="window-expanded-line"`, same styling as the existing coverage line) reads "Showing signals from the last {3|7} days — live coverage is still expanding." only when the API widened past a 24h window; hidden otherwise. Full detail: `docs/brain/06_COMPONENTS.md` §3.1, `docs/brain/05_API.md`, `docs/brain/15_INGESTION_PIPELINE.md` §5.4.
 
+### Dashboard infinite scroll (`apps/web/app/(dashboard)/dashboard/page.tsx`, `hooks/useSignalFeed.ts`) (2026-09-29, v0.125.0)
+
+The Recent Signal Stream no longer stops after ~15-40 items. Removed the old 10-at-a-time client-side reveal-throttle; the full loaded list renders directly, and scrolling near the bottom auto-loads the next page via a new `IntersectionObserver`-based sentinel in `useSignalFeed`, with the existing "Load more" button kept as a manual fallback. End-of-list copy now honestly names the earliest signal's date once pagination genuinely exhausts the full set, instead of implying there's no more news. Full detail: `docs/brain/06_COMPONENTS.md` §3.1, `docs/brain/14_CHANGELOG.md` v0.125.0.
+
 ---
 
 ## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)

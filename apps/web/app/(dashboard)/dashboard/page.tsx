@@ -86,6 +86,7 @@ export default function DashboardPage() {
     liveSignals,
     justIn,
     resolvedWindow,
+    oldestEventDate,
     isLoading,
     isError,
     fallback,
@@ -96,6 +97,7 @@ export default function DashboardPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    sentinelRef,
   } = useSignalFeed({
     enabled: true,
     personalized,
@@ -119,10 +121,6 @@ export default function DashboardPage() {
   const latestPrices = pricesData?.prices ?? [];
 
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
-  // How many rows of the "Recent Signal Stream" are visible. Starts at 10 (the
-  // list's prior fixed size, so the first render is unchanged); "Load more" adds
-  // 10 and pulls the next API page once the current pages are exhausted.
-  const [streamCount, setStreamCount] = useState(10);
   const [quickViewSignal, setQuickViewSignal] = useState<Signal | null>(null);
   const [coverageLine, setCoverageLine] = useState<string | null>(null);
 
@@ -150,12 +148,10 @@ export default function DashboardPage() {
       commodity: preset.commodity,
       region: preset.region,
     }));
-    setStreamCount(10);
   };
 
   const handleFiltersChange = (next: FilterBarValue) => {
     setFilters(next);
-    setStreamCount(10);
   };
 
   // Compute top hotzones from liveSignals
@@ -203,20 +199,33 @@ export default function DashboardPage() {
   const featured = justIn.length > 0 ? justIn[0] : liveSignals[0];
   const secondaryA = liveSignals[1];
   const secondaryB = liveSignals[2];
-  const streamList = liveSignals.slice(0, streamCount);
+  // Real infinite scroll now (sentinelRef, below) — every loaded signal
+  // renders, rather than being held back behind a client-side reveal batch.
+  const streamList = liveSignals;
 
   const filtersActive =
     filters.commodity != null ||
     filters.region != null ||
     filters.minSeverity > DEFAULT_FILTERS.minSeverity ||
     filters.window != null;
-  const canLoadMoreStream = streamCount < liveSignals.length || hasNextPage;
+  const canLoadMoreStream = hasNextPage;
+  // Manual fallback for the "Load more" button — the sentinel div below
+  // triggers the same fetchNextPage automatically as the user scrolls near it.
   const handleLoadMoreStream = () => {
-    setStreamCount((c) => c + 10);
-    if (streamCount + 10 >= liveSignals.length && hasNextPage) {
-      void fetchNextPage();
-    }
+    void fetchNextPage();
   };
+  // Once pagination genuinely exhausts the full is_active+severity set
+  // (oldestEventDate only arrives then — see useSignalFeed), say so
+  // honestly instead of implying there's no more news. Only for the
+  // unfiltered default view: an explicit filter (window/region/commodity/
+  // severity) running out of matches is a real "no more results for this
+  // filter", not the same claim.
+  const streamEndLabel =
+    !filtersActive && oldestEventDate
+      ? `You've reached the earliest signal on record (${new Date(
+          oldestEventDate,
+        ).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })})`
+      : "End of signal stream";
 
   // First-time tour: only fires once real signal data (and a featured card
   // to anchor steps 2-4 to) has actually loaded, and only for users who
@@ -982,14 +991,21 @@ export default function DashboardPage() {
                 )}
               </div>
               {streamList.length > 0 && (
-                <LoadMoreButton
-                  hasMore={canLoadMoreStream}
-                  isLoading={isFetchingNextPage}
-                  onClick={handleLoadMoreStream}
-                  loadedCount={streamList.length}
-                  totalCount={total}
-                  endLabel="End of signal stream"
-                />
+                <>
+                  {/* Scroll-triggered loading: IntersectionObserver fires
+                      fetchNextPage once this comes near the viewport, ahead
+                      of the LoadMoreButton below (which stays as a manual
+                      fallback / the "you've reached the end" terminal state). */}
+                  {canLoadMoreStream && <div ref={sentinelRef} aria-hidden="true" />}
+                  <LoadMoreButton
+                    hasMore={canLoadMoreStream}
+                    isLoading={isFetchingNextPage}
+                    onClick={handleLoadMoreStream}
+                    loadedCount={streamList.length}
+                    totalCount={total}
+                    endLabel={streamEndLabel}
+                  />
+                </>
               )}
             </section>
           </>

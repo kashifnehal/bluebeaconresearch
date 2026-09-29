@@ -65,6 +65,62 @@ type SignalRow = {
   invalidation_condition: string | null;
 };
 
+// Opaque pagination cursor for the default (no explicit `window`) feed view,
+// beyond its first page (#259 follow-up). This is a real DB-level keyset on
+// (event_date, id) — NOT the relevance score itself: score decays with age
+// and isn't a stored column, so there's no way to push a "resume after this
+// score" query down to Postgres directly. Instead each page does a plain,
+// proven-correct keyset scan (event_date DESC, id DESC — same mechanism
+// `sort=newest` already uses via `.range()`), fetches a chunk, and re-ranks
+// just that chunk by relevance before emitting it. That chunk-local ranking
+// is the same tradeoff the existing 24h/72h/7d tiered fallback already makes
+// for page 1 (each tier is ranked within itself, not globally) — it isn't
+// perfectly globally score-monotonic across chunk boundaries, but it's
+// simple, always makes forward progress, and never loses or repeats a row.
+type FeedCursor = {
+  /** event_date of the last row physically scanned (keyset position). */
+  d: string;
+  /** that row's id — keyset tiebreaker for same-timestamp rows. */
+  id: string;
+  /** "now" snapshot from this scroll session's first page, reused on every
+   * later page so a signal's relevance score doesn't drift mid-scroll. */
+  t: string;
+  /** cumulative signals already shown this session, for hasMore/total bookkeeping. */
+  n: number;
+  /** ids already surfaced in the "Just In" zone (page 1 only) — excluded from
+   * every later page so a freshest-but-low-severity item can't reappear. */
+  j: string[];
+};
+
+function encodeFeedCursor(c: FeedCursor): string {
+  return Buffer.from(JSON.stringify(c)).toString("base64url");
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// `d`/`id`/`j` get interpolated straight into a PostgREST `.or()` filter
+// string below (keyset pagination has no parameterized-query builder for
+// this), and the cursor is client-supplied — so this validates each field's
+// shape (valid ISO date, valid UUIDs) rather than trusting it, to rule out
+// filter-string injection via a hand-crafted cursor.
+function decodeFeedCursor(raw: string): FeedCursor | null {
+  try {
+    const p = JSON.parse(Buffer.from(raw, "base64url").toString("utf8"));
+    if (
+      p && typeof p.d === "string" && Number.isFinite(new Date(p.d).getTime()) &&
+      typeof p.id === "string" && UUID_RE.test(p.id) &&
+      typeof p.t === "string" && Number.isFinite(new Date(p.t).getTime()) &&
+      typeof p.n === "number" && Number.isFinite(p.n) &&
+      Array.isArray(p.j) && p.j.every((x: unknown) => typeof x === "string" && UUID_RE.test(x))
+    ) {
+      return p as FeedCursor;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const ip =
@@ -170,6 +226,22 @@ export async function GET(req: NextRequest) {
     const sort = url.searchParams.get("sort") ?? "severity";
     const window =
       url.searchParams.get("window") ?? url.searchParams.get("range");
+    // Every sort mode except the two explicit alternatives (`newest` = pure
+    // recency, `confidence` = classifier confidence) goes through the
+    // recency+severity blend — see the fuller explanation further down by
+    // applySort/runQuery. Hoisted up here (rather than declared where it's
+    // used below) because the cursor-pagination decision right after it
+    // needs the value first.
+    const isRelevanceSort = sort !== "newest" && sort !== "confidence";
+    // Beyond page 1, the default (no explicit `window`) view has no time
+    // cutoff — the 24h/72h/7d tiered fallback below used to be a hard
+    // exclusion for the whole feed, not just its first page (#259 follow-up).
+    // Ordering there is a decaying score, not a stored column, so `.range()`
+    // offset paging can't resume it correctly; this instead resumes from an
+    // opaque keyset cursor built from the previous page. See FeedCursor above.
+    const useCursorPagination = !window && isRelevanceSort;
+    const cursorParam = useCursorPagination ? url.searchParams.get("page") : null;
+    const decodedCursor = cursorParam ? decodeFeedCursor(cursorParam) : null;
     // Optional row-count override (e.g. the map's filter fetch and tension-index
     // sparkline need more than the default 20). Capped at 500 (map "All" / "This
     // month"); callers that omit `limit` still get the original 20.
@@ -307,7 +379,8 @@ export async function GET(req: NextRequest) {
     // across them. 2026-09-28: every mode except the two explicit alternatives
     // (`newest` = pure recency, `confidence` = classifier confidence) now goes
     // through this same blended path, so the default feed gets it too.
-    const isRelevanceSort = sort !== "newest" && sort !== "confidence";
+    // (isRelevanceSort itself is hoisted above, near `sort`/`window` — the
+    // cursor-pagination decision needs it before this point.)
     // 500 (matching this route's own existing rowLimit cap) comfortably covers
     // a live count of signals clearing the new severity>=4 floor even at the
     // widest fixed window this route serves (30d: 399 as of 2026-09-28,
@@ -372,6 +445,38 @@ export async function GET(req: NextRequest) {
         Date.now() - Number(genericDaysMatch[1]) * 24 * 60 * 60 * 1000,
       ).toISOString();
       ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", cutoff)));
+    } else if (decodedCursor) {
+      // Cursor continuation beyond page 1 of the default view — the full
+      // is_active + severity(+other filters) set, no time cutoff. `is_active`
+      // is a hard filter here specifically (not on page 1 — see the tiered
+      // fallback below, left exactly as it was); `severity` continues to come
+      // from the `severity` query param via buildFilteredQuery(), same as
+      // every other branch — the dashboard always sends it (DEFAULT_FILTERS
+      // .minSeverity=4 in lib/signal-filters.ts), which is the feed's single
+      // severity floor. Don't hardcode a second one here.
+      //
+      // Plain keyset scan (event_date DESC, id DESC) resuming after the
+      // cursor's position — the same proven mechanism `sort=newest` already
+      // uses via `.range()`. Fetches a chunk bigger than one page so there's
+      // real material to relevance-rank locally (see below), capped well
+      // under Supabase/PostgREST's hard 1000-row-per-request ceiling.
+      const CHUNK_SIZE = Math.min(500, Math.max(rowLimit * 3, 60));
+      // Re-serialized through Date/toISOString (not the raw decoded string)
+      // before going into the filter string below — decodeFeedCursor already
+      // checks `d` parses as a date and `id` is UUID-shaped, but this keeps
+      // the interpolated value itself in a known-safe, fixed format.
+      const cursorEventDate = new Date(decodedCursor.d).toISOString();
+      const { data: chunkData, error: chunkError } = await buildFilteredQuery()
+        .eq("is_active", true)
+        .or(
+          `event_date.lt.${cursorEventDate},and(event_date.eq.${cursorEventDate},id.lt.${decodedCursor.id})`,
+        )
+        .order("event_date", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(CHUNK_SIZE);
+      data = chunkData as SignalRow[] | null;
+      error = chunkError;
+      count = null; // not the true total — fullTotal below covers that for this branch
     } else {
       // Default ("latest") view: tiered feed-fill fallback. A hard 24h cutoff
       // used to be applied unconditionally, which made a real thin-inventory
@@ -522,11 +627,17 @@ export async function GET(req: NextRequest) {
 
     const deduped = dedupeSignalsByTitle(signals);
 
+    // "Now" for score purposes: for a cursor continuation, reuse the exact
+    // snapshot the session's first page captured, not a fresh Date.now() —
+    // otherwise every item's score would shift between pages (it decays with
+    // age) and the feed would visibly reshuffle under the user mid-scroll.
+    const requestNow = decodedCursor ? new Date(decodedCursor.t) : new Date();
+
     // Re-rank the candidate set by recency+severity and take this page's slice
     // out of that ranked order — the DB-level `.order()`/`.limit()` above only
     // fetched a reasonable candidate window, it did not do the real ranking.
     const rankedSignals = isRelevanceSort
-      ? sortByRelevance(deduped, (s) => s.severity, (s) => s.eventDate)
+      ? sortByRelevance(deduped, (s) => s.severity, (s) => s.eventDate, requestNow, (s) => s.id)
       : deduped;
 
     // "Just In" — a pure event_date DESC slice of the same resolved-window
@@ -552,28 +663,91 @@ export async function GET(req: NextRequest) {
       rankedSignalsMinusJustIn = rankedSignals.filter((s) => !justInIds.has(s.id));
     }
 
-    const pagedSignals = isRelevanceSort
-      ? rankedSignalsMinusJustIn.slice(rangeFrom, rangeFrom + rowLimit)
-      : rankedSignalsMinusJustIn;
+    let pagedSignals: Signal[];
+    if (decodedCursor) {
+      // The keyset fetch above already excludes everything at/after the
+      // cursor's (event_date, id) position, so nothing here needs a
+      // cursor-boundary re-check — emit the whole locally-ranked chunk
+      // rather than slicing to rowLimit. Slicing would silently drop the
+      // rest of this chunk forever: the next page's keyset position (below)
+      // advances past everything just *fetched*, not just what was shown,
+      // so any unshown remainder wouldn't be revisited. justIn ids are
+      // excluded too: a freshest-but-low-severity "Just In" pick can
+      // legitimately reappear in a later date-ordered chunk otherwise.
+      const justInExclude = new Set(decodedCursor.j);
+      pagedSignals = rankedSignalsMinusJustIn.filter((s) => !justInExclude.has(s.id));
+    } else {
+      pagedSignals = isRelevanceSort
+        ? rankedSignalsMinusJustIn.slice(rangeFrom, rangeFrom + rowLimit)
+        : rankedSignalsMinusJustIn;
+    }
 
-    // `hasMore` / `total` are computed from the raw DB rows (pre-title-dedupe) and
-    // the exact row count, so paging never stalls just because one page happened
-    // to collapse several same-headline signals. Cross-page headline dupes are
-    // still possible (dedupe is per-page) but the client keys the merged feed by
-    // signal id, so they don't render twice.
-    // NOTE: for isRelevanceSort, `rows.length` is the fetched candidate-window
-    // size, not the page size, and the query above re-requests
-    // `Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1)` fresh on every call —
-    // so this stays *exactly* correct (rows.length reaches the real `total`
-    // once the dynamic limit covers it, and `hasMore` flips false at that
-    // point), just at the cost of an ever-larger re-fetch on each successive
-    // page once a candidate set exceeds RELEVANCE_CANDIDATE_LIMIT. Acceptable
-    // for how deep either caller actually pages today (command palette: page 1
-    // only; the main Intelligence Feed's infinite scroll: real-world scroll
-    // depth against a 500+ candidate window is rare) — worth revisiting with
-    // real `.range()`-based paging only if that assumption stops holding.
-    const total = count ?? rangeFrom + rows.length;
-    const hasMore = rangeFrom + rows.length < total;
+    let total: number;
+    let hasMore: boolean;
+    let nextCursorValue: string | null;
+    let oldestEventDate: string | null = null;
+
+    if (useCursorPagination) {
+      // Full is_active + severity(+other filters) count, unbounded by the
+      // tiered window or this request's own floorDate bound — this is the
+      // honest "how many signals are really out there" number for the Load
+      // More count and the earliest-signal terminal copy, and it's the same
+      // set page 2+ actually draws from.
+      const { count: fullTotalRaw } = await buildFilteredQuery()
+        .eq("is_active", true)
+        .limit(1);
+      const fullTotal = fullTotalRaw ?? 0;
+      const shownBefore = decodedCursor?.n ?? 0;
+      const shownNow = shownBefore + justIn.length + pagedSignals.length;
+      total = fullTotal;
+      // pagedSignals.length > 0 guard: floorDate is a proven-safe bound so an
+      // empty page shouldn't happen while shownNow < fullTotal, but this
+      // stops an infinite empty-page loop rather than trusting that blindly.
+      hasMore = shownNow < fullTotal && pagedSignals.length > 0;
+      if (hasMore) {
+        // Keyset resume point: the oldest (event_date, id) among everything
+        // actually shown this page (justIn + pagedSignals), not just the
+        // last item in ranked order — page 1 emits in *score* order, so its
+        // lowest-ranked item isn't necessarily its chronologically oldest
+        // one. Using the true minimum here guarantees the next page's plain
+        // `event_date < d OR (event_date = d AND id < id)` scan can never
+        // re-include anything already shown, at the cost of not
+        // re-surfacing the handful of page-1-window candidates that ranked
+        // just below its own cutoff (bounded to page 1's tiered window,
+        // ~24h-7d of inventory, not the whole feed).
+        const shownThisPage = [...justIn, ...pagedSignals];
+        const oldest = shownThisPage.reduce((min, s) => {
+          const st = new Date(s.eventDate ?? 0).getTime();
+          const mt = new Date(min.eventDate ?? 0).getTime();
+          if (st !== mt) return st < mt ? s : min;
+          return s.id < min.id ? s : min;
+        });
+        nextCursorValue = encodeFeedCursor({
+          d: oldest.eventDate ?? "",
+          id: oldest.id,
+          t: requestNow.toISOString(),
+          n: shownNow,
+          j: decodedCursor?.j ?? justIn.map((s) => s.id),
+        });
+      } else {
+        nextCursorValue = null;
+        const { data: oldestRows } = await buildFilteredQuery()
+          .eq("is_active", true)
+          .order("event_date", { ascending: true })
+          .limit(1);
+        oldestEventDate =
+          (oldestRows?.[0] as { event_date?: string } | undefined)?.event_date ?? null;
+      }
+    } else {
+      // `hasMore` / `total` are computed from the raw DB rows (pre-title-dedupe)
+      // and the exact row count, so paging never stalls just because one page
+      // happened to collapse several same-headline signals. Cross-page
+      // headline dupes are still possible (dedupe is per-page) but the client
+      // keys the merged feed by signal id, so they don't render twice.
+      total = count ?? rangeFrom + rows.length;
+      hasMore = rangeFrom + rows.length < total;
+      nextCursorValue = hasMore ? String(page + 1) : null;
+    }
 
     const payload: {
       signals: Signal[];
@@ -582,9 +756,10 @@ export async function GET(req: NextRequest) {
       personalized: boolean;
       resolvedWindow?: "24h" | "72h" | "7d";
       justIn?: Signal[];
+      oldestEventDate?: string | null;
     } = {
       signals: pagedSignals,
-      nextCursor: hasMore ? String(page + 1) : null,
+      nextCursor: nextCursorValue,
       total,
       // Whether the "My Feed" narrowing was actually applied (false when the
       // caller opted in but has no saved preferences yet).
@@ -596,6 +771,12 @@ export async function GET(req: NextRequest) {
     if (resolvedWindow) {
       payload.resolvedWindow = resolvedWindow;
       payload.justIn = justIn;
+    }
+    // Only present once pagination has genuinely exhausted the full
+    // is_active + severity(+filters) set — lets the UI say "you've reached
+    // the earliest signal on record" instead of implying there's no more news.
+    if (useCursorPagination && !hasMore) {
+      payload.oldestEventDate = oldestEventDate;
     }
 
     // Update in-memory cache of last successful payload for this query.

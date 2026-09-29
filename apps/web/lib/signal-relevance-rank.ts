@@ -32,15 +32,43 @@ export function relevanceRankScore(
   return severity / Math.pow(hoursSince + 2, 1.8);
 }
 
-/** Stable descending sort by relevanceRankScore; does not mutate `items`. */
+/**
+ * Stable descending sort by relevanceRankScore; does not mutate `items`.
+ *
+ * `getId`, when provided, breaks an exact score tie by (eventDate DESC, id
+ * ASC) instead of original array index — this is what lets a cursor-based
+ * paginator (apps/web/app/api/signals/route.ts's default-view pagination)
+ * reconstruct the *same* total order on a later request from just
+ * (score, eventDate, id), since "whatever index it happened to have in this
+ * particular fetch" isn't something a stateless cursor can encode. Callers
+ * that don't paginate (e.g. the command palette's single-page search) can
+ * omit it and keep the original index-stable behavior.
+ */
 export function sortByRelevance<T>(
   items: T[],
   getSeverity: (item: T) => number,
   getTimestamp: (item: T) => string | null | undefined,
   now: Date = new Date(),
+  getId?: (item: T) => string,
 ): T[] {
   return items
-    .map((item, index) => ({ item, index, score: relevanceRankScore(getSeverity(item), getTimestamp(item), now) }))
-    .sort((a, b) => (b.score !== a.score ? b.score - a.score : a.index - b.index))
+    .map((item, index) => ({
+      item,
+      index,
+      score: relevanceRankScore(getSeverity(item), getTimestamp(item), now),
+      ts: getTimestamp(item),
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (getId) {
+        const at = a.ts ? new Date(a.ts).getTime() : 0;
+        const bt = b.ts ? new Date(b.ts).getTime() : 0;
+        if (bt !== at) return bt - at;
+        const aid = getId(a.item);
+        const bid = getId(b.item);
+        return aid < bid ? -1 : aid > bid ? 1 : 0;
+      }
+      return a.index - b.index;
+    })
     .map((r) => r.item);
 }

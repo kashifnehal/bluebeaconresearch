@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
 import {
@@ -69,6 +69,9 @@ export function useSignalFeed({
         // feed-fill fallback in apps/web/app/api/signals/route.ts.
         resolvedWindow?: "24h" | "72h" | "7d";
         justIn?: Signal[];
+        // Only present once the default view's cursor pagination has
+        // genuinely exhausted the full matching set.
+        oldestEventDate?: string | null;
       };
     },
     // `nextCursor` is an opaque page token from /api/signals ("2", "3", …) or
@@ -120,11 +123,50 @@ export function useSignalFeed({
   // means the tiered fallback actually widened the window — see
   // dashboard/page.tsx's honest-banner usage.
   const resolvedWindow = pages[0]?.resolvedWindow ?? null;
+  // Only set on the page where pagination genuinely ran out (server only
+  // computes it once `hasMore` goes false) — the honest "earliest signal on
+  // record" terminal copy needs this date, not a bare "no more news" label.
+  const oldestEventDate = pages[pages.length - 1]?.oldestEventDate ?? null;
+
+  // Scroll-triggered loading: attach `sentinelRef` to an element near the
+  // bottom of the rendered list. An IntersectionObserver (not a click
+  // handler) fetches the next page once that element nears the viewport,
+  // and the fetched page appends to `liveSignals` via the `pages` memo above.
+  const hasNextPageRef = useRef(false);
+  hasNextPageRef.current = !!hasNextPage;
+  const isFetchingNextPageRef = useRef(false);
+  isFetchingNextPageRef.current = isFetchingNextPage;
+  const fetchNextPageRef = useRef(fetchNextPage);
+  fetchNextPageRef.current = fetchNextPage;
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const sentinelRef = useCallback((node: Element | null) => {
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+    if (!node) return;
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0]?.isIntersecting &&
+          hasNextPageRef.current &&
+          !isFetchingNextPageRef.current
+        ) {
+          void fetchNextPageRef.current();
+        }
+      },
+      // Fires the fetch before the sentinel is actually on-screen, so the
+      // next page is usually loaded by the time the user scrolls to it.
+      { rootMargin: "600px" },
+    );
+    observerRef.current.observe(node);
+  }, []);
+  useEffect(() => () => observerRef.current?.disconnect(), []);
 
   return {
     liveSignals,
     justIn,
     resolvedWindow,
+    oldestEventDate,
     isLoading,
     isError,
     fallback,
@@ -135,5 +177,6 @@ export function useSignalFeed({
     fetchNextPage,
     hasNextPage: !!hasNextPage,
     isFetchingNextPage,
+    sentinelRef,
   };
 }
