@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-29 (v0.124.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-29 (v0.126.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.126.0 — Signal archive/search page (2026-09-29)
+
+`apps/web` + a catalog-only `apps/backend` change (`search-catalog.ts` / its test). Dedicated `/archive` lookup, separate from the Intelligence Feed. Existing dashboard pages live under `app/(dashboard)/`, so the route is `app/(dashboard)/archive/page.tsx` → `/archive` (not a top-level `app/archive/`). `GET /api/signals?mode=archive` is an opt-in branch: no `severity` param means no floor; no `window` means no recency cutoff; optional `from`/`to` (`YYYY-MM-DD`); desk chips reuse `#125` `DESK_PRESETS`; `search` matches title/summary only. Sorted `event_date DESC`. Pagination is a keyset cursor on `(event_date, id)` (`lib/signal-archive.ts`), not offset `.range()`. Sidebar ARCHIVE item; Cmd+K + Fastify assist catalog kept at 9 pages. `proxy.ts` protects `/archive`. **Not C17** (40-year GDELT archive) — live `signals` table only. Feed callers (`sort`, `window`, default severity) are unchanged.
 
 ### v0.125.0 — Infinite scroll for the default Intelligence Feed view (2026-09-29)
 

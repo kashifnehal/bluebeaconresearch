@@ -17,7 +17,7 @@ const TABS: TabItem[] = [
 // Material Symbols icon names as Sidebar's NAV so mobile and desktop share
 // iconography. MORE opens the existing off-canvas drawer (useUIStore's
 // mobileSidebarOpen) instead of duplicating a second nav surface — Calendar,
-// Backtesting, Settings, Help and Logout all already live there.
+// Archive, Backtesting, Settings, Help and Logout all already live there.
 export function MobileTabBar() {
   const pathname = usePathname();
   const { unreadCount, setMobileSidebarOpen } = useUIStore();

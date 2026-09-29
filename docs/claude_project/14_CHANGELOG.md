@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-29 (PHASE 101).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-29 (PHASE 103).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 103 — Signal archive/search page (2026-09-29)
+
+`apps/web` (+ search-catalog entry in `apps/backend`). New `/archive` page under the `(dashboard)` route group so a user can jump to older signals by date, Oil/Grain/Metals desk, region, or keyword instead of scrolling the live feed. Same `signals` table, no severity floor, no recency cutoff, keyset-paginated newest-first. Sidebar + Cmd+K. Not backlog C17 (40-year historical archive). Full detail: `docs/brain/14_CHANGELOG.md` v0.126.0.
 
 ## PHASE 102 — Infinite scroll for the default Intelligence Feed view (2026-09-29)
 

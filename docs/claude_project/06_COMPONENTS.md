@@ -538,6 +538,10 @@ Featured hero card now picks the API's `justIn[0]` (freshest signal) instead of 
 
 The Recent Signal Stream no longer stops after ~15-40 items. Removed the old 10-at-a-time client-side reveal-throttle; the full loaded list renders directly, and scrolling near the bottom auto-loads the next page via a new `IntersectionObserver`-based sentinel in `useSignalFeed`, with the existing "Load more" button kept as a manual fallback. End-of-list copy now honestly names the earliest signal's date once pagination genuinely exhausts the full set, instead of implying there's no more news. Full detail: `docs/brain/06_COMPONENTS.md` §3.1, `docs/brain/14_CHANGELOG.md` v0.125.0.
 
+### ArchivePage (`apps/web/app/(dashboard)/archive/page.tsx` + `ArchiveClient.tsx`) (2026-09-29, v0.126.0)
+
+Lookup tool, not a priority feed. Filters: date range, `#125` Oil/Grain/Metals desk chips (`DESK_PRESETS`), commodity dropdown, region, keyword (title/summary, 3+ chars). Results from `GET /api/signals?mode=archive` — no severity floor, no recency cutoff, `event_date DESC`, keyset pagination via `useArchiveFeed` (same scroll-sentinel pattern as the feed). `SignalCard` compact + `SignalQuickView`. Sidebar ARCHIVE + Cmd+K. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/14_CHANGELOG.md` v0.126.0.
+
 ---
 
 ## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)

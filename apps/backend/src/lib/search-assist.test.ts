@@ -41,7 +41,7 @@ runTest("catalog includes #155 FAQ copy plus the Help page", () => {
     .map((e) => e.url);
   assert.deepEqual(
     urls.sort(),
-    ["/alerts", "/backtesting", "/calendar", "/dashboard", "/help", "/map", "/settings", "/watchlist"],
+    ["/alerts", "/archive", "/backtesting", "/calendar", "/dashboard", "/help", "/map", "/settings", "/watchlist"],
   );
   assert.equal(
     SEARCH_PAGE_ENTRIES.every((e) => e.content.length > 20 && e.sourceKind === "page"),

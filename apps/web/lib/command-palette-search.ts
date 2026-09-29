@@ -20,7 +20,7 @@ export type StaticPage = {
 /**
  * Keep this list's `href`s in sync with apps/backend/src/lib/search-catalog.ts's
  * SEARCH_PAGE_ENTRIES (the AI-assist RAG catalog) — command-palette-search.test.ts
- * asserts the two page sets match. Both currently cover the same 8 pages.
+ * asserts the two page sets match. Both currently cover the same 9 pages.
  */
 export const STATIC_PAGES: StaticPage[] = [
   {
@@ -127,6 +127,21 @@ export const STATIC_PAGES: StaticPage[] = [
       "events calendar",
       "upcoming events",
       "schedule",
+    ],
+  },
+  {
+    label: "Archive",
+    href: "/archive",
+    icon: "archive",
+    keywords: [
+      "archive",
+      "search",
+      "older signals",
+      "historical",
+      "lookup",
+      "past signals",
+      "find signal",
+      "keyword search",
     ],
   },
 ];

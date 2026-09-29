@@ -26,8 +26,8 @@ const RULES = [
   { id: "r1", name: "Severe Middle East oil", regions: ["Middle East"], commodities: ["USOIL"] },
 ];
 
-runTest("STATIC_PAGES has 8 entries, each with real keywords, and matches the AI-assist page catalog's URLs", () => {
-  assert.equal(STATIC_PAGES.length, 8);
+runTest("STATIC_PAGES has 9 entries, each with real keywords, and matches the AI-assist page catalog's URLs", () => {
+  assert.equal(STATIC_PAGES.length, 9);
   assert.equal(
     STATIC_PAGES.every((p) => Array.isArray(p.keywords) && p.keywords.length > 0),
     true,
@@ -36,7 +36,7 @@ runTest("STATIC_PAGES has 8 entries, each with real keywords, and matches the AI
   // (see that file's own catalog test) — Change 3's cross-app consistency check.
   assert.deepEqual(
     STATIC_PAGES.map((p) => p.href).sort(),
-    ["/alerts", "/backtesting", "/calendar", "/dashboard", "/help", "/map", "/settings", "/watchlist"],
+    ["/alerts", "/archive", "/backtesting", "/calendar", "/dashboard", "/help", "/map", "/settings", "/watchlist"],
   );
 });
 
@@ -67,6 +67,11 @@ runTest("expanded keywords: oil price finds Watchlist; world map finds Map; smb 
   const world = matchStaticPages("world map").map((p) => p.label);
   assert.ok(world.includes("Map"), `expected Map in ${JSON.stringify(world)}`);
   assert.deepEqual(matchStaticPages("smb"), []);
+});
+
+runTest('fuzzy keyword match: "older signals" finds Archive', () => {
+  const labels = matchStaticPages("older signals").map((p) => p.label);
+  assert.ok(labels.includes("Archive"), `expected Archive in ${JSON.stringify(labels)}`);
 });
 
 runTest("does not fabricate a page match for unrelated noise input", () => {

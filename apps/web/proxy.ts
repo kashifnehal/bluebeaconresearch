@@ -37,6 +37,7 @@ const PROTECTED = [
   // always required an authenticated session — logged-out visitors could load
   // the page shell but every filter showed "0 total" with no indication why.
   "/map",
+  "/archive",
 ];
 
 // Incident-response hardening (2026-08-28): a degraded Supabase auth gateway made

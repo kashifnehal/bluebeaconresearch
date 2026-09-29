@@ -189,6 +189,17 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     ].join(" "),
     sourceKind: "page",
   },
+  {
+    contentKey: "page:/archive",
+    title: "Archive",
+    url: "/archive",
+    content: [
+      "Archive. Signal archive. historical. lookup. older signals. past signals. find signal. keyword search.",
+      "Search the full signals table by date range, Oil/Grain/Metals desk, region, or keyword.",
+      "No severity floor and no recency cutoff — a lookup tool, not the live Intelligence Feed.",
+    ].join(" "),
+    sourceKind: "page",
+  },
 ];
 
 export function getSearchCatalog(): SearchCatalogEntry[] {

@@ -5,6 +5,11 @@ import { dedupeSignalsByTitle } from "@/lib/dedupe-signals";
 import { REGIONS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { expandRegionVariants } from "@/lib/signal-filters";
+import {
+  decodeArchiveCursor,
+  encodeArchiveCursor,
+  parseArchiveDayBound,
+} from "@/lib/signal-archive";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import { parseEventCategory, parseNovelty, parseSourceConfirmation } from "@/lib/market-impact-assessment";
 import { sortByRelevance } from "@/lib/signal-relevance-rank";
@@ -219,6 +224,16 @@ export async function GET(req: NextRequest) {
     const severity = url.searchParams.get("severity");
     const region = url.searchParams.get("region");
     const commodity = url.searchParams.get("commodity");
+    // Dedicated archive/search lookup (`/archive`). Opt-in so the Intelligence
+    // Feed's severity floor, recency window, and relevance ranking stay
+    // untouched. Sorted event_date DESC; keyset-paginated; no default cutoff.
+    const isArchive = url.searchParams.get("mode") === "archive";
+    const fromIso = isArchive
+      ? parseArchiveDayBound(url.searchParams.get("from"), false)
+      : null;
+    const toIso = isArchive
+      ? parseArchiveDayBound(url.searchParams.get("to"), true)
+      : null;
     // Forex-pair equivalent of `commodity` (#87). Deliberately a separate param:
     // `commodity` means commodity_impacts everywhere else in the codebase and
     // must keep that meaning. `forexPair` filters currency_pair_impacts instead.
@@ -281,7 +296,7 @@ export async function GET(req: NextRequest) {
     // hasn't opted in.
     let personalizedApplied = false;
     const personalizedOrParts: string[] = [];
-    if (personalizedParam && user) {
+    if (personalizedParam && user && !isArchive) {
       const { data: prefs } = await supabaseAuth
         .from("user_preferences")
         .select("commodities, regions, forex_pairs")
@@ -343,12 +358,16 @@ export async function GET(req: NextRequest) {
         q = q.or(parts.join(","));
       }
       if (personalizedOrParts.length > 0) q = q.or(personalizedOrParts.join(","));
-      // Server-side free-text search if query provided (A1 — search bar Enter key)
+      // Server-side free-text search if query provided (A1 — search bar Enter key).
+      // Archive restricts to title/summary as specified for the lookup page;
+      // the feed also matches country/event_type.
       if (searchQ && searchQ.length >= 3) {
         const ilike = `%${searchQ.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
-        q = q.or(
-          `title.ilike.${ilike},summary.ilike.${ilike},country.ilike.${ilike},event_type.ilike.${ilike}`,
-        );
+        q = isArchive
+          ? q.or(`title.ilike.${ilike},summary.ilike.${ilike}`)
+          : q.or(
+              `title.ilike.${ilike},summary.ilike.${ilike},country.ilike.${ilike},event_type.ilike.${ilike}`,
+            );
       }
       return q;
     }
@@ -426,8 +445,31 @@ export async function GET(req: NextRequest) {
     // (24h/7d/30d/all/active/"<N>d"), which runs exactly one query, exactly
     // as before this change.
     let resolvedWindow: "24h" | "72h" | "7d" | undefined;
+    let archiveHasMore = false;
 
-    if (window === "active") {
+    if (isArchive) {
+      const decodedArchive = decodeArchiveCursor(url.searchParams.get("page"));
+      let q = buildFilteredQuery();
+      if (fromIso) q = q.gte("event_date", fromIso);
+      if (toIso) q = q.lte("event_date", toIso);
+      if (decodedArchive) {
+        const cursorEventDate = new Date(decodedArchive.d).toISOString();
+        q = q.or(
+          `event_date.lt.${cursorEventDate},and(event_date.eq.${cursorEventDate},id.lt.${decodedArchive.id})`,
+        );
+      }
+      const res = await q
+        .order("event_date", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(rowLimit + 1);
+      data = res.data as SignalRow[] | null;
+      error = res.error;
+      count = null;
+      if ((data?.length ?? 0) > rowLimit) {
+        archiveHasMore = true;
+        data = (data as SignalRow[]).slice(0, rowLimit);
+      }
+    } else if (window === "active") {
       ({ data, error, count } = await runQuery(buildFilteredQuery().eq("is_active", true)));
     } else if (window === "7d") {
       ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", sevenDaysAgo)));
@@ -636,7 +678,7 @@ export async function GET(req: NextRequest) {
     // Re-rank the candidate set by recency+severity and take this page's slice
     // out of that ranked order — the DB-level `.order()`/`.limit()` above only
     // fetched a reasonable candidate window, it did not do the real ranking.
-    const rankedSignals = isRelevanceSort
+    const rankedSignals = isRelevanceSort && !isArchive
       ? sortByRelevance(deduped, (s) => s.severity, (s) => s.eventDate, requestNow, (s) => s.id)
       : deduped;
 
@@ -677,7 +719,7 @@ export async function GET(req: NextRequest) {
       const justInExclude = new Set(decodedCursor.j);
       pagedSignals = rankedSignalsMinusJustIn.filter((s) => !justInExclude.has(s.id));
     } else {
-      pagedSignals = isRelevanceSort
+      pagedSignals = isRelevanceSort && !isArchive
         ? rankedSignalsMinusJustIn.slice(rangeFrom, rangeFrom + rowLimit)
         : rankedSignalsMinusJustIn;
     }
@@ -687,7 +729,22 @@ export async function GET(req: NextRequest) {
     let nextCursorValue: string | null;
     let oldestEventDate: string | null = null;
 
-    if (useCursorPagination) {
+    if (isArchive) {
+      let archiveCountQ = buildFilteredQuery();
+      if (fromIso) archiveCountQ = archiveCountQ.gte("event_date", fromIso);
+      if (toIso) archiveCountQ = archiveCountQ.lte("event_date", toIso);
+      const { count: archiveTotalRaw } = await archiveCountQ.limit(1);
+      total = archiveTotalRaw ?? pagedSignals.length;
+      hasMore = archiveHasMore && pagedSignals.length > 0;
+      const last = rows[rows.length - 1];
+      nextCursorValue =
+        hasMore && last
+          ? encodeArchiveCursor({
+              d: last.event_date ?? last.created_at,
+              id: last.id,
+            })
+          : null;
+    } else if (useCursorPagination) {
       // Full is_active + severity(+other filters) count, unbounded by the
       // tiered window or this request's own floorDate bound — this is the
       // honest "how many signals are really out there" number for the Load

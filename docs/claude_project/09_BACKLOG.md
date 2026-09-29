@@ -11,7 +11,7 @@
 
 > ⚠️ UPDATED 2026-09-23 — **#186 full responsive rework (mobile + tablet)** added. Phases 1+2 shipped (PHASE 51); Phases 0 and 3–6 remain open. Phase 0 is blocked on Claude Design authorization (`/design-login`). Live per-phase status: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-09-24 — **#186 Phases 7 and 8 both closed.** Only Phase 6 (768px tablet pass) and the 3 recommended-not-approved Stitch builds remain open. See the table below and `docs/brain/LIVE_TODO.md` for full per-bug diagnosis/fix/verification.
+> ⚠️ UPDATED 2026-09-29 — current-table signal archive/search page shipped at `/archive` (v0.126.0 / PHASE 103). Looks up the live `signals` table (no severity floor, no recency cutoff). **C17 (40-year GDELT historical archive) stays open** — this is not that work.
 
 ---
 
@@ -109,6 +109,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | ~~#207~~ / ~~#228~~ | ~~Chart attribution — "why did this happen"~~ | — | **Phase 1 done 2026-09-26 (DB-only), revised 2026-09-27.** **Phase 2 (GDELT external-news fallback + classifier) code shipped 2026-09-28, migration blocked** — `GET /api/signals/attribution` now falls back to a new Fastify `GET /v1/signals/attribution-backfill` only on a zero-result DB-first miss: searches GDELT's historical archive for the asset/window, classifies top candidates, writes anything relevant through the normal ingestion path (`is_backfilled` tag, excluded from new-signal alerts only — ADR 030/D34). Not yet live — depends on a migration Claude Code's production-deploy gate denied this session; founder action needed. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.109.0/PHASE 86 (Phase 1), v0.115.0/PHASE 92 (Phase 2). |
 | ~~#227~~ | ~~Market Impact Assessment — historical-pattern chart (Phase 2)~~ | — | **Done 2026-09-27** — small collapsed-by-default `recharts` bar chart (median % move at 1h/4h/24h/48h, only checkpoints clearing `MIN_SAMPLE_SIZE = 20`) added next to Phase 1's magnitude sentence on event detail's Affected-market chips; reuses the exact `signal_outcomes` rows Phase 1 already fetches, no new query. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.111.0/PHASE 88. |
 | ~~#227~~ | ~~Economic Calendar integration — EIA/USDA entries + magnitude line + options-IV note~~ | — | **Done 2026-09-27** — 8 real EIA/USDA entries added to `data/economic-calendar.json`; qualifying events show a per-asset magnitude sentence via new asset-level `GET /api/market-impact` (reuses #227's exact functions/query, no duplication); one-time sourced options-IV educational note added. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.113.0/PHASE 90. |
+| — | Signal archive/search page (`/archive`) | — | **Done 2026-09-29** — lookup of the live `signals` table by date/desk/region/keyword; no severity floor, no recency cutoff; keyset pagination. **Not C17.** See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.126.0/PHASE 103. |
 
 ### Still open
 
@@ -206,7 +207,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | C14 | Economic calendar → auto-generate signal when actual ≠ forecast | 2 days | Calendar intelligence integration |
 | C15 | Sentry error monitoring | 2 hr | Catch production crashes |
 | C16 | PostHog analytics | 2 hr | User behavior tracking |
-| C17 | 40-year intel archive (historical signal search) | 2 weeks | Pro tier feature |
+| C17 | 40-year intel archive (historical signal search) | 2 weeks | Pro tier feature. **Still open** — 2026-09-29 shipped a current-table `/archive` lookup (v0.126.0), not this 40-year GDELT product. |
 | C18 | Webhook test delivery button | 1 day | Developer UX |
 | C19 | Multi-seat team feature (Pro tier, 3 seats) | 3 days | Pro tier requirement |
 

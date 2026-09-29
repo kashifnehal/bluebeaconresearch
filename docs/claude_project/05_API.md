@@ -204,6 +204,8 @@ Returns 5 most recent signals. Used by landing page live preview and dashboard r
 > ⚠️ UPDATED 2026-09-29 (tiered feed-fill fallback + "Just In" zone) — `GET /api/signals` list, default (no `window` param) path only: the fixed 24h cutoff above now widens to 72h then 7d if the candidate count is below 12, and stops there. Response gains `resolvedWindow: "24h"|"72h"|"7d"` and `justIn: Signal[]` (top 5 of that candidate set by `event_date` DESC, ids excluded from `signals`), both fields present only on this path. Dashboard's featured-card pick (`app/(dashboard)/dashboard/page.tsx`) now uses `justIn[0]`, replacing the old hardcoded `severity >= 8` hunt. Full detail: `docs/brain/05_API.md`, `docs/brain/15_INGESTION_PIPELINE.md` §5.1/§5.4.
 >
 > ⚠️ UPDATED 2026-09-29 (infinite scroll, v0.125.0) — `GET /api/signals` list, default path, beyond page 1 only: the tiered window above no longer applies past page 1. Pagination continues from the full active+severity set with no time cutoff via a real database keyset cursor (opaque `page` token — clients must pass it back verbatim, never construct one). `total`/`hasMore` reflect the real count; new `oldestEventDate` field appears only once pagination genuinely exhausts the set. Explicit `window` values and `sort=newest`/`sort=confidence` are unaffected. Full detail: `docs/brain/05_API.md`, `docs/brain/14_CHANGELOG.md` v0.125.0.
+
+> ⚠️ UPDATED 2026-09-29 (archive/search, v0.126.0) — `GET /api/signals?mode=archive` opt-in branch for `/archive`: no default severity floor, no recency cutoff, optional `from`/`to`, title/summary `search`, keyset cursor on `(event_date, id)`. Feed callers unchanged. Full detail: `docs/brain/05_API.md`, `docs/brain/14_CHANGELOG.md` v0.126.0.
 > ⚠️ NEW 2026-09-27 (#227 calendar integration) — new `GET /api/market-impact?assets=A,B,C` gives the same magnitude/time-horizon shape at the **asset** level (no signal ID needed), for the Economic Calendar. Reuses the same `signal_outcomes` paging query (extracted to a shared `fetchSignalOutcomeRows()`) and the same pure functions as this route — not a duplicate query. Full detail: `docs/brain/05_API.md`.
 > ⚠️ UPDATED 2026-09-20 (search-quality fix) — the `search` param row above was removed: this Fastify route's actual zod query schema never had one (confirmed reading `apps/backend/src/routes/signals.ts`) — that row was aspirational, not real. Command-palette-style text search only exists on the Next.js BFF `/api/signals` (§6 below), which reads Supabase directly rather than proxying here (also corrected below — a stale claim this ship found). New `sort=relevance` blends recency+severity in application code (`rank_score = severity / (hours_since_created_at + 2)^1.8`, `apps/backend/src/lib/relevance-rank.ts`) over a candidate window (existing filters still apply), then slices the requested page — added for parity with the BFF route's new relevance sort, though nothing currently calls it on this Fastify surface.
 
@@ -716,7 +718,10 @@ apps/web/app/api/
 │                                order severity-first (`severity desc, created_at desc`)
 │                                — was recency-first (`event_date desc, severity desc,
 │                                created_at desc`) despite its own inline comment; see
-│                                `docs/brain/05_API.md` for the full note
+│                                `docs/brain/05_API.md` for the full note.
+│                                2026-09-29: `mode=archive` opt-in for `/archive`
+│                                (no severity/recency floor; `from`/`to`; keyset
+│                                on event_date). Feed callers unchanged.
 ├── signals/[id]/route.ts     → event-detail payload (reads Supabase directly). 2026-09-25:
 │                                `sources` now ordered oldest-first with `domain` (Timeline
 │                                tab); new `relatedEvents[]` (same country + overlapping
