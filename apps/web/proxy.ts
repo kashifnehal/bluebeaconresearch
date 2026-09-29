@@ -138,6 +138,7 @@ export async function proxy(request: NextRequest) {
   let user = null;
   let timedOut = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
+  const authCheckStartedAt = Date.now();
   const getUserPromise = supabase.auth.getUser();
   try {
     const result = await Promise.race([
@@ -151,6 +152,10 @@ export async function proxy(request: NextRequest) {
     ]);
     if ("timedOut" in result) {
       timedOut = true;
+      console.warn("Middleware auth check timed out:", {
+        pathname,
+        elapsedMs: Date.now() - authCheckStartedAt,
+      });
       // Let getUser() finish in the background; swallow a later rejection so
       // it does not become an unhandled promise.
       void getUserPromise.catch((err: unknown) => {

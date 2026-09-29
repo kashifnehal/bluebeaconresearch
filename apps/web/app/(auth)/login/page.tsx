@@ -54,6 +54,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dismissUrlError, setDismissUrlError] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
   const [resendState, setResendState] = useState<"idle" | "sending" | "sent">("idle");
 
@@ -84,6 +85,7 @@ function LoginForm() {
 
   async function onSubmit(values: FormValues) {
     setError(null);
+    setDismissUrlError(true);
     setUnconfirmedEmail(null);
     setResendState("idle");
     setIsLoading(true);
@@ -528,7 +530,7 @@ function LoginForm() {
           )}
 
           {/* FIX 2: Error from OAuth redirect URL param */}
-          {urlError && !error && (
+          {urlError && !error && !dismissUrlError && (
             <div
               style={{
                 padding: "12px",
