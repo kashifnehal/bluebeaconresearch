@@ -190,17 +190,6 @@ export async function GET(req: NextRequest) {
     const rangeFrom = (page - 1) * rowLimit;
     const rangeTo = rangeFrom + rowLimit - 1;
 
-    let query = supabase
-      .from("signals")
-      .select("*, event_date", { count: "exact" });
-    if (severity) query = query.gte("severity", Number(severity));
-    if (region) {
-      const variants = expandRegionVariants(region);
-      query =
-        variants.length > 1
-          ? query.in("region", variants)
-          : query.eq("region", region);
-    }
     // Commodity may be a single symbol or a comma-separated desk preset
     // (USOIL,UKOIL,NGAS). FX symbols also live on currency_pair_impacts, so
     // every asset is OR'd against both jsonb columns.
@@ -212,13 +201,6 @@ export async function GET(req: NextRequest) {
           .filter((s) => /^[A-Z0-9]+$/.test(s)),
       ),
     ];
-    if (assetSymbols.length > 0) {
-      const parts = assetSymbols.flatMap((sym) => [
-        `commodity_impacts.cs.[{"asset":"${sym}"}]`,
-        `currency_pair_impacts.cs.[{"asset":"${sym}"}]`,
-      ]);
-      query = query.or(parts.join(","));
-    }
 
     // Personalized "My Feed" (#81) — opt-in via ?personalized=true, default OFF.
     // Narrows the feed to signals overlapping the user's saved commodities/regions.
@@ -226,6 +208,7 @@ export async function GET(req: NextRequest) {
     // unchanged, so this can never silently hide signals from an existing user who
     // hasn't opted in.
     let personalizedApplied = false;
+    const personalizedOrParts: string[] = [];
     if (personalizedParam && user) {
       const { data: prefs } = await supabaseAuth
         .from("user_preferences")
@@ -242,17 +225,16 @@ export async function GET(req: NextRequest) {
         ? (prefs!.forex_pairs as string[])
         : [];
 
-      const orParts: string[] = [];
       for (const rid of prefRegions) {
-        orParts.push(`region.eq.${rid}`);
+        personalizedOrParts.push(`region.eq.${rid}`);
         const label = REGION_LABEL.get(rid);
-        if (label) orParts.push(`region.ilike.*${label}*`);
+        if (label) personalizedOrParts.push(`region.ilike.*${label}*`);
       }
       for (const sym of prefCommodities) {
         // `sym` originates from our own COMMODITIES constant on write; the guard
         // keeps the value free of characters that are reserved inside .or().
         if (/^[A-Z0-9]+$/.test(sym)) {
-          orParts.push(`commodity_impacts.cs.[{"asset":"${sym}"}]`);
+          personalizedOrParts.push(`commodity_impacts.cs.[{"asset":"${sym}"}]`);
         }
       }
       // Forex pairs (#87) — identical jsonb-containment check against
@@ -260,22 +242,43 @@ export async function GET(req: NextRequest) {
       // comes from our own FOREX_PAIRS constant on write; same char guard.
       for (const sym of prefForexPairs) {
         if (/^[A-Z0-9]+$/.test(sym)) {
-          orParts.push(`currency_pair_impacts.cs.[{"asset":"${sym}"}]`);
+          personalizedOrParts.push(`currency_pair_impacts.cs.[{"asset":"${sym}"}]`);
         }
       }
 
-      if (orParts.length > 0) {
-        query = query.or(orParts.join(","));
-        personalizedApplied = true;
-      }
+      if (personalizedOrParts.length > 0) personalizedApplied = true;
     }
 
-    // Server-side free-text search if query provided (A1 — search bar Enter key)
-    if (searchQ && searchQ.length >= 3) {
-      const ilike = `%${searchQ.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
-      query = query.or(
-        `title.ilike.${ilike},summary.ilike.${ilike},country.ilike.${ilike},event_type.ilike.${ilike}`,
-      );
+    // Builds a fresh, independent query with every non-window filter applied.
+    // Factored out (tiered feed-fill fallback, see the `else` window branch
+    // below) so the default view can re-run the identical filter set at
+    // successive event_date cutoffs without the accumulated-mutation bugs of
+    // reusing one chained builder across attempts.
+    function buildFilteredQuery() {
+      let q = supabase
+        .from("signals")
+        .select("*, event_date", { count: "exact" });
+      if (severity) q = q.gte("severity", Number(severity));
+      if (region) {
+        const variants = expandRegionVariants(region);
+        q = variants.length > 1 ? q.in("region", variants) : q.eq("region", region);
+      }
+      if (assetSymbols.length > 0) {
+        const parts = assetSymbols.flatMap((sym) => [
+          `commodity_impacts.cs.[{"asset":"${sym}"}]`,
+          `currency_pair_impacts.cs.[{"asset":"${sym}"}]`,
+        ]);
+        q = q.or(parts.join(","));
+      }
+      if (personalizedOrParts.length > 0) q = q.or(personalizedOrParts.join(","));
+      // Server-side free-text search if query provided (A1 — search bar Enter key)
+      if (searchQ && searchQ.length >= 3) {
+        const ilike = `%${searchQ.replace(/%/g, "\\%").replace(/_/g, "\\_")}%`;
+        q = q.or(
+          `title.ilike.${ilike},summary.ilike.${ilike},country.ilike.${ilike},event_type.ilike.${ilike}`,
+        );
+      }
+      return q;
     }
 
     const twentyFourHoursAgo = new Date(
@@ -291,37 +294,6 @@ export async function GET(req: NextRequest) {
     // Generic "<N>d" windows (e.g. "90d") beyond the built-in 24h/7d/30d shortcuts —
     // used by the watchlist commodity drill-down to match its price-chart range.
     const genericDaysMatch = window?.match(/^(\d+)d$/);
-
-    if (window === "active") {
-      query = query.eq("is_active", true);
-    } else if (window === "7d") {
-      query = query.gte("event_date", sevenDaysAgo);
-    } else if (window === "30d") {
-      query = query.gte("event_date", thirtyDaysAgo);
-    } else if (window === "24h") {
-      query = query.gte("event_date", twentyFourHoursAgo);
-    } else if (window === "all") {
-      // Explicit "show everything" — no date restriction at all. Distinct from
-      // omitting `window` entirely (the `else` branch below), which callers that
-      // don't pass a window param rely on for the existing 24h+active default.
-    } else if (genericDaysMatch) {
-      const cutoff = new Date(
-        Date.now() - Number(genericDaysMatch[1]) * 24 * 60 * 60 * 1000,
-      ).toISOString();
-      query = query.gte("event_date", cutoff);
-    } else {
-      // Default and "latest" behavior: a real 24h cutoff on event_date, full stop.
-      // Previously OR'd in `is_active.eq.true` as an "escalation window" escape
-      // hatch, but is_active is true on 100% of signals rows (confirmed live
-      // 2026-09-28 — no code path ever flips it false; see insertOrMergeSignal in
-      // apps/backend/src/workers/signal-merge.ts, which only ever writes
-      // is_active: true) so that OR made this filter an unbounded no-op — every
-      // signal regardless of age matched via is_active. `window=active` below is
-      // unaffected and still available for whatever surface wants that column
-      // specifically (signal-merge's own candidate query, alert-dispatcher,
-      // digest-sender all filter on is_active independently of this route).
-      query = query.gte("event_date", twentyFourHoursAgo);
-    }
 
     // Recency+severity blend (relevanceRankScore, lib/signal-relevance-rank.ts)
     // applied in application code rather than SQL, so it needs a candidate set
@@ -344,13 +316,13 @@ export async function GET(req: NextRequest) {
     // per-page for deeper pagination (e.g. `window=all`, 2,371 candidates).
     const RELEVANCE_CANDIDATE_LIMIT = 500;
 
-    query =
-      sort === "newest"
-        ? query
+    function applySort<Q extends { order: (...args: any[]) => Q }>(q: Q): Q {
+      return sort === "newest"
+        ? q
             .order("event_date", { ascending: false })
             .order("created_at", { ascending: false })
         : sort === "confidence"
-          ? query
+          ? q
               .order("confidence", { ascending: false })
               .order("event_date", { ascending: false })
           : // Pre-sort for the candidate fetch only — most-recent/highest-severity
@@ -359,14 +331,77 @@ export async function GET(req: NextRequest) {
             // recency+severity re-rank happens in application code below.
             // Final order for this mode comes from sortByRelevance(), not this
             // clause.
-            query
+            q
               .order("event_date", { ascending: false })
               .order("severity", { ascending: false })
               .order("created_at", { ascending: false });
+    }
 
-    const { data, error, count } = isRelevanceSort
-      ? await query.limit(Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1))
-      : await query.range(rangeFrom, rangeTo);
+    async function runQuery<Q extends { order: (...args: any[]) => Q; limit: (n: number) => any; range: (a: number, b: number) => any }>(
+      q: Q,
+    ) {
+      return isRelevanceSort
+        ? await applySort(q).limit(Math.max(RELEVANCE_CANDIDATE_LIMIT, rangeTo + 1))
+        : await applySort(q).range(rangeFrom, rangeTo);
+    }
+
+    let data: SignalRow[] | null = null;
+    let error: any = null;
+    let count: number | null = null;
+    // Set only on the default (no `window` param) path below — the tiered
+    // feed-fill fallback. Left undefined for every explicit window choice
+    // (24h/7d/30d/all/active/"<N>d"), which runs exactly one query, exactly
+    // as before this change.
+    let resolvedWindow: "24h" | "72h" | "7d" | undefined;
+
+    if (window === "active") {
+      ({ data, error, count } = await runQuery(buildFilteredQuery().eq("is_active", true)));
+    } else if (window === "7d") {
+      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", sevenDaysAgo)));
+    } else if (window === "30d") {
+      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", thirtyDaysAgo)));
+    } else if (window === "24h") {
+      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", twentyFourHoursAgo)));
+    } else if (window === "all") {
+      // Explicit "show everything" — no date restriction at all. Distinct from
+      // omitting `window` entirely (the tiered default below), which callers
+      // that don't pass a window param hit instead.
+      ({ data, error, count } = await runQuery(buildFilteredQuery()));
+    } else if (genericDaysMatch) {
+      const cutoff = new Date(
+        Date.now() - Number(genericDaysMatch[1]) * 24 * 60 * 60 * 1000,
+      ).toISOString();
+      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", cutoff)));
+    } else {
+      // Default ("latest") view: tiered feed-fill fallback. A hard 24h cutoff
+      // used to be applied unconditionally, which made a real thin-inventory
+      // moment (see #237/#238 — separate ingestion work, not touched here)
+      // look identical to a broken feed. Try 24h first; if the candidate
+      // count is below MIN_FEED_FILL, widen to 72h, then 7d, and stop — the
+      // explicit window picker (7d/30d/all) above already covers wider views
+      // on user request, so this never auto-widens past a week.
+      //
+      // MIN_FEED_FILL=12 is a product choice, not a researched number —
+      // revisit once there's real usage data on how much feed content
+      // actually keeps someone engaged.
+      const MIN_FEED_FILL = 12;
+      const tiers: { label: "24h" | "72h" | "7d"; cutoff: string }[] = [
+        { label: "24h", cutoff: twentyFourHoursAgo },
+        {
+          label: "72h",
+          cutoff: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+        },
+        { label: "7d", cutoff: sevenDaysAgo },
+      ];
+      for (const tier of tiers) {
+        const res = await runQuery(buildFilteredQuery().gte("event_date", tier.cutoff));
+        data = res.data as SignalRow[] | null;
+        error = res.error;
+        count = res.count ?? null;
+        resolvedWindow = tier.label;
+        if (error || (count ?? 0) >= MIN_FEED_FILL || tier.label === "7d") break;
+      }
+    }
 
     // A page request past the last row (PostgREST "range not satisfiable",
     // code PGRST103) is a normal end-of-list condition, not a failure — return
@@ -493,9 +528,33 @@ export async function GET(req: NextRequest) {
     const rankedSignals = isRelevanceSort
       ? sortByRelevance(deduped, (s) => s.severity, (s) => s.eventDate)
       : deduped;
+
+    // "Just In" — a pure event_date DESC slice of the same resolved-window
+    // candidate set, default-view only (resolvedWindow is only set on that
+    // path above). No new ranking formula: relevanceRankScore already favors
+    // recency, but a single blended list still lets an aging severity-7 sit
+    // ahead of a brand-new severity-4, so this surfaces the freshest signals
+    // as their own zone. 5 items (not 6) so the dashboard's featured pick
+    // (justIn[0]) plus its existing 2-up secondaryA/secondaryB grid land on
+    // items 2 and 3 of the same freshest-5 set — see dashboard/page.tsx.
+    const JUST_IN_COUNT = 5;
+    let justIn: Signal[] = [];
+    let rankedSignalsMinusJustIn = rankedSignals;
+    if (resolvedWindow) {
+      justIn = [...rankedSignals]
+        .sort(
+          (a, b) =>
+            new Date(b.eventDate ?? b.createdAt).getTime() -
+            new Date(a.eventDate ?? a.createdAt).getTime(),
+        )
+        .slice(0, JUST_IN_COUNT);
+      const justInIds = new Set(justIn.map((s) => s.id));
+      rankedSignalsMinusJustIn = rankedSignals.filter((s) => !justInIds.has(s.id));
+    }
+
     const pagedSignals = isRelevanceSort
-      ? rankedSignals.slice(rangeFrom, rangeFrom + rowLimit)
-      : rankedSignals;
+      ? rankedSignalsMinusJustIn.slice(rangeFrom, rangeFrom + rowLimit)
+      : rankedSignalsMinusJustIn;
 
     // `hasMore` / `total` are computed from the raw DB rows (pre-title-dedupe) and
     // the exact row count, so paging never stalls just because one page happened
@@ -516,7 +575,14 @@ export async function GET(req: NextRequest) {
     const total = count ?? rangeFrom + rows.length;
     const hasMore = rangeFrom + rows.length < total;
 
-    const payload = {
+    const payload: {
+      signals: Signal[];
+      nextCursor: string | null;
+      total: number;
+      personalized: boolean;
+      resolvedWindow?: "24h" | "72h" | "7d";
+      justIn?: Signal[];
+    } = {
       signals: pagedSignals,
       nextCursor: hasMore ? String(page + 1) : null,
       total,
@@ -524,6 +590,13 @@ export async function GET(req: NextRequest) {
       // caller opted in but has no saved preferences yet).
       personalized: personalizedApplied,
     };
+    // Only present on the default (no `window` param) view — see the tiered
+    // fallback above. Explicit window choices keep the exact previous
+    // response shape.
+    if (resolvedWindow) {
+      payload.resolvedWindow = resolvedWindow;
+      payload.justIn = justIn;
+    }
 
     // Update in-memory cache of last successful payload for this query.
     // Personalized payloads are per-user and never cached (see `skipCache`).

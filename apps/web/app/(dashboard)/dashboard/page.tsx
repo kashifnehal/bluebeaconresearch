@@ -84,6 +84,8 @@ export default function DashboardPage() {
   const { data: myPrefs } = useMyPreferences();
   const {
     liveSignals,
+    justIn,
+    resolvedWindow,
     isLoading,
     isError,
     fallback,
@@ -175,8 +177,30 @@ export default function DashboardPage() {
     return arr.slice(0, 3);
   }, [liveSignals]);
 
-  const featured =
-    liveSignals.find((s) => s.severity >= 8) || liveSignals[0];
+  // Honest widened-window banner: the tiered default fallback in
+  // apps/web/app/api/signals/route.ts can silently widen 24h → 72h → 7d when
+  // there aren't enough signals to fill the feed. `resolvedWindow` is only
+  // present on that default (no explicit window filter) path, so this never
+  // fires when the user picked a window themselves. Never hide the widening —
+  // that's exactly the invisible-window mistake `is_active` made previously.
+  const windowExpandedLine =
+    resolvedWindow === "72h"
+      ? "Showing signals from the last 3 days — live coverage is still expanding."
+      : resolvedWindow === "7d"
+        ? "Showing signals from the last 7 days — live coverage is still expanding."
+        : null;
+
+  // Featured pick: freshest-first (justIn[0]) when the default tiered view
+  // resolved a `justIn` zone, falling back to the top of the blended list
+  // otherwise (explicit window filters, or a candidate set too small to have
+  // a justIn split at all). Replaces the old `severity >= 8` hunt — that rule
+  // assumed the feed was always hard-bounded to 24h, which stopped being true
+  // once the window can widen to 72h/7d; a month-old severity-8 could
+  // otherwise resurface as "featured" ahead of anything actually new.
+  // `justIn[0]` is both the single freshest signal AND, by construction,
+  // already near the top of the recency+severity blend, so this doesn't trade
+  // relevance for recency — see docs/brain/15_INGESTION_PIPELINE.md §5.4.
+  const featured = justIn.length > 0 ? justIn[0] : liveSignals[0];
   const secondaryA = liveSignals[1];
   const secondaryB = liveSignals[2];
   const streamList = liveSignals.slice(0, streamCount);
@@ -267,6 +291,15 @@ export default function DashboardPage() {
               style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
             >
               {coverageLine}
+            </p>
+          ) : null}
+          {windowExpandedLine ? (
+            <p
+              data-testid="window-expanded-line"
+              className="text-[12px] md:text-[11px] mt-2"
+              style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
+            >
+              {windowExpandedLine}
             </p>
           ) : null}
         </div>

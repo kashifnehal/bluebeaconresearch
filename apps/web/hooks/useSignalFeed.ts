@@ -65,6 +65,10 @@ export function useSignalFeed({
         fallbackReason?: string;
         fallbackLastUpdated?: string;
         personalized?: boolean;
+        // Only present on the default (no `window` param) view — the tiered
+        // feed-fill fallback in apps/web/app/api/signals/route.ts.
+        resolvedWindow?: "24h" | "72h" | "7d";
+        justIn?: Signal[];
       };
     },
     // `nextCursor` is an opaque page token from /api/signals ("2", "3", …) or
@@ -89,8 +93,16 @@ export function useSignalFeed({
   });
 
   const pages = data?.pages ?? [];
+  // Page 1 only ever carries `justIn` (the tiered default-view fallback is
+  // resolved fresh per request, but the "freshest 5" zone only makes sense
+  // once, at the head of the list — later pages' own `justIn` would just be
+  // the same top-5 recomputed from a shifted candidate set). Re-prepending it
+  // here reconstructs the same full blended order the route computed before
+  // splitting `justIn` out of `signals` — the API split them only so the two
+  // arrays never overlap, not so callers lose those items entirely.
+  const justIn = pages[0]?.justIn ?? [];
   const liveSignals = useMemo(
-    () => pages.flatMap((p) => p.signals ?? []),
+    () => [...justIn, ...pages.flatMap((p) => p.signals ?? [])],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [data?.pages],
   );
@@ -104,9 +116,15 @@ export function useSignalFeed({
   // saved preferences). Lets the UI distinguish "My Feed on" from "My Feed on
   // but you haven't picked anything yet".
   const personalizedApplied = pages[0]?.personalized ?? false;
+  // Present only on the default (no `window` param) view. Wider than "24h"
+  // means the tiered fallback actually widened the window — see
+  // dashboard/page.tsx's honest-banner usage.
+  const resolvedWindow = pages[0]?.resolvedWindow ?? null;
 
   return {
     liveSignals,
+    justIn,
+    resolvedWindow,
     isLoading,
     isError,
     fallback,
