@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-28 (PHASE 100).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-29 (PHASE 101).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 101 — Tiered default-window feed-fill fallback, "Just In" zone, honest featured-card fix (2026-09-29, `f7cfa36`)
+
+`apps/web` only. The default (no `window` param) Intelligence Feed view's hard 24h cutoff (fixed the previous session, PHASE 95 below) was correct but made a genuinely thin-inventory day look identical to a broken feed. It's now a tiered fallback: try 24h, then widen to 72h then 7d only if there aren't enough matching signals (a new `MIN_FEED_FILL = 12` constant), and stop — never wider than a week; the explicit window picker still covers that on request. The response now says which tier actually resolved and separately surfaces the 5 freshest signals ("Just In") from that same candidate set. Riding along: the dashboard's featured hero card — previously a hardcoded "first severity-8-or-higher story" rule that was only safe while the window couldn't widen past 24h — now picks the single freshest signal instead, and a small honest line tells the user when the window actually widened, so this never repeats the earlier invisible-widened-window mistake. Verified live against production data (real signal counts checked at each tier) and in a real logged-in browser session, not just code review. Full detail: `docs/brain/14_CHANGELOG.md` v0.124.0.
 
 ## PHASE 100 — #257: Backtesting Lab fake-results UI disabled (2026-09-28, `18bde16`)
 

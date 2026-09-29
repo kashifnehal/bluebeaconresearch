@@ -232,7 +232,7 @@ After passing the filter and dedup check:
 | :----------- | :------------------------------------------------------------------ |
 | Auth         | Requires logged-in user                                             |
 | DB read      | Service role key (if set on Vercel)                                 |
-| Time window  | `event_date >= 24 hours ago`, full stop (default/no `window` param) |
+| Time window  | Tiered default (no `window` param): `event_date >= 24h`, widening to 72h then 7d if the candidate count is below `MIN_FEED_FILL` (12) — see below. Explicit `window` values (24h/7d/30d/all/active/`<N>d`) are unaffected, exactly one query each. |
 | Sort default | Blended recency+severity rank (`relevanceRankScore`, `lib/signal-relevance-rank.ts`) — same formula `sort=relevance` (command palette) always used, now also the main feed's default. `sort=newest`/`sort=confidence` are the two remaining pure-order modes. |
 | Cache        | `force-dynamic` — no Next.js cache                                  |
 
@@ -249,6 +249,22 @@ fresher lower-severity one; it now reuses the same `relevanceRankScore` blend
 `sort=relevance` already used, so recency is weighed against severity across
 the whole ranking, not just within ties. `signal-filters.ts`'s
 `DEFAULT_FILTERS.minSeverity` floor also dropped 6 → 4 in the same change.
+
+**2026-09-29 follow-up (tiered feed-fill fallback):** the hard 24h cutoff
+above made a real thin-inventory moment (see #237/#238 — separate ingestion
+work) look identical to a broken feed. The default (no `window` param) path
+now tries 24h first; if the candidate count is below `MIN_FEED_FILL` (12 —
+a product choice, not a researched number, revisit once there's real usage
+data), it re-queries at 72h, then 7d, and stops — the explicit window picker
+already covers wider views on request. The response carries a `resolvedWindow:
+"24h" | "72h" | "7d"` field (present only on this default path) so the
+frontend can show an honest "still expanding" banner when it widens (see
+`dashboard/page.tsx`'s `windowExpandedLine`). The same default path also
+splits a `justIn: Signal[]` field out of the response — the top 5 signals of
+the resolved-window candidate set by `event_date` DESC (pure recency, no new
+ranking formula), with their ids excluded from `signals` so nothing appears
+twice. `useSignalFeed.ts` re-prepends `justIn` onto `liveSignals` for callers
+that just want the one flat, no-duplicate list.
 
 ### 5.2 Timestamp display
 
@@ -271,25 +287,26 @@ the whole ranking, not just within ties. `signal-filters.ts`'s
 ### 5.4 Featured card selection (`/dashboard`)
 
 ```typescript
-featured = liveSignals.find((s) => s.severity >= 8) || liveSignals[0];
+const featured = justIn.length > 0 ? justIn[0] : liveSignals[0];
 ```
 
-High-severity (8+) stories dominate the hero card, but `liveSignals` is now
-the same blended-rank list `/api/signals`'s default sort produces (see §5.1) —
-`.find()` returns the *highest-ranked* severity-8+ story, not just the first
-one chronologically, so this can no longer surface a stale severity-8 ahead of
-a fresher one the way a pure `severity DESC` order could. No separate hard
-recency cap was added here (2026-09-28 decision): the default dashboard view
-is already hard-bounded to `event_date >= 24h` by the §5.1 fix, so a
-month-old severity-8 cannot appear in `liveSignals` at all under the default
-window; a hard cap would only matter if the user explicitly widens the window
-(7d/30d/all), where the existing blend already favors recency correctly.
-Reads from the exact same `liveSignals` array as the rest of the feed — no
-separate query. (This section previously listed `/alerts` as a second caller
-of this pattern — checked while touching this doc: `/alerts/page.tsx` has no
-`severity >= 8`/featured-card selection at all, so that was stale; corrected.
-The pattern also independently exists on the homepage, `app/page.tsx`, and
-`/map` — both out of scope for this change, not touched.)
+**2026-09-29 rewrite.** The previous rule (`liveSignals.find((s) => s.severity
+>= 8) || liveSignals[0]`) leaned on a hard, non-time-bound severity floor and
+was only safe because the default view was itself hard-bounded to `event_date
+>= 24h` — once §5.1's tiered fallback let that window widen to 72h/7d, a
+severity-8+ story up to a week old could resurface as "featured" ahead of
+anything actually new, exactly the staleness problem the 2026-09-28 blended-sort
+fix was meant to close. The new rule picks the single freshest signal
+(`justIn[0]`, a pure `event_date` DESC pick from the same resolved-window
+candidate set — see §5.1) when one exists, falling back to the top of the
+blended list (`liveSignals[0]`) for explicit window filters or any response
+with no `justIn` split. `justIn[0]` is both the freshest signal and, by
+construction of the blend, already near the top of it — so this doesn't trade
+relevance for recency. Reads from the exact same `liveSignals`/`justIn` the
+rest of the feed uses — no separate query. (The pattern also independently
+exists on the homepage, `app/page.tsx`, and `/map` — both out of scope for
+this change, not touched. `/alerts/page.tsx` has no featured-card selection at
+all.)
 
 ---
 
@@ -303,7 +320,7 @@ The pattern also independently exists on the homepage, `app/page.tsx`, and
 | **UI shows publish time** | Ingested 2 min ago but article says "4h ago"              |
 | **GDELT 429**             | Rate limited — no new articles that run                   |
 | **GNews quota**           | Free tier exhausted for the day                           |
-| **Hero card logic**       | New severity-5 story hidden behind severity-9 hero        |
+| **Hero card logic**       | Stale — hero is now the freshest signal (§5.4), not severity-gated |
 
 ---
 
