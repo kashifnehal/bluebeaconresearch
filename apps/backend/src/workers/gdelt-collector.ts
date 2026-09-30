@@ -11,6 +11,7 @@ import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
+import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -173,6 +174,12 @@ export async function runGdeltCollectorOnce() {
         country: countryLabel,
         eventType: "news",
       });
+      // GDELT's article records (see GdeltArticle above) carry no body/summary text at
+      // all — raw_events.summary is always null for this source (see the insert above).
+      // detectHeadlinePlacement() with an empty body still resolves correctly: a keyword
+      // match can only ever come from the title here, so it reads "headline", never
+      // "body" — there's nothing to falsely suppress the bonus against.
+      const headlinePlacement = detectHeadlinePlacement(title, "");
       const classification = await claude.classifyEvent(
         {
           id: rawEventId,
@@ -181,7 +188,7 @@ export async function runGdeltCollectorOnce() {
           event_type: "news",
           event_date: eventDate,
         },
-        { similarStoryLast48h },
+        { similarStoryLast48h, headlinePlacement },
       );
 
       // #139/#141 materiality gate — see gnews-collector.ts for the full comment.

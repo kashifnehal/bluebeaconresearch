@@ -11,6 +11,7 @@ import { tryTitlePreFilterSkip } from "./title-prefilter.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
+import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 
 const claude = new ClaudeService();
 
@@ -268,6 +269,10 @@ export async function runRssCollectorOnce() {
         country: countryLabel,
         eventType: rawEventPayload.event_type,
       });
+      // item.summary is already the richest body text this collector has (rss-parser's
+      // contentSnippet/content/summary chain — see the allItems.push() above), so it
+      // doubles as the "full article text" the placement check compares against.
+      const headlinePlacement = detectHeadlinePlacement(rawEventPayload.title, item.summary);
       const classification = await claude.classifyEvent(
         {
           id: rawEventId,
@@ -277,7 +282,7 @@ export async function runRssCollectorOnce() {
           event_type: rawEventPayload.event_type,
           event_date: rawEventPayload.event_date,
         },
-        { similarStoryLast48h },
+        { similarStoryLast48h, headlinePlacement },
       );
 
       // #139/#141 materiality gate — see gnews-collector.ts for the full comment.

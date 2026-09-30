@@ -23,6 +23,7 @@ import {
   sanitizeMediaImpactEntity,
   type MediaImpactWatchlistEntry,
 } from "../lib/media-impact-watchlist.js";
+import type { HeadlinePlacement } from "../lib/headline-placement.js";
 
 // chatAboutSignal() truncation safety net (quality bug found in live testing,
 // 2026-09-12): max_tokens stays at 600 (do not raise it — see chatAboutSignal),
@@ -75,6 +76,49 @@ let usageLimitAlertedLocally = false;
 
 const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 const SONNET_MODEL = "claude-sonnet-5";
+
+/**
+ * Placement-proxy adjustment (claude/277 A6, founder conditions 2026-09-30).
+ *
+ * IMPORTANT — unlike the task's own framing, this codebase has NO existing
+ * Goldstein/chokepoint/actor-style severity bonus system to match the scale of.
+ * Confirmed by grepping the full backend (no "goldstein"/"chokepoint" hit anywhere,
+ * no additive bonus applied to severity on either the real-Claude or heuristic
+ * path before this change) — severity comes from Claude's own 1-10 judgment call
+ * with zero post-processing, or from heuristicClassify()'s fixed keyword-tier
+ * ladder (5/6/7/8/9, capped to 6). So this constant is NOT derived from any
+ * existing scale — there is none to derive it from. +1 is a deliberately small,
+ * conservative, founder-reviewable guess, not a validated weight.
+ *
+ * The underlying claim — that a headline-placed trigger event carries more price
+ * impact than the same event reported only in the body — is RavenPack's own
+ * webinar statement about RavenPack's data (claude/277 A6). It has not been
+ * verified, and it has not been tested against BBR's own signal_outcomes. This
+ * adjustment stays unvalidated until someone checks it against real outcomes.
+ *
+ * Set to 0 to disable entirely without touching call sites.
+ */
+const HEADLINE_PLACEMENT_SEVERITY_BONUS = 1;
+
+/**
+ * Bonus-only, per founder condition 2026-09-30: a headline placement may add up to
+ * HEADLINE_PLACEMENT_SEVERITY_BONUS; body-only or no-match placement adds and
+ * subtracts nothing. A penalty was deliberately rejected — it could push a real,
+ * material update below the feed's severity>=4 visibility floor (signal-filters.ts)
+ * and hide a story that does deserve to be seen, which the founder's "never
+ * suppress or hide updates to a developing story" condition rules out. This
+ * function can only ever raise severity, never lower it, and is clamped to
+ * MAX_SEVERITY so a bonus can't push a value out of the DB's valid range.
+ */
+const MAX_SEVERITY = 10;
+
+function applyHeadlinePlacementBonus(
+  severity: number,
+  placement: HeadlinePlacement | undefined,
+): number {
+  if (placement !== "headline" || HEADLINE_PLACEMENT_SEVERITY_BONUS <= 0) return severity;
+  return Math.min(severity + HEADLINE_PLACEMENT_SEVERITY_BONUS, MAX_SEVERITY);
+}
 
 // #142 — watchlist lives in public.media_impact_watchlist (active=true).
 // classifyEvent() reads it through getActiveWatchlist() (10-min in-memory TTL,
@@ -314,12 +358,13 @@ export class ClaudeService {
     // Optional so existing/dormant callers (ai-classifier.ts, the
     // backfill-commodity-impacts script) that don't compute this still compile
     // and behave sanely (novelty judged from text alone, as before this change).
-    options?: { similarStoryLast48h?: boolean },
+    options?: { similarStoryLast48h?: boolean; headlinePlacement?: HeadlinePlacement },
   ): Promise<ClassificationResult> {
     const client = this.getClient();
     const title = String(rawEvent.title ?? "New geopolitical event");
     const summaryText = String(rawEvent.summary ?? "");
     const similarStoryLast48h = options?.similarStoryLast48h ?? false;
+    const headlinePlacement = options?.headlinePlacement;
     const callStartedAt = Date.now();
     const watchlist = await getActiveWatchlist();
 
@@ -411,6 +456,18 @@ export class ClaudeService {
         );
         parsed.classificationMethod = "claude";
 
+        // Placement-proxy adjustment (claude/277 A6) — see HEADLINE_PLACEMENT_SEVERITY_BONUS
+        // above for the full rationale and the unvalidated-claim caveat. Logged every time
+        // so every scoring factor stays disclosed/traceable (founder condition 2026-09-30),
+        // not only when it actually changes the number.
+        const preBonusSeverity = parsed.severity;
+        parsed.severity = applyHeadlinePlacementBonus(parsed.severity, headlinePlacement);
+        console.log(
+          `[headline-placement] rawEvent=${rawEvent.id ?? "unknown"} method=claude ` +
+            `placement=${headlinePlacement ?? "unknown"} bonusApplied=${parsed.severity - preBonusSeverity} ` +
+            `severity(${preBonusSeverity} -> ${parsed.severity})`,
+        );
+
         // #139/#141 — sanitize the new materiality-gate fields the same way the
         // commodity/forex arrays above already are: a malformed/out-of-range
         // value from Claude must never reach the DB (event_category and
@@ -498,7 +555,7 @@ export class ClaudeService {
       }
     }
 
-    return this.heuristicClassify(title, summaryText, rawEvent, watchlist);
+    return this.heuristicClassify(title, summaryText, rawEvent, watchlist, headlinePlacement);
   }
 
   private heuristicClassify(
@@ -506,6 +563,7 @@ export class ClaudeService {
     summaryText: string,
     rawEvent: Record<string, unknown>,
     watchlist: MediaImpactWatchlistEntry[] = [],
+    headlinePlacement?: HeadlinePlacement,
   ): ClassificationResult {
     const text = (title + " " + summaryText).toLowerCase();
 
@@ -544,11 +602,28 @@ export class ClaudeService {
     //   - id 5e3b9c09-99ad-4959-88e2-dcc90c2bb629: "9/11 in the Navy: I went to war,
     //     but never got off the boat" — a personal memoir — scored severity 9 purely
     //     because "war" matched the war/invasion/nuclear tier.
+    // Placement-proxy adjustment (claude/277 A6) — item 5 of the task spec asks
+    // explicitly whether the heuristic path needs the same treatment: yes, applied
+    // here for consistency, but deliberately BEFORE the safety cap two lines down —
+    // that cap (heuristic severity never exceeds 6, real 7-9 only from a genuine
+    // Claude read) stays the authoritative final invariant either way. A headline
+    // placement can only nudge a heuristic severity up toward that existing
+    // ceiling, never push it past it.
+    const preBonusSeverity = severity;
+    severity = applyHeadlinePlacementBonus(severity, headlinePlacement);
+    console.log(
+      `[headline-placement] rawEvent=${rawEvent.id ?? "unknown"} method=heuristic ` +
+        `placement=${headlinePlacement ?? "unknown"} bonusApplied=${severity - preBonusSeverity} ` +
+        `severity(${preBonusSeverity} -> ${severity})`,
+    );
+
     // A bare keyword hit is not evidence a story is actually a high-severity
     // geopolitical/market event. Severity 7-9 should only ever come from a real,
     // successful Claude classification (see the client-success branch of
     // classifyEvent() above, which sets classificationMethod: "claude" and is never
-    // subject to this cap) — never from this keyword-only fallback path.
+    // subject to this cap) — never from this keyword-only fallback path. This cap
+    // is applied AFTER the headline-placement bonus above, so it remains the
+    // final word regardless of that bonus.
     severity = Math.min(severity, 6);
 
     // Region Detection

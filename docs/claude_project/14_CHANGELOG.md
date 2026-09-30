@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 105).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 106).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 106 — Headline-placement severity bonus, claude/277 A6 (2026-10-01)
+
+`apps/backend` only. New bonus-only severity adjustment: the 3 live-source collectors now detect whether a story's trigger keywords appear in the headline or only the body (`lib/headline-placement.ts`, reusing the existing relevance-filter keyword lists — no new taxonomy), and a small `+1` bonus (`HEADLINE_PLACEMENT_SEVERITY_BONUS`, settable to 0) applies only on a headline match, on both the real-Claude and heuristic classification paths. Confirmed via full-repo grep that no Goldstein/chokepoint/actor severity-bonus system actually exists in code — that was a documented-but-never-implemented spec, corrected in `17_SIGNAL_ENGINE.md` §2.2. Step 0 read-only verification also confirmed `signal-merge.ts`'s dedup behavior unchanged and that `signals.novelty` affects display only, never ranking/gating. Verified via full backend test suite (incl. new tests) + type-check. Full detail: `docs/brain/14_CHANGELOG.md` v0.129.0.
 
 ## PHASE 105 — Watchlist driver-breakdown chart, correlated-instrument overlay, XAGUSD coverage (2026-10-01)
 

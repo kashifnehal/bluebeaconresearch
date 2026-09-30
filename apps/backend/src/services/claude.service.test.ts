@@ -939,6 +939,185 @@ async function main() {
       assert.equal(isAnthropicUsageLimitError(""), false);
     },
   );
+
+  // ── claude/277 A6 — headline-placement severity bonus ──────────────────────
+  runTest(
+    "classifyEvent (real-Claude path): headline placement adds the bonus, body-only placement leaves severity untouched",
+    async () => {
+      const promptService = new ClaudeService();
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => ({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  severity: 5,
+                  confidence: 0.6,
+                  commodityImpacts: [],
+                  currencyPairImpacts: [],
+                  isBreaking: false,
+                  summary: "Test event",
+                  region: "global",
+                  materialityPass: true,
+                  materialityReasoning: "test",
+                }),
+              },
+            ],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const headline = await promptService.classifyEvent(
+          {
+            title: "Test event",
+            summary: "Test summary",
+            event_type: "news",
+            country: "US",
+            event_date: new Date().toISOString(),
+          },
+          { headlinePlacement: "headline" },
+        );
+        assert.strictEqual(headline.severity, 6, "headline placement should add the +1 bonus (5 -> 6)");
+
+        const bodyOnly = await promptService.classifyEvent(
+          {
+            title: "Test event",
+            summary: "Test summary",
+            event_type: "news",
+            country: "US",
+            event_date: new Date().toISOString(),
+          },
+          { headlinePlacement: "body" },
+        );
+        assert.strictEqual(bodyOnly.severity, 5, "body-only placement must not change severity");
+
+        const none = await promptService.classifyEvent(
+          {
+            title: "Test event",
+            summary: "Test summary",
+            event_type: "news",
+            country: "US",
+            event_date: new Date().toISOString(),
+          },
+          { headlinePlacement: "none" },
+        );
+        assert.strictEqual(none.severity, 5, "'none' placement must not change severity");
+
+        const omitted = await promptService.classifyEvent({
+          title: "Test event",
+          summary: "Test summary",
+          event_type: "news",
+          country: "US",
+          event_date: new Date().toISOString(),
+        });
+        assert.strictEqual(omitted.severity, 5, "omitting headlinePlacement entirely must not change severity");
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
+    "classifyEvent (real-Claude path): the placement bonus never pushes severity past 10",
+    async () => {
+      const promptService = new ClaudeService();
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => ({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  severity: 10,
+                  confidence: 0.9,
+                  commodityImpacts: [],
+                  currencyPairImpacts: [],
+                  isBreaking: true,
+                  summary: "Already at max severity",
+                  region: "global",
+                  materialityPass: true,
+                  materialityReasoning: "test",
+                }),
+              },
+            ],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const classification = await promptService.classifyEvent(
+          {
+            title: "Already at max severity",
+            summary: "Test summary",
+            event_type: "news",
+            country: "US",
+            event_date: new Date().toISOString(),
+          },
+          { headlinePlacement: "headline" },
+        );
+        assert.strictEqual(classification.severity, 10);
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest(
+    "heuristicClassify (no-client fallback): headline placement can only raise severity, body/none placement never changes it",
+    async () => {
+      // `service`'s mocked client always throws (top of file), so this exercises
+      // heuristicClassify(), not a real Claude read. This text hits no severity-tier
+      // keyword (stays at the default baseline of 5) but does clear the materiality
+      // gate via a validated commodity impact (isSafeHaven: "gold" + "central bank").
+      const baseEvent = {
+        title: "Central bank discloses gold reserves data",
+        summary: "A routine disclosure with no severity-tier keyword present.",
+        event_type: "news",
+        country: "US",
+        event_date: new Date().toISOString(),
+      };
+
+      const headline = await service.classifyEvent(baseEvent, { headlinePlacement: "headline" });
+      const bodyOnly = await service.classifyEvent(baseEvent, { headlinePlacement: "body" });
+      const none = await service.classifyEvent(baseEvent, { headlinePlacement: "none" });
+      const omitted = await service.classifyEvent(baseEvent);
+
+      assert.strictEqual(headline.classificationMethod, "heuristic");
+      assert.strictEqual(bodyOnly.severity, none.severity);
+      assert.strictEqual(bodyOnly.severity, omitted.severity);
+      assert.ok(
+        headline.severity >= bodyOnly.severity,
+        `headline placement (${headline.severity}) must never score below body-only (${bodyOnly.severity})`,
+      );
+      assert.strictEqual(headline.severity, bodyOnly.severity + 1, "expected exactly the +1 bonus");
+    },
+  );
+
+  runTest(
+    "heuristicClassify: the placement bonus stays under the existing safety cap of 6, even for a high-tier keyword match",
+    async () => {
+      // "war" hits the top severity tier (would be 9 pre-cap) — the existing safety
+      // cap (heuristic severity never exceeds 6) must still win even with the bonus
+      // applied before it, per the code comment in heuristicClassify().
+      const classification = await service.classifyEvent(
+        {
+          title: "War breaks out near the border",
+          summary: "Escalating conflict reported.",
+          event_type: "news",
+          country: "US",
+          event_date: new Date().toISOString(),
+        },
+        { headlinePlacement: "headline" },
+      );
+      assert.ok(classification.severity <= 6, `expected heuristic severity capped at 6, got ${classification.severity}`);
+    },
+  );
 }
 
 main().catch((err) => {

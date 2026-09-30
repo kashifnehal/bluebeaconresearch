@@ -12,6 +12,7 @@ import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
+import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 
 const claude = new ClaudeService();
 
@@ -157,6 +158,14 @@ export async function runGnewsCollectorOnce() {
         country: countryLabel,
         eventType: rawEventPayload.event_type,
       });
+      // a.content is GNews's (truncated) full-article body — richer than a.description,
+      // which is only ever a 1-2 sentence excerpt. Not currently written into
+      // rawEventPayload.summary (kept as-is, out of this task's scope); used here only
+      // to decide whether the triggering keyword content is headline- or body-only.
+      const headlinePlacement = detectHeadlinePlacement(
+        rawEventPayload.title,
+        String(a.content ?? a.description ?? ""),
+      );
       const classification = await claude.classifyEvent(
         {
           id: rawEventId,
@@ -166,7 +175,7 @@ export async function runGnewsCollectorOnce() {
           event_type: rawEventPayload.event_type,
           event_date: rawEventPayload.event_date,
         },
-        { similarStoryLast48h },
+        { similarStoryLast48h, headlinePlacement },
       );
 
       // #139/#141 materiality gate — the "this does not mean anything, drop it"
