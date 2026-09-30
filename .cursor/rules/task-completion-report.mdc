@@ -1,0 +1,32 @@
+---
+description: Always end a finished task with a detailed standalone report.
+alwaysApply: true
+---
+
+# Task completion report
+
+When a task is done — shipped, closed, or blocked — the final user-facing message is a detailed report. Do not end on a one-liner, a SHA-only note, or "docs were updated." Scale length to the task, but never skip a section by assuming the user remembers the chat.
+
+## Required sections
+
+1. **Outcome** — shipped / blocked / partial. Ticket number if any. Commit SHA(s) if committed; say if nothing was committed.
+2. **What changed** — each fix or feature in plain language (what was wrong, what it does now).
+3. **Files touched** — code paths. Call out `apps/web` vs `apps/backend` vs docs.
+4. **Diagnosis** — any "check before assuming" finding (e.g. stale vs real-flat prices).
+5. **Docs** — list every `docs/brain/` and `docs/claude_project/` file updated, and any topic file skipped with why (no new route / table / prompt / decision).
+6. **Verification** — what actually ran (tests, grep, SQL, curl, browser). Honest gaps ("could not verify…").
+7. **What's next** — what to do next (queued leftovers, follow-ups), and what you could/couldn't do this ship (explicit non-goals, gaps, blockers).
+
+## Example (too thin → required)
+
+```
+❌ Done. Commit abc123. Docs updated.
+
+✅ #137 shipped on main (`46264b2`).
+   Chat history: typed 401/403/5xx/network copy.
+   Price subtext: live latest-row fetch; USOIL +0.0% was a real flat.
+   Docs: brain LIVE_TODO / 08 / 14 / 06; claude_project 09 / 08 / 14 / 06.
+   Skipped 05_API / 04_DATABASE / 18_AI_ENGINE / 10_DECISIONS — no route, table, prompt, or standing rule.
+   Tests: 9/9 signal-display.test.ts; tsc clean. Not browser-walked.
+   What's next: #138 copy catalog and #139 pipeline audit are queued, not started this ship.
+```
