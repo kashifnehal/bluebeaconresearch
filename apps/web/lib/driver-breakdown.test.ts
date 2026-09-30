@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { mergeSignalRows, type DriverSignalRow } from "./driver-breakdown";
+import { mergeSignalRows, shouldShowUncategorizedNote, type DriverSignalRow } from "./driver-breakdown";
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -47,4 +47,20 @@ runTest("the first-seen row for a duplicate id is kept, not overwritten", () => 
   const merged = mergeSignalRows([first], [second]);
   assert.equal(merged.length, 1);
   assert.equal(merged[0].event_category, null);
+});
+
+runTest("no note when there are no signals at all", () => {
+  assert.equal(shouldShowUncategorizedNote(0, 0), false);
+});
+
+runTest("no note when uncategorized is at the 0.8 threshold exactly", () => {
+  assert.equal(shouldShowUncategorizedNote(10, 8), false);
+});
+
+runTest("note shown once uncategorized share exceeds the 0.8 threshold", () => {
+  assert.equal(shouldShowUncategorizedNote(10, 9), true);
+});
+
+runTest("no note when uncategorized is a small minority", () => {
+  assert.equal(shouldShowUncategorizedNote(100, 2), false);
 });

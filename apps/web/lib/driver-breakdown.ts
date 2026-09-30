@@ -27,3 +27,16 @@ export function mergeSignalRows(...rowSets: DriverSignalRow[][]): DriverSignalRo
   }
   return Array.from(byId.values());
 }
+
+// Above this share of a window's signals being "Uncategorized", the note
+// explaining why is worth showing — chosen so a couple of stray pre-#141
+// rows in an otherwise well-classified window doesn't trigger it.
+export const UNCATEGORIZED_NOTE_THRESHOLD = 0.8;
+
+/**
+ * Decide whether the driver-breakdown chart should show the note explaining
+ * why signals show as "Uncategorized" (missing event_category data).
+ */
+export function shouldShowUncategorizedNote(total: number, uncategorizedTotal: number): boolean {
+  return total > 0 && uncategorizedTotal / total > UNCATEGORIZED_NOTE_THRESHOLD;
+}

@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import type { EventCategory } from "@blue-beacon-research/shared";
 import { EVENT_CATEGORY_LABELS } from "@/lib/market-impact-assessment";
+import { shouldShowUncategorizedNote } from "@/lib/driver-breakdown";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const UNCATEGORIZED_KEY = "uncategorized" as const;
@@ -47,10 +48,6 @@ const OTHER_LABEL = "Other";
 // NULL) is never folded into "Other": it's a distinct, honest bucket for
 // missing data, always its own legend entry when present.
 const MAX_OWN_CATEGORIES = 7;
-// Above this share of a window's signals being "Uncategorized", the note
-// below explaining why is worth showing — chosen so a couple of stray
-// pre-#141 rows in an otherwise well-classified window doesn't trigger it.
-const UNCATEGORIZED_NOTE_THRESHOLD = 0.8;
 
 function utcDayKeys(fromMs: number, toMs: number): string[] {
   const days: string[] = [];
@@ -75,20 +72,23 @@ export function DriverBreakdownChart({
   toIso: string;
   rangeId: string;
 }) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["driver-breakdown", symbol, fromIso, toIso],
     queryFn: async () => {
       const res = await fetch(
         `/api/signals/driver-breakdown?symbol=${encodeURIComponent(symbol)}&from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
       );
       const json = (await res.json()) as { rows?: Row[]; error?: string };
-      return { rows: json.rows ?? [], error: json.error ?? null };
+      // A response carrying json.error (rate limit, DB error, unavailable
+      // client, unauthenticated) is a failure, not data — thrown so
+      // react-query retries it and never caches it as a success.
+      if (json.error) throw new Error(json.error);
+      return { rows: json.rows ?? [] };
     },
+    retry: 2,
   });
   const rows = data?.rows ?? [];
-  // Distinct from the genuine "no signals in this range" state below — a
-  // rate limit or DB error must never render as if BBR simply has no data.
-  const loadError = data?.error ?? null;
+  const loadErrorCode = error instanceof Error ? error.message : null;
 
   // Client-side, already-fetched-data toggle — no refetch on click.
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -141,8 +141,7 @@ export function DriverBreakdownChart({
     const chartRows = days.map((d) => ({ date: d, ...byDay.get(d) }));
 
     const total = Array.from(totals.values()).reduce((a, b) => a + b, 0);
-    const showUncategorizedNote =
-      total > 0 && uncategorizedTotal / total > UNCATEGORIZED_NOTE_THRESHOLD;
+    const showUncategorizedNote = shouldShowUncategorizedNote(total, uncategorizedTotal);
     return { series: seriesList, chartData: chartRows, totalCount: total, showUncategorizedNote };
   }, [rows, fromIso, toIso]);
 
@@ -157,13 +156,22 @@ export function DriverBreakdownChart({
 
       {isLoading ? (
         <Skeleton className="h-[220px] w-full rounded-lg" data-testid="driver-breakdown-skeleton" />
-      ) : loadError ? (
-        <p
-          className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-16"
-          data-testid="driver-breakdown-error"
-        >
-          Couldn&apos;t load driver data. Try again.
-        </p>
+      ) : isError ? (
+        <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-error">
+          <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+            {loadErrorCode === "unauthenticated"
+              ? "Sign in to see driver data."
+              : "Couldn't load driver data. Try again."}
+          </p>
+          <button
+            type="button"
+            data-testid="driver-breakdown-retry"
+            onClick={() => refetch()}
+            className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
       ) : totalCount === 0 ? (
         <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-16">
           No signals recorded for {label} in this range yet. The price chart is live.
@@ -242,8 +250,7 @@ export function DriverBreakdownChart({
           </div>
           {showUncategorizedNote && (
             <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
-              Most signals in this range were recorded before event categories were stored, so they show as
-              Uncategorized.
+              Most signals in this range have no event category stored, so they show as Uncategorized.
             </p>
           )}
         </>
