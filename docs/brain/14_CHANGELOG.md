@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-01 (v0.129.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-10-01 (v0.132.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.132.0 — Driver-breakdown FX undercounting fix, load-error honesty, overlay alignment (2026-10-01)
+
+`apps/web` only, follow-up to v0.128.0 (`a73f788`). Founder-verified live SQL: a forex symbol's signals are tagged in BOTH `commodity_impacts` and `currency_pair_impacts` (EURUSD 248 vs 39; USDRUB 71 vs 16), but `GET /api/signals/driver-breakdown` only ever read `currency_pair_impacts` for forex, undercounting every FX driver chart. Route now runs both columns' `.range()`-paged queries for a forex symbol and de-dupes by signal id via new pure helper `apps/web/lib/driver-breakdown.ts` (`mergeSignalRows`, unit-tested, registered in `package.json`); commodity symbols unchanged (single-column query). Live-verified: EURUSD 39→287, USDRUB 16→87, both matching a direct SQL union-count query exactly; USOIL (commodity, unaffected) still 1276, also matching. Separately checked and confirmed correct as-is: the watchlist page's own "Correlated Signals" list/count (`/api/signals?commodity=|forexPair=`) already ORs both impact columns for any asset symbol. Also fixed in the same pass: (1) the route returned a bare `{ rows: [] }` on a rate-limit or DB error, indistinguishable from a real empty window — now `{ rows: [], error: "rate_limited" | "db_error" }`, and `DriverBreakdownChart.tsx` shows a distinct "Couldn't load driver data" state for it; (2) a new note appears when >80% of a window's signals are "Uncategorized," computed from the fetched data; (3) the price-chart overlay's percent-change lines now share one start date (the later of the two series' first timestamps) instead of each reading 0% from its own, possibly different, first point; (4) a note now explains that event markers/click-to-attribute are unavailable while an overlay is active; (5) `driverFromIso`/`driverToIso` are now memoized off a UTC-day-rounded timestamp instead of `Date.now()` on every render, so hovering the chart or picking an overlay no longer refetches driver data (confirmed via network-request diff). Verified: `pnpm --filter web test` (new `driver-breakdown.test.ts` included) + `tsc --noEmit` clean; live curl (dedicated git worktree dev server, `RATE_LIMIT_SAFE_MODE=true`) confirmed the EURUSD/USDRUB/USOIL totals and 400/unknown-symbol error paths. Not live-browser-walked (backend/data-correctness fix, per session-efficiency rule to prefer direct API/SQL checks over Playwright here). Full detail: `LIVE_TODO.md`, `05_API.md`, `06_COMPONENTS.md`.
 
 ### v0.131.0 — ACLED collector: real root-cause fix, corrected endpoints (2026-10-01)
 

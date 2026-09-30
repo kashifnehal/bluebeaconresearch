@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 107).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 109).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 109 — Driver-breakdown FX undercounting fix, load-error honesty, overlay alignment (2026-10-01)
+
+`apps/web` only, follow-up to PHASE 105. Founder-verified live SQL: a forex symbol's signals are tagged in BOTH `commodity_impacts` and `currency_pair_impacts` (EURUSD 248 vs 39, USDRUB 71 vs 16), but the driver-breakdown route only read `currency_pair_impacts` for forex, undercounting every FX chart. Route now queries both columns and de-dupes by signal id via a new pure helper, unit-tested. Live-verified against a direct SQL union-count: EURUSD 39→287, USDRUB 16→87, exact match; USOIL (commodity, unaffected) unchanged at 1276. The watchlist page's own signal list/count were checked and found already correct (they already query both columns). Also in this pass: a rate-limit/DB error on the route no longer renders as a false "no signals" state; a note appears when a window is mostly "Uncategorized"; the price-chart overlay's two percent-change lines now share one real start date instead of each reading 0% from a different one; a note explains when overlay hides event markers/attribution; and the driver chart no longer refetches on every hover or overlay pick. Full test suite + type-check clean; live-verified via curl against a dedicated dev instance, not a full browser walk. Full detail: `docs/brain/14_CHANGELOG.md` v0.132.0.
 
 ## PHASE 108 — ACLED collector: real root-cause fix, corrected endpoints (2026-10-01)
 

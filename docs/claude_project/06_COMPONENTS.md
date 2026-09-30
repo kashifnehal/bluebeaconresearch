@@ -483,6 +483,8 @@ Sections:
 
 > ⚠️ UPDATED 2026-10-01 (doc 278) — new `DriverBreakdownChart.tsx` component renders a stacked-area "Signal Drivers" chart below the price chart (daily signal counts by `event_category`, client-side-togglable legend, honest empty state for zero-signal assets). A new "Compare with" control overlays a second same-category instrument as a percent-change line on the same price chart (never two absolute price scales on one axis). `COMMODITIES` also gained `XAGUSD` (Silver, `metals`) so every tracked instrument has a watchlist page. Full detail: `docs/brain/06_COMPONENTS.md` §3.7, `docs/brain/05_API.md`.
 
+> ⚠️ UPDATED 2026-10-01 (same-day follow-up) — the driver chart fixed 4 issues: an undercounted forex symbol (it read `currency_pair_impacts` only; now reads both impact columns and de-dupes — EURUSD went from 39 shown to the real 287), a rate-limit/DB error rendering as if there were simply no signals (now a distinct "couldn't load" state), the overlay's two percent-change lines starting from different real dates while both reading 0%, and the driver-chart query refetching on every hover/overlay pick (its date range is now memoized). The watchlist page's own signal list/count were checked and were already correct (they query both impact columns). Full detail: `docs/brain/06_COMPONENTS.md` §3.7, `docs/brain/05_API.md`.
+
 ---
 
 ## 6. SETTINGS COMPONENTS

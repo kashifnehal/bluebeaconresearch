@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getRouteSupabaseClients } from "@/lib/supabase-server";
+import { getRouteSupabaseClients, type RouteSupabaseClients } from "@/lib/supabase-server";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 import { COMMODITIES, FOREX_PAIRS, type EventCategory } from "@blue-beacon-research/shared";
 import { parseEventCategory } from "@/lib/market-impact-assessment";
+import { mergeSignalRows, type DriverSignalRow } from "@/lib/driver-breakdown";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -20,14 +21,42 @@ const MAX_WINDOW_DAYS = 365 * 6;
 export const UNCATEGORIZED_KEY = "uncategorized" as const;
 export type DriverBucketKey = EventCategory | typeof UNCATEGORIZED_KEY;
 
-type SignalRow = {
-  event_date: string | null;
-  created_at: string;
-  event_category: string | null;
-};
-
 function utcDay(iso: string): string {
   return iso.slice(0, 10);
+}
+
+type ImpactColumn = "commodity_impacts" | "currency_pair_impacts";
+
+// Page with .range() — USOIL alone carries well over PostgREST's 1,000-row
+// cap in some ranges, so a single unranged .select() would silently
+// undercount (see apps/web/lib/signal-outcomes-server.ts for the same
+// pattern already proven against this exact failure mode).
+async function fetchImpactRows(
+  supabase: RouteSupabaseClients["supabase"],
+  column: ImpactColumn,
+  symbol: string,
+  fromIso: string,
+  toIso: string,
+): Promise<{ rows: DriverSignalRow[]; error: string | null }> {
+  const rows: DriverSignalRow[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("signals")
+      .select("id, event_date, created_at, event_category")
+      .lte("event_date", toIso)
+      .gte("event_date", fromIso)
+      .filter(column, "cs", `[{"asset":"${symbol}"}]`)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.error(`[signals/driver-breakdown] DB error (${column}):`, error.message);
+      return { rows, error: error.message };
+    }
+    const page = (data ?? []) as DriverSignalRow[];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
+  return { rows, error: null };
 }
 
 export async function GET(req: NextRequest) {
@@ -39,7 +68,7 @@ export async function GET(req: NextRequest) {
     try {
       const rl = await rateLimitOrPass(`signals-driver-breakdown:${ip}`);
       if (!rl.success) {
-        return NextResponse.json({ rows: [] }, { status: 200 });
+        return NextResponse.json({ rows: [], error: "rate_limited" }, { status: 200 });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -71,7 +100,6 @@ export async function GET(req: NextRequest) {
     if (!isForex && !isCommodity) {
       return NextResponse.json({ error: "unknown symbol" }, { status: 400 });
     }
-    const impactColumn = isForex ? "currency_pair_impacts" : "commodity_impacts";
 
     const clients = await getRouteSupabaseClients();
     if (!clients) return NextResponse.json({ rows: [] });
@@ -83,27 +111,27 @@ export async function GET(req: NextRequest) {
     const fromIso = new Date(fromMs).toISOString();
     const toIso = new Date(toMs).toISOString();
 
-    // Page with .range() — USOIL alone carries well over PostgREST's 1,000-row
-    // cap in some ranges, so a single unranged .select() would silently
-    // undercount (see apps/web/lib/signal-outcomes-server.ts for the same
-    // pattern already proven against this exact failure mode).
-    const rows: SignalRow[] = [];
-    for (let from = 0; ; from += PAGE_SIZE) {
-      const { data, error } = await supabase
-        .from("signals")
-        .select("event_date, created_at, event_category")
-        .lte("event_date", toIso)
-        .gte("event_date", fromIso)
-        .filter(impactColumn, "cs", `[{"asset":"${symbol}"}]`)
-        .range(from, from + PAGE_SIZE - 1);
-
-      if (error) {
-        console.error("[signals/driver-breakdown] DB error:", error.message);
-        return NextResponse.json({ rows: [] });
+    // Forex pairs are tagged in BOTH commodity_impacts and currency_pair_impacts
+    // (verified 2026-10-01: EURUSD had 248 rows in the former vs 39 in the
+    // latter), so a forex symbol reads both columns and de-dupes by signal id —
+    // a single-column query undercounts. Commodity symbols only ever land in
+    // commodity_impacts, so they keep the single query.
+    let rows: DriverSignalRow[];
+    if (isForex) {
+      const [currencyResult, commodityResult] = await Promise.all([
+        fetchImpactRows(supabase, "currency_pair_impacts", symbol, fromIso, toIso),
+        fetchImpactRows(supabase, "commodity_impacts", symbol, fromIso, toIso),
+      ]);
+      if (currencyResult.error || commodityResult.error) {
+        return NextResponse.json({ rows: [], error: "db_error" }, { status: 200 });
       }
-      const page = (data ?? []) as SignalRow[];
-      rows.push(...page);
-      if (page.length < PAGE_SIZE) break;
+      rows = mergeSignalRows(currencyResult.rows, commodityResult.rows);
+    } else {
+      const result = await fetchImpactRows(supabase, "commodity_impacts", symbol, fromIso, toIso);
+      if (result.error) {
+        return NextResponse.json({ rows: [], error: "db_error" }, { status: 200 });
+      }
+      rows = result.rows;
     }
 
     // Group by UTC day + event_category. Map key "day|category" -> count.
@@ -125,6 +153,6 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const stack = err instanceof Error ? (err.stack ?? err.message) : String(err);
     console.error("[signals/driver-breakdown] unexpected handler error:", stack);
-    return NextResponse.json({ rows: [] });
+    return NextResponse.json({ rows: [], error: "db_error" }, { status: 200 });
   }
 }
