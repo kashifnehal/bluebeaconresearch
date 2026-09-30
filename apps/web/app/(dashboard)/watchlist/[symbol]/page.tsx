@@ -349,18 +349,27 @@ export default function WatchlistSymbolPage() {
   // share one axis, so an active overlay switches BOTH lines to percent
   // change from the first point in the selected range instead of price.
   const isOverlayActive = Boolean(overlaySymbol) && chartData.length >= 2 && overlayChartData.length >= 2;
-  const toPctSeries = (points: { t: number; price: number }[]) => {
-    const base = points[0]?.price;
+  // Both series must read 0% at the SAME date, not each at its own first
+  // point — the two price histories don't always start on the same day, and
+  // anchoring each to its own start makes two unrelated dates look aligned.
+  // The later of the two first timestamps is the earliest date both series
+  // actually have data for.
+  const overlaySharedStartT = isOverlayActive
+    ? Math.max(chartData[0].t, overlayChartData[0].t)
+    : null;
+  const toPctSeries = (points: { t: number; price: number }[], startT: number) => {
+    const fromStart = points.filter((p) => p.t >= startT);
+    const base = fromStart[0]?.price;
     if (!base) return [];
-    return points.map((p) => ({ t: p.t, pct: ((p.price - base) / base) * 100 }));
+    return fromStart.map((p) => ({ t: p.t, pct: ((p.price - base) / base) * 100 }));
   };
   const primaryPctData = useMemo(
-    () => (isOverlayActive ? toPctSeries(chartData) : []),
-    [isOverlayActive, chartData],
+    () => (overlaySharedStartT != null ? toPctSeries(chartData, overlaySharedStartT) : []),
+    [overlaySharedStartT, chartData],
   );
   const overlayPctData = useMemo(
-    () => (isOverlayActive ? toPctSeries(overlayChartData) : []),
-    [isOverlayActive, overlayChartData],
+    () => (overlaySharedStartT != null ? toPctSeries(overlayChartData, overlaySharedStartT) : []),
+    [overlaySharedStartT, overlayChartData],
   );
   const overlayMeta = overlaySymbol
     ? (COMMODITIES.find((c) => c.symbol === overlaySymbol) ?? FOREX_PAIRS.find((f) => f.symbol === overlaySymbol))
@@ -368,10 +377,26 @@ export default function WatchlistSymbolPage() {
 
   // Driver-breakdown chart window mirrors the selected price-chart range (5Y
   // has `days: null` on CHART_RANGES, so it falls back to a concrete 5-year
-  // span here since the API route requires a bounded from/to).
+  // span here since the API route requires a bounded from/to). Rounded to the
+  // start of the current UTC day and memoized with no per-render inputs so
+  // hovering the price chart or picking an overlay (both just component
+  // re-renders) doesn't produce a new from/to pair and refetch driver data —
+  // only navigating to a different day, or changing the price-chart range,
+  // should.
   const driverWindowDays = activeRange.days ?? 365 * 5;
-  const driverToIso = new Date().toISOString();
-  const driverFromIso = new Date(Date.now() - driverWindowDays * 24 * 60 * 60 * 1000).toISOString();
+  const todayStartUtcMs = useMemo(() => {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    return d.getTime();
+  }, []);
+  const driverToIso = useMemo(
+    () => new Date(todayStartUtcMs + 24 * 60 * 60 * 1000).toISOString(),
+    [todayStartUtcMs],
+  );
+  const driverFromIso = useMemo(
+    () => new Date(todayStartUtcMs + 24 * 60 * 60 * 1000 - driverWindowDays * 24 * 60 * 60 * 1000).toISOString(),
+    [todayStartUtcMs, driverWindowDays],
+  );
 
   const chartLoading =
     activeRange.source === "db" ? historyLoading : history5yLoading;
@@ -694,6 +719,11 @@ export default function WatchlistSymbolPage() {
                 ? "Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation."
                 : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
           </p>
+          {isOverlayActive && (
+            <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-1">
+              Event markers and click-to-attribute are available when Compare is set to None.
+            </p>
+          )}
 
           {attributionPoint && (
             <div className="mt-4 pt-4 border-t border-outline-variant/20">

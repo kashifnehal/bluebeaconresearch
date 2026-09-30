@@ -47,6 +47,10 @@ const OTHER_LABEL = "Other";
 // NULL) is never folded into "Other": it's a distinct, honest bucket for
 // missing data, always its own legend entry when present.
 const MAX_OWN_CATEGORIES = 7;
+// Above this share of a window's signals being "Uncategorized", the note
+// below explaining why is worth showing — chosen so a couple of stray
+// pre-#141 rows in an otherwise well-classified window doesn't trigger it.
+const UNCATEGORIZED_NOTE_THRESHOLD = 0.8;
 
 function utcDayKeys(fromMs: number, toMs: number): string[] {
   const days: string[] = [];
@@ -77,11 +81,14 @@ export function DriverBreakdownChart({
       const res = await fetch(
         `/api/signals/driver-breakdown?symbol=${encodeURIComponent(symbol)}&from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}`,
       );
-      const json = (await res.json()) as { rows?: Row[] };
-      return json.rows ?? [];
+      const json = (await res.json()) as { rows?: Row[]; error?: string };
+      return { rows: json.rows ?? [], error: json.error ?? null };
     },
   });
-  const rows = data ?? [];
+  const rows = data?.rows ?? [];
+  // Distinct from the genuine "no signals in this range" state below — a
+  // rate limit or DB error must never render as if BBR simply has no data.
+  const loadError = data?.error ?? null;
 
   // Client-side, already-fetched-data toggle — no refetch on click.
   const [hidden, setHidden] = useState<Set<string>>(new Set());
@@ -94,7 +101,7 @@ export function DriverBreakdownChart({
     });
   }
 
-  const { series, chartData, totalCount } = useMemo(() => {
+  const { series, chartData, totalCount, showUncategorizedNote } = useMemo(() => {
     const totals = new Map<string, number>();
     for (const r of rows) totals.set(r.category, (totals.get(r.category) ?? 0) + r.count);
 
@@ -134,7 +141,9 @@ export function DriverBreakdownChart({
     const chartRows = days.map((d) => ({ date: d, ...byDay.get(d) }));
 
     const total = Array.from(totals.values()).reduce((a, b) => a + b, 0);
-    return { series: seriesList, chartData: chartRows, totalCount: total };
+    const showUncategorizedNote =
+      total > 0 && uncategorizedTotal / total > UNCATEGORIZED_NOTE_THRESHOLD;
+    return { series: seriesList, chartData: chartRows, totalCount: total, showUncategorizedNote };
   }, [rows, fromIso, toIso]);
 
   return (
@@ -148,6 +157,13 @@ export function DriverBreakdownChart({
 
       {isLoading ? (
         <Skeleton className="h-[220px] w-full rounded-lg" data-testid="driver-breakdown-skeleton" />
+      ) : loadError ? (
+        <p
+          className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-16"
+          data-testid="driver-breakdown-error"
+        >
+          Couldn&apos;t load driver data. Try again.
+        </p>
       ) : totalCount === 0 ? (
         <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-16">
           No signals recorded for {label} in this range yet. The price chart is live.
@@ -224,6 +240,12 @@ export function DriverBreakdownChart({
               </AreaChart>
             </ResponsiveContainer>
           </div>
+          {showUncategorizedNote && (
+            <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
+              Most signals in this range were recorded before event categories were stored, so they show as
+              Uncategorized.
+            </p>
+          )}
         </>
       )}
     </div>

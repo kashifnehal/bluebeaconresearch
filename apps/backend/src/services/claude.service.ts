@@ -87,18 +87,36 @@ const SONNET_MODEL = "claude-sonnet-5";
  * path before this change) — severity comes from Claude's own 1-10 judgment call
  * with zero post-processing, or from heuristicClassify()'s fixed keyword-tier
  * ladder (5/6/7/8/9, capped to 6). So this constant is NOT derived from any
- * existing scale — there is none to derive it from. +1 is a deliberately small,
+ * existing scale — there is none to derive it from. +1 was a deliberately small,
  * conservative, founder-reviewable guess, not a validated weight.
  *
  * The underlying claim — that a headline-placed trigger event carries more price
  * impact than the same event reported only in the body — is RavenPack's own
  * webinar statement about RavenPack's data (claude/277 A6). It has not been
- * verified, and it has not been tested against BBR's own signal_outcomes. This
- * adjustment stays unvalidated until someone checks it against real outcomes.
+ * verified, and it has not been tested against BBR's own signal_outcomes.
  *
- * Set to 0 to disable entirely without touching call sites.
+ * DISABLED 2026-10-01 (founder decision D9). Measured against all 2,993 stored
+ * signals: detectHeadlinePlacement() (headline-placement.ts) returns "headline"
+ * whenever ANY of ~192 broad keywords (GEOPOLITICAL_KEYWORDS + MARKET_FINANCE_
+ * KEYWORDS from relevance-filter.ts — "market", "trade", "business", "bank",
+ * "deal", "fund", etc.) appears in the title, which matched about 89.5% of
+ * titles. At that hit rate the bonus was not acting as a placement signal, it
+ * was a near-uniform +1 on severity: severity 6 -> 7 (crosses the full-briefing/
+ * alert threshold), severity 3 -> 4 (crosses the feed's severity>=4 visibility
+ * floor in signal-filters.ts), and a duplicate article differing only in
+ * placement could raise severity above the stored value and trigger the merge
+ * escalation branch in workers/signal-merge.ts. Set to 0 until both of the
+ * following are true: (a) detectHeadlinePlacement() is redesigned so it does not
+ * fire on generic geopolitical/market vocabulary, and (b) the placement claim is
+ * checked against BBR's own signal_outcomes instead of taken from RavenPack's
+ * webinar claim. Do not re-derive a new test or weight as part of disabling this
+ * — that redesign is separate, future work.
+ *
+ * Kept at 0 rather than removed so the [headline-placement] log line (see call
+ * sites below) keeps recording the real headline/body/none split as data for
+ * that future redesign. Set to a positive integer to re-enable.
  */
-const HEADLINE_PLACEMENT_SEVERITY_BONUS = 1;
+export const HEADLINE_PLACEMENT_SEVERITY_BONUS = 0;
 
 /**
  * Bonus-only, per founder condition 2026-09-30: a headline placement may add up to
@@ -112,12 +130,18 @@ const HEADLINE_PLACEMENT_SEVERITY_BONUS = 1;
  */
 const MAX_SEVERITY = 10;
 
-function applyHeadlinePlacementBonus(
+// `bonus` defaults to the shipped constant so every existing call site is
+// unaffected; it's a parameter (not a hardcoded read of the constant) purely
+// so tests can exercise the bonus-applying/clamping logic itself with a
+// non-zero value without depending on HEADLINE_PLACEMENT_SEVERITY_BONUS being
+// non-zero in production.
+export function applyHeadlinePlacementBonus(
   severity: number,
   placement: HeadlinePlacement | undefined,
+  bonus: number = HEADLINE_PLACEMENT_SEVERITY_BONUS,
 ): number {
-  if (placement !== "headline" || HEADLINE_PLACEMENT_SEVERITY_BONUS <= 0) return severity;
-  return Math.min(severity + HEADLINE_PLACEMENT_SEVERITY_BONUS, MAX_SEVERITY);
+  if (placement !== "headline" || bonus <= 0) return severity;
+  return Math.min(severity + bonus, MAX_SEVERITY);
 }
 
 // #142 — watchlist lives in public.media_impact_watchlist (active=true).
