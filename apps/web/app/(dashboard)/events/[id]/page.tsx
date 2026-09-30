@@ -620,6 +620,12 @@ export default function EventDetailPage() {
 
               {/* ── SOURCES TAB ──────────────────────────────────── */}
               <TabsContent value="sources" className="m-0 outline-none">
+                <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                  Every signal links out to the named sources it was built from, and is tagged with a claim-status label — official statement, reported claim, or speculative/unconfirmed — shown on the feed and map views.
+                </p>
+                <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest mb-4">
+                  As a general practice, events are screened for real market relevance before they are published as a signal.
+                </p>
                 {sources.length > 0 ? (
                   <div className="space-y-3">
                     {sources.map((s, i) => (
