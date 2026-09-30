@@ -102,10 +102,10 @@ export async function GET(req: NextRequest) {
     }
 
     const clients = await getRouteSupabaseClients();
-    if (!clients) return NextResponse.json({ rows: [] });
+    if (!clients) return NextResponse.json({ rows: [], error: "unavailable" });
     const { supabase, user } = clients;
     if (!user && process.env.NODE_ENV === "production") {
-      return NextResponse.json({ rows: [] });
+      return NextResponse.json({ rows: [], error: "unauthenticated" });
     }
 
     const fromIso = new Date(fromMs).toISOString();

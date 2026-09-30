@@ -489,6 +489,8 @@ Sections:
 
 > ⚠️ UPDATED 2026-10-01 (same-day follow-up) — the driver chart fixed 4 issues: an undercounted forex symbol (it read `currency_pair_impacts` only; now reads both impact columns and de-dupes — EURUSD went from 39 shown to the real 287), a rate-limit/DB error rendering as if there were simply no signals (now a distinct "couldn't load" state), the overlay's two percent-change lines starting from different real dates while both reading 0%, and the driver-chart query refetching on every hover/overlay pick (its date range is now memoized). The watchlist page's own signal list/count were checked and were already correct (they query both impact columns). Full detail: `docs/brain/06_COMPONENTS.md` §3.7, `docs/brain/05_API.md`.
 
+> ⚠️ UPDATED 2026-10-02 (follow-up to `808f93c`) — two of the driver-breakdown route's early returns (no Supabase client, unauthenticated in production) previously returned `{ rows: [] }` with no error flag at all, so they still rendered as an honest empty state. Both now carry an `error` value ("unavailable" / "unauthenticated"), and the chart now throws on any `error` response (react-query retries twice) instead of caching it as a success — the failure state gained a "Retry" button, with distinct copy for the signed-out case. The "Uncategorized" note's wording was also corrected: live data (41 of 2,994 signals have an `event_category`) shows it's not just older, pre-category signals missing it, so "recorded before categories were stored" was dropped for a plain "have no event category stored" framing. Full detail: `docs/brain/06_COMPONENTS.md` §3.7, `docs/brain/05_API.md`.
+
 ---
 
 ## 6. SETTINGS COMPONENTS
