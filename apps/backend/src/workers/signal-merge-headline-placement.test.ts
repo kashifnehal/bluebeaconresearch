@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { ClaudeService } from "../services/claude.service.js";
 
+process.env.NODE_ENV = "test";
+process.env.SUPABASE_URL = "http://localhost";
+process.env.SUPABASE_SERVICE_ROLE_KEY = "test-supabase-role-key";
+
 function runTest(name: string, fn: () => void | Promise<void>) {
   return (async () => {
     try {
