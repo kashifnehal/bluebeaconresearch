@@ -7,7 +7,7 @@ const CSV_COLUMNS = [
   "Type",
   "Direction",
   "Impact",
-  "Sources",
+  "Reports",
   "Topic/commodity",
 ] as const;
 

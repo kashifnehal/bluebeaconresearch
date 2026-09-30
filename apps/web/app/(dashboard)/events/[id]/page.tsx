@@ -320,7 +320,7 @@ export default function EventDetailPage() {
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary">
                       {signal.sourcesCount}{" "}
-                      {signal.sourcesCount === 1 ? "Source" : "Sources"}
+                      {signal.sourcesCount === 1 ? "Report" : "Reports"}
                     </span>
                   </div>
                 </div>

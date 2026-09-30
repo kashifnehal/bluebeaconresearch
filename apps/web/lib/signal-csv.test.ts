@@ -39,7 +39,7 @@ runTest("header row has the 8 columns in order", () => {
   const header = csv.split("\r\n")[0];
   assert.equal(
     header,
-    '"Date","Event","Summary","Type","Direction","Impact","Sources","Topic/commodity"',
+    '"Date","Event","Summary","Type","Direction","Impact","Reports","Topic/commodity"',
   );
 });
 

@@ -81,7 +81,7 @@ export function MapSignalPopup({
           <FreshTag createdAt={signal.createdAt} className="text-primary normal-case tracking-normal" />
           <span>{timeAgo} ago</span>
           <span>
-            {signal.sourcesCount ?? 1} source
+            {signal.sourcesCount ?? 1} report
             {(signal.sourcesCount ?? 1) === 1 ? "" : "s"}
           </span>
           {signal.country ? <span className="normal-case">{signal.country}</span> : null}

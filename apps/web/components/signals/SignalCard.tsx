@@ -51,7 +51,7 @@ export function SignalCard({
         <div className="flex items-center gap-2 text-outline text-xs">
           <FreshTag createdAt={signal.createdAt} className="text-primary font-mono" />
           <span>{timeAgo}</span>
-          <span>{signal.sourcesCount} sources</span>
+          <span>{signal.sourcesCount} reports</span>
           {variant === "feed" ? (
             <Bookmark
               className="text-outline hover:text-on-surface"

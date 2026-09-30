@@ -127,7 +127,7 @@ export function FilterBar({
 
       <div className={fieldClass}>
         <label htmlFor="filter-min-sources" className={labelClass} style={labelStyle}>
-          Min sources
+          Min reports
         </label>
         <select
           id="filter-min-sources"
