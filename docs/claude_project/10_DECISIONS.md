@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural & Product Decision Log
 
-> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through D32 / ADR 028. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through D37 / ADR 033. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Format: Decision → Context → Options considered → Choice → Rationale → Trade-offs**
@@ -744,3 +744,13 @@ Also decided as part of this same pass:
 **Rationale:** The Analysis-tab-only scope stands on its own merits regardless of the unverifiable citation: it's a deep-dive, analyst-briefing-style field (one sentence of reasoning, not a glanceable badge), and the dense card/feed/drawer surfaces have repeatedly had filler trimmed from them (see the 2026-09-26 drawer-trim entry) rather than grown. A second, separate task in this same batch (a point-in-time-integrity audit for the backtesting engine, cited to the same "claude/229" ticket) was dropped entirely rather than partially fabricated — see `LIVE_TODO.md` for that finding.
 
 **Cross-tree mapping:** Recorded as **ADR 032** in `docs/brain/10_DECISIONS.md`.
+
+## D37: Headline-placement severity bonus disabled — kept as a live, zero-value constant, not reverted (founder decision D9, 2026-10-01)
+
+**Decision:** `HEADLINE_PLACEMENT_SEVERITY_BONUS` (`apps/backend/src/services/claude.service.ts`) is set to `0`. `applyHeadlinePlacementBonus()`, the `detectHeadlinePlacement()` call in all three live collectors (`gnews`/`gdelt`/`rss`-collector.ts), and the `[headline-placement]` log line are left completely unchanged and still run on every classification — only the bonus's numeric effect is off. Re-enabling requires both: (a) a placement test redesigned so it does not fire on generic geopolitical/market vocabulary, and (b) validating the underlying claim against BBR's own `signal_outcomes` rather than RavenPack's unverified webinar statement.
+
+**Context:** The bonus (shipped same day, `0d0da9a`) added +1 severity whenever `detectHeadlinePlacement()` judged a story's trigger keywords to be in the headline. Founder verification measured this against all 2,993 stored signals: the detector reuses `relevance-filter.ts`'s ~192-keyword list (including generic terms like "market", "trade", "bank", "deal", "fund"), broad enough that ~89.5% of titles matched "headline." At that hit rate the bonus was effectively a near-uniform +1 on every classification, not a placement signal — crossing the briefing/alert threshold, the feed's visibility floor, and able to trigger `signal-merge.ts`'s escalation branch on placement alone.
+
+**Rationale:** This is a narrow, disclosed, disable-by-constant correction, not a reversal of the original bonus-only/fully-logged design — that design stays in place for whenever the detector is fixed. Disabling via the existing constant (built with exactly this rollback path in mind) avoids re-doing the collector wiring later, and keeping the log line live means the real headline/body/none split keeps accumulating as the dataset a redesigned detector would be validated against.
+
+**Cross-tree mapping:** Recorded as **ADR 033** in `docs/brain/10_DECISIONS.md`.

@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural Decision Records (ADRs) & Trade-offs
 
-> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through ADR 028 / D32. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through ADR 033 / D37. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
 This document records the foundational architectural decisions, framework selections, infrastructure trade-offs, underlying assumptions, and system risks for Blue Beacon Research.
 
@@ -687,3 +687,21 @@ The Analysis-tab-only scope stands on its own merits regardless of the unverifia
 ### Cross-tree mapping
 
 Recorded as **D36** in `docs/claude_project/10_DECISIONS.md`.
+
+## 34. ADR 033: Headline-placement severity bonus disabled — kept as a live, zero-value constant, not reverted (founder decision D9, 2026-10-01)
+
+### Context
+
+The `HEADLINE_PLACEMENT_SEVERITY_BONUS` scoring adjustment (shipped `0d0da9a`, same day, not itself recorded as an ADR — the original `LIVE_TODO.md` entry treated it as a bounded, disable-by-constant scoring tweak already covered by its own founder conditions rather than a new standing rule) added a small +1 severity bonus whenever `detectHeadlinePlacement()` judged a story's trigger keywords to be in the headline rather than only the body. A founder-requested verification pass measured this against all 2,993 stored signals: `detectHeadlinePlacement()` reuses `relevance-filter.ts`'s existing `GEOPOLITICAL_KEYWORDS`/`MARKET_FINANCE_KEYWORDS` (~192 keywords, including generic terms like "market", "trade", "business", "bank", "deal", "fund") — broad enough that ~89.5% of titles matched "headline." At that hit rate the bonus was not functioning as a placement signal; it was close to a uniform +1 applied to almost every classification, with real consequences: severity 6→7 crosses the threshold that triggers full briefing generation and alerts, severity 3→4 crosses the feed's severity≥4 visibility floor, and a duplicate article differing only in placement could raise severity above an already-stored value and take `signal-merge.ts`'s escalation branch on a spurious basis.
+
+### Decision
+
+`HEADLINE_PLACEMENT_SEVERITY_BONUS` (`apps/backend/src/services/claude.service.ts`) is set to `0`. `applyHeadlinePlacementBonus()`, the `detectHeadlinePlacement()` call in all three live collectors (`gnews`/`gdelt`/`rss`-collector.ts), and the `[headline-placement] rawEvent=... placement=... bonusApplied=... severity(...)` log line are all left completely unchanged and still execute on every classification — only the bonus's numeric effect is off (`bonusApplied` will read `0`). This keeps the real headline/body/none placement distribution flowing into the logs as data for whatever redesign comes next, rather than losing that signal by reverting the feature outright. Re-enabling requires both: (a) a placement test redesigned so it does not fire on generic geopolitical/market vocabulary, and (b) validating the underlying claim against BBR's own `signal_outcomes` rather than relying on RavenPack's unverified webinar statement about RavenPack's own data.
+
+### Rationale
+
+This is a narrow, disclosed, disable-by-constant scoring correction, not a reversal of the original founder-approved design (bonus-only, never a penalty, fully logged) — that design is sound and stays in place for whenever the underlying detector is fixed. Disabling via the existing constant (already built with exactly this rollback path in mind) rather than removing the feature avoids re-doing the collector wiring and logging infrastructure later, and the logging continuing at bonus=0 is itself useful — it's the dataset a redesigned detector would be validated against.
+
+### Cross-tree mapping
+
+Recorded as **D37** in `docs/claude_project/10_DECISIONS.md`.

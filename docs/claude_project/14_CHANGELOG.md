@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 106).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 107).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 107 — Headline-placement severity bonus DISABLED, founder decision D9 (2026-10-01)
+
+`apps/backend` only, same day as PHASE 106. Founder verification measured the placement detector against all 2,993 stored signals: it matched "headline" on ~89.5% of titles — too broad to work as a real placement signal, so the +1 bonus was effectively a near-uniform severity bump rather than a placement-aware one. `HEADLINE_PLACEMENT_SEVERITY_BONUS` set to 0; detection, collector wiring, and the `[headline-placement]` log line are unchanged and stay live, recording the real headline/body/none split as data for a future redesign. Tests rewritten to stop depending on the constant's shipped value (an explicit `bonus` parameter now covers the bonus-application/clamp logic directly), plus a new test asserting the shipped constant is 0 and a new test proving duplicate articles score identically regardless of placement. Re-enabling needs a redesigned placement test and a real check against `signal_outcomes`. Full detail: `docs/brain/14_CHANGELOG.md` v0.130.0.
 
 ## PHASE 106 — Headline-placement severity bonus, claude/277 A6 (2026-10-01)
 
