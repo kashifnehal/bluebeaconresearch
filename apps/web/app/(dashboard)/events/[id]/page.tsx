@@ -319,7 +319,7 @@ export default function EventDetailPage() {
                       Verification
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary">
-                      {signal.sourcesCount} High-Integrity{" "}
+                      {signal.sourcesCount}{" "}
                       {signal.sourcesCount === 1 ? "Source" : "Sources"}
                     </span>
                   </div>
@@ -621,7 +621,7 @@ export default function EventDetailPage() {
               {/* ── SOURCES TAB ──────────────────────────────────── */}
               <TabsContent value="sources" className="m-0 outline-none">
                 <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
-                  Every signal links out to the named sources it was built from, and is tagged with a claim-status label — official statement, reported claim, or speculative/unconfirmed — shown on the feed and map views.
+                  Signals list the named sources they were built from, linking out where the publisher's URL is available, and are tagged with a claim-status label — official statement, reported claim, or speculative/unconfirmed — where that label is available.
                 </p>
                 <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest mb-4">
                   As a general practice, events are screened for real market relevance before they are published as a signal.
