@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Signal, CommodityImpact } from "@blue-beacon-research/shared";
+import { CHOKEPOINTS } from "@blue-beacon-research/shared";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -23,7 +24,7 @@ import {
   DEFAULT_MAP_ZOOM,
 } from "@/lib/map-config";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
-import { getSignalCoordinates } from "@/lib/geo-coords";
+import { getSignalCoordinates, haversineDistanceKm } from "@/lib/geo-coords";
 import {
   DEFAULT_FILTERS,
   regionsMatch,
@@ -73,6 +74,11 @@ type MapLibreMapLike = {
 };
 
 type GeoSignal = Signal & { lat: number; lng: number };
+
+// Arbitrary display choice — no source ties "how close counts as related to
+// this chokepoint" to a specific distance; this is just what reads sensibly
+// on the map, not a researched figure.
+const CHOKEPOINT_SIGNAL_RADIUS_KM = 500;
 
 // Refines a cluster's expansion zoom so the resulting split is closer to
 // ~5 pieces (avoids landing on a zoom that just reveals one giant
@@ -284,6 +290,12 @@ export default function MapPage() {
   const mapLibRef = useRef<any>(null);
 
   const signalsGeoJsonRef = useRef<any | null>(null);
+
+  // Toggleable chokepoints layer (fixed reference markers, not derived from
+  // signals). Default off so the map isn't cluttered until asked for.
+  const [chokepointsVisible, setChokepointsVisible] = useState(false);
+  const chokepointsVisibleRef = useRef(chokepointsVisible);
+  chokepointsVisibleRef.current = chokepointsVisible;
 
   const closePopup = () => {
     setPopupSignal(null);
@@ -587,6 +599,98 @@ export default function MapPage() {
               } as any);
             }
 
+            // Chokepoints layer — static reference points (packages/shared
+            // CHOKEPOINTS), not derived from signals, so this source is built
+            // once here rather than in the signals-data effect below. Same
+            // add-source/add-layer pattern as the heatmap/cluster/
+            // unclustered-point layers above.
+            if (!map.getSource("chokepoints")) {
+              map.addSource("chokepoints", {
+                type: "geojson",
+                data: {
+                  type: "FeatureCollection",
+                  features: CHOKEPOINTS.map((cp) => ({
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [cp.lng, cp.lat] },
+                    properties: {
+                      id: cp.id,
+                      name: cp.name,
+                      commodities: JSON.stringify(cp.commodities),
+                    },
+                  })),
+                },
+              });
+            }
+
+            if (!map.getLayer("chokepoints-layer")) {
+              map.addLayer({
+                id: "chokepoints-layer",
+                type: "circle",
+                source: "chokepoints",
+                layout: {
+                  visibility: chokepointsVisibleRef.current ? "visible" : "none",
+                },
+                paint: {
+                  "circle-radius": 7,
+                  "circle-color": "#38bdf8",
+                  "circle-stroke-color": "#0b1120",
+                  "circle-stroke-width": 2,
+                },
+              } as any);
+            }
+
+            map.on("click", "chokepoints-layer", (e: any) => {
+              e.originalEvent?.preventDefault?.();
+              const feat = e.features && e.features[0];
+              if (!feat) return;
+              const props = feat.properties || {};
+              const [cpLng, cpLat] = (feat.geometry as any).coordinates;
+              let commodities: string[] = [];
+              try {
+                commodities = JSON.parse(String(props.commodities || "[]"));
+              } catch {
+                commodities = [];
+              }
+
+              // Grouped count of CURRENT signals (the same filtered/active
+              // set already backing the map markers and sidebar, via
+              // geolocatedSignalsRef) whose commodity impacts overlap this
+              // chokepoint's commodities AND whose resolved location falls
+              // within CHOKEPOINT_SIGNAL_RADIUS_KM of it.
+              const matchCount = geolocatedSignalsRef.current.filter((s) => {
+                const assets = new Set(
+                  (s.commodityImpacts ?? []).map((c) => c.asset),
+                );
+                if (!commodities.some((c) => assets.has(c))) return false;
+                return (
+                  haversineDistanceKm(cpLat, cpLng, s.lat, s.lng) <=
+                  CHOKEPOINT_SIGNAL_RADIUS_KM
+                );
+              }).length;
+
+              const name = typeof props.name === "string" ? props.name : "Chokepoint";
+              new maplib.Popup({ closeButton: true, closeOnClick: true })
+                .setLngLat([cpLng, cpLat])
+                .setHTML(
+                  `<div style="font-family:inherit;font-size:12px;line-height:1.4;">` +
+                    `<strong>${name}</strong><br/>` +
+                    `${matchCount} current signal${matchCount === 1 ? "" : "s"} within ${CHOKEPOINT_SIGNAL_RADIUS_KM} km` +
+                    `</div>`,
+                )
+                .addTo(map);
+            });
+
+            map.on(
+              "mouseenter",
+              "chokepoints-layer",
+              () => (map.getCanvas().style.cursor = "pointer"),
+            );
+            map.on(
+              "mouseleave",
+              "chokepoints-layer",
+              () => (map.getCanvas().style.cursor = "default"),
+            );
+
             // Click handlers: clusters -> zoom + populate Intelligence Stream, points -> popup + populate Intelligence Stream
             map.on("click", "clusters", (e: any) => {
               const features = map.queryRenderedFeatures(e.point, {
@@ -660,7 +764,7 @@ export default function MapPage() {
 
             map.on("click", (e: any) => {
               const hits = map.queryRenderedFeatures(e.point, {
-                layers: ["unclustered-point", "clusters"],
+                layers: ["unclustered-point", "clusters", "chokepoints-layer"],
               });
               if (hits.length === 0) {
                 closePopup();
@@ -717,6 +821,18 @@ export default function MapPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [popupSignal]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || typeof map.getLayer !== "function" || !map.getLayer("chokepoints-layer")) {
+      return;
+    }
+    map.setLayoutProperty(
+      "chokepoints-layer",
+      "visibility",
+      chokepointsVisible ? "visible" : "none",
+    );
+  }, [chokepointsVisible]);
 
   // Fetch server-side filtered signals when filters change so filters affect actual dataset.
   // Only sets React state here — Effect below (keyed on `geolocatedSignals`) is the single
@@ -803,6 +919,20 @@ export default function MapPage() {
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Map" }]}
           className="bg-black/50 backdrop-blur px-3 py-1.5 rounded-md"
         />
+      </div>
+      <div className="absolute top-3 right-3 z-30">
+        <button
+          type="button"
+          onClick={() => setChokepointsVisible((v) => !v)}
+          aria-pressed={chokepointsVisible}
+          className={`text-[12px] md:text-[11px] font-medium px-3 py-1.5 rounded-md backdrop-blur transition-colors ${
+            chokepointsVisible
+              ? "bg-primary text-on-primary"
+              : "bg-black/50 text-on-surface hover:bg-black/70"
+          }`}
+        >
+          Chokepoints
+        </button>
       </div>
       <div className="absolute inset-0">
         <div

@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 109).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-30 (PHASE 110).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 110 — Map chokepoints layer, #127 leftover chokepoint half (2026-09-30)
+
+`packages/shared` + `apps/web`. New static `CHOKEPOINTS` reference list (8 entries: Strait of Hormuz, Strait of Malacca, Suez Canal, Bab-el-Mandeb, Panama Canal, Turkish Straits, Strait of Gibraltar, Danish Straits) in `packages/shared`, membership-only commodity links type-enforced against `COMMODITIES` (a bad symbol fails the shared package's type-check), sourced per entry — mostly the U.S. EIA "World Oil Transit Chokepoints" report plus USDA/Panama Canal Authority grain-transit data; Strait of Gibraltar deliberately left with no commodities and a "no source found" comment rather than a guess. New toggleable "Chokepoints" layer on the map (default off), same add-source/add-layer pattern as the existing heatmap/cluster layers; clicking a marker shows a count of the current filtered signals whose commodities match that chokepoint's list within 500 km (new `haversineDistanceKm()` helper — no distance helper existed anywhere in the codebase before this, checked both `geo-coords.ts` and `geo-resolver.ts`). No severity-scoring change, no new database table, no change to the existing layers' behavior. Verified via full `pnpm --filter web test` suite + `tsc --noEmit` on `apps/web` and `packages/shared`; not live-browser-tested. Full detail: `docs/brain/14_CHANGELOG.md` v0.133.0.
 
 ## PHASE 109 — Driver-breakdown FX undercounting fix, load-error honesty, overlay alignment (2026-10-01)
 
