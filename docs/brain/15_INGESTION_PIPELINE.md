@@ -130,8 +130,9 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 
 ### 2.4 ACLED Collector (`acled-collector.ts`) — Optional
 
-**Auth:** `ACLED_EMAIL` + `ACLED_PASSWORD` (not configured in production)  
-**Status:** Skipped silently if credentials missing.
+**Auth:** `ACLED_EMAIL` + `ACLED_PASSWORD` (set on Railway `workers` since 2026-09-28) — `POST https://acleddata.com/oauth/token` (`application/x-www-form-urlencoded`: `username`/`password`/`grant_type=password`/`client_id=acled`/`scope=authenticated`), returns `{access_token, expires_in: 86400, refresh_token, token_type}`, used as `Authorization: Bearer <access_token>`.
+**Read:** `GET https://acleddata.com/api/acled/read` (`_format=json`, `event_date`/`event_date_where=>` for a 7-day lookback — no documented pagination), response `{status, success, count, data[], last_update, messages}`; dedup key is `event_id_cnty`.
+**Status (corrected 2026-10-01):** credentials-missing is still skipped silently (an intentional not-configured state), but a login/read *failure* is no longer silent — `acled.service.ts` throws and `acled-collector.ts` records `service_health_events` `status=error`. Previously (through 2026-09-30) the service posted to a non-resolving `api.acleddata.com` host, caught the DNS failure, and returned `null`/`[]`, which the collector logged as a false `"ok — fetched 0 event(s)"` — `raw_events` has zero `source='acled'` rows to date. See `LIVE_TODO.md` (2026-10-01 "ACLED collector — real root-cause fix") for the fix and what's still unverified (no credentials in the dev/fix environment).
 
 ---
 

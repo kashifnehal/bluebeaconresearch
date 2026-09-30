@@ -41,7 +41,7 @@ export async function runAcledCollectorOnce() {
   let materialityRejected = 0;
 
   for (const e of events) {
-    const externalId = e.data_id ? `acled-${e.data_id}` : null;
+    const externalId = e.event_id_cnty ? `acled-${e.event_id_cnty}` : null;
     if (!externalId) continue;
 
     const existing = await supabase
@@ -67,8 +67,8 @@ export async function runAcledCollectorOnce() {
         title,
         summary: e.notes || null,
         country: e.country ?? null,
-        lat: parseFloat(e.latitude) || null,
-        lng: parseFloat(e.longitude) || null,
+        lat: parseFloat(e.latitude ?? "") || null,
+        lng: parseFloat(e.longitude ?? "") || null,
         event_type: e.event_type ?? null,
         event_date: eventDate,
         raw_data: e,
@@ -130,8 +130,8 @@ export async function runAcledCollectorOnce() {
           event_type: eventTypeLabel,
           country: countryLabel,
           region: classification.region,
-          lat: parseFloat(e.latitude) || null,
-          lng: parseFloat(e.longitude) || null,
+          lat: parseFloat(e.latitude ?? "") || null,
+          lng: parseFloat(e.longitude ?? "") || null,
           sources_count: 1,
           commodity_impacts: classification.commodityImpacts,
           currency_pair_impacts: classification.currencyPairImpacts ?? [],
