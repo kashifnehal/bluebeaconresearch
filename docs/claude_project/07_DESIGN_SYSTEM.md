@@ -1,6 +1,6 @@
 # 07_DESIGN_SYSTEM.md — Visual Design System
 
-> **📍 Doc status — SUPERSEDED 2026-09-23.** Neither this file nor `docs/brain/07_DESIGN_SYSTEM.md` matches shipped reality (this one describes a `#10B981` green-accent palette the app never shipped; the brain copy is an earlier Stitch snapshot with mismatched hex values). The canonical design system is now **`docs/stitch_mobile/tactical_intelligence_terminal/DESIGN.md`** — its palette is token-identical to the live `apps/web/tailwind.config.ts` / `globals.css` (`#0E0E0E` / `#131313` / `#201F1F` / `#2A2A2A` / `#6FFBBE` / `#E5E2E1` / `#3C4A42` all verified matching). One correction to that doc: its §5 lists `primary-container` as `#4EDE93`; the live token is `#4EDEA3` — live code wins. Live UI: both `06_COMPONENTS.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — corrected 2026-09-30.** This file previously described a `#10B981` green-accent palette the app never shipped. Section 2 below has been rewritten to match the live tokens in `apps/web/app/globals.css` and `apps/web/tailwind.config.ts` (`primary: "#6ffbbe"`) exactly. **`apps/web/app/globals.css` is the source of truth for all color tokens** — if this doc and the CSS ever disagree again, the CSS wins; update this file, not the other way around. `docs/brain/07_DESIGN_SYSTEM.md` already matched live code before this fix. The canonical design system is now **`docs/stitch_mobile/tactical_intelligence_terminal/DESIGN.md`** — its palette is token-identical to the live `apps/web/tailwind.config.ts` / `globals.css` (`#0E0E0E` / `#131313` / `#201F1F` / `#2A2A2A` / `#6FFBBE` / `#E5E2E1` / `#3C4A42` all verified matching). One correction to that doc: its §5 lists `primary-container` as `#4EDE93`; the live token is `#4EDEA3` — live code wins. Live UI: both `06_COMPONENTS.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Theme: Dark-first terminal aesthetic. Bloomberg meets modern SaaS.**
@@ -11,7 +11,7 @@
 
 Every visual decision reinforces one idea: Blue Beacon Research is a **professional intelligence terminal**, not a consumer app. Users should feel like they're sitting in front of a Bloomberg terminal or a military operations center — serious, data-dense, trusted. The dark theme is non-negotiable. Traders spend hours looking at this. Dark reduces eye strain and signals professionalism.
 
-The green accent (#10B981) was chosen deliberately: it is the color of "go," of active systems, of price-up movements — without being the clichéd finance red/green pair. It creates a distinctive brand identity.
+The green accent (`--accent`, `#4EDEA3` dark / `#2563EB` light) was chosen deliberately: it is the color of "go," of active systems, of price-up movements — without being the clichéd finance red/green pair. It creates a distinctive brand identity.
 
 ---
 
@@ -24,53 +24,50 @@ All colors defined in `apps/web/app/globals.css` as CSS variables. Never use hex
 ```css
 :root {
   /* Backgrounds */
-  --bg-app:       #050914;   /* Outermost page background */
-  --bg-primary:   #0D1117;   /* Cards, modals, main content */
-  --bg-secondary: #161B22;   /* Sidebar, inputs, subtle surfaces */
-  --bg-elevated:  #1C2333;   /* Hover states, selected rows, tooltips */
+  --bg-app:       #0E0E0E;
+  --bg-primary:   #131313;   /* Cards, modals, main content */
+  --bg-secondary: #1C1B1B;   /* Sidebar, inputs, subtle surfaces */
+  --bg-elevated:  #2A2A2A;   /* Hover states, selected rows, tooltips */
 
   /* Borders */
-  --border:        #2D3748;  /* All borders and dividers */
-  --border-subtle: #1E2736;  /* Very subtle separators */
+  --border:        #3C4A42;               /* All borders and dividers */
+  --border-subtle: rgba(60, 74, 66, 0.1); /* Very subtle separators */
 
   /* Text */
-  --text-primary:   #F8FAFC; /* Headings, important labels */
-  --text-secondary: #94A3B8; /* Body text, descriptions */
-  --text-muted:     #4B5563; /* Timestamps, metadata, captions */
+  --text-primary:   #E5E2E1; /* Headings, important labels */
+  --text-secondary: #BBCAC0; /* Body text, descriptions */
+  --text-muted:     #86948A; /* Timestamps, metadata, captions */
 
   /* Accent (green — primary CTA, active states, success) */
-  --accent:        #10B981;  /* Primary buttons, active nav, links */
-  --accent-hover:  #059669;  /* Hover state for accent */
-  --accent-subtle: #0D2B21;  /* Accent backgrounds, info banners */
-
-  /* Blue accent (used for data, signals, info) */
-  --blue:          #3B82F6;
-  --blue-subtle:   #1D2D50;
+  --accent:        #4EDEA3;  /* Primary buttons, active nav, links */
+  --accent-hover:  #6FFBBE;  /* Hover state for accent */
+  --accent-subtle: #005236;  /* Accent backgrounds, info banners */
 
   /* Danger (severity 9-10, errors, breaking alerts) */
-  --danger:        #EF4444;
-  --danger-subtle: #2D1B1B;
+  --danger:        #FFB4AB;
+  --danger-subtle: #7F2927;
 
   /* Warning (severity 7-8, medium risk) */
-  --warning:       #F59E0B;
-  --warning-subtle:#2D2210;
+  --warning:       #FFB3AE;
+  --warning-subtle:#410004;
 
   /* Success (correct signals, connected status, price up) */
-  --success:       #10B981;
-  --success-subtle:#0D2B21;
+  --success:       #4EDEA3;
+  --success-subtle:#002114;
 
   /* Price colors */
-  --price-up:   #34D399;    /* Commodity price increase */
-  --price-down: #F87171;    /* Commodity price decrease */
+  --price-up:   #4EDEA3;    /* Commodity price increase */
+  --price-down: #EE7D77;    /* Commodity price decrease */
 
   /* Border radius */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-  --radius-full: 9999px;
 }
 ```
+
+There is no `--blue` / `--blue-subtle` token and no `--radius-full` token in `globals.css` — both have been removed from this doc (they were never shipped).
 
 ### Light Mode (data-theme="light")
 
@@ -85,11 +82,9 @@ All colors defined in `apps/web/app/globals.css` as CSS variables. Never use hex
   --text-primary:  #0D1117;
   --text-secondary:#6B7280;
   --text-muted:    #9CA3AF;
-  --accent:        #059669;
-  --accent-hover:  #047857;
-  --accent-subtle: #ECFDF5;
-  --blue:          #2563EB;
-  --blue-subtle:   #EFF6FF;
+  --accent:        #2563EB;
+  --accent-hover:  #1D4ED8;
+  --accent-subtle: #EFF6FF;
   --danger:        #DC2626;
   --danger-subtle: #FEF2F2;
   --warning:       #D97706;
@@ -388,7 +383,7 @@ Icon sizes:
 
 ### Logo
 Text logo: **"● BLUE BEACON RESEARCH"**
-- ● dot: accent green (#10B981)
+- ● dot: accent green (`--accent`, `#4EDEA3` dark / `#2563EB` light)
 - "BLUE": white bold
 - "BEACON": white bold
 - "RESEARCH": slightly lighter weight

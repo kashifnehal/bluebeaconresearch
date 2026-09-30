@@ -120,7 +120,9 @@ Do not compete on data breadth. Compete on:
 **Type:** AI-classified news signals for individual stocks
 **Pricing:** Free tier + paid plans
 **Target:** Individual stock traders and investors
-**Threat level:** LOW — different asset class, same concept
+**Threat level:** MEDIUM — feature overlap reported 2026-09-29; commodity-vs-equity positioning (claude/45) unchanged
+
+> 📍 **2026-09-29 founder comparison.** Live-checked pricing: $0 Free / $24.99 per month Premium / $99.99 per month Pro / Enterprise custom. StockNews.AI ships source-backed analysis, price-at-signal, an API, and backtesting records. No other claims added beyond what was directly confirmed that day.
 
 ### What makes Stocknews.ai relevant to BBR:
 - They do exactly what BBR does, but for stocks not commodities
