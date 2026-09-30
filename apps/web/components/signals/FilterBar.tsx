@@ -125,6 +125,25 @@ export function FilterBar({
         </select>
       </div>
 
+      <div className={fieldClass}>
+        <label htmlFor="filter-min-sources" className={labelClass} style={labelStyle}>
+          Min sources
+        </label>
+        <select
+          id="filter-min-sources"
+          data-testid="filter-min-sources"
+          value={value.minSources}
+          onChange={(e) => patch({ minSources: Number(e.target.value) })}
+          className={selectClass}
+        >
+          {[...Array(10)].map((_, i) => (
+            <option key={i + 1} value={i + 1}>
+              {i + 1}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className={`${fieldClass} ${stacked ? "" : "col-span-3 md:col-span-1"}`}>
         <span className={labelClass} style={labelStyle}>
           Time range

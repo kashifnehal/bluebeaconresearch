@@ -31,6 +31,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Auth**: Required (Bearer JWT or API Key).
 - **Query Params**:
   - `severity` (`number`, optional, e.g. `7`): Min severity threshold.
+  - `minSources` (`number`, optional, 2026-09-30): Min `sources_count` — `.gte("sources_count", minSources)`, same pattern as `severity`. Also added to Fastify `GET /v1/signals`'s zod `querySchema` (`apps/backend/src/routes/signals.ts`). Surfaced as a "Min sources" select in `FilterBar.tsx` (`FilterBarValue.minSources`, default `1` = no filtering), shared by the dashboard feed and the map.
   - `commodity` (`string`, optional, e.g. `USOIL`): Target symbol.
   - `region` (`string`, optional, e.g. `Middle East`).
   - `window` (`string`, optional): signal lifecycle filter. Allowed values:

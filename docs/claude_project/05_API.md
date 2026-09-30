@@ -122,6 +122,7 @@ Returns paginated signal feed. Auth required.
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
 | severity | integer | — | Min severity (1–10) |
+| minSources | integer | — | Min `sources_count` (2026-09-30) |
 | region | string | — | Filter by region slug |
 | commodity | string | — | Filter by asset symbol (USOIL etc) |
 | category | string | — | Filter by event_category |
@@ -206,6 +207,7 @@ Returns 5 most recent signals. Used by landing page live preview and dashboard r
 > ⚠️ UPDATED 2026-09-29 (infinite scroll, v0.125.0) — `GET /api/signals` list, default path, beyond page 1 only: the tiered window above no longer applies past page 1. Pagination continues from the full active+severity set with no time cutoff via a real database keyset cursor (opaque `page` token — clients must pass it back verbatim, never construct one). `total`/`hasMore` reflect the real count; new `oldestEventDate` field appears only once pagination genuinely exhausts the set. Explicit `window` values and `sort=newest`/`sort=confidence` are unaffected. Full detail: `docs/brain/05_API.md`, `docs/brain/14_CHANGELOG.md` v0.125.0.
 
 > ⚠️ UPDATED 2026-09-29 (archive/search, v0.126.0) — `GET /api/signals?mode=archive` opt-in branch for `/archive`: no default severity floor, no recency cutoff, optional `from`/`to`, title/summary `search`, keyset cursor on `(event_date, id)`. Feed callers unchanged. Full detail: `docs/brain/05_API.md`, `docs/brain/14_CHANGELOG.md` v0.126.0.
+> ⚠️ NEW 2026-09-30 (min-sources filter) — both `GET /api/signals` (Next.js BFF) and Fastify `GET /v1/signals` gain an optional `minSources` query param, `.gte("sources_count", minSources)`, same pattern as `severity`. Dashboard + map `FilterBar` gained a matching min-sources select (`FilterBarValue.minSources`, default `1` = no filtering). Full detail: `docs/brain/05_API.md`, `docs/brain/06_COMPONENTS.md`.
 > ⚠️ NEW 2026-09-27 (#227 calendar integration) — new `GET /api/market-impact?assets=A,B,C` gives the same magnitude/time-horizon shape at the **asset** level (no signal ID needed), for the Economic Calendar. Reuses the same `signal_outcomes` paging query (extracted to a shared `fetchSignalOutcomeRows()`) and the same pure functions as this route — not a duplicate query. Full detail: `docs/brain/05_API.md`.
 > ⚠️ UPDATED 2026-09-20 (search-quality fix) — the `search` param row above was removed: this Fastify route's actual zod query schema never had one (confirmed reading `apps/backend/src/routes/signals.ts`) — that row was aspirational, not real. Command-palette-style text search only exists on the Next.js BFF `/api/signals` (§6 below), which reads Supabase directly rather than proxying here (also corrected below — a stale claim this ship found). New `sort=relevance` blends recency+severity in application code (`rank_score = severity / (hours_since_created_at + 2)^1.8`, `apps/backend/src/lib/relevance-rank.ts`) over a candidate window (existing filters still apply), then slices the requested page — added for parity with the BFF route's new relevance sort, though nothing currently calls it on this Fastify surface.
 

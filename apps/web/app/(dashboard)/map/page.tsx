@@ -190,6 +190,7 @@ export default function MapPage() {
     region: filters.region,
     minSeverity: filters.minSeverity,
     window: filters.window,
+    minSources: filters.minSources,
   });
   const signals = liveSignals ?? [];
   // Server-side filtered results (severity/region/window) — proper React state, not a ref,
@@ -221,6 +222,7 @@ export default function MapPage() {
       .filter(
         (signal) =>
           signal.severity >= minSeverity &&
+          signal.sourcesCount >= filters.minSources &&
           signalMatchesCommodity(
             signal.commodityImpacts,
             signal.currencyPairImpacts,
@@ -732,6 +734,8 @@ export default function MapPage() {
         if (filters.minSeverity > 1)
           params.set("severity", String(filters.minSeverity));
         if (filters.region) params.set("region", filters.region);
+        if (filters.minSources > 1)
+          params.set("minSources", String(filters.minSources));
         const symbols = symbolsForCommodityFilter(filters.commodity);
         if (symbols.length > 0) params.set("commodity", symbols.join(","));
         if (filters.window) params.set("window", filters.window);

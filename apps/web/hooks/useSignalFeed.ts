@@ -16,6 +16,7 @@ type Options = {
   region?: string | null;
   minSeverity?: number;
   window?: FeedWindow | null;
+  minSources?: number;
 };
 
 export function useSignalFeed({
@@ -25,6 +26,7 @@ export function useSignalFeed({
   region = null,
   minSeverity = 1,
   window = null,
+  minSources = 1,
 }: Options = {}) {
   const {
     data,
@@ -42,6 +44,7 @@ export function useSignalFeed({
       region ?? "",
       minSeverity,
       window ?? "",
+      minSources,
     ],
     initialPageParam: "1",
     queryFn: async ({ pageParam }) => {
@@ -53,6 +56,7 @@ export function useSignalFeed({
       if (region) params.set("region", region);
       if (minSeverity > 1) params.set("severity", String(minSeverity));
       if (window) params.set("window", window);
+      if (minSources > 1) params.set("minSources", String(minSources));
       params.set("page", String(pageParam));
 
       const res = await fetch(`/api/signals?${params.toString()}`);

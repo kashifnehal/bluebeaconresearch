@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-09-29 (signal archive/search page at `/archive` — lookup of the live `signals` table with no severity floor and no recency cutoff)
+Last updated: 2026-09-30 (min-sources feed filter + free CSV export, v0.127.0)
+
+> ⚠️ NEW 2026-09-30 (min-sources filter + CSV export) — `apps/web` + `apps/backend`. New optional `minSources` query param on `GET /api/signals` (Next.js) and `GET /v1/signals` (Fastify), `.gte("sources_count", minSources)`. Shared `FilterBar` (`/dashboard` + `/map`) gains a "Min sources" select (`FilterBarValue.minSources`, default `1`). Dashboard gains a free, no-plan-gate "Export CSV" button (`lib/signal-csv.ts`) exporting the currently filtered/loaded feed client-side. Severity floor (4) and recency+severity ranking untouched — out of scope, founder-decided. Verified via full web + backend test suites and `tsc --noEmit` on both apps; not live-browser-tested. Full detail: `LIVE_TODO.md`, `14_CHANGELOG.md` v0.127.0, `05_API.md`, `06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-09-29 (signal archive/search page) — `apps/web` (+ `apps/backend` search-catalog catalog entry only). New authenticated `/archive` page under the `(dashboard)` route group, sidebar ARCHIVE item, Cmd+K entry. Queries the same `signals` table as the feed via `GET /api/signals?mode=archive`: no default severity floor, no time-window cutoff, optional date range / desk (`DESK_PRESETS` from #125) / region / title-summary keyword, sorted `event_date DESC`, keyset-paginated. Not C17 (40-year historical archive). Full detail: `LIVE_TODO.md`, `14_CHANGELOG.md` v0.126.0, `05_API.md`, `06_COMPONENTS.md`.
 

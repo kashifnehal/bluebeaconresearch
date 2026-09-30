@@ -224,6 +224,11 @@ export async function GET(req: NextRequest) {
     const severity = url.searchParams.get("severity");
     const region = url.searchParams.get("region");
     const commodity = url.searchParams.get("commodity");
+    const minSourcesParam = url.searchParams.get("minSources");
+    const minSources =
+      minSourcesParam && Number.isFinite(Number(minSourcesParam))
+        ? Number(minSourcesParam)
+        : null;
     // Dedicated archive/search lookup (`/archive`). Opt-in so the Intelligence
     // Feed's severity floor, recency window, and relevance ranking stay
     // untouched. Sorted event_date DESC; keyset-paginated; no default cutoff.
@@ -346,6 +351,7 @@ export async function GET(req: NextRequest) {
         .from("signals")
         .select("*, event_date", { count: "exact" });
       if (severity) q = q.gte("severity", Number(severity));
+      if (minSources) q = q.gte("sources_count", minSources);
       if (region) {
         const variants = expandRegionVariants(region);
         q = variants.length > 1 ? q.in("region", variants) : q.eq("region", region);

@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-29 (PHASE 103).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-09-30 (PHASE 104).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 104 — Min-sources feed filter + free CSV export (2026-09-30)
+
+`apps/web` + `apps/backend`. New "Min sources" filter on the shared `FilterBar` (dashboard + map), backed by the existing `sources_count` column — new `minSources` query param on both the Next.js BFF and Fastify signals routes. New "Export CSV" button on the dashboard: client-side export of the currently filtered/loaded feed (Date/Event/Summary/Type/Direction/Impact/Sources/Topic), free for every plan tier, no plan gate. Severity floor and ranking untouched. Verified via full test suites (web + backend) and type-check on both apps; not live-browser-tested. Full detail: `docs/brain/14_CHANGELOG.md` v0.127.0.
 
 ## PHASE 103 — Signal archive/search page (2026-09-29)
 

@@ -40,6 +40,8 @@ export type FilterBarValue = {
   minSeverity: number;
   /** Null = All (omit `window` on the feed; map still sends `window=all`). */
   window: FeedWindow | null;
+  /** Minimum sources_count. 1 = no filtering (every signal has >=1 source). */
+  minSources: number;
 };
 
 // minSeverity floor of 4 (lowered from 6, 2026-09-28) is the single visibility
@@ -55,6 +57,7 @@ export const DEFAULT_FILTERS: FilterBarValue = {
   region: null,
   minSeverity: 4,
   window: null,
+  minSources: 1,
 };
 
 export const WINDOW_OPTIONS: { id: FeedWindow | null; label: string }[] = [

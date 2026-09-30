@@ -11,6 +11,7 @@ const querySchema = z.object({
   severity: z.coerce.number().int().min(1).max(10).optional(),
   region: z.string().min(1).optional(),
   commodity: z.string().min(1).optional(),
+  minSources: z.coerce.number().int().min(1).optional(),
   window: z.enum(["latest", "24h", "7d", "30d", "active"]).optional(),
   cursor: z.string().min(1).optional(),
   // "relevance" = recency+severity blend, computed in application code — see
@@ -48,7 +49,7 @@ export async function signalsRoutes(app: FastifyInstance) {
         .send({ error: "Invalid query", issues: parsed.error.issues });
     }
 
-    const { severity, region, commodity, window, sort, page, limit, cursor } =
+    const { severity, region, commodity, minSources, window, sort, page, limit, cursor } =
       parsed.data;
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -61,6 +62,7 @@ export async function signalsRoutes(app: FastifyInstance) {
     let query = supabase.from("signals").select("*", { count: "exact" });
 
     if (severity) query = query.gte("severity", severity);
+    if (minSources) query = query.gte("sources_count", minSources);
     if (region) {
       const variants = expandRegionVariants(region);
       query =

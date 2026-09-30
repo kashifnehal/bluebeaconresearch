@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-29 (v0.126.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-09-30 (v0.127.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.127.0 — Min-sources feed filter + free CSV export (2026-09-30)
+
+`apps/web` + `apps/backend`. Two independent additions. **Min-sources filter:** `sources_count` already existed on every `signals` row (already shown on `SignalCard`) but nothing filtered on it. New `FilterBarValue.minSources` (default `1` = no filtering, `lib/signal-filters.ts`), a new "Min sources" select in the shared `FilterBar.tsx` (same numeric-select pattern as min-severity), threaded through `useSignalFeed.ts`, the Next.js BFF `GET /api/signals` (`.gte("sources_count", minSources)`), and Fastify `GET /v1/signals` (new optional `minSources` on the zod `querySchema`, same `.gte`). The map page needed its own extra wiring since it re-fetches/re-filters independently of `useSignalFeed`'s normal consumption — both its `useSignalFeed` call and its separate server-side `fetchFiltered` effect now pass `minSources`, and its client-side `geolocatedSignals` filter gained a matching `sourcesCount` check. Severity floor (4) and recency+severity ranking untouched — founder-decided, explicitly out of scope. **CSV export:** new "Export CSV" button on the dashboard next to `FilterBar`, client-side export of the currently filtered/loaded `liveSignals` (no new API call). Columns: Date, Event, Summary, Type, Direction, Impact, Sources, Topic/commodity. New `apps/web/lib/signal-csv.ts` — a manual ~40-line RFC-4180-style encoder, since no CSV library existed in `apps/web/package.json`. Free for every plan tier, no gate (founder decision 2026-09-30). **Verified:** full `pnpm --filter web test` and `pnpm --filter backend test` suites pass; `tsc --noEmit` clean on both apps. **Not live-browser-tested** — filter-plumbing + client-side-export change, not a rendering bug, so outside this project's Playwright-required scope; the CSV button's click→download flow and the map's min-sources behavior haven't been clicked through in a real browser. Full detail: `LIVE_TODO.md`, `05_API.md`, `06_COMPONENTS.md`.
 
 ### v0.126.0 — Signal archive/search page (2026-09-29)
 

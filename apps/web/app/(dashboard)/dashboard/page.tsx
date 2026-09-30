@@ -18,6 +18,7 @@ import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
+import { signalsToCsv, downloadCsv } from "@/lib/signal-csv";
 import { countryToFlagEmoji } from "@/lib/country-flags";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import {
@@ -105,6 +106,7 @@ export default function DashboardPage() {
     region: filters.region,
     minSeverity: filters.minSeverity,
     window: filters.window,
+    minSources: filters.minSources,
   });
   const { tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
 
@@ -152,6 +154,13 @@ export default function DashboardPage() {
 
   const handleFiltersChange = (next: FilterBarValue) => {
     setFilters(next);
+  };
+
+  // #CSV export — client-side from the currently loaded, currently filtered
+  // feed. Free for every user, no plan gate (founder decision 2026-09-30).
+  const handleExportCsv = () => {
+    const csv = signalsToCsv(liveSignals);
+    downloadCsv(`blue-beacon-signals-${new Date().toISOString().slice(0, 10)}.csv`, csv);
   };
 
   // Compute top hotzones from liveSignals
@@ -207,7 +216,8 @@ export default function DashboardPage() {
     filters.commodity != null ||
     filters.region != null ||
     filters.minSeverity > DEFAULT_FILTERS.minSeverity ||
-    filters.window != null;
+    filters.window != null ||
+    filters.minSources > DEFAULT_FILTERS.minSources;
   const canLoadMoreStream = hasNextPage;
   // Manual fallback for the "Load more" button — the sentinel div below
   // triggers the same fetchNextPage automatically as the user scrolls near it.
@@ -351,6 +361,23 @@ export default function DashboardPage() {
               {total} signal{total === 1 ? "" : "s"}
             </span>
           )}
+
+          <button
+            type="button"
+            data-testid="export-csv-button"
+            onClick={handleExportCsv}
+            disabled={liveSignals.length === 0}
+            className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 min-h-[44px] md:min-h-0"
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              backgroundColor: "#201f1f",
+              color: "#bbcac0",
+              borderColor: "#3c4a42",
+            }}
+          >
+            <span className="material-symbols-outlined text-[14px]">download</span>
+            EXPORT CSV
+          </button>
 
           {showMyFeedToggle && (
             <div className="ml-auto flex items-center gap-2 pb-0.5">
