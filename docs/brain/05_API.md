@@ -158,6 +158,19 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 ---
 
+#### `GET /api/signals/driver-breakdown` (Next.js route, doc 278 Part A, 2026-10-01)
+
+- **Description**: Powers the watchlist symbol page's stacked-area "Signal Drivers" chart. Given `{ symbol, from, to }` (ISO timestamps), pages `signals` with `.range()` (1,000-row PostgREST cap — USOIL alone exceeds it in wide windows) filtered on `commodity_impacts`/`currency_pair_impacts` containing the asset (same `.filter(col, "cs", '[{"asset":"X"}]')` pattern as `/api/signals/attribution`; `.contains()` was tried first and silently returned zero rows — do not reuse it here), then groups in-process by UTC day (`event_date ?? created_at`, sliced to `YYYY-MM-DD`) and `event_category`.
+- **Symbol routing**: commodity symbols (in `COMMODITIES`) match `commodity_impacts`; forex symbols (in `FOREX_PAIRS`) match `currency_pair_impacts`. `400` on an unknown symbol.
+- **Response `200 OK`**: `{ "rows": [{ "date", "category", "count" }], "total": number }`. `category` is one of the 9 real `EventCategory` values or the literal `"uncategorized"` for `event_category IS NULL`. Empty `rows`/`total: 0` for a zero-signal instrument (confirmed live for COPPER, XAGUSD) — not an error.
+- **`event_category` data quality note** (found while building this): ~98% of USOIL's 1,276-signal window has `event_category IS NULL` even for signals created well after the 2026-09-13 materiality-gate migration (`20260913160000_signals_materiality_gate.sql`) that added the column — it is not purely a pre-migration artifact, some post-gate classifications still don't set it. The frontend treats this as an honest "Uncategorized" bucket, not dropped or silently merged into `other_market_relevant`.
+- **Frontend bucket cap**: `DriverBreakdownChart.tsx` renders at most the top-7 real categories (by count in the window) with their own color, folds any remaining real categories into a single "Other" series, and always gives "Uncategorized" its own entry when present — total ≤ 8 categorical colors + 1 gray, per the dataviz skill's fixed-8-hue categorical limit. See the component's own comments for the exact rule.
+- **Rate limit**: `rateLimitOrPass('signals-driver-breakdown:<ip>')`, same pattern as the other `/api/signals/*` routes — soft-fails to `{ rows: [] }` rather than a 429.
+- **Auth**: same as `/api/signals/attribution` — unauthenticated allowed outside production.
+- **Not a new Fastify/backend route** — implemented entirely in `apps/web` (queries Supabase directly), matching `/api/signals/attribution`'s existing pattern; no `apps/backend` change was needed.
+
+---
+
 ### 2.2 Alert Rules & Dispatch Endpoints
 
 #### `GET /api/alerts`

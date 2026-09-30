@@ -15,6 +15,13 @@ export const COMMODITIES = [
   // already fetches it from Yahoo Finance (HG=F) — added alongside CORN rather than
   // replacing it, since CORN is equally real/working and nothing calls for dropping it.
   { symbol: "COPPER", label: "Copper", unit: "USD/lb", category: "metals" },
+  // XAGUSD added 2026-10-01 (doc 278 Part C, founder default): price-syncer.ts
+  // already fetches it (SI=F, same as COPPER's HG=F pattern above) but it was
+  // never in this list, so it never showed up anywhere in the product. Zero
+  // signals carry XAGUSD yet — the classifier isn't touched by this change —
+  // so its watchlist page shows a live price chart with an honest "no signals"
+  // driver/correlated-events state until a separate task adds silver coverage.
+  { symbol: "XAGUSD", label: "Silver", unit: "USD/oz", category: "metals" },
   // EURUSD / USDRUB removed 2026-08-15: addable in the watchlist but /api/prices
   // never fetches them (not in its SYMBOLS list), so they permanently showed a
   // flat "— 0.00%" placeholder. Re-add only once the price-syncer worker actually

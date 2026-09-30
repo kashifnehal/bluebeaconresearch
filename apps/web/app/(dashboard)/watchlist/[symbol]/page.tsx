@@ -16,6 +16,7 @@ import {
 import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { CommodityChip } from "@/components/signals/CommodityChip";
+import { DriverBreakdownChart } from "@/components/signals/DriverBreakdownChart";
 import { Pagination } from "@/components/ui/Pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -75,6 +76,11 @@ const CHART_RANGES = [
   { id: "3Y" as const, label: "3Y", source: "yahoo" as const, days: 365 * 3 },
   { id: "5Y" as const, label: "5Y", source: "yahoo" as const, days: null },
 ] as const;
+
+// Dataviz skill categorical palette slot 1 (blue, dark-mode step), distinct
+// from the primary price line's teal — see DriverBreakdownChart.tsx for the
+// full validated set this is drawn from.
+const OVERLAY_LINE_COLOR = "#3987e5";
 
 function slicePointsToDays(
   points: PricePoint[],
@@ -201,6 +207,40 @@ export default function WatchlistSymbolPage() {
   });
   const history5yPoints = history5y?.points ?? [];
 
+  // Correlated-instrument overlay (Part B, doc 278). Peers share this asset's
+  // `category` field within the same list it belongs to (commodities stay
+  // with commodities, forex with forex) — never a hand-picked pairing.
+  const categoryPeers = useMemo(() => {
+    if (!meta) return [];
+    const pool = isForex ? FOREX_PAIRS : COMMODITIES;
+    return pool.filter((m) => m.category === meta.category && m.symbol !== symbol);
+  }, [meta, isForex, symbol]);
+  const [overlaySymbol, setOverlaySymbol] = useState<string | null>(null);
+
+  const { data: overlayHistoryPoints } = useQuery({
+    queryKey: ["price-history", overlaySymbol, HISTORY_DAYS],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/prices/history?symbol=${encodeURIComponent(overlaySymbol as string)}&days=${HISTORY_DAYS}`,
+      );
+      const json = (await res.json()) as { points: PricePoint[] };
+      return json.points ?? [];
+    },
+    enabled: Boolean(overlaySymbol),
+  });
+  const { data: overlayHistory5y } = useQuery({
+    queryKey: ["price-history-5y", overlaySymbol],
+    queryFn: async () => {
+      const res = await fetch(
+        `/api/prices/history-5y?symbol=${encodeURIComponent(overlaySymbol as string)}`,
+      );
+      const json = (await res.json()) as History5y;
+      return json.points ?? [];
+    },
+    enabled: Boolean(overlaySymbol),
+    staleTime: 15 * 60 * 1000,
+  });
+
   const [signalsPage, setSignalsPage] = useState(1);
   const [attributionPoint, setAttributionPoint] = useState<{ t: number; price: number } | null>(null);
   // Different commodity → back to page 1. React's documented "adjust state when a
@@ -212,6 +252,7 @@ export default function WatchlistSymbolPage() {
     setSignalsPage(1);
     setChartRange("1M");
     setAttributionPoint(null);
+    setOverlaySymbol(null);
   }
 
   const {
@@ -294,6 +335,43 @@ export default function WatchlistSymbolPage() {
   const chartDomain: [number, number] | null = chartData.length
     ? [chartData[0].t, chartData[chartData.length - 1].t]
     : null;
+
+  const overlayChartData = useMemo(() => {
+    if (!overlaySymbol) return [];
+    const source = activeRange.source === "db" ? (overlayHistoryPoints ?? []) : (overlayHistory5y ?? []);
+    return slicePointsToDays(source, activeRange.days).map((p) => ({
+      t: new Date(p.fetchedAt).getTime(),
+      price: p.price,
+    }));
+  }, [overlaySymbol, activeRange, overlayHistoryPoints, overlayHistory5y]);
+
+  // Two absolute price scales (e.g. $75/bbl oil vs $2,600/oz gold) can never
+  // share one axis, so an active overlay switches BOTH lines to percent
+  // change from the first point in the selected range instead of price.
+  const isOverlayActive = Boolean(overlaySymbol) && chartData.length >= 2 && overlayChartData.length >= 2;
+  const toPctSeries = (points: { t: number; price: number }[]) => {
+    const base = points[0]?.price;
+    if (!base) return [];
+    return points.map((p) => ({ t: p.t, pct: ((p.price - base) / base) * 100 }));
+  };
+  const primaryPctData = useMemo(
+    () => (isOverlayActive ? toPctSeries(chartData) : []),
+    [isOverlayActive, chartData],
+  );
+  const overlayPctData = useMemo(
+    () => (isOverlayActive ? toPctSeries(overlayChartData) : []),
+    [isOverlayActive, overlayChartData],
+  );
+  const overlayMeta = overlaySymbol
+    ? (COMMODITIES.find((c) => c.symbol === overlaySymbol) ?? FOREX_PAIRS.find((f) => f.symbol === overlaySymbol))
+    : null;
+
+  // Driver-breakdown chart window mirrors the selected price-chart range (5Y
+  // has `days: null` on CHART_RANGES, so it falls back to a concrete 5-year
+  // span here since the API route requires a bounded from/to).
+  const driverWindowDays = activeRange.days ?? 365 * 5;
+  const driverToIso = new Date().toISOString();
+  const driverFromIso = new Date(Date.now() - driverWindowDays * 24 * 60 * 60 * 1000).toISOString();
 
   const chartLoading =
     activeRange.source === "db" ? historyLoading : history5yLoading;
@@ -396,6 +474,52 @@ export default function WatchlistSymbolPage() {
               })}
             </div>
           </div>
+          {categoryPeers.length > 0 && (
+            <div
+              className="flex flex-wrap items-center gap-2 mb-4"
+              role="group"
+              aria-label="Compare with another instrument"
+              data-testid="watchlist-overlay-control"
+            >
+              <span className="font-label text-[11px] md:text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
+                Compare with
+              </span>
+              <button
+                type="button"
+                aria-pressed={!overlaySymbol}
+                data-testid="watchlist-overlay-none"
+                onClick={() => setOverlaySymbol(null)}
+                className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                style={{
+                  backgroundColor: !overlaySymbol ? "#3c4a42" : "transparent",
+                  color: !overlaySymbol ? "#e8ece9" : "#bbcac0",
+                  borderColor: "#3c4a42",
+                }}
+              >
+                None
+              </button>
+              {categoryPeers.map((peer) => {
+                const selected = overlaySymbol === peer.symbol;
+                return (
+                  <button
+                    key={peer.symbol}
+                    type="button"
+                    aria-pressed={selected}
+                    data-testid={`watchlist-overlay-${peer.symbol}`}
+                    onClick={() => setOverlaySymbol(peer.symbol)}
+                    className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                    style={{
+                      backgroundColor: selected ? OVERLAY_LINE_COLOR : "transparent",
+                      color: selected ? "#04101f" : "#bbcac0",
+                      borderColor: selected ? OVERLAY_LINE_COLOR : "#3c4a42",
+                    }}
+                  >
+                    {peer.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {showYahooIncomplete && history5y?.availableFrom && (
             <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
               Showing available history from{" "}
@@ -421,92 +545,154 @@ export default function WatchlistSymbolPage() {
                 : "Not enough price history yet for a chart view"}
             </p>
           ) : (
-            <div className="h-[340px]">
+            <div className="h-[340px]" data-testid={isOverlayActive ? "watchlist-chart-overlay" : "watchlist-chart-price"}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                  <XAxis
-                    dataKey="t"
-                    type="number"
-                    domain={chartDomain ?? ["dataMin", "dataMax"]}
-                    tickFormatter={(t) =>
-                      useLongAxisTicks
-                        ? new Date(t).toLocaleDateString(undefined, {
-                            month: "short",
-                            year: "numeric",
-                          })
-                        : new Date(t).toLocaleDateString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                          })
-                    }
-                    stroke="rgba(255,255,255,0.3)"
-                    tick={{ fontSize: 10, fontFamily: "monospace" }}
-                  />
-                  <YAxis
-                    domain={["auto", "auto"]}
-                    stroke="rgba(255,255,255,0.3)"
-                    tick={{ fontSize: 10, fontFamily: "monospace" }}
-                    width={70}
-                  />
-                  <Tooltip
-                    labelFormatter={(t) =>
-                      useLongAxisTicks
-                        ? new Date(t as number).toLocaleDateString(undefined, {
-                            month: "short",
-                            year: "numeric",
-                          })
-                        : new Date(t as number).toLocaleString()
-                    }
-                    formatter={(v) => [typeof v === "number" ? v.toFixed(2) : String(v), "Price"]}
-                    contentStyle={{
-                      background: "#141414",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      fontSize: 11,
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="price"
-                    stroke="#6ffbbe"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={(dotProps: { cx?: number; cy?: number; index?: number }) => {
-                      const { cx, cy, index } = dotProps;
-                      return (
-                        <g key={`attribution-dot-${index}`}>
-                          <circle cx={cx} cy={cy} r={5} fill="#6ffbbe" stroke="#003824" strokeWidth={1} />
-                          <circle
-                            data-testid="chart-attribution-trigger"
-                            cx={cx}
-                            cy={cy}
-                            r={16}
-                            fill="transparent"
-                            style={{ cursor: "pointer" }}
-                            onClick={() => index !== undefined && handleChartPointClick(index)}
-                          />
-                        </g>
-                      );
-                    }}
-                  />
-                  {activeRange.source === "db" &&
-                    chartDomain &&
-                    events.map((ev) => {
-                      const iso = ev.eventDate ?? ev.createdAt;
-                      const t = new Date(iso).getTime();
-                      if (t < chartDomain[0] || t > chartDomain[1]) return null;
-                      return (
-                        <ReferenceLine key={ev.id} x={t} stroke="rgba(255,255,255,0.35)" strokeDasharray="2 4" />
-                      );
-                    })}
-                </LineChart>
+                {isOverlayActive ? (
+                  <LineChart margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                    <XAxis
+                      dataKey="t"
+                      type="number"
+                      domain={chartDomain ?? ["dataMin", "dataMax"]}
+                      tickFormatter={(t) =>
+                        useLongAxisTicks
+                          ? new Date(t).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+                          : new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+                      }
+                      stroke="rgba(255,255,255,0.3)"
+                      tick={{ fontSize: 10, fontFamily: "monospace" }}
+                      allowDuplicatedCategory={false}
+                    />
+                    <YAxis
+                      domain={["auto", "auto"]}
+                      tickFormatter={(v) => `${v >= 0 ? "+" : ""}${v}%`}
+                      stroke="rgba(255,255,255,0.3)"
+                      tick={{ fontSize: 10, fontFamily: "monospace" }}
+                      width={70}
+                    />
+                    <Tooltip
+                      labelFormatter={(t) =>
+                        useLongAxisTicks
+                          ? new Date(t as number).toLocaleDateString(undefined, { month: "short", year: "numeric" })
+                          : new Date(t as number).toLocaleString()
+                      }
+                      formatter={(v, name) => [
+                        typeof v === "number" ? `${v >= 0 ? "+" : ""}${v.toFixed(2)}%` : String(v),
+                        name,
+                      ]}
+                      contentStyle={{
+                        background: "#141414",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        fontSize: 11,
+                      }}
+                    />
+                    <Line
+                      data={primaryPctData}
+                      type="monotone"
+                      dataKey="pct"
+                      name={meta?.label || symbol}
+                      stroke="#6ffbbe"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      data={overlayPctData}
+                      type="monotone"
+                      dataKey="pct"
+                      name={overlayMeta?.label || overlaySymbol || ""}
+                      stroke={OVERLAY_LINE_COLOR}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                ) : (
+                  <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                    <XAxis
+                      dataKey="t"
+                      type="number"
+                      domain={chartDomain ?? ["dataMin", "dataMax"]}
+                      tickFormatter={(t) =>
+                        useLongAxisTicks
+                          ? new Date(t).toLocaleDateString(undefined, {
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : new Date(t).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })
+                      }
+                      stroke="rgba(255,255,255,0.3)"
+                      tick={{ fontSize: 10, fontFamily: "monospace" }}
+                    />
+                    <YAxis
+                      domain={["auto", "auto"]}
+                      stroke="rgba(255,255,255,0.3)"
+                      tick={{ fontSize: 10, fontFamily: "monospace" }}
+                      width={70}
+                    />
+                    <Tooltip
+                      labelFormatter={(t) =>
+                        useLongAxisTicks
+                          ? new Date(t as number).toLocaleDateString(undefined, {
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : new Date(t as number).toLocaleString()
+                      }
+                      formatter={(v) => [typeof v === "number" ? v.toFixed(2) : String(v), "Price"]}
+                      contentStyle={{
+                        background: "#141414",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        fontSize: 11,
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="price"
+                      stroke="#6ffbbe"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={(dotProps: { cx?: number; cy?: number; index?: number }) => {
+                        const { cx, cy, index } = dotProps;
+                        return (
+                          <g key={`attribution-dot-${index}`}>
+                            <circle cx={cx} cy={cy} r={5} fill="#6ffbbe" stroke="#003824" strokeWidth={1} />
+                            <circle
+                              data-testid="chart-attribution-trigger"
+                              cx={cx}
+                              cy={cy}
+                              r={16}
+                              fill="transparent"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => index !== undefined && handleChartPointClick(index)}
+                            />
+                          </g>
+                        );
+                      }}
+                    />
+                    {activeRange.source === "db" &&
+                      chartDomain &&
+                      events.map((ev) => {
+                        const iso = ev.eventDate ?? ev.createdAt;
+                        const t = new Date(iso).getTime();
+                        if (t < chartDomain[0] || t > chartDomain[1]) return null;
+                        return (
+                          <ReferenceLine key={ev.id} x={t} stroke="rgba(255,255,255,0.35)" strokeDasharray="2 4" />
+                        );
+                      })}
+                  </LineChart>
+                )}
               </ResponsiveContainer>
             </div>
           )}
           <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
-            {activeRange.source === "db"
-              ? "Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation."
-              : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
+            {isOverlayActive
+              ? "Percent change from the start of the selected range. Informational only — not a trading recommendation."
+              : activeRange.source === "db"
+                ? "Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation."
+                : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
           </p>
 
           {attributionPoint && (
@@ -564,6 +750,14 @@ export default function WatchlistSymbolPage() {
             </div>
           )}
         </div>
+
+        <DriverBreakdownChart
+          symbol={symbol}
+          label={meta?.label || symbol}
+          fromIso={driverFromIso}
+          toIso={driverToIso}
+          rangeId={activeRange.label}
+        />
 
         {/* Correlated events timeline */}
         <div className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-6 mb-10">

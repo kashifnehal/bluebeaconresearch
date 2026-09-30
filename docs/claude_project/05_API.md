@@ -266,6 +266,11 @@ A backfilled signal deliberately never triggers `dispatchAlertsForSignal` (see D
 
 ---
 
+#### GET /api/signals/driver-breakdown (Next.js BFF, doc 278 Part A, 2026-10-01)
+Powers the watchlist symbol page's stacked-area "Signal Drivers" chart. Query: `symbol`, `from`, `to` (ISO). Groups signals matching that asset (commodity or forex impacts) by UTC day + `event_category`, paged with `.range()`. Response: `{ "rows": [{ "date", "category", "count" }], "total" }`. `category` is a real `EventCategory` value or `"uncategorized"` when `event_category IS NULL` (true for most historical signals, a real data-quality gap — see `docs/brain/05_API.md` for detail). Empty `rows` for a zero-signal instrument (e.g. COPPER, XAGUSD) is a normal, honest response, not an error. Implemented in `apps/web` only, same pattern as `/api/signals/attribution` — no backend route added.
+
+---
+
 #### POST /v1/search/assist  (Cmd+K search assist, 2026-09-19)
 Auth required. Body: `{ "query": string }` (2–200 chars). RAG over `search_content_embeddings` (real page copy + #155 FAQ), then one Haiku sentence if cosine similarity clears the model threshold. Chat daily Anthropic budget (`isAnthropicBudgetAvailable("chat")` / `assertAnthropicBudget("chat")`). Below threshold or `NO_ANSWER` → `{ "status": "no_confident_answer" }` (200). Budget exceeded → `503 ai_temporarily_unavailable` with the same daily-limit message as #111. Next.js BFF: `app/api/search/assist/route.ts`. See `18_AI_ENGINE.md` §3c.
 

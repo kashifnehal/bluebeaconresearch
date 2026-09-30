@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-30 (PHASE 104).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 105).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 105 — Watchlist driver-breakdown chart, correlated-instrument overlay, XAGUSD coverage (2026-10-01)
+
+`apps/web` + `packages/shared`. New stacked-area "Signal Drivers" chart on the watchlist symbol page (daily signal counts by event category, new `GET /api/signals/driver-breakdown` route, client-side legend toggle, honest empty state for zero-signal assets). New "Compare with" control overlays a same-category peer instrument as a percent-change line on the price chart (never two absolute price scales on one axis). `COMMODITIES` gained Silver (`XAGUSD`) so every tracked instrument has a watchlist page — zero signals yet, classifier untouched. Verified via full test suite + type-check and a live browser walk. Full detail: `docs/brain/14_CHANGELOG.md` v0.128.0.
 
 ## PHASE 104 — Min-sources feed filter + free CSV export (2026-09-30)
 

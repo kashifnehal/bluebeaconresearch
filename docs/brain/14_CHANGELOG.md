@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-09-30 (v0.127.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
+> **📍 Doc status — live changelog as of 2026-10-01 (v0.128.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.128.0 — Watchlist driver-breakdown chart, correlated-instrument overlay, XAGUSD coverage (2026-10-01)
+
+`apps/web` + `packages/shared`, doc 278. New `GET /api/signals/driver-breakdown` (Next.js, DB-direct, `.range()`-paged) groups an instrument's matching signals by UTC day + `event_category`; new `DriverBreakdownChart.tsx` renders it as a stacked area below the watchlist symbol page's price chart, with a client-side-only legend toggle (confirmed to fire zero new requests) and an honest empty state for zero-signal instruments. ~98% of USOIL's signals have `event_category IS NULL` — kept as its own "Uncategorized" legend entry (not folded into a real category or dropped); categories beyond the top-7-by-count fold into "Other" to stay within the dataviz skill's fixed 8-hue categorical limit. New "Compare with" control overlays a same-`category` peer (from `COMMODITIES`/`FOREX_PAIRS`) as a second line, switching both lines to percent-change-from-range-start so one axis never mixes two absolute price scales — hidden when the asset has no peer. `COMMODITIES` gained `XAGUSD` (Silver, `metals`) — `price-syncer.ts` already fetched it, it just wasn't in the shared list; zero signals carry it yet (classifier untouched), so it shows the same honest empty driver-chart state as COPPER. Full 15-instrument price/signal coverage table in the task's own report, not duplicated here. Verified: `pnpm --filter web test` + `tsc --noEmit` clean; live browser walk (USOIL, EURUSD, XAGUSD) confirmed legend toggle/overlay/empty-state behavior; SQL cross-check confirms the route's bucket-count sum matches a direct signal count for the same window. Full detail: `LIVE_TODO.md`, `05_API.md`, `06_COMPONENTS.md`.
 
 ### v0.127.0 — Min-sources feed filter + free CSV export (2026-09-30)
 

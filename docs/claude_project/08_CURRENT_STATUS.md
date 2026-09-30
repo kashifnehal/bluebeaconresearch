@@ -196,7 +196,9 @@
 
 > ⚠️ UPDATED 2026-09-28 (dead 24h feed filter / severity floor 6→4 / blended default sort / Anthropic usage-limit alert) — `GET /api/signals`'s default time filter was an unbounded no-op (`is_active` true on 100% of rows); now a real 24h cutoff. Feed default sort now blends recency+severity instead of pure severity-DESC. New deduped Sentry alert on an Anthropic usage-limit/credit-exhaustion `classifyEvent()` error. **Also confirmed live: the Anthropic usage cap has already cleared**, ahead of its stated 2026-10-01 regain date — real successful `classifyEvent` calls observed as recently as 07:01 UTC this same day. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.118.0.
 
-Last updated: 2026-09-30 (min-sources feed filter + free CSV export, v0.127.0)
+Last updated: 2026-10-01 (watchlist driver-breakdown chart + correlated-instrument overlay + XAGUSD coverage, v0.128.0)
+
+> ⚠️ NEW 2026-10-01 (watchlist driver-breakdown chart + correlated-instrument overlay + XAGUSD) — new stacked-area "Signal Drivers" chart on the watchlist symbol page (daily signal counts by event category, client-side legend toggle, honest empty state for zero-signal assets). New "Compare with" control overlays a same-category peer as a percent-change line on the price chart. `COMMODITIES` gained Silver (`XAGUSD`) — zero signals yet, classifier untouched. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.128.0, `05_API.md`, `06_COMPONENTS.md`.
 
 > ⚠️ NEW 2026-09-30 (min-sources filter + CSV export) — `GET /api/signals` (both Next.js and Fastify) gains an optional `minSources` param (`.gte("sources_count", minSources)`). Shared `FilterBar` (`/dashboard` + `/map`) gains a matching "Min sources" select. Dashboard gains a free, no-plan-gate "Export CSV" button exporting the currently filtered/loaded feed client-side. Severity floor and ranking untouched. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.127.0, `05_API.md`, `06_COMPONENTS.md`.
 
