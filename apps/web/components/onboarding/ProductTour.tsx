@@ -24,7 +24,7 @@ const DASHBOARD_STEPS: Step[] = [
   {
     target: '[data-tour="confidence-score"]',
     content:
-      "Confidence reflects how many independent sources have confirmed this and how directly it maps to a market outcome — not a guess dressed up as a number.",
+      "Confidence reflects how certain our AI-powered research platform is in its read of this event — not how many sources reported it, and not a guess dressed up as a number.",
     placement: "bottom",
   },
   {
