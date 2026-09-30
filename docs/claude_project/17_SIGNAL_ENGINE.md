@@ -52,7 +52,7 @@ A signal contains:
 
 The AI classifier considers these factors in severity scoring:
 
-**Factor 1: Goldstein Scale (from GDELT)**
+**Factor 1: Goldstein Scale (from GDELT) — planned, not built**
 - Ranges from -10 (most conflictual) to +10 (most cooperative)
 - Goldstein ≤ -7 → base severity 9
 - Goldstein -5 to -7 → base severity 8
@@ -65,15 +65,17 @@ The AI classifier considers these factors in severity scoring:
 - 2-3 sources: +0.5 to base severity
 - 4+ sources: +1.0 to base severity
 
-**Factor 3: Chokepoint proximity**
+**Factor 3: Chokepoint proximity — planned, not built**
 - Event within 50km of Hormuz/Suez/Malacca/Bab-el-Mandeb: +1 to severity
 - Event within 50-200km: +0.5
 - Event beyond 200km: no adjustment
 
-**Factor 4: Actor significance**
+**Factor 4: Actor significance — planned, not built**
 - Named state actor (Iran, Russia, China, US): no change (expected)
 - Named non-state actor (Houthis, Hezbollah): +0.5 (unpredictability premium)
 - Sanctions match in actor names: +0.5
+
+No such scoring exists in apps/backend/src/services/claude.service.ts as of 2026-10-01.
 
 **Factor 5: AI re-scoring**
 Claude's output severity is the final arbiter. The Goldstein-based estimate is provided as context in the prompt, but Claude can override it based on the full event context.
