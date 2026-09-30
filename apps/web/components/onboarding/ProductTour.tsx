@@ -11,14 +11,14 @@ const DASHBOARD_STEPS: Step[] = [
   {
     target: '[data-tour="feed-header"]',
     content:
-      "This is your signal feed. New geopolitical and macro events that could affect markets you care about show up here as they're confirmed.",
+      "This is your signal feed. New geopolitical and macro events that could affect markets you care about show up here as our AI-powered research platform classifies them.",
     disableBeacon: true,
     placement: "bottom",
   },
   {
     target: '[data-tour="severity-badge"]',
     content:
-      "Severity 1-10 tells you how market-relevant this is. 8+ is the kind of thing that moves markets before you hear about it elsewhere.",
+      "Severity 1-10 shows how market-relevant this event looks. Higher means more relevant.",
     placement: "bottom",
   },
   {
@@ -36,7 +36,7 @@ const DASHBOARD_STEPS: Step[] = [
   {
     target: '[data-tour="quick-view"]',
     content:
-      "Need a faster look without leaving the feed? This preview opens a slide-over with severity, confidence, commodity impacts, and a short excerpt of the analyst briefing. Open full details from there when you want the complete file.",
+      "Need a faster look without leaving the feed? This preview opens a slide-over with severity, confidence, commodity impacts, and a short excerpt of the generated briefing. Open full details from there when you want the complete file.",
     placement: "left",
   },
 ];
