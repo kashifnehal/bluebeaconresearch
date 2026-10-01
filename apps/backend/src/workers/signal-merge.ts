@@ -2,6 +2,7 @@ import type { getSupabaseAdmin } from "../clients/supabase.js";
 import type { ClassificationResult } from "../services/claude.service.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
+import { buildEventCategoryPatch } from "../lib/event-category-patch.js";
 
 /**
  * Cross-source signal merge. Runs AFTER classifyEvent() — classification is never
@@ -97,6 +98,7 @@ type CandidateSignal = {
   country: string | null;
   summary: string | null;
   event_date: string;
+  event_category: string | null;
 };
 
 type MergeOutcome = "new" | "duplicate" | "escalation";
@@ -163,7 +165,7 @@ async function findMergeCandidate(
   // restriction, vs. a wildcard match risking an incorrect merge.
   const { data: candidates, error } = await supabase
     .from("signals")
-    .select("id, severity, sources_count, raw_event_ids, region, country, summary, event_date")
+    .select("id, severity, sources_count, raw_event_ids, region, country, summary, event_date, event_category")
     .eq("is_active", true)
     .eq("region", region)
     .gte("event_date", lowerBound)
@@ -301,6 +303,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
         sources_count: newSourcesCount,
         updated_at: new Date().toISOString(),
         ...eventDatePatch,
+        ...buildEventCategoryPatch(match.event_category, classification.eventCategory),
       })
       .eq("id", match.id);
 
@@ -326,6 +329,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
       sources_count: newSourcesCount,
       updated_at: new Date().toISOString(),
       ...eventDatePatch,
+      ...buildEventCategoryPatch(match.event_category, classification.eventCategory),
     })
     .eq("id", match.id);
 

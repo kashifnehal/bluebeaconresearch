@@ -392,8 +392,17 @@ export class ClaudeService {
     const callStartedAt = Date.now();
     const watchlist = await getActiveWatchlist();
 
+    // Tracks why this call is about to fall back to heuristicClassify() (if it does) —
+    // logged once, right before the single fallback return point below, so a dashboard
+    // can tell "no API key configured" apart from "budget closed" / "API call failed" /
+    // "Claude's response wasn't parseable JSON" instead of seeing an undifferentiated
+    // heuristic rate. Defaults to "no_client" since that's the only one of the four
+    // reasons with no branch below that sets it explicitly.
+    let fallbackReason: "no_client" | "budget_closed" | "api_error" | "json_parse" = "no_client";
+
     const ingestionBudgetOpen = client ? await isAnthropicBudgetAvailable("ingestion") : false;
     if (client && !ingestionBudgetOpen) {
+      fallbackReason = "budget_closed";
       console.warn(
         "⚠️ [Claude AI Classifier] ingestion daily budget reached — using heuristic fallback.",
       );
@@ -546,6 +555,7 @@ export class ClaudeService {
         }
         return parsed;
       } catch (err: any) {
+        fallbackReason = err instanceof SyntaxError ? "json_parse" : "api_error";
         console.warn(
           `⚠️ [Claude AI Classifier] API error (${err.message}). Using intelligent heuristic fallback classifier.`,
         );
@@ -579,6 +589,9 @@ export class ClaudeService {
       }
     }
 
+    console.log(
+      `[classify-fallback] reason=${fallbackReason} rawEvent=${rawEvent.id ?? "unknown"}`,
+    );
     return this.heuristicClassify(title, summaryText, rawEvent, watchlist, headlinePlacement);
   }
 
