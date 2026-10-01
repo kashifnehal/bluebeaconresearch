@@ -16,6 +16,7 @@ import {
   isAnthropicUsageLimitAlerted,
   setAnthropicUsageLimitAlerted,
 } from "../lib/pipeline-status.js";
+import { maybeSendSpendLimitAlert } from "../lib/spend-limit-alert.js";
 import {
   formatWatchlistPromptBlock,
   getActiveWatchlist,
@@ -58,6 +59,23 @@ function trimToLastCompleteSentence(text: string): string {
 export function isAnthropicUsageLimitError(message: string | null | undefined): boolean {
   const lower = String(message ?? "").toLowerCase();
   return lower.includes("usage limit") || lower.includes("credit balance");
+}
+
+// W5-SPEND-ALERT — a distinct Anthropic Console condition from the usage-limit/credit
+// check above: an HTTP 400 whose body starts "You have reached your sp..." (spend
+// limit). Checked on err.status (not a substring of the whole error, which can embed
+// an unrelated 400 from a different cause) AND the message text, so an unrelated 400
+// never gets misreported as a spend-limit condition. This is exactly what happened
+// Sep 10-27 (see claude.service.ts classifyEvent's catch block) — every failed call
+// silently fell back to heuristicClassify() tagged generically as reason=api_error,
+// with nobody noticing for days.
+export function isAnthropicSpendLimitError(err: {
+  status?: unknown;
+  message?: string | null;
+}): boolean {
+  const status = err?.status;
+  const message = String(err?.message ?? "").toLowerCase();
+  return status === 400 && message.includes("reached your");
 }
 
 // In-process mirror of the persisted Redis flag, so a successful classifyEvent()
@@ -395,10 +413,13 @@ export class ClaudeService {
     // Tracks why this call is about to fall back to heuristicClassify() (if it does) —
     // logged once, right before the single fallback return point below, so a dashboard
     // can tell "no API key configured" apart from "budget closed" / "API call failed" /
-    // "Claude's response wasn't parseable JSON" instead of seeing an undifferentiated
-    // heuristic rate. Defaults to "no_client" since that's the only one of the four
-    // reasons with no branch below that sets it explicitly.
-    let fallbackReason: "no_client" | "budget_closed" | "api_error" | "json_parse" = "no_client";
+    // "Claude's response wasn't parseable JSON" / "Anthropic spend limit reached"
+    // instead of seeing an undifferentiated heuristic rate. Defaults to "no_client"
+    // since that's the only one of these reasons with no branch below that sets it
+    // explicitly. "spend_limit" (W5-SPEND-ALERT) is the one reason that also triggers
+    // an alert email — see the catch block below.
+    let fallbackReason: "no_client" | "budget_closed" | "api_error" | "json_parse" | "spend_limit" =
+      "no_client";
 
     const ingestionBudgetOpen = client ? await isAnthropicBudgetAvailable("ingestion") : false;
     if (client && !ingestionBudgetOpen) {
@@ -555,7 +576,11 @@ export class ClaudeService {
         }
         return parsed;
       } catch (err: any) {
-        fallbackReason = err instanceof SyntaxError ? "json_parse" : "api_error";
+        fallbackReason = err instanceof SyntaxError
+          ? "json_parse"
+          : isAnthropicSpendLimitError(err)
+            ? "spend_limit"
+            : "api_error";
         console.warn(
           `⚠️ [Claude AI Classifier] API error (${err.message}). Using intelligent heuristic fallback classifier.`,
         );
@@ -585,6 +610,22 @@ export class ClaudeService {
           );
           await setAnthropicUsageLimitAlerted(true);
           usageLimitAlertedLocally = true;
+        }
+
+        // W5-SPEND-ALERT — the fallback decision is already made (fallbackReason is
+        // set above); this only sends the at-most-once-per-UTC-day admin email once
+        // that decision is "spend_limit". No extra Anthropic call here (nothing above
+        // added one either — this is purely a read of the error already in hand).
+        // maybeSendSpendLimitAlert() never throws on its own, but it's still wrapped
+        // here so an email/Redis failure can never take down classification.
+        if (fallbackReason === "spend_limit") {
+          try {
+            await maybeSendSpendLimitAlert();
+          } catch (alertErr: any) {
+            console.warn(
+              `[classify-fallback] spend-limit alert email failed: ${alertErr?.message ?? alertErr}`,
+            );
+          }
         }
       }
     }

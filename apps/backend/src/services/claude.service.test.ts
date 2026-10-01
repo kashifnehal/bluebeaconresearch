@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   ClaudeService,
   isAnthropicUsageLimitError,
+  isAnthropicSpendLimitError,
   applyHeadlinePlacementBonus,
   HEADLINE_PLACEMENT_SEVERITY_BONUS,
 } from "./claude.service.js";
@@ -942,6 +943,39 @@ async function main() {
       assert.equal(isAnthropicUsageLimitError(undefined), false);
       assert.equal(isAnthropicUsageLimitError(null), false);
       assert.equal(isAnthropicUsageLimitError(""), false);
+    },
+  );
+
+  // W5-SPEND-ALERT — a 400 is only ever a spend-limit condition when BOTH the status
+  // is 400 AND the message matches Anthropic's actual wording ("You have reached your
+  // sp..."). A 400 for an unrelated reason (bad request shape, invalid model, etc.)
+  // must stay tagged api_error, not get misreported as spend_limit.
+  runTest(
+    "isAnthropicSpendLimitError: only a 400 whose message contains 'reached your' counts; other 400s and other statuses do not",
+    () => {
+      assert.equal(
+        isAnthropicSpendLimitError({
+          status: 400,
+          message: 'You have reached your specified spend limit of $100.',
+        }),
+        true,
+        "the real Anthropic spend-limit wording must match",
+      );
+      assert.equal(
+        isAnthropicSpendLimitError({ status: 400, message: "Invalid request: model not found" }),
+        false,
+        "a 400 without 'reached your' must stay api_error, not spend_limit",
+      );
+      assert.equal(
+        isAnthropicSpendLimitError({ status: 429, message: "You have reached your rate limit" }),
+        false,
+        "a non-400 status must never be classified as spend_limit, even with matching text",
+      );
+      assert.equal(
+        isAnthropicSpendLimitError({ status: 400, message: undefined }),
+        false,
+      );
+      assert.equal(isAnthropicSpendLimitError({}), false);
     },
   );
 
