@@ -24,7 +24,8 @@ import {
   DEFAULT_MAP_ZOOM,
 } from "@/lib/map-config";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
-import { getSignalCoordinates, haversineDistanceKm } from "@/lib/geo-coords";
+import { getSignalCoordinates } from "@/lib/geo-coords";
+import { signalsNearChokepoint, chokepointDirectionTally } from "@/lib/chokepoints";
 import {
   DEFAULT_FILTERS,
   regionsMatch,
@@ -645,28 +646,22 @@ export default function MapPage() {
               if (!feat) return;
               const props = feat.properties || {};
               const [cpLng, cpLat] = (feat.geometry as any).coordinates;
-              let commodities: string[] = [];
-              try {
-                commodities = JSON.parse(String(props.commodities || "[]"));
-              } catch {
-                commodities = [];
-              }
 
               // Grouped count of CURRENT signals (the same filtered/active
               // set already backing the map markers and sidebar, via
               // geolocatedSignalsRef) whose commodity impacts overlap this
               // chokepoint's commodities AND whose resolved location falls
-              // within CHOKEPOINT_SIGNAL_RADIUS_KM of it.
-              const matchCount = geolocatedSignalsRef.current.filter((s) => {
-                const assets = new Set(
-                  (s.commodityImpacts ?? []).map((c) => c.asset),
-                );
-                if (!commodities.some((c) => assets.has(c))) return false;
-                return (
-                  haversineDistanceKm(cpLat, cpLng, s.lat, s.lng) <=
-                  CHOKEPOINT_SIGNAL_RADIUS_KM
-                );
-              }).length;
+              // within CHOKEPOINT_SIGNAL_RADIUS_KM of it. Extracted into the
+              // pure signalsNearChokepoint() (lib/chokepoints.ts) so the
+              // Chokepoints list panel can reuse the exact same rule.
+              const cp = CHOKEPOINTS.find((c) => c.id === props.id);
+              const matchCount = cp
+                ? signalsNearChokepoint(
+                    geolocatedSignalsRef.current,
+                    cp,
+                    CHOKEPOINT_SIGNAL_RADIUS_KM,
+                  ).length
+                : 0;
 
               const name = typeof props.name === "string" ? props.name : "Chokepoint";
               new maplib.Popup({ closeButton: true, closeOnClick: true })
@@ -909,6 +904,30 @@ export default function MapPage() {
     };
   }, [liveSignals]);
 
+  // Grouped chokepoint list (doc claude/278 item 4.6) — same
+  // signalsNearChokepoint() rule as the map's chokepoint popup, over the
+  // same filtered/active geolocatedSignals set. Sorted count desc, then name.
+  const chokepointRows = useMemo(() => {
+    return CHOKEPOINTS.map((cp) => {
+      const matched = signalsNearChokepoint(
+        geolocatedSignals,
+        cp,
+        CHOKEPOINT_SIGNAL_RADIUS_KM,
+      );
+      return {
+        chokepoint: cp,
+        count: matched.length,
+        tally: chokepointDirectionTally(matched, cp),
+      };
+    }).sort((a, b) => b.count - a.count || a.chokepoint.name.localeCompare(b.chokepoint.name));
+  }, [geolocatedSignals]);
+
+  function handleChokepointRowClick(cp: (typeof CHOKEPOINTS)[number]) {
+    const map = mapRef.current;
+    if (!map) return;
+    map.flyTo({ center: [cp.lng, cp.lat], zoom: Math.max(map.getZoom(), 5) });
+  }
+
   return (
     <div className="map-page-root relative w-full mt-16 h-[calc(100vh-64px)] bg-background overflow-hidden">
       {/* Visually hidden — the page is a full-bleed map with no visible title slot,
@@ -933,6 +952,52 @@ export default function MapPage() {
         >
           Chokepoints
         </button>
+        {chokepointsVisible && (
+          <div
+            className="mt-2 w-72 max-h-[60vh] overflow-y-auto rounded-md bg-black/70 backdrop-blur p-2 text-on-surface"
+            data-testid="chokepoints-list-panel"
+          >
+            <ul className="space-y-1">
+              {chokepointRows.map(({ chokepoint, count, tally }) => {
+                const hasCommodities = chokepoint.commodities.length > 0;
+                const directionParts = (
+                  ["up", "down", "volatile", "neutral"] as const
+                )
+                  .filter((d) => tally[d] > 0)
+                  .map((d) => `${d[0].toUpperCase()}${d.slice(1)} ${tally[d]}`);
+                return (
+                  <li key={chokepoint.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleChokepointRowClick(chokepoint)}
+                      className="w-full text-left px-2 py-1.5 rounded-md text-[12px] md:text-[11px] hover:bg-white/10 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{chokepoint.name}</span>
+                        <span className="font-mono text-on-surface-variant">
+                          {count}
+                        </span>
+                      </div>
+                      {!hasCommodities ? (
+                        <div className="text-on-surface-variant text-[11px] md:text-[10px]">
+                          No commodity link found (no source)
+                        </div>
+                      ) : directionParts.length > 0 ? (
+                        <div className="text-on-surface-variant text-[11px] md:text-[10px]">
+                          {directionParts.join(" · ")}
+                        </div>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2 px-2 text-[10px] text-on-surface-variant/80">
+              Counts are signals within {CHOKEPOINT_SIGNAL_RADIUS_KM} km (a
+              display choice, not a sourced threshold).
+            </p>
+          </div>
+        )}
       </div>
       <div className="absolute inset-0">
         <div

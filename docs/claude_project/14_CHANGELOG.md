@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-09-30 (PHASE 110).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 111).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 111 — TASK W1-CHOKE: chokepoints sourcing cleanup + grouped chokepoint list panel (doc claude/278 item 4.6) (2026-10-01)
+
+`packages/shared` + `apps/web`. Re-applied PHASE 110's membership-only/no-weights sourcing rule to `chokepoints.ts`: this session's network still blocks `eia.gov`/`usda.gov` (confirmed via direct fetch attempts), so per the task's "do not guess" instruction, Bab-el-Mandeb lost its gas link (LNG volume reported as ~0 this period), and Panama Canal and Turkish Straits were emptied of every commodity that couldn't be confirmed from an openable document this session — Hormuz/Malacca/Suez/Danish Straits unchanged, Gibraltar still empty. Separately, the map popup's chokepoint-signal-matching logic was extracted into a reusable, unit-tested `signalsNearChokepoint()` helper (`apps/web/lib/chokepoints.ts`), and a new "Chokepoints" list panel was added under the existing map toggle — one row per chokepoint with its live signal count and direction split, a click flies the map to it, and a chokepoint with no sourced commodity link reads "No commodity link found (no source)" instead of a count. `FilterBar`/dashboard untouched. Verified via full `pnpm --filter web test` suite + `tsc --noEmit` on `apps/web` and `packages/shared`; not live-browser-tested. Full detail: `docs/brain/14_CHANGELOG.md` v0.134.0.
 
 ## PHASE 110 — Map chokepoints layer, #127 leftover chokepoint half (2026-09-30)
 
