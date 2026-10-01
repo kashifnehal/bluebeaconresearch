@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import axios from "axios";
-import { AcledService } from "./acled.service.js";
+import { AcledAccessDeniedError, AcledService, describeAxiosError } from "./acled.service.js";
 
 process.env.NODE_ENV = "test";
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
@@ -240,6 +240,99 @@ async function main() {
         process.env.ACLED_EMAIL = email;
         process.env.ACLED_PASSWORD = password;
       }
+    },
+  );
+  await runTest(
+    "describeAxiosError: an object response body is logged as JSON text, never [object Object]",
+    async () => {
+      const text = describeAxiosError(
+        makeAxiosError(403, "Forbidden", {
+          data: { message: "Access denied" },
+          headers: { server: "cloudflare", "cf-ray": "test-ray-id" },
+        }),
+      );
+      assert.ok(text.includes('{"message":"Access denied"}'), text);
+      assert.ok(!text.includes("[object Object]"), text);
+      assert.ok(text.includes("HTTP 403 Forbidden"), text);
+    },
+  );
+
+  await runTest(
+    "describeAxiosError: a string body is still logged as text and capped at 200 chars",
+    async () => {
+      const text = describeAxiosError(
+        makeAxiosError(500, "Internal Server Error", { data: "x".repeat(500) }),
+      );
+      const body = text.split(" | body: ")[1] ?? "";
+      assert.equal(body.length, 200);
+    },
+  );
+
+  await runTest(
+    "fetchRecentEvents: a 403 on the read throws AcledAccessDeniedError with the JSON body in the message",
+    async () => {
+      mockAxios({
+        post: (async () => TOKEN_RESPONSE) as typeof axios.post,
+        get: (async () => {
+          throw makeAxiosError(403, "Forbidden", { data: { message: "Access denied" } });
+        }) as typeof axios.get,
+      });
+
+      const service = new AcledService();
+      await assert.rejects(
+        () => service.fetchRecentEvents(),
+        (err: unknown) => {
+          assert.ok(err instanceof AcledAccessDeniedError);
+          assert.match((err as Error).message, /ACLED read failed: HTTP 403 Forbidden/);
+          assert.match((err as Error).message, /Access denied/);
+          return true;
+        },
+      );
+      restoreAxios();
+    },
+  );
+
+  await runTest(
+    "fetchRecentEvents: a 500 on the read throws a plain Error, not AcledAccessDeniedError",
+    async () => {
+      mockAxios({
+        post: (async () => TOKEN_RESPONSE) as typeof axios.post,
+        get: (async () => {
+          throw makeAxiosError(500, "Internal Server Error");
+        }) as typeof axios.get,
+      });
+
+      const service = new AcledService();
+      await assert.rejects(
+        () => service.fetchRecentEvents(),
+        (err: unknown) => {
+          assert.ok(!(err instanceof AcledAccessDeniedError));
+          return true;
+        },
+      );
+      restoreAxios();
+    },
+  );
+
+  await runTest(
+    "getAccessToken: a 403 on LOGIN is not treated as a data-access denial",
+    async () => {
+      mockAxios({
+        post: (async () => {
+          throw makeAxiosError(403, "Forbidden", { data: "blocked by policy" });
+        }) as typeof axios.post,
+      });
+
+      const service = new AcledService();
+      await assert.rejects(
+        () => service.fetchRecentEvents(),
+        (err: unknown) => {
+          assert.ok(!(err instanceof AcledAccessDeniedError));
+          assert.match((err as Error).message, /ACLED login failed/);
+          return true;
+        },
+      );
+      restoreAxios();
     },
   );
 }

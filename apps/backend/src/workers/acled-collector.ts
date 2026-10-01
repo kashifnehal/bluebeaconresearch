@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
-import { AcledService } from "../services/acled.service.js";
+import { AcledAccessDeniedError, AcledService } from "../services/acled.service.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -9,27 +9,107 @@ import { logMaterialityRejection } from "../lib/materiality-gate.js";
 
 const claude = new ClaudeService();
 
-export async function runAcledCollectorOnce() {
-  const supabase = getSupabaseAdmin();
-  const acled = new AcledService();
+// ── 403 back-off (auto-resume) ────────────────────────────────────────────────
+// When ACLED answers the data read with HTTP 403 the account has no API data
+// access (a tier/licence matter, not something retrying fixes). We then stop
+// calling ACLED for 24 hours, write at most one failure health row per 24 hours,
+// and make ONE attempt after that. A 200 clears the back-off, so ingestion
+// resumes on its own the first cycle after ACLED grants access.
+// 24 hours is an operational choice, not a sourced threshold.
+const ACLED_DENIED_BACKOFF_MS = 24 * 60 * 60 * 1000;
+export const ACLED_ACCESS_DENIED_DETAIL =
+  "ACLED data access denied (HTTP 403). Awaiting licence or tier upgrade. Login works.";
 
-  const fetchStartedAt = Date.now();
+// Module-level on purpose: runAcledCollectorOnce() builds a new AcledService on
+// every run, so the state cannot live on the service object. In memory only (no
+// Redis, no database) — a worker restart resets it and costs at most one extra
+// ACLED call.
+let deniedUntilMs = 0;
+let lastDeniedHealthRowMs = Number.NEGATIVE_INFINITY;
+
+/** Test-only: clear the in-memory back-off state. */
+export function resetAcledBackoffForTests() {
+  deniedUntilMs = 0;
+  lastDeniedHealthRowMs = Number.NEGATIVE_INFINITY;
+}
+
+export interface AcledCollectorResult {
+  fetched: number;
+  inserted: number;
+  duplicates: number;
+  signals: number;
+  materialityRejected: number;
+  /** Set when the run made no ingest: "access_denied" (this run got a 403) or
+   *  "access_denied_backoff" (inside the 24h window, ACLED not called). */
+  skipped?: "access_denied" | "access_denied_backoff";
+}
+
+/** Injection points for tests. Production uses the defaults. */
+export interface AcledCollectorDeps {
+  now?: () => number;
+  acled?: Pick<AcledService, "fetchRecentEvents">;
+  recordHealth?: typeof recordServiceHealth;
+}
+
+export async function runAcledCollectorOnce(
+  deps: AcledCollectorDeps = {},
+): Promise<AcledCollectorResult> {
+  const now = deps.now ?? Date.now;
+  const acled = deps.acled ?? new AcledService();
+  const recordHealth = deps.recordHealth ?? recordServiceHealth;
+
+  // Inside the back-off window: do not call ACLED, write no health row, and return
+  // normally. (workers.ts logs every throw as an error and sends it to Sentry, so a
+  // known, expected state must not throw.)
+  if (now() < deniedUntilMs) {
+    return {
+      fetched: 0,
+      inserted: 0,
+      duplicates: 0,
+      signals: 0,
+      materialityRejected: 0,
+      skipped: "access_denied_backoff",
+    };
+  }
+
+  const supabase = getSupabaseAdmin();
+
+  const fetchStartedAt = now();
   let events: Awaited<ReturnType<AcledService["fetchRecentEvents"]>>;
   try {
     events = await acled.fetchRecentEvents();
-    await recordServiceHealth(
+    deniedUntilMs = 0; // a successful read clears any back-off
+    await recordHealth(
       "acled",
       "ok",
       `fetched ${events.length} event(s)`,
-      Date.now() - fetchStartedAt,
+      now() - fetchStartedAt,
     );
   } catch (e) {
+    if (e instanceof AcledAccessDeniedError) {
+      // Known state (login works, no data access). Back off, log at most one row per
+      // 24h, and return quietly instead of rethrowing.
+      const t = now();
+      deniedUntilMs = t + ACLED_DENIED_BACKOFF_MS;
+      if (t - lastDeniedHealthRowMs >= ACLED_DENIED_BACKOFF_MS) {
+        lastDeniedHealthRowMs = t;
+        await recordHealth("acled", "error", ACLED_ACCESS_DENIED_DETAIL, t - fetchStartedAt);
+      }
+      return {
+        fetched: 0,
+        inserted: 0,
+        duplicates: 0,
+        signals: 0,
+        materialityRejected: 0,
+        skipped: "access_denied",
+      };
+    }
     const msg = e instanceof Error ? e.message : String(e);
     // "ACLED credentials missing" is an intentional not-configured state, not a
     // failure — workers.ts already treats it as debug-level. Everything else is a
     // real fetch failure worth a health row.
     if (!msg.includes("ACLED credentials missing")) {
-      await recordServiceHealth("acled", "error", msg, Date.now() - fetchStartedAt);
+      await recordHealth("acled", "error", msg, now() - fetchStartedAt);
     }
     throw e;
   }

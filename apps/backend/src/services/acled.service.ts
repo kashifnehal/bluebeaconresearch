@@ -34,13 +34,34 @@ export interface AcledEvent {
   [key: string]: unknown;
 }
 
-function describeAxiosError(e: unknown): string {
+/**
+ * Thrown when the data read returns HTTP 403 (login worked, the account has no
+ * API data access). The collector uses this to back off instead of retrying every
+ * ingestion cycle. Matching on the type, not on message text, keeps that logic
+ * from breaking if the wording changes.
+ */
+export class AcledAccessDeniedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AcledAccessDeniedError";
+  }
+}
+
+// Exported for tests only.
+export function describeAxiosError(e: unknown): string {
   if (axios.isAxiosError(e)) {
     const status = e.response?.status;
     const statusText = e.response?.statusText;
     let msg = status ? `HTTP ${status}${statusText ? ` ${statusText}` : ""}` : e.message;
     if (e.response) {
-      const body = String(e.response.data).replace(/\r?\n/g, " ").slice(0, 200);
+      // ACLED's 403 body is JSON ({"message":"Access denied"}); axios parses it to an
+      // object, and String(object) logs "[object Object]". Stringify objects instead.
+      const rawBody = e.response.data;
+      const bodyText =
+        rawBody !== null && typeof rawBody === "object"
+          ? JSON.stringify(rawBody)
+          : String(rawBody);
+      const body = bodyText.replace(/\r?\n/g, " ").slice(0, 200);
       msg += ` | body: ${body}`;
       const server = e.response.headers?.["server"];
       if (server) msg += ` | server: ${server}`;
@@ -134,7 +155,11 @@ export class AcledService {
         timeout: 20_000,
       });
     } catch (e) {
-      throw new Error(`ACLED read failed: ${describeAxiosError(e)}`);
+      const text = `ACLED read failed: ${describeAxiosError(e)}`;
+      if (axios.isAxiosError(e) && e.response?.status === 403) {
+        throw new AcledAccessDeniedError(text);
+      }
+      throw new Error(text);
     }
 
     if (resp.data?.success !== true) {

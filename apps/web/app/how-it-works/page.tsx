@@ -116,7 +116,7 @@ const CLAIM_ROWS: ClaimRow[] = [
 const LIMITS = [
   "Severity and confidence are model outputs, not guarantees.",
   "Some signals are classified by the keyword fallback instead of the model — those are marked, not hidden.",
-  "ACLED conflict-event data is not included yet. The collector is configured but is not currently ingesting (its last runs failed authentication).",
+  "ACLED conflict data: our connection signs in, but ACLED has not yet granted data access, so no ACLED events are ingested yet.",
   "A merged \"reports\" count can include more than one article from the same outlet — it is not a count of distinct sources.",
 ];
 
