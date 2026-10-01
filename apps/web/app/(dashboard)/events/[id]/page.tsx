@@ -47,6 +47,7 @@ import { logFunnelEventOnce, logUsageEvent } from "@/lib/funnel-events";
 import {
   emptyBriefingCopy,
   eventAlertCta,
+  shouldShowLastUpdated,
 } from "@/lib/signal-display";
 
 function eventTypeLabel(eventType?: string | null): string {
@@ -176,6 +177,11 @@ export default function EventDetailPage() {
   const pricesAtSignal = data.pricesAtSignal ?? [];
   const marketImpactMagnitudes = data.marketImpactMagnitudes ?? {};
   const alertCta = eventAlertCta(signal.severity);
+  const showLastUpdated = shouldShowLastUpdated(
+    signal.sourcesCount,
+    signal.createdAt,
+    signal.updatedAt,
+  );
 
   const hasPreciseLocation =
     typeof signal.lat === "number" &&
@@ -322,6 +328,12 @@ export default function EventDetailPage() {
                       {signal.sourcesCount}{" "}
                       {signal.sourcesCount === 1 ? "Report" : "Reports"}
                     </span>
+                    {showLastUpdated ? (
+                      <span className="text-[12px] md:text-[9px] font-mono text-muted">
+                        Last updated{" "}
+                        {safeFormatDistanceToNow(signal.updatedAt, { addSuffix: true })}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

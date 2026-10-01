@@ -13,6 +13,7 @@ import {
   formatConfidencePercent,
   formatPriceSinceFiredSubtext,
   historyErrorCodeFromResponse,
+  shouldShowLastUpdated,
 } from "./signal-display";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -111,6 +112,17 @@ runTest("empty briefing copy is severity-gated, not an outage story", () => {
   const compact = emptyBriefingCopy(6, "compact");
   assert.equal(compact.kind, "severity_gated");
   assert.match(compact.text, /Severity 6/);
+});
+
+runTest("Last updated shows only for merged coverage with a real later update", () => {
+  const created = "2026-09-01T00:00:00.000Z";
+  const sameTime = "2026-09-01T00:00:00.000Z";
+  const later = "2026-09-02T00:00:00.000Z";
+  assert.equal(shouldShowLastUpdated(1, created, later), false);
+  assert.equal(shouldShowLastUpdated(2, created, sameTime), false);
+  assert.equal(shouldShowLastUpdated(2, created, later), true);
+  assert.equal(shouldShowLastUpdated(2, created, undefined), false);
+  assert.equal(shouldShowLastUpdated(1, created, sameTime), false);
 });
 
 runTest("old restoring-capacity string is gone from event page and quick view", () => {

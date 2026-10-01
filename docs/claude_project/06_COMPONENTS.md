@@ -261,6 +261,8 @@ interface SignalCardProps {
 
 **#142 `[Media-Impact]` tag** (`MediaImpactTag.tsx`): shown when `signal.mediaImpactEntity` is set. Compact hover/title on cards; expanded entity + short caveat on the event detail page. Copy is a sourced historical reaction pattern — not a forecast, not a buy/sell. Live dashboard featured / secondary / stream cards render the same tag (those cards are inline in `dashboard/page.tsx`, not `SignalCard`).
 
+> ⚠️ UPDATED 2026-10-01 (W3-P7) — `SignalCard.tsx` and the event-detail Verification block now show "Last updated {timeAgo}" next to the reports count, shown only for merged coverage (`sourcesCount >= 2`) with a real later `updatedAt` than `createdAt` — never "new reports"/"breaking", since `signals.updated_at` can also move for a non-coverage reason (severity-gated AI-briefing backfill). Full detail: `docs/brain/06_COMPONENTS.md` §3.1.
+
 ---
 
 ### SignalChatPanel (apps/web/components/signals/SignalChatPanel.tsx) — #111, `9f2aada`; visual pass 2026-09-12
