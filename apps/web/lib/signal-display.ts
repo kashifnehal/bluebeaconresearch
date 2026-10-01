@@ -106,3 +106,22 @@ export function emptyBriefingCopy(
 export function analysisVerificationCopy(_sourcesCount: number): string | null {
   return null;
 }
+
+/**
+ * signals.updated_at also moves for non-coverage reasons (severity-gated
+ * ai_analysis backfill in signal-generator.ts) — see W3-P7 Step 0. So
+ * "updated_at changed" alone can't mean "new reports came in." Require merged
+ * coverage (sourcesCount >= 2) AND an actual later updated_at as the proxy for
+ * "this signal picked up a later update", not just any touch of the row.
+ */
+export function shouldShowLastUpdated(
+  sourcesCount: number,
+  createdAt: string,
+  updatedAt?: string | null,
+): boolean {
+  if (sourcesCount < 2 || !updatedAt) return false;
+  const created = new Date(createdAt).getTime();
+  const updated = new Date(updatedAt).getTime();
+  if (!Number.isFinite(created) || !Number.isFinite(updated)) return false;
+  return updated > created;
+}
