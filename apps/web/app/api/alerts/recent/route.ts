@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const { supabaseAuth, supabase, user } = clients;
 
   if (!user) {
-    return NextResponse.json({ alerts: [] });
+    return NextResponse.json({ alerts: [], total: 0, hasMore: false });
   }
 
   // `limit` defaults to 10 to preserve NotificationPanel's existing behavior exactly;
@@ -28,6 +28,13 @@ export async function GET(req: NextRequest) {
   // per alert_rule rather than just the last 10 across all rules combined.
   const rawLimit = Number(req.nextUrl.searchParams.get("limit"));
   const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 200) : 10;
+
+  // `offset` defaults to 0 — the alerts page pages forward with it to reach alerts
+  // older than the first `limit` rows (audit #276: this route previously had no way
+  // to see past its first page at all). Omitting it keeps every existing caller
+  // (NotificationPanel's 10-row preview included) on exactly the same first page.
+  const rawOffset = Number(req.nextUrl.searchParams.get("offset"));
+  const offset = Number.isFinite(rawOffset) && rawOffset > 0 ? Math.floor(rawOffset) : 0;
 
   // Real alerts_sent rows only — no fallback to raw signals relabeled as delivered
   // alerts. An empty result here means no alert_rules have matched anything yet, which
@@ -37,20 +44,27 @@ export async function GET(req: NextRequest) {
   // section), `commodity_impacts` (the "which instruments" section) and
   // `raw_event_ids` so the card can link back to the source article(s) the signal
   // was built from.
-  const { data, error } = await supabaseAuth
+  //
+  // `count: "exact"` gives an authoritative total straight from Postgres (not a
+  // row-limited estimate), so the "Showing N of total" text on the alerts page is
+  // honest at any history size.
+  const { data, error, count } = await supabaseAuth
     .from("alerts_sent")
     .select(
       "*, signals(id, title, severity, summary, ai_analysis, commodity_impacts, currency_pair_impacts, is_breaking, updated_at, country, region, event_type, event_date, confidence, raw_event_ids)",
+      { count: "exact" },
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .range(offset, offset + limit - 1);
 
   if (error) {
     return apiErrorLogged(500, "db_error", error);
   }
 
   const rows = data ?? [];
+  const total = count ?? offset + rows.length;
+  const hasMore = offset + rows.length < total;
 
   // Surface the source article(s) each matched signal was built from — already linked
   // through the ingestion pipeline via signals.raw_event_ids → raw_events.raw_data.url.
@@ -92,5 +106,5 @@ export async function GET(req: NextRequest) {
     return { ...r, signals: r.signals ? { ...r.signals, sources } : r.signals };
   });
 
-  return NextResponse.json({ alerts });
+  return NextResponse.json({ alerts, total, hasMore });
 }

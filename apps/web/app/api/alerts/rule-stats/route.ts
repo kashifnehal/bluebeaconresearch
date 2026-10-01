@@ -1,8 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
+import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
 
 const TREND_WINDOW_DAYS = 14;
+
+type AlertsSentRuleSignalRow = { rule_id: string; signal_id: string };
 
 export type RuleStats = {
   ruleId: string;
@@ -37,6 +40,11 @@ export async function GET(_req: NextRequest) {
   // history yet" gate. A signal can have multiple alerts_sent rows (one per delivery
   // channel), so both are deduped by signal_id to match "matches" as the alerts page
   // already defines it.
+  // The all-time query below has no natural upper bound — an active account's
+  // alerts_sent rows grow forever — so it pages with .range() rather than a bare
+  // .select(), the same proven pattern as apps/web/app/api/signals/driver-breakdown/
+  // route.ts's fetchImpactRows: a single unranged query would silently stop at
+  // PostgREST's default row cap and undercount "total matches" with no error.
   const [windowResult, totalResult] = await Promise.all([
     supabaseAuth
       .from("alerts_sent")
@@ -44,21 +52,24 @@ export async function GET(_req: NextRequest) {
       .eq("user_id", user.id)
       .not("rule_id", "is", null)
       .gte("created_at", since.toISOString()),
-    supabaseAuth
-      .from("alerts_sent")
-      .select("rule_id, signal_id")
-      .eq("user_id", user.id)
-      .not("rule_id", "is", null),
+    fetchAllRangedRows<AlertsSentRuleSignalRow>((from, to) =>
+      supabaseAuth
+        .from("alerts_sent")
+        .select("rule_id, signal_id")
+        .eq("user_id", user.id)
+        .not("rule_id", "is", null)
+        .range(from, to),
+    ),
   ]);
 
   if (windowResult.error) return apiErrorLogged(500, "db_error", windowResult.error);
   if (totalResult.error) return apiErrorLogged(500, "db_error", totalResult.error);
 
   const totalSeenByRule = new Map<string, Set<string>>();
-  for (const row of totalResult.data ?? []) {
-    const ruleId = row.rule_id as string;
+  for (const row of totalResult.rows) {
+    const ruleId = row.rule_id;
     const seen = totalSeenByRule.get(ruleId) ?? new Set<string>();
-    seen.add(row.signal_id as string);
+    seen.add(row.signal_id);
     totalSeenByRule.set(ruleId, seen);
   }
 

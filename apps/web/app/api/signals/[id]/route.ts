@@ -4,6 +4,8 @@ import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
+import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
+import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
 import {
   computeMarketImpactCheckpoints,
   computeMarketImpactMagnitude,
@@ -69,6 +71,7 @@ export type EventDetailResponse = {
   sources: EventSource[];
   historicalComparisons: HistoricalComparison[];
   relatedEvents: RelatedEvent[];
+  relatedEventsTotal: number;
   pricesAtSignal: PriceAtSignal[];
   marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry>;
 };
@@ -78,7 +81,18 @@ export type EventDetailResponse = {
 // real traffic. See signal-merge.ts's SIMILARITY_THRESHOLD comment for the same
 // pattern applied to a value that *does* have real backtest evidence behind it.
 const RELATED_EVENTS_WINDOW_DAYS = 7;
-const RELATED_EVENTS_LIMIT = 10;
+// RELATED_EVENTS_PAGE_SIZE (display count, not a query cap) lives in
+// @/lib/related-events — see that file for why it isn't re-exported from here.
+
+type RelatedCandidateRow = {
+  id: string;
+  title: string;
+  country: string | null;
+  event_date: string | null;
+  created_at: string | null;
+  commodity_impacts: Signal["commodityImpacts"] | null;
+  raw_event_ids: string[] | null;
+};
 
 function seendateToIso(seendate: unknown): string | null {
   // GDELT's raw_data.seendate is "20260905T160000Z" (no separators), not ISO-8601.
@@ -157,17 +171,26 @@ export async function GET(
     // broader region-based guess historicalComparisons above uses — an AND with
     // country, not an OR with region, per the explicit correction that a
     // region-only match would make almost everything "related".
+    //
+    // Paged with .range() rather than a bare .limit(50) — the same proven pattern
+    // as apps/web/app/api/signals/driver-breakdown/route.ts's fetchImpactRows. A
+    // fixed .limit(50) candidate pool meant the real highest-relevance matches
+    // beyond the 50th DB row were never even considered, let alone shown (audit
+    // #276). The response-level display cap is RELATED_EVENTS_PAGE_SIZE, applied
+    // after scoring, below.
     row.country && ownCommodityAssets.length > 0
-      ? supabase
-          .from("signals")
-          .select("id, title, event_date, created_at, country, commodity_impacts, raw_event_ids")
-          .neq("id", id)
-          .eq("country", row.country)
-          .gte("event_date", relatedWindowStart)
-          .lte("event_date", row.event_date ?? row.created_at)
-          .order("event_date", { ascending: false })
-          .limit(50)
-      : Promise.resolve({ data: [] as any[], error: null }),
+      ? fetchAllRangedRows<RelatedCandidateRow>((from, to) =>
+          supabase
+            .from("signals")
+            .select("id, title, event_date, created_at, country, commodity_impacts, raw_event_ids")
+            .neq("id", id)
+            .eq("country", row.country)
+            .gte("event_date", relatedWindowStart)
+            .lte("event_date", row.event_date ?? row.created_at)
+            .order("event_date", { ascending: false })
+            .range(from, to),
+        )
+      : Promise.resolve({ rows: [] as RelatedCandidateRow[], error: null }),
   ]);
 
   const sources: EventSource[] = (rawEventsRes.data ?? [])
@@ -196,7 +219,11 @@ export async function GET(
     return "mixed";
   }
 
-  const relatedEvents: RelatedEvent[] = (relatedRes.data ?? [])
+  if (relatedRes.error) {
+    console.error("[signals/:id] related events paging error:", relatedRes.error);
+  }
+
+  const relatedEventsFull: RelatedEvent[] = relatedRes.rows
     .filter((candidate: any) => {
       // Exclude anything already folded into this signal's own merge group.
       const candidateRawIds: string[] = candidate.raw_event_ids ?? [];
@@ -233,8 +260,15 @@ export async function GET(
       };
       return entry;
     })
-    .filter((e: RelatedEvent | null): e is RelatedEvent => e !== null)
-    .slice(0, RELATED_EVENTS_LIMIT);
+    .filter((e: RelatedEvent | null): e is RelatedEvent => e !== null);
+
+  // The full, correctly-scored match set is sent to the client rather than sliced
+  // here — the event-detail page reveals it RELATED_EVENTS_PAGE_SIZE at a time via
+  // its own "Load more", the same already-fetched-then-paginated-client-side
+  // approach the Alerts page's per-rule match list uses. This keeps the "Showing
+  // 50 of N" count and every subsequent page honest without a second round trip.
+  const relatedEvents = relatedEventsFull;
+  const relatedEventsTotal = relatedEventsFull.length;
 
   const historicalComparisons: HistoricalComparison[] = (historicalRes.data ?? []).map(
     (h: any) => ({
@@ -366,6 +400,7 @@ export async function GET(
     sources,
     historicalComparisons,
     relatedEvents,
+    relatedEventsTotal,
     pricesAtSignal,
     marketImpactMagnitudes,
   };

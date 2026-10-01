@@ -34,6 +34,8 @@ import { RECORD_BUTTON_TOOLTIP } from "@/lib/feature-hints";
 import type { Signal } from "@blue-beacon-research/shared";
 import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
+import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
+import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
@@ -92,6 +94,14 @@ export default function EventDetailPage() {
   );
   const [modalChannels, setModalChannels] = useState<string[]>(["telegram"]);
   const [modalForexPairs, setModalForexPairs] = useState<string[]>([]);
+  // How many of the already-fetched, already-scored Related Events to render —
+  // "Load more" reveals further pages of the same in-hand array rather than a
+  // second round trip (see RELATED_EVENTS_PAGE_SIZE in the signals/[id] route).
+  const [visibleRelatedCount, setVisibleRelatedCount] = useState(RELATED_EVENTS_PAGE_SIZE);
+
+  useEffect(() => {
+    setVisibleRelatedCount(RELATED_EVENTS_PAGE_SIZE);
+  }, [id]);
 
   // Minimum funnel step: "first signal viewed" — PostHog computes first-occurrence
   // itself from this event, no client-side "is this the first" tracking needed.
@@ -173,7 +183,10 @@ export default function EventDetailPage() {
   const countryFlag = signal.country ? countryToFlagEmoji(signal.country) : null;
   const sources = data.sources ?? [];
   const historicalComparisons = data.historicalComparisons ?? [];
-  const relatedEvents = data.relatedEvents ?? [];
+  const relatedEventsAll = data.relatedEvents ?? [];
+  const relatedEventsTotal = data.relatedEventsTotal ?? relatedEventsAll.length;
+  const relatedEvents = relatedEventsAll.slice(0, visibleRelatedCount);
+  const relatedEventsHasMore = visibleRelatedCount < relatedEventsAll.length;
   const pricesAtSignal = data.pricesAtSignal ?? [];
   const marketImpactMagnitudes = data.marketImpactMagnitudes ?? {};
   const alertCta = eventAlertCta(signal.severity);
@@ -676,8 +689,11 @@ export default function EventDetailPage() {
 
               {/* ── RELATED EVENTS TAB ───────────────────────────────── */}
               <TabsContent value="related" className="m-0 outline-none">
-                {relatedEvents.length > 0 ? (
+                {relatedEventsAll.length > 0 ? (
                   <div className="space-y-3">
+                    <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest">
+                      Showing {relatedEvents.length} of {relatedEventsTotal}
+                    </p>
                     {relatedEvents.map((r) => (
                       <a
                         key={r.id}
@@ -704,6 +720,16 @@ export default function EventDetailPage() {
                         </span>
                       </a>
                     ))}
+                    <LoadMoreButton
+                      hasMore={relatedEventsHasMore}
+                      isLoading={false}
+                      onClick={() =>
+                        setVisibleRelatedCount((n) => n + RELATED_EVENTS_PAGE_SIZE)
+                      }
+                      loadedCount={relatedEvents.length}
+                      totalCount={relatedEventsTotal}
+                      endLabel="End of related events"
+                    />
                   </div>
                 ) : (
                   <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">

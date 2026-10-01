@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import type { Signal } from "@blue-beacon-research/shared";
 import { FOREX_PAIRS } from "@blue-beacon-research/shared";
@@ -12,6 +12,7 @@ import { CommodityChip } from "@/components/signals/CommodityChip";
 import { toast } from "sonner";
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Pagination } from "@/components/ui/Pagination";
+import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
@@ -37,6 +38,12 @@ type DeliveryStatus = "queued" | "delivered" | "failed";
 // Matched-signals shown per rule at once. 5 matches the list's prior fixed
 // `.slice(0, 5)`, so page 1 of each rule renders exactly as it did before.
 const MATCHES_PER_PAGE = 5;
+
+// alerts_sent rows fetched per "Load more" step — matches the page's prior fixed
+// `limit=100` (audit #276: that fixed fetch had no way to see older alerts at all;
+// this keeps the same page size but makes it a real, repeatable page instead of a
+// hard ceiling). A display choice, not a sourced threshold.
+const ALERTS_PAGE_SIZE = 100;
 
 const CHANNEL_OPTIONS = [
   { id: "telegram", label: "Telegram" },
@@ -179,15 +186,30 @@ export default function AlertsPage() {
     refetchInterval: 30_000,
   });
 
-  const { data: alertsData, isLoading: alertsLoading } = useQuery({
+  const {
+    data: alertsPages,
+    isLoading: alertsLoading,
+    fetchNextPage: fetchMoreAlerts,
+    hasNextPage: hasMoreAlerts,
+    isFetchingNextPage: isFetchingMoreAlerts,
+  } = useInfiniteQuery({
     queryKey: ["alerts", "recent", "for-rules"],
-    queryFn: async () => {
-      const res = await fetch("/api/alerts/recent?limit=100");
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      const res = await fetch(`/api/alerts/recent?limit=${ALERTS_PAGE_SIZE}&offset=${pageParam}`);
       if (!res.ok) throw new Error("Failed to fetch recent alerts");
-      return (await res.json()) as { alerts: AlertSentRow[] };
+      return (await res.json()) as { alerts: AlertSentRow[]; total: number; hasMore: boolean };
     },
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.hasMore ? allPages.flatMap((p) => p.alerts).length : undefined,
     refetchInterval: 30_000,
   });
+
+  const alertRows = useMemo(
+    () => alertsPages?.pages.flatMap((p) => p.alerts) ?? [],
+    [alertsPages],
+  );
+  const alertsTotal = alertsPages?.pages[0]?.total ?? alertRows.length;
 
   const { data: connectedChannels } = useQuery({
     queryKey: ["user-channels", "connected"],
@@ -240,7 +262,6 @@ export default function AlertsPage() {
   // apps/backend/src/workers/alert-dispatcher.ts. Nothing here re-derives or guesses
   // matches client-side.
   const matchesByRule = useMemo(() => {
-    const alertRows = alertsData?.alerts ?? [];
     const perRule = new Map<string, Map<string, MatchedSignal>>();
     for (const row of alertRows) {
       if (!row.rule_id || !row.signals) continue;
@@ -279,7 +300,7 @@ export default function AlertsPage() {
       );
     }
     return result;
-  }, [alertsData]);
+  }, [alertRows]);
 
   // The disclaimer is shown once on the page — attached to the first matched-signal
   // card that actually renders (first rule, in list order, that has ≥1 match).
@@ -729,6 +750,22 @@ export default function AlertsPage() {
               </div>
             );
           })}
+          <div className="flex flex-col items-center gap-1">
+            <span
+              className="text-[12px] md:text-[10px] font-bold uppercase tracking-widest text-on-surface/50"
+              data-testid="alerts-showing-count"
+            >
+              Showing {alertRows.length} of {alertsTotal}
+            </span>
+            <LoadMoreButton
+              hasMore={!!hasMoreAlerts}
+              isLoading={isFetchingMoreAlerts}
+              onClick={() => void fetchMoreAlerts()}
+              loadedCount={alertRows.length}
+              totalCount={alertsTotal}
+              endLabel="End of alert history"
+            />
+          </div>
         </div>
       )}
 
