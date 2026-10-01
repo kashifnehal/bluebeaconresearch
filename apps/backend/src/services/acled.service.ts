@@ -38,7 +38,20 @@ function describeAxiosError(e: unknown): string {
   if (axios.isAxiosError(e)) {
     const status = e.response?.status;
     const statusText = e.response?.statusText;
-    if (status) return `HTTP ${status}${statusText ? ` ${statusText}` : ""}`;
+    if (status) {
+      let detail = `HTTP ${status}${statusText ? ` ${statusText}` : ""}`;
+      if (e.response?.data !== undefined) {
+        detail += ` — ${String(e.response.data).slice(0, 200)}`;
+      }
+      const server = e.response?.headers?.["server"];
+      const cfRay = e.response?.headers?.["cf-ray"];
+      const headerBits = [
+        server ? `server=${server}` : null,
+        cfRay ? `cf-ray=${cfRay}` : null,
+      ].filter(Boolean);
+      if (headerBits.length > 0) detail += ` (${headerBits.join(", ")})`;
+      return detail;
+    }
     return e.message;
   }
   return e instanceof Error ? e.message : String(e);
@@ -71,7 +84,10 @@ export class AcledService {
           scope: "authenticated",
         }).toString(),
         {
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "BlueBeaconResearch/1.0 (contact: bluebeaconresearch@gmail.com)",
+          },
           timeout: 10_000,
         },
       );
@@ -110,6 +126,7 @@ export class AcledService {
         },
         headers: {
           Authorization: `Bearer ${token}`,
+          "User-Agent": "BlueBeaconResearch/1.0 (contact: bluebeaconresearch@gmail.com)",
         },
         timeout: 20_000,
       });

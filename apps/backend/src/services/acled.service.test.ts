@@ -42,13 +42,18 @@ function mockAxios(opts: {
   if (opts.get) (axios as unknown as AxiosLike).get = opts.get;
 }
 
-function makeAxiosError(status: number, statusText: string) {
+function makeAxiosError(
+  status: number,
+  statusText: string,
+  data?: unknown,
+  headers?: Record<string, string>,
+) {
   const err = new Error(`Request failed with status code ${status}`) as Error & {
     isAxiosError: boolean;
-    response: { status: number; statusText: string };
+    response: { status: number; statusText: string; data?: unknown; headers?: Record<string, string> };
   };
   err.isAxiosError = true;
-  err.response = { status, statusText };
+  err.response = { status, statusText, data, headers };
   return err;
 }
 
@@ -147,6 +152,29 @@ async function main() {
         () => service.fetchRecentEvents(),
         /ACLED read failed: HTTP 500 Internal Server Error/,
       );
+      restoreAxios();
+    },
+  );
+
+  await runTest(
+    "fetchRecentEvents: 403 with body 'blocked' surfaces it without leaking the password",
+    async () => {
+      mockAxios({
+        post: (async () => TOKEN_RESPONSE) as typeof axios.post,
+        get: (async () => {
+          throw makeAxiosError(403, "Forbidden", "blocked", {
+            server: "cloudflare",
+            "cf-ray": "test-ray-id",
+          });
+        }) as typeof axios.get,
+      });
+
+      const service = new AcledService();
+      await assert.rejects(() => service.fetchRecentEvents(), (err: Error) => {
+        assert.match(err.message, /blocked/);
+        assert.doesNotMatch(err.message, /test-password/);
+        return true;
+      });
       restoreAxios();
     },
   );
