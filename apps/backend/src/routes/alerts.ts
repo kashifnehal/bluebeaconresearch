@@ -4,6 +4,13 @@ import { z } from "zod";
 import { requireUser } from "../middleware/auth.middleware.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
+// #276 — paging for /history. Default page/limit reproduce the prior fixed
+// 50-row fetch exactly; meta.total lets callers detect more pages.
+const historyQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
 const ruleSchema = z.object({
   name: z.string().min(1).max(120),
   regions: z.array(z.string()).optional().default([]),
@@ -90,15 +97,23 @@ export async function alertsRoutes(app: FastifyInstance) {
 
   app.get("/history", async (req, reply) => {
     const user = requireUser(req, reply);
+    const parsed = historyQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: "Invalid query", issues: parsed.error.issues });
+    }
+    const { page, limit } = parsed.data;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from("alerts_sent")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .range(from, to);
     if (error) return reply.status(500).send({ error: "Query failed" });
-    return reply.send({ data: data ?? [] });
+    return reply.send({ data: data ?? [], meta: { total: count ?? 0, page, limit } });
   });
 }
 

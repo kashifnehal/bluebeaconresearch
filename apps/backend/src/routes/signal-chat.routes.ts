@@ -32,6 +32,18 @@ const DAILY_MESSAGE_LIMIT = 30;
 const BURST_MESSAGE_LIMIT = 5;
 const BURST_WINDOW_MS = 5 * 60 * 1000;
 
+// #276 — history paging. Default page (no `before`) returns the most recent
+// CHAT_HISTORY_PAGE_SIZE messages so the panel opens on the latest exchange;
+// `before` (an earlier page's oldest `created_at`) walks further back for a
+// "Load older messages" control. A display choice, not a sourced threshold.
+const CHAT_HISTORY_PAGE_SIZE = 50;
+const CHAT_HISTORY_MAX_PAGE_SIZE = 100;
+
+const chatHistoryQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(CHAT_HISTORY_MAX_PAGE_SIZE).default(CHAT_HISTORY_PAGE_SIZE),
+  before: z.string().trim().min(1).optional(),
+});
+
 type ChatLimitReason = "rate_limited" | "rate_limited_burst" | "count_failed";
 
 async function chatLimitReason(
@@ -86,17 +98,33 @@ export async function signalChatRoutes(app: FastifyInstance) {
       return denyEarlyAccess(reply);
     }
 
+    const parsedQuery = chatHistoryQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) {
+      return reply.status(400).send({ error: "Invalid query", issues: parsedQuery.error.issues });
+    }
+    const { limit, before } = parsedQuery.data;
+
     const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
+    let query = supabase
       .from("signal_chat_messages")
       .select("id,role,content,created_at")
       .eq("signal_id", signalId)
       .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(50);
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (before) query = query.lt("created_at", before);
+
+    const { data, error } = await query;
 
     if (error) return reply.status(500).send({ error: "Query failed" });
-    return reply.send({ data: data ?? [] });
+
+    // Re-ascend for display (oldest-first within the page) after the
+    // descending fetch above, which is what lets `before` walk backward.
+    const rows = (data ?? []).slice().reverse();
+    const hasMore = rows.length === limit;
+    const nextBefore = rows.length > 0 ? rows[0].created_at : null;
+
+    return reply.send({ data: rows, hasMore, nextBefore });
   });
 
   app.post("/:id/chat", async (req, reply) => {
