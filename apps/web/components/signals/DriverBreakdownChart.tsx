@@ -13,11 +13,17 @@ import {
 } from "recharts";
 import type { EventCategory } from "@blue-beacon-research/shared";
 import { EVENT_CATEGORY_LABELS } from "@/lib/market-impact-assessment";
-import { shouldShowUncategorizedNote } from "@/lib/driver-breakdown";
+import {
+  shouldShowUncategorizedNote,
+  partitionCategoryCounts,
+  isAllUncategorized,
+  orderSeriesKeys,
+  UNCATEGORIZED_KEY,
+  OTHER_KEY,
+} from "@/lib/driver-breakdown";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const UNCATEGORIZED_KEY = "uncategorized" as const;
-type BucketKey = EventCategory | typeof UNCATEGORIZED_KEY | "other";
+type BucketKey = EventCategory | typeof UNCATEGORIZED_KEY | typeof OTHER_KEY;
 
 type Row = { date: string; category: string; count: number };
 
@@ -101,33 +107,28 @@ export function DriverBreakdownChart({
     });
   }
 
-  const { series, chartData, totalCount, showUncategorizedNote } = useMemo(() => {
-    const totals = new Map<string, number>();
-    for (const r of rows) totals.set(r.category, (totals.get(r.category) ?? 0) + r.count);
-
-    const uncategorizedTotal = totals.get(UNCATEGORIZED_KEY) ?? 0;
-    const realCategories = Array.from(totals.entries())
-      .filter(([cat]) => cat !== UNCATEGORIZED_KEY)
-      .sort((a, b) => b[1] - a[1]);
-    const ownReal = realCategories.slice(0, MAX_OWN_CATEGORIES);
-    const overflowReal = realCategories.slice(MAX_OWN_CATEGORIES);
-    const otherTotal = overflowReal.reduce((sum, [, c]) => sum + c, 0);
-
-    const seriesList: { key: BucketKey; label: string; color: string }[] = ownReal.map(
-      ([cat], i) => ({
-        key: cat as EventCategory,
-        label: EVENT_CATEGORY_LABELS[cat as EventCategory] ?? cat,
-        color: CATEGORY_COLORS[i],
-      }),
+  const { series, chartData, totalCount, showUncategorizedNote, allUncategorized } = useMemo(() => {
+    const partition = partitionCategoryCounts(rows);
+    const orderedKeys = orderSeriesKeys(partition, MAX_OWN_CATEGORIES);
+    const overflowKeySet = new Set(
+      partition.realCategories.slice(MAX_OWN_CATEGORIES).map(([cat]) => cat),
     );
-    if (otherTotal > 0) {
-      seriesList.push({ key: "other", label: OTHER_LABEL, color: CATEGORY_COLORS[MAX_OWN_CATEGORIES] });
-    }
-    if (uncategorizedTotal > 0) {
-      seriesList.push({ key: UNCATEGORIZED_KEY, label: "Uncategorized", color: UNCATEGORIZED_COLOR });
-    }
 
-    const overflowKeySet = new Set(overflowReal.map(([cat]) => cat));
+    const seriesList: { key: BucketKey; label: string; color: string }[] = orderedKeys.map((key) => {
+      if (key === UNCATEGORIZED_KEY) {
+        return { key: UNCATEGORIZED_KEY, label: "Older signals (not categorized)", color: UNCATEGORIZED_COLOR };
+      }
+      if (key === OTHER_KEY) {
+        return { key: OTHER_KEY, label: OTHER_LABEL, color: CATEGORY_COLORS[MAX_OWN_CATEGORIES] };
+      }
+      const i = partition.realCategories.findIndex(([cat]) => cat === key);
+      return {
+        key: key as EventCategory,
+        label: EVENT_CATEGORY_LABELS[key as EventCategory] ?? key,
+        color: CATEGORY_COLORS[i],
+      };
+    });
+
     const fromMs = new Date(fromIso).getTime();
     const toMs = new Date(toIso).getTime();
     const days = utcDayKeys(fromMs, toMs);
@@ -135,14 +136,19 @@ export function DriverBreakdownChart({
     for (const r of rows) {
       const bucket = byDay.get(r.date);
       if (!bucket) continue; // outside the computed day range — shouldn't happen given from/to match the query
-      const seriesKey = overflowKeySet.has(r.category) ? "other" : r.category;
+      const seriesKey = overflowKeySet.has(r.category) ? OTHER_KEY : r.category;
       bucket[seriesKey] = (bucket[seriesKey] ?? 0) + r.count;
     }
     const chartRows = days.map((d) => ({ date: d, ...byDay.get(d) }));
 
-    const total = Array.from(totals.values()).reduce((a, b) => a + b, 0);
-    const showUncategorizedNote = shouldShowUncategorizedNote(total, uncategorizedTotal);
-    return { series: seriesList, chartData: chartRows, totalCount: total, showUncategorizedNote };
+    const showUncategorizedNote = shouldShowUncategorizedNote(partition.total, partition.uncategorizedTotal);
+    return {
+      series: seriesList,
+      chartData: chartRows,
+      totalCount: partition.total,
+      showUncategorizedNote,
+      allUncategorized: isAllUncategorized(partition),
+    };
   }, [rows, fromIso, toIso]);
 
   return (
@@ -156,12 +162,10 @@ export function DriverBreakdownChart({
 
       {isLoading ? (
         <Skeleton className="h-[220px] w-full rounded-lg" data-testid="driver-breakdown-skeleton" />
-      ) : isError ? (
+      ) : isError && loadErrorCode === "unauthenticated" ? (
         <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-error">
           <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
-            {loadErrorCode === "unauthenticated"
-              ? "Sign in to see driver data."
-              : "Couldn't load driver data. Try again."}
+            Sign in to see driver data.
           </p>
           <button
             type="button"
@@ -172,10 +176,26 @@ export function DriverBreakdownChart({
             Retry
           </button>
         </div>
-      ) : totalCount === 0 ? (
-        <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-16">
-          No signals recorded for {label} in this range yet. The price chart is live.
-        </p>
+      ) : isError || totalCount === 0 ? (
+        // The price chart above this panel has its own data source and never
+        // depends on this request — a failed/empty driver fetch loses only
+        // this panel's content, never the price chart, and always shows this
+        // line rather than leaving the panel blank.
+        <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-unavailable">
+          <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+            Signal breakdown unavailable for this range.
+          </p>
+          {isError && (
+            <button
+              type="button"
+              data-testid="driver-breakdown-retry"
+              onClick={() => refetch()}
+              className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
+            >
+              Retry
+            </button>
+          )}
+        </div>
       ) : (
         <>
           <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Signal driver legend">
@@ -248,10 +268,17 @@ export function DriverBreakdownChart({
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          {showUncategorizedNote && (
+          {allUncategorized ? (
             <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
-              Most signals in this range have no event category stored, so they show as Uncategorized.
+              Signals in this range were created before categories were added, so they are grouped together. The price
+              chart is not affected.
             </p>
+          ) : (
+            showUncategorizedNote && (
+              <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
+                Most signals in this range have no event category stored, so they show as Uncategorized.
+              </p>
+            )
           )}
         </>
       )}

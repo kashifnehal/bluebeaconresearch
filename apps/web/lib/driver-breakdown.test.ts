@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
 
-import { mergeSignalRows, shouldShowUncategorizedNote, type DriverSignalRow } from "./driver-breakdown";
+import {
+  mergeSignalRows,
+  shouldShowUncategorizedNote,
+  partitionCategoryCounts,
+  isAllUncategorized,
+  orderSeriesKeys,
+  UNCATEGORIZED_KEY,
+  OTHER_KEY,
+  type DriverSignalRow,
+} from "./driver-breakdown";
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -63,4 +72,91 @@ runTest("note shown once uncategorized share exceeds the 0.8 threshold", () => {
 
 runTest("no note when uncategorized is a small minority", () => {
   assert.equal(shouldShowUncategorizedNote(100, 2), false);
+});
+
+runTest("partitionCategoryCounts: empty input has zero total and no categories", () => {
+  const partition = partitionCategoryCounts([]);
+  assert.deepEqual(partition.realCategories, []);
+  assert.equal(partition.uncategorizedTotal, 0);
+  assert.equal(partition.total, 0);
+});
+
+runTest("partitionCategoryCounts: mixed input splits real categories from uncategorized", () => {
+  const partition = partitionCategoryCounts([
+    { category: "armed_conflict_security", count: 5 },
+    { category: UNCATEGORIZED_KEY, count: 3 },
+    { category: "armed_conflict_security", count: 1 },
+    { category: "trade_policy_tariffs", count: 2 },
+  ]);
+  assert.deepEqual(partition.realCategories, [
+    ["armed_conflict_security", 6],
+    ["trade_policy_tariffs", 2],
+  ]);
+  assert.equal(partition.uncategorizedTotal, 3);
+  assert.equal(partition.total, 11);
+});
+
+runTest("partitionCategoryCounts: all-uncategorized input has no real categories", () => {
+  const partition = partitionCategoryCounts([
+    { category: UNCATEGORIZED_KEY, count: 4 },
+    { category: UNCATEGORIZED_KEY, count: 6 },
+  ]);
+  assert.deepEqual(partition.realCategories, []);
+  assert.equal(partition.uncategorizedTotal, 10);
+  assert.equal(partition.total, 10);
+});
+
+runTest("isAllUncategorized: true only when every row is uncategorized and there is at least one", () => {
+  assert.equal(
+    isAllUncategorized(partitionCategoryCounts([{ category: UNCATEGORIZED_KEY, count: 10 }])),
+    true,
+  );
+});
+
+runTest("isAllUncategorized: false for empty input (nothing to show, not a backfill gap)", () => {
+  assert.equal(isAllUncategorized(partitionCategoryCounts([])), false);
+});
+
+runTest("isAllUncategorized: false for mixed input", () => {
+  assert.equal(
+    isAllUncategorized(
+      partitionCategoryCounts([
+        { category: "armed_conflict_security", count: 1 },
+        { category: UNCATEGORIZED_KEY, count: 10 },
+      ]),
+    ),
+    false,
+  );
+});
+
+runTest("orderSeriesKeys: uncategorized is always last, even when it has the largest count", () => {
+  const partition = partitionCategoryCounts([
+    { category: "trade_policy_tariffs", count: 2 },
+    { category: "armed_conflict_security", count: 5 },
+    { category: UNCATEGORIZED_KEY, count: 999 },
+  ]);
+  assert.deepEqual(orderSeriesKeys(partition, 7), [
+    "armed_conflict_security",
+    "trade_policy_tariffs",
+    UNCATEGORIZED_KEY,
+  ]);
+});
+
+runTest("orderSeriesKeys: real categories beyond the own-category budget fold into 'other' before uncategorized", () => {
+  const partition = partitionCategoryCounts([
+    { category: "a", count: 10 },
+    { category: "b", count: 9 },
+    { category: "c", count: 8 },
+    { category: UNCATEGORIZED_KEY, count: 1 },
+  ]);
+  assert.deepEqual(orderSeriesKeys(partition, 2), ["a", "b", OTHER_KEY, UNCATEGORIZED_KEY]);
+});
+
+runTest("orderSeriesKeys: no uncategorized key when there is no uncategorized data", () => {
+  const partition = partitionCategoryCounts([{ category: "armed_conflict_security", count: 1 }]);
+  assert.deepEqual(orderSeriesKeys(partition, 7), ["armed_conflict_security"]);
+});
+
+runTest("orderSeriesKeys: empty input orders to an empty list", () => {
+  assert.deepEqual(orderSeriesKeys(partitionCategoryCounts([]), 7), []);
 });

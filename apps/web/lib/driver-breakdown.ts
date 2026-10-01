@@ -40,3 +40,62 @@ export const UNCATEGORIZED_NOTE_THRESHOLD = 0.8;
 export function shouldShowUncategorizedNote(total: number, uncategorizedTotal: number): boolean {
   return total > 0 && uncategorizedTotal / total > UNCATEGORIZED_NOTE_THRESHOLD;
 }
+
+// Same key the driver-breakdown route (app/api/signals/driver-breakdown/route.ts)
+// assigns to a signal with no event_category — kept here too so the chart's
+// own aggregation and ordering helpers don't need the route's module.
+export const UNCATEGORIZED_KEY = "uncategorized" as const;
+// Bucket real categories beyond a chart's own-color budget fold into here —
+// see DriverBreakdownChart.tsx's MAX_OWN_CATEGORIES.
+export const OTHER_KEY = "other" as const;
+
+export type CategoryCountRow = { category: string; count: number };
+
+export type CategoryPartition = {
+  /** Real (non-uncategorized) categories, sorted most-to-least frequent. */
+  realCategories: [string, number][];
+  uncategorizedTotal: number;
+  total: number;
+};
+
+/**
+ * Aggregate per-day/per-category rows into per-category totals, splitting the
+ * uncategorized bucket out from real event categories.
+ */
+export function partitionCategoryCounts(rows: CategoryCountRow[]): CategoryPartition {
+  const totals = new Map<string, number>();
+  for (const r of rows) totals.set(r.category, (totals.get(r.category) ?? 0) + r.count);
+  const uncategorizedTotal = totals.get(UNCATEGORIZED_KEY) ?? 0;
+  const realCategories = Array.from(totals.entries())
+    .filter(([cat]) => cat !== UNCATEGORIZED_KEY)
+    .sort((a, b) => b[1] - a[1]);
+  const total = Array.from(totals.values()).reduce((a, b) => a + b, 0);
+  return { realCategories, uncategorizedTotal, total };
+}
+
+/**
+ * True when every signal in the window landed in the uncategorized bucket —
+ * the window is entirely pre-event_category signals. Founder decision
+ * 2026-10-01: no paid backfill for these, so the chart must still render
+ * (as a single band) instead of looking broken or empty.
+ */
+export function isAllUncategorized(partition: CategoryPartition): boolean {
+  return partition.total > 0 && partition.realCategories.length === 0 && partition.uncategorizedTotal > 0;
+}
+
+/**
+ * Orders category keys for the stacked chart: real categories most-to-least
+ * frequent (folding any beyond `maxOwnCategories` into a single "other" key),
+ * then uncategorized always LAST — regardless of its own count relative to
+ * the real categories — so its position in the stack never moves between
+ * renders or windows.
+ */
+export function orderSeriesKeys(partition: CategoryPartition, maxOwnCategories: number): string[] {
+  const ownReal = partition.realCategories.slice(0, maxOwnCategories).map(([cat]) => cat);
+  const overflow = partition.realCategories.slice(maxOwnCategories);
+  const otherTotal = overflow.reduce((sum, [, c]) => sum + c, 0);
+  const keys = [...ownReal];
+  if (otherTotal > 0) keys.push(OTHER_KEY);
+  if (partition.uncategorizedTotal > 0) keys.push(UNCATEGORIZED_KEY);
+  return keys;
+}
