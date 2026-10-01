@@ -443,6 +443,32 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
     same commodity signals). API: `?forexPair=EURUSD&window=90d` → 1 signal;
     `?commodity=USOIL` → 429 (unchanged); `?forexPair=USOIL` → 0.
 
+## New open technical item — found 2026-10-01 (PERS-Pn diagnostic, no code changed)
+
+**COPPER and XAGUSD (Silver) carry zero signals** — not a regression, confirmed
+root cause. SQL (`signals.commodity_impacts`, last 30 days, project
+`evavcgfmemwryggdkjmx`): USOIL 311, EURUSD 159, UKOIL 141, XAUUSD 133, NGAS 84,
+WHEAT 57, USDRUB 47, CORN 47 — no COPPER, no XAGUSD row at all. Both are
+selectable today in `WatchlistClient.tsx` and `onboarding/page.tsx` (both
+import `COMMODITIES` from `packages/shared/src/constants/commodities.ts`,
+which already lists both — COPPER added 2026-08-25, XAGUSD added 2026-10-01
+per that file's own comments) and `price-syncer.ts` already fetches both
+(`HG=F`, `SI=F`). The gap is entirely in
+`apps/backend/src/services/claude.service.ts`: `ALLOWED_COMMODITY_ASSETS`
+(line ~279) is only `["USOIL","UKOIL","NGAS","XAUUSD","WHEAT","CORN"]`,
+`COMMODITY_ASSET_ALIASES` has no COPPER/SILVER→XAGUSD entries, and the
+classification prompt's enumerated asset list (line ~461) repeats the same
+6-symbol set — so Claude is never even told COPPER/XAGUSD are valid outputs.
+**Not the cause:** `title-prefilter.ts`, `ai-classifier.ts`, and
+`signal-generator.ts` contain no asset/keyword list at all (checked directly,
+nothing to fix there). `apps/backend/src/lib/relevance-filter.ts`'s keyword
+gate already has both `"copper"` and `"silver"` as keywords — not the
+bottleneck either.
+**Not fixed in this task** — `claude.service.ts` is out of scope here
+(owned by W5-SPEND-ALERT per this task's instructions); fix is a 3-line add
+to that file (ALLOWED_COMMODITY_ASSETS, the alias map, the prompt string),
+copying the existing GOLD/XAUUSD pattern. No commit made.
+
 ## New open technical item — found 2026-09-26, needs investigation
 
 **MapLibre cluster-inspection worker RPCs (`getClusterExpansionZoom`,
