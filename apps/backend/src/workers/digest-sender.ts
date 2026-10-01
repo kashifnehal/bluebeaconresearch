@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { EmailService } from "../services/email.service.js";
+import { tokenize, jaccardSimilarity } from "./signal-merge.js";
 
 const supabase = getSupabaseAdmin();
 const email = new EmailService();
@@ -23,6 +24,12 @@ const TRUST_LINE =
   "Blue Beacon surfaces signals for your own analysis — informational only, not financial advice or a buy/sell call.";
 
 const DIGEST_LIMIT = 5;
+// Candidate pool fetched before diversity picking — DESIGN CHOICE, not a tuned
+// constant (same spirit as signal-merge.ts's own CANDIDATE_LIMIT).
+const CANDIDATE_POOL_LIMIT = 25;
+// MMR lambda (Carbonell & Goldstein) — DESIGN CHOICE: weigh relevance (severity)
+// over novelty 0.7/0.3, matching signal-merge.ts's own bias toward not over-merging.
+const MMR_LAMBDA = 0.7;
 
 type PrefRow = {
   user_id: string;
@@ -32,7 +39,7 @@ type PrefRow = {
   min_severity: number | null;
 };
 
-type SignalRow = {
+export type SignalRow = {
   id: string;
   title: string;
   summary: string | null;
@@ -64,8 +71,12 @@ function esc(s: string): string {
 
 /**
  * Pull the last 24h of signals that overlap a single user's watched commodities /
- * regions, ranked by severity, top N. Returns [] when the user has no preferences
- * (the digest is genuinely personalized — no global top-5 fallback).
+ * regions / forex pairs, above their own min_severity floor (if set), then pick
+ * DIGEST_LIMIT of them via pickDiverse() rather than a flat top-N — a severity-only
+ * cut previously let one heavily-covered story crowd out every other watchlist hit
+ * (see LIVE_TODO #83 note on a CORN/WHEAT-only digest). Returns [] when the user
+ * has no preferences (the digest is genuinely personalized — no global top-5
+ * fallback).
  */
 export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalRow[]> {
   const regions = Array.isArray(pref.regions) ? pref.regions : [];
@@ -74,6 +85,9 @@ export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalR
   if (regions.length === 0 && commodities.length === 0 && forexPairs.length === 0) return [];
 
   const orParts: string[] = [];
+  // TODO(PERS-P1): once apps/backend/src/lib/region-variants.ts lands, switch this
+  // (and whichWatchMatched's region check below) to regionMatches() instead of the
+  // REGION_LABEL id/substring pair — P1 hasn't landed yet, so behavior is unchanged.
   for (const rid of regions) {
     orParts.push(`region.eq.${rid}`);
     const label = REGION_LABEL[rid];
@@ -90,23 +104,64 @@ export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalR
   if (orParts.length === 0) return [];
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
+  let query = supabase
     .from("signals")
     .select(
       "id, title, summary, ai_analysis, severity, region, commodity_impacts, currency_pair_impacts, raw_event_ids, event_date, created_at",
     )
     .eq("is_active", true)
     .gte("created_at", since)
-    .or(orParts.join(","))
+    .or(orParts.join(","));
+  if (pref.min_severity != null) query = query.gte("severity", pref.min_severity);
+
+  const { data, error } = await query
     .order("severity", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(DIGEST_LIMIT);
+    .limit(CANDIDATE_POOL_LIMIT);
 
   if (error) {
     console.error("[digest] signal select failed:", error.message);
     return [];
   }
-  return (data ?? []) as SignalRow[];
+  return pickDiverse((data ?? []) as SignalRow[], DIGEST_LIMIT);
+}
+
+/**
+ * Picks `limit` items out of `candidates` (already ordered severity-desc,
+ * created_at-desc) via Maximal Marginal Relevance (Carbonell & Goldstein 1998):
+ * greedily adds the candidate maximizing score = λ*relevance - (1-λ)*maxSim,
+ * where relevance is normalized severity (severity/10, scale is always 1-10)
+ * and maxSim is the highest title-Jaccard-similarity against items already
+ * picked (same tokenizer signal-merge.ts uses for cross-source dedup, imported
+ * above rather than reimplemented). Pure function — no I/O — so a digest full of
+ * near-duplicate coverage of one story no longer crowds out the other 4 slots.
+ */
+export function pickDiverse(candidates: SignalRow[], limit: number): SignalRow[] {
+  if (candidates.length <= limit) return candidates;
+
+  const titleTokens = candidates.map((c) => tokenize(c.title));
+  const pickedIdx: number[] = [];
+  const remaining = new Set(candidates.map((_, i) => i));
+
+  while (pickedIdx.length < limit && remaining.size > 0) {
+    let bestIdx = -1;
+    let bestScore = -Infinity;
+    for (const i of remaining) {
+      const relevance = candidates[i].severity / 10;
+      const maxSim = pickedIdx.length
+        ? Math.max(...pickedIdx.map((j) => jaccardSimilarity(titleTokens[i], titleTokens[j])))
+        : 0;
+      const score = MMR_LAMBDA * relevance - (1 - MMR_LAMBDA) * maxSim;
+      if (score > bestScore) {
+        bestScore = score;
+        bestIdx = i;
+      }
+    }
+    pickedIdx.push(bestIdx);
+    remaining.delete(bestIdx);
+  }
+
+  return pickedIdx.map((i) => candidates[i]);
 }
 
 function whichWatchMatched(signal: SignalRow, pref: PrefRow): string {

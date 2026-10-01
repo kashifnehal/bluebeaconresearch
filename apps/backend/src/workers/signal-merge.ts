@@ -48,7 +48,10 @@ const STOPWORDS = new Set([
   "geopolitical", "financial", "market", "implications", "impact", "material",
 ]);
 
-function tokenize(text: string | null | undefined): Set<string> {
+// Exported for reuse by digest-sender.ts's MMR diversity pick — same
+// tokenization/similarity notion of "two stories are about the same thing",
+// not reimplemented there.
+export function tokenize(text: string | null | undefined): Set<string> {
   if (!text) return new Set();
   return new Set(
     text
@@ -60,7 +63,7 @@ function tokenize(text: string | null | undefined): Set<string> {
   );
 }
 
-function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+export function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
   if (a.size === 0 || b.size === 0) return 0;
   let intersection = 0;
   for (const word of a) if (b.has(word)) intersection++;
