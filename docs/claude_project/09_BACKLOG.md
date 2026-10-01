@@ -13,6 +13,8 @@
 
 > ⚠️ UPDATED 2026-09-29 — current-table signal archive/search page shipped at `/archive` (v0.126.0 / PHASE 103). Looks up the live `signals` table (no severity floor, no recency cutoff). **C17 (40-year GDELT historical archive) stays open** — this is not that work.
 
+> ⚠️ UPDATED 2026-10-01 — public `/how-it-works` research-integrity page shipped (W2-TRUST, brain changelog v0.135.0 / PHASE 112). Claim/proof table (6 claims, each checked against code or live data, none quoting an accuracy percentage) + a 3-number live stats bar. No prior backlog line existed for this page — confirmed by grep, nothing struck.
+
 ---
 
 ## #186 — FULL RESPONSIVE REWORK (MOBILE + TABLET)

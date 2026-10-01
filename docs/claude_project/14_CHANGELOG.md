@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 111).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 112).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 112 — Public `/how-it-works` research-integrity page (2026-10-01)
+
+`apps/web` only (W2-TRUST). A claim/proof table (6 claims, each verified against code or live data before being written — nothing dropped) plus a 3-number live stats bar: total signals and signals-in-last-7-days (live Supabase counts, server-computed per request) and "sources monitored" = 28 RSS feeds + 3 other collector modules (GDELT/GNews/ACLED), counted from code constants, not a DB query. A failed stat query hides that number instead of rendering 0. Limits section, live-checked against `service_health_events`: ACLED is still failing auth today, so "not yet ingesting" is current fact, not stale copy. No accuracy percentage anywhere on the page — links to the existing `/accuracy` page instead, per explicit instruction. Reuses `/accuracy`'s header/footer and color tokens, no new colors; claim/proof table is a responsive grid, not an HTML table, so no horizontal scroll at phone width. Footer link + sitemap entry added. New tests for the stats-formatting helper and the sitemap entry. Full detail: `docs/brain/14_CHANGELOG.md` v0.135.0, `06_COMPONENTS.md`.
 
 ## PHASE 111 — TASK W1-CHOKE: chokepoints sourcing cleanup + grouped chokepoint list panel (doc claude/278 item 4.6) (2026-10-01)
 

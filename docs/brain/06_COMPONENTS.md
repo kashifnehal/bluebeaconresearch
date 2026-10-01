@@ -226,6 +226,15 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page.
 - **Methodology**: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115. #144: worker stores 1h/4h/24h/48h; this page still reads 48h only (no horizon selector).
 
+### 3.6a `app/how-it-works/page.tsx` (W2-TRUST, 2026-10-01)
+- **Purpose**: public (no auth) research-integrity page — "what we claim, and how you can check it."
+- **How**: server component, direct Supabase queries (same `getRouteSupabaseClients()`/service-role fallback pattern as `getLatestSignal()`/`getHomepageStats()` in `app/page.tsx`), `dynamic = "force-dynamic"`. Dark-terminal styling reuses `/accuracy`'s exact tokens, `PublicHeader`/`LegalDisclaimerFooter`.
+- **Stats bar** (3 numbers, `apps/web/lib/how-it-works-stats.ts`): total signals + signals-in-last-7-days are live Supabase counts; "sources monitored" (31) is `CONFIGURED_RSS_FEED_COUNT` (28, `packages/shared`) + `OTHER_COLLECTOR_COUNT` (3 — `gdelt`/`gnews`/`acled`-collector.ts, named in a code comment), not a DB query. A failed query hides that stat instead of showing 0.
+- **Claim/proof table**: 6 claims, each verified against code or live data in Step 0 before the page was written (full table: `LIVE_TODO.md`). Responsive CSS grid (not an HTML `<table>`), so no horizontal scroll at phone width.
+- **Limits list**: severity/confidence are model outputs not guarantees; some signals use the keyword fallback; merged "reports" can repeat an outlet; ACLED is configured but not currently ingesting — confirmed live against `service_health_events` (still failing auth as of ship date), not assumed.
+- **Hard rule**: no accuracy percentage anywhere on this page — links to `/accuracy` instead. No "novelty scoring"/"Confirmed by N sources"/"High-Integrity"/latency figures/buy-sell language/competitor names (grepped).
+- Full detail: `docs/claude_project/06_COMPONENTS.md` §7a, `14_CHANGELOG.md` v0.135.0.
+
 ### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19; picker collapsed + mobile FAB removed #186, 2026-09-25)
 - **List:** first paint with no selections shows `COMMODITIES` cards. Live `/api/prices` + history sparkline only.
 - **Add mechanism (2026-09-25):** was 3 overlapping ways in (My Commodities/Show All toggle, ADD COMMODITY dropdown, per-category chip rows) — collapsed to just the ADD COMMODITY `<select>`, which already listed every commodity and forex pair (`[...COMMODITIES, ...FOREX_PAIRS]`). A header "+ Add Asset" button (next to the `<h1>`, 44px touch target, both breakpoints) and the desktop-only FAB (`hidden md:flex`) both call the same `openAddCommodityPicker()` handler that scrolls/focuses that select. The mobile FAB was removed outright — it was `position:fixed` and visually overlapped scrolling card content (confirmed via Playwright screenshots, `claude/MOBILE_AUDIT_FULL_2026-09-24.md`).

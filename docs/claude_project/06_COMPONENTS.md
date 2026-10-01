@@ -586,6 +586,38 @@ plain-language date range ("Based on N signals scored between … and …"). Con
 **no** "top signals"/"best calls" highlight list anywhere — a hard product rule, not
 a style choice, per the #121 spec.
 
+### HowItWorksPage (apps/web/app/how-it-works/page.tsx) (W2-TRUST, 2026-10-01)
+
+Public research-integrity page — "what we claim, and how you can check it." Server
+component, `dynamic = "force-dynamic"`, direct Supabase queries via
+`getRouteSupabaseClients()` (same pattern as `getLatestSignal()`/`getHomepageStats()`
+on the homepage, no new API route). Reuses `PublicHeader`/`LegalDisclaimerFooter` and
+`/accuracy`'s exact dark-token palette — no new colors.
+
+**Stats bar** (`apps/web/lib/how-it-works-stats.ts`): total signals and signals in the
+last 7 days are live Supabase counts computed at request time; "sources monitored"
+(31) is counted from code constants, not a query — `CONFIGURED_RSS_FEED_COUNT` (28 RSS
+feeds, `packages/shared/src/constants/ingestion.ts`) plus `OTHER_COLLECTOR_COUNT` (3 —
+`gdelt-collector.ts`, `gnews-collector.ts`, `acled-collector.ts`, named in a code
+comment). A failed query hides that stat rather than rendering 0.
+
+**Claim/proof table**: 6 claims (sources-tab links, heuristic-fallback disclosure,
+zero headline-placement bonus, confidence-vs-report-count copy, reports-not-outlets
+counting, published track record) — each checked against code or live data before
+being written; the full Step 0 table is in `docs/brain/LIVE_TODO.md`'s W2-TRUST entry.
+Laid out as a responsive CSS grid, not an HTML `<table>`, so it never needs horizontal
+scroll at phone width. A short **Limits** list follows, including a line on ACLED not
+yet ingesting — checked live against `service_health_events` (still failing auth at
+ship time) rather than assumed from the known-open-items list.
+
+**Hard rule**: no accuracy percentage anywhere on this page — links to the existing
+`/accuracy` page instead, consistent with that page's own "no homepage hit-rate
+percentage" rule. No "novelty scoring," "Confirmed by N sources," "High-Integrity,"
+latency figures, buy/sell language, or competitor names (same forbidden-term list as
+the rest of the product). Footer link (`app/page.tsx`, Research column) and a
+`/how-it-works` entry in `app/sitemap.ts`. Full detail: `docs/brain/06_COMPONENTS.md`
+§3.6a, `14_CHANGELOG.md` v0.135.0.
+
 ---
 
 ## 8. SHARED UI TOKENS (SHADCN COMPONENTS USED)
