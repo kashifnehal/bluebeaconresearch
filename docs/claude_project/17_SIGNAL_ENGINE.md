@@ -60,10 +60,12 @@ The AI classifier considers these factors in severity scoring:
 - Goldstein -1 to -3 → base severity 6
 - Goldstein ≥ -1 → base severity ≤ 5
 
-**Factor 2: Source count multiplier**
+**Factor 2: Source count multiplier — planned, not built**
 - 1 source: base severity (unconfirmed)
 - 2-3 sources: +0.5 to base severity
 - 4+ sources: +1.0 to base severity
+
+signal-merge.ts increments sources_count but does not change severity from it.
 
 **Factor 3: Chokepoint proximity — planned, not built**
 - Event within 50km of Hormuz/Suez/Malacca/Bab-el-Mandeb: +1 to severity
@@ -78,7 +80,7 @@ The AI classifier considers these factors in severity scoring:
 No such scoring exists in apps/backend/src/services/claude.service.ts as of 2026-10-01.
 
 **Factor 5: AI re-scoring**
-Claude's output severity is the final arbiter. The Goldstein-based estimate is provided as context in the prompt, but Claude can override it based on the full event context.
+Claude's output severity is the final arbiter. No Goldstein value is sent to the model. Severity is what Claude returns, clamped.
 
 **Factor 6: Headline-placement proxy (added 2026-10-01, claude/277 A6) — DISABLED 2026-10-01 (founder decision D9)**
 - Source claim: RavenPack's own webinar states that events placed high in an article (the headline) tend to carry more price impact than the same event reported only in the body. This is RavenPack's unverified statement about RavenPack's data — **not** verified, and **not yet tested against BBR's own `signal_outcomes`**.
