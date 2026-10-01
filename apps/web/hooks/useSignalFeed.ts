@@ -6,6 +6,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import {
   symbolsForCommodityFilter,
   type FeedWindow,
+  type FilterBarValue,
 } from "@/lib/signal-filters";
 
 type Options = {
@@ -17,6 +18,8 @@ type Options = {
   minSeverity?: number;
   window?: FeedWindow | null;
   minSources?: number;
+  /** Dashboard category filter chips (4.2). Default null = All. */
+  eventCategory?: FilterBarValue["eventCategory"];
 };
 
 export function useSignalFeed({
@@ -27,6 +30,7 @@ export function useSignalFeed({
   minSeverity = 1,
   window = null,
   minSources = 1,
+  eventCategory = null,
 }: Options = {}) {
   const {
     data,
@@ -45,6 +49,7 @@ export function useSignalFeed({
       minSeverity,
       window ?? "",
       minSources,
+      eventCategory ?? "",
     ],
     initialPageParam: "1",
     queryFn: async ({ pageParam }) => {
@@ -57,6 +62,7 @@ export function useSignalFeed({
       if (minSeverity > 1) params.set("severity", String(minSeverity));
       if (window) params.set("window", window);
       if (minSources > 1) params.set("minSources", String(minSources));
+      if (eventCategory) params.set("eventCategory", eventCategory);
       params.set("page", String(pageParam));
 
       const res = await fetch(`/api/signals?${params.toString()}`);

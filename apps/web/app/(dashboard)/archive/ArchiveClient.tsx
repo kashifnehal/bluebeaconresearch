@@ -86,6 +86,7 @@ export function ArchiveClient() {
       minSeverity: 1,
       window: null,
       minSources: 1,
+      eventCategory: null,
     };
     if (deskMatchesFilters(id, asBar)) {
       setFilters((prev) => ({ ...prev, commodity: null, region: null }));
@@ -139,6 +140,7 @@ export function ArchiveClient() {
                 minSeverity: 1,
                 window: null,
                 minSources: 1,
+                eventCategory: null,
               });
               return (
                 <button
