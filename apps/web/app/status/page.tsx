@@ -1,6 +1,7 @@
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { getSystemChecks, type CheckStatus } from "@/lib/status-checks";
+import { formatOperationalSummary } from "@/lib/status-summary";
 
 export const metadata = {
   title: "System Status | Blue Beacon Research",
@@ -22,7 +23,6 @@ export default async function StatusPage() {
 
   const operationalCount = systems.filter((s) => s.status === "Operational").length;
   const allOperational = operationalCount === systems.length;
-  const uptimePct = Math.round((operationalCount / systems.length) * 100);
   const bannerColor = allOperational ? "#4edea3" : "#f5a623";
 
   return (
@@ -32,7 +32,7 @@ export default async function StatusPage() {
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-8 py-16">
         {/* Banner */}
-        <div className="p-8 bg-[#131313] border border-[#3c4a42] rounded-lg mb-12 flex items-center justify-between">
+        <div className="p-8 bg-[#131313] border border-[#3c4a42] rounded-lg mb-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: bannerColor }} />
             <div>
@@ -41,7 +41,7 @@ export default async function StatusPage() {
               </h1>
               <p className="text-xs text-[#86948a] mt-1 font-mono">
                 {allOperational
-                  ? "All production microservices are running within normal parameters."
+                  ? "All live checks passed."
                   : "One or more subsystems are degraded or reporting an unknown state — see below."}
               </p>
             </div>
@@ -50,9 +50,13 @@ export default async function StatusPage() {
             className="text-xs font-mono px-3 py-1 border rounded-sm"
             style={{ color: bannerColor, backgroundColor: `${bannerColor}1a`, borderColor: `${bannerColor}33` }}
           >
-            {uptimePct}% OPERATIONAL
+            {formatOperationalSummary(operationalCount, systems.length)}
           </span>
         </div>
+
+        <p className="text-xs text-[#86948a] font-mono mb-12">
+          Live checks run when this page loads. This is not a historical uptime figure.
+        </p>
 
         {/* System List */}
         <section className="space-y-4 mb-12">

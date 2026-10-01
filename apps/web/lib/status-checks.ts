@@ -34,7 +34,7 @@ function getUpstashRedis() {
 }
 
 async function checkIntelligenceFeed(): Promise<SystemCheck> {
-  const detail = "REST API, updates roughly every 30 minutes";
+  const detail = "Most recent signal row is less than 30 minutes old";
   const supabase = getAdminSupabase();
   if (!supabase) return { name: "Intelligence Feed", status: "Unknown", detail };
 
@@ -54,7 +54,7 @@ async function checkIntelligenceFeed(): Promise<SystemCheck> {
 }
 
 async function checkAlertDelivery(): Promise<SystemCheck> {
-  const detail = "Telegram, Webhook & Multi-channel Dispatcher";
+  const detail = "At least one user has a Telegram or Slack channel connected (config presence, not a live send)";
   const supabase = getAdminSupabase();
   if (!supabase) return { name: "Alert Delivery", status: "Unknown", detail };
 
@@ -77,7 +77,7 @@ async function checkAlertDelivery(): Promise<SystemCheck> {
 }
 
 async function checkGlobalMap(): Promise<SystemCheck> {
-  const detail = "MapLibre GL Spatial Engine & Incident Markers";
+  const detail = "Basemap tile server responds";
   try {
     const tileUrl = BASEMAP_TILE_URLS[0].replace("{z}", "0").replace("{x}", "0").replace("{y}", "0");
     const controller = new AbortController();
@@ -94,7 +94,7 @@ async function checkGlobalMap(): Promise<SystemCheck> {
 }
 
 async function checkDataPipeline(): Promise<SystemCheck> {
-  const detail = "GDELT, ACLED, GNews & Price Sync Collector Workers";
+  const detail = "Most recent ingested event, across all collectors combined, is less than 30 minutes old";
 
   // Reuses the same tracking /api/ingestion/status already relies on (Redis
   // `pipeline:last_run`, falling back to the newest `raw_events` row) instead of
