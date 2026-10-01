@@ -73,7 +73,7 @@ Return this exact JSON:
   "severity": <integer 1-10>,
   "confidence": <float 0.0-1.0>,
   "event_type": "<conflict|sanctions|trade_policy|naval_exercise|military_buildup|cyber_attack|election|coup|protest|energy_disruption|food_security|natural_disaster|central_bank|other>",
-  "event_category": "<conflict|sanctions|trade_policy|central_bank|food_security|energy|election|natural_disaster|macro_release|other>",
+  "event_category": "<armed_conflict_security|supply_disruption_logistics|sanctions_trade_policy|production_output_decision|central_bank_monetary_policy|scheduled_economic_data|official_statement_commentary|elections_political_transition|other_market_relevant>",
   "commodity_impacts": [
     {"asset": "<USOIL|UKOIL|XAUUSD|NGAS|WHEAT|COPPER|XAGUSD|CORN>", "direction": "<up|down|volatile|neutral>", "confidence": <float>}
   ],

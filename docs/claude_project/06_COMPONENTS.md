@@ -348,7 +348,7 @@ Dismissal stored in sessionStorage. Re-appears for new breaking signals (differe
 
 ---
 
-> ⚠️ NEW 2026-09-30 (min-sources filter + CSV export) — `FilterBar.tsx` (shared by `/dashboard` and `/map`) gained a "Min sources" select (`FilterBarValue.minSources`, default `1`). Dashboard gained an "Export CSV" button next to `FilterBar` — client-side export of the currently filtered/loaded feed (new `lib/signal-csv.ts`), free for every plan tier. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/05_API.md`.
+> ⚠️ NEW 2026-09-30 (min-sources filter + CSV export) — `FilterBar.tsx` (shared by `/dashboard` and `/map`) gained a "Min reports" select (`FilterBarValue.minSources`, default `1`). Dashboard gained an "Export CSV" button next to `FilterBar` — client-side export of the currently filtered/loaded feed (new `lib/signal-csv.ts`), free for every plan tier. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/05_API.md`.
 
 ## 3. LANDING PAGE COMPONENTS
 

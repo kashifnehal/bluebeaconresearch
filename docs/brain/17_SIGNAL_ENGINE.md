@@ -19,7 +19,7 @@ The AI classifier considers these factors in severity scoring:
 - 2-3 sources: +0.5 to base severity
 - 4+ sources: +1.0 to base severity
 
-signal-merge.ts increments sources_count but does not change severity from it.
+signal-merge.ts increments sources_count but does not change severity from it (apps/backend/src/workers/signal-merge.ts).
 
 **Factor 3: Chokepoint proximity — planned, not built**
 - Event within 50km of Hormuz/Suez/Malacca/Bab-el-Mandeb: +1 to severity
@@ -34,4 +34,4 @@ signal-merge.ts increments sources_count but does not change severity from it.
 No such scoring exists in apps/backend/src/services/claude.service.ts as of 2026-10-01.
 
 **Factor 5: AI re-scoring**
-Claude's output severity is the final arbiter. No Goldstein value is sent to the model. Severity is what Claude returns, clamped.
+Claude's output severity is the final arbiter. No Goldstein value is sent to the model. Severity is what Claude returns, clamped by the existing code.
