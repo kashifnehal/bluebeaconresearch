@@ -34,8 +34,8 @@ export default function AccessLimitedModal({
   joinedWaitlist = false,
   variant = "fullscreen",
   title = "Access Limited",
-  body = "Only the first 1000 users are being onboarded in this phase.",
-  italic = "We are expanding our research capacity to maintain signal quality and accuracy.",
+  body = "Access is limited while we get ready to open to everyone.",
+  italic = "",
   ctaLabel,
   hideCta = false,
 }: AccessLimitedModalProps) {
@@ -198,6 +198,7 @@ export default function AccessLimitedModal({
           {body}
         </p>
 
+        {italic && (
         <p
           style={{
             fontFamily: "'Space Grotesk', sans-serif",
@@ -211,6 +212,7 @@ export default function AccessLimitedModal({
         >
           {italic}
         </p>
+        )}
 
         {!hideCta && (
         <p
