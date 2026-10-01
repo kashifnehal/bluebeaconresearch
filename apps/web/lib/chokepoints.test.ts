@@ -38,6 +38,42 @@ assert.ok(hormuz, "strait-of-hormuz entry missing");
 assert.ok(Math.abs(hormuz!.lat - 26.6) < 1, "Hormuz lat not near 26.6 N");
 assert.ok(Math.abs(hormuz!.lng - 56.25) < 1, "Hormuz lng not near 56.25 E");
 
+// Turkish Straits and Panama Canal were re-sourced from the EIA "World Oil
+// Transit Chokepoints" page (last updated March 3, 2026) and should no
+// longer be empty — and should not show NGAS/CORN/WHEAT, which the page
+// doesn't support.
+{
+  const turkishStraits = CHOKEPOINTS.find((cp) => cp.id === "turkish-straits");
+  assert.ok(turkishStraits, "turkish-straits entry missing");
+  assert.deepEqual(
+    [...turkishStraits!.commodities].sort(),
+    ["UKOIL", "USOIL"],
+    "turkish-straits should resolve to USOIL/UKOIL only",
+  );
+
+  const panamaCanal = CHOKEPOINTS.find((cp) => cp.id === "panama-canal");
+  assert.ok(panamaCanal, "panama-canal entry missing");
+  assert.deepEqual(
+    [...panamaCanal!.commodities].sort(),
+    ["UKOIL", "USOIL"],
+    "panama-canal should resolve to USOIL/UKOIL only",
+  );
+}
+
+// The map's chokepoints list panel renders "No commodity link found (no
+// source)" whenever a chokepoint's commodities array is empty (see
+// apps/web/app/(dashboard)/map/page.tsx, `hasCommodities` check). Turkish
+// Straits and Panama Canal now have sourced commodities, so that panel
+// should no longer show that message for them.
+for (const id of ["turkish-straits", "panama-canal"]) {
+  const cp = CHOKEPOINTS.find((c) => c.id === id);
+  assert.ok(cp, `${id} entry missing`);
+  assert.ok(
+    cp!.commodities.length > 0,
+    `${id}: expected non-empty commodities so the map panel no longer shows "No commodity link found (no source)"`,
+  );
+}
+
 // --- signalsNearChokepoint ---
 
 function makeSignal(overrides: Partial<ChokepointSignal>): ChokepointSignal {

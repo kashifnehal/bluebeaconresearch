@@ -57,31 +57,32 @@ export const CHOKEPOINTS: Chokepoint[] = [
     lng: 43.3,
     commodities: ["USOIL", "UKOIL"],
   },
-  // USDA AMS Grain Transportation Report discusses Panama Canal draft
-  // limits; no source found for a corn volume. No source found for LNG
-  // through Panama either — this session could not open the EIA "World Oil
-  // Transit Chokepoints" page to check (network egress to eia.gov/usda.gov
-  // is blocked). Left with an empty commodities list rather than a guessed
-  // one.
+  // Source: U.S. EIA, World Oil Transit Chokepoints, last updated March 3,
+  // 2026 — FY2025: more than 2.3 million b/d petroleum and other liquids
+  // (about 2.2 million b/d refined products) transited the Panama Canal.
+  // LNG flow exists but small (fell to less than 0.3 Bcf/d in FY2025 from
+  // about 2.5 Bcf/d in FY2021); NGAS not added, founder decision pending.
+  // No grain/corn/wheat data on this page — CORN/WHEAT not added.
   {
     id: "panama-canal",
     name: "Panama Canal",
     lat: 8.9824,
     lng: -79.5199,
-    commodities: [],
+    commodities: ["USOIL", "UKOIL"],
   },
-  // No source found. This session could not open the EIA "World Oil Transit
-  // Chokepoints" page or a named USDA Black Sea grain-export document
-  // (network egress to eia.gov/usda.gov is blocked) to confirm USOIL/UKOIL
-  // oil transit or WHEAT/CORN grain-export volumes through the
-  // Bosphorus/Dardanelles. Left with an empty commodities list rather than
-  // a guessed one.
+  // Source: U.S. EIA, World Oil Transit Chokepoints, last updated March 3,
+  // 2026 — 1H25: Bosporus carried 3.3 million b/d crude oil and condensate
+  // plus 1.3 million b/d petroleum products; Dardanelles carried 3.7
+  // million b/d crude oil and petroleum products.
+  // LNG flow exists but small (Dardanelles LNG 0.6 Bcf/d, 1H25); NGAS not
+  // added, founder decision pending.
+  // No grain/corn/wheat data on this page — CORN/WHEAT not added.
   {
     id: "turkish-straits",
     name: "Turkish Straits (Bosphorus/Dardanelles)",
     lat: 41.01,
     lng: 29.06,
-    commodities: [],
+    commodities: ["USOIL", "UKOIL"],
   },
   // No source found for a chokepoint-to-commodity link here — EIA's "World
   // Oil Transit Chokepoints" report does not list Gibraltar (it is wide
