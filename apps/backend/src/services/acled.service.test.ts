@@ -42,13 +42,17 @@ function mockAxios(opts: {
   if (opts.get) (axios as unknown as AxiosLike).get = opts.get;
 }
 
-function makeAxiosError(status: number, statusText: string) {
+function makeAxiosError(
+  status: number,
+  statusText: string,
+  response?: { data?: unknown; headers?: Record<string, string> },
+) {
   const err = new Error(`Request failed with status code ${status}`) as Error & {
     isAxiosError: boolean;
-    response: { status: number; statusText: string };
+    response: { status: number; statusText: string; data?: unknown; headers?: Record<string, string> };
   };
   err.isAxiosError = true;
-  err.response = { status, statusText };
+  err.response = { status, statusText, ...response };
   return err;
 }
 
@@ -128,6 +132,50 @@ async function main() {
         () => service.fetchRecentEvents(),
         /ACLED login failed: HTTP 401 Unauthorized/,
       );
+      restoreAxios();
+    },
+  );
+
+  await runTest(
+    "getAccessToken: 403 with a response body surfaces that body in the error message",
+    async () => {
+      mockAxios({
+        post: (async () => {
+          throw makeAxiosError(403, "Forbidden", {
+            data: "blocked by policy",
+            headers: { server: "cloudflare", "cf-ray": "test-ray-id" },
+          });
+        }) as typeof axios.post,
+      });
+
+      const service = new AcledService();
+      await assert.rejects(
+        () => service.fetchRecentEvents(),
+        /blocked by policy/,
+      );
+      restoreAxios();
+    },
+  );
+
+  await runTest(
+    "getAccessToken: a 403 error message never leaks the email or password used to log in",
+    async () => {
+      mockAxios({
+        post: (async () => {
+          throw makeAxiosError(403, "Forbidden", { data: "blocked by policy" });
+        }) as typeof axios.post,
+      });
+
+      const service = new AcledService();
+      let message = "";
+      try {
+        await service.fetchRecentEvents();
+      } catch (err) {
+        message = err instanceof Error ? err.message : String(err);
+      }
+      assert.ok(message.includes("blocked by policy"));
+      assert.ok(!message.includes(process.env.ACLED_EMAIL as string));
+      assert.ok(!message.includes(process.env.ACLED_PASSWORD as string));
       restoreAxios();
     },
   );

@@ -38,11 +38,27 @@ function describeAxiosError(e: unknown): string {
   if (axios.isAxiosError(e)) {
     const status = e.response?.status;
     const statusText = e.response?.statusText;
-    if (status) return `HTTP ${status}${statusText ? ` ${statusText}` : ""}`;
-    return e.message;
+    let msg = status ? `HTTP ${status}${statusText ? ` ${statusText}` : ""}` : e.message;
+    if (e.response) {
+      const body = String(e.response.data).replace(/\r?\n/g, " ").slice(0, 200);
+      msg += ` | body: ${body}`;
+      const server = e.response.headers?.["server"];
+      if (server) msg += ` | server: ${server}`;
+      const cfRay = e.response.headers?.["cf-ray"];
+      if (cfRay) msg += ` | cf-ray: ${cfRay}`;
+    }
+    return msg;
   }
   return e instanceof Error ? e.message : String(e);
 }
+
+// Identifies calls to ACLED so a 403 that reproduces only off the founder's
+// laptop (e.g. Railway's egress IP/ASN blocked by Cloudflare) shows up as such
+// server-side, instead of looking identical to a bad-credentials 403.
+const ACLED_REQUEST_HEADERS = {
+  "User-Agent": "BlueBeaconResearch/1.0 (contact: bluebeaconresearch@gmail.com)",
+  Accept: "application/json",
+};
 
 export class AcledService {
   private token: string | null = null;
@@ -71,7 +87,10 @@ export class AcledService {
           scope: "authenticated",
         }).toString(),
         {
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            ...ACLED_REQUEST_HEADERS,
+          },
           timeout: 10_000,
         },
       );
@@ -110,6 +129,7 @@ export class AcledService {
         },
         headers: {
           Authorization: `Bearer ${token}`,
+          ...ACLED_REQUEST_HEADERS,
         },
         timeout: 20_000,
       });
