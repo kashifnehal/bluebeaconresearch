@@ -1,4 +1,4 @@
-import { REGIONS } from "@blue-beacon-research/shared";
+import { REGIONS, type EventCategory } from "@blue-beacon-research/shared";
 import { formatRegionLabel } from "@/lib/utils";
 
 /**
@@ -42,6 +42,14 @@ export type FilterBarValue = {
   window: FeedWindow | null;
   /** Minimum sources_count. 1 = no filtering (every signal has >=1 source). */
   minSources: number;
+  /**
+   * Dashboard-only category filter chips (4.2). `"uncategorized"` matches
+   * `event_category IS NULL` — coverage is low (~half of recent signals,
+   * almost none older), so this is a required option, not an edge case.
+   * Null = All. The map page carries this field too (shared FilterBarValue)
+   * but ignores it — no CategoryChips row there.
+   */
+  eventCategory: EventCategory | "uncategorized" | null;
 };
 
 // minSeverity floor of 4 (lowered from 6, 2026-09-28) is the single visibility
@@ -58,7 +66,21 @@ export const DEFAULT_FILTERS: FilterBarValue = {
   minSeverity: 4,
   window: null,
   minSources: 1,
+  eventCategory: null,
 };
+
+/**
+ * Maps `FilterBarValue.eventCategory` to the `eventCategory` query-string
+ * fragment `GET /api/signals` expects (empty string = omit the param
+ * entirely, i.e. "All"). Pure so it can be unit-tested without the
+ * surrounding fetch/useSignalFeed plumbing.
+ */
+export function eventCategoryQueryParam(
+  value: FilterBarValue["eventCategory"],
+): string {
+  if (value === null) return "";
+  return `eventCategory=${encodeURIComponent(value)}`;
+}
 
 export const WINDOW_OPTIONS: { id: FeedWindow | null; label: string }[] = [
   { id: "24h", label: "Today" },

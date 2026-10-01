@@ -25,6 +25,28 @@ export type EventCategory =
   | "elections_political_transition"
   | "other_market_relevant";
 
+// Runtime counterpart to EventCategory, for callers that need to iterate or
+// validate against the 9 values (e.g. the category-filter chips, API query
+// param validation). `Record<EventCategory, true>` makes the compiler prove
+// this list is exhaustive: adding, removing, or typo-ing a member of
+// EventCategory without updating this object is a type error, not a
+// silent mismatch caught only at runtime.
+const EVENT_CATEGORY_EXHAUSTIVENESS_CHECK: Record<EventCategory, true> = {
+  armed_conflict_security: true,
+  supply_disruption_logistics: true,
+  sanctions_trade_policy: true,
+  production_output_decision: true,
+  central_bank_monetary_policy: true,
+  scheduled_economic_data: true,
+  official_statement_commentary: true,
+  elections_political_transition: true,
+  other_market_relevant: true,
+};
+
+export const EVENT_CATEGORY_VALUES = Object.keys(
+  EVENT_CATEGORY_EXHAUSTIVENESS_CHECK,
+) as EventCategory[];
+
 export interface CommodityImpact {
   asset: string;
   direction: Direction;

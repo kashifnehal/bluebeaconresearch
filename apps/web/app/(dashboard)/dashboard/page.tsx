@@ -9,6 +9,8 @@ import { useUIStore } from "@/store/useUIStore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { FilterBar } from "@/components/signals/FilterBar";
+import { CategoryChips } from "@/components/signals/CategoryChips";
+import { SignalTable } from "@/components/signals/SignalTable";
 import { SignalQuickView } from "@/components/signals/SignalQuickView";
 import { FreshTag } from "@/components/signals/FreshTag";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
@@ -82,6 +84,27 @@ export default function DashboardPage() {
   // Default OFF: existing users see the exact same full feed until they turn it on.
   const [personalized, setPersonalized] = useState(false);
   const [filters, setFilters] = useState<FilterBarValue>(DEFAULT_FILTERS);
+  // Cards | Table view toggle (4.1) — remembered per-browser. Reads lazily so
+  // the very first render already matches a returning user's last choice
+  // (no layout flash); wrapped in try/catch, as localStorage can throw (private
+  // mode, blocked storage) or simply not exist — defaults to "cards" either way.
+  const [feedViewMode, setFeedViewMode] = useState<"cards" | "table">(() => {
+    if (typeof window === "undefined") return "cards";
+    try {
+      const stored = window.localStorage.getItem("bbr_feed_view_mode");
+      return stored === "table" ? "table" : "cards";
+    } catch {
+      return "cards";
+    }
+  });
+  const setFeedViewModePersisted = (mode: "cards" | "table") => {
+    setFeedViewMode(mode);
+    try {
+      window.localStorage.setItem("bbr_feed_view_mode", mode);
+    } catch {
+      // ignore — view toggle still works for this session, just not remembered
+    }
+  };
   const { data: myPrefs } = useMyPreferences();
   const {
     liveSignals,
@@ -107,6 +130,7 @@ export default function DashboardPage() {
     minSeverity: filters.minSeverity,
     window: filters.window,
     minSources: filters.minSources,
+    eventCategory: filters.eventCategory,
   });
   const { tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
 
@@ -217,7 +241,8 @@ export default function DashboardPage() {
     filters.region != null ||
     filters.minSeverity > DEFAULT_FILTERS.minSeverity ||
     filters.window != null ||
-    filters.minSources > DEFAULT_FILTERS.minSources;
+    filters.minSources > DEFAULT_FILTERS.minSources ||
+    filters.eventCategory != null;
   const canLoadMoreStream = hasNextPage;
   // Manual fallback for the "Load more" button — the sentinel div below
   // triggers the same fetchNextPage automatically as the user scrolls near it.
@@ -402,6 +427,14 @@ export default function DashboardPage() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* Category filter chips (4.2) — dashboard only, not the map. */}
+        <div className="mb-4">
+          <CategoryChips
+            value={filters.eventCategory}
+            onChange={(eventCategory) => handleFiltersChange({ ...filters, eventCategory })}
+          />
         </div>
         <div className="flex flex-wrap gap-2 mb-5 md:mb-8" role="group" aria-label="Saved views">
           {(Object.keys(DESK_PRESETS) as DeskPresetId[]).map((id) => {
@@ -877,16 +910,49 @@ export default function DashboardPage() {
                 >
                   Recent Signal Stream
                 </h4>
-                <span
-                  className="text-[12px] md:text-[10px]"
-                  style={{
-                    color: "#4edea3",
-                    fontFamily: "'JetBrains Mono', monospace",
-                  }}
-                >
-                  UPDATES ROUGHLY EVERY 30 MIN
-                </span>
+                <div className="flex items-center gap-3">
+                  <div
+                    data-testid="feed-view-toggle"
+                    role="group"
+                    aria-label="Feed view"
+                    className="flex border"
+                    style={{ borderColor: "#3c4a42" }}
+                  >
+                    {(["cards", "table"] as const).map((mode) => {
+                      const selected = feedViewMode === mode;
+                      return (
+                        <button
+                          key={mode}
+                          type="button"
+                          data-testid={`feed-view-${mode}`}
+                          aria-pressed={selected}
+                          onClick={() => setFeedViewModePersisted(mode)}
+                          className="px-3 py-1 text-[12px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer"
+                          style={{
+                            fontFamily: "'Space Grotesk', sans-serif",
+                            backgroundColor: selected ? "#4edea3" : "transparent",
+                            color: selected ? "#005f40" : "#86948a",
+                          }}
+                        >
+                          {mode === "cards" ? "Cards" : "Table"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <span
+                    className="text-[12px] md:text-[10px]"
+                    style={{
+                      color: "#4edea3",
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}
+                  >
+                    UPDATES ROUGHLY EVERY 30 MIN
+                  </span>
+                </div>
               </div>
+              {feedViewMode === "table" ? (
+                <SignalTable signals={streamList} />
+              ) : (
               <div
                 className="divide-y"
                 style={{ borderColor: "rgba(60,74,66,0.3)" }}
@@ -1017,6 +1083,7 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
+              )}
               {streamList.length > 0 && (
                 <>
                   {/* Scroll-triggered loading: IntersectionObserver fires

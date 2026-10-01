@@ -7,11 +7,30 @@ import { REDIS_CHANNELS } from "../workers/pubsub.js";
 import { getRedis } from "../clients/redis.js";
 import { sortByRelevance } from "../lib/relevance-rank.js";
 
+// Mirrors EventCategory in packages/shared/src/types/signal.types.ts
+// (apps/backend does not depend on @blue-beacon-research/shared — see the
+// identical note on sortByRelevance in ../lib/relevance-rank.ts — so this is
+// a small duplicated literal list, not a new cross-app dependency).
+// "uncategorized" is not a real EventCategory member; it maps to
+// `event_category IS NULL` below.
+const EVENT_CATEGORY_VALUES = [
+  "armed_conflict_security",
+  "supply_disruption_logistics",
+  "sanctions_trade_policy",
+  "production_output_decision",
+  "central_bank_monetary_policy",
+  "scheduled_economic_data",
+  "official_statement_commentary",
+  "elections_political_transition",
+  "other_market_relevant",
+] as const;
+
 const querySchema = z.object({
   severity: z.coerce.number().int().min(1).max(10).optional(),
   region: z.string().min(1).optional(),
   commodity: z.string().min(1).optional(),
   minSources: z.coerce.number().int().min(1).optional(),
+  eventCategory: z.enum([...EVENT_CATEGORY_VALUES, "uncategorized"]).optional(),
   window: z.enum(["latest", "24h", "7d", "30d", "active"]).optional(),
   cursor: z.string().min(1).optional(),
   // "relevance" = recency+severity blend, computed in application code — see
@@ -49,7 +68,7 @@ export async function signalsRoutes(app: FastifyInstance) {
         .send({ error: "Invalid query", issues: parsed.error.issues });
     }
 
-    const { severity, region, commodity, minSources, window, sort, page, limit, cursor } =
+    const { severity, region, commodity, minSources, eventCategory, window, sort, page, limit, cursor } =
       parsed.data;
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -63,6 +82,11 @@ export async function signalsRoutes(app: FastifyInstance) {
 
     if (severity) query = query.gte("severity", severity);
     if (minSources) query = query.gte("sources_count", minSources);
+    if (eventCategory === "uncategorized") {
+      query = query.is("event_category", null);
+    } else if (eventCategory) {
+      query = query.eq("event_category", eventCategory);
+    }
     if (region) {
       const variants = expandRegionVariants(region);
       query =

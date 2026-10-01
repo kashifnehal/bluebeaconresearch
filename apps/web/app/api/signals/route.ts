@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 import { dedupeSignalsByTitle } from "@/lib/dedupe-signals";
-import { REGIONS } from "@blue-beacon-research/shared";
+import { REGIONS, EVENT_CATEGORY_VALUES } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
 import { expandRegionVariants } from "@/lib/signal-filters";
 import {
@@ -229,6 +229,16 @@ export async function GET(req: NextRequest) {
       minSourcesParam && Number.isFinite(Number(minSourcesParam))
         ? Number(minSourcesParam)
         : null;
+    // Category filter chips (4.2). "uncategorized" means event_category IS
+    // NULL — a real option, not a fallback, given today's low classifier
+    // coverage. Anything else unrecognized is ignored (same silent-ignore
+    // pattern as an invalid `window`), not a 400.
+    const eventCategoryParam = url.searchParams.get("eventCategory");
+    const eventCategory =
+      eventCategoryParam === "uncategorized" ||
+      (eventCategoryParam && (EVENT_CATEGORY_VALUES as string[]).includes(eventCategoryParam))
+        ? eventCategoryParam
+        : null;
     // Dedicated archive/search lookup (`/archive`). Opt-in so the Intelligence
     // Feed's severity floor, recency window, and relevance ranking stay
     // untouched. Sorted event_date DESC; keyset-paginated; no default cutoff.
@@ -352,6 +362,11 @@ export async function GET(req: NextRequest) {
         .select("*, event_date", { count: "exact" });
       if (severity) q = q.gte("severity", Number(severity));
       if (minSources) q = q.gte("sources_count", minSources);
+      if (eventCategory === "uncategorized") {
+        q = q.is("event_category", null);
+      } else if (eventCategory) {
+        q = q.eq("event_category", eventCategory);
+      }
       if (region) {
         const variants = expandRegionVariants(region);
         q = variants.length > 1 ? q.in("region", variants) : q.eq("region", region);
