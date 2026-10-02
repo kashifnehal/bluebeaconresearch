@@ -100,6 +100,8 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 
 - `20260928140000_signals_invalidation_condition.sql` — #216. Nullable `signals.invalidation_condition text` (the "what would prove this signal wrong" field). Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `signals_invalidation_condition`. Verified via `information_schema.columns`.
 
+- `20261002120000_alert_feedback.sql` — PERS-Pn (Telegram inline-keyboard alert feedback). New table `alert_feedback` (`user_id` → profiles, `alerts_sent_id` → alerts_sent, `value` check `useful`/`not_useful`/`mute_topic`, `created_at`). RLS on, `alert_feedback_select_own` only (same shape as `alerts_sent` — all writes are service-role, from `routes/telegram.ts`'s callback_query handler). **NOT yet applied to the live DB** — `apply_migration` against `evavcgfmemwryggdkjmx` timed out twice this session (`Connection terminated due to connection timeout`), a Supabase connectivity failure rather than the production-deploy gate that blocked `user_sessions`/`signals_is_backfilled` above, but the practical effect is the same: the founder needs to apply this file directly (SQL editor / CLI) or re-run `apply_migration` once connectivity recovers. Until then, the webhook's `alert_feedback` insert in `routes/telegram.ts` will fail (not try/caught — a callback that can't be recorded should surface, not silently no-op) and `answerCallbackQuery` won't fire, so tapping a feedback button in Telegram will appear to do nothing.
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.

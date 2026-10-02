@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 112).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-02 (PHASE 113).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 113 — Telegram alert feedback buttons, PERS-Pn (2026-10-02)
+
+`apps/backend` only. Telegram alerts now carry an inline Useful / Not useful / Mute topic keyboard; a tap is handled by a new `callback_query` branch in the webhook route, which verifies the answering chat owns the alert (via `user_channels`) before recording the feedback — a chat that doesn't own the alert is ignored, not just unauthenticated-rejected. `mute_topic` records feedback only in this version; it does not touch alert rules or thresholds. The alert-dispatcher's Telegram send now writes its `alerts_sent` row immediately, before sending, so the keyboard can reference the real row id instead of a separate token. New migration is written but **not yet applied live** — two Supabase connection timeouts this session, a connectivity issue rather than a design block; plus `TELEGRAM_BOT_TOKEN` is still unset, so no end-to-end live check was possible yet either way. 9 new unit tests (keyboard shape/byte-limit, callback parsing, ownership) all pass; full backend suite + type-check clean. Full detail: `docs/brain/14_CHANGELOG.md` v0.136.0, `04_DATABASE.md`, `16_MIGRATION_CHECKLIST.md`.
 
 ## PHASE 112 — Public `/how-it-works` research-integrity page (2026-10-01)
 

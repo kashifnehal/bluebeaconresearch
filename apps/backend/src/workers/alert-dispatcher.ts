@@ -222,17 +222,39 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     for (const channel of channels) {
       attempted += 1;
       let status: "queued" | "delivered" | "failed" = "queued";
+      let telegramRowWrittenDirectly = false;
 
       try {
         if (channel === "telegram") {
           if (!channelsRow?.telegram_chat_id) {
             status = "queued";
           } else {
-            const result = await telegram.sendMessage(
-              channelsRow.telegram_chat_id,
-              telegramText,
-            );
-            status = result.ok ? "delivered" : "failed";
+            // The feedback keyboard's callback_data embeds the real alerts_sent.id
+            // (#82-feedback), so the row has to exist before the Telegram send, not
+            // after it. Inserted directly here (one row, immediately) rather than via
+            // a short-lived token: alerts_sent is already the durable record the
+            // ownership check in routes/telegram.ts reads back against, so reusing it
+            // avoids a second table/TTL cache just to bridge send -> callback.
+            const { data: inserted, error: insertErr } = await supabase
+              .from("alerts_sent")
+              .insert({ user_id: rule.user_id, rule_id: rule.id, signal_id: signalId, channel, status: "queued" })
+              .select("id")
+              .single();
+
+            if (insertErr || !inserted) {
+              status = "failed";
+            } else {
+              telegramRowWrittenDirectly = true;
+              const keyboard = telegram.buildFeedbackKeyboard(inserted.id);
+              const result = await telegram.sendMessage(channelsRow.telegram_chat_id, telegramText, {
+                inlineKeyboard: keyboard,
+              });
+              status = result.ok ? "delivered" : "failed";
+              await supabase
+                .from("alerts_sent")
+                .update({ status, delivered_at: status === "delivered" ? new Date().toISOString() : null })
+                .eq("id", inserted.id);
+            }
           }
         } else if (channel === "slack") {
           if (!channelsRow?.slack_webhook_url) {
@@ -291,14 +313,16 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
         status = "failed";
       }
 
-      alertsSentRows.push({
-        user_id: rule.user_id,
-        rule_id: rule.id,
-        signal_id: signalId,
-        channel,
-        status,
-        delivered_at: status === "delivered" ? new Date().toISOString() : null,
-      });
+      if (!telegramRowWrittenDirectly) {
+        alertsSentRows.push({
+          user_id: rule.user_id,
+          rule_id: rule.id,
+          signal_id: signalId,
+          channel,
+          status,
+          delivered_at: status === "delivered" ? new Date().toISOString() : null,
+        });
+      }
     }
 
     // Push notifications for any user with tokens (best-effort) — once per matched
