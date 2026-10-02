@@ -15,6 +15,8 @@
 
 > ⚠️ UPDATED 2026-10-01 — public `/how-it-works` research-integrity page shipped (W2-TRUST, brain changelog v0.135.0 / PHASE 112). Claim/proof table (6 claims, each checked against code or live data, none quoting an accuracy percentage) + a 3-number live stats bar. No prior backlog line existed for this page — confirmed by grep, nothing struck.
 
+> ⚠️ UPDATED 2026-10-02 — **PERS-Pn: alert match-reason** shipped (brain changelog v0.136.0 / PHASE 113), `apps/backend` + `apps/web` — `alerts_sent.match_reason` (tier 1/2/3 + the matched watchlist/commodity/region/forex values), surfaced as one plain line on both the chat delivery and the `/alerts` web card. **Migration written, not yet applied to the live DB** — see `16_MIGRATION_CHECKLIST.md`; treat as not fully live until a human applies it. No prior backlog line existed for this ticket (searched for `PERS-P` and `match_reason` — confirmed by grep, nothing struck).
+
 ---
 
 ## #186 — FULL RESPONSIVE REWORK (MOBILE + TABLET)

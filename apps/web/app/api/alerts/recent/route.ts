@@ -48,6 +48,10 @@ export async function GET(req: NextRequest) {
   // `count: "exact"` gives an authoritative total straight from Postgres (not a
   // row-limited estimate), so the "Showing N of total" text on the alerts page is
   // honest at any history size.
+  //
+  // PERS-Pn: the leading `*` already carries alerts_sent.match_reason (written once
+  // by apps/backend/src/workers/alert-dispatcher.ts at dispatch time) straight
+  // through to the alerts page — no extra column needed here.
   const { data, error, count } = await supabaseAuth
     .from("alerts_sent")
     .select(

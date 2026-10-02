@@ -145,6 +145,7 @@ One row per alert actually dispatched. Written by `alert-dispatcher.ts`.
 - `delivered_at` (`timestamptz`, nullable)
 - `outcome_direction` (`text`, nullable) / `outcome_price_change` (`double precision`, nullable)
 - `created_at` (`timestamptz`, NOT NULL, default `now()`)
+- `match_reason` (`jsonb`, nullable) — PERS-Pn, `20261002090000_alerts_sent_match_reason.sql`, **migration written, NOT yet applied to the live DB**. `{ tier: 1|2|3, matched: { watchlist?, commodity?, region?, forex?: string[] } }`, written once by `dispatchAlertsForSignal()` per matched rule. Display/ordering only — never read by any filtering logic, never affects whether an alert was sent.
 
 ### Table 8: `api_keys`
 Institutional developer API credentials.

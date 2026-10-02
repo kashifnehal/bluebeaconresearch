@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 112).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-02 (PHASE 113).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 113 — PERS-Pn: alert match-reason (why a rule matched) (2026-10-02)
+
+`apps/backend` + `apps/web`. Alert cards (web + chat) explained *that* a signal matched a rule but not *why*. New nullable `alerts_sent.match_reason jsonb` (migration **written, not applied to the live DB** — see `16_MIGRATION_CHECKLIST.md`). `dispatchAlertsForSignal()` computes a reason per matched rule: tier 1 = the signal's own commodity/forex asset is on the user's `user_preferences.watchlist_symbols`, tier 2 = a commodity/forex filter AND the region filter both matched, tier 3 = only one of the rule's configured filters matched. Tier is for display/ordering only and is computed after the existing hard pass/fail filter — it never changes whether an alert is sent. `buildAlertBody()` appends one plain line ("Matched because you follow: COPPER, Chile" — no scoring, no percentages); the web `/alerts` page card renders the identical line under its existing "Alert threshold" section, sourced from the same `match_reason` row via `GET /api/alerts/recent`'s existing `select("*")` (no route change needed). New unit tests cover tier 1/2/3 boundaries and a full input sweep proving no combination of inputs can be mistaken for a "skip" signal. Full detail: `docs/brain/14_CHANGELOG.md` v0.136.0, `08_CURRENT_STATUS.md`, `05_API.md`, `06_COMPONENTS.md`, `04_DATABASE.md`.
 
 ## PHASE 112 — Public `/how-it-works` research-integrity page (2026-10-01)
 
