@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 113 — TASK PERS-Pn: asset-page Follow/Following toggle (2026-10-02)
+
+`apps/web` only. New Follow/Following button on the asset drill-down page, toggling the symbol in/out of the real watchlist (`user_preferences.watchlist_symbols`) through the existing preferences hook — no new API route. Kept distinct from the pre-existing "You follow this" chip, which is a different preference field. Logged-out click round-trips through sign-in back to the same page via a new, validated redirect param on the shared post-auth redirect logic. A gate the task named (`watchlist.max_symbols` via `lib/entitlements.ts`) does not exist anywhere in this repo — flagged rather than fabricated, not built. Full test suite + type-check + build all clean; not live-browser-tested (logic change, not a rendering bug). Full detail: `docs/brain/14_CHANGELOG.md` v0.136.0.
+
 ## PHASE 112 — Public `/how-it-works` research-integrity page (2026-10-01)
 
 `apps/web` only (W2-TRUST). A claim/proof table (6 claims, each verified against code or live data before being written — nothing dropped) plus a 3-number live stats bar: total signals and signals-in-last-7-days (live Supabase counts, server-computed per request) and "sources monitored" = 28 RSS feeds + 3 other collector modules (GDELT/GNews/ACLED), counted from code constants, not a DB query. A failed stat query hides that number instead of rendering 0. Limits section, live-checked against `service_health_events`: ACLED is still failing auth today, so "not yet ingesting" is current fact, not stale copy. No accuracy percentage anywhere on the page — links to the existing `/accuracy` page instead, per explicit instruction. Reuses `/accuracy`'s header/footer and color tokens, no new colors; claim/proof table is a responsive grid, not an HTML table, so no horizontal scroll at phone width. Footer link + sitemap entry added. New tests for the stats-formatting helper and the sitemap entry. Full detail: `docs/brain/14_CHANGELOG.md` v0.135.0, `06_COMPONENTS.md`.

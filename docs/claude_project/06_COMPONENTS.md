@@ -495,6 +495,8 @@ Sections:
 
 > ⚠️ UPDATED 2026-10-02 (follow-up to `808f93c`) — two of the driver-breakdown route's early returns (no Supabase client, unauthenticated in production) previously returned `{ rows: [] }` with no error flag at all, so they still rendered as an honest empty state. Both now carry an `error` value ("unavailable" / "unauthenticated"), and the chart now throws on any `error` response (react-query retries twice) instead of caching it as a success — the failure state gained a "Retry" button, with distinct copy for the signed-out case. The "Uncategorized" note's wording was also corrected: live data (41 of 2,994 signals have an `event_category`) shows it's not just older, pre-category signals missing it, so "recorded before categories were stored" was dropped for a plain "have no event category stored" framing. Full detail: `docs/brain/06_COMPONENTS.md` §3.7, `docs/brain/05_API.md`.
 
+> ⚠️ UPDATED 2026-10-02 (PERS-Pn) — the `[symbol]` drill-down gained a Follow/Following toggle next to the price that adds/removes the symbol from the real watchlist (`user_preferences.watchlist_symbols`, via the existing `useMyPreferences` hook — no new API route), distinct from the pre-existing "You follow this" chip (onboarding preferences, not the watchlist). Logged-out click now round-trips through `/login` back to the same page via a new, validated `redirectedFrom` param on the shared post-auth redirect helper and the OAuth callback route. The task also named a `lib/entitlements.ts` gate (`can()`/`limitFor()`, `watchlist.max_symbols`) — no such file exists anywhere in this repo; not built, flagged instead of fabricated. Full detail: `docs/brain/06_COMPONENTS.md` §3.7, `LIVE_TODO.md`.
+
 ---
 
 ## 6. SETTINGS COMPONENTS

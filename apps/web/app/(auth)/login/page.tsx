@@ -51,6 +51,10 @@ function LoginForm() {
   const urlError = searchParams.get("error");
   const justConfirmed = searchParams.get("confirmed") === "1";
   const prefillEmail = searchParams.get("email") ?? "";
+  // Set by a gated action's "sign in and come back here" link (e.g. the
+  // watchlist Follow toggle) — honored by resolvePostAuthRedirect() once
+  // onboarding is done, ignored otherwise.
+  const redirectedFrom = searchParams.get("redirectedFrom");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +132,7 @@ function LoginForm() {
       // middleware sees the auth cookie on the very next request, same SSR-cookie rule
       // already applied to the post-signup redirect.
       const profile = isProjectReady ? await fetchMyProfile() : null;
-      window.location.href = resolvePostAuthRedirect(profile);
+      window.location.href = resolvePostAuthRedirect(profile, redirectedFrom);
     } catch (e: unknown) {
       setError(userFacingCaughtError(e, "Failed to sign in."));
     } finally {
@@ -158,7 +162,9 @@ function LoginForm() {
     setIsLoading(true);
     try {
       const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
-      const redirectTo = `${origin || window.location.origin}/auth/callback`;
+      const callbackUrl = new URL("/auth/callback", origin || window.location.origin);
+      if (redirectedFrom) callbackUrl.searchParams.set("redirectedFrom", redirectedFrom);
+      const redirectTo = callbackUrl.toString();
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },

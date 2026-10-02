@@ -46,11 +46,25 @@ export async function fetchMyProfile(): Promise<Profile | null> {
   };
 }
 
+// A same-origin path only — never a protocol-relative ("//evil.com") or
+// absolute URL — so a crafted redirectedFrom can't bounce a user off-site
+// after they sign in.
+export function isSafeInternalRedirect(path: string | null | undefined): path is string {
+  return typeof path === "string" && path.startsWith("/") && !path.startsWith("//");
+}
+
 // Shared by every post-auth flow (login, password reset) that needs to land the
 // user on the right page via window.location.href. Single source of truth so the
-// destination logic can't drift between callers.
-export function resolvePostAuthRedirect(profile: Profile | null): string {
+// destination logic can't drift between callers. `redirectedFrom` (e.g. a gated
+// action's "sign in and come back here" link) only wins once onboarding is done —
+// same as every other destination here, a not-yet-onboarded user always lands on
+// /onboarding first.
+export function resolvePostAuthRedirect(
+  profile: Profile | null,
+  redirectedFrom?: string | null,
+): string {
   if (!isProjectReady) return "/";
-  return profile?.onboardingCompleted ? "/dashboard" : "/onboarding";
+  if (!profile?.onboardingCompleted) return "/onboarding";
+  return isSafeInternalRedirect(redirectedFrom) ? redirectedFrom : "/dashboard";
 }
 
