@@ -62,16 +62,63 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+const SIGNAL_COLUMNS =
+  "id, title, summary, ai_analysis, severity, region, commodity_impacts, currency_pair_impacts, raw_event_ids, event_date, created_at";
+
+/**
+ * Signals the alert-dispatcher's per-user daily budget deferred (doc 298 algorithm
+ * A2 §3) for this user — `alerts_sent` rows with status "deferred" and
+ * deferred_to_digest still true. These bypass the normal preference/time-window
+ * filter below: the user already cleared an alert_rules match for them, so they
+ * belong in the digest regardless of whether they also happen to fall in the last
+ * 24h or match the OR-filter this function otherwise builds.
+ */
+async function deferredSignalsForUser(userId: string): Promise<SignalRow[]> {
+  const { data: deferredRows, error: deferredErr } = await supabase
+    .from("alerts_sent")
+    .select("signal_id")
+    .eq("user_id", userId)
+    .eq("status", "deferred")
+    .eq("deferred_to_digest", true);
+  if (deferredErr || !deferredRows?.length) return [];
+
+  const signalIds = [...new Set(deferredRows.map((r) => r.signal_id as string))];
+  const { data, error } = await supabase.from("signals").select(SIGNAL_COLUMNS).in("id", signalIds);
+  if (error) {
+    console.error("[digest] deferred-signal select failed:", error.message);
+    return [];
+  }
+  return (data ?? []) as SignalRow[];
+}
+
+/** Clears the deferred_to_digest flag so a sent digest never resurfaces the same signal tomorrow. */
+export async function clearDeferredDigestFlags(userId: string, signalIds: string[]): Promise<void> {
+  if (signalIds.length === 0) return;
+  await supabase
+    .from("alerts_sent")
+    .update({ deferred_to_digest: false })
+    .eq("user_id", userId)
+    .eq("status", "deferred")
+    .in("signal_id", signalIds);
+}
+
 /**
  * Pull the last 24h of signals that overlap a single user's watched commodities /
- * regions, ranked by severity, top N. Returns [] when the user has no preferences
- * (the digest is genuinely personalized — no global top-5 fallback).
+ * regions, ranked by severity, top N, plus any signal the alert-dispatcher budget
+ * deferred for this user (doc 298 algorithm A2 §3). Returns [] when the user has no
+ * preferences and nothing was deferred (the digest is genuinely personalized — no
+ * global top-5 fallback).
  */
 export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalRow[]> {
   const regions = Array.isArray(pref.regions) ? pref.regions : [];
   const commodities = Array.isArray(pref.commodities) ? pref.commodities : [];
   const forexPairs = Array.isArray(pref.forex_pairs) ? pref.forex_pairs : [];
-  if (regions.length === 0 && commodities.length === 0 && forexPairs.length === 0) return [];
+
+  const deferred = await deferredSignalsForUser(pref.user_id);
+
+  if (regions.length === 0 && commodities.length === 0 && forexPairs.length === 0) {
+    return deferred.slice(0, DIGEST_LIMIT);
+  }
 
   const orParts: string[] = [];
   for (const rid of regions) {
@@ -87,26 +134,32 @@ export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalR
   for (const sym of forexPairs) {
     if (/^[A-Z0-9]+$/.test(sym)) orParts.push(`currency_pair_impacts.cs.[{"asset":"${sym}"}]`);
   }
-  if (orParts.length === 0) return [];
 
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
-    .from("signals")
-    .select(
-      "id, title, summary, ai_analysis, severity, region, commodity_impacts, currency_pair_impacts, raw_event_ids, event_date, created_at",
-    )
-    .eq("is_active", true)
-    .gte("created_at", since)
-    .or(orParts.join(","))
-    .order("severity", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(DIGEST_LIMIT);
+  let regular: SignalRow[] = [];
+  if (orParts.length > 0) {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from("signals")
+      .select(SIGNAL_COLUMNS)
+      .eq("is_active", true)
+      .gte("created_at", since)
+      .or(orParts.join(","))
+      .order("severity", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(DIGEST_LIMIT);
 
-  if (error) {
-    console.error("[digest] signal select failed:", error.message);
-    return [];
+    if (error) {
+      console.error("[digest] signal select failed:", error.message);
+    } else {
+      regular = (data ?? []) as SignalRow[];
+    }
   }
-  return (data ?? []) as SignalRow[];
+
+  const byId = new Map<string, SignalRow>();
+  for (const s of [...deferred, ...regular]) byId.set(s.id, s);
+  return [...byId.values()]
+    .sort((a, b) => b.severity - a.severity || b.created_at.localeCompare(a.created_at))
+    .slice(0, DIGEST_LIMIT);
 }
 
 function whichWatchMatched(signal: SignalRow, pref: PrefRow): string {
@@ -341,6 +394,10 @@ export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: bo
       if (res.sent) {
         result.sent += 1;
         console.log(`[digest] sent to ${to} (${signals.length} signals) id=${res.id}`);
+        // Only on a confirmed real send — never on a dry run or a failed/throwing
+        // send — so a budget-deferred signal keeps retrying tomorrow's digest
+        // until it has actually gone out once.
+        await clearDeferredDigestFlags(pref.user_id, signals.map((s) => s.id));
       } else {
         result.failed += 1;
         console.warn(`[digest] not sent to ${to}: ${res.reason}`);

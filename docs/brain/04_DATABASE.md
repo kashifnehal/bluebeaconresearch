@@ -140,8 +140,9 @@ Ingested news articles and incident logs before classification.
 One row per alert actually dispatched. Written by `alert-dispatcher.ts`.
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)
 - `user_id` (`uuid`, NOT NULL) / `rule_id` (`uuid`, nullable) / `signal_id` (`uuid`, NOT NULL)
-- `channel` (`text`, nullable)
-- `status` (`text`, NOT NULL, default `'queued'`, check: `queued`, `delivered`, `failed`) — `NotificationPanel.tsx` renders all three distinctly; a queued/failed row must never look delivered
+- `channel` (`text`, nullable) — null on a `deferred` row (no channel was ever attempted)
+- `status` (`text`, NOT NULL, default `'queued'`, check: `queued`, `delivered`, `failed`, `deferred`) — `NotificationPanel.tsx` renders the first three distinctly; a queued/failed row must never look delivered. `deferred` added `20261001200000_alerts_sent_deferred_to_digest.sql` (doc 298 algorithm A2, per-user daily alert budget — see `alert-dispatcher.ts`'s `shouldDeferForBudget`)
+- `deferred_to_digest` (`boolean`, NOT NULL, default `false`) — same migration. True on a budget-deferred row until `digest-sender.ts`'s `clearDeferredDigestFlags()` flips it false after that signal has actually gone out in a daily digest; `selectDigestSignalsForUser()` reads it to fold deferred signals into the digest regardless of the normal preference/24h filter.
 - `delivered_at` (`timestamptz`, nullable)
 - `outcome_direction` (`text`, nullable) / `outcome_price_change` (`double precision`, nullable)
 - `created_at` (`timestamptz`, NOT NULL, default `now()`)

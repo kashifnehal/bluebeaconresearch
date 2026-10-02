@@ -100,6 +100,8 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 
 - `20260928140000_signals_invalidation_condition.sql` — #216. Nullable `signals.invalidation_condition text` (the "what would prove this signal wrong" field). Applied live to `evavcgfmemwryggdkjmx` via Supabase MCP `apply_migration` as `signals_invalidation_condition`. Verified via `information_schema.columns`.
 
+- `20261001200000_alerts_sent_deferred_to_digest.sql` — doc 298 algorithm A2 (alert-dispatcher per-user daily budget). Adds `alerts_sent.deferred_to_digest boolean not null default false`; widens the `alerts_sent_status_check` constraint to add `'deferred'` to `queued`/`delivered`/`failed`. **NOT yet applied to the live DB.** Both `apply_migration` and a plain read-only `execute_sql` against `evavcgfmemwryggdkjmx` failed this session with `Connection terminated due to connection timeout` — a connectivity block, not the specific production-deploy-gate denial `user_sessions`/`signals_is_backfilled` hit earlier, but the same practical outcome. Until a human applies this (SQL editor or a session with working Supabase connectivity), the new `shouldDeferForBudget`/budget-deferred code path in `alert-dispatcher.ts` will fail its `alerts_sent` insert on a `'deferred'` row (constraint violation) — wrapped in the same insert call as every other status, so check Railway logs for `alerts_sent` insert errors if budget-deferred alerts stop appearing in digests.
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.

@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 113 — Alert-dispatcher per-user daily budget + per-story cooldown (doc 298 algorithm A2) (2026-10-02)
+
+`apps/backend` only. Two new alert-fatigue gates ahead of sending an alert: a 30-minute cooldown that skips a repeat alert for the same story (reusing `signal-merge.ts`'s own duplicate-story similarity check), and a 10-per-day budget that defers any alert past that count to the next daily digest instead of dropping it. Severity-10 signals and escalation re-alerts bypass both, matching the existing quiet-hours exception. Both numbers are explicitly flagged as design choices, not measured constants. New migration adds the digest-deferral flag and status value to `alerts_sent` — written but not yet applied live (Supabase connection timeout this session). Full detail: `docs/brain/14_CHANGELOG.md` v0.136.0.
+
 ## PHASE 112 — Public `/how-it-works` research-integrity page (2026-10-01)
 
 `apps/web` only (W2-TRUST). A claim/proof table (6 claims, each verified against code or live data before being written — nothing dropped) plus a 3-number live stats bar: total signals and signals-in-last-7-days (live Supabase counts, server-computed per request) and "sources monitored" = 28 RSS feeds + 3 other collector modules (GDELT/GNews/ACLED), counted from code constants, not a DB query. A failed stat query hides that number instead of rendering 0. Limits section, live-checked against `service_health_events`: ACLED is still failing auth today, so "not yet ingesting" is current fact, not stale copy. No accuracy percentage anywhere on the page — links to the existing `/accuracy` page instead, per explicit instruction. Reuses `/accuracy`'s header/footer and color tokens, no new colors; claim/proof table is a responsive grid, not an HTML table, so no horizontal scroll at phone width. Footer link + sitemap entry added. New tests for the stats-formatting helper and the sitemap entry. Full detail: `docs/brain/14_CHANGELOG.md` v0.135.0, `06_COMPONENTS.md`.
