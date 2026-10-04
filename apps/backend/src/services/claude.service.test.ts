@@ -1129,6 +1129,183 @@ async function main() {
       assert.ok(classification.severity <= 6, `expected heuristic severity capped at 6, got ${classification.severity}`);
     },
   );
+
+  // ── W7-ASSETS-COPPER-SILVER — COPPER / XAGUSD alias normalization ─────────
+
+  runTest("normalizeCommodityAsset: 'Copper' returns COPPER", async () => {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 6,
+                confidence: 0.7,
+                commodityImpacts: [{ asset: "Copper", direction: "down", confidence: 0.8 }],
+                currencyPairImpacts: [],
+                isBreaking: false,
+                summary: "Copper strike cuts mine output",
+                region: "americas",
+                materialityPass: true,
+                materialityReasoning: "real market mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Workers strike at major Chilean copper mine",
+        summary: "Union halts production indefinitely.",
+        event_type: "news",
+        country: "CL",
+        event_date: new Date().toISOString(),
+      });
+      assert.deepStrictEqual(
+        classification.commodityImpacts.map((impact) => impact.asset),
+        ["COPPER"],
+      );
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
+
+  runTest("normalizeCommodityAsset: 'Silver' returns XAGUSD", async () => {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 5,
+                confidence: 0.6,
+                commodityImpacts: [{ asset: "Silver", direction: "up", confidence: 0.75 }],
+                currencyPairImpacts: [],
+                isBreaking: false,
+                summary: "Silver gains on safe-haven demand",
+                region: "global",
+                materialityPass: true,
+                materialityReasoning: "real market mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Investors seek safe-haven silver amid uncertainty",
+        summary: "Bullion demand rises.",
+        event_type: "news",
+        country: "US",
+        event_date: new Date().toISOString(),
+      });
+      assert.deepStrictEqual(
+        classification.commodityImpacts.map((impact) => impact.asset),
+        ["XAGUSD"],
+      );
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
+
+  runTest(
+    "normalizeCommodityAsset: a Chile copper strike story tagged 'Copper' no longer returns USOIL",
+    async () => {
+      const assetService = new ClaudeService();
+      (assetService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => ({
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  severity: 6,
+                  confidence: 0.7,
+                  commodityImpacts: [{ asset: "Copper", direction: "down", confidence: 0.8 }],
+                  currencyPairImpacts: [],
+                  isBreaking: false,
+                  summary: "Chile copper strike shuts major mine",
+                  region: "americas",
+                  materialityPass: true,
+                  materialityReasoning: "real market mechanism",
+                }),
+              },
+            ],
+            usage: { input_tokens: 10, output_tokens: 20 },
+          }),
+        },
+      };
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        const classification = await assetService.classifyEvent({
+          title: "Chile copper strike shuts major mine",
+          summary: "Workers walk out, raising supply concerns.",
+          event_type: "news",
+          country: "CL",
+          event_date: new Date().toISOString(),
+        });
+        const assets = classification.commodityImpacts.map((impact) => impact.asset);
+        assert.ok(assets.includes("COPPER"), "Expected COPPER impact");
+        assert.ok(!assets.includes("USOIL"), "Did not expect a spurious USOIL impact");
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
+
+  runTest("normalizeCommodityAsset: an unknown asset is still dropped", async () => {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 4,
+                confidence: 0.6,
+                commodityImpacts: [{ asset: "Platinum", direction: "up", confidence: 0.6 }],
+                currencyPairImpacts: [],
+                isBreaking: false,
+                summary: "Platinum prices rise",
+                region: "global",
+                materialityPass: false,
+                materialityReasoning: "no commodity/currency/watchlist mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Platinum prices rise on mining disruption",
+        summary: "Unrelated to BBR's allowed asset list.",
+        event_type: "news",
+        country: "ZA",
+        event_date: new Date().toISOString(),
+      });
+      assert.deepEqual(classification.commodityImpacts, []);
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
 }
 
 main().catch((err) => {

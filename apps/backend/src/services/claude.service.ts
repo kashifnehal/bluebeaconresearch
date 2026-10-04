@@ -283,6 +283,11 @@ export class ClaudeService {
     "XAUUSD",
     "WHEAT",
     "CORN",
+    // COPPER / XAGUSD added W7-ASSETS-COPPER-SILVER: both had zero tagged
+    // signals in 30 days although price-syncer.ts already syncs them
+    // (HG=F / SI=F) — see COMMODITY_ASSET_ALIASES below.
+    "COPPER",
+    "XAGUSD",
   ]);
 
   // Forex pairs (#87). Kept as its own allowlist rather than folded into
@@ -331,6 +336,16 @@ export class ClaudeService {
     "XAU/USD": "XAUUSD",
     XAU: "XAUUSD",
     MAIZE: "CORN",
+    // W7-ASSETS-COPPER-SILVER: price-syncer.ts uses HG=F for COPPER and SI=F
+    // for XAGUSD — these aliases normalize Claude's natural-language asset
+    // names onto those same tickers.
+    COPPER: "COPPER",
+    "COPPER FUTURES": "COPPER",
+    HG: "COPPER",
+    SILVER: "XAGUSD",
+    XAG: "XAGUSD",
+    "XAG/USD": "XAGUSD",
+    "SILVER FUTURES": "XAGUSD",
   };
 
   private normalizeCommodityAsset(asset: string): string | null {
@@ -458,7 +473,7 @@ export class ClaudeService {
           `{\n` +
           `  "severity": integer between 1 and 10,\n` +
           `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
-          `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+          `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN"|"COPPER"|"XAGUSD" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "isBreaking": boolean,\n` +
           `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n` +
