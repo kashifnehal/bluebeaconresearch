@@ -12,6 +12,7 @@ import { recordServiceHealth } from "../lib/service-health.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
+import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
 
 const claude = new ClaudeService();
 
@@ -195,23 +196,40 @@ export async function runRssCollectorOnce() {
   let prefiltered = 0;
   let materialityRejected = 0;
 
+  // W7-DEDUPE-KEY: one prefetch per cycle instead of one .select() per article.
+  const sevenDaysAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const existingRows = await supabase
+    .from("raw_events")
+    .select("external_id, raw_data")
+    .eq("source", "rss")
+    .gte("created_at", sevenDaysAgoIso);
+  if (existingRows.error) {
+    console.error("[RSS] prefetch of existing external_id/url failed:", existingRows.error.message);
+  }
+  const seenExternalIds = new Set<string>();
+  const seenCanonicalUrls = new Set<string>();
+  for (const row of existingRows.data ?? []) {
+    if (row.external_id) seenExternalIds.add(row.external_id);
+    const url = (row.raw_data as any)?.url;
+    if (url) seenCanonicalUrls.add(canonicalUrl(url));
+  }
+
+  let passedFilters = 0;
+  let alreadySeen = 0;
+
   for (const item of items) {
     if (!isRelevantEvent(item.title, item.summary, item.tier)) {
       filtered++;
       feedDiag[item.label].filteredIrrelevant++;
       continue;
     }
+    passedFilters++;
 
-    const externalId = `rss-${Buffer.from(item.url).toString("base64").slice(0, 32)}`;
+    const externalId = articleExternalId("rss", item.url);
 
-    const existing = await supabase
-      .from("raw_events")
-      .select("id")
-      .eq("external_id", externalId)
-      .maybeSingle();
-
-    if (existing.data?.id) {
+    if (seenExternalIds.has(externalId) || seenCanonicalUrls.has(canonicalUrl(item.url))) {
       duplicates++;
+      alreadySeen++;
       feedDiag[item.label].duplicate++;
       continue;
     }
@@ -238,12 +256,25 @@ export async function runRssCollectorOnce() {
       .select("id")
       .maybeSingle();
 
-    if (insert.error || !insert.data?.id) {
-      console.error("[RSS] raw_events insert error:", insert.error?.message);
+    if (insert.error) {
+      // 23505 = unique_violation on (source, external_id) — a genuine race/duplicate.
+      // Live evidence (2026-10-03): the old per-article select here looked like
+      // "not found" on failure, so this error surfaced as ~40 insert-error log
+      // lines/cycle while the diag below said new=0 — misleading noise, not a bug.
+      if (insert.error.code === "23505") {
+        duplicates++;
+        alreadySeen++;
+        feedDiag[item.label].duplicate++;
+      } else {
+        console.error("[RSS] raw_events insert error:", insert.error.message);
+      }
       continue;
     }
+    if (!insert.data?.id) continue;
     inserted++;
     feedDiag[item.label].new++;
+    seenExternalIds.add(externalId);
+    seenCanonicalUrls.add(canonicalUrl(item.url));
 
     const rawEventId = insert.data.id as string;
 
@@ -363,6 +394,11 @@ export async function runRssCollectorOnce() {
         `filteredIrrelevant=${d.filteredIrrelevant} duplicate=${d.duplicate} new=${d.new}`,
     );
   }
+
+  // W7-DEDUPE-KEY diag: one summary line per cycle across all feeds.
+  console.log(
+    `[RSS-DIAG] cycle summary: fetched=${fetched} passedFilters=${passedFilters} alreadySeen=${alreadySeen} inserted=${inserted}`,
+  );
 
   // A run is "ok" only if at most half the configured feeds threw. 2 consecutive
   // not-ok runs is what workers.ts alerts on — the check that would have caught the

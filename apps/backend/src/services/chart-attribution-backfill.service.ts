@@ -11,6 +11,7 @@ import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { recordServiceHealth } from "../lib/service-health.js";
+import { articleExternalId } from "../lib/external-id.js";
 
 // Phase 2 of chart attribution (#207/#228, Phase 1 = cb12e82/dc7dc45). Runs ONLY
 // when apps/web's DB-first lookup (app/api/signals/attribution/route.ts) finds
@@ -145,8 +146,8 @@ export async function runChartAttributionBackfill(params: {
   const results: BackfillResult[] = [];
 
   for (const { article: a } of byProximity) {
-    const externalId = a.url ? `gdelt-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
-    if (!externalId) continue;
+    if (!a.url) continue;
+    const externalId = articleExternalId("gdelt", a.url);
 
     const title = a.title?.slice(0, 280) ?? a.url ?? "GDELT article";
     const eventDate = parseSeenDate(a.seendate);

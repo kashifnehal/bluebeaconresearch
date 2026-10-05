@@ -13,6 +13,7 @@ import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
+import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
 
 const claude = new ClaudeService();
 
@@ -95,9 +96,31 @@ export async function runGnewsCollectorOnce() {
   let prefiltered = 0;
   let materialityRejected = 0;
 
+  // W7-DEDUPE-KEY: one prefetch per cycle instead of one .select() per article.
+  // GNews rows are stored with source "newsapi" (see rawEventPayload.source below).
+  const sevenDaysAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const existingRows = await supabase
+    .from("raw_events")
+    .select("external_id, raw_data")
+    .eq("source", "newsapi")
+    .gte("created_at", sevenDaysAgoIso);
+  if (existingRows.error) {
+    console.error("[GNews] prefetch of existing external_id/url failed:", existingRows.error.message);
+  }
+  const seenExternalIds = new Set<string>();
+  const seenCanonicalUrls = new Set<string>();
+  for (const row of existingRows.data ?? []) {
+    if (row.external_id) seenExternalIds.add(row.external_id);
+    const url = (row.raw_data as any)?.url;
+    if (url) seenCanonicalUrls.add(canonicalUrl(url));
+  }
+
+  let passedFilters = 0;
+  let alreadySeen = 0;
+
   for (const a of articles) {
-    const externalId = a.url ? `gnews-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
-    if (!externalId) continue;
+    if (!a.url) continue;
+    const externalId = articleExternalId("gnews", a.url);
 
     const title = a.title?.slice(0, 280) ?? "GNews article";
     const summary = a.description?.slice(0, 1000) ?? "";
@@ -105,10 +128,11 @@ export async function runGnewsCollectorOnce() {
       filtered += 1;
       continue;
     }
+    passedFilters += 1;
 
-    const existing = await supabase.from("raw_events").select("id").eq("external_id", externalId).maybeSingle();
-    if (existing.data?.id) {
+    if (seenExternalIds.has(externalId) || seenCanonicalUrls.has(canonicalUrl(a.url))) {
       duplicates += 1;
+      alreadySeen += 1;
       continue;
     }
 
@@ -127,11 +151,20 @@ export async function runGnewsCollectorOnce() {
 
     const insert = await supabase.from("raw_events").insert(rawEventPayload).select("id").maybeSingle();
 
-    if (insert.error || !insert.data?.id) {
-      console.error("[GNews] raw_events insert error:", insert.error?.message);
+    if (insert.error) {
+      // 23505 = unique_violation on (source, external_id) — a genuine race/duplicate.
+      if (insert.error.code === "23505") {
+        duplicates += 1;
+        alreadySeen += 1;
+      } else {
+        console.error("[GNews] raw_events insert error:", insert.error.message);
+      }
       continue;
     }
+    if (!insert.data?.id) continue;
     inserted += 1;
+    seenExternalIds.add(externalId);
+    seenCanonicalUrls.add(canonicalUrl(a.url));
 
     const rawEventId = insert.data.id as string;
 
@@ -249,6 +282,11 @@ export async function runGnewsCollectorOnce() {
       console.error("[GNews] Classification/signal insert failed:", e.message);
     }
   }
+
+  // W7-DEDUPE-KEY diag: one line per cycle — fetched/passed-filters/already-seen/inserted.
+  console.log(
+    `[GNews-DIAG] fetched=${fetched} passedFilters=${passedFilters} alreadySeen=${alreadySeen} inserted=${inserted}`,
+  );
 
   return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected };
 }

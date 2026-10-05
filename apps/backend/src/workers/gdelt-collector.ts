@@ -12,6 +12,7 @@ import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
+import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -100,9 +101,33 @@ export async function runGdeltCollectorOnce() {
   let prefiltered = 0;
   let materialityRejected = 0;
 
+  // W7-DEDUPE-KEY: one prefetch per cycle instead of one .select() per article
+  // (was ~250 selects/cycle for GDELT's maxrecords=250). Covers both the new
+  // full-hash external_id and the canonical URL, so an article already stored
+  // under the OLD truncated id is still recognized as seen.
+  const sevenDaysAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const existingRows = await supabase
+    .from("raw_events")
+    .select("external_id, raw_data")
+    .eq("source", "gdelt")
+    .gte("created_at", sevenDaysAgoIso);
+  if (existingRows.error) {
+    console.error("[GDELT] prefetch of existing external_id/url failed:", existingRows.error.message);
+  }
+  const seenExternalIds = new Set<string>();
+  const seenCanonicalUrls = new Set<string>();
+  for (const row of existingRows.data ?? []) {
+    if (row.external_id) seenExternalIds.add(row.external_id);
+    const url = (row.raw_data as any)?.url;
+    if (url) seenCanonicalUrls.add(canonicalUrl(url));
+  }
+
+  let passedLanguageAndRelevance = 0;
+  let alreadySeen = 0;
+
   for (const a of articles) {
-    const externalId = a.url ? `gdelt-${Buffer.from(a.url).toString("base64").slice(0, 32)}` : null;
-    if (!externalId) continue;
+    if (!a.url) continue;
+    const externalId = articleExternalId("gdelt", a.url);
 
     const title = a.title?.slice(0, 280) ?? a.url ?? "GDELT article";
 
@@ -118,10 +143,11 @@ export async function runGdeltCollectorOnce() {
       filtered += 1;
       continue;
     }
+    passedLanguageAndRelevance += 1;
 
-    const existing = await supabase.from("raw_events").select("id").eq("external_id", externalId).maybeSingle();
-    if (existing.data?.id) {
+    if (seenExternalIds.has(externalId) || seenCanonicalUrls.has(canonicalUrl(a.url))) {
       duplicates += 1;
+      alreadySeen += 1;
       continue;
     }
 
@@ -150,8 +176,21 @@ export async function runGdeltCollectorOnce() {
       .select("id")
       .maybeSingle();
 
-    if (insert.error || !insert.data?.id) continue;
+    if (insert.error) {
+      // 23505 = unique_violation on (source, external_id) — a genuine race/duplicate,
+      // not a real error. Anything else is a real insert failure worth the log line.
+      if (insert.error.code === "23505") {
+        duplicates += 1;
+        alreadySeen += 1;
+      } else {
+        console.error("[GDELT] raw_events insert error:", insert.error.message);
+      }
+      continue;
+    }
+    if (!insert.data?.id) continue;
     inserted += 1;
+    seenExternalIds.add(externalId);
+    seenCanonicalUrls.add(canonicalUrl(a.url));
 
     const rawEventId = insert.data.id as string;
 
@@ -263,6 +302,11 @@ export async function runGdeltCollectorOnce() {
       console.error("[GDELT] Classification/signal insert failed:", e.message);
     }
   }
+
+  // W7-DEDUPE-KEY diag: one line per cycle — fetched/passed-filters/already-seen/inserted.
+  console.log(
+    `[GDELT-DIAG] fetched=${fetched} passedFilters=${passedLanguageAndRelevance} alreadySeen=${alreadySeen} inserted=${inserted}`,
+  );
 
   return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected };
 }
