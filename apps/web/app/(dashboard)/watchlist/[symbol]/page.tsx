@@ -15,15 +15,18 @@ import {
 } from "recharts";
 import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { Signal } from "@blue-beacon-research/shared";
+import { toast } from "sonner";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { DriverBreakdownChart } from "@/components/signals/DriverBreakdownChart";
 import { Pagination } from "@/components/ui/Pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { logUsageEvent } from "@/lib/funnel-events";
 import { isHintSeen, markHintSeen } from "@/lib/feature-hints";
+import { toggleWatchlistSymbol } from "@/lib/watchlist-follow";
 import type { Direction } from "@blue-beacon-research/shared";
 
 const CHART_ATTRIBUTION_HINT_ID = "chart_attribution";
@@ -153,11 +156,42 @@ export default function WatchlistSymbolPage() {
   const forexMeta = FOREX_PAIRS.find((f) => f.symbol === symbol);
   const meta = COMMODITIES.find((c) => c.symbol === symbol) ?? forexMeta;
   const isForex = Boolean(forexMeta);
-  const { data: myPrefs } = useMyPreferences();
+  const { data: myPrefs, isFetched: prefsFetched, persistWatchlist } = useMyPreferences();
   const isFollowed = Boolean(
     myPrefs?.commodities.includes(symbol) ||
       myPrefs?.forexPairs.includes(symbol),
   );
+  // Follow / Following — distinct from the "You follow this" chip above,
+  // which reflects onboarding commodity/forex-pair preferences. This toggle
+  // is the actual watchlist (user_preferences.watchlist_symbols), the same
+  // list the /watchlist grid page reads and persists.
+  const watchlistSymbols = myPrefs?.watchlistSymbols ?? [];
+  const isWatchlisted = watchlistSymbols.includes(symbol);
+  const [followPending, setFollowPending] = useState(false);
+
+  async function handleToggleFollow() {
+    if (followPending || !prefsFetched) return;
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = `/login?redirectedFrom=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+    setFollowPending(true);
+    try {
+      // Explicit, manual edit — same as every other watchlist add/remove
+      // (WatchlistClient.tsx), so it marks the list as no longer "suggested".
+      await persistWatchlist(toggleWatchlistSymbol(watchlistSymbols, symbol), false);
+    } catch (err) {
+      console.warn("[watchlist-symbol] follow toggle failed:", err);
+      toast.error("Could not update your watchlist. Please try again.");
+    } finally {
+      setFollowPending(false);
+    }
+  }
 
   const { data: pricesData } = useQuery({
     queryKey: ["prices"],
@@ -445,6 +479,27 @@ export default function WatchlistSymbolPage() {
             <p className="font-mono text-xs text-on-surface-variant mt-1">{symbol}</p>
           </div>
           <div className="flex items-baseline gap-4">
+            <button
+              type="button"
+              onClick={handleToggleFollow}
+              disabled={followPending || !prefsFetched}
+              aria-pressed={isWatchlisted}
+              data-testid="watchlist-follow-toggle"
+              className="inline-flex items-center gap-1.5 px-3 min-h-[44px] md:min-h-0 md:py-1.5 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              style={{
+                backgroundColor: isWatchlisted ? "#4edea3" : "transparent",
+                color: isWatchlisted ? "#003824" : "#bbcac0",
+                borderColor: isWatchlisted ? "#4edea3" : "#3c4a42",
+              }}
+            >
+              <span
+                className="material-symbols-outlined text-base"
+                style={isWatchlisted ? { fontVariationSettings: "'FILL' 1" } : undefined}
+              >
+                {isWatchlisted ? "star" : "star_outline"}
+              </span>
+              {isWatchlisted ? "Following" : "Follow"}
+            </button>
             <span className="font-mono text-3xl font-bold text-on-surface tracking-tighter">
               {price
                 ? Number(price.price).toLocaleString(undefined, {

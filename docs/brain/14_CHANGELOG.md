@@ -1,12 +1,18 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-06 (v0.145.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0 are three branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-06 (v0.146.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.146.0 — TASK PERS-Pn: asset-page Follow/Following toggle (doc 280/281) (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
+
+`apps/web` only. New Follow/Following button on `/watchlist/[symbol]` toggling the symbol in/out of `user_preferences.watchlist_symbols` through the existing `useMyPreferences().persistWatchlist` — no new endpoint. New pure `toggleWatchlistSymbol()` (`apps/web/lib/watchlist-follow.ts`, unit-tested) adds only when absent and removes every occurrence, so a double-toggle round-trips exactly and duplicates can't occur; kept separate from the pre-existing "You follow this" chip on the same page, which reflects onboarding `commodities`/`forexPairs` prefs, not the watchlist. Since `/watchlist/*` is already middleware-protected, a logged-out click is only reachable via a session expiring mid-view — the handler checks auth at click time and sends that case to `/login?redirectedFrom=<path>`; extended the shared `resolvePostAuthRedirect()` (`lib/profile.ts`) and the OAuth `/auth/callback` route with a validated (same-origin-only) `redirectedFrom` so sign-in lands back on the same page once onboarding is complete, with no change to the 3 existing callers. Task also named a `watchlist.max_symbols` gate via `apps/web/lib/entitlements.ts`'s `can()`/`limitFor()` — no such file exists anywhere in this repo as of this merge (grepped); not built, flagged rather than invented. Verified: fresh `pnpm install` (no `node_modules` at session start), `pnpm --filter web test` (6 new cases, full suite green) + `tsc --noEmit` (web, shared) + `pnpm --filter web build`, all clean. Not live-browser-walked — logic/data-correctness change, not a rendering bug. Full detail: `LIVE_TODO.md`, `06_COMPONENTS.md` §3.7.
+
+> Renumbered from this branch's own v0.136.0 to v0.146.0 on merge — v0.136.0, v0.143.0, v0.144.0, and v0.145.0 were already claimed by `main` and the three prior W7-MERGE steps.
 
 ### v0.145.0 — Telegram alert feedback buttons (PERS-Pn) (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
 

@@ -17,6 +17,12 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const origin = url.origin;
+  // Forwarded from /login's "sign in and come back here" link (e.g. the
+  // watchlist Follow toggle) — only trusted as a same-origin path, never an
+  // absolute or protocol-relative URL.
+  const redirectedFrom = url.searchParams.get("redirectedFrom");
+  const isSafeRedirect = (p: string | null): p is string =>
+    typeof p === "string" && p.startsWith("/") && !p.startsWith("//");
 
   // Handle OAuth error params forwarded by Supabase or Google
   const error = url.searchParams.get("error");
@@ -79,7 +85,7 @@ export async function GET(request: NextRequest) {
           .maybeSingle();
 
         if (profile?.onboarding_completed) {
-          targetPath = "/dashboard";
+          targetPath = isSafeRedirect(redirectedFrom) ? redirectedFrom : "/dashboard";
         }
 
         // Minimal funnel tracking (2026-08-27) -- signup_completed, fired once per

@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-06 (PHASE 122).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122 are three branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-06 (PHASE 123).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 123 — TASK PERS-Pn: asset-page Follow/Following toggle (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
+
+`apps/web` only. New Follow/Following button on the asset drill-down page, toggling the symbol in/out of the real watchlist (`user_preferences.watchlist_symbols`) through the existing preferences hook — no new API route. Kept distinct from the pre-existing "You follow this" chip, which is a different preference field. Logged-out click round-trips through sign-in back to the same page via a new, validated redirect param on the shared post-auth redirect logic. A gate the task named (`watchlist.max_symbols` via `lib/entitlements.ts`) does not exist anywhere in this repo as of this merge — flagged rather than fabricated, not built. Full test suite + type-check + build all clean; not live-browser-tested (logic change, not a rendering bug). Full detail: `docs/brain/14_CHANGELOG.md` v0.146.0 (renumbered from v0.136.0 on merge).
 
 ## PHASE 122 — Telegram alert feedback buttons, PERS-Pn (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
 
