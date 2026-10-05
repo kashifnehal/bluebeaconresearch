@@ -1,4 +1,5 @@
 import { getRedis } from "../clients/redis.js";
+import { isAnthropicBudgetAvailable } from "./anthropic-budget.js";
 
 export type CollectorResult = {
   fetched?: number;
@@ -18,6 +19,10 @@ export type CollectorResult = {
   // derived from these — a run is "ok" only if <=50% of feeds failed.
   feedsOk?: number;
   feedsFailed?: number;
+  // W8-BUDGET-DEFER (ADR 035, D10) — true when this collector's own early-return
+  // budget check (see gdelt/gnews/rss-collector.ts) skipped the cycle entirely.
+  // `ok` stays true on that path (a closed budget is not a collector failure).
+  budgetClosed?: boolean;
 };
 
 // Collectors we track run-to-run health for. Order/keys must match what
@@ -51,6 +56,15 @@ export type PipelineRunStatus = {
   // and evaluate "overdue" against the actual interval instead of a guess that
   // drifts out of sync whenever INGESTION_INTERVAL_CRON changes.
   intervalMinutes: number;
+  // W8-BUDGET-DEFER (ADR 035, founder decision D10) — read by
+  // apps/web/lib/status-checks.ts's getPipelineRunStatus() (landed in
+  // W8-BUDGET-STATUS, which shipped the read side ahead of this write side) to
+  // show the honest "Classification paused until the next UTC day" line instead
+  // of a plain Claude/heuristic row count. Computed fresh in recordPipelineRun()
+  // below — callers of buildPipelineStatus() (workers.ts, scripts/ingest-once.ts)
+  // don't need to know about this at all.
+  budgetClosed?: boolean;
+  budgetClosedCheckedAt?: string;
 };
 
 const REDIS_KEY = "pipeline:last_run";
@@ -140,7 +154,23 @@ export async function recordPipelineRun(status: PipelineRunStatus): Promise<Pipe
     }
   }
 
-  const enriched: PipelineRunStatus = { ...status, consecutiveFailures, lastSuccessAt, alerted };
+  // W8-BUDGET-DEFER (ADR 035, D10) — one extra read per ingestion cycle (not per
+  // collector), same call the 3 collectors each already made for themselves this
+  // cycle. Cheap and correctly fresh: if any collector returned budgetClosed: true
+  // this run, the budget was closed at least at the START of this cycle, which is
+  // enough to show the honest status-page line; a budget that reopens mid-cycle
+  // just shows closed for one extra cycle, never the reverse (never shows open
+  // while a collector actually skipped).
+  const budgetClosed = await isAnthropicBudgetAvailable("ingestion").then((open) => !open);
+
+  const enriched: PipelineRunStatus = {
+    ...status,
+    consecutiveFailures,
+    lastSuccessAt,
+    alerted,
+    budgetClosed,
+    budgetClosedCheckedAt: new Date().toISOString(),
+  };
 
   if (!redis) {
     // Loud on purpose (#63 follow-up): a silent skip here is exactly why
@@ -236,6 +266,18 @@ async function trackZeroYieldStreak(
   redis: ReturnType<typeof getRedis>,
 ): Promise<void> {
   if (!redis) return;
+  // W8-BUDGET-DEFER (ADR 035, D10) — a closed budget makes every collector return
+  // fetched: 0 by design (see gdelt/gnews/rss-collector.ts's own early returns),
+  // which is a deliberate pause, not the "something broke" signal this alert exists
+  // for. Skip tracking entirely while closed: don't increment (would falsely fire
+  // the alert after ZERO_YIELD_ALERT_THRESHOLD closed cycles) and don't reset
+  // either (a real pre-existing zero-yield streak from before the budget closed
+  // shouldn't be erased by the closure). Resumes exactly where it left off once
+  // the budget reopens and a real cycle runs again.
+  if (status.budgetClosed) {
+    console.log("[pipeline-status] zero-yield streak tracking paused — budget closed this cycle");
+    return;
+  }
   const isZeroYield = status.totals.fetched === 0;
   try {
     if (!isZeroYield) {

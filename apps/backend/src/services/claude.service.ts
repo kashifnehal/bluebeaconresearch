@@ -234,7 +234,26 @@ export type ClassificationResult = {
   // 20260912000000_signals_classification_method.sql) so the frontend can eventually
   // show an "auto-classified, unverified" indicator instead of presenting a
   // keyword-guess as equally authoritative to a real Claude read.
+  // NOTE when deferred is true (see below): this still holds a placeholder literal
+  // ("heuristic") purely so the required field type-checks — no heuristic guess was
+  // actually made. Callers must check `deferred` before trusting this or any other
+  // field on a deferred result.
   classificationMethod: "claude" | "heuristic";
+
+  // W8-BUDGET-DEFER (ADR 035, founder decision D10, 2026-10-05) — true only when
+  // classifyEvent() made NO classification attempt at all: the daily ingestion
+  // budget was closed, or Anthropic returned a spend-limit error. Distinct from
+  // classificationMethod: "heuristic", which IS a real (if lower-confidence)
+  // classification attempt. Every other field on a deferred result is an inert
+  // placeholder (severity 0, empty arrays, materialityPass false, etc.) — callers
+  // (the 3 collectors + reconciliation.ts) must check `deferred` BEFORE reading
+  // materialityPass/severity/anything else, must not insert a signal, must not call
+  // logMaterialityRejection, must not stamp raw_events.materiality_checked_at, and
+  // must stop processing the rest of that batch (circuit breaker: budget_closed and
+  // spend_limit are both process-wide conditions, not per-article ones — retrying
+  // the next article in the same cycle would just defer again for no benefit).
+  deferred?: boolean;
+  deferReason?: "budget_closed" | "spend_limit";
 
   // ── #139/#141 materiality gate fields ────────────────────────────────────
   // Optional/nullable because heuristicClassify() (no real Claude read of the
@@ -448,7 +467,7 @@ export class ClaudeService {
     if (client && !ingestionBudgetOpen) {
       fallbackReason = "budget_closed";
       console.warn(
-        "⚠️ [Claude AI Classifier] ingestion daily budget reached — using heuristic fallback.",
+        "⚠️ [Claude AI Classifier] ingestion daily budget reached — deferring, not heuristic-classifying (ADR 035, D10).",
       );
       await recordServiceHealth(
         "anthropic",
@@ -456,6 +475,10 @@ export class ClaudeService {
         "classifyEvent: ingestion budget exceeded",
         Date.now() - callStartedAt,
       );
+      console.log(
+        `[classify-fallback] reason=${fallbackReason} rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
+      );
+      return this.deferredClassification("budget_closed");
     }
 
     if (client && ingestionBudgetOpen) {
@@ -649,6 +672,13 @@ export class ClaudeService {
               `[classify-fallback] spend-limit alert email failed: ${alertErr?.message ?? alertErr}`,
             );
           }
+          // W8-BUDGET-DEFER (ADR 035, D10) — a spend-limit error is the same
+          // process-wide "no real classification is possible right now" condition
+          // as a closed budget. Defer, do not fall through to heuristicClassify().
+          console.log(
+            `[classify-fallback] reason=${fallbackReason} rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
+          );
+          return this.deferredClassification("spend_limit");
         }
       }
     }
@@ -657,6 +687,36 @@ export class ClaudeService {
       `[classify-fallback] reason=${fallbackReason} rawEvent=${rawEvent.id ?? "unknown"}`,
     );
     return this.heuristicClassify(title, summaryText, rawEvent, watchlist, headlinePlacement);
+  }
+
+  // W8-BUDGET-DEFER (ADR 035, founder decision D10, 2026-10-05) — the result
+  // classifyEvent() returns for "budget_closed" / "spend_limit" instead of calling
+  // heuristicClassify(). Every field below is an inert placeholder: no article was
+  // read, no keyword regex was run, nothing here should ever reach the DB. Callers
+  // must check `deferred` first (see the ClassificationResult.deferred comment) —
+  // materialityPass is false purely as a fail-closed backstop for any caller that
+  // doesn't, not because a gate decision was actually made.
+  private deferredClassification(
+    reason: "budget_closed" | "spend_limit",
+  ): ClassificationResult {
+    return {
+      severity: 0,
+      confidence: 0,
+      commodityImpacts: [],
+      currencyPairImpacts: [],
+      isBreaking: false,
+      summary: "",
+      region: "",
+      country: null,
+      classificationMethod: "heuristic",
+      materialityPass: false,
+      materialityReasoning:
+        reason === "budget_closed"
+          ? "deferred: anthropic ingestion daily budget closed (ADR 035) — no classification attempted"
+          : "deferred: anthropic spend limit reached (ADR 035) — no classification attempted",
+      deferred: true,
+      deferReason: reason,
+    };
   }
 
   private heuristicClassify(

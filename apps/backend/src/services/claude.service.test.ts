@@ -117,7 +117,7 @@ function runTest(name: string, fn: () => void | Promise<void>) {
 }
 
 async function main() {
-  runTest(
+  await runTest(
     "generateAnalysis fallback should read commodity_impacts (snake_case), not commodityImpacts",
     async () => {
       process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-fallback";
@@ -153,7 +153,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "generateAnalysis system prompt keeps the buy/sell prohibition and adds plain-language rules",
     async () => {
       process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
@@ -197,7 +197,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "chatAboutSignal prompt forbids invented URLs and asks for a ---SOURCES--- section",
     async () => {
       process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
@@ -239,7 +239,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "chatAboutSignal system prompt keeps governance rules intact and adds length/formatting/sources-reliability instructions",
     async () => {
       process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
@@ -295,7 +295,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "chatAboutSignal trims a max_tokens cutoff reply to the last complete sentence",
     async () => {
       process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
@@ -333,7 +333,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "chatAboutSignal does not trim a reply that finished normally, even without trailing punctuation",
     async () => {
       process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
@@ -365,7 +365,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "unrelated company event should return no commodity impact",
     async () => {
       const classification = await service.classifyEvent({
@@ -381,7 +381,7 @@ async function main() {
     },
   );
 
-  runTest("oil disruption should assign oil impacts", async () => {
+  await runTest("oil disruption should assign oil impacts", async () => {
     const classification = await service.classifyEvent({
       title: "Pipeline explosion halts crude export from Saudi refinery",
       summary:
@@ -402,7 +402,7 @@ async function main() {
     );
   });
 
-  runTest(
+  await runTest(
     "geopolitical conflict with safe-haven mention should only map defensible assets",
     async () => {
       const classification = await service.classifyEvent({
@@ -422,7 +422,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "ambiguous event should return empty commodity impact list",
     async () => {
       const classification = await service.classifyEvent({
@@ -443,7 +443,7 @@ async function main() {
   // service.classifyEvent() call below exercises heuristicClassify(), not a
   // real Claude read.
 
-  runTest(
+  await runTest(
     "heuristic: no commodity/currency impact and no watchlist match fails the gate",
     async () => {
       const classification = await service.classifyEvent({
@@ -465,7 +465,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "heuristic: a validated commodity impact passes the gate",
     async () => {
       const classification = await service.classifyEvent({
@@ -485,7 +485,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "heuristic: a watchlist-entity match passes the gate even with no commodity impact",
     async () => {
       const classification = await service.classifyEvent({
@@ -509,7 +509,7 @@ async function main() {
 
   // ── #139/#141 materiality gate — classifyEvent()'s live prompt (Step 2/5) ──
 
-  runTest(
+  await runTest(
     "classifyEvent prompt asks for the new materiality-gate fields, embeds the watchlist, and reflects the novelty hint",
     async () => {
       const promptService = new ClaudeService();
@@ -600,7 +600,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "classifyEvent keeps a watchlist mediaImpactEntity and drops an unsourced name",
     async () => {
       const promptService = new ClaudeService();
@@ -696,7 +696,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "classifyEvent sanitizes an out-of-range/invalid materiality response instead of trusting it",
     async () => {
       const promptService = new ClaudeService();
@@ -757,7 +757,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "classifyEvent keeps a sanitized title when Claude returns one",
     async () => {
       const promptService = new ClaudeService();
@@ -813,7 +813,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "classifyEvent returns a clean null title for missing/empty/literal-null responses",
     async () => {
       for (const titleValue of [undefined, "", "null", "   "]) {
@@ -872,7 +872,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "answerSearchAssist uses Haiku, the retrieved URL, and the no-buy/sell rule (mocked client)",
     async () => {
       const promptService = new ClaudeService();
@@ -922,7 +922,7 @@ async function main() {
   // dedup assertion here would just be asserting against a no-op. Said
   // plainly rather than building new Redis-mocking infra for this one task, or
   // claiming coverage that isn't real.
-  runTest(
+  await runTest(
     "isAnthropicUsageLimitError matches Anthropic's real usage-limit and credit-balance wordings, case-insensitively, and rejects unrelated errors",
     () => {
       assert.equal(
@@ -950,7 +950,7 @@ async function main() {
   // is 400 AND the message matches Anthropic's actual wording ("You have reached your
   // sp..."). A 400 for an unrelated reason (bad request shape, invalid model, etc.)
   // must stay tagged api_error, not get misreported as spend_limit.
-  runTest(
+  await runTest(
     "isAnthropicSpendLimitError: only a 400 whose message contains 'reached your' counts; other 400s and other statuses do not",
     () => {
       assert.equal(
@@ -985,7 +985,7 @@ async function main() {
   // directly with an explicit `bonus` argument, rather than relying on the shipped constant
   // being 1, so they keep proving the bonus-application/clamp/cap logic itself works
   // regardless of whether the constant is currently on or off.
-  runTest(
+  await runTest(
     "applyHeadlinePlacementBonus: bonus-only — only 'headline' placement is affected, other placements are untouched at any bonus value",
     () => {
       assert.strictEqual(applyHeadlinePlacementBonus(5, "headline", 1), 6, "bonus=1 should add 1 to a headline placement");
@@ -997,7 +997,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "applyHeadlinePlacementBonus: clamps at MAX_SEVERITY (10) when the bonus would push past it",
     () => {
       assert.strictEqual(applyHeadlinePlacementBonus(10, "headline", 1), 10, "already-max severity must stay at 10, not overflow to 11");
@@ -1005,7 +1005,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "applyHeadlinePlacementBonus composed with heuristicClassify's own safety cap: bonus=1 still can't push heuristic severity past 6",
     () => {
       // heuristicClassify() applies the bonus BEFORE its own `Math.min(severity, 6)`
@@ -1019,7 +1019,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "shipped HEADLINE_PLACEMENT_SEVERITY_BONUS constant is 0 (disabled 2026-10-01, founder decision D9)",
     () => {
       assert.strictEqual(
@@ -1031,7 +1031,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "classifyEvent (real-Claude path): with the shipped (disabled) constant, headline/body/none/omitted placement all produce the same severity",
     async () => {
       const promptService = new ClaudeService();
@@ -1084,7 +1084,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "heuristicClassify (no-client fallback): with the shipped (disabled) constant, headline/body/none/omitted placement all produce the same severity",
     async () => {
       // `service`'s mocked client always throws (top of file), so this exercises
@@ -1111,7 +1111,7 @@ async function main() {
     },
   );
 
-  runTest(
+  await runTest(
     "heuristicClassify: severity stays under the existing safety cap of 6 for a high-tier keyword match, independent of placement",
     async () => {
       // "war" hits the top severity tier (would be 9 pre-cap) — the existing safety
@@ -1132,7 +1132,7 @@ async function main() {
 
   // ── W7-ASSETS-COPPER-SILVER — COPPER / XAGUSD alias normalization ─────────
 
-  runTest("normalizeCommodityAsset: 'Copper' returns COPPER", async () => {
+  await runTest("normalizeCommodityAsset: 'Copper' returns COPPER", async () => {
     const assetService = new ClaudeService();
     (assetService as unknown as { client: unknown }).client = {
       messages: {
@@ -1176,7 +1176,7 @@ async function main() {
     }
   });
 
-  runTest("normalizeCommodityAsset: 'Silver' returns XAGUSD", async () => {
+  await runTest("normalizeCommodityAsset: 'Silver' returns XAGUSD", async () => {
     const assetService = new ClaudeService();
     (assetService as unknown as { client: unknown }).client = {
       messages: {
@@ -1220,7 +1220,7 @@ async function main() {
     }
   });
 
-  runTest(
+  await runTest(
     "normalizeCommodityAsset: a Chile copper strike story tagged 'Copper' no longer returns USOIL",
     async () => {
       const assetService = new ClaudeService();
@@ -1266,7 +1266,7 @@ async function main() {
     },
   );
 
-  runTest("normalizeCommodityAsset: an unknown asset is still dropped", async () => {
+  await runTest("normalizeCommodityAsset: an unknown asset is still dropped", async () => {
     const assetService = new ClaudeService();
     (assetService as unknown as { client: unknown }).client = {
       messages: {
@@ -1309,7 +1309,7 @@ async function main() {
 
   // ── W7-ASSET-LISTS — USDINR forex pair alias normalization ─────────────────
 
-  runTest("normalizeForexPair: 'USD/INR' returns USDINR", async () => {
+  await runTest("normalizeForexPair: 'USD/INR' returns USDINR", async () => {
     const assetService = new ClaudeService();
     (assetService as unknown as { client: unknown }).client = {
       messages: {
@@ -1353,7 +1353,7 @@ async function main() {
     }
   });
 
-  runTest("normalizeForexPair: 'Indian Rupee' and 'INR' both return USDINR", async () => {
+  await runTest("normalizeForexPair: 'Indian Rupee' and 'INR' both return USDINR", async () => {
     const assetService = new ClaudeService();
     (assetService as unknown as { client: unknown }).client = {
       messages: {
@@ -1400,6 +1400,119 @@ async function main() {
       delete process.env.ANTHROPIC_API_KEY;
     }
   });
+
+  // ── W8-BUDGET-DEFER (ADR 035, founder decision D10) ───────────────────────
+  // classifyEvent() must defer (not heuristic-classify) on two reasons only:
+  // a closed daily ingestion budget, and an Anthropic spend-limit error.
+  await runTest(
+  "classifyEvent defers (does not heuristic-classify) when the ingestion budget is closed",
+  async () => {
+    const deferService = new ClaudeService();
+    let createCalled = false;
+    (deferService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => {
+          createCalled = true;
+          throw new Error("must not be called when the budget is closed");
+        },
+      },
+    };
+
+    // isAnthropicBudgetAvailable("ingestion") makes a real Supabase call against
+    // SUPABASE_URL=http://localhost (no server there), which always throws; its
+    // catch block fails OPEN unless NODE_ENV==="production" (see anthropic-budget.ts).
+    // Flipping NODE_ENV here is the only way to deterministically force the
+    // "budget closed" branch in this repo's plain tsx+node:assert test runner,
+    // which has no module-mocking facility (see spend-limit-alert.test.ts's own
+    // comment on the same constraint). getClient() is bypassed entirely (client
+    // is injected directly above), so this never risks building a live SDK client.
+    const prevNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      // Text that WOULD trigger heuristicClassify()'s top severity tier and a
+      // validated oil impact if the heuristic ran — proves the heuristic path was
+      // never reached, not just that materialityPass happens to be false.
+      const classification = await deferService.classifyEvent({
+        title: "War erupts as crude pipeline explosion halts oil exports",
+        summary: "Escalating conflict disrupts Red Sea crude shipments.",
+        event_type: "news",
+        country: "SA",
+        event_date: new Date().toISOString(),
+      });
+
+      assert.strictEqual(createCalled, false, "classifyEvent must not call the Anthropic client when budget is closed");
+      assert.strictEqual(classification.deferred, true);
+      assert.strictEqual(classification.deferReason, "budget_closed");
+      assert.strictEqual(classification.classificationMethod, "heuristic", "inert placeholder, not a real heuristic read");
+      assert.strictEqual(classification.materialityPass, false);
+      assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
+      assert.match(classification.materialityReasoning, /deferred: anthropic ingestion daily budget closed/);
+    } finally {
+      process.env.NODE_ENV = prevNodeEnv;
+    }
+  },
+  );
+
+  await runTest(
+  "classifyEvent defers (does not heuristic-classify) on an Anthropic spend-limit error",
+  async () => {
+    const spendLimitService = new ClaudeService();
+    (spendLimitService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => {
+          const err: any = new Error("You have reached your specified spend limit of $100.");
+          err.status = 400;
+          throw err;
+        },
+      },
+    };
+
+    const classification = await spendLimitService.classifyEvent({
+      title: "War erupts as crude pipeline explosion halts oil exports",
+      summary: "Escalating conflict disrupts Red Sea crude shipments.",
+      event_type: "news",
+      country: "SA",
+      event_date: new Date().toISOString(),
+    });
+
+    assert.strictEqual(classification.deferred, true);
+    assert.strictEqual(classification.deferReason, "spend_limit");
+    assert.strictEqual(classification.materialityPass, false);
+    assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
+    assert.match(classification.materialityReasoning, /deferred: anthropic spend limit reached/);
+  },
+  );
+
+  await runTest(
+  "classifyEvent still falls back to heuristicClassify (not deferred) on a plain transient API error",
+  async () => {
+    const apiErrorService = new ClaudeService();
+    (apiErrorService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => {
+          const err: any = new Error("503 Service Unavailable");
+          err.status = 503;
+          throw err;
+        },
+      },
+    };
+
+    const classification = await apiErrorService.classifyEvent({
+      title: "Pipeline explosion halts crude export from Saudi refinery",
+      summary: "Disruption in the Red Sea supply chain pushes crude oil prices higher.",
+      event_type: "news",
+      country: "SA",
+      event_date: new Date().toISOString(),
+    });
+
+    assert.equal(classification.deferred ?? false, false);
+    assert.strictEqual(classification.classificationMethod, "heuristic");
+    // D12 (api_error fallback behavior) is explicitly out of scope for this task —
+    // this only confirms api_error keeps the pre-existing heuristic path, unchanged.
+    const assets = classification.commodityImpacts.map((impact) => impact.asset);
+    assert.ok(assets.includes("USOIL"), "expected a real heuristicClassify() read, not a deferred stub");
+  },
+  );
 }
 
 main().catch((err) => {

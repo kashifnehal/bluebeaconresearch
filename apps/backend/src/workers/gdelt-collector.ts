@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent } from "../lib/relevance-filter.js";
@@ -74,6 +75,28 @@ async function fetchGdeltWithBackoff() {
 }
 
 export async function runGdeltCollectorOnce() {
+  // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
+  // budget is closed, fetch nothing and write nothing: a closed budget means
+  // classifyEvent() would just defer every raw_event anyway (see claude.service.ts),
+  // and GDELT's DOC API only ever returns its newest maxrecords=250 — fetching and
+  // discarding during a closed window would permanently lose whatever article(s)
+  // the full cap would have pushed out by the time the budget reopens.
+  if (!(await isAnthropicBudgetAvailable("ingestion"))) {
+    console.log("[GDELT] budget closed, skipping cycle");
+    return {
+      ok: true,
+      fetched: 0,
+      inserted: 0,
+      duplicates: 0,
+      filtered: 0,
+      signals: 0,
+      prefiltered: 0,
+      materialityRejected: 0,
+      staleSkipped: 0,
+      budgetClosed: true,
+    };
+  }
+
   const supabase = getSupabaseAdmin();
 
   let res: any;
@@ -258,6 +281,21 @@ export async function runGdeltCollectorOnce() {
         },
         { similarStoryLast48h, headlinePlacement },
       );
+
+      // W8-BUDGET-DEFER (ADR 035, D10) — budget_closed/spend_limit are process-wide
+      // conditions (see claude.service.ts's deferredClassification()), not
+      // per-article ones: the next classifyEvent() call this same cycle would just
+      // defer again. Checked BEFORE materialityPass (deferred is not a real gate
+      // decision) — do not insert a signal, do not call logMaterialityRejection, and
+      // do not stamp materiality_checked_at (the raw_event row stays unclassified so
+      // reconciliation.ts picks it up once the budget reopens). `break`, not
+      // `continue`, stops the rest of this batch outright.
+      if (classification.deferred) {
+        console.log(
+          `[GDELT] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+        );
+        break;
+      }
 
       // #139/#141 materiality gate — see gnews-collector.ts for the full comment.
       if (!classification.materialityPass) {

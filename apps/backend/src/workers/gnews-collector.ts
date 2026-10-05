@@ -1,6 +1,7 @@
 import axios from "axios";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { getEnv } from "../env.js";
+import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { isRelevantEvent } from "./gdelt-collector.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
@@ -59,6 +60,26 @@ async function fetchGnewsArticles(query: string, token: string) {
 }
 
 export async function runGnewsCollectorOnce() {
+  // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
+  // budget is closed, fetch nothing and write nothing. Checked before incrementing
+  // gnewsCycleCounter so a skipped cycle doesn't burn a turn in the query rotation
+  // (W7-GNEWS-ROTATE) for a query that was never actually fetched.
+  if (!(await isAnthropicBudgetAvailable("ingestion"))) {
+    console.log("[GNews] budget closed, skipping cycle");
+    return {
+      ok: true,
+      fetched: 0,
+      inserted: 0,
+      duplicates: 0,
+      filtered: 0,
+      signals: 0,
+      prefiltered: 0,
+      materialityRejected: 0,
+      staleSkipped: 0,
+      budgetClosed: true,
+    };
+  }
+
   const env = getEnv();
   if (!env.GNEWS_API_KEY) return { ok: false, error: "GNEWS_API_KEY missing" };
 
@@ -252,6 +273,16 @@ export async function runGnewsCollectorOnce() {
         },
         { similarStoryLast48h, headlinePlacement },
       );
+
+      // W8-BUDGET-DEFER (ADR 035, D10) — see gdelt-collector.ts for the full
+      // comment. Checked before materialityPass; `break` stops the rest of this
+      // batch outright (budget_closed/spend_limit are process-wide conditions).
+      if (classification.deferred) {
+        console.log(
+          `[GNews] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+        );
+        break;
+      }
 
       // #139/#141 materiality gate — the "this does not mean anything, drop it"
       // step the pipeline never had (claude/85_SIGNAL_INGESTION_FILTER_SEVERITY_AUDIT.md).

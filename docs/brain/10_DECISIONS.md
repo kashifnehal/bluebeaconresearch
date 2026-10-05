@@ -723,3 +723,23 @@ USDINR is real, Yahoo-verified market data with a direct classifier/price-sync/f
 ### Cross-tree mapping
 
 Recorded as **D38** in `docs/claude_project/10_DECISIONS.md`.
+
+## 36. ADR 035: When the daily Anthropic budget is closed, defer — do not classify heuristically. Amends ADR 005 for `budget_closed` and `spend_limit` only (founder decision D10, 2026-10-05)
+
+### Context
+
+ADR 005 established `heuristicClassify()` (fixed keyword-tier severity ladder, capped at 6) as `classifyEvent()`'s fallback whenever a real Claude call can't be made — no client, an API error, bad JSON, a closed ingestion budget, or an Anthropic spend-limit error, all treated the same way. Founder decision 2026-10-05 (source: doc 302 §5.3 d) draws a line through that fallback: the two process-wide "no real classification is possible right now" reasons (`budget_closed`, `spend_limit`) should defer instead of guessing with the heuristic.
+
+### Decision
+
+`classifyEvent()` (`apps/backend/src/services/claude.service.ts`) now returns `{ deferred: true, deferReason: "budget_closed" | "spend_limit", materialityPass: false, ... }` for those two reasons only, instead of calling `heuristicClassify()`. The 3 live collectors (`gdelt`/`gnews`/`rss-collector.ts`) each call `isAnthropicBudgetAvailable("ingestion")` at the very start of their cycle and, if closed, fetch nothing and write nothing to `raw_events` at all — not even a heuristic-classified row. `reconciliation.ts` does the same at the top of `reconcileOrphanedRawEventsOnce()`. All 4 callers check `classification.deferred` before `materialityPass`, skip the signal insert, skip `logMaterialityRejection` (so `materiality_checked_at` is never stamped — the row stays a valid candidate for later reconciliation), and `break` out of the rest of that batch (a process-wide condition won't clear mid-cycle, so retrying the next article is pointless). `pipeline-status.ts` records `budgetClosed: true/false` + a checked-at UTC timestamp on `pipeline:last_run`, read by `apps/web/lib/status-checks.ts` (landed ahead of this, in W8-BUDGET-STATUS) for the status page's honest "Classification paused until the next UTC day" line; the zero-yield-streak alert is suppressed while `budgetClosed` is true, since a closed budget deliberately produces `fetched: 0` from every collector. Transient errors (`api_error`, `json_parse`) are explicitly untouched — they still fall back to `heuristicClassify()` as before (ADR 005, unchanged; D12 on that path stays open).
+
+### Rationale
+
+A heuristic classification (keyword-regex only, severity capped at 6, no real article read) presented as if it were a normal signal is actively misleading for a materiality/market-impact product — worse than no signal at all. Waiting one UTC day for the real budget reset loses nothing for a `raw_event` already sitting in the DB: it just waits, unclassified, until the budget reopens (reconciliation picks it up — see the `ORPHAN_MAX_AGE_HOURS` change below). The real cost is on the *fetch* side, stated plainly rather than hidden: GDELT's keyless DOC API only ever returns its newest `maxrecords=250`, and RSS only keeps a 4-hour article-age window (`MAX_ARTICLE_AGE_MS`) — news that was never fetched during a closed window can be permanently lost once it ages out of those windows, in a way a GNews-style cached/delayed feed would not be. This trade-off (lose some fetch coverage during closure vs. ship a misleading heuristic classification) is the one the founder decision explicitly accepts.
+
+`reconciliation.ts`'s `ORPHAN_MAX_AGE_HOURS` was raised from 12h to 36h (24h worst-case closed-budget window — budget reopens "next UTC day" — times a 1.5x safety margin) rather than adding new cross-run "time the budget last reopened" state: `reconcileOrphanedRawEventsOnce()` already returns before even querying candidates whenever the budget is closed, so a row can sit with zero real classification attempts for the whole closed window; sweeping it into "permanently stale" purely on wall-clock age would incorrectly treat a never-attempted row the same as a genuinely unclassifiable one. The simpler, same-file-scoped fix (more margin on the existing constant) was chosen over building new persisted reopen-timestamp tracking, which would add real state-management risk to a 30-minute-cadence job for a bounded, already-known worst case.
+
+### Cross-tree mapping
+
+Recorded as **D39** in `docs/claude_project/10_DECISIONS.md`.

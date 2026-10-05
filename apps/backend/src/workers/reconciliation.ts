@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -21,9 +22,36 @@ const BATCH_LIMIT = 200;
 // every 30 min forever burns Claude API calls for nothing. Past this age we log the
 // row once (as it crosses the line) and permanently skip it. The cron runs every
 // 30 min, so a one-interval-wide window catches each newly-stale row exactly once.
-const ORPHAN_MAX_AGE_HOURS = 12;
+//
+// W8-BUDGET-DEFER (ADR 035, D10) note: this was 12h, but a row's "orphan age" clock
+// here is wall-clock time since raw_events.created_at, not actual-attempt-opportunity
+// time — and reconcileOrphanedRawEventsOnce() now returns before even querying
+// candidates whenever the ingestion budget is closed (see the early return below),
+// so a row can sit for the entire closed window with zero classification attempts.
+// A row never actually tried should not be swept into "permanently stale" just
+// because the budget happened to be closed for a while. The budget's own worst-case
+// closed duration is bounded by "reopens next UTC day" (≤24h if it closes just after
+// UTC midnight) — doing real per-row "time since the budget last reopened" tracking
+// would mean adding new persisted state (e.g. a reopened-at timestamp) outside this
+// file's existing scope, which risks a subtler bug for a 30-min-cadence job. Chosen
+// instead (the task's own simpler documented option): raise the limit with enough
+// margin to absorb that worst case — 36h = 24h worst-case closed window x 1.5 safety
+// margin — rather than add new cross-run timestamp state. A row genuinely stuck for
+// a non-budget reason (can't classify, 404'd) just waits 3x as long before being
+// permanently skipped, which only costs a few more harmless re-attempts, not a
+// correctness problem.
+const ORPHAN_MAX_AGE_HOURS = 36;
 
 export async function reconcileOrphanedRawEventsOnce() {
+  // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
+  // budget is closed, classifyEvent() would just defer every candidate anyway (see
+  // claude.service.ts), so skip the query entirely rather than spend a Supabase
+  // read for nothing.
+  if (!(await isAnthropicBudgetAvailable("ingestion"))) {
+    console.log("[Reconciliation] budget closed, skipping cycle");
+    return { checked: 0, orphaned: 0, recovered: 0, deferred: true };
+  }
+
   const supabase = getSupabaseAdmin();
   const now = Date.now();
   const cutoff = new Date(now - RECONCILE_THRESHOLD_MINUTES * 60_000).toISOString();
@@ -108,6 +136,18 @@ export async function reconcileOrphanedRawEventsOnce() {
         },
         { similarStoryLast48h },
       );
+
+      // W8-BUDGET-DEFER (ADR 035, D10) — see gdelt-collector.ts for the full
+      // comment. Checked before materialityPass; `break` stops the rest of this
+      // batch outright (budget_closed/spend_limit are process-wide conditions, and
+      // the raw_event stays unclassified so a later cycle, once the budget reopens,
+      // picks it back up — see the ORPHAN_MAX_AGE_HOURS comment above).
+      if (classification.deferred) {
+        console.log(
+          `[Reconciliation] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+        );
+        break;
+      }
 
       // #139/#141 materiality gate — this is a live cron job (every 30 min)
       // retrying classification for orphaned raw_events, one of the task's

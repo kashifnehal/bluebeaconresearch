@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
@@ -115,6 +116,28 @@ export const RSS_FEED_COUNT = RSS_FEEDS.length;
 type FeedDiag = { fetched: number; tooOld: number; filteredIrrelevant: number; duplicate: number; new: number };
 
 export async function runRssCollectorOnce() {
+  // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
+  // budget is closed, fetch nothing and write nothing. RSS's MAX_ARTICLE_AGE_MS
+  // window (4h) means skipping a fetch here is the most lossy of the 3 collectors
+  // if the budget stays closed for multiple cycles — see ADR 035's explicit
+  // trade-off note.
+  if (!(await isAnthropicBudgetAvailable("ingestion"))) {
+    console.log("[RSS] budget closed, skipping cycle");
+    return {
+      ok: true,
+      fetched: 0,
+      inserted: 0,
+      duplicates: 0,
+      filtered: 0,
+      signals: 0,
+      prefiltered: 0,
+      materialityRejected: 0,
+      feedsOk: 0,
+      feedsFailed: 0,
+      budgetClosed: true,
+    };
+  }
+
   const supabase = getSupabaseAdmin();
 
   const allItems: { title: string; summary: string; url: string; pubDate: string; label: string; tier: FeedTier }[] = [];
@@ -332,6 +355,16 @@ export async function runRssCollectorOnce() {
         },
         { similarStoryLast48h, headlinePlacement },
       );
+
+      // W8-BUDGET-DEFER (ADR 035, D10) — see gdelt-collector.ts for the full
+      // comment. Checked before materialityPass; `break` stops the rest of this
+      // batch outright (budget_closed/spend_limit are process-wide conditions).
+      if (classification.deferred) {
+        console.log(
+          `[RSS] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+        );
+        break;
+      }
 
       // #139/#141 materiality gate — see gnews-collector.ts for the full comment.
       if (!classification.materialityPass) {
