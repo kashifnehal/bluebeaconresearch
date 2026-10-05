@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 
-import { evaluateIntelligenceFeedHealth, evaluateClassifierHealth, evaluateDataPipelineFreshness } from "./status-checks";
+import {
+  evaluateIntelligenceFeedHealth,
+  evaluateClassifierHealth,
+  evaluateDataPipelineFreshness,
+  BUDGET_CLOSED_DETAIL,
+} from "./status-checks";
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -121,4 +126,31 @@ runTest("Classifier is Operational when no signals were created, nothing to flag
 runTest("Classifier is Unknown when the underlying query errors", () => {
   const result = evaluateClassifierHealth(null);
   assert.equal(result.status, "Unknown");
+});
+
+runTest("Classifier shows the budget-closed line, not row counts, when budgetClosed is true", () => {
+  const result = evaluateClassifierHealth(
+    [{ classification_method: "heuristic" }, { classification_method: "heuristic" }],
+    true,
+  );
+  assert.equal(result.status, "Degraded");
+  assert.equal(result.detail, BUDGET_CLOSED_DETAIL);
+});
+
+runTest("Classifier budget-closed line does not claim a reopen time or a dollar amount", () => {
+  const result = evaluateClassifierHealth([], true);
+  assert.match(result.detail, /next UTC day/);
+  assert.doesNotMatch(result.detail, /\$/);
+});
+
+runTest("Classifier budget-closed overrides even an Unknown (query-error) row state", () => {
+  const result = evaluateClassifierHealth(null, true);
+  assert.equal(result.status, "Degraded");
+  assert.equal(result.detail, BUDGET_CLOSED_DETAIL);
+});
+
+runTest("Classifier ignores budgetClosed=false and falls back to normal row-derived detail", () => {
+  const result = evaluateClassifierHealth([{ classification_method: "claude" }], false);
+  assert.equal(result.status, "Operational");
+  assert.notEqual(result.detail, BUDGET_CLOSED_DETAIL);
 });

@@ -63,17 +63,30 @@ export function evaluateIntelligenceFeedHealth(
   };
 }
 
+// W8-BUDGET-STATUS: the exact, mandated line for when the backend's Anthropic
+// ingestion daily budget is exhausted (claude.service.ts classifyEvent() falls
+// back to the heuristic classifier). Budget resets at UTC midnight — this repo
+// never guesses a reopen time, so the copy says "next UTC day", not a clock time.
+export const BUDGET_CLOSED_DETAIL =
+  "Classification paused until the next UTC day (daily budget reached). New news is not being collected.";
+
 /**
  * Pure decision logic for the Classifier check, split out so it's unit testable.
  * `rows` is every `signals` row created in the lookback window (classification_method
  * only); `null` means the query itself failed/timed out (→ Unknown), as distinct from
  * an empty array, which means no signals were created (→ Operational, nothing to flag).
+ * `budgetClosed` is today's `pipeline:last_run.budgetClosed` flag (set by the backend
+ * ingestion-budget gate) — when true it overrides the row-derived detail with the one
+ * honest line above, since that's the actual reason behind any heuristic-only rows.
  */
 export function evaluateClassifierHealth(
   rows: Array<{ classification_method: string | null }> | null,
+  budgetClosed = false,
 ): SystemCheck {
   const name = "Classifier";
   const unknownDetail = "At least one signal classified via Claude in the last 6 h (heuristic keyword fallback otherwise)";
+
+  if (budgetClosed) return { name, status: "Degraded", detail: BUDGET_CLOSED_DETAIL };
   if (rows === null) return { name, status: "Unknown", detail: unknownDetail };
 
   const claudeCount = rows.filter((r) => r.classification_method === "claude").length;
@@ -217,10 +230,15 @@ async function getPipelineRunStatus(): Promise<{
   lastFetchedAt: string | null;
   intervalMinutes: number;
   usedFallback: boolean;
+  budgetClosed: boolean;
 }> {
   let lastFetchedAt: string | null = null;
   let intervalMinutes = FALLBACK_INTERVAL_MINUTES;
   let usedFallback = false;
+  // GAP: not yet written by the backend (W8-BUDGET-DEFER) — stays false until
+  // pipeline-status.ts's PipelineRunStatus gains a budgetClosed field. Reading it
+  // here now means the UI picks it up with no further web-side change once it does.
+  let budgetClosed = false;
 
   const redis = getUpstashRedis();
   if (redis) {
@@ -230,6 +248,7 @@ async function getPipelineRunStatus(): Promise<{
         const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
         lastFetchedAt = parsed?.lastFetchedAt ?? null;
         if (typeof parsed?.intervalMinutes === "number") intervalMinutes = parsed.intervalMinutes;
+        budgetClosed = parsed?.budgetClosed === true;
       }
     } catch {
       // fall through to DB fallback below
@@ -255,12 +274,12 @@ async function getPipelineRunStatus(): Promise<{
     }
   }
 
-  return { lastFetchedAt, intervalMinutes, usedFallback };
+  return { lastFetchedAt, intervalMinutes, usedFallback, budgetClosed };
 }
 
-async function checkClassifier(): Promise<SystemCheck> {
+async function checkClassifier(budgetClosed: boolean): Promise<SystemCheck> {
   const supabase = getAdminSupabase();
-  if (!supabase) return evaluateClassifierHealth(null);
+  if (!supabase) return evaluateClassifierHealth(null, budgetClosed);
 
   try {
     // 6-hour lookback is a GAP-grade display choice (keeps the detail text's
@@ -270,10 +289,10 @@ async function checkClassifier(): Promise<SystemCheck> {
       supabase.from("signals").select("classification_method").gte("created_at", sixHoursAgo),
       CHECK_TIMEOUT_MS,
     );
-    if (error) return evaluateClassifierHealth(null);
-    return evaluateClassifierHealth(data as Array<{ classification_method: string | null }>);
+    if (error) return evaluateClassifierHealth(null, budgetClosed);
+    return evaluateClassifierHealth(data as Array<{ classification_method: string | null }>, budgetClosed);
   } catch {
-    return evaluateClassifierHealth(null);
+    return evaluateClassifierHealth(null, budgetClosed);
   }
 }
 
@@ -288,7 +307,7 @@ export async function getSystemChecks(): Promise<SystemCheck[]> {
       pipelineRun.then(({ intervalMinutes }) => checkIntelligenceFeed(intervalMinutes)),
       checkAlertDelivery(),
       checkGlobalMap(),
-      checkClassifier(),
+      pipelineRun.then(({ budgetClosed }) => checkClassifier(budgetClosed)),
     ]);
 
   const dataPipeline = evaluateDataPipelineFreshness(lastFetchedAt, intervalMinutes, usedFallback);
