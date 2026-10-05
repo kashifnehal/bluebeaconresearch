@@ -130,14 +130,18 @@ async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
     console.error("[workers] collector-health alerting failed:", e instanceof Error ? e.message : e);
   }
 
-  // W7-IO-FIX-v2: console-only write-volume line (no new table) — purpose is to
-  // measure actual raw_events/signals write volume per cycle next time instead of
-  // guessing, same motivation as the sanctions_entities update-count finding above.
-  console.log(
-    `[workers] ingestion-cycle write-volume: raw_events inserted=${recorded.totals.inserted}, signals inserted=${recorded.totals.signals}, elapsedMs=${Date.now() - cycleStartedAt}`,
-  );
+  // W7-IO-FIX-v2 (amended): no new log line — folded into the existing
+  // "ingestion-cycle complete" / "startup:ingestion complete" calls below instead,
+  // so write-volume (raw_events/signals inserted this cycle, elapsed ms) rides
+  // along on those rather than adding a third console line. Console only, no new
+  // table — same as before.
+  const writeVolume = {
+    rawEventsInserted: recorded.totals.inserted,
+    signalsInserted: recorded.totals.signals,
+    elapsedMs: Date.now() - cycleStartedAt,
+  };
 
-  return collectors;
+  return { collectors, writeVolume };
 }
 
 async function main() {
@@ -173,16 +177,16 @@ async function main() {
   // ── Run collectors IMMEDIATELY on startup (don't wait up to 15 min for first cron tick) ──
   // This means after a Railway deploy or restart, data is fresh within ~30 seconds.
   app.log.info("Running initial ingestion immediately on startup...");
-  runIngestionCycle(app).then((c) => {
-    app.log.info({ collectors: c }, "startup:ingestion complete");
+  runIngestionCycle(app).then(({ collectors, writeVolume }) => {
+    app.log.info({ collectors, writeVolume }, "startup:ingestion complete");
   }).catch(() => {});
 
   // ── Collect news signals — interval set by INGESTION_INTERVAL_CRON, default 15 min ──
   app.log.info({ schedule: INGESTION_CRON }, "workers: ingestion cron schedule");
   cron.schedule(INGESTION_CRON, async () => {
     try {
-      const collectors = await runIngestionCycle(app);
-      app.log.info({ collectors }, "ingestion-cycle complete");
+      const { collectors, writeVolume } = await runIngestionCycle(app);
+      app.log.info({ collectors, writeVolume }, "ingestion-cycle complete");
     } catch (e) {
       app.log.error({ err: e }, "ingestion-cycle failed");
       Sentry.captureException(e);
