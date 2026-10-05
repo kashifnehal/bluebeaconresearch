@@ -14,6 +14,7 @@ import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
+import { isWithinIntakeWindow } from "../lib/article-age.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -116,6 +117,7 @@ export async function runGdeltCollectorOnce() {
   let signals = 0;
   let prefiltered = 0;
   let materialityRejected = 0;
+  let staleSkipped = 0;
 
   // W7-DEDUPE-KEY: one prefetch per cycle instead of one .select() per article
   // (was ~250 selects/cycle for GDELT's maxrecords=250). Covers both the new
@@ -172,6 +174,17 @@ export async function runGdeltCollectorOnce() {
           a.seendate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/, "$1-$2-$3T$4:$5:$6Z")
         ).toISOString()
       : new Date().toISOString();
+
+    // W8-INTAKE-GUARDS — ADR 007: the feed shows a 24h event_date window, so an
+    // article this old can never appear in it. GDELT's keyless DOC API returns
+    // the same backlog every cycle (see the W7-DEDUPE-KEY diag above), so without
+    // this, stale articles keep reaching the classifier run after run. Skip before
+    // the raw_events insert — before the classifier — so no Claude call or stale
+    // event_date reaches the pipeline.
+    if (!isWithinIntakeWindow(new Date(eventDate), new Date())) {
+      staleSkipped += 1;
+      continue;
+    }
 
     const country = a.sourcecountry ?? null;
 
@@ -320,9 +333,10 @@ export async function runGdeltCollectorOnce() {
   }
 
   // W7-DEDUPE-KEY diag: one line per cycle — fetched/passed-filters/already-seen/inserted.
+  // staleSkipped (W8-INTAKE-GUARDS) added separately so the existing counters stay comparable.
   console.log(
-    `[GDELT-DIAG] fetched=${fetched} passedFilters=${passedLanguageAndRelevance} alreadySeen=${alreadySeen} inserted=${inserted}`,
+    `[GDELT-DIAG] fetched=${fetched} passedFilters=${passedLanguageAndRelevance} alreadySeen=${alreadySeen} staleSkipped=${staleSkipped} inserted=${inserted}`,
   );
 
-  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected, staleSkipped };
 }

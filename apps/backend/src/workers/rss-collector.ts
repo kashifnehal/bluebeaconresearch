@@ -37,6 +37,9 @@ const parser = new Parser({
 /** Max article age — 4h window per product requirement for market-moving news */
 const MAX_ARTICLE_AGE_MS = 4 * 60 * 60 * 1000;
 
+// W8-INTAKE-GUARDS — clock-skew allowance, no source.
+const CLOCK_SKEW_ALLOWANCE_MS = 5 * 60 * 1000;
+
 type RssFeed = { url: string; label: string; tier: FeedTier };
 
 /** Coverage line (#126) reads `CONFIGURED_RSS_FEED_COUNT` from packages/shared —
@@ -127,6 +130,7 @@ export async function runRssCollectorOnce() {
 
   for (const feed of RSS_FEEDS) {
     const feedStartedAt = Date.now();
+    let futureClampLogged = false;
     try {
       const parsed = await parser.parseURL(feed.url);
       feedsOk++;
@@ -140,9 +144,22 @@ export async function runRssCollectorOnce() {
       for (const item of parsed.items ?? []) {
         if (!item.link || !item.title) continue;
         feedDiag[feed.label].fetched++;
-        const pubDate = item.isoDate || item.pubDate
+        let pubDate = item.isoDate || item.pubDate
           ? new Date(item.isoDate ?? item.pubDate ?? "").toISOString()
           : new Date().toISOString();
+
+        // A feed item dated more than 5 min in the future (bad feed clock, not a
+        // real future event) gets clamped to now instead of silently sitting
+        // outside the 4h window below with a wrong event_date. Logged once per
+        // feed per cycle, not once per item, to avoid flooding the log when a
+        // whole feed is skewed.
+        if (new Date(pubDate).getTime() - Date.now() > CLOCK_SKEW_ALLOWANCE_MS) {
+          if (!futureClampLogged) {
+            console.warn(`[RSS] Feed "${feed.label}" has a future-dated item, clamping to now`);
+            futureClampLogged = true;
+          }
+          pubDate = new Date().toISOString();
+        }
 
         if (Date.now() - new Date(pubDate).getTime() > MAX_ARTICLE_AGE_MS) {
           feedDiag[feed.label].tooOld++;

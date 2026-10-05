@@ -14,6 +14,7 @@ import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
+import { isWithinIntakeWindow } from "../lib/article-age.js";
 
 const claude = new ClaudeService();
 
@@ -124,6 +125,7 @@ export async function runGnewsCollectorOnce() {
   let signals = 0;
   let prefiltered = 0;
   let materialityRejected = 0;
+  let staleSkipped = 0;
 
   // W7-DEDUPE-KEY: one prefetch per cycle instead of one .select() per article.
   // GNews rows are stored with source "newsapi" (see rawEventPayload.source below).
@@ -165,6 +167,17 @@ export async function runGnewsCollectorOnce() {
       continue;
     }
 
+    const publishedAt = a.publishedAt ? new Date(a.publishedAt) : new Date();
+
+    // W8-INTAKE-GUARDS — ADR 007: the feed shows a 24h event_date window, so an
+    // article this old can never appear in it. Skip before the raw_events insert
+    // — before the classifier — so no Claude call or stale event_date reaches
+    // the pipeline.
+    if (!isWithinIntakeWindow(publishedAt, new Date())) {
+      staleSkipped += 1;
+      continue;
+    }
+
     const rawEventPayload = {
       source: "newsapi",  // DB constraint allows: gdelt, acled, newsapi — gnews maps to newsapi
       external_id: externalId,
@@ -174,7 +187,7 @@ export async function runGnewsCollectorOnce() {
       lat: null,
       lng: null,
       event_type: "news",
-      event_date: a.publishedAt ?? new Date().toISOString(),  // article publish time
+      event_date: publishedAt.toISOString(),  // article publish time
       raw_data: { ...a, freshness: "cached" },  // GNews free tier surfaces articles with up to ~12h lag (ADR 007)
     };
 
@@ -313,9 +326,10 @@ export async function runGnewsCollectorOnce() {
   }
 
   // W7-DEDUPE-KEY diag: one line per cycle — fetched/passed-filters/already-seen/inserted.
+  // staleSkipped (W8-INTAKE-GUARDS) added separately so the existing counters stay comparable.
   console.log(
-    `[GNews-DIAG] fetched=${fetched} passedFilters=${passedFilters} alreadySeen=${alreadySeen} inserted=${inserted}`,
+    `[GNews-DIAG] fetched=${fetched} passedFilters=${passedFilters} alreadySeen=${alreadySeen} staleSkipped=${staleSkipped} inserted=${inserted}`,
   );
 
-  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected };
+  return { ok: true, fetched, inserted, duplicates, filtered, signals, prefiltered, materialityRejected, staleSkipped };
 }
