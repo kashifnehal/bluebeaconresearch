@@ -176,25 +176,31 @@ export function DriverBreakdownChart({
             Retry
           </button>
         </div>
-      ) : isError || totalCount === 0 ? (
+      ) : isError ? (
         // The price chart above this panel has its own data source and never
-        // depends on this request — a failed/empty driver fetch loses only
-        // this panel's content, never the price chart, and always shows this
-        // line rather than leaving the panel blank.
+        // depends on this request — a failed driver fetch loses only this
+        // panel's content, never the price chart, and always shows this line
+        // rather than leaving the panel blank.
         <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-unavailable">
           <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
             Signal breakdown unavailable for this range.
           </p>
-          {isError && (
-            <button
-              type="button"
-              data-testid="driver-breakdown-retry"
-              onClick={() => refetch()}
-              className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
-            >
-              Retry
-            </button>
-          )}
+          <button
+            type="button"
+            data-testid="driver-breakdown-retry"
+            onClick={() => refetch()}
+            className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      ) : totalCount === 0 ? (
+        // A real zero-signals result, not a fetch failure — say so plainly
+        // rather than reusing the error copy above.
+        <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-empty">
+          <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+            No signals flagged in this range.
+          </p>
         </div>
       ) : (
         <>

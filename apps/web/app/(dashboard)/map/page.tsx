@@ -1102,15 +1102,26 @@ export default function MapPage() {
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="font-mono text-4xl font-bold text-on-surface">
-                {tensionMetrics.highSeverityCount}
-              </span>
-              <span
-                className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70"
-                data-testid="map-signal-count"
-              >
-                high-severity event{tensionMetrics.highSeverityCount === 1 ? "" : "s"} active, of {tensionMetrics.sampleSize} total
-              </span>
+              {isLoading ? (
+                <span
+                  className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70"
+                  data-testid="map-signal-count"
+                >
+                  Loading
+                </span>
+              ) : (
+                <>
+                  <span className="font-mono text-4xl font-bold text-on-surface">
+                    {tensionMetrics.highSeverityCount}
+                  </span>
+                  <span
+                    className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70"
+                    data-testid="map-signal-count"
+                  >
+                    high-severity event{tensionMetrics.highSeverityCount === 1 ? "" : "s"} active, of {tensionMetrics.sampleSize} loaded signals
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/20">

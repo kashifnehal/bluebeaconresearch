@@ -41,16 +41,19 @@ type LatestPrice = {
 };
 
 /** The signal's primary asset (commodity first, then forex pair) matched against the
- * latest-prices lookup. Null when no asset can be confidently associated. */
-function signalPriceMovePct(signal: Signal, prices: LatestPrice[]): { asset: string; pct: number } | null {
+ * latest-prices lookup. Null when no asset can be confidently associated, or the
+ * matched price row has no 24h-change figure (never fabricated as 0.0%). */
+export function signalPriceMovePct(signal: Signal, prices: LatestPrice[]): { asset: string; pct: number } | null {
   const asset = signal.commodityImpacts?.[0]?.asset ?? signal.currencyPairImpacts?.[0]?.asset;
   if (!asset) return null;
   const price = prices.find((p) => p.symbol === asset);
   if (!price) return null;
-  return { asset, pct: price.change_pct_24h ?? price.changePct24h ?? 0 };
+  const pct = price.change_pct_24h ?? price.changePct24h;
+  if (pct == null) return null;
+  return { asset, pct };
 }
 
-function SignalRowPriceChip({ signal, prices }: { signal: Signal; prices: LatestPrice[] }) {
+export function SignalRowPriceChip({ signal, prices }: { signal: Signal; prices: LatestPrice[] }) {
   const move = signalPriceMovePct(signal, prices);
   if (!move) {
     return (
@@ -71,9 +74,8 @@ function SignalRowPriceChip({ signal, prices }: { signal: Signal; prices: Latest
         color: isUp ? "#4edea3" : "#ee7d77",
         fontFamily: "'JetBrains Mono', monospace",
       }}
-      title={`${move.asset} 24h change`}
     >
-      {move.asset} {isUp ? "+" : ""}
+      {move.asset} 24h {isUp ? "+" : ""}
       {move.pct.toFixed(1)}%
     </span>
   );
@@ -158,7 +160,7 @@ export default function DashboardPage() {
         if (cancelled || !d) return;
         if (typeof d.sourcesLast24h !== "number" || typeof d.rssFeedCount !== "number") return;
         setCoverageLine(
-          `Last 24h: signals from ${d.sourcesLast24h} sources across ${d.rssFeedCount} RSS feeds + GNews + GDELT + ACLED.`,
+          `Last 24h: signals from ${d.sourcesLast24h} sources across ${d.rssFeedCount} RSS feeds + GNews + GDELT. ACLED is configured but returning no data (access pending).`,
         );
       })
       .catch(() => {});

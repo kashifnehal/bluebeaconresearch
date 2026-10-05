@@ -19,6 +19,7 @@ import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import { AlertRuleTrendChart, AlertRuleTrendEmptyState, isTrendSparse, type DailyCount } from "@/components/alerts/AlertRuleTrendChart";
+import { useUIStore } from "@/store/useUIStore";
 
 type AlertRule = {
   id: string;
@@ -61,6 +62,15 @@ function defaultChannelsFrom(connected: ConnectedChannels | null | undefined): s
   if (!connected) return ["telegram"];
   const next = CHANNEL_OPTIONS.map((c) => c.id).filter((id) => connected[id]);
   return next.length ? [...next] : ["telegram"];
+}
+
+/** Heading for the zero-rules empty state — surfaces unread inbox alerts
+ * (delivered before any rule existed, e.g. from a default/system alert)
+ * instead of implying the inbox is empty too. */
+export function alertsEmptyStateHeading(unreadCount: number): string {
+  return unreadCount > 0
+    ? `No alert rules yet. ${unreadCount} unread alert${unreadCount === 1 ? "" : "s"} in your inbox.`
+    : "No alert rules configured";
 }
 
 async function fetchConnectedChannels(): Promise<ConnectedChannels> {
@@ -160,6 +170,7 @@ function CardSection({
 export default function AlertsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { unreadCount } = useUIStore();
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [modalRegion, setModalRegion] = useState("middle-east");
   const [modalMinSeverity, setModalMinSeverity] = useState(7);
@@ -430,7 +441,9 @@ export default function AlertsPage() {
         <div className="bg-surface-container rounded-lg border border-outline-variant/10 shadow-xl p-12 text-center flex flex-col items-center gap-4 pb-24">
           <span className="material-symbols-outlined text-4xl text-on-surface/20">notifications_off</span>
           <div>
-            <h2 className="text-lg font-bold font-headline text-on-surface mb-1">No alert rules configured</h2>
+            <h2 className="text-lg font-bold font-headline text-on-surface mb-1">
+              {alertsEmptyStateHeading(unreadCount)}
+            </h2>
             <p className="text-xs text-on-surface/60 max-w-md">
               Create a rule to get notified when signals match a region, commodity, or severity threshold you care about.
             </p>

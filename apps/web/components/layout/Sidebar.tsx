@@ -123,6 +123,8 @@ export function Sidebar() {
                       color: "#ff9993",
                       borderRadius: "9999px",
                     }}
+                    aria-label="unread alerts"
+                    title="unread alerts"
                   >
                     {unreadCount}
                   </span>
