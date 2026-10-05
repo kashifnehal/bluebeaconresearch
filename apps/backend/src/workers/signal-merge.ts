@@ -32,7 +32,9 @@ import { buildEventCategoryPatch } from "../lib/event-category-patch.js";
  * restrictions) means we stop right at the evidence line, not past it.
  */
 const MATCH_WINDOW_HOURS = 8;
-const SIMILARITY_THRESHOLD = 0.33;
+// Exported so alert-dispatcher.ts's per-story alert cooldown can reuse the exact same
+// "is this the same story" check instead of re-deriving its own threshold.
+export const SIMILARITY_THRESHOLD = 0.33;
 const CANDIDATE_LIMIT = 25;
 
 const STOPWORDS = new Set([
@@ -48,7 +50,7 @@ const STOPWORDS = new Set([
   "geopolitical", "financial", "market", "implications", "impact", "material",
 ]);
 
-function tokenize(text: string | null | undefined): Set<string> {
+export function tokenize(text: string | null | undefined): Set<string> {
   if (!text) return new Set();
   return new Set(
     text
@@ -60,7 +62,7 @@ function tokenize(text: string | null | undefined): Set<string> {
   );
 }
 
-function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+export function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
   if (a.size === 0 || b.size === 0) return 0;
   let intersection = 0;
   for (const word of a) if (b.has(word)) intersection++;

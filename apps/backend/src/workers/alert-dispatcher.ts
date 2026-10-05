@@ -6,10 +6,57 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { QUEUE_NAMES } from "../queues.js";
 import { TelegramService } from "../services/telegram.service.js";
 import { ExpoPushService } from "../services/expo-push.service.js";
+import { tokenize, jaccardSimilarity, SIMILARITY_THRESHOLD } from "./signal-merge.js";
 
 const supabase = getSupabaseAdmin();
 const telegram = new TelegramService();
 const expoPush = new ExpoPushService();
+
+/**
+ * Alert-fatigue guard (doc 298 algorithm A2; principle source: Google SRE alerting
+ * guidance — alerts must be actionable, noise causes fatigue). The two numbers below
+ * are DESIGN CHOICES, not measured/tuned constants — there is no production volume
+ * yet to derive them from, unlike e.g. signal-merge.ts's SIMILARITY_THRESHOLD.
+ */
+export const MAX_ALERTS_PER_USER_PER_DAY = 10; // DESIGN CHOICE, not measured.
+const STORY_COOLDOWN_MINUTES = 30; // DESIGN CHOICE, not measured.
+
+/**
+ * Budget gate: true when this user has already hit MAX_ALERTS_PER_USER_PER_DAY
+ * alerts_sent rows in the last 24h and this isn't the severity-10 exception.
+ * Pure/exported for unit testing — doc 64 rule: this is a count, not a learned score,
+ * so it never looks at open/click/dismiss behavior data, only alerts_sent row counts.
+ */
+export function shouldDeferForBudget(alertsSentTodayCount: number, severity: number): boolean {
+  if (severity === 10) return false;
+  return alertsSentTodayCount >= MAX_ALERTS_PER_USER_PER_DAY;
+}
+
+export type RecentAlertForCooldown = { signalId: string; summary: string | null };
+
+/**
+ * Cooldown gate: true when the user already got an alert for the same story (exact
+ * same signal, or a different signal whose summary clears signal-merge.ts's own
+ * duplicate-story similarity threshold) within STORY_COOLDOWN_MINUTES. Severity-10
+ * signals and escalation re-alerts (already a deliberately distinct "UPDATED:" message
+ * — see signal-merge.ts's shouldReAlertOnEscalation) are exempt.
+ */
+export function isStoryCooldownHit(params: {
+  severity: number;
+  escalation: boolean;
+  currentSignalId: string;
+  currentSummary: string | null;
+  recentAlerts: RecentAlertForCooldown[];
+}): boolean {
+  const { severity, escalation, currentSignalId, currentSummary, recentAlerts } = params;
+  if (severity === 10 || escalation) return false;
+  const currentTokens = tokenize(currentSummary);
+  return recentAlerts.some(
+    (a) =>
+      a.signalId === currentSignalId ||
+      jaccardSimilarity(currentTokens, tokenize(a.summary)) >= SIMILARITY_THRESHOLD,
+  );
+}
 
 export type EscalationAlertContext = { oldSeverity: number; newSeverity: number };
 
@@ -174,7 +221,10 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     ),
   ];
 
-  const [{ data: prefsRows }, { data: channelsRows }, { data: profileRows }, { data: webhookRows }] =
+  const dayAgo = new Date(Date.now() - 24 * 3_600_000).toISOString();
+  const cooldownStart = new Date(Date.now() - STORY_COOLDOWN_MINUTES * 60_000).toISOString();
+
+  const [{ data: prefsRows }, { data: channelsRows }, { data: profileRows }, { data: webhookRows }, { data: recentAlertRows }] =
     await Promise.all([
       supabase.from("user_preferences").select("user_id, quiet_start, quiet_end, timezone").in("user_id", userIds),
       supabase.from("user_channels").select("user_id, telegram_chat_id, slack_webhook_url, discord_webhook_url").in("user_id", userIds),
@@ -182,6 +232,10 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
       webhookUserIds.length
         ? supabase.from("webhook_endpoints").select("*").in("user_id", webhookUserIds).eq("is_active", true)
         : Promise.resolve({ data: [] as any[] }),
+      // Single batched query backs both the per-user daily budget (full 24h window)
+      // and the per-story cooldown (the cooldownStart..now subset of the same rows) —
+      // one query for all matched users, not one per rule (doc 298 algorithm A2).
+      supabase.from("alerts_sent").select("user_id, signal_id, created_at").in("user_id", userIds).gte("created_at", dayAgo),
     ]);
 
   const prefsByUser = new Map((prefsRows ?? []).map((p) => [p.user_id, p]));
@@ -193,6 +247,30 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     list.push(hook);
     webhooksByUser.set(hook.user_id, list);
   }
+
+  const alertsTodayCountByUser = new Map<string, number>();
+  const cooldownRowsByUser = new Map<string, { signal_id: string; created_at: string }[]>();
+  for (const row of recentAlertRows ?? []) {
+    alertsTodayCountByUser.set(row.user_id, (alertsTodayCountByUser.get(row.user_id) ?? 0) + 1);
+    if (row.created_at >= cooldownStart) {
+      const list = cooldownRowsByUser.get(row.user_id) ?? [];
+      list.push(row);
+      cooldownRowsByUser.set(row.user_id, list);
+    }
+  }
+
+  // Resolve summaries for the distinct signals behind those cooldown-window rows (one
+  // more batched query, not one per rule/user) so isStoryCooldownHit can compare them
+  // against the current signal using signal-merge.ts's own similarity check.
+  const cooldownSignalIds = [
+    ...new Set(
+      [...cooldownRowsByUser.values()].flat().map((r) => r.signal_id).filter((id) => id !== signal.id),
+    ),
+  ];
+  const { data: cooldownSignalRows } = cooldownSignalIds.length
+    ? await supabase.from("signals").select("id, summary").in("id", cooldownSignalIds)
+    : { data: [] as Array<{ id: string; summary: string | null }> };
+  const summaryBySignalId = new Map((cooldownSignalRows ?? []).map((s) => [s.id, s.summary]));
 
   let attempted = 0;
   let delivered = 0;
@@ -209,6 +287,38 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
       const inRange =
         start < end ? hhmm >= start && hhmm <= end : hhmm >= start || hhmm <= end; // handles overnight windows
       if (inRange) continue;
+    }
+
+    // Cooldown (doc 298 A2 §4): same story, same user, within STORY_COOLDOWN_MINUTES
+    // — skip entirely, no alerts_sent row. Escalation re-alerts are exempt.
+    const recentForUser = (cooldownRowsByUser.get(rule.user_id) ?? []).map((r) => ({
+      signalId: r.signal_id,
+      summary: r.signal_id === signal.id ? signal.summary : summaryBySignalId.get(r.signal_id) ?? null,
+    }));
+    if (
+      isStoryCooldownHit({
+        severity: signal.severity,
+        escalation: Boolean(escalation),
+        currentSignalId: signal.id,
+        currentSummary: signal.summary,
+        recentAlerts: recentForUser,
+      })
+    ) {
+      continue;
+    }
+
+    // Budget (doc 298 A2 §1-3): over MAX_ALERTS_PER_USER_PER_DAY and not severity 10
+    // — defer to the next digest instead of sending now.
+    if (shouldDeferForBudget(alertsTodayCountByUser.get(rule.user_id) ?? 0, signal.severity)) {
+      alertsSentRows.push({
+        user_id: rule.user_id,
+        rule_id: rule.id,
+        signal_id: signalId,
+        channel: null,
+        status: "deferred",
+        deferred_to_digest: true,
+      });
+      continue;
     }
 
     const channelsRow = channelsByUser.get(rule.user_id);

@@ -157,6 +157,9 @@ CREATE INDEX idx_signals_fulltext ON public.signals USING gin (
 );
 CREATE INDEX idx_commodity_prices_symbol ON public.commodity_prices (symbol, fetched_at DESC);
 CREATE INDEX idx_alerts_sent_user ON public.alerts_sent (user_id, created_at DESC);
+-- alerts_sent gained deferred_to_digest (boolean) + a 'deferred' status value,
+-- 20261001200000_alerts_sent_deferred_to_digest.sql (doc 298 A2 alert budget).
+-- Full note in docs/brain/04_DATABASE.md Table 7.
 CREATE INDEX idx_raw_events_dedup ON public.raw_events (external_id, source);
 ```
 

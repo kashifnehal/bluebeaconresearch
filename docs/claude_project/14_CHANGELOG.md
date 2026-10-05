@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 120 — Alert-dispatcher per-user daily budget + per-story cooldown (doc 298 algorithm A2) (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
+
+`apps/backend` only. Two new alert-fatigue gates ahead of sending an alert: a 30-minute cooldown that skips a repeat alert for the same story (reusing `signal-merge.ts`'s own duplicate-story similarity check), and a 10-per-day budget that defers any alert past that count to the next daily digest instead of dropping it. Severity-10 signals and escalation re-alerts bypass both, matching the existing quiet-hours exception. Both numbers are explicitly flagged as design choices, not measured constants. New migration adds the digest-deferral flag and status value to `alerts_sent` — written but not yet applied live (Supabase connection timeout this session). Full detail: `docs/brain/14_CHANGELOG.md` v0.143.0 (renumbered from v0.136.0 on merge — PHASE 113/v0.136.0 was already in use for W7-ASSET-LISTS).
+
 ## PHASE 119 — W7-AUTH-RESILIENCE: don't sign users out on a Supabase Auth hiccup (2026-10-05, backfilled)
 
 `db138a7` — 3 files changed, 319 insertions(+), 50 deletions(-)
