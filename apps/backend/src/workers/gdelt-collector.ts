@@ -1,4 +1,5 @@
 import axios from "axios";
+import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
@@ -92,6 +93,21 @@ export async function runGdeltCollectorOnce() {
   }
 
   const articles: GdeltArticle[] = res.data?.articles ?? [];
+
+  // W7-DEDUPE-KEY diag (doc 304 amendment, 2026-10-05) — PROBABLE, not proven: the
+  // repeated fetched=250/duplicates=83/filtered=167 lines look like GDELT's keyless
+  // DOC API returning the same article list every cycle. This hashes the sorted URL
+  // set + newest seendate seen so a later log diff can confirm or disprove that
+  // without guessing. Query itself is unchanged — diagnostic only.
+  const sortedUrls = articles.map((a) => a.url ?? "").sort();
+  const urlsHash = createHash("sha1").update(sortedUrls.join("\n")).digest("hex");
+  const newestSeendate = articles.reduce(
+    (max, a) => (a.seendate && a.seendate > max ? a.seendate : max),
+    "",
+  );
+  console.log(
+    `[GDELT] newest_seendate=${newestSeendate || "none"} urls_hash=${urlsHash} fetched=${articles.length}`,
+  );
 
   let fetched = articles.length;
   let inserted = 0;
