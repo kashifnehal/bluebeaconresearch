@@ -1,10 +1,40 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-05 (PHASE 113).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-05 (PHASE 119).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 119 — W7-AUTH-RESILIENCE: don't sign users out on a Supabase Auth hiccup (2026-10-05, backfilled)
+
+`db138a7` — 3 files changed, 319 insertions(+), 50 deletions(-)
+Files: `apps/web/proxy.ts` (+test). Full detail: `docs/brain/14_CHANGELOG.md` v0.142.0.
+
+## PHASE 118 — W7-UI-FIXES: remove fabricated UI content across dashboard/map/alerts/watchlist, + D6 Vercel Analytics removal amendment (2026-10-05, backfilled)
+
+`7fa3596` — 13 files changed, 249 insertions(+), 35 deletions(-); `990594e` (amendment) — 2 files changed, 2 insertions(+), 2 deletions(-)
+Files: `apps/web/app/(dashboard)/{alerts,dashboard}/page.tsx` (+test), `map/page.tsx`, `app/layout.tsx`, `components/layout/Sidebar.tsx` (+test), `components/signals/{DriverBreakdownChart,SeverityBadge}.tsx` (+test). Full detail: `docs/brain/14_CHANGELOG.md` v0.141.0.
+
+## PHASE 117 — W7-STATUS-FIX: /status cutoffs follow real ingestion interval + Classifier check (2026-10-05, backfilled)
+
+`765dfb5` — 3 files changed, 174 insertions(+), 34 deletions(-)
+Files: `apps/web/lib/status-checks.ts` (+test). Full detail: `docs/brain/14_CHANGELOG.md` v0.140.0.
+
+## PHASE 116 — W7-DEDUPE-KEY: fix 24-byte truncated external_id collision, + GDELT same-list diagnostic amendment (2026-10-05, backfilled)
+
+`bcc0da8` — 8 files changed, 252 insertions(+), 24 deletions(-); `60ce8f9` (amendment) — 2 files changed, 18 insertions(+)
+Files: `apps/backend/src/lib/external-id.ts` (+test), `src/workers/{gdelt,gnews,rss}-collector.ts`. Full detail: `docs/brain/14_CHANGELOG.md` v0.139.0.
+
+## PHASE 115 — W6-ACLED: quiet 24h back-off on 403, JSON error bodies, honest source count (2026-10-01, backfilled)
+
+`ca641cd` — 9 files changed, 395 insertions(+), 24 deletions(-)
+Files: `apps/backend/src/services/acled.service.ts` (+test), `src/workers/acled-collector.ts` (+test). Full detail: `docs/brain/14_CHANGELOG.md` v0.138.0.
+
+## PHASE 114 — W5-PAGE-WEB: fix silent list cut-offs on alerts + related events (2026-10-01, backfilled)
+
+`3c4efc1` — 10 files changed, 278 insertions(+), 36 deletions(-)
+Files: `apps/web/app/(dashboard)/alerts/page.tsx`, `app/api/alerts/{recent,rule-stats}/route.ts`, `app/api/signals/[id]/route.ts`, `lib/paged-range-fetch.ts` (+test). Full detail: `docs/brain/14_CHANGELOG.md` v0.137.0.
 
 ## PHASE 113 — W7-ASSET-LISTS: COPPER/XAGUSD filter coverage + USDINR forex pair (2026-10-05)
 

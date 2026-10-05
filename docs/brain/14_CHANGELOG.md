@@ -1,12 +1,44 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-05 (v0.136.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: v0.136.0 picks up directly after v0.135.0 (2026-10-01) — several sessions between then and now (W6-ACLED, W5-PAGE-WEB, W7-ASSETS-COPPER-SILVER, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, W7-AUTH-RESILIENCE) shipped real commits (see `git log`, `LIVE_TODO.md`'s "Resolved this session" sections for 2026-10-03/04/05) but were never folded into this changelog — a gap already flagged as a founder/next-session TODO by the 2026-10-04 `LIVE_TODO.md` entry, not backfilled here either (out of this task's scope).
+> **📍 Doc status — live changelog as of 2026-10-05 (v0.142.0).** `claude/23_TODO.md` / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed).
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.142.0 — W7-AUTH-RESILIENCE: don't sign users out on a Supabase Auth hiccup (2026-10-05, backfilled 2026-10-05 per W8-TEST-WIRING)
+
+`db138a7` — 3 files changed, 319 insertions(+), 50 deletions(-)
+Files: `apps/web/proxy.ts` (+ new `proxy.test.ts`), `docs/brain/LIVE_TODO.md`.
+
+### v0.141.0 — W7-UI-FIXES: remove fabricated UI content across dashboard/map/alerts/watchlist, + D6 amendment removing Vercel Analytics from root layout (2026-10-05, backfilled 2026-10-05 per W8-TEST-WIRING)
+
+`7fa3596` — 13 files changed, 249 insertions(+), 35 deletions(-); `990594e` (amendment) — 2 files changed, 2 insertions(+), 2 deletions(-)
+Files: `apps/web/app/(dashboard)/{alerts,dashboard}/page.tsx` (+test), `app/(dashboard)/map/page.tsx`, `app/how-it-works/page.tsx`, `app/layout.tsx`, `components/layout/Sidebar.tsx` (+test), `components/signals/{DriverBreakdownChart,SeverityBadge}.tsx` (+test), `package.json`, `docs/brain/LIVE_TODO.md`.
+
+### v0.140.0 — W7-STATUS-FIX: /status cutoffs follow real ingestion interval + Classifier check (2026-10-05, backfilled 2026-10-05 per W8-TEST-WIRING)
+
+`765dfb5` — 3 files changed, 174 insertions(+), 34 deletions(-)
+Files: `apps/web/lib/status-checks.ts` (+test), `docs/brain/LIVE_TODO.md`.
+
+### v0.139.0 — W7-DEDUPE-KEY: fix 24-byte truncated external_id collision, + amendment adding a GDELT same-list diagnostic (2026-10-05, backfilled 2026-10-05 per W8-TEST-WIRING)
+
+`bcc0da8` — 8 files changed, 252 insertions(+), 24 deletions(-); `60ce8f9` (amendment) — 2 files changed, 18 insertions(+)
+Files: `apps/backend/src/lib/external-id.ts` (+test), `src/workers/{gdelt,gnews,rss}-collector.ts`, `src/services/chart-attribution-backfill.service.ts`, `package.json`, `docs/brain/LIVE_TODO.md`.
+
+### v0.138.0 — W6-ACLED: quiet 24h back-off on 403, JSON error bodies, honest source count (2026-10-01, backfilled 2026-10-05 per W8-TEST-WIRING)
+
+`ca641cd` — 9 files changed, 395 insertions(+), 24 deletions(-)
+Files: `apps/backend/src/services/acled.service.ts` (+test), `src/workers/acled-collector.ts` (+test), `apps/web/app/how-it-works/page.tsx`, `apps/web/lib/how-it-works-stats.ts` (+test), `apps/backend/package.json`, `docs/brain/LIVE_TODO.md`.
+
+### v0.137.0 — W5-PAGE-WEB: fix silent list cut-offs on alerts + related events (2026-10-01, backfilled 2026-10-05 per W8-TEST-WIRING)
+
+`3c4efc1` — 10 files changed, 278 insertions(+), 36 deletions(-)
+Files: `apps/web/app/(dashboard)/alerts/page.tsx`, `app/(dashboard)/events/[id]/page.tsx`, `app/api/alerts/{recent,rule-stats}/route.ts`, `app/api/signals/[id]/route.ts`, `lib/paged-range-fetch.ts` (+test), `lib/related-events.ts`, `package.json`, `docs/brain/LIVE_TODO.md`.
+
+> Backfill note: these five entries (v0.137.0–v0.142.0, covering 7 commits) were written 2026-10-05 as part of W8-TEST-WIRING, closing the gap this doc's own top banner had flagged. Each is 2 lines taken directly from `git show --stat`; no narrative claims beyond that were added. v0.136.0 below (W7-ASSET-LISTS, `8beec02`) was already present before this backfill.
 
 ### v0.136.0 — W7-ASSET-LISTS: COPPER/XAGUSD filter coverage + USDINR forex pair (2026-10-05)
 
