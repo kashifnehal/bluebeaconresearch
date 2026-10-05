@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-06 (PHASE 121).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121 are two branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-06 (PHASE 122).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122 are three branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 122 — Telegram alert feedback buttons, PERS-Pn (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
+
+`apps/backend` only. Telegram alerts now carry an inline Useful / Not useful / Mute topic keyboard; a tap is handled by a new `callback_query` branch in the webhook route, which verifies the answering chat owns the alert (via `user_channels`) before recording the feedback — a chat that doesn't own the alert is ignored, not just unauthenticated-rejected. `mute_topic` records feedback only in this version; it does not touch alert rules or thresholds. The alert-dispatcher's Telegram send now writes its `alerts_sent` row immediately, before sending, so the keyboard can reference the real row id instead of a separate token — merged alongside the earlier `match_reason` field so the direct insert carries it too. New migration is written but **not yet applied live** — two Supabase connection timeouts this session, a connectivity issue rather than a design block; plus `TELEGRAM_BOT_TOKEN` is still unset, so no end-to-end live check was possible yet either way. 9 new unit tests (keyboard shape/byte-limit, callback parsing, ownership) all pass; full backend suite + type-check clean. Full detail: `docs/brain/14_CHANGELOG.md` v0.145.0 (renumbered from v0.136.0 on merge), `04_DATABASE.md`, `16_MIGRATION_CHECKLIST.md`.
 
 ## PHASE 121 — PERS-Pn: alert match-reason (why a rule matched) (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
 

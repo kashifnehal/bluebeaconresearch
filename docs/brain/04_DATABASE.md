@@ -148,6 +148,15 @@ One row per alert actually dispatched. Written by `alert-dispatcher.ts`.
 - `created_at` (`timestamptz`, NOT NULL, default `now()`)
 - `match_reason` (`jsonb`, nullable) — PERS-Pn, `20261002090000_alerts_sent_match_reason.sql`, **migration written, NOT yet applied to the live DB**. `{ tier: 1|2|3, matched: { watchlist?, commodity?, region?, forex?: string[] } }`, written once by `dispatchAlertsForSignal()` per matched rule. Display/ordering only — never read by any filtering logic, never affects whether an alert was sent.
 
+### Table 7b: `alert_feedback` (PERS-Pn, migration `20261002120000_alert_feedback.sql`, **not yet applied** to `evavcgfmemwryggdkjmx` — see `16_MIGRATION_CHECKLIST.md`)
+Telegram inline-keyboard feedback on a dispatched alert. Inserted only by `routes/telegram.ts`'s `callback_query` handler (service role), after verifying the answering chat's `user_channels.telegram_chat_id` owns the `alerts_sent` row.
+- `id` (`uuid`, PK, default `gen_random_uuid()`)
+- `user_id` (`uuid`, NOT NULL, FK `profiles.id` ON DELETE CASCADE) / `alerts_sent_id` (`uuid`, NOT NULL, FK `alerts_sent.id` ON DELETE CASCADE)
+- `value` (`text`, NOT NULL, check: `useful`, `not_useful`, `mute_topic`) — `mute_topic` records feedback only in this version; it does not change `alert_rules`/thresholds (doc 64)
+- `created_at` (`timestamptz`, NOT NULL, default `now()`)
+- **RLS**: `alert_feedback_select_own` (SELECT only) — same shape as `alerts_sent`, all writes are service-role.
+- Callback payload: `alert-dispatcher.ts`'s telegram branch now inserts the `alerts_sent` row directly (not batched with the other channels) before sending, so the real row id can be embedded in the button's `callback_data` (`fb:<value>:<alerts_sent_id>`, ≤64 bytes, Telegram's limit).
+
 ### Table 8: `api_keys`
 Institutional developer API credentials.
 - `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL)

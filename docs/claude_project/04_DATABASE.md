@@ -108,6 +108,8 @@ Ingested news articles and military incident logs before AI processing.
 - `slack_connected_at` (`timestamptz`)
 - `discord_webhook_url` (`text`, nullable) / `discord_connected_at` (`timestamptz`) — added 2026-09-12, webhook-URL-paste only. Full column list + RLS note: `docs/brain/04_DATABASE.md` Table 6. Existing `user_channels_all_own` covers the new columns; no CHECK on `alert_rules.channels`.
 
+> **Added 2026-10-02 (PERS-Pn, not yet applied to the live DB)** — new table `alert_feedback` (Telegram inline-keyboard Useful/Not useful/Mute topic feedback on `alerts_sent` rows). Full column list + RLS: `docs/brain/04_DATABASE.md` Table 7b.
+
 ### Table 7: `api_keys` & Table 8: `webhook_endpoints`
 Institutional developer API credentials and webhook subscription URLs.
 
