@@ -90,6 +90,19 @@ process.env.NODE_ENV = "test";
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
 process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || "test-supabase-role-key";
+// W8-BUDGET-DEFER's "spend-limit" test below exercises classifyEvent()'s real
+// (unmocked) catch-block call to maybeSendSpendLimitAlert() -> getRedis(). On a
+// machine whose .env.local carries a genuine REDIS_URL (dotenv, loaded by one of
+// the imports above, injects it before this line runs), getRedis() opens a real
+// Upstash/Redis connection — confirmed live via `lsof` (an ESTABLISHED TCP socket
+// to port 6379) — and that open ioredis handle then keeps this process's event
+// loop alive forever after every test has already finished and printed its ✔/✖
+// line (observed: 13+ minutes with zero further output before this fix). Deleting
+// both possible var names forces getRedis() down its own documented "no valid
+// REDIS_URL -> return null" path, matching this file's existing no-ioredis-
+// mocking limitation (see the isAnthropicUsageLimitError comment below).
+delete process.env.REDIS_URL;
+delete process.env.UPSTASH_REDIS_REST_URL;
 
 const service = new ClaudeService();
 // Never let classifyEvent() build a real Anthropic SDK client in this file.
