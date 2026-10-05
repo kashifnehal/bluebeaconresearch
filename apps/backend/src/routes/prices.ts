@@ -3,7 +3,8 @@ import type { FastifyInstance } from "fastify";
 import { getRedis, recordRedisError } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
-const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "WHEAT", "NGAS", "CORN", "EURUSD", "USDRUB"] as const;
+// USDINR added W7-ASSET-LISTS, 2026-10-05.
+export const SYMBOLS = ["USOIL", "UKOIL", "XAUUSD", "WHEAT", "NGAS", "CORN", "EURUSD", "USDRUB", "USDINR"] as const;
 
 export async function pricesRoutes(app: FastifyInstance) {
   app.get("/", async (_req, reply) => {

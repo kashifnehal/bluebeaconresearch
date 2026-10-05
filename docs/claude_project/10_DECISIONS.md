@@ -754,3 +754,13 @@ Also decided as part of this same pass:
 **Rationale:** This is a narrow, disclosed, disable-by-constant correction, not a reversal of the original bonus-only/fully-logged design — that design stays in place for whenever the detector is fixed. Disabling via the existing constant (built with exactly this rollback path in mind) avoids re-doing the collector wiring later, and keeping the log line live means the real headline/body/none split keeps accumulating as the dataset a redesigned detector would be validated against.
 
 **Cross-tree mapping:** Recorded as **ADR 033** in `docs/brain/10_DECISIONS.md`.
+
+## D38: Asset taxonomy extended to USDINR; no equities/stocks (founder decision, Oct 5 2026)
+
+**Decision:** USDINR is a tagged forex pair across the full stack — `claude.service.ts` classifier (`ALLOWED_FOREX_PAIRS` + aliases `USD/INR`/`RUPEE`/`INDIAN RUPEE`/`INR`), `price-syncer.ts` (`USDINR=X`, verified live via a real `yf.quote()` call), `price-history.ts`, `prices.ts`, `apps/web/app/api/prices/route.ts`, `packages/shared/src/constants/commodities.ts` (`FOREX_PAIRS`), and both filter lists (`apps/backend/src/routes/commodities.ts`, `apps/web/lib/signal-filters.ts`). Decision D2b (no equities, no stocks) stands — this taxonomy is commodities + forex pairs only, nothing beyond.
+
+**Context:** W7-ASSETS (`b24f88e`) added classifier coverage for COPPER/XAGUSD but left them out of the two user-facing filter lists; this same ticket (W7-ASSET-LISTS) closes that gap and adds USDINR per founder decision D2a. MCX turnover mix was cited as background for the decision but is a secondary-source number and is not quoted anywhere in code.
+
+**Rationale:** USDINR is real, Yahoo-verified market data with a direct classifier/price-sync/filter path already proven out for the other six forex pairs (#87) — extending the same pattern is low-risk. Equities/stocks are explicitly out (D2b): BBR's positioning is commodities and currency pairs for commodity traders/import-export SMBs/fund analysts, not an equities product.
+
+**Cross-tree mapping:** Recorded as **ADR 034** in `docs/brain/10_DECISIONS.md`.

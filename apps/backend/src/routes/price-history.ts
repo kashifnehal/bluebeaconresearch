@@ -5,7 +5,7 @@ import YahooFinance from "yahoo-finance2";
 // workers/price-syncer.ts but is deliberately a separate copy — that job is
 // unrelated (live quotes into commodity_prices on a schedule) and is not
 // touched here. Unknown symbols never pass through to Yahoo (closed set).
-const YAHOO_TICKERS: Record<string, string> = {
+export const YAHOO_TICKERS: Record<string, string> = {
   USOIL: "CL=F",
   UKOIL: "BZ=F",
   XAUUSD: "GC=F",
@@ -20,6 +20,7 @@ const YAHOO_TICKERS: Record<string, string> = {
   USDCHF: "USDCHF=X",
   USDRUB: "USDRUB=X",
   USDCNY: "USDCNY=X",
+  USDINR: "USDINR=X", // W7-ASSET-LISTS, 2026-10-05
 };
 
 const CACHE_TTL_MS = 15 * 60 * 1000;

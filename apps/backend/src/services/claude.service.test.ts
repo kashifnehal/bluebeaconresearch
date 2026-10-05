@@ -1306,6 +1306,100 @@ async function main() {
       delete process.env.ANTHROPIC_API_KEY;
     }
   });
+
+  // ── W7-ASSET-LISTS — USDINR forex pair alias normalization ─────────────────
+
+  runTest("normalizeForexPair: 'USD/INR' returns USDINR", async () => {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 6,
+                confidence: 0.7,
+                commodityImpacts: [],
+                currencyPairImpacts: [{ asset: "USD/INR", direction: "volatile", confidence: 0.8 }],
+                isBreaking: false,
+                summary: "Rupee weakens on capital outflows",
+                region: "asia-pacific",
+                materialityPass: true,
+                materialityReasoning: "real market mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Rupee weakens sharply on foreign capital outflows",
+        summary: "RBI intervenes to steady the currency.",
+        event_type: "news",
+        country: "IN",
+        event_date: new Date().toISOString(),
+      });
+      assert.deepStrictEqual(
+        classification.currencyPairImpacts.map((impact) => impact.asset),
+        ["USDINR"],
+      );
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
+
+  runTest("normalizeForexPair: 'Indian Rupee' and 'INR' both return USDINR", async () => {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 5,
+                confidence: 0.65,
+                commodityImpacts: [],
+                currencyPairImpacts: [
+                  { asset: "Indian Rupee", direction: "down", confidence: 0.7 },
+                  { asset: "INR", direction: "down", confidence: 0.7 },
+                ],
+                isBreaking: false,
+                summary: "Rupee under pressure",
+                region: "asia-pacific",
+                materialityPass: true,
+                materialityReasoning: "real market mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Indian rupee under renewed pressure",
+        summary: "Currency weakens against the dollar.",
+        event_type: "news",
+        country: "IN",
+        event_date: new Date().toISOString(),
+      });
+      // Both aliases normalize onto the same ticker and are deduped.
+      assert.deepStrictEqual(
+        classification.currencyPairImpacts.map((impact) => impact.asset),
+        ["USDINR"],
+      );
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
 }
 
 main().catch((err) => {

@@ -705,3 +705,21 @@ This is a narrow, disclosed, disable-by-constant scoring correction, not a rever
 ### Cross-tree mapping
 
 Recorded as **D37** in `docs/claude_project/10_DECISIONS.md`.
+
+## 35. ADR 034: Asset taxonomy extended to USDINR; no equities/stocks (founder decision, Oct 5 2026)
+
+### Context
+
+W7-ASSETS (`b24f88e`) added classifier coverage for COPPER/XAGUSD but left them out of the two user-facing filter lists (`apps/backend/src/routes/commodities.ts`, `apps/web/lib/signal-filters.ts`). This ticket (W7-ASSET-LISTS) closes that gap and, per founder decision Oct 5 (D2a), adds USDINR as a new forex pair across the stack. D2b (no equities, no stocks) was decided in the same pass and stands. MCX turnover mix was cited as background for the decision but is a secondary-source number, not quoted in code.
+
+### Decision
+
+USDINR is a tagged forex pair end-to-end: `claude.service.ts` classifier (`ALLOWED_FOREX_PAIRS` + aliases `USD/INR`/`RUPEE`/`INDIAN RUPEE`/`INR`, plus the live prompt's pair enum), `price-syncer.ts` (`USDINR=X` — verified live via a real `yf.quote()` call returning `regularMarketPrice: 96.2925`, `currency: "INR"`, `marketState: "REGULAR"` before any code was written), `price-history.ts`, `prices.ts`, `apps/web/app/api/prices/route.ts`, `packages/shared/src/constants/commodities.ts` (`FOREX_PAIRS`), and both filter lists above (which also picked up COPPER/XAGUSD in the same pass). Equities/stocks remain out of scope (D2b) — no code path in this change tags anything beyond commodities + forex pairs.
+
+### Rationale
+
+USDINR is real, Yahoo-verified market data with a direct classifier/price-sync/filter pattern already proven out for the other six forex pairs (#87) — extending that same pattern is low-risk and consistent. Equities are explicitly excluded: BBR's positioning is commodities and currency pairs for commodity traders/import-export SMBs/fund analysts, not an equities product.
+
+### Cross-tree mapping
+
+Recorded as **D38** in `docs/claude_project/10_DECISIONS.md`.

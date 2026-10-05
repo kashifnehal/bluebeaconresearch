@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { EVENT_CATEGORY_VALUES } from "@blue-beacon-research/shared";
-import { DEFAULT_FILTERS, eventCategoryQueryParam } from "./signal-filters";
+import {
+  DEFAULT_FILTERS,
+  eventCategoryQueryParam,
+  FILTER_COMMODITIES,
+  symbolsForCommodityFilter,
+} from "./signal-filters";
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -35,4 +40,24 @@ runTest("DEFAULT_FILTERS.eventCategory defaults to null (All)", () => {
 runTest("EVENT_CATEGORY_VALUES has exactly 9 entries with no duplicates", () => {
   assert.equal(EVENT_CATEGORY_VALUES.length, 9);
   assert.equal(new Set(EVENT_CATEGORY_VALUES).size, 9);
+});
+
+// W7-ASSET-LISTS: COPPER/XAGUSD/USDINR added to the filter catalog.
+runTest("FILTER_COMMODITIES includes COPPER, XAGUSD, and USDINR with no duplicate symbols", () => {
+  const symbols = FILTER_COMMODITIES.map((c) => c.symbol);
+  assert.ok(symbols.includes("COPPER"));
+  assert.ok(symbols.includes("XAGUSD"));
+  assert.ok(symbols.includes("USDINR"));
+  assert.equal(new Set(symbols).size, symbols.length);
+});
+
+runTest("symbolsForCommodityFilter(cat:metals) includes COPPER and XAGUSD", () => {
+  const symbols = symbolsForCommodityFilter("cat:metals");
+  assert.ok(symbols.includes("COPPER"));
+  assert.ok(symbols.includes("XAGUSD"));
+  assert.ok(symbols.includes("XAUUSD"));
+});
+
+runTest("symbolsForCommodityFilter(USDINR) returns just USDINR", () => {
+  assert.deepStrictEqual(symbolsForCommodityFilter("USDINR"), ["USDINR"]);
 });

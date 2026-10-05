@@ -35,6 +35,8 @@ const EXISTING_OUTCOMES_CHUNK = 200;
 // mislabeled EURUSD/USDRUB commodity_impacts entry would otherwise silently clamp
 // both price_at_event and price_at_checkpoint to the same distant point and record
 // a fabricated 0%/"flat" outcome. Past this distance, treat it as no price data.
+// USDINR (W7-ASSET-LISTS) joins this same list with price history starting
+// 2026-10-05 — same clamping risk applies to any pre-existing USDINR mentions.
 const MAX_PRICE_POINT_DISTANCE_MS = 24 * 3_600_000;
 
 type Direction = "up" | "down" | "volatile" | "neutral";

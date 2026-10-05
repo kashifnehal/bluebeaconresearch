@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-01 (PHASE 112).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live changelog as of 2026-10-05 (PHASE 113).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 113 — W7-ASSET-LISTS: COPPER/XAGUSD filter coverage + USDINR forex pair (2026-10-05)
+
+`apps/backend` + `apps/web` + `packages/shared`. The classifier and price-syncer already supported COPPER/XAGUSD (PHASE 112-era W7-ASSETS-COPPER-SILVER, 2026-10-04), but the two user-facing filter lists never got them — fixed here. USDINR added as a new live forex pair end-to-end (founder decision D2a, Oct 5; D2b — no equities — stands), verified against a real Yahoo Finance quote before any code was written. Recorded as D38/ADR 034. Full detail: `docs/brain/14_CHANGELOG.md` v0.136.0.
 
 ## PHASE 112 — Public `/how-it-works` research-integrity page (2026-10-01)
 

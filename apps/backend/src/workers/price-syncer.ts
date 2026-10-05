@@ -19,13 +19,17 @@ const COMMODITY_SYMBOLS = {
 // (the less-common pairs) both returned live regularMarketPrice values.
 // Written into the same commodity_prices table as COMMODITY_SYMBOLS (the table is
 // a generic symbol/price time-series despite the name).
-const FOREX_SYMBOLS = {
+export const FOREX_SYMBOLS = {
   EURUSD: "EURUSD=X",
   GBPUSD: "GBPUSD=X",
   USDJPY: "USDJPY=X",
   USDCHF: "USDCHF=X",
   USDRUB: "USDRUB=X",
   USDCNY: "USDCNY=X",
+  // USDINR added W7-ASSET-LISTS (2026-10-05, founder decision D2a). Verified
+  // against a real yf.quote() call before writing this: USDINR=X returned
+  // regularMarketPrice 96.2925, currency "INR", marketState "REGULAR".
+  USDINR: "USDINR=X",
 } as const;
 
 export async function runPriceSyncOnce() {

@@ -42,6 +42,9 @@ export const FOREX_PAIRS = [
   { symbol: "USDCHF", label: "USD/CHF", unit: "rate", category: "forex" },
   { symbol: "USDRUB", label: "USD/RUB", unit: "rate", category: "forex" },
   { symbol: "USDCNY", label: "USD/CNY", unit: "rate", category: "forex" },
+  // USDINR added W7-ASSET-LISTS (2026-10-05, founder decision D2a: USDINR
+  // yes, D2b no equities/stocks).
+  { symbol: "USDINR", label: "USD/INR", unit: "rate", category: "forex" },
 ] as const;
 
 export const REGIONS = [

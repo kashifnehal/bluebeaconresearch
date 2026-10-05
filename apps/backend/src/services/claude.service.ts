@@ -301,6 +301,9 @@ export class ClaudeService {
     "USDCHF",
     "USDRUB",
     "USDCNY",
+    // USDINR added W7-ASSET-LISTS (2026-10-05, founder decision D2a: USDINR
+    // yes, D2b no equities) — price-syncer.ts already syncs it (USDINR=X).
+    "USDINR",
   ]);
 
   // Claude (asked in plain English to classify "financial market impact") reliably
@@ -386,6 +389,11 @@ export class ClaudeService {
     RMB: "USDCNY",
     "CHINESE YUAN": "USDCNY",
     "USD/CNY": "USDCNY",
+    // W7-ASSET-LISTS: aliases for USDINR per task spec.
+    "USD/INR": "USDINR",
+    RUPEE: "USDINR",
+    "INDIAN RUPEE": "USDINR",
+    INR: "USDINR",
   };
 
   private normalizeForexPair(asset: string): string | null {
@@ -474,7 +482,7 @@ export class ClaudeService {
           `  "severity": integer between 1 and 10,\n` +
           `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
           `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN"|"COPPER"|"XAGUSD" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
-          `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+          `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY"|"USDINR" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "isBreaking": boolean,\n` +
           `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n` +
           `  "summary": string (max 120 chars),\n` +

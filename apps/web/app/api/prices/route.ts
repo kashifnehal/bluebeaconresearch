@@ -18,9 +18,9 @@ type CommodityPriceRow = {
 // below) already returns every symbol the price-syncer writes, forex included;
 // this list only bounds which symbols the Redis fallback re-hydrates, so the six
 // forex pairs (#87) are appended here to keep the fallback path in parity.
-const SYMBOLS = [
+export const SYMBOLS = [
   "USOIL", "UKOIL", "XAUUSD", "NGAS", "WHEAT", "COPPER", "XAGUSD", "CORN",
-  "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDRUB", "USDCNY",
+  "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDRUB", "USDCNY", "USDINR",
 ] as const;
 
 // Step 3: Server-side in-memory cache for /api/prices (60s TTL)

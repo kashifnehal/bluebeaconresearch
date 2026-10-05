@@ -16,6 +16,12 @@ export const FILTER_COMMODITIES = [
   { symbol: "CORN", label: "Corn", unit: "USc/bu", category: "agriculture" },
   { symbol: "EURUSD", label: "EUR/USD", unit: "", category: "fx" },
   { symbol: "USDRUB", label: "USD/RUB", unit: "", category: "fx" },
+  // COPPER / XAGUSD / USDINR added W7-ASSET-LISTS (2026-10-05) to match the
+  // same additions in the backend's live /v1/commodities catalog this list
+  // mirrors — see the comment above.
+  { symbol: "COPPER", label: "Copper", unit: "USD/lb", category: "metals" },
+  { symbol: "XAGUSD", label: "Silver", unit: "USD/oz", category: "metals" },
+  { symbol: "USDINR", label: "USD/INR", unit: "", category: "fx" },
 ] as const;
 
 export type FilterCommodity = (typeof FILTER_COMMODITIES)[number];
