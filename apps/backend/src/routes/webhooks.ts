@@ -6,6 +6,13 @@ import { requireUser } from "../middleware/auth.middleware.js";
 import { planGuard } from "../middleware/plan-guard.middleware.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
+// #276 — paging for /deliveries. Default page/limit reproduce the prior fixed
+// 50-row fetch exactly; meta.total lets callers detect more pages.
+const deliveriesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+});
+
 const endpointSchema = z.object({
   url: z.string().url(),
   name: z.string().max(120).optional(),
@@ -135,6 +142,14 @@ export async function webhooksRoutes(app: FastifyInstance) {
 
   app.get("/deliveries", { preHandler: planGuard(["api"]) }, async (req, reply) => {
     const user = requireUser(req, reply);
+    const parsed = deliveriesQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: "Invalid query", issues: parsed.error.issues });
+    }
+    const { page, limit } = parsed.data;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
     const supabase = getSupabaseAdmin();
 
     const { data: endpoints } = await supabase
@@ -142,16 +157,16 @@ export async function webhooksRoutes(app: FastifyInstance) {
       .select("id")
       .eq("user_id", user.id);
     const ids = (endpoints ?? []).map((e) => e.id);
-    if (!ids.length) return reply.send({ data: [] });
+    if (!ids.length) return reply.send({ data: [], meta: { total: 0, page, limit } });
 
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from("webhook_deliveries")
-      .select("*")
+      .select("*", { count: "exact" })
       .in("endpoint_id", ids)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .range(from, to);
     if (error) return reply.status(500).send({ error: "Query failed" });
-    return reply.send({ data: data ?? [] });
+    return reply.send({ data: data ?? [], meta: { total: count ?? 0, page, limit } });
   });
 }
 

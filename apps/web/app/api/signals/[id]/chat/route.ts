@@ -23,7 +23,7 @@ async function getAccessToken(): Promise<string | null> {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -35,8 +35,16 @@ export async function GET(
   const apiBase = process.env.API_URL?.replace(/\/$/, "");
   if (!apiBase) return apiErrorLogged(500, "config_error", "Missing API_URL env var");
 
+  // #276 — forward "Load older messages" paging params straight through.
+  const before = req.nextUrl.searchParams.get("before");
+  const limit = req.nextUrl.searchParams.get("limit");
+  const qs = new URLSearchParams();
+  if (before) qs.set("before", before);
+  if (limit) qs.set("limit", limit);
+  const query = qs.toString() ? `?${qs.toString()}` : "";
+
   try {
-    const res = await fetch(`${apiBase}/v1/signals/${encodeURIComponent(id)}/chat`, {
+    const res = await fetch(`${apiBase}/v1/signals/${encodeURIComponent(id)}/chat${query}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });

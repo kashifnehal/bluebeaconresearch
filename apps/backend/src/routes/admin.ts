@@ -17,6 +17,40 @@ function adminEmailSet(): Set<string> {
   );
 }
 
+// #276 — the summary branch below used to stop at a single 1000-row fetch,
+// which could undercount count_24h once total event volume across all
+// services passed that cap. Page through with .range() instead (same proven
+// pattern as accuracy.routes.ts's fetchAllOutcomes). MAX_SUMMARY_PAGES is a
+// safety margin on the loop, an operational choice, not a sourced threshold.
+const SERVICE_HEALTH_SUMMARY_PAGE_SIZE = 1000;
+const MAX_SUMMARY_PAGES = 50;
+
+type ServiceHealthEventRow = {
+  service: string;
+  status: string;
+  detail: string | null;
+  created_at: string;
+};
+
+async function fetchAllServiceHealthEvents(
+  supabase: ReturnType<typeof getSupabaseAdmin>,
+): Promise<ServiceHealthEventRow[]> {
+  const rows: ServiceHealthEventRow[] = [];
+  for (let pageIdx = 0; pageIdx < MAX_SUMMARY_PAGES; pageIdx++) {
+    const from = pageIdx * SERVICE_HEALTH_SUMMARY_PAGE_SIZE;
+    const { data, error } = await supabase
+      .from("service_health_events")
+      .select("service, status, detail, created_at")
+      .order("created_at", { ascending: false })
+      .range(from, from + SERVICE_HEALTH_SUMMARY_PAGE_SIZE - 1);
+    if (error) throw new Error(error.message);
+    if (!data?.length) break;
+    rows.push(...(data as ServiceHealthEventRow[]));
+    if (data.length < SERVICE_HEALTH_SUMMARY_PAGE_SIZE) break;
+  }
+  return rows;
+}
+
 /** Returns the admin's email on success; sends a 403 and returns null otherwise. */
 async function assertAdmin(req: FastifyRequest, reply: FastifyReply): Promise<string | null> {
   const user = requireUser(req, reply);
@@ -82,15 +116,13 @@ export async function adminRoutes(app: FastifyInstance) {
       return reply.send({ data: { service, events: data ?? [] } });
     }
 
-    // Summary: last 1000 rows is plenty to derive per-service latest status + a
-    // rough recent-volume count without a SQL function.
-    const { data, error } = await supabase
-      .from("service_health_events")
-      .select("service, status, detail, created_at")
-      .order("created_at", { ascending: false })
-      .limit(1000);
-    if (error) {
-      req.log.error({ err: error }, "service_health_events summary query failed");
+    // Summary: page through every row via .range() so count_24h isn't
+    // undercounted once total event volume passes a single request's cap.
+    let data: ServiceHealthEventRow[];
+    try {
+      data = await fetchAllServiceHealthEvents(supabase);
+    } catch (err) {
+      req.log.error({ err }, "service_health_events summary query failed");
       return reply.status(500).send({ error: "Query failed" });
     }
 
@@ -99,7 +131,7 @@ export async function adminRoutes(app: FastifyInstance) {
       string,
       { service: string; last_status: string; last_at: string; last_detail: string | null; count_24h: number }
     >();
-    for (const row of data ?? []) {
+    for (const row of data) {
       const existing = byService.get(row.service);
       const inWindow = new Date(row.created_at).getTime() >= dayAgo;
       if (!existing) {

@@ -74,7 +74,11 @@ export function SignalChatPanel({
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<SendErrorCode | null>(null);
   const [earlyAccessOnly, setEarlyAccessOnly] = useState(false);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [oldestCursor, setOldestCursor] = useState<string | null>(null);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const skipAutoScrollRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +89,8 @@ export function SignalChatPanel({
       .then(async (res) => {
         const json = (await res.json().catch(() => ({}))) as {
           data?: ChatMessage[];
+          hasMore?: boolean;
+          nextBefore?: string | null;
           error?: string;
         };
         if (res.status === 403 && json.error === "chat_early_access_only") {
@@ -95,7 +101,11 @@ export function SignalChatPanel({
           if (!cancelled) setHistoryError(historyErrorCodeFromResponse(res.status, json));
           return;
         }
-        if (!cancelled) setMessages(json.data ?? []);
+        if (!cancelled) {
+          setMessages(json.data ?? []);
+          setHasOlderMessages(Boolean(json.hasMore));
+          setOldestCursor(json.nextBefore ?? null);
+        }
       })
       .catch(() => {
         if (!cancelled) setHistoryError("network_error");
@@ -109,7 +119,35 @@ export function SignalChatPanel({
     };
   }, [signalId]);
 
+  const handleLoadOlder = async () => {
+    if (!oldestCursor || isLoadingOlder) return;
+    setIsLoadingOlder(true);
+    try {
+      const res = await fetch(
+        `/api/signals/${signalId}/chat?before=${encodeURIComponent(oldestCursor)}`,
+        { cache: "no-store" },
+      );
+      const json = (await res.json().catch(() => ({}))) as {
+        data?: ChatMessage[];
+        hasMore?: boolean;
+        nextBefore?: string | null;
+      };
+      if (!res.ok) return;
+      const olderMessages = json.data ?? [];
+      skipAutoScrollRef.current = true;
+      setMessages((prev) => [...olderMessages, ...prev]);
+      setHasOlderMessages(Boolean(json.hasMore));
+      setOldestCursor(json.nextBefore ?? null);
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  };
+
   useEffect(() => {
+    if (skipAutoScrollRef.current) {
+      skipAutoScrollRef.current = false;
+      return;
+    }
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isSending]);
 
@@ -283,7 +321,21 @@ export function SignalChatPanel({
               </div>
             </div>
           ) : (
-            messages.map((m) => (
+            <>
+              {hasOlderMessages && (
+                <div className="flex justify-center pb-1">
+                  <button
+                    type="button"
+                    data-testid="signal-chat-load-older"
+                    onClick={handleLoadOlder}
+                    disabled={isLoadingOlder}
+                    className="rounded-md border border-outline-variant/30 bg-surface-container px-3 py-1.5 text-[12px] font-bold uppercase tracking-[0.1em] text-primary-fixed-dim disabled:opacity-50"
+                  >
+                    {isLoadingOlder ? "Loading…" : "Load older messages"}
+                  </button>
+                </div>
+              )}
+              {messages.map((m) => (
               <div
                 key={m.id}
                 className={`flex min-w-0 gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}
@@ -318,7 +370,8 @@ export function SignalChatPanel({
                   </div>
                 )}
               </div>
-            ))
+              ))}
+            </>
           )}
 
           {isSending && (

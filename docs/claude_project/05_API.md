@@ -227,10 +227,12 @@ Returns single signal with full detail. Auth required.
 
 ---
 
-#### GET /v1/signals/:id/chat  (#111, `dcdc877`)
-Returns this user's last 50 chat turns for this signal, oldest first. Auth required (`requireUser`). Rows live in `signal_chat_messages` (RLS: user owns their rows; the Fastify route uses the service-role client).
+#### GET /v1/signals/:id/chat  (#111, `dcdc877`; paging added AUDIT_276/W5-PAGE-BACKEND)
+Returns this user's chat turns for this signal, oldest first within the page. Auth required (`requireUser`). Rows live in `signal_chat_messages` (RLS: user owns their rows; the Fastify route uses the service-role client).
 
-**Response 200:** `{ "data": [{ "id", "role": "user"|"assistant", "content", "created_at" }] }`
+**Query params:** `limit` (default 50, max 100), `before` (an earlier page's oldest `created_at`, for "Load older messages"). No params → most recent `limit` messages.
+
+**Response 200:** `{ "data": [{ "id", "role": "user"|"assistant", "content", "created_at" }], "hasMore": boolean, "nextBefore": string | null }`
 
 **⚠️ UPDATED 2026-09-12** — `CHAT_ALLOWED_EMAILS` allowlist (fail closed if unset) → `403 { "error": "chat_early_access_only" }` before history is returned.
 
