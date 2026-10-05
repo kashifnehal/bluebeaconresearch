@@ -60,6 +60,81 @@ export function isStoryCooldownHit(params: {
 
 export type EscalationAlertContext = { oldSeverity: number; newSeverity: number };
 
+// PERS-Pn: why a rule matched, computed once per (rule, signal) pair at dispatch time
+// and carried through to both the alerts_sent row and the outgoing message body, so
+// the chat delivery and the web Alerts card show the identical reason without either
+// one re-deriving it later from the rule + signal rows.
+export type MatchReason = {
+  tier: 1 | 2 | 3;
+  matched: {
+    watchlist?: string[];
+    commodity?: string[];
+    region?: string[];
+    forex?: string[];
+  };
+};
+
+/**
+ * DESIGN CHOICE (PERS-Pn): tier is for display/ordering only and must never change
+ * whether an alert is sent — the pass/fail decision already happened in the
+ * `matchedRules` filter above this is called from. Tiers:
+ *   1 = one of the signal's own commodity/forex assets is on the user's watchlist
+ *       (user_preferences.watchlist_symbols) — the strongest, most personal reason.
+ *   2 = the rule's commodity/forex filter AND its region filter both matched.
+ *   3 = it cleared only one of the rule's configured filters (or the rule has no
+ *       instrument/region filter at all and matched on severity alone).
+ */
+export function computeMatchReason(
+  signal: { region?: string | null },
+  rule: { regions?: string[] | null; commodities?: string[] | null; forex_pairs?: string[] | null },
+  commodityAssets: string[],
+  forexAssets: string[],
+  watchlistSymbols: string[],
+): MatchReason {
+  const matched: MatchReason["matched"] = {};
+
+  const watchlistHits = [...new Set([...commodityAssets, ...forexAssets])].filter((a) =>
+    watchlistSymbols.includes(a),
+  );
+  if (watchlistHits.length) matched.watchlist = watchlistHits;
+
+  const hasCommodityFilter = Array.isArray(rule.commodities) && rule.commodities.length > 0;
+  const hasForexFilter = Array.isArray(rule.forex_pairs) && rule.forex_pairs.length > 0;
+  const hasRegionFilter = Array.isArray(rule.regions) && rule.regions.length > 0;
+
+  if (hasCommodityFilter) {
+    const hits = commodityAssets.filter((a) => rule.commodities!.includes(a));
+    if (hits.length) matched.commodity = hits;
+  }
+  if (hasForexFilter) {
+    const hits = forexAssets.filter((a) => rule.forex_pairs!.includes(a));
+    if (hits.length) matched.forex = hits;
+  }
+  if (hasRegionFilter && signal.region) {
+    matched.region = [signal.region];
+  }
+
+  const tier: 1 | 2 | 3 = matched.watchlist
+    ? 1
+    : (matched.commodity || matched.forex) && matched.region
+      ? 2
+      : 3;
+
+  return { tier, matched };
+}
+
+/** Flattened, display-ready list behind "Matched because you follow: …" — watchlist
+ * hits first (the most personal reason), then commodity/forex/region, no dedup logic
+ * beyond what computeMatchReason already applied. No scoring, no percentages. */
+function matchedValues(matched: MatchReason["matched"]): string[] {
+  return [
+    ...(matched.watchlist ?? []),
+    ...(matched.commodity ?? []),
+    ...(matched.forex ?? []),
+    ...(matched.region ?? []),
+  ];
+}
+
 // One-line trust/differentiation statement carried on every delivery, shortened for a
 // chat message. Approved framing: docs/claude_project/00_PROJECT.md §7, 20_RISKS.md
 // ("Disclaimer on every signal card, every email, every alert delivery").
@@ -95,6 +170,7 @@ export function buildAlertBody(
   signal: any,
   rule: { name?: string | null; min_severity?: number | null },
   sourceUrls: string[],
+  matchReason?: MatchReason,
 ): string {
   const impacts = [
     ...(Array.isArray(signal.commodity_impacts) ? signal.commodity_impacts : []),
@@ -113,6 +189,11 @@ export function buildAlertBody(
   const threshold =
     `Sent because it cleared "${rule.name ?? "your alert rule"}" — severity ${rule.min_severity ?? "?"}+.`;
 
+  // PERS-Pn: one plain line naming what actually fired (watchlist/commodity/region/
+  // forex) — no scoring, no percentages. Omitted entirely when nothing matched beyond
+  // severity (an unfiltered rule).
+  const matchedList = matchReason ? matchedValues(matchReason.matched) : [];
+
   const lines = [
     `EVENT`,
     signal.title,
@@ -125,6 +206,7 @@ export function buildAlertBody(
     ``,
     `ALERT THRESHOLD`,
     threshold,
+    ...(matchedList.length ? [`Matched because you follow: ${matchedList.join(", ")}`] : []),
   ];
 
   if (sourceUrls.length) {
@@ -177,11 +259,12 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     .filter((u): u is string => typeof u === "string" && u.length > 0)
     .slice(0, 3);
 
+  const isAsset = (a: string | undefined): a is string => typeof a === "string" && a.length > 0;
   const commodityAssets = Array.isArray(signal.commodity_impacts)
-    ? (signal.commodity_impacts as Array<{ asset?: string }>).map((c) => c.asset).filter(Boolean)
+    ? (signal.commodity_impacts as Array<{ asset?: string }>).map((c) => c.asset).filter(isAsset)
     : [];
   const forexAssets = Array.isArray(signal.currency_pair_impacts)
-    ? (signal.currency_pair_impacts as Array<{ asset?: string }>).map((c) => c.asset).filter(Boolean)
+    ? (signal.currency_pair_impacts as Array<{ asset?: string }>).map((c) => c.asset).filter(isAsset)
     : [];
 
   const matchedRules = (rules ?? []).filter((rule) => {
@@ -226,7 +309,10 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
 
   const [{ data: prefsRows }, { data: channelsRows }, { data: profileRows }, { data: webhookRows }, { data: recentAlertRows }] =
     await Promise.all([
-      supabase.from("user_preferences").select("user_id, quiet_start, quiet_end, timezone").in("user_id", userIds),
+      supabase
+        .from("user_preferences")
+        .select("user_id, quiet_start, quiet_end, timezone, watchlist_symbols")
+        .in("user_id", userIds),
       supabase.from("user_channels").select("user_id, telegram_chat_id, slack_webhook_url, discord_webhook_url").in("user_id", userIds),
       supabase.from("profiles").select("id, push_tokens").in("id", userIds),
       webhookUserIds.length
@@ -324,8 +410,11 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     const channelsRow = channelsByUser.get(rule.user_id);
     const channels: string[] = Array.isArray(rule.channels) ? rule.channels : ["telegram"];
 
+    const watchlistSymbols = (prefs?.watchlist_symbols ?? []) as string[];
+    const matchReason = computeMatchReason(signal, rule, commodityAssets, forexAssets, watchlistSymbols);
+
     // Four-section body — identical structure/order to the in-app Alerts card (#82).
-    const alertBody = buildAlertBody(signal, rule, sourceUrls);
+    const alertBody = buildAlertBody(signal, rule, sourceUrls, matchReason);
     const telegramText = `${messagePrefix}\n\n${alertBody}`;
     const slackText = `${slackMessagePrefix}\n\n${alertBody}`;
 
@@ -408,6 +497,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
         channel,
         status,
         delivered_at: status === "delivered" ? new Date().toISOString() : null,
+        match_reason: matchReason,
       });
     }
 

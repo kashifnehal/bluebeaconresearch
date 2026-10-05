@@ -100,6 +100,19 @@ const DISCLAIMER =
 
 type MatchSource = { title: string; url: string | null; sourceLabel: string | null };
 
+// PERS-Pn: why alert-dispatcher.ts's dispatchAlertsForSignal matched this rule —
+// written once at dispatch time into alerts_sent.match_reason, not re-derived here.
+// `tier` is display/ordering only; it never changes whether an alert was sent.
+type MatchReason = {
+  tier: 1 | 2 | 3;
+  matched: {
+    watchlist?: string[];
+    commodity?: string[];
+    region?: string[];
+    forex?: string[];
+  };
+};
+
 type MatchedSignal = {
   id: string;
   title: string;
@@ -113,6 +126,7 @@ type MatchedSignal = {
   eventDate?: string | null;
   matchedAt: string;
   sources: MatchSource[];
+  matchReason: MatchReason | null;
   deliveries: { channel: string | null; status: DeliveryStatus }[];
 };
 
@@ -123,6 +137,7 @@ type AlertSentRow = {
   channel: string | null;
   status: DeliveryStatus;
   created_at: string;
+  match_reason?: MatchReason | null;
   signals?: {
     id: string;
     title: string;
@@ -142,6 +157,19 @@ function worstDeliveryStatus(deliveries: { status: DeliveryStatus }[]): Delivery
   if (deliveries.some((d) => d.status === "failed")) return "failed";
   if (deliveries.some((d) => d.status === "queued")) return "queued";
   return "delivered";
+}
+
+// Same flattening + ordering as matchedValues() in apps/backend's alert-dispatcher.ts,
+// so the web card and the chat delivery read identically. No scoring, no percentages.
+function matchReasonLabel(reason: MatchReason | null): string | null {
+  if (!reason) return null;
+  const values = [
+    ...(reason.matched.watchlist ?? []),
+    ...(reason.matched.commodity ?? []),
+    ...(reason.matched.forex ?? []),
+    ...(reason.matched.region ?? []),
+  ];
+  return values.length ? `Matched because you follow: ${values.join(", ")}` : null;
 }
 
 /** One labelled block of an alert card — Event / Why it matters / Which instruments / Threshold. */
@@ -299,6 +327,7 @@ export default function AlertsPage() {
           eventDate: row.signals.event_date,
           matchedAt: row.created_at,
           sources: row.signals.sources ?? [],
+          matchReason: row.match_reason ?? null,
           deliveries: [{ channel: row.channel, status: row.status }],
         });
       }
@@ -700,6 +729,11 @@ export default function AlertsPage() {
                                   <span className="mono font-bold text-primary">{rule.min_severity}+</span>. Raise the
                                   threshold above to hear about fewer, higher-severity events.
                                 </p>
+                                {matchReasonLabel(m.matchReason) && (
+                                  <p className="mt-1 text-[12px] md:text-[11px] text-on-surface/50">
+                                    {matchReasonLabel(m.matchReason)}
+                                  </p>
+                                )}
                               </CardSection>
 
                               {/* ── Persistent trust element: source link(s) ── */}

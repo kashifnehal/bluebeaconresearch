@@ -142,6 +142,8 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - **Mobile**: keeps the bar shape + summary number at all widths; only the tooltip's per-day date label is desktop-only (hover/tap), per the mobile-verification bar that a fix/feature can't just look right at desktop width.
 - **Parent**: `(dashboard)/alerts/page.tsx`, one instance per rule card, keyed off `ruleStatsById` (a `Map` built from the query result, looked up by `rule.id`).
 
+> ⚠️ UPDATED 2026-10-02 (PERS-Pn: alert match-reason, migration **written, not yet applied to the live DB**) — `(dashboard)/alerts/page.tsx`'s matched-signal card gains a `matchReason: MatchReason | null` field on `MatchedSignal`/`AlertSentRow`, populated straight from `alerts_sent.match_reason` (one `computeMatchReason()` result per rule+signal, shared across its per-channel rows — no divergence). A new `matchReasonLabel()` helper mirrors `apps/backend/src/workers/alert-dispatcher.ts`'s `matchedValues()` ordering exactly (watchlist, then commodity, then forex, then region) and renders as a `text-on-surface/50` line under the existing "Alert threshold" `CardSection`, right below the existing threshold sentence. Nothing renders when `match_reason` is null — which is every row until the migration is applied, and any row from a severity-only rule with nothing beyond severity to report. No new component; `GET /api/alerts/recent` needed no code change (its `select("*", ...)` already carries the column). Full detail: `14_CHANGELOG.md` v0.136.0, `05_API.md`, `04_DATABASE.md`.
+
 ### 3.4 `SignalQuickView.tsx` (#122)
 - **Purpose**: Desktop-only right-half slide-over preview of a feed row.
 - **Parent**: Intelligence Feed stream.
