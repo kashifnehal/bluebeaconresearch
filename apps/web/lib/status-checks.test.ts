@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { evaluateIntelligenceFeedHealth } from "./status-checks";
+import { evaluateIntelligenceFeedHealth, evaluateClassifierHealth, evaluateDataPipelineFreshness } from "./status-checks";
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -19,6 +19,7 @@ runTest("healthy when an ingestion collector reported ok within the cutoff, even
   const result = evaluateIntelligenceFeedHealth(
     { service: "gdelt", created_at: new Date(NOW - 10 * 60 * 1000).toISOString() },
     new Date(NOW - 6 * 60 * 60 * 1000).toISOString(), // a quiet news hour, not an outage
+    30,
     NOW,
   );
   assert.equal(result.status, "Operational");
@@ -30,6 +31,7 @@ runTest("degraded once the last ok health row is older than 2x the observed writ
   const result = evaluateIntelligenceFeedHealth(
     { service: "rss", created_at: new Date(NOW - 61 * 60 * 1000).toISOString() },
     new Date(NOW - 5 * 60 * 1000).toISOString(),
+    30,
     NOW,
   );
   assert.equal(result.status, "Degraded");
@@ -39,13 +41,14 @@ runTest("healthy right at the 60-minute cutoff boundary", () => {
   const result = evaluateIntelligenceFeedHealth(
     { service: "acled", created_at: new Date(NOW - 60 * 60 * 1000).toISOString() },
     null,
+    30,
     NOW,
   );
   assert.equal(result.status, "Operational");
 });
 
 runTest("degraded with a clear detail string when no ingestion health rows exist at all", () => {
-  const result = evaluateIntelligenceFeedHealth(null, null, NOW);
+  const result = evaluateIntelligenceFeedHealth(null, null, 30, NOW);
   assert.equal(result.status, "Degraded");
   assert.match(result.detail, /No ingestion collector/);
   assert.match(result.detail, /gdelt\/gnews\/rss\/acled/);
@@ -57,7 +60,65 @@ runTest("newest-signal age is detail text only, never the pass/fail rule", () =>
   const staleCollectorFreshSignal = evaluateIntelligenceFeedHealth(
     { service: "gnews", created_at: new Date(NOW - 2 * 60 * 60 * 1000).toISOString() },
     new Date(NOW - 1 * 60 * 1000).toISOString(),
+    30,
     NOW,
   );
   assert.equal(staleCollectorFreshSignal.status, "Degraded");
+});
+
+runTest("Intelligence Feed cutoff follows the real interval: interval 60 does not report Degraded at 61 minutes", () => {
+  const result = evaluateIntelligenceFeedHealth(
+    { service: "gdelt", created_at: new Date(NOW - 61 * 60 * 1000).toISOString() },
+    null,
+    60,
+    NOW,
+  );
+  assert.notEqual(result.status, "Degraded");
+});
+
+runTest("Intelligence Feed cutoff follows the real interval: interval 30 reports Degraded at 61 minutes", () => {
+  const result = evaluateIntelligenceFeedHealth(
+    { service: "gdelt", created_at: new Date(NOW - 61 * 60 * 1000).toISOString() },
+    null,
+    30,
+    NOW,
+  );
+  assert.equal(result.status, "Degraded");
+});
+
+runTest("Data Pipeline freshness: interval 60 does not report Degraded at 61 minutes", () => {
+  const result = evaluateDataPipelineFreshness(new Date(NOW - 61 * 60 * 1000).toISOString(), 60, false, NOW);
+  assert.notEqual(result.status, "Degraded");
+});
+
+runTest("Data Pipeline freshness: interval 30 reports Degraded at 61 minutes", () => {
+  const result = evaluateDataPipelineFreshness(new Date(NOW - 61 * 60 * 1000).toISOString(), 30, false, NOW);
+  assert.equal(result.status, "Degraded");
+});
+
+runTest("Classifier is Degraded when every signal in the window used the heuristic fallback", () => {
+  const result = evaluateClassifierHealth([
+    { classification_method: "heuristic" },
+    { classification_method: "heuristic" },
+  ]);
+  assert.equal(result.status, "Degraded");
+  assert.match(result.detail, /0 Claude, 2 keyword fallback/);
+});
+
+runTest("Classifier is Operational when at least one row used Claude", () => {
+  const result = evaluateClassifierHealth([
+    { classification_method: "heuristic" },
+    { classification_method: "claude" },
+  ]);
+  assert.equal(result.status, "Operational");
+});
+
+runTest("Classifier is Operational when no signals were created, nothing to flag", () => {
+  const result = evaluateClassifierHealth([]);
+  assert.equal(result.status, "Operational");
+});
+
+runTest("Classifier is Unknown when the underlying query errors", () => {
+  const result = evaluateClassifierHealth(null);
+  assert.equal(result.status, "Unknown");
 });
