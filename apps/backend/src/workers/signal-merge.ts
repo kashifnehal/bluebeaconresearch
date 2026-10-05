@@ -50,6 +50,9 @@ const STOPWORDS = new Set([
   "geopolitical", "financial", "market", "implications", "impact", "material",
 ]);
 
+// Exported for reuse by alert-dispatcher.ts's cooldown check and digest-sender.ts's
+// MMR diversity pick — same tokenization/similarity notion of "two stories are about
+// the same thing", not reimplemented in either place.
 export function tokenize(text: string | null | undefined): Set<string> {
   if (!text) return new Set();
   return new Set(
