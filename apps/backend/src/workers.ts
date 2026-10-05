@@ -107,6 +107,7 @@ if (
 }
 
 async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
+  const cycleStartedAt = Date.now();
   const [gdelt, gnews, rss, prices] = await Promise.allSettled([
     runGdeltCollectorOnce(),
     runGnewsCollectorOnce(),
@@ -128,6 +129,14 @@ async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
   } catch (e) {
     console.error("[workers] collector-health alerting failed:", e instanceof Error ? e.message : e);
   }
+
+  // W7-IO-FIX-v2: console-only write-volume line (no new table) — purpose is to
+  // measure actual raw_events/signals write volume per cycle next time instead of
+  // guessing, same motivation as the sanctions_entities update-count finding above.
+  console.log(
+    `[workers] ingestion-cycle write-volume: raw_events inserted=${recorded.totals.inserted}, signals inserted=${recorded.totals.signals}, elapsedMs=${Date.now() - cycleStartedAt}`,
+  );
+
   return collectors;
 }
 

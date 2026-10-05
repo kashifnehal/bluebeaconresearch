@@ -1,3 +1,5 @@
+import cron from "node-cron";
+
 import { getRedis } from "../clients/redis.js";
 
 export type CollectorResult = {
@@ -56,14 +58,74 @@ export type PipelineRunStatus = {
 const REDIS_KEY = "pipeline:last_run";
 const DEFAULT_INGESTION_INTERVAL_MINUTES = 15;
 
-// Mirrors workers.ts's own validation of INGESTION_INTERVAL_CRON, but only needs
-// the interval in minutes, not the full cron expression — only the common
-// "*/N * * * *" step form (the only form this env var has ever been set to) is
-// parsed; anything else falls back to the default rather than guessing.
-function getIngestionIntervalMinutes(): number {
+// W7-IO-FIX-v2: the old version here only matched "*/N * * * *" — any other valid
+// cron shape (e.g. "0 */2 * * *", "0 * * * *", a comma minute-list) silently fell
+// back to the 15-minute default, which fed a wrong number into the "/status" page,
+// the "next run in" banner, and the zero-yield alert's cadence math. This mirrors
+// workers.ts's own cron.validate() gate (node-cron is already a dependency; it's
+// used here only to reject malformed expressions, not to do the minute-math).
+let lastWarnedInvalidCronExpr: string | undefined;
+function warnInvalidCronOnce(expr: string, reason: string) {
+  if (lastWarnedInvalidCronExpr === expr) return;
+  lastWarnedInvalidCronExpr = expr;
+  console.warn(
+    `[pipeline-status] INGESTION_INTERVAL_CRON="${expr}" ${reason} — using default ${DEFAULT_INGESTION_INTERVAL_MINUTES}m`,
+  );
+}
+
+export function getIngestionIntervalMinutes(): number {
   const expr = process.env.INGESTION_INTERVAL_CRON;
-  const match = expr?.match(/^\*\/(\d+) \* \* \* \*$/);
-  return match ? Number(match[1]) : DEFAULT_INGESTION_INTERVAL_MINUTES;
+  if (!expr) return DEFAULT_INGESTION_INTERVAL_MINUTES;
+
+  if (!cron.validate(expr)) {
+    warnInvalidCronOnce(expr, "is not a valid cron expression");
+    return DEFAULT_INGESTION_INTERVAL_MINUTES;
+  }
+
+  const parts = expr.trim().split(/\s+/);
+  if (parts.length !== 5) {
+    warnInvalidCronOnce(expr, "did not split into 5 fields");
+    return DEFAULT_INGESTION_INTERVAL_MINUTES;
+  }
+  const [minute, hour] = parts;
+
+  // "*/N * * * *" — every N minutes.
+  const minuteStep = minute.match(/^\*\/(\d+)$/);
+  if (minuteStep && hour === "*") {
+    return Number(minuteStep[1]);
+  }
+
+  // "0 */N * * *" — every N hours, on the hour.
+  const hourStep = hour.match(/^\*\/(\d+)$/);
+  if (minute === "0" && hourStep) {
+    return Number(hourStep[1]) * 60;
+  }
+
+  // "0 * * * *" — hourly.
+  if (minute === "0" && hour === "*") {
+    return 60;
+  }
+
+  // A comma list in the minute field (e.g. "0,20,40 * * * *"): the real cadence is
+  // the smallest gap between consecutive (sorted) fire times — if the list has only
+  // two values that's just their gap, otherwise take the smallest gap across all of
+  // them, since that's the fastest the banner/alert math needs to assume.
+  if (/^\d+(,\d+)+$/.test(minute) && hour === "*") {
+    const values = minute.split(",").map(Number).sort((a, b) => a - b);
+    let smallestGap = Infinity;
+    for (let i = 1; i < values.length; i++) {
+      smallestGap = Math.min(smallestGap, values[i] - values[i - 1]);
+    }
+    if (Number.isFinite(smallestGap) && smallestGap > 0) return smallestGap;
+  }
+
+  warnInvalidCronOnce(expr, "is valid cron but not a recognized ingestion-interval shape");
+  return DEFAULT_INGESTION_INTERVAL_MINUTES;
+}
+
+/** Test-only: clears the "already warned about this cron string" dedupe state. */
+export function resetCronWarningStateForTests() {
+  lastWarnedInvalidCronExpr = undefined;
 }
 const ZERO_YIELD_STREAK_KEY = "pipeline:consecutive_zero_yield";
 // 3 consecutive 15-min cycles with literally nothing fetched from any source is a
