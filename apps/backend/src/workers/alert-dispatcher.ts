@@ -7,6 +7,7 @@ import { QUEUE_NAMES } from "../queues.js";
 import { TelegramService } from "../services/telegram.service.js";
 import { ExpoPushService } from "../services/expo-push.service.js";
 import { tokenize, jaccardSimilarity, SIMILARITY_THRESHOLD } from "./signal-merge.js";
+import { regionMatches } from "../lib/region-variants.js";
 
 const supabase = getSupabaseAdmin();
 const telegram = new TelegramService();
@@ -143,6 +144,38 @@ const TRUST_LINE =
 
 const DIRECTION_ARROW: Record<string, string> = { up: "↑", down: "↓", volatile: "↕", neutral: "→" };
 
+/** "HH:MM" for `now` in the given IANA timezone, or UTC if tz is null/invalid. */
+function localHHMM(now: Date, tz?: string | null): string {
+  if (tz) {
+    try {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }).format(now);
+    } catch {
+      // Invalid IANA tz name — fall through to UTC.
+    }
+  }
+  return now.toISOString().slice(11, 16);
+}
+
+/**
+ * Pure quiet-hours check, extracted from dispatchAlertsForSignal so it can be
+ * unit-tested without the surrounding Supabase/channel-dispatch plumbing. The
+ * severity===10 bypass stays in the caller — this function only answers
+ * "is `now` inside the [start, end) quiet window for this timezone", handling
+ * the overnight case (e.g. 22:00 -> 06:00) the same way the old UTC-only
+ * check did.
+ */
+export function isInQuietHours(now: Date, start: string, end: string, tz?: string | null): boolean {
+  const hhmm = localHHMM(now, tz);
+  const s = start.slice(0, 5);
+  const e = end.slice(0, 5);
+  return s < e ? hhmm >= s && hhmm <= e : hhmm >= s || hhmm <= e;
+}
+
 /**
  * Lead prose of the analyst briefing, stripped of markdown, capped for a chat message.
  * Skips leading heading lines (all-caps banners, "#" headers, short label lines) so the
@@ -269,7 +302,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
 
   const matchedRules = (rules ?? []).filter((rule) => {
     if (Array.isArray(rule.regions) && rule.regions.length) {
-      if (!rule.regions.includes(signal.region)) return false;
+      if (!regionMatches(rule.regions, signal.region)) return false;
     }
     // Instrument filter: commodities and forex_pairs are OR'd against each other,
     // mirroring the same OR-of-arrays logic used for regions/commodities. A rule
@@ -367,12 +400,9 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
     const prefs = prefsByUser.get(rule.user_id);
     if (signal.severity !== 10 && prefs?.quiet_start && prefs?.quiet_end) {
       const now = new Date();
-      const hhmm = now.toISOString().slice(11, 16); // "HH:MM"
-      const start = String(prefs.quiet_start).slice(0, 5);
-      const end = String(prefs.quiet_end).slice(0, 5);
-      const inRange =
-        start < end ? hhmm >= start && hhmm <= end : hhmm >= start || hhmm <= end; // handles overnight windows
-      if (inRange) continue;
+      if (isInQuietHours(now, String(prefs.quiet_start), String(prefs.quiet_end), prefs.timezone)) {
+        continue;
+      }
     }
 
     // Cooldown (doc 298 A2 §4): same story, same user, within STORY_COOLDOWN_MINUTES

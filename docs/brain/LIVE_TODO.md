@@ -3,6 +3,10 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## W7-MERGE — merging eager-dijkstra-u93hcj (region label drift fix + quiet-hours timezone support) into main, 2026-10-06
+
+- No doc changes shipped in this branch (code + tests only) — nothing to reconcile in `08_CURRENT_STATUS.md`/`14_CHANGELOG.md`, flagging per the sync protocol's "say so explicitly" fallback rather than silently skipping. Real conflicts resolved: `alert-dispatcher.ts`'s import line (kept both the step-1 `signal-merge.ts` cooldown imports and this branch's new `regionMatches` import) — the actual `regionMatches()`/`isInQuietHours()` call sites merged cleanly with no further conflict since nothing from steps 1-3 had touched those two specific lines. `alert-dispatcher.test.ts` was an add/add conflict (both this branch and step 1's peaceful-heisenberg created a file at this path) — merged into one file keeping every test case from both: budget/cooldown (step 1) plus the new timezone-aware quiet-hours cases (overnight/non-overnight/invalid-tz/null-tz/DST-transition), with a single shared static import block.
+
 ## W7-MERGE — merging telegram-alert-feedback-vhnume (Telegram alert feedback buttons, migration 20261002120000) into main, 2026-10-06
 
 - Founder confirmed the `alert_feedback` migration before this merge ran. Real conflict in `alert-dispatcher.ts`'s channel-send loop (not a clean auto-merge like the previous two steps): kept the branch's "insert the telegram `alerts_sent` row directly, before sending, so the feedback keyboard can embed the real row id" behavior, and added `match_reason: matchReason` to both that direct insert and the batched non-telegram insert, so the new `match_reason` column (from step 2) is populated on every channel, not just the batched ones. Doc trees: additive/version-collision conflicts only (`package.json` test script, both `08_CURRENT_STATUS.md`/`14_CHANGELOG.md` trees — branch's v0.136.0/PHASE 113 renumbered to v0.145.0/PHASE 122). Migration `20261002120000_alert_feedback.sql` still **NOT applied**.
