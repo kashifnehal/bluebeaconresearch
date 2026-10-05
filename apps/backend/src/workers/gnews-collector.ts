@@ -17,29 +17,38 @@ import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
 
 const claude = new ClaudeService();
 
-// Free plan: non-commercial (gnews.io/pricing). Remove or upgrade before the first paying customer.
+// Free plan: non-commercial (gnews.io/pricing, GNews dashboard quota page). Remove
+// or upgrade before the first paying customer (claude/307 §7).
 // Free plan caps: 100 req/day, 10 articles/req, ~12h publish delay. The ingestion
-// cycle runs every 30 min (48 cycles/day) — one query per cycle keeps total GNews
-// traffic at 48 req/day, with each topic getting its turn via W7-GNEWS-ROTATE below
-// instead of one query spending the whole daily budget on itself.
+// cycle runs every 30 min -> 24h / 0.5h = 48 cycles/day. One query per cycle (not
+// one request per query per cycle) keeps total GNews traffic at 48 req/day
+// regardless of GNEWS_QUERIES.length, comfortably under the 100 req/day cap,
+// with each topic getting its turn via W7-GNEWS-ROTATE below instead of one query
+// spending the whole daily budget on itself.
 const GNEWS_QUERIES = [
   "conflict OR war OR sanctions OR trade OR stock market OR inflation OR fed OR earnings", // geopolitics and markets
-  "oil OR gas OR OPEC OR energy OR pipeline OR refinery", // energy
-  "gold OR copper OR wheat OR corn OR soybean OR commodities", // metals and grains
-  "rupee OR RBI OR \"Reserve Bank of India\" OR INR", // India rupee and RBI
+  // Metals/energy terms from ALLOWED_COMMODITY_ASSETS + COMMODITY_ASSET_ALIASES in
+  // claude.service.ts: USOIL/UKOIL ("oil", "crude", "brent"), NGAS ("natural gas"),
+  // XAUUSD ("gold"), COPPER, XAGUSD ("silver").
+  "oil OR crude OR brent OR \"natural gas\" OR OPEC OR pipeline OR refinery OR gold OR copper OR silver",
+  // Shipping/sanctions: no asset in ALLOWED_COMMODITY_ASSETS maps to "shipping" —
+  // these are route/trade-disruption terms, not ticker-derived.
+  "shipping OR tanker OR port OR canal OR sanctions OR embargo OR \"export ban\" OR tariff OR blockade",
 ];
 
 // W7-GNEWS-ROTATE: picks one query per ingestion cycle (cycleIndex % GNEWS_QUERIES.length)
-// so the 4 topics rotate evenly across the day instead of all sharing one query.
+// so the topics rotate evenly across the day instead of all sharing one query.
 // Pure/exported for testing; the actual rotation counter lives in runGnewsCollectorOnce.
 export function selectGnewsQuery(cycleIndex: number): { query: string; index: number } {
   const index = ((cycleIndex % GNEWS_QUERIES.length) + GNEWS_QUERIES.length) % GNEWS_QUERIES.length;
   return { query: GNEWS_QUERIES[index], index };
 }
 
+export const GNEWS_QUERY_COUNT = GNEWS_QUERIES.length;
+
 // Process-lifetime counter — resets on deploy/restart, which just means rotation
-// restarts from query 0. Not persisted; 48 cycles/day comfortably covers all 4
-// topics multiple times even after a restart.
+// restarts from query 0. Not persisted; 48 cycles/day comfortably covers all
+// GNEWS_QUERIES.length topics multiple times even after a restart.
 let gnewsCycleCounter = 0;
 
 async function fetchGnewsArticles(query: string, token: string) {
