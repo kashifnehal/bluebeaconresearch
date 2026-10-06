@@ -91,7 +91,7 @@ const CLAIM_ROWS: ClaimRow[] = [
     proof: "Open any signal and check its Sources tab.",
   },
   {
-    claim: "When the model is unavailable, signals fall back to a keyword classifier — and we mark it.",
+    claim: "When the AI model is unavailable or the daily budget is reached, we pause classification instead of guessing. Older signals from the keyword period stay marked as auto-classified.",
     proof:
       "An auto-classified signal shows a note on its page: \"This signal was auto-classified — Claude analysis is temporarily unavailable.\"",
   },
@@ -115,7 +115,7 @@ const CLAIM_ROWS: ClaimRow[] = [
 
 const LIMITS = [
   "Severity and confidence are model outputs, not guarantees.",
-  "Some signals are classified by the keyword fallback instead of the model — those are marked, not hidden.",
+  "Older signals were classified by a keyword fallback — those are marked, not hidden. New signals wait for the model.",
   "ACLED conflict data: ACLED is configured but returning no data (access pending), so no ACLED events are ingested yet.",
   "A merged \"reports\" count can include more than one article from the same outlet — it is not a count of distinct sources.",
 ];
