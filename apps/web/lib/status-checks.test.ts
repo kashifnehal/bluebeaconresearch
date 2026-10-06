@@ -5,6 +5,8 @@ import {
   evaluateClassifierHealth,
   evaluateDataPipelineFreshness,
   BUDGET_CLOSED_DETAIL,
+  DATA_PIPELINE_BUDGET_CLOSED_DETAIL,
+  INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX,
 } from "./status-checks";
 
 function runTest(name: string, fn: () => void) {
@@ -153,4 +155,51 @@ runTest("Classifier ignores budgetClosed=false and falls back to normal row-deri
   const result = evaluateClassifierHealth([{ classification_method: "claude" }], false);
   assert.equal(result.status, "Operational");
   assert.notEqual(result.detail, BUDGET_CLOSED_DETAIL);
+});
+
+runTest("Data Pipeline is Degraded with the paused line when budgetClosed is true", () => {
+  // Fresh enough to be Operational if the budget were open — the flag overrides freshness.
+  const result = evaluateDataPipelineFreshness(new Date(NOW - 5 * 60 * 1000).toISOString(), 30, false, NOW, true);
+  assert.equal(result.name, "Data Pipeline");
+  assert.equal(result.status, "Degraded");
+  assert.equal(result.detail, DATA_PIPELINE_BUDGET_CLOSED_DETAIL);
+  assert.equal(
+    result.detail,
+    "Paused: the daily classification budget is reached. No new news is collected until the next UTC day.",
+  );
+  assert.doesNotMatch(result.detail, /\$/);
+});
+
+runTest("Data Pipeline budgetClosed=false leaves the existing freshness result", () => {
+  const lastFetchedAt = new Date(NOW - 61 * 60 * 1000).toISOString();
+  const withFlag = evaluateDataPipelineFreshness(lastFetchedAt, 30, false, NOW, false);
+  const withoutFlag = evaluateDataPipelineFreshness(lastFetchedAt, 30, false, NOW);
+  assert.deepEqual(withFlag, withoutFlag);
+  assert.equal(withFlag.status, "Degraded");
+  assert.equal(
+    withFlag.detail,
+    "Most recent ingested event, across all collectors combined, is less than 60 minutes old",
+  );
+  assert.doesNotMatch(withFlag.detail, /Collection is paused/);
+  assert.notEqual(withFlag.detail, DATA_PIPELINE_BUDGET_CLOSED_DETAIL);
+});
+
+runTest("Intelligence Feed appends the paused suffix only when budgetClosed is true", () => {
+  const row = { service: "gdelt", created_at: new Date(NOW - 10 * 60 * 1000).toISOString() };
+  const open = evaluateIntelligenceFeedHealth(row, null, 30, NOW, false);
+  const baseline = evaluateIntelligenceFeedHealth(row, null, 30, NOW);
+  const closed = evaluateIntelligenceFeedHealth(row, null, 30, NOW, true);
+  assert.deepEqual(open, baseline);
+  assert.equal(open.status, "Operational");
+  assert.doesNotMatch(open.detail, /Collection is paused/);
+  assert.equal(closed.status, open.status);
+  assert.equal(closed.detail, `${open.detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
+  assert.equal(closed.detail.endsWith(" Collection is paused until the next UTC day."), true);
+
+  const degradedOpen = evaluateIntelligenceFeedHealth(null, null, 30, NOW, false);
+  const degradedClosed = evaluateIntelligenceFeedHealth(null, null, 30, NOW, true);
+  assert.equal(degradedClosed.status, degradedOpen.status);
+  assert.equal(degradedClosed.status, "Degraded");
+  assert.equal(degradedClosed.detail, `${degradedOpen.detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
+  assert.doesNotMatch(degradedOpen.detail, /Collection is paused/);
 });

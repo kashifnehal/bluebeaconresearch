@@ -35,32 +35,38 @@ function formatMinutesAgo(ms: number): string {
  * recent status:'ok' row across INGESTION_COLLECTOR_SERVICES (or null if none exist
  * within the lookback window the caller queried); `latestSignalCreatedAt` is used
  * only to add age-of-newest-signal as extra detail text, never as the pass/fail rule.
+ * `budgetClosed` does not change the status. When true, the existing detail gets
+ * INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX appended.
  */
 export function evaluateIntelligenceFeedHealth(
   latestOkHealthRow: { service: string; created_at: string } | null,
   latestSignalCreatedAt: string | null,
   intervalMinutes: number = FALLBACK_INTERVAL_MINUTES,
   now: number = Date.now(),
+  budgetClosed = false,
 ): SystemCheck {
   const signalDetail = latestSignalCreatedAt
     ? `newest signal ${formatMinutesAgo(now - new Date(latestSignalCreatedAt).getTime())}`
     : "no signals recorded yet";
 
+  let result: SystemCheck;
   if (!latestOkHealthRow) {
-    return {
+    result = {
       name: "Intelligence Feed",
       status: "Degraded",
       detail: `No ingestion collector (gdelt/gnews/rss/acled) has reported healthy (${signalDetail})`,
     };
+  } else {
+    const ageMs = now - new Date(latestOkHealthRow.created_at).getTime();
+    const healthy = ageMs <= freshnessCutoffMs(intervalMinutes);
+    result = {
+      name: "Intelligence Feed",
+      status: healthy ? "Operational" : "Degraded",
+      detail: `${latestOkHealthRow.service} collector last reported healthy ${formatMinutesAgo(ageMs)} (${signalDetail})`,
+    };
   }
 
-  const ageMs = now - new Date(latestOkHealthRow.created_at).getTime();
-  const healthy = ageMs <= freshnessCutoffMs(intervalMinutes);
-  return {
-    name: "Intelligence Feed",
-    status: healthy ? "Operational" : "Degraded",
-    detail: `${latestOkHealthRow.service} collector last reported healthy ${formatMinutesAgo(ageMs)} (${signalDetail})`,
-  };
+  return withBudgetPausedNote(result, budgetClosed);
 }
 
 // W8-BUDGET-STATUS: the exact, mandated line for when the backend's Anthropic
@@ -69,6 +75,19 @@ export function evaluateIntelligenceFeedHealth(
 // never guesses a reopen time, so the copy says "next UTC day", not a clock time.
 export const BUDGET_CLOSED_DETAIL =
   "Classification paused until the next UTC day (daily budget reached). New news is not being collected.";
+
+// Data Pipeline line when pipeline:last_run.budgetClosed is true. No dollar amount
+// and no clock-time reopen — the budget resets on the next UTC day.
+export const DATA_PIPELINE_BUDGET_CLOSED_DETAIL =
+  "Paused: the daily classification budget is reached. No new news is collected until the next UTC day.";
+
+// Leading space is part of the sentence so it joins the Intelligence Feed's existing detail.
+export const INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX = " Collection is paused until the next UTC day.";
+
+function withBudgetPausedNote(check: SystemCheck, budgetClosed: boolean): SystemCheck {
+  if (!budgetClosed) return check;
+  return { ...check, detail: `${check.detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}` };
+}
 
 /**
  * Pure decision logic for the Classifier check, split out so it's unit testable.
@@ -102,14 +121,19 @@ export function evaluateClassifierHealth(
  * `usedFallback` means Redis's pipeline:last_run was unavailable and lastFetchedAt
  * was inferred from the newest raw_events row instead — per-collector health is
  * unknowable in that case, so it's never reported as a clean "Operational".
+ * `budgetClosed` is the same flag checkClassifier receives from getPipelineRunStatus().
+ * When true, collectors are not fetching, so freshness is not the status.
  */
 export function evaluateDataPipelineFreshness(
   lastFetchedAt: string | null,
   intervalMinutes: number,
   usedFallback: boolean,
   now: number = Date.now(),
+  budgetClosed = false,
 ): SystemCheck {
   const name = "Data Pipeline";
+  if (budgetClosed) return { name, status: "Degraded", detail: DATA_PIPELINE_BUDGET_CLOSED_DETAIL };
+
   const detail = `Most recent ingested event, across all collectors combined, is less than ${intervalMinutes * 2} minutes old`;
 
   if (!lastFetchedAt) return { name, status: "Unknown", detail };
@@ -144,10 +168,12 @@ function getUpstashRedis() {
   return new Redis({ url, token });
 }
 
-async function checkIntelligenceFeed(intervalMinutes: number): Promise<SystemCheck> {
+async function checkIntelligenceFeed(intervalMinutes: number, budgetClosed = false): Promise<SystemCheck> {
   const unknownDetail = "At least one ingestion collector (gdelt/gnews/rss/acled) reported healthy recently";
+  const unknown = (): SystemCheck =>
+    withBudgetPausedNote({ name: "Intelligence Feed", status: "Unknown", detail: unknownDetail }, budgetClosed);
   const supabase = getAdminSupabase();
-  if (!supabase) return { name: "Intelligence Feed", status: "Unknown", detail: unknownDetail };
+  if (!supabase) return unknown();
 
   try {
     const [healthResult, signalResult] = await Promise.all([
@@ -168,15 +194,17 @@ async function checkIntelligenceFeed(intervalMinutes: number): Promise<SystemChe
       ),
     ]);
 
-    if (healthResult.error) return { name: "Intelligence Feed", status: "Unknown", detail: unknownDetail };
+    if (healthResult.error) return unknown();
 
     return evaluateIntelligenceFeedHealth(
       healthResult.data as { service: string; created_at: string } | null,
       (signalResult.data?.created_at as string | undefined) ?? null,
       intervalMinutes,
+      Date.now(),
+      budgetClosed,
     );
   } catch {
-    return { name: "Intelligence Feed", status: "Unknown", detail: unknownDetail };
+    return unknown();
   }
 }
 
@@ -301,15 +329,15 @@ export async function getSystemChecks(): Promise<SystemCheck[]> {
   // and Data Pipeline, which share its intervalMinutes cutoff basis — keeps this
   // concurrent with the other checks rather than blocking them on it.
   const pipelineRun = getPipelineRunStatus();
-  const [{ lastFetchedAt, intervalMinutes, usedFallback }, intelligenceFeed, alertDelivery, globalMap, classifier] =
+  const [{ lastFetchedAt, intervalMinutes, usedFallback, budgetClosed }, intelligenceFeed, alertDelivery, globalMap, classifier] =
     await Promise.all([
       pipelineRun,
-      pipelineRun.then(({ intervalMinutes }) => checkIntelligenceFeed(intervalMinutes)),
+      pipelineRun.then(({ intervalMinutes, budgetClosed }) => checkIntelligenceFeed(intervalMinutes, budgetClosed)),
       checkAlertDelivery(),
       checkGlobalMap(),
       pipelineRun.then(({ budgetClosed }) => checkClassifier(budgetClosed)),
     ]);
 
-  const dataPipeline = evaluateDataPipelineFreshness(lastFetchedAt, intervalMinutes, usedFallback);
+  const dataPipeline = evaluateDataPipelineFreshness(lastFetchedAt, intervalMinutes, usedFallback, Date.now(), budgetClosed);
   return [intelligenceFeed, alertDelivery, globalMap, dataPipeline, classifier];
 }
