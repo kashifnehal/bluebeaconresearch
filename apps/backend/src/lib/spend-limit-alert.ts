@@ -97,8 +97,8 @@ export async function maybeSendSpendLimitAlert(
   const subject = "BBR: Anthropic spend limit reached";
   const text =
     `${date} (UTC)\n\n` +
-    `Live classification is using the keyword fallback until the limit is raised.`;
-  const html = `<p>${date} (UTC)</p><p>Live classification is using the keyword fallback until the limit is raised.</p>`;
+    `Classification is paused until the limit is raised. No keyword fallback signals are being created.`;
+  const html = `<p>${date} (UTC)</p><p>Classification is paused until the limit is raised. No keyword fallback signals are being created.</p>`;
 
   let anySent = false;
   for (const to of recipients) {

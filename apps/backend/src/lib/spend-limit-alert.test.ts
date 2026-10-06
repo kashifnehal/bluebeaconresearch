@@ -44,11 +44,11 @@ function fakeRedis() {
 }
 
 function fakeEmail(sendResult: { sent: boolean; reason?: string } = { sent: true }) {
-  const calls: Array<{ to: string; subject: string }> = [];
+  const calls: Array<{ to: string; subject: string; html: string; text: string }> = [];
   return {
     calls,
     async send(opts: { to: string; subject: string; html: string; text: string }) {
-      calls.push({ to: opts.to, subject: opts.subject });
+      calls.push({ to: opts.to, subject: opts.subject, html: opts.html, text: opts.text });
       return sendResult.sent
         ? { sent: true as const, id: "fake-id" }
         : { sent: false as const, reason: sendResult.reason ?? "fake_failure" };
@@ -67,6 +67,10 @@ async function main() {
       assert.equal(email.calls.length, 1);
       assert.equal(email.calls[0]?.to, "founder@example.com");
       assert.equal(email.calls[0]?.subject, "BBR: Anthropic spend limit reached");
+      const paused =
+        "Classification is paused until the limit is raised. No keyword fallback signals are being created.";
+      assert.equal(email.calls[0]?.text, `2026-10-01 (UTC)\n\n${paused}`);
+      assert.equal(email.calls[0]?.html, `<p>2026-10-01 (UTC)</p><p>${paused}</p>`);
     },
   );
 

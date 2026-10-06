@@ -1,6 +1,10 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { getEnv } from "../env.js";
 import { EmailService } from "../services/email.service.js";
+import {
+  claimBudgetClosedAlertUtcDate,
+  maybeSendBudgetClosedAlert,
+} from "./budget-closed-alert.js";
 
 export type AnthropicBudgetBucket = "ingestion" | "chat";
 
@@ -118,7 +122,14 @@ export async function isAnthropicBudgetAvailable(
   const cap = getDailyBudgetUsd(bucket);
   try {
     const row = await readToday(bucket);
-    return rowUsd(row) < cap;
+    const open = rowUsd(row) < cap;
+    // In-process memo of the last UTC date, so a closed ingestion budget does not
+    // hit Redis on every later check in this process. One email per UTC day is
+    // still enforced inside maybeSendBudgetClosedAlert.
+    if (!open && bucket === "ingestion" && claimBudgetClosedAlertUtcDate(utcUsageDate())) {
+      void maybeSendBudgetClosedAlert().catch(() => {});
+    }
+    return open;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.warn(`[ANTHROPIC BUDGET] ${bucket} counter read failed: ${message}`);
