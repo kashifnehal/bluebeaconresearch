@@ -35,7 +35,7 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
     id: "materiality",
     question: "Why didn’t a news story become a signal?",
     answer:
-      "Not every ingested article becomes a signal. After classification, a market-materiality/relevance gate must pass: the story has to contain genuinely new information (not just a reminder of an already-public date) and at least one of (a) a stated market mechanism actually supported by the story, (b) a named entity on BBR’s sourced media-impact watchlist, or (c) a genuine armed-conflict/security event with plausible commodity relevance. Stories that fail stay in the raw-event log and are not inserted as signals. This is BBR’s own product gate, not the legal TSC/Basic securities-law test, and it does not try to predict whether an unconfirmed claim will turn out true. The keyword fallback only passes if it already found a validated commodity or FX impact, or a watchlist hit.",
+      "Not every ingested article becomes a signal. After classification, a market-materiality/relevance gate must pass: the story has to contain genuinely new information (not just a reminder of an already-public date) and at least one of (a) a stated market mechanism actually supported by the story, (b) a named entity on BBR’s sourced media-impact watchlist, or (c) a genuine armed-conflict/security event with plausible commodity relevance. Stories that fail stay in the raw-event log and are not inserted as signals. This is BBR’s own product gate, not the legal TSC/Basic securities-law test, and it does not try to predict whether an unconfirmed claim will turn out true. If no research-model client is configured, a keyword fallback applies instead; when the classifier cannot run because the cap is closed or a temporary error occurs, collection pauses.",
   },
   {
     id: "not-advice",
@@ -67,7 +67,7 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
     id: "severity",
     question: "What does severity 1–10 mean?",
     answer:
-      "Severity is the classifier’s 1–10 rating of how systemically important the event looks for the markets BBR covers. Higher numbers are reserved for large-scale disruption. When the keyword fallback is used — only when no research-model client is configured — severity is hard-capped at 6 so a stray keyword cannot mint a 9 on an unrelated story. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess. A “CREATE SEVERE ALERT” shortcut on an event only appears at severity 7 or above.",
+      "Severity is the classifier’s 1–10 rating of how important the event looks for the markets BBR covers. It is not tied to a published scale, and BBR has not yet shown that a higher number means a larger price move. When the keyword fallback is used — only when no research-model client is configured — severity is hard-capped at 6 so a stray keyword cannot mint a 9 on an unrelated story. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess. A “CREATE SEVERE ALERT” shortcut on an event only appears at severity 7 or above.",
   },
   {
     id: "human-review",

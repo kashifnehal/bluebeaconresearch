@@ -22,7 +22,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "What does the confidence score mean?",
     url: "/help#confidence",
     content:
-      "The number on a signal (shown as a percent on the Intelligence Feed featured card, stream rows, and some previews) is the classifier's self-reported certainty that it classified the event correctly. It is not a calibrated probability that a named market will move in the stated direction, and it is not a price forecast. Per-asset chips on cards and in the Market Impact Assessment box do not print that percent; they show ticker and direction only. When the research classifier is unavailable, a keyword fallback is used instead of a full read of the article, and that path produces a small set of formula values rather than a judged confidence.",
+      "The number on a signal (shown as a percent on the Intelligence Feed featured card, stream rows, and some previews) is the classifier's self-reported certainty that it classified the event correctly. It is not a calibrated probability that a named market will move in the stated direction, and it is not a price forecast. Per-asset chips on cards and in the Market Impact Assessment box do not print that percent; they show ticker and direction only. A keyword fallback is used instead of a full read of the article only when no research-model client is configured, and that path produces a small set of formula values rather than a judged confidence. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess.",
     sourceKind: "faq",
   },
   {
@@ -46,7 +46,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "Why didn't a news story become a signal?",
     url: "/help#materiality",
     content:
-      "Not every ingested article becomes a signal. After classification, a market-materiality/relevance gate must pass: the story has to contain genuinely new information (not just a reminder of an already-public date) and at least one of a stated market mechanism actually supported by the story, a named entity on BBR's sourced media-impact watchlist, or a genuine armed-conflict/security event with plausible commodity relevance. Stories that fail stay in the raw-event log and are not inserted as signals. This is BBR's own product gate, not the legal TSC/Basic securities-law test. The keyword fallback only passes if it already found a validated commodity or FX impact, or a watchlist hit.",
+      "Not every ingested article becomes a signal. After classification, a market-materiality/relevance gate must pass: the story has to contain genuinely new information (not just a reminder of an already-public date) and at least one of a stated market mechanism actually supported by the story, a named entity on BBR's sourced media-impact watchlist, or a genuine armed-conflict/security event with plausible commodity relevance. Stories that fail stay in the raw-event log and are not inserted as signals. This is BBR's own product gate, not the legal TSC/Basic securities-law test. If no research-model client is configured, a keyword fallback applies instead; when the classifier cannot run because the cap is closed or a temporary error occurs, collection pauses.",
     sourceKind: "faq",
   },
   {
@@ -86,7 +86,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "What does severity 1-10 mean?",
     url: "/help#severity",
     content:
-      "Severity is the classifier's 1-10 rating of how systemically important the event looks for the markets BBR covers. Higher numbers are reserved for large-scale disruption. When the keyword fallback is used, severity is hard-capped at 6 so a stray keyword cannot mint a 9 on an unrelated story. A CREATE SEVERE ALERT shortcut on an event only appears at severity 7 or above.",
+      "Severity is the classifier's 1-10 rating of how important the event looks for the markets BBR covers. It is not tied to a published scale, and BBR has not yet shown that a higher number means a larger price move. When the keyword fallback is used — only when no research-model client is configured — severity is hard-capped at 6 so a stray keyword cannot mint a 9 on an unrelated story. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess. A CREATE SEVERE ALERT shortcut on an event only appears at severity 7 or above.",
     sourceKind: "faq",
   },
   {
@@ -94,7 +94,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "Does a research team review every signal before it appears?",
     url: "/help#human-review",
     content:
-      "No. Classification is automated — a research-model path when that service is available, otherwise a conservative keyword fallback. There is no logged human-review workflow on signals today, so the product does not claim that items are human-verified.",
+      "No. Classification is automated — a research-model path when a research-model client is configured. The keyword fallback applies only when no research-model client is configured. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess. There is no logged human-review workflow on signals today, so the product does not claim that items are human-verified.",
     sourceKind: "faq",
   },
 ];
