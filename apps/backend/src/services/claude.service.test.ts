@@ -5,6 +5,8 @@ import {
   isAnthropicSpendLimitError,
   applyHeadlinePlacementBonus,
   HEADLINE_PLACEMENT_SEVERITY_BONUS,
+  MATERIALITY_GATE_INSTRUCTION,
+  shouldStopBatch,
 } from "./claude.service.js";
 import {
   setWatchlistCacheForTests,
@@ -105,15 +107,11 @@ delete process.env.REDIS_URL;
 delete process.env.UPSTASH_REDIS_REST_URL;
 
 const service = new ClaudeService();
-// Never let classifyEvent() build a real Anthropic SDK client in this file.
-// .env.local may contain a live key; a 401 still leaves the machine.
-(service as unknown as { client: unknown }).client = {
-  messages: {
-    create: async () => {
-      throw new Error("mocked anthropic — tests must not call the live API");
-    },
-  },
-};
+// Leave client unset. getClient() returns null when NODE_ENV=test and never
+// builds a live SDK client, so classifyEvent() takes the no_client heuristic
+// path. Tests that need a mocked Anthropic response inject their own client.
+// A throwing client is now api_error → deferred (founder decision 2026-10-06),
+// not heuristicClassify().
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   try {
@@ -452,9 +450,9 @@ async function main() {
   );
 
   // ── #139/#141 materiality gate — heuristicClassify() (Step 4) ──────────────
-  // `service`'s mocked client always throws (see top of file), so every
-  // service.classifyEvent() call below exercises heuristicClassify(), not a
-  // real Claude read.
+  // `service` has no injected client (see top of file), so every
+  // service.classifyEvent() call below exercises the no_client heuristic path,
+  // not a real Claude read.
 
   await runTest(
     "heuristic: no commodity/currency impact and no watchlist match fails the gate",
@@ -1100,8 +1098,8 @@ async function main() {
   await runTest(
     "heuristicClassify (no-client fallback): with the shipped (disabled) constant, headline/body/none/omitted placement all produce the same severity",
     async () => {
-      // `service`'s mocked client always throws (top of file), so this exercises
-      // heuristicClassify(), not a real Claude read. This text hits no severity-tier
+      // `service` has no injected client (top of file), so this exercises
+      // heuristicClassify() via no_client, not a real Claude read. This text hits no severity-tier
       // keyword (stays at the default baseline of 5) but does clear the materiality
       // gate via a validated commodity impact (isSafeHaven: "gold" + "central bank").
       const baseEvent = {
@@ -1414,9 +1412,9 @@ async function main() {
     }
   });
 
-  // ── W8-BUDGET-DEFER (ADR 035, founder decision D10) ───────────────────────
-  // classifyEvent() must defer (not heuristic-classify) on two reasons only:
-  // a closed daily ingestion budget, and an Anthropic spend-limit error.
+  // ── W8-BUDGET-DEFER + W9-CLAUDE-SERVICE (founder decisions 2026-10-05 / 2026-10-06) ──
+  // classifyEvent() defers on budget_closed, spend_limit, api_error, json_parse.
+  // heuristicClassify stays only for no_client.
   await runTest(
   "classifyEvent defers (does not heuristic-classify) when the ingestion budget is closed",
   async () => {
@@ -1460,6 +1458,7 @@ async function main() {
       assert.strictEqual(classification.materialityPass, false);
       assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
       assert.match(classification.materialityReasoning, /deferred: anthropic ingestion daily budget closed/);
+      assert.equal(shouldStopBatch(classification.deferReason, classification.deferHttpStatus), true);
     } finally {
       process.env.NODE_ENV = prevNodeEnv;
     }
@@ -1493,18 +1492,19 @@ async function main() {
     assert.strictEqual(classification.materialityPass, false);
     assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
     assert.match(classification.materialityReasoning, /deferred: anthropic spend limit reached/);
+    assert.equal(shouldStopBatch(classification.deferReason, classification.deferHttpStatus), true);
   },
   );
 
   await runTest(
-  "classifyEvent still falls back to heuristicClassify (not deferred) on a plain transient API error",
+  "classifyEvent defers on HTTP 500 api_error and shouldStopBatch is true",
   async () => {
     const apiErrorService = new ClaudeService();
     (apiErrorService as unknown as { client: unknown }).client = {
       messages: {
         create: async () => {
-          const err: any = new Error("503 Service Unavailable");
-          err.status = 503;
+          const err: any = new Error("500 Internal Server Error");
+          err.status = 500;
           throw err;
         },
       },
@@ -1518,12 +1518,106 @@ async function main() {
       event_date: new Date().toISOString(),
     });
 
+    assert.strictEqual(classification.deferred, true);
+    assert.strictEqual(classification.deferReason, "api_error");
+    assert.strictEqual(classification.deferHttpStatus, 500);
+    assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
+    assert.equal(shouldStopBatch(classification.deferReason, classification.deferHttpStatus), true);
+  },
+  );
+
+  await runTest(
+  "classifyEvent defers on HTTP 400 api_error but shouldStopBatch is false (batch continues)",
+  async () => {
+    const apiErrorService = new ClaudeService();
+    (apiErrorService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => {
+          const err: any = new Error("invalid_request_error: malformed request");
+          err.status = 400;
+          throw err;
+        },
+      },
+    };
+
+    const classification = await apiErrorService.classifyEvent({
+      title: "Pipeline explosion halts crude export from Saudi refinery",
+      summary: "Disruption in the Red Sea supply chain pushes crude oil prices higher.",
+      event_type: "news",
+      country: "SA",
+      event_date: new Date().toISOString(),
+    });
+
+    assert.strictEqual(classification.deferred, true);
+    assert.strictEqual(classification.deferReason, "api_error");
+    assert.strictEqual(classification.deferHttpStatus, 400);
+    assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
+    assert.equal(shouldStopBatch(classification.deferReason, classification.deferHttpStatus), false);
+  },
+  );
+
+  await runTest(
+  "classifyEvent defers on json_parse and shouldStopBatch is false (batch continues)",
+  async () => {
+    const parseService = new ClaudeService();
+    (parseService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [{ type: "text", text: "this is not json at all" }],
+          usage: { input_tokens: 1, output_tokens: 1 },
+        }),
+      },
+    };
+
+    const classification = await parseService.classifyEvent({
+      title: "Pipeline explosion halts crude export from Saudi refinery",
+      summary: "Disruption in the Red Sea supply chain pushes crude oil prices higher.",
+      event_type: "news",
+      country: "SA",
+      event_date: new Date().toISOString(),
+    });
+
+    assert.strictEqual(classification.deferred, true);
+    assert.strictEqual(classification.deferReason, "json_parse");
+    assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
+    assert.equal(shouldStopBatch(classification.deferReason, classification.deferHttpStatus), false);
+  },
+  );
+
+  await runTest(
+  "classifyEvent still falls back to heuristicClassify (not deferred) when no client is configured",
+  async () => {
+    const noClientService = new ClaudeService();
+
+    const classification = await noClientService.classifyEvent({
+      title: "Pipeline explosion halts crude export from Saudi refinery",
+      summary: "Disruption in the Red Sea supply chain pushes crude oil prices higher.",
+      event_type: "news",
+      country: "SA",
+      event_date: new Date().toISOString(),
+    });
+
     assert.equal(classification.deferred ?? false, false);
     assert.strictEqual(classification.classificationMethod, "heuristic");
-    // D12 (api_error fallback behavior) is explicitly out of scope for this task —
-    // this only confirms api_error keeps the pre-existing heuristic path, unchanged.
     const assets = classification.commodityImpacts.map((impact) => impact.asset);
     assert.ok(assets.includes("USOIL"), "expected a real heuristicClassify() read, not a deferred stub");
+  },
+  );
+
+  await runTest(
+  "MATERIALITY_GATE_INSTRUCTION includes the 2026-10-06 clarification of rule (a)",
+  () => {
+    assert.match(MATERIALITY_GATE_INSTRUCTION, /a decision, quota, price announcement or data release/);
+    assert.match(MATERIALITY_GATE_INSTRUCTION, /Judge only what this story reports/);
+  },
+  );
+
+  await runTest(
+  "shouldStopBatch: budget_closed and spend_limit stop; json_parse continues",
+  () => {
+    assert.equal(shouldStopBatch("budget_closed"), true);
+    assert.equal(shouldStopBatch("spend_limit"), true);
+    assert.equal(shouldStopBatch("json_parse"), false);
   },
   );
 }

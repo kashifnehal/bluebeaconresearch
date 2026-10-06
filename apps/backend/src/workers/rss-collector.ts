@@ -2,7 +2,7 @@ import Parser from "rss-parser";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
-import { ClaudeService } from "../services/claude.service.js";
+import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent, type FeedTier } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -356,14 +356,20 @@ export async function runRssCollectorOnce() {
         { similarStoryLast48h, headlinePlacement },
       );
 
-      // W8-BUDGET-DEFER (ADR 035, D10) — see gdelt-collector.ts for the full
-      // comment. Checked before materialityPass; `break` stops the rest of this
-      // batch outright (budget_closed/spend_limit are process-wide conditions).
+      // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder
+      // decision 2026-10-06 — see gdelt-collector.ts for the full comment.
+      // shouldStopBatch decides stop-the-batch vs skip-this-event.
       if (classification.deferred) {
+        if (shouldStopBatch(classification.deferReason, classification.deferHttpStatus)) {
+          console.log(
+            `[RSS] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          );
+          break;
+        }
         console.log(
-          `[RSS] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          `[RSS] classifyEvent deferred (reason=${classification.deferReason}) — skipping this event, continuing batch`,
         );
-        break;
+        continue;
       }
 
       // #139/#141 materiality gate — see gnews-collector.ts for the full comment.

@@ -78,6 +78,34 @@ export function isAnthropicSpendLimitError(err: {
   return status === 400 && message.includes("reached your");
 }
 
+export type DeferReason = "budget_closed" | "spend_limit" | "api_error" | "json_parse";
+
+// HTTP meanings: Anthropic API "Errors" documentation
+// (https://docs.anthropic.com/en/api/errors) — 400 invalid_request_error,
+// 401 authentication_error, 403 permission_error, 404 not_found_error,
+// 413 request_too_large, 429 rate_limit_error, 500 api_error, 529 overloaded_error.
+// Request-specific 400/404/413 skip only that event (one bad article must not
+// stop the batch). Network (no status), 5xx, 529, 429, 401, 403 are service-level
+// and stop the rest of the batch. spend_limit is its own reason (a 400 whose
+// body is the spend-limit message) and always stops. json_parse skips one event.
+export function shouldStopBatch(
+  deferReason: DeferReason | undefined,
+  httpStatus?: number,
+): boolean {
+  if (deferReason === "budget_closed" || deferReason === "spend_limit") return true;
+  if (deferReason === "json_parse") return false;
+  if (deferReason === "api_error") {
+    if (httpStatus === 400 || httpStatus === 404 || httpStatus === 413) return false;
+    return true;
+  }
+  return false;
+}
+
+function anthropicHttpStatus(err: { status?: unknown; response?: { status?: unknown } }): number | undefined {
+  const status = err?.status ?? err?.response?.status;
+  return typeof status === "number" ? status : undefined;
+}
+
 // In-process mirror of the persisted Redis flag, so a successful classifyEvent()
 // call — which happens many times per 15-30min ingestion cycle — only pays a
 // Redis round-trip to clear the flag when this process actually knows it set
@@ -172,8 +200,8 @@ export function applyHeadlinePlacementBonus(
 // alongside the watchlist above, ahead of the JSON schema in classifyEvent()'s
 // prompt. This is BBR's own materiality principle: inspired by (not literally
 // applying) the reasonable-investor standard used in US securities law.
-const MATERIALITY_GATE_INSTRUCTION =
-  `Ask yourself: taking this story's own reported claims at face value — you are not being asked to judge whether they are true or will come to pass, only to assess what they would mean for a market if they hold — is there a substantial likelihood that a commodity trader, an import/export business, or a fund analyst would consider this important enough to change a decision they're about to make? This is BBR's own materiality principle, inspired by (not literally applying) the reasonable-investor standard used in US securities law for 50 years. Answer "pass" only if: (a) the story contains genuinely new information (a fact, a claim, a statement, a data release) rather than only reminding the reader of a previously-known, already-public schedule or date with nothing new added, AND (b) it clears ONE of: a real, stated market mechanism exists (marketMechanism is non-null and directly supported by the story), OR the story names an entity on BBR's watchlist below, OR it is a genuine armed-conflict/security event with plausible commodity relevance even without a fully worked-out mechanism yet. Do NOT weigh this decision by how likely you think the underlying event is to actually happen or turn out to be true — BBR is not in the business of predicting outcomes, only of assessing the market impact of what has actually been reported, and getting that assessment out fast, before the market has fully reacted. A story reporting a new, sourced, but unconfirmed claim (e.g. "sources say...") should pass exactly the same way a confirmed official statement would, if it clears (a) and (b) above — mark its sourcing strength separately in sourceConfirmation, don't use it to gate the story out. When sourceConfirmation is "reported" or "speculative," note in materialityReasoning that unconfirmed claims of this kind have historically produced smaller, shorter-lived market reactions than a confirmed release of the same category (per BBR's own research base) — this informs how the story's expected magnitude should be read, it does not reduce the likelihood of it passing this gate. General finance/earnings/corporate news with no commodity, currency, or watchlist-entity connection should NOT pass, regardless of how large the company or number involved is. When you reject a story, say specifically why in materialityReasoning — which criterion it failed — not just "not important."`;
+export const MATERIALITY_GATE_INSTRUCTION =
+  `Ask yourself: taking this story's own reported claims at face value — you are not being asked to judge whether they are true or will come to pass, only to assess what they would mean for a market if they hold — is there a substantial likelihood that a commodity trader, an import/export business, or a fund analyst would consider this important enough to change a decision they're about to make? This is BBR's own materiality principle, inspired by (not literally applying) the reasonable-investor standard used in US securities law for 50 years. Answer "pass" only if: (a) the story contains genuinely new information (a fact, a claim, a statement, a data release) rather than only reminding the reader of a previously-known, already-public schedule or date with nothing new added, AND (b) it clears ONE of: a real, stated market mechanism exists (marketMechanism is non-null and directly supported by the story), OR the story names an entity on BBR's watchlist below, OR it is a genuine armed-conflict/security event with plausible commodity relevance even without a fully worked-out mechanism yet. Clarification of (a): a decision, quota, price announcement or data release that is reported today IS new information, even when the number is unchanged from last time or the outcome was widely expected; only a story that merely reminds the reader of an upcoming scheduled date, with no decision or data in it, fails (a). Judge only what this story reports, not how a watchlist entity has behaved in the past. Do NOT weigh this decision by how likely you think the underlying event is to actually happen or turn out to be true — BBR is not in the business of predicting outcomes, only of assessing the market impact of what has actually been reported, and getting that assessment out fast, before the market has fully reacted. A story reporting a new, sourced, but unconfirmed claim (e.g. "sources say...") should pass exactly the same way a confirmed official statement would, if it clears (a) and (b) above — mark its sourcing strength separately in sourceConfirmation, don't use it to gate the story out. When sourceConfirmation is "reported" or "speculative," note in materialityReasoning that unconfirmed claims of this kind have historically produced smaller, shorter-lived market reactions than a confirmed release of the same category (per BBR's own research base) — this informs how the story's expected magnitude should be read, it does not reduce the likelihood of it passing this gate. General finance/earnings/corporate news with no commodity, currency, or watchlist-entity connection should NOT pass, regardless of how large the company or number involved is. When you reject a story, say specifically why in materialityReasoning — which criterion it failed — not just "not important."`;
 
 function usageFromMessage(msg: { usage?: { input_tokens?: number; output_tokens?: number } }) {
   return {
@@ -228,8 +256,9 @@ export type ClassificationResult = {
   // location; null when the article genuinely doesn't make it clear.
   country: string | null;
   // Which path actually produced this result — 'claude' only when a real Anthropic
-  // API call succeeded and parsed cleanly, 'heuristic' whenever classifyEvent() fell
-  // back to heuristicClassify() (no client, API error, or bad JSON). Callers write
+  // API call succeeded and parsed cleanly, 'heuristic' when classifyEvent() fell
+  // back to heuristicClassify() (no_client only, as of founder decision 2026-10-06).
+  // Callers write
   // this straight into signals.classification_method (see migration
   // 20260912000000_signals_classification_method.sql) so the frontend can eventually
   // show an "auto-classified, unverified" indicator instead of presenting a
@@ -240,20 +269,25 @@ export type ClassificationResult = {
   // field on a deferred result.
   classificationMethod: "claude" | "heuristic";
 
-  // W8-BUDGET-DEFER (ADR 035, founder decision D10, 2026-10-05) — true only when
-  // classifyEvent() made NO classification attempt at all: the daily ingestion
-  // budget was closed, or Anthropic returned a spend-limit error. Distinct from
+  // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder decision
+  // 2026-10-06 — true when classifyEvent() made NO classification attempt:
+  // budget_closed, spend_limit, api_error, or json_parse. Distinct from
   // classificationMethod: "heuristic", which IS a real (if lower-confidence)
-  // classification attempt. Every other field on a deferred result is an inert
-  // placeholder (severity 0, empty arrays, materialityPass false, etc.) — callers
-  // (the 3 collectors + reconciliation.ts) must check `deferred` BEFORE reading
-  // materialityPass/severity/anything else, must not insert a signal, must not call
-  // logMaterialityRejection, must not stamp raw_events.materiality_checked_at, and
-  // must stop processing the rest of that batch (circuit breaker: budget_closed and
-  // spend_limit are both process-wide conditions, not per-article ones — retrying
-  // the next article in the same cycle would just defer again for no benefit).
+  // classification attempt and now happens only for no_client (no API key).
+  // Every other field on a deferred result is an inert placeholder (severity 0,
+  // empty arrays, materialityPass false, etc.) — callers (the 3 collectors +
+  // reconciliation.ts) must check `deferred` BEFORE reading materialityPass/
+  // severity/anything else, must not insert a signal, must not call
+  // logMaterialityRejection, and must not stamp raw_events.materiality_checked_at
+  // (null keeps the row retryable). Whether to stop the rest of the batch is
+  // shouldStopBatch(deferReason, deferHttpStatus) — not every deferred reason
+  // is process-wide.
   deferred?: boolean;
-  deferReason?: "budget_closed" | "spend_limit";
+  deferReason?: DeferReason;
+  // HTTP status from the Anthropic error when deferReason is api_error. Absent
+  // for network failures (no status) and for non-HTTP reasons. Used by
+  // shouldStopBatch() so a request-specific 400/404/413 does not stop the batch.
+  deferHttpStatus?: number;
 
   // ── #139/#141 materiality gate fields ────────────────────────────────────
   // Optional/nullable because heuristicClassify() (no real Claude read of the
@@ -628,7 +662,7 @@ export class ClaudeService {
             ? "spend_limit"
             : "api_error";
         console.warn(
-          `⚠️ [Claude AI Classifier] API error (${err.message}). Using intelligent heuristic fallback classifier.`,
+          `⚠️ [Claude AI Classifier] API error (${err.message}). Deferring classification (founder decision 2026-10-06).`,
         );
         await recordServiceHealth(
           "anthropic",
@@ -638,12 +672,11 @@ export class ClaudeService {
         );
 
         // claude/252 action step 3: an Anthropic Console-level usage-limit/
-        // credit-exhaustion condition is unambiguously actionable and silently
-        // degrades every classification to heuristicClassify() until it
-        // clears — unlike a single transient 429/5xx/network error, which is
-        // normal fallback territory this catch block already handles the same
-        // way it always has (no retry added here; classifyEvent's own catch
-        // has never retried, and this task isn't asking it to start). Deduped
+        // credit-exhaustion condition is unambiguously actionable and now
+        // defers classification until it clears — unlike a request-specific
+        // 400/404/413, which skips only that event. No retry added here;
+        // classifyEvent's own catch has never retried, and this task isn't
+        // asking it to start. Deduped
         // via a persisted flag (see pipeline-status.ts) so this doesn't refire
         // on every single classification call while the cap stays active —
         // pages once per threshold-crossing, same as evaluateCollectorHealth
@@ -651,7 +684,7 @@ export class ClaudeService {
         if (isAnthropicUsageLimitError(err?.message) && !(await isAnthropicUsageLimitAlerted())) {
           Sentry.captureMessage(
             `[claude.service] classifyEvent() hit an Anthropic usage-limit/credit-exhaustion error — ` +
-              `every event is now classifying via heuristicClassify() until this clears: ${err?.message}`,
+              `classification is deferred until this clears: ${err?.message}`,
             "error",
           );
           await setAnthropicUsageLimitAlerted(true);
@@ -672,14 +705,28 @@ export class ClaudeService {
               `[classify-fallback] spend-limit alert email failed: ${alertErr?.message ?? alertErr}`,
             );
           }
-          // W8-BUDGET-DEFER (ADR 035, D10) — a spend-limit error is the same
-          // process-wide "no real classification is possible right now" condition
-          // as a closed budget. Defer, do not fall through to heuristicClassify().
+          // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) — a spend-limit
+          // error is the same process-wide "no real classification is possible
+          // right now" condition as a closed budget. Defer, do not fall through
+          // to heuristicClassify().
           console.log(
             `[classify-fallback] reason=${fallbackReason} rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
           );
           return this.deferredClassification("spend_limit");
         }
+
+        // Founder decision 2026-10-06: temporary Anthropic errors also defer.
+        // A heuristic signal (severity capped at 6) is worse for traders than
+        // a short wait. heuristicClassify() stays only for no_client below.
+        const deferReason: DeferReason =
+          fallbackReason === "json_parse" ? "json_parse" : "api_error";
+        const deferHttpStatus =
+          deferReason === "api_error" ? anthropicHttpStatus(err) : undefined;
+        console.log(
+          `[classify-fallback] reason=${deferReason} rawEvent=${rawEvent.id ?? "unknown"} deferred=true` +
+            (deferHttpStatus !== undefined ? ` httpStatus=${deferHttpStatus}` : ""),
+        );
+        return this.deferredClassification(deferReason, deferHttpStatus);
       }
     }
 
@@ -689,16 +736,33 @@ export class ClaudeService {
     return this.heuristicClassify(title, summaryText, rawEvent, watchlist, headlinePlacement);
   }
 
-  // W8-BUDGET-DEFER (ADR 035, founder decision D10, 2026-10-05) — the result
-  // classifyEvent() returns for "budget_closed" / "spend_limit" instead of calling
-  // heuristicClassify(). Every field below is an inert placeholder: no article was
-  // read, no keyword regex was run, nothing here should ever reach the DB. Callers
-  // must check `deferred` first (see the ClassificationResult.deferred comment) —
+  // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder decision
+  // 2026-10-06 — the result classifyEvent() returns instead of calling
+  // heuristicClassify() for budget_closed / spend_limit / api_error / json_parse.
+  // Every field below is an inert placeholder: no article was read, no keyword
+  // regex was run, nothing here should ever reach the DB. Callers must check
+  // `deferred` first (see the ClassificationResult.deferred comment) —
   // materialityPass is false purely as a fail-closed backstop for any caller that
   // doesn't, not because a gate decision was actually made.
+  //
+  // A deferred event keeps materiality_checked_at = null, so reconciliation
+  // retries it on its next run. Retry bound is the existing stale window in
+  // reconciliation.ts: ORPHAN_MAX_AGE_HOURS = 36, and that file's own comment
+  // that the reconciliation cron runs every 30 minutes (DEFAULT_RECONCILIATION_CRON
+  // */30 * * * *). 36h / 0.5h = 72 cron ticks of retry opportunity before the
+  // row is permanently skipped. No new retry number is added here.
   private deferredClassification(
-    reason: "budget_closed" | "spend_limit",
+    reason: DeferReason,
+    httpStatus?: number,
   ): ClassificationResult {
+    const reasoningByReason: Record<DeferReason, string> = {
+      budget_closed:
+        "deferred: anthropic ingestion daily budget closed (ADR 035) — no classification attempted",
+      spend_limit:
+        "deferred: anthropic spend limit reached (ADR 035) — no classification attempted",
+      api_error: "deferred: anthropic api error — no classification attempted",
+      json_parse: "deferred: anthropic response was not parseable JSON — no classification attempted",
+    };
     return {
       severity: 0,
       confidence: 0,
@@ -710,12 +774,10 @@ export class ClaudeService {
       country: null,
       classificationMethod: "heuristic",
       materialityPass: false,
-      materialityReasoning:
-        reason === "budget_closed"
-          ? "deferred: anthropic ingestion daily budget closed (ADR 035) — no classification attempted"
-          : "deferred: anthropic spend limit reached (ADR 035) — no classification attempted",
+      materialityReasoning: reasoningByReason[reason],
       deferred: true,
       deferReason: reason,
+      ...(httpStatus !== undefined ? { deferHttpStatus: httpStatus } : {}),
     };
   }
 

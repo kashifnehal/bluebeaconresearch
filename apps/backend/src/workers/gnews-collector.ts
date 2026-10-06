@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { getEnv } from "../env.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { isRelevantEvent } from "./gdelt-collector.js";
-import { ClaudeService } from "../services/claude.service.js";
+import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
@@ -20,7 +20,7 @@ import { isWithinIntakeWindow } from "../lib/article-age.js";
 const claude = new ClaudeService();
 
 // Free plan: non-commercial (gnews.io/pricing, GNews dashboard quota page). Remove
-// or upgrade before the first paying customer (claude/307 §7).
+// or upgrade before the first paying customer (founder decision 2026-10-05: replace GNews with a paid news source before go-live).
 // Free plan caps: 100 req/day, 10 articles/req, ~12h publish delay. The ingestion
 // cycle runs every 30 min -> 24h / 0.5h = 48 cycles/day. One query per cycle (not
 // one request per query per cycle) keeps total GNews traffic at 48 req/day
@@ -274,14 +274,20 @@ export async function runGnewsCollectorOnce() {
         { similarStoryLast48h, headlinePlacement },
       );
 
-      // W8-BUDGET-DEFER (ADR 035, D10) — see gdelt-collector.ts for the full
-      // comment. Checked before materialityPass; `break` stops the rest of this
-      // batch outright (budget_closed/spend_limit are process-wide conditions).
+      // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder
+      // decision 2026-10-06 — see gdelt-collector.ts for the full comment.
+      // shouldStopBatch decides stop-the-batch vs skip-this-event.
       if (classification.deferred) {
+        if (shouldStopBatch(classification.deferReason, classification.deferHttpStatus)) {
+          console.log(
+            `[GNews] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          );
+          break;
+        }
         console.log(
-          `[GNews] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          `[GNews] classifyEvent deferred (reason=${classification.deferReason}) — skipping this event, continuing batch`,
         );
-        break;
+        continue;
       }
 
       // #139/#141 materiality gate — the "this does not mean anything, drop it"

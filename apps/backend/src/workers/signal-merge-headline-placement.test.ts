@@ -29,17 +29,9 @@ await runTest(
   "an identical duplicate article with headline vs body placement produces the same severity (bonus disabled)",
   async () => {
     const service = new ClaudeService();
-    // Never let classifyEvent() build a real Anthropic SDK client in this file.
-    // .env.local may contain a live key; a 401 still leaves the machine. Forcing
-    // the mocked client to throw exercises heuristicClassify(), which is what
-    // this test needs (a real Claude read is covered by claude.service.test.ts).
-    (service as unknown as { client: unknown }).client = {
-      messages: {
-        create: async () => {
-          throw new Error("mocked anthropic — tests must not call the live API");
-        },
-      },
-    };
+    // Leave client unset. getClient() returns null when NODE_ENV=test, so this
+    // takes the no_client heuristic path. A throwing client is now api_error →
+    // deferred (founder decision 2026-10-06), not heuristicClassify().
     const event = {
       title: "Central bank discloses gold reserves data",
       summary: "A routine disclosure with no severity-tier keyword present.",

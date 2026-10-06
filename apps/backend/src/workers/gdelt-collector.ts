@@ -2,7 +2,7 @@ import axios from "axios";
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
-import { ClaudeService } from "../services/claude.service.js";
+import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { isRelevantEvent } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -118,7 +118,8 @@ export async function runGdeltCollectorOnce() {
 
   const articles: GdeltArticle[] = res.data?.articles ?? [];
 
-  // W7-DEDUPE-KEY diag (doc 304 amendment, 2026-10-05) — PROBABLE, not proven: the
+  // W7-DEDUPE-KEY diag (2026-10-05): check whether GDELT's keyless DOC API returns
+  // the same article list every cycle — PROBABLE, not proven: the
   // repeated fetched=250/duplicates=83/filtered=167 lines look like GDELT's keyless
   // DOC API returning the same article list every cycle. This hashes the sorted URL
   // set + newest seendate seen so a later log diff can confirm or disprove that
@@ -282,19 +283,25 @@ export async function runGdeltCollectorOnce() {
         { similarStoryLast48h, headlinePlacement },
       );
 
-      // W8-BUDGET-DEFER (ADR 035, D10) — budget_closed/spend_limit are process-wide
-      // conditions (see claude.service.ts's deferredClassification()), not
-      // per-article ones: the next classifyEvent() call this same cycle would just
-      // defer again. Checked BEFORE materialityPass (deferred is not a real gate
-      // decision) — do not insert a signal, do not call logMaterialityRejection, and
-      // do not stamp materiality_checked_at (the raw_event row stays unclassified so
-      // reconciliation.ts picks it up once the budget reopens). `break`, not
-      // `continue`, stops the rest of this batch outright.
+      // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder
+      // decision 2026-10-06 — deferred is not a real gate decision. Do not insert
+      // a signal, do not call logMaterialityRejection, and do not stamp
+      // materiality_checked_at (null keeps the row retryable; reconciliation.ts
+      // retries on its next run, bounded by ORPHAN_MAX_AGE_HOURS = 36 and that
+      // file's existing every-30-min cron: 36h / 0.5h = 72 ticks). shouldStopBatch
+      // stops the rest of this cycle for budget_closed / spend_limit / service-level
+      // api_error; json_parse and request-specific 400/404/413 skip only this event.
       if (classification.deferred) {
+        if (shouldStopBatch(classification.deferReason, classification.deferHttpStatus)) {
+          console.log(
+            `[GDELT] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          );
+          break;
+        }
         console.log(
-          `[GDELT] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          `[GDELT] classifyEvent deferred (reason=${classification.deferReason}) — skipping this event, continuing batch`,
         );
-        break;
+        continue;
       }
 
       // #139/#141 materiality gate — see gnews-collector.ts for the full comment.

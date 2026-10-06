@@ -728,7 +728,7 @@ Recorded as **D38** in `docs/claude_project/10_DECISIONS.md`.
 
 ### Context
 
-ADR 005 established `heuristicClassify()` (fixed keyword-tier severity ladder, capped at 6) as `classifyEvent()`'s fallback whenever a real Claude call can't be made — no client, an API error, bad JSON, a closed ingestion budget, or an Anthropic spend-limit error, all treated the same way. Founder decision 2026-10-05 (source: doc 302 §5.3 d) draws a line through that fallback: the two process-wide "no real classification is possible right now" reasons (`budget_closed`, `spend_limit`) should defer instead of guessing with the heuristic.
+ADR 005 established `heuristicClassify()` (fixed keyword-tier severity ladder, capped at 6) as `classifyEvent()`'s fallback whenever a real Claude call can't be made — no client, an API error, bad JSON, a closed ingestion budget, or an Anthropic spend-limit error, all treated the same way. Founder decision 2026-10-05 draws a line through that fallback: the two process-wide "no real classification is possible right now" reasons (`budget_closed`, `spend_limit`) should defer instead of guessing with the heuristic. GDELT returns only its newest 250 articles and RSS keeps only the last 4 hours, so news published while the budget is closed can be lost.
 
 ### Decision
 
@@ -743,3 +743,21 @@ A heuristic classification (keyword-regex only, severity capped at 6, no real ar
 ### Cross-tree mapping
 
 Recorded as **D39** in `docs/claude_project/10_DECISIONS.md`.
+
+## 37. ADR 036: Temporary Anthropic errors defer instead of falling back to the heuristic; gate rule (a) clarified (founder decision 2026-10-06)
+
+### Context
+
+ADR 035 deferred `budget_closed` and `spend_limit` instead of calling `heuristicClassify()`. Transient Anthropic failures (`api_error`, `json_parse`) still fell through to the keyword heuristic. Separately, live data on 2026-10-05 showed the materiality gate rejecting 5 of 5 OPEC+ decision headlines as "routine, no new information" even though rule (a) only excludes a story that merely reminds the reader of a previously-known schedule.
+
+### Decision
+
+`classifyEvent()` now also returns a deferred result for `api_error` and `json_parse`. `heuristicClassify()` remains only for `no_client` (no API key: local/dev). Callers use exported `shouldStopBatch(deferReason, httpStatus)`: stop the rest of the batch for `budget_closed`, `spend_limit`, and service-level `api_error` (network, HTTP 5xx, 529, 429, 401, 403); skip only that event for `json_parse` and request-specific HTTP 400/404/413 (Anthropic API Errors documentation). A deferred row keeps `materiality_checked_at` null so reconciliation retries it, bounded by existing `ORPHAN_MAX_AGE_HOURS` (36) and the existing 30-minute reconciliation cron. Gate rule (a) gained one clarifying sentence: a decision, quota, price announcement or data release reported today is new information even when the number is unchanged or expected.
+
+### Rationale
+
+A heuristic signal is capped at severity 6 and is less reliable than a real Claude read; waiting is bounded by the existing reconciliation constants. OPEC+ decisions were being rejected against the gate's own written rule.
+
+### Cross-tree mapping
+
+Recorded as **D40** in `docs/claude_project/10_DECISIONS.md`.

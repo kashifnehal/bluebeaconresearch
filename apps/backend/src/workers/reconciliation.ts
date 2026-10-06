@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
-import { ClaudeService } from "../services/claude.service.js";
+import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
@@ -137,16 +137,22 @@ export async function reconcileOrphanedRawEventsOnce() {
         { similarStoryLast48h },
       );
 
-      // W8-BUDGET-DEFER (ADR 035, D10) — see gdelt-collector.ts for the full
-      // comment. Checked before materialityPass; `break` stops the rest of this
-      // batch outright (budget_closed/spend_limit are process-wide conditions, and
-      // the raw_event stays unclassified so a later cycle, once the budget reopens,
-      // picks it back up — see the ORPHAN_MAX_AGE_HOURS comment above).
+      // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder
+      // decision 2026-10-06 — see gdelt-collector.ts for the full comment.
+      // materiality_checked_at stays null so the next cycle retries this row,
+      // bounded by ORPHAN_MAX_AGE_HOURS = 36 and this file's existing every-30-min
+      // cron (36h / 0.5h = 72 ticks). shouldStopBatch decides stop vs skip.
       if (classification.deferred) {
+        if (shouldStopBatch(classification.deferReason, classification.deferHttpStatus)) {
+          console.log(
+            `[Reconciliation] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          );
+          break;
+        }
         console.log(
-          `[Reconciliation] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+          `[Reconciliation] classifyEvent deferred (reason=${classification.deferReason}) — skipping this event, continuing batch`,
         );
-        break;
+        continue;
       }
 
       // #139/#141 materiality gate — this is a live cron job (every 30 min)
