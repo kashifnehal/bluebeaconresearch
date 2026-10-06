@@ -69,10 +69,10 @@ export function evaluateIntelligenceFeedHealth(
   return withBudgetPausedNote(result, budgetClosed);
 }
 
-// W8-BUDGET-STATUS: the exact, mandated line for when the backend's Anthropic
-// ingestion daily budget is exhausted (claude.service.ts classifyEvent() falls
-// back to the heuristic classifier). Budget resets at UTC midnight — this repo
-// never guesses a reopen time, so the copy says "next UTC day", not a clock time.
+// When the daily ingestion budget is closed, collection pauses and no signal is
+// created from a keyword guess. Budget resets at UTC midnight — this repo never
+// guesses a reopen time, so the copy says "next UTC day", not a clock time.
+// The keyword fallback applies only when no Anthropic client is configured.
 export const BUDGET_CLOSED_DETAIL =
   "Classification paused until the next UTC day (daily budget reached). New news is not being collected.";
 
@@ -96,21 +96,23 @@ function withBudgetPausedNote(check: SystemCheck, budgetClosed: boolean): System
  * an empty array, which means no signals were created (→ Operational, nothing to flag).
  * `budgetClosed` is today's `pipeline:last_run.budgetClosed` flag (set by the backend
  * ingestion-budget gate) — when true it overrides the row-derived detail with the one
- * honest line above, since that's the actual reason behind any heuristic-only rows.
+ * honest line above. A closed cap pauses collection; it does not create a signal
+ * from a keyword guess.
  */
 export function evaluateClassifierHealth(
   rows: Array<{ classification_method: string | null }> | null,
   budgetClosed = false,
 ): SystemCheck {
   const name = "Classifier";
-  const unknownDetail = "At least one signal classified via Claude in the last 6 h (heuristic keyword fallback otherwise)";
+  const unknownDetail =
+    "At least one signal classified via Claude in the last 6 h (keyword fallback only when no research-model client is configured; collection pauses when the classifier cannot run)";
 
   if (budgetClosed) return { name, status: "Degraded", detail: BUDGET_CLOSED_DETAIL };
   if (rows === null) return { name, status: "Unknown", detail: unknownDetail };
 
   const claudeCount = rows.filter((r) => r.classification_method === "claude").length;
   const heuristicCount = rows.filter((r) => r.classification_method === "heuristic").length;
-  const detail = `last 6 h: ${claudeCount} Claude, ${heuristicCount} keyword fallback`;
+  const detail = `last 6 h: ${claudeCount} Claude, ${heuristicCount} keyword fallback (only with no research-model client)`;
 
   if (rows.length === 0 || claudeCount > 0) return { name, status: "Operational", detail };
   return { name, status: "Degraded", detail };

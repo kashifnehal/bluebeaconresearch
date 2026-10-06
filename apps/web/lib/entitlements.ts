@@ -1,7 +1,7 @@
 import type { PlanTier } from "@blue-beacon-research/shared";
 
 /**
- * Personalization entitlement keys (PERS tracker, doc 298 §3). Mirrors
+ * Personalization entitlement keys (decided 2026-10-02). Mirrors
  * apps/backend/src/lib/entitlements.ts key-for-key — keep the two in sync by
  * hand; nothing calls can()/limitFor() yet (see entitlements.test.ts for the
  * only current usage). This is scaffolding for a later, separate task.
@@ -33,10 +33,9 @@ export const GATES_ENABLED = false;
 
 /**
  * Every free/paid value below (booleans AND numeric limits) is a placeholder
- * DESIGN CHOICE made in this session, not sourced from doc 298 §3 itself
- * (that doc's actual free/paid split was not available to read from this
- * repo — only the key names were). Treat every row as provisional until
- * someone reconciles it against doc 298. Must match the backend table.
+ * DESIGN CHOICE made 2026-10-02, not a measured free/paid split. Only the
+ * key names were available in this repo. GAP: source recorded outside the repo.
+ * Treat every row as provisional. Must match the backend table.
  */
 export const ENTITLEMENTS: Record<FeatureKey, { free: boolean | number; paid: boolean | number }> = {
   "alerts.why_matched": { free: false, paid: true },

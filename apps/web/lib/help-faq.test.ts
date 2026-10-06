@@ -31,6 +31,23 @@ runTest("FAQ has 10 honest product questions", () => {
   }
 });
 
+runTest("confidence, severity, and human review describe pause-instead-of-guessing", () => {
+  const byId = Object.fromEntries(HELP_FAQ_ITEMS.map((item) => [item.id, item.answer]));
+  for (const id of ["confidence", "severity", "human-review"] as const) {
+    const answer = byId[id];
+    assert.equal(answer.includes("only when no research-model client is configured"), true, id);
+    assert.equal(
+      answer.includes(
+        "When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess.",
+      ),
+      true,
+      id,
+    );
+    assert.equal(/unavailable, a keyword fallback/.test(answer), false, id);
+    assert.equal(/otherwise a conservative keyword fallback/.test(answer), false, id);
+  }
+});
+
 runTest("no FAQ answer claims buy/sell or human verification", () => {
   const blob = HELP_FAQ_ITEMS.map((i) => `${i.question} ${i.answer}`).join("\n").toLowerCase();
   assert.equal(blob.includes("buy or sell"), true);

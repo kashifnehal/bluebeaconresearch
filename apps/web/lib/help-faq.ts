@@ -17,7 +17,7 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
     id: "confidence",
     question: "What does the confidence score mean?",
     answer:
-      "The number on a signal (shown as a percent on the Intelligence Feed featured card, stream rows, and some previews) is the classifier's self-reported certainty that it classified the event correctly. It is not a calibrated probability that a named market will move in the stated direction, and it is not a price forecast. Per-asset chips on cards and in the Market Impact Assessment box do not print that percent; they show ticker and direction only. When the research classifier is unavailable, a keyword fallback is used instead of a full read of the article, and that path produces a small set of formula values rather than a judged confidence.",
+      "The number on a signal (shown as a percent on the Intelligence Feed featured card, stream rows, and some previews) is the classifier's self-reported certainty that it classified the event correctly. It is not a calibrated probability that a named market will move in the stated direction, and it is not a price forecast. Per-asset chips on cards and in the Market Impact Assessment box do not print that percent; they show ticker and direction only. A keyword fallback is used instead of a full read of the article only when no research-model client is configured, and that path produces a small set of formula values rather than a judged confidence. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess.",
   },
   {
     id: "accuracy-history",
@@ -67,12 +67,12 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
     id: "severity",
     question: "What does severity 1–10 mean?",
     answer:
-      "Severity is the classifier’s 1–10 rating of how systemically important the event looks for the markets BBR covers. Higher numbers are reserved for large-scale disruption. When the keyword fallback is used, severity is hard-capped at 6 so a stray keyword cannot mint a 9 on an unrelated story. A “CREATE SEVERE ALERT” shortcut on an event only appears at severity 7 or above.",
+      "Severity is the classifier’s 1–10 rating of how systemically important the event looks for the markets BBR covers. Higher numbers are reserved for large-scale disruption. When the keyword fallback is used — only when no research-model client is configured — severity is hard-capped at 6 so a stray keyword cannot mint a 9 on an unrelated story. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess. A “CREATE SEVERE ALERT” shortcut on an event only appears at severity 7 or above.",
   },
   {
     id: "human-review",
     question: "Does a research team review every signal before it appears?",
     answer:
-      "No. Classification is automated — a research-model path when that service is available, otherwise a conservative keyword fallback. There is no logged human-review workflow on signals today, so the product does not claim that items are human-verified.",
+      "No. Classification is automated — a research-model path when a research-model client is configured. The keyword fallback applies only when no research-model client is configured. When the classifier cannot run because the daily cap is closed or because of a temporary error, collection pauses and no signal is created from a keyword guess. There is no logged human-review workflow on signals today, so the product does not claim that items are human-verified.",
   },
 ];

@@ -109,7 +109,8 @@ runTest("Classifier is Degraded when every signal in the window used the heurist
     { classification_method: "heuristic" },
   ]);
   assert.equal(result.status, "Degraded");
-  assert.match(result.detail, /0 Claude, 2 keyword fallback/);
+  assert.match(result.detail, /0 Claude, 2 keyword fallback \(only with no research-model client\)/);
+  assert.doesNotMatch(result.detail, /otherwise/);
 });
 
 runTest("Classifier is Operational when at least one row used Claude", () => {
@@ -128,6 +129,9 @@ runTest("Classifier is Operational when no signals were created, nothing to flag
 runTest("Classifier is Unknown when the underlying query errors", () => {
   const result = evaluateClassifierHealth(null);
   assert.equal(result.status, "Unknown");
+  assert.match(result.detail, /keyword fallback only when no research-model client is configured/);
+  assert.match(result.detail, /collection pauses when the classifier cannot run/);
+  assert.doesNotMatch(result.detail, /keyword fallback otherwise/);
 });
 
 runTest("Classifier shows the budget-closed line, not row counts, when budgetClosed is true", () => {
