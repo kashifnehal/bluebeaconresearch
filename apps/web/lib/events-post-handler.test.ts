@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
 
-import { POST, type EventsPostDeps } from "./route";
+import { handleEventsPost as POST, type EventsPostDeps } from "./events-post-handler";
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   return Promise.resolve()
