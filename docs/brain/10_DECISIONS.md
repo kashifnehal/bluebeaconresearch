@@ -761,3 +761,23 @@ A heuristic signal is capped at severity 6 and is less reliable than a real Clau
 ### Cross-tree mapping
 
 Recorded as **D40** in `docs/claude_project/10_DECISIONS.md`.
+
+## 38. ADR 037: Classifier prompt includes a cleaned article excerpt when the feed stored one (2026-10-06)
+
+### Context
+
+`classifyEvent()` sent the model only the headline. RSS and GNews already store a summary on `raw_events.summary`, and the collectors already pass `rawEvent.summary`, but that text was read into `summaryText` and used only by the keyword fallback. Proven in code on 2026-10-06: the user prompt's event block was title, country, type, and date, with no article text. The model then rejected stories with reasons about text it never saw (for example "the article body does not disclose"). GDELT items have no summary.
+
+### Decision
+
+When a cleaned excerpt is available, `classifyEvent()` inserts it immediately after the Date line, inside `"""` delimiters, labeled as untrusted publisher-feed text to treat only as facts about the event. The excerpt is HTML-stripped, entity-decoded, control characters removed, at least 20 characters, and not a repeat of the title; `"""` inside it is rewritten to `'''`; longer text is cut at the last space before 400 characters. A null excerpt leaves the user prompt byte-for-byte unchanged. GDELT items never get an excerpt. The materiality-gate wording is unchanged.
+
+GAP: 400 characters (about 100 tokens at the common 4 characters per token rule of thumb, not measured here) is a design choice, not a researched value. Measured 2026-10-06 over 3 days of raw_events: RSS summary median 338 characters, 90th percentile 630; GNews median 158, 90th percentile 436; GDELT has none.
+
+### Rationale
+
+The classifier saw only titles, proven in code on 2026-10-06. Oct 5 average input was 2,588 tokens per call and $0.00438 per call. About 100 extra tokens at $1 per million input tokens is about $0.0001 per call (about 2 to 3 percent of that call cost), roughly $0.07 a day at 685 calls.
+
+### Cross-tree mapping
+
+Recorded as **D41** in `docs/claude_project/10_DECISIONS.md`.
