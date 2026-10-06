@@ -20,6 +20,7 @@ const SHORTEST_CHECKPOINT_HOURS = CHECKPOINT_HOURS_LIST[0];
 const FLAT_THRESHOLD_PCT = 0.5;
 const SIGNAL_PAGE_SIZE = 1000;
 const PRICE_PAGE_SIZE = 1000;
+const OUTCOME_PAGE_SIZE = 1000;
 // 200, not 500: `.in("signal_id", chunk)` with real ~36-char UUIDs starts
 // throwing `TypeError: fetch failed` once the chunk hits ~400 items (a URL-length
 // limit somewhere in the request chain, root-caused during #121's frontend-half
@@ -180,25 +181,35 @@ function outcomeKey(asset: string, checkpointHours: number): string {
   return `${asset}::${checkpointHours}`;
 }
 
-async function fetchExistingOutcomeAssets(
+export async function fetchExistingOutcomeAssets(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   signalIds: string[],
 ): Promise<Map<string, Set<string>>> {
   const bySignal = new Map<string, Set<string>>();
   for (let i = 0; i < signalIds.length; i += EXISTING_OUTCOMES_CHUNK) {
     const chunk = signalIds.slice(i, i + EXISTING_OUTCOMES_CHUNK);
-    const { data, error } = await supabase
-      .from("signal_outcomes")
-      .select("signal_id, asset, checkpoint_hours")
-      .in("signal_id", chunk);
-    if (error) {
-      console.error("[outcome-tracker] existing signal_outcomes fetch failed:", error.message);
-      continue;
-    }
-    for (const row of data ?? []) {
-      const set = bySignal.get(row.signal_id as string) ?? new Set<string>();
-      set.add(outcomeKey(row.asset as string, row.checkpoint_hours as number));
-      bySignal.set(row.signal_id as string, set);
+    // One 200-id chunk can still exceed the database API's 1,000-row cap
+    // (assets × checkpoints). Page until a short page, same loop as
+    // fetchEligibleSignals / loadPriceSeries. A truncated first page used to
+    // drop the rest silently, so those pairs were treated as unscored.
+    for (let from = 0; ; from += OUTCOME_PAGE_SIZE) {
+      const { data, error } = await supabase
+        .from("signal_outcomes")
+        .select("signal_id, asset, checkpoint_hours")
+        .in("signal_id", chunk)
+        .order("id")
+        .range(from, from + OUTCOME_PAGE_SIZE - 1);
+      if (error) {
+        console.error("[outcome-tracker] existing signal_outcomes fetch failed:", error.message);
+        break;
+      }
+      if (!data?.length) break;
+      for (const row of data) {
+        const set = bySignal.get(row.signal_id as string) ?? new Set<string>();
+        set.add(outcomeKey(row.asset as string, row.checkpoint_hours as number));
+        bySignal.set(row.signal_id as string, set);
+      }
+      if (data.length < OUTCOME_PAGE_SIZE) break;
     }
   }
   return bySignal;
@@ -210,24 +221,11 @@ type WorkPair = {
   checkpointHours: number;
 };
 
-export async function runOutcomeTrackerOnce() {
-  const supabase = getSupabaseAdmin();
-  const nowMs = Date.now();
-  const cutoffIso = new Date(nowMs - SHORTEST_CHECKPOINT_HOURS * 3_600_000).toISOString();
-
-  const eligible = await fetchEligibleSignals(supabase, cutoffIso);
-  if (eligible.length === 0) {
-    console.log(
-      `[outcome-tracker] no signals >= ${SHORTEST_CHECKPOINT_HOURS}h old with non-empty commodity_impacts`,
-    );
-    return { signalsProcessed: 0, outcomesWritten: 0, pairsSkipped: 0, skipReasons: {} as Record<string, number> };
-  }
-
-  const existingBySignal = await fetchExistingOutcomeAssets(
-    supabase,
-    eligible.map((s) => s.id),
-  );
-
+export function collectPendingPairs(
+  eligible: EligibleSignal[],
+  existingBySignal: Map<string, Set<string>>,
+  nowMs: number,
+): { pairsByAsset: Map<string, WorkPair[]>; signalsProcessed: number } {
   // Which (signal, asset, checkpoint) triples actually need work, grouped by
   // asset so each asset's price series is loaded exactly once.
   const pairsByAsset = new Map<string, WorkPair[]>();
@@ -252,6 +250,33 @@ export async function runOutcomeTrackerOnce() {
     }
     if (addedForSignal) signalsProcessed += 1;
   }
+  return { pairsByAsset, signalsProcessed };
+}
+
+export async function runOutcomeTrackerOnce(
+  supabase: ReturnType<typeof getSupabaseAdmin> = getSupabaseAdmin(),
+) {
+  const nowMs = Date.now();
+  const cutoffIso = new Date(nowMs - SHORTEST_CHECKPOINT_HOURS * 3_600_000).toISOString();
+
+  const eligible = await fetchEligibleSignals(supabase, cutoffIso);
+  if (eligible.length === 0) {
+    console.log(
+      `[outcome-tracker] no signals >= ${SHORTEST_CHECKPOINT_HOURS}h old with non-empty commodity_impacts`,
+    );
+    return { signalsProcessed: 0, outcomesWritten: 0, pairsSkipped: 0, skipReasons: {} as Record<string, number> };
+  }
+
+  const existingBySignal = await fetchExistingOutcomeAssets(
+    supabase,
+    eligible.map((s) => s.id),
+  );
+
+  const { pairsByAsset, signalsProcessed } = collectPendingPairs(
+    eligible,
+    existingBySignal,
+    nowMs,
+  );
 
   let outcomesWritten = 0;
   let pairsSkipped = 0;
@@ -307,15 +332,18 @@ export async function runOutcomeTrackerOnce() {
 
     if (rows.length === 0) continue;
 
-    const { error: insertErr } = await supabase.from("signal_outcomes").insert(rows);
-    if (insertErr) {
+    const { error: upsertErr } = await supabase.from("signal_outcomes").upsert(rows, {
+      onConflict: "signal_id,asset,checkpoint_hours",
+      ignoreDuplicates: true,
+    });
+    if (upsertErr) {
       console.error(
-        `[outcome-tracker] insert failed for asset=${asset} (${rows.length} row(s)):`,
-        insertErr.message,
+        `[outcome-tracker] upsert failed for asset=${asset} (${rows.length} row(s)):`,
+        upsertErr.message,
       );
       pairsSkipped += rows.length;
-      skipReasons[`${asset}: insert failed (${insertErr.message})`] =
-        (skipReasons[`${asset}: insert failed (${insertErr.message})`] ?? 0) + rows.length;
+      skipReasons[`${asset}: upsert failed (${upsertErr.message})`] =
+        (skipReasons[`${asset}: upsert failed (${upsertErr.message})`] ?? 0) + rows.length;
       continue;
     }
     outcomesWritten += rows.length;
