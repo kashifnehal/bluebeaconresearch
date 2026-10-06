@@ -1777,6 +1777,85 @@ async function main() {
       assert.equal(inside.includes('"""'), false);
     },
   );
+
+  await runTest(
+    "classifyEvent prints the title match when similarRecentSignal is set, and keeps the old sentence when it is omitted",
+    async () => {
+      const promptService = new ClaudeService();
+      let capturedUser = "";
+      (promptService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async (opts: { messages?: { content?: string }[] }) => {
+            capturedUser = String(opts.messages?.[0]?.content ?? "");
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    severity: 3,
+                    confidence: 0.6,
+                    commodityImpacts: [],
+                    currencyPairImpacts: [],
+                    isBreaking: false,
+                    summary: "Test event",
+                    region: "global",
+                    relevance: 0.5,
+                    novelty: 0.5,
+                    eventCategory: "other_market_relevant",
+                    marketMechanism: null,
+                    isPreview: false,
+                    sourceConfirmation: "reported",
+                    materialityPass: false,
+                    materialityReasoning: "no mechanism",
+                  }),
+                },
+              ],
+              usage: { input_tokens: 10, output_tokens: 20 },
+            };
+          },
+        },
+      };
+
+      const baseEvent = {
+        title: "US strikes Iranian oil tankers",
+        summary: "A new report.",
+        event_type: "news",
+        country: "IR",
+        event_date: "2026-10-07T00:00:00.000Z",
+      };
+      const oldSentence =
+        "A similar-looking story (same country/event-type combination) was already logged in the last 48 hours: yes (a coarse hint, not a verdict — weigh it, don't rely on it alone for novelty).";
+      const matchSentence =
+        'A recent signal may cover the same story: "US strikes Iranian oil tankers in the Gulf" (6 hours ago). Treat this article as an UPDATE and let it pass if it adds a new fact (a number, a named person or organisation, a quote, a decision). Treat it as a repeat only if it adds nothing new.';
+      const noneSentence = "No similar recent signal in the last 48 hours.";
+
+      process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+      try {
+        await promptService.classifyEvent(baseEvent, {
+          similarStoryLast48h: true,
+          similarRecentSignal: { title: "US strikes Iranian oil tankers in the Gulf", hoursAgo: 6 },
+        });
+        assert.equal(capturedUser.includes(matchSentence), true);
+        assert.equal(capturedUser.includes(oldSentence), false);
+        assert.equal(capturedUser.includes(noneSentence), false);
+
+        await promptService.classifyEvent(baseEvent, {
+          similarStoryLast48h: true,
+          similarRecentSignal: null,
+        });
+        assert.equal(capturedUser.includes(noneSentence), true);
+        assert.equal(capturedUser.includes(oldSentence), false);
+        assert.equal(capturedUser.includes("A recent signal may cover the same story"), false);
+
+        await promptService.classifyEvent(baseEvent, { similarStoryLast48h: true });
+        assert.equal(capturedUser.includes(oldSentence), true);
+        assert.equal(capturedUser.includes("A recent signal may cover the same story"), false);
+        assert.equal(capturedUser.includes(noneSentence), false);
+      } finally {
+        delete process.env.ANTHROPIC_API_KEY;
+      }
+    },
+  );
 }
 
 main().catch((err) => {

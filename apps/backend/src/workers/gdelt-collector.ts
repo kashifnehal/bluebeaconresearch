@@ -11,7 +11,7 @@ import { insertOrMergeSignal } from "./signal-merge.js";
 import { tryTitlePreFilterSkip } from "./title-prefilter.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
-import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { findSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
@@ -261,11 +261,12 @@ export async function runGdeltCollectorOnce() {
     }
 
     try {
-      const countryLabel = formatCountryName(country);
-      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
-        country: countryLabel,
-        eventType: "news",
-      });
+      const similarRecentSignal = await findSimilarRecentSignal(supabase, { title });
+      if (similarRecentSignal) {
+        console.log(
+          `[NOVELTY-HINT] title="${title}" match="${similarRecentSignal.title}" similarity=${similarRecentSignal.similarity.toFixed(2)}`,
+        );
+      }
       // GDELT's article records (see GdeltArticle above) carry no body/summary text at
       // all — raw_events.summary is always null for this source (see the insert above).
       // detectHeadlinePlacement() with an empty body still resolves correctly: a keyword
@@ -280,7 +281,7 @@ export async function runGdeltCollectorOnce() {
           event_type: "news",
           event_date: eventDate,
         },
-        { similarStoryLast48h, headlinePlacement },
+        { similarRecentSignal, headlinePlacement },
       );
 
       // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder

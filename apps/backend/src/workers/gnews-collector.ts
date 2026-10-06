@@ -11,7 +11,7 @@ import { insertOrMergeSignal } from "./signal-merge.js";
 import { tryTitlePreFilterSkip } from "./title-prefilter.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
-import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { findSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
@@ -249,11 +249,14 @@ export async function runGnewsCollectorOnce() {
 
     // Classify and write signal directly — reliable even when Redis/BullMQ is unavailable
     try {
-      const countryLabel = formatCountryName(rawEventPayload.country);
-      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
-        country: countryLabel,
-        eventType: rawEventPayload.event_type,
+      const similarRecentSignal = await findSimilarRecentSignal(supabase, {
+        title: rawEventPayload.title,
       });
+      if (similarRecentSignal) {
+        console.log(
+          `[NOVELTY-HINT] title="${rawEventPayload.title}" match="${similarRecentSignal.title}" similarity=${similarRecentSignal.similarity.toFixed(2)}`,
+        );
+      }
       // a.content is GNews's (truncated) full-article body — richer than a.description,
       // which is only ever a 1-2 sentence excerpt. Not currently written into
       // rawEventPayload.summary (kept as-is, out of this task's scope); used here only
@@ -271,7 +274,7 @@ export async function runGnewsCollectorOnce() {
           event_type: rawEventPayload.event_type,
           event_date: rawEventPayload.event_date,
         },
-        { similarStoryLast48h, headlinePlacement },
+        { similarRecentSignal, headlinePlacement },
       );
 
       // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder

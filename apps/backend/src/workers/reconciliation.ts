@@ -4,7 +4,7 @@ import { ClaudeService, shouldStopBatch, type DeferReason } from "../services/cl
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
-import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { findSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 
 const claude = new ClaudeService();
@@ -155,22 +155,26 @@ export async function reconcileOrphanedRawEventsOnce() {
   let rejected = 0;
   for (const raw of orphans) {
     try {
-      const countryLabel = formatCountryName(raw.country);
       const eventTypeLabel = raw.event_type ?? "unknown";
-      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
-        country: countryLabel,
-        eventType: eventTypeLabel,
+      const reconcileTitle = raw.title ?? "Untitled event";
+      const similarRecentSignal = await findSimilarRecentSignal(supabase, {
+        title: reconcileTitle,
       });
+      if (similarRecentSignal) {
+        console.log(
+          `[NOVELTY-HINT] title="${reconcileTitle}" match="${similarRecentSignal.title}" similarity=${similarRecentSignal.similarity.toFixed(2)}`,
+        );
+      }
       const classification = await claude.classifyEvent(
         {
           id: raw.id,
-          title: raw.title ?? "Untitled event",
+          title: reconcileTitle,
           summary: raw.summary ?? "",
           country: raw.country,
           event_type: raw.event_type,
           event_date: raw.event_date,
         },
-        { similarStoryLast48h },
+        { similarRecentSignal },
       );
 
       // Deferred is not a classification (founder decisions 2026-10-05 and
@@ -218,9 +222,8 @@ export async function reconcileOrphanedRawEventsOnce() {
           severity: classification.severity,
           confidence: classification.confidence,
           event_type: eventTypeLabel,
-          // #188 — countryLabel (computed above, before classification, from
-          // raw.country) is right for RSS/GNews (null -> "Global") and ACLED
-          // (a real per-event country already), but wrong for a recovered
+          // #188 — formatting raw.country (null -> "Global" for RSS/GNews, a real
+          // country for ACLED) is right for those sources, but wrong for a recovered
           // GDELT orphan: raw.country there is sourcecountry, the publishing
           // outlet's country, not the event's location. Prefer Claude's own
           // read of the article; fall back to the raw value only when the

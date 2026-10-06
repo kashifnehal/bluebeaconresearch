@@ -10,7 +10,7 @@ import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
 import { tryTitlePreFilterSkip } from "./title-prefilter.js";
 import { recordServiceHealth } from "../lib/service-health.js";
-import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
+import { findSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
@@ -335,11 +335,14 @@ export async function runRssCollectorOnce() {
     }
 
     try {
-      const countryLabel = formatCountryName(rawEventPayload.country);
-      const similarStoryLast48h = await hasSimilarRecentSignal(supabase, {
-        country: countryLabel,
-        eventType: rawEventPayload.event_type,
+      const similarRecentSignal = await findSimilarRecentSignal(supabase, {
+        title: rawEventPayload.title,
       });
+      if (similarRecentSignal) {
+        console.log(
+          `[NOVELTY-HINT] title="${rawEventPayload.title}" match="${similarRecentSignal.title}" similarity=${similarRecentSignal.similarity.toFixed(2)}`,
+        );
+      }
       // item.summary is already the richest body text this collector has (rss-parser's
       // contentSnippet/content/summary chain — see the allItems.push() above), so it
       // doubles as the "full article text" the placement check compares against.
@@ -353,7 +356,7 @@ export async function runRssCollectorOnce() {
           event_type: rawEventPayload.event_type,
           event_date: rawEventPayload.event_date,
         },
-        { similarStoryLast48h, headlinePlacement },
+        { similarRecentSignal, headlinePlacement },
       );
 
       // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder
