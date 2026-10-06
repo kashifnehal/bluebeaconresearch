@@ -96,7 +96,7 @@ export async function telegramRoutes(app: FastifyInstance) {
       });
 
       // "mute_topic" records feedback only in this version — it does not change
-      // alert_rules or thresholds (doc 64).
+      // alert_rules or thresholds (decided 2026-10-02).
       const ackText =
         parsed.value === "useful"
           ? "Thanks — noted as useful."

@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural & Product Decision Log
 
-> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through D37 / ADR 033. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through D37 / ADR 033. Day-to-day: `docs/brain/LIVE_TODO.md`. The external session TODO is not in this repo.
 
 **Classification: Internal — CTO Level**
 **Format: Decision → Context → Options considered → Choice → Rationale → Trade-offs**
@@ -719,7 +719,7 @@ Also decided as part of this same pass:
 
 **Decision:** A signal retroactively discovered via the GDELT historical-backfill path (`is_backfilled = true`) behaves exactly like any other signal — feed, chart attribution, search — except it never triggers `dispatchAlertsForSignal` ("new signal" Telegram/email/Discord alerts), on either a fresh insert or an escalation merge. Briefing generation (severity ≥ 7) still runs.
 
-**Context:** Phase 1 (`cb12e82`/`dc7dc45`) only explains chart moves from BBR's own DB. Phase 2 queries GDELT's historical archive when that lookup finds nothing and writes a real signal through the normal ingestion path. The task spec for this work cited a founder decision in a `claude/245_...md` file that does not exist anywhere in the repo — no record of it exists in this file or `LIVE_TODO.md` either. Made live in this session instead of guessing; flagged per the doc-precedence/citation-verification rule in `CLAUDE.md`.
+**Context:** Phase 1 (`cb12e82`/`dc7dc45`) only explains chart moves from BBR's own DB. Phase 2 queries GDELT's historical archive when that lookup finds nothing and writes a real signal through the normal ingestion path. The task spec for this work cited a founder decision in a a planning note that is not in this repo file that does not exist anywhere in the repo — no record of it exists in this file or `LIVE_TODO.md` either. Made live in this session instead of guessing; flagged per the doc-precedence/citation-verification rule in `CLAUDE.md`.
 
 **Rationale:** A push alert about an event from weeks ago, triggered by a user simply clicking a chart point, would be actively misleading — "new signal" alerts exist specifically for timeliness. Suppressing only the dispatch (not the row) keeps the signal useful everywhere else it's supposed to be.
 
@@ -731,7 +731,7 @@ Also decided as part of this same pass:
 
 **Context:** This feature (shipped 2026-09-27) was documented as blocked on a migration Claude Code's deploy gate had denied. A direct SQL check during this task found the `user_sessions` table already live in production — the migration was applied without the docs being updated, so eviction had been running unconditionally with no off-switch. Feature has no `apps/backend` code at all, despite the task instructions assuming it did.
 
-**Rationale:** The task asked for the parking comment to cite "claude/232 in the BBR Claude Project" — the same unverifiable reference already flagged in D34/ADR 030's history. Repo-wide search again found no such doc/ticket, so it was dropped per the no-fabricated-citations rule and replaced with the real decision date and toggle mechanism.
+**Rationale:** The task asked for the parking comment to cite a planning note that is not in this repo — the same unverifiable reference already flagged in D34/ADR 030's history. Repo-wide search again found no such doc/ticket, so it was dropped per the no-fabricated-citations rule and replaced with the real decision date and toggle mechanism.
 
 **Cross-tree mapping:** Recorded as **ADR 031** in `docs/brain/10_DECISIONS.md`.
 
@@ -739,9 +739,9 @@ Also decided as part of this same pass:
 
 **Decision:** `classifyEvent()`'s new `invalidationCondition` field (a one-sentence, plain-language statement of what specific reported fact would undercut the event's market-impact read, grounded in the article's own claim) is rendered in exactly one place: a labeled section on `events/[id]/page.tsx`'s Analysis tab (`data-testid="invalidation-condition"`). Not added to `SignalCard.tsx`, the dashboard feed, or `SignalQuickView.tsx`.
 
-**Context:** The task instructions for this work cited "claude/229 Part D" as the source of this scope restriction. `claude/229` is a real, closed prior task (2026-09-26, feed ranking/skeleton loaders/breadcrumbs/country flags — see ADR/changelog entries for that date) but every record of it in this repo refers only to "Part A"; no "Part D" appears anywhere (`docs/`, `git log --all`). Repo-wide search found no such doc/ticket, matching the same fabricated-citation pattern already flagged for `claude/232` (D35/ADR 031) and `claude/245` (D34/ADR 030) — so the citation was dropped per the standing no-fabricated-citations rule.
+**Context:** The task instructions for this work cited "a section that is not in this repo" as the source of this scope restriction. The 2026-09-26 feed-ranking note is a real, closed prior task (2026-09-26, feed ranking/skeleton loaders/breadcrumbs/country flags — see ADR/changelog entries for that date) but every record of it in this repo refers only to "Part A"; no "Part D" appears anywhere (`docs/`, `git log --all`). Repo-wide search found no such doc/ticket, matching the same fabricated-citation pattern already flagged in ADR 031 and ADR 030 — so the citation was dropped per the standing no-fabricated-citations rule.
 
-**Rationale:** The Analysis-tab-only scope stands on its own merits regardless of the unverifiable citation: it's a deep-dive, analyst-briefing-style field (one sentence of reasoning, not a glanceable badge), and the dense card/feed/drawer surfaces have repeatedly had filler trimmed from them (see the 2026-09-26 drawer-trim entry) rather than grown. A second, separate task in this same batch (a point-in-time-integrity audit for the backtesting engine, cited to the same "claude/229" ticket) was dropped entirely rather than partially fabricated — see `LIVE_TODO.md` for that finding.
+**Rationale:** The Analysis-tab-only scope stands on its own merits regardless of the unverifiable citation: it's a deep-dive, analyst-briefing-style field (one sentence of reasoning, not a glanceable badge), and the dense card/feed/drawer surfaces have repeatedly had filler trimmed from them (see the 2026-09-26 drawer-trim entry) rather than grown. A second, separate task in this same batch (a point-in-time-integrity audit for the backtesting engine, cited to the same 2026-09-26 planning note) was dropped entirely rather than partially fabricated — see `LIVE_TODO.md` for that finding.
 
 **Cross-tree mapping:** Recorded as **ADR 032** in `docs/brain/10_DECISIONS.md`.
 
@@ -765,7 +765,7 @@ Also decided as part of this same pass:
 
 **Cross-tree mapping:** Recorded as **ADR 034** in `docs/brain/10_DECISIONS.md`.
 
-## D39: When the daily Anthropic budget is closed, defer — do not classify heuristically. Amends ADR 005 for `budget_closed` and `spend_limit` only (founder decision D10, 2026-10-05)
+## D39: When the daily Anthropic budget is closed, defer — do not classify heuristically. Amends ADR 005 for `budget_closed` and `spend_limit` only (founder decision 2026-10-05)
 
 **Decision:** `classifyEvent()` now returns `{ deferred: true, deferReason: "budget_closed" | "spend_limit", materialityPass: false, ... }` instead of calling `heuristicClassify()` for those two reasons only. The 3 live collectors (`gdelt`/`gnews`/`rss-collector.ts`) each check `isAnthropicBudgetAvailable("ingestion")` at the start of their cycle and fetch/write nothing if closed; `reconciliation.ts` does the same at the top of its own run. All 4 callers check `deferred` before `materialityPass`, skip the signal insert and `logMaterialityRejection` (so `materiality_checked_at` stays unset — the row waits for a later, open-budget cycle), and stop the rest of that batch. `pipeline-status.ts` records `budgetClosed` on `pipeline:last_run` for the status page's honest line (read side already shipped in W8-BUDGET-STATUS); the zero-yield alert is suppressed while closed. Transient errors (`api_error`, `json_parse`) are unchanged — still heuristic fallback.
 

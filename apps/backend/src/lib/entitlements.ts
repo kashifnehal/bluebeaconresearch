@@ -1,7 +1,7 @@
 import type { AuthedUser } from "../middleware/auth.middleware.js";
 
 /**
- * Personalization entitlement keys (PERS tracker, doc 298 §3). This file only
+ * Personalization entitlement keys (decided 2026-10-02). This file only
  * defines the keys and their free/paid table — nothing calls can()/limitFor()
  * yet (see entitlements.test.ts for the only current usage). planGuard
  * (middleware/plan-guard.middleware.ts) is untouched and remains the actual
@@ -36,10 +36,9 @@ export const GATES_ENABLED = false;
 
 /**
  * Every free/paid value below (booleans AND numeric limits) is a placeholder
- * DESIGN CHOICE made in this session, not sourced from doc 298 §3 itself
- * (that doc's actual free/paid split was not available to read from this
- * repo — only the key names were). Treat every row as provisional until
- * someone reconciles it against doc 298.
+ * DESIGN CHOICE made 2026-10-02, not a measured free/paid split. Only the
+ * key names were available in this repo. GAP: source recorded outside the repo.
+ * Treat every row as provisional.
  */
 export const ENTITLEMENTS: Record<FeatureKey, { free: boolean | number; paid: boolean | number }> = {
   "alerts.why_matched": { free: false, paid: true },

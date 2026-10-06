@@ -73,8 +73,8 @@ const SIGNAL_COLUMNS =
   "id, title, summary, ai_analysis, severity, region, commodity_impacts, currency_pair_impacts, raw_event_ids, event_date, created_at";
 
 /**
- * Signals the alert-dispatcher's per-user daily budget deferred (doc 298 algorithm
- * A2 §3) for this user — `alerts_sent` rows with status "deferred" and
+ * Signals the alert-dispatcher's per-user daily budget deferred (decided 2026-10-02)
+ * for this user — `alerts_sent` rows with status "deferred" and
  * deferred_to_digest still true. These bypass the normal preference/time-window
  * filter below: the user already cleared an alert_rules match for them, so they
  * belong in the digest regardless of whether they also happen to fall in the last
@@ -115,7 +115,7 @@ export async function clearDeferredDigestFlags(userId: string, signalIds: string
  * DIGEST_LIMIT of them via pickDiverse() rather than a flat top-N — a severity-only
  * cut previously let one heavily-covered story crowd out every other watchlist hit
  * (see LIVE_TODO #83 note on a CORN/WHEAT-only digest) — plus any signal the
- * alert-dispatcher budget deferred for this user (doc 298 algorithm A2 §3), which
+ * alert-dispatcher budget deferred for this user (decided 2026-10-02), which
  * bypasses the diversity pick entirely since the user already cleared a real
  * alert_rules match for it. Returns [] when the user has no preferences and
  * nothing was deferred (the digest is genuinely personalized — no global top-5

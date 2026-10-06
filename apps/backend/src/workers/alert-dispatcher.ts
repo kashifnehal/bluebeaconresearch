@@ -14,7 +14,7 @@ const telegram = new TelegramService();
 const expoPush = new ExpoPushService();
 
 /**
- * Alert-fatigue guard (doc 298 algorithm A2; principle source: Google SRE alerting
+ * Alert-fatigue guard (decided 2026-10-02; principle source: Google SRE alerting
  * guidance — alerts must be actionable, noise causes fatigue). The two numbers below
  * are DESIGN CHOICES, not measured/tuned constants — there is no production volume
  * yet to derive them from, unlike e.g. signal-merge.ts's SIMILARITY_THRESHOLD.
@@ -25,7 +25,7 @@ const STORY_COOLDOWN_MINUTES = 30; // DESIGN CHOICE, not measured.
 /**
  * Budget gate: true when this user has already hit MAX_ALERTS_PER_USER_PER_DAY
  * alerts_sent rows in the last 24h and this isn't the severity-10 exception.
- * Pure/exported for unit testing — doc 64 rule: this is a count, not a learned score,
+ * Pure/exported for unit testing — decided 2026-10-02: this is a count, not a learned score,
  * so it never looks at open/click/dismiss behavior data, only alerts_sent row counts.
  */
 export function shouldDeferForBudget(alertsSentTodayCount: number, severity: number): boolean {
@@ -353,7 +353,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
         : Promise.resolve({ data: [] as any[] }),
       // Single batched query backs both the per-user daily budget (full 24h window)
       // and the per-story cooldown (the cooldownStart..now subset of the same rows) —
-      // one query for all matched users, not one per rule (doc 298 algorithm A2).
+      // one query for all matched users, not one per rule (decided 2026-10-02).
       supabase.from("alerts_sent").select("user_id, signal_id, created_at").in("user_id", userIds).gte("created_at", dayAgo),
     ]);
 
@@ -405,7 +405,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
       }
     }
 
-    // Cooldown (doc 298 A2 §4): same story, same user, within STORY_COOLDOWN_MINUTES
+    // Cooldown (decided 2026-10-02): same story, same user, within STORY_COOLDOWN_MINUTES
     // — skip entirely, no alerts_sent row. Escalation re-alerts are exempt.
     const recentForUser = (cooldownRowsByUser.get(rule.user_id) ?? []).map((r) => ({
       signalId: r.signal_id,
@@ -423,7 +423,7 @@ export async function dispatchAlertsForSignal(signalId: string, escalation?: Esc
       continue;
     }
 
-    // Budget (doc 298 A2 §1-3): over MAX_ALERTS_PER_USER_PER_DAY and not severity 10
+    // Budget (decided 2026-10-02): over MAX_ALERTS_PER_USER_PER_DAY and not severity 10
     // — defer to the next digest instead of sending now.
     if (shouldDeferForBudget(alertsTodayCountByUser.get(rule.user_id) ?? 0, signal.severity)) {
       alertsSentRows.push({

@@ -1,6 +1,6 @@
 # 10_DECISIONS.md — Architectural Decision Records (ADRs) & Trade-offs
 
-> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through ADR 033 / D37. Day-to-day: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-09-26 for standing rules.** Latest ADRs through ADR 033 / D37. Day-to-day: `docs/brain/LIVE_TODO.md`. The external session TODO is not in this repo.
 
 This document records the foundational architectural decisions, framework selections, infrastructure trade-offs, underlying assumptions, and system risks for Blue Beacon Research.
 
@@ -638,7 +638,7 @@ Recorded as **D33** in `docs/claude_project/10_DECISIONS.md`.
 
 ### Context
 
-Phase 1 (`cb12e82`/`dc7dc45`) answers "why did this move happen?" only from signals already in BBR's own DB. When that lookup finds nothing, Phase 2 queries GDELT's own historical archive for the clicked asset/window and, for classifier-confirmed-relevant results, writes a real signal through the normal `raw_events` → materiality gate → `signals` path (new `raw_events.source = 'chart-attribution-backfill'`, new `signals.is_backfilled` column). The task spec for this work cited a founder decision in `claude/245_...md §4` picking between two options for how these retroactively-discovered rows should behave — that file does not exist anywhere in the repo, and no record of the decision was found in this file or `LIVE_TODO.md` (matches a prior pattern of fabricated doc citations in this project — see `project_fabricated_citation_incident` in session memory). Rather than silently guessing, the choice was made live in this session and is recorded here for the first time.
+Phase 1 (`cb12e82`/`dc7dc45`) answers "why did this move happen?" only from signals already in BBR's own DB. When that lookup finds nothing, Phase 2 queries GDELT's own historical archive for the clicked asset/window and, for classifier-confirmed-relevant results, writes a real signal through the normal `raw_events` → materiality gate → `signals` path (new `raw_events.source = 'chart-attribution-backfill'`, new `signals.is_backfilled` column). The task spec for this work cited a founder decision in `a planning note that is not in this repo_...md §4` picking between two options for how these retroactively-discovered rows should behave — that file does not exist anywhere in the repo, and no record of the decision was found in this file or `LIVE_TODO.md` (matches a prior pattern of fabricated doc citations in this project — see `project_fabricated_citation_incident` in session memory). Rather than silently guessing, the choice was made live in this session and is recorded here for the first time.
 
 ### Decision
 
@@ -664,7 +664,7 @@ Eviction (the count-at-cap check, deleting the oldest row, any future revoke att
 
 ### Rationale
 
-The task instructions for this work asked for the parking comment to cite "claude/232 in the BBR Claude Project" — same unverifiable reference already flagged twice before (ADR 030/D34's `claude/245`, and the original `LIVE_TODO.md` session-cap entry). Repo-wide `grep`/`git log --all` again found no such doc/ticket; per the standing no-fabricated-citations rule the citation was dropped and the comment instead states the real founder-decision date and the real toggle mechanism. Separately, the task's own premise ("Main app: apps/backend") didn't hold — this feature has no backend code at all, confirmed by grep; the flag was added to `apps/web` instead, in the file and pattern actually in use there.
+The task instructions for this work asked for the parking comment to cite a planning note that is not in this repo — same unverifiable reference already flagged twice before (ADR 030/D34's a planning note that is not in this repo, and the original `LIVE_TODO.md` session-cap entry). Repo-wide `grep`/`git log --all` again found no such doc/ticket; per the standing no-fabricated-citations rule the citation was dropped and the comment instead states the real founder-decision date and the real toggle mechanism. Separately, the task's own premise ("Main app: apps/backend") didn't hold — this feature has no backend code at all, confirmed by grep; the flag was added to `apps/web` instead, in the file and pattern actually in use there.
 
 ### Cross-tree mapping
 
@@ -674,7 +674,7 @@ Recorded as **D35** in `docs/claude_project/10_DECISIONS.md`.
 
 ### Context
 
-The task instructions for this work cited "claude/229 Part D" as the source of the "Analysis tab only" scope restriction. `claude/229` is a real, closed prior task (2026-09-26, feed ranking/skeleton loaders/breadcrumbs/country flags), but every record of it in this repo refers only to "Part A" — no "Part D" appears anywhere (`docs/`, `git log --all`). Matches the same fabricated-citation pattern already flagged for `claude/232` (ADR 031/D35) and `claude/245` (ADR 030/D34), so the citation was dropped per the standing no-fabricated-citations rule.
+The task instructions for this work cited "a section that is not in this repo" as the source of the "Analysis tab only" scope restriction. The 2026-09-26 feed-ranking note is a real, closed prior task (2026-09-26, feed ranking/skeleton loaders/breadcrumbs/country flags), but every record of it in this repo refers only to "Part A" — no "Part D" appears anywhere (`docs/`, `git log --all`). Matches the same fabricated-citation pattern already flagged in ADR 031 and ADR 030, so the citation was dropped per the standing no-fabricated-citations rule.
 
 ### Decision
 
@@ -682,7 +682,7 @@ The task instructions for this work cited "claude/229 Part D" as the source of t
 
 ### Rationale
 
-The Analysis-tab-only scope stands on its own merits regardless of the unverifiable citation: it's a deep-dive, analyst-briefing-style field (one sentence of reasoning, not a glanceable badge), and the dense card/feed/drawer surfaces have repeatedly had filler trimmed from them (see the 2026-09-26 drawer-trim entry) rather than grown. A second, separate task in this same batch (a point-in-time-integrity audit for the backtesting engine, cited to the same "claude/229" ticket) was dropped entirely rather than partially fabricated — see `LIVE_TODO.md` for that finding.
+The Analysis-tab-only scope stands on its own merits regardless of the unverifiable citation: it's a deep-dive, analyst-briefing-style field (one sentence of reasoning, not a glanceable badge), and the dense card/feed/drawer surfaces have repeatedly had filler trimmed from them (see the 2026-09-26 drawer-trim entry) rather than grown. A second, separate task in this same batch (a point-in-time-integrity audit for the backtesting engine, cited to the same 2026-09-26 planning note) was dropped entirely rather than partially fabricated — see `LIVE_TODO.md` for that finding.
 
 ### Cross-tree mapping
 
@@ -724,7 +724,7 @@ USDINR is real, Yahoo-verified market data with a direct classifier/price-sync/f
 
 Recorded as **D38** in `docs/claude_project/10_DECISIONS.md`.
 
-## 36. ADR 035: When the daily Anthropic budget is closed, defer — do not classify heuristically. Amends ADR 005 for `budget_closed` and `spend_limit` only (founder decision D10, 2026-10-05)
+## 36. ADR 035: When the daily Anthropic budget is closed, defer — do not classify heuristically. Amends ADR 005 for `budget_closed` and `spend_limit` only (founder decision 2026-10-05)
 
 ### Context
 
@@ -732,7 +732,7 @@ ADR 005 established `heuristicClassify()` (fixed keyword-tier severity ladder, c
 
 ### Decision
 
-`classifyEvent()` (`apps/backend/src/services/claude.service.ts`) now returns `{ deferred: true, deferReason: "budget_closed" | "spend_limit", materialityPass: false, ... }` for those two reasons only, instead of calling `heuristicClassify()`. The 3 live collectors (`gdelt`/`gnews`/`rss-collector.ts`) each call `isAnthropicBudgetAvailable("ingestion")` at the very start of their cycle and, if closed, fetch nothing and write nothing to `raw_events` at all — not even a heuristic-classified row. `reconciliation.ts` does the same at the top of `reconcileOrphanedRawEventsOnce()`. All 4 callers check `classification.deferred` before `materialityPass`, skip the signal insert, skip `logMaterialityRejection` (so `materiality_checked_at` is never stamped — the row stays a valid candidate for later reconciliation), and `break` out of the rest of that batch (a process-wide condition won't clear mid-cycle, so retrying the next article is pointless). `pipeline-status.ts` records `budgetClosed: true/false` + a checked-at UTC timestamp on `pipeline:last_run`, read by `apps/web/lib/status-checks.ts` (landed ahead of this, in W8-BUDGET-STATUS) for the status page's honest "Classification paused until the next UTC day" line; the zero-yield-streak alert is suppressed while `budgetClosed` is true, since a closed budget deliberately produces `fetched: 0` from every collector. Transient errors (`api_error`, `json_parse`) are explicitly untouched — they still fall back to `heuristicClassify()` as before (ADR 005, unchanged; D12 on that path stays open).
+`classifyEvent()` (`apps/backend/src/services/claude.service.ts`) now returns `{ deferred: true, deferReason: "budget_closed" | "spend_limit", materialityPass: false, ... }` for those two reasons only, instead of calling `heuristicClassify()`. The 3 live collectors (`gdelt`/`gnews`/`rss-collector.ts`) each call `isAnthropicBudgetAvailable("ingestion")` at the very start of their cycle and, if closed, fetch nothing and write nothing to `raw_events` at all — not even a heuristic-classified row. `reconciliation.ts` does the same at the top of `reconcileOrphanedRawEventsOnce()`. All 4 callers check `classification.deferred` before `materialityPass`, skip the signal insert, skip `logMaterialityRejection` (so `materiality_checked_at` is never stamped — the row stays a valid candidate for later reconciliation), and `break` out of the rest of that batch (a process-wide condition won't clear mid-cycle, so retrying the next article is pointless). `pipeline-status.ts` records `budgetClosed: true/false` + a checked-at UTC timestamp on `pipeline:last_run`, read by `apps/web/lib/status-checks.ts` (landed ahead of this, in W8-BUDGET-STATUS) for the status page's honest "Classification paused until the next UTC day" line; the zero-yield-streak alert is suppressed while `budgetClosed` is true, since a closed budget deliberately produces `fetched: 0` from every collector. Transient errors (`api_error`, `json_parse`) are explicitly untouched — they still fall back to `heuristicClassify()` as before (ADR 005, unchanged; the api_error/json_parse path stays open as of 2026-10-05).
 
 ### Rationale
 
