@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
-import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
+import { ClaudeService, shouldStopBatch, type DeferReason } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
@@ -41,6 +41,42 @@ const BATCH_LIMIT = 200;
 // permanently skipped, which only costs a few more harmless re-attempts, not a
 // correctness problem.
 const ORPHAN_MAX_AGE_HOURS = 36;
+
+export type RawEventClassificationAction = "stop_batch" | "skip_event" | "reject" | "insert";
+
+export interface RawEventClassificationDecision {
+  action: RawEventClassificationAction;
+  createSignal: boolean;
+  /** True only for a real materiality rejection, which stamps raw_events.materiality_checked_at. */
+  setMaterialityCheckedAt: boolean;
+}
+
+/**
+ * Per-event decision after classifyEvent(). Pure: no I/O.
+ * A deferred result (founder decisions 2026-10-05 and 2026-10-06) creates no
+ * signal and leaves materiality_checked_at unset. shouldStopBatch chooses
+ * stop_batch (budget_closed, spend_limit, service-level api_error) or
+ * skip_event (json_parse, request-specific HTTP 400/404/413).
+ */
+export function decideRawEventClassification(classification: {
+  deferred?: boolean;
+  deferReason?: DeferReason;
+  deferHttpStatus?: number;
+  materialityPass: boolean;
+}): RawEventClassificationDecision {
+  if (classification.deferred) {
+    const stop = shouldStopBatch(classification.deferReason, classification.deferHttpStatus);
+    return {
+      action: stop ? "stop_batch" : "skip_event",
+      createSignal: false,
+      setMaterialityCheckedAt: false,
+    };
+  }
+  if (!classification.materialityPass) {
+    return { action: "reject", createSignal: false, setMaterialityCheckedAt: true };
+  }
+  return { action: "insert", createSignal: true, setMaterialityCheckedAt: false };
+}
 
 export async function reconcileOrphanedRawEventsOnce() {
   // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
@@ -137,30 +173,30 @@ export async function reconcileOrphanedRawEventsOnce() {
         { similarStoryLast48h },
       );
 
-      // W8-BUDGET-DEFER (ADR 035, founder decision 2026-10-05) plus founder
-      // decision 2026-10-06 — see gdelt-collector.ts for the full comment.
-      // materiality_checked_at stays null so the next cycle retries this row,
-      // bounded by ORPHAN_MAX_AGE_HOURS = 36 and this file's existing every-30-min
-      // cron (36h / 0.5h = 72 ticks). shouldStopBatch decides stop vs skip.
-      if (classification.deferred) {
-        if (shouldStopBatch(classification.deferReason, classification.deferHttpStatus)) {
-          console.log(
-            `[Reconciliation] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
-          );
-          break;
-        }
+      // Deferred is not a classification (founder decisions 2026-10-05 and
+      // 2026-10-06). decideRawEventClassification leaves materiality_checked_at
+      // unset so the next cycle retries this row, bounded by ORPHAN_MAX_AGE_HOURS
+      // = 36 and this file's existing every-30-min cron (36h / 0.5h = 72 ticks).
+      const decision = decideRawEventClassification(classification);
+      if (decision.action === "stop_batch") {
+        console.log(
+          `[Reconciliation] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+        );
+        break;
+      }
+      if (decision.action === "skip_event") {
         console.log(
           `[Reconciliation] classifyEvent deferred (reason=${classification.deferReason}) — skipping this event, continuing batch`,
         );
         continue;
       }
 
-      // #139/#141 materiality gate — this is a live cron job (every 30 min)
-      // retrying classification for orphaned raw_events, one of the task's
-      // explicitly-named 5 live call sites. Same gate, same skip-the-insert
+      // Materiality gate — this is a live cron job (every 30 min) retrying
+      // classification for orphaned raw_events. Same gate, same skip-the-insert
       // behavior as the collectors: the raw_event stays (it's already there),
-      // only the signals insert is skipped.
-      if (!classification.materialityPass) {
+      // only the signals insert is skipped. logMaterialityRejection stamps
+      // materiality_checked_at; a deferred result never reaches this branch.
+      if (decision.action === "reject") {
         rejected += 1;
         await logMaterialityRejection({
           collectorLabel: "Reconciliation",

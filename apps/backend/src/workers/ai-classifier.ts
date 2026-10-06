@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getRedis } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { QUEUE_NAMES, buildQueues } from "../queues.js";
-import { ClaudeService } from "../services/claude.service.js";
+import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { publishNewSignal } from "../workers/pubsub.js";
 
 const classificationSchema = z.object({
@@ -79,6 +79,26 @@ export function startAiClassifierWorker() {
       }
 
       const result = await claude.classifyEvent(rawEvent);
+
+      // Deferred is not a classification (founder decisions 2026-10-05 and
+      // 2026-10-06). This worker handles one raw event per job. shouldStopBatch
+      // true stops; false skips. Both return before the signal insert and before
+      // the schema parse (a deferred placeholder would otherwise fail that parse
+      // and be retried as a bad payload). Neither path writes a signal or stamps
+      // materiality_checked_at.
+      if (result.deferred) {
+        if (shouldStopBatch(result.deferReason, result.deferHttpStatus)) {
+          console.log(
+            `[CLASSIFIER] classifyEvent deferred (reason=${result.deferReason}) — stopping batch for this cycle`,
+          );
+          return { deferred: true, stopped: true };
+        }
+        console.log(
+          `[CLASSIFIER] classifyEvent deferred (reason=${result.deferReason}) — skipping this event, continuing batch`,
+        );
+        return { deferred: true, skipped: true };
+      }
+
       const parsed = classificationSchema.safeParse(result);
       if (!parsed.success) {
         throw new Error("Invalid classification payload");

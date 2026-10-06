@@ -2,6 +2,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { AcledAccessDeniedError, AcledService } from "../services/acled.service.js";
 import { ClaudeService } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
+import { decideRawEventClassification } from "./reconciliation.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 import { hasSimilarRecentSignal } from "../lib/novelty-hint.js";
@@ -179,14 +180,30 @@ export async function runAcledCollectorOnce(
         { similarStoryLast48h },
       );
 
-      // #139/#141 materiality gate — the task spec explicitly calls out ACLED
-      // (armed-conflict/security) as BBR's own highest-value content category
-      // and instructs NOT skipping it; the gate still applies exactly the same
-      // way here as the other 4 live paths — armed-conflict/security events
-      // clear criterion (b) via "genuine armed-conflict/security event with
-      // plausible commodity relevance" in the prompt's own materiality
-      // instruction, so a real ACLED event should almost always still pass.
-      if (!classification.materialityPass) {
+      // Deferred is not a classification (founder decisions 2026-10-05 and
+      // 2026-10-06). Create no signal and do not call logMaterialityRejection,
+      // so materiality_checked_at stays unset. shouldStopBatch (inside
+      // decideRawEventClassification) stops the rest of this cycle for
+      // budget_closed, spend_limit, and service-level api_error; json_parse
+      // and request-specific HTTP 400/404/413 skip only this event.
+      const decision = decideRawEventClassification(classification);
+      if (decision.action === "stop_batch") {
+        console.log(
+          `[ACLED] classifyEvent deferred (reason=${classification.deferReason}) — stopping batch for this cycle`,
+        );
+        break;
+      }
+      if (decision.action === "skip_event") {
+        console.log(
+          `[ACLED] classifyEvent deferred (reason=${classification.deferReason}) — skipping this event, continuing batch`,
+        );
+        continue;
+      }
+
+      // Materiality gate. Armed-conflict events still go through the same gate
+      // as the other collectors. A real rejection stamps materiality_checked_at;
+      // the deferred branch above never reaches this call.
+      if (decision.action === "reject") {
         materialityRejected += 1;
         await logMaterialityRejection({
           collectorLabel: "ACLED",
