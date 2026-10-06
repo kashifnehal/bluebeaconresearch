@@ -16,7 +16,7 @@ Railway workers (startup + every 30 min)
   ├── Price Syncer       (Yahoo Finance — 8 commodities + 6 forex pairs)
   └── ACLED Collector    (optional — requires credentials)
         ↓
-  relevance-filter.ts    (exclude spam → match keywords OR finance-tier pass-through)
+  relevance-filter.ts    (exclude spam → drop routine insider/analyst noise → match keywords OR finance-tier pass-through)
         ↓
   raw_events table       (dedupe by external_id)
         ↓
@@ -179,12 +179,16 @@ Drop if title+summary contains (word-boundary match as of `b0783ab`, not substri
 - **False-positive phrases:** star wars, war movie, tug-of-war, oil painting, farmers market, dollar tree, military fitness, net worth, trade deadline…
 - **Historical years:** 1970–2005 in headline (archive retrospectives)
 
+### Step 1b — Routine market noise (`isRoutineMarketNoise`), 2026-10-07
+
+After the hard exclude and before the finance-tier pass-through, drop a title that matches an insider-trade pattern or an analyst-rating pattern. On a 1,111-article sample that day, 103 headlines matched and none became a signal. The patterns were built on that same sample, so each drop logs one `[RELEVANCE] routine-noise drop` line. Finance-tier feeds do not skip this check.
+
 ### Step 2 — Tier-based include
 
 | Tier                            | Rule                                                |
 | :------------------------------ | :-------------------------------------------------- |
-| **`finance`** RSS feeds         | Pass if NOT excluded (no keyword required)          |
-| **`world`** RSS + GNews + GDELT | Pass if NOT excluded AND matches keyword list below |
+| **`finance`** RSS feeds         | Pass if NOT excluded and NOT routine market noise (no keyword required) |
+| **`world`** RSS + GNews + GDELT | Pass if NOT excluded, NOT routine market noise, AND matches keyword list below |
 
 ### Step 3 — Keyword match (`matchesKeywords`)
 

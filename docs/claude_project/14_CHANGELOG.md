@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-06 (PHASE 123).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-07 (PHASE 124).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 124 — W12-C: drop routine insider-trade and analyst-rating headlines (2026-10-07)
+
+`apps/backend` only. Insider-trade and analyst-rating titles are dropped in the shared relevance filter after the hard exclude and before the finance-tier pass-through. Each drop is logged. Measured 2026-10-07: 103 of 1,111 headlines matched and none became a signal; the patterns are in-sample. Full detail: `docs/brain/14_CHANGELOG.md` v0.148.0.
 
 ## PHASE 123 — TASK PERS-Pn: asset-page Follow/Following toggle (2026-10-02, merged into main 2026-10-06 per W7-MERGE)
 

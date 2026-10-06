@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-06 (citation cleanup, comments and docs only, v0.147.0)
+Last updated: 2026-10-07 (W12-C: routine insider-trade and analyst-rating titles dropped, v0.148.0)
+
+> ⚠️ NEW 2026-10-07 (W12-C, `apps/backend` only) — `isRelevantEvent` drops insider-trade and analyst-rating titles after the hard exclude, including on finance-tier feeds, and logs each drop. Measured that day on 1,111 articles: 103 headlines matched and none became a signal. Patterns were fit on that sample, so the log line is the audit trail. Full detail: `14_CHANGELOG.md` v0.148.0, `LIVE_TODO.md`, `15_INGESTION_PIPELINE.md` §3.
 
 > ⚠️ NEW 2026-10-06 (citation cleanup, comments and docs only) — external planning-note ids were removed from the backend comments and the repo docs this task lists. Facts and dates stay. No behavior change. Full detail: `14_CHANGELOG.md` v0.147.0, `LIVE_TODO.md`.
 

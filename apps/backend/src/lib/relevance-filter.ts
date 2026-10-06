@@ -2,10 +2,10 @@
  * Shared relevance filter for all ingestion collectors.
  *
  * Two tiers:
- *  - "finance" feeds (BBC Business, MarketWatch, etc.): only hard-exclude spam/sports
- *  - "world" feeds + APIs: exclude spam + match geopolitical OR market/finance keywords
- *
- * See docs/brain/15_INGESTION_PIPELINE.md for full documentation.
+ *  - "finance" feeds (BBC Business, MarketWatch, etc.): only hard-exclude spam/sports,
+ *    then the routine-noise drop below
+ *  - "world" feeds + APIs: exclude spam, drop routine insider-trade and analyst-rating
+ *    titles, then match geopolitical OR market/finance keywords
  */
 
 /** Hard drops — sports, entertainment, lifestyle (never show regardless of source) */
@@ -117,10 +117,32 @@ function matchesKeywords(text: string): boolean {
 }
 
 /**
+ * Routine insider-trade and analyst-rating headlines.
+ *
+ * Measured 2026-10-07 on 1,111 articles: 103 headlines matched these two
+ * patterns and none of them became a signal. The patterns were built on that
+ * same sample (in-sample), so every drop is logged for audit.
+ */
+const INSIDER_TRADE_TITLE =
+  /(director|ceo|cfo|coo|cto|\bvp\b|\bevp\b|\bsvp\b|officer|insider|chairman|president|\bcao\b).{0,60}\b(sells?|sold|buys?|bought|purchases?)\b.{0,40}\$/i;
+const INSIDER_TRADE_SHARES =
+  /\b(sells?|buys?)\b \$[0-9,.]+[kmb]? (in|of) (company |class . )?(shares|stock)/i;
+const ANALYST_RATING =
+  /(price target|stock rating|rating maintained|reiterates .{0,40}(rating|stock)|upgrades .{0,40}(stock|rating)|downgrades .{0,40}(stock|rating)|consensus (rating|recommendation)|average (recommendation|price target|rating)|stock now rated|stock has average)/i;
+
+export function isRoutineMarketNoise(title: string): boolean {
+  return INSIDER_TRADE_TITLE.test(title) || INSIDER_TRADE_SHARES.test(title) || ANALYST_RATING.test(title);
+}
+
+/**
  * Main relevance gate used by GDELT, GNews, and world-tier RSS feeds.
  */
 export function isRelevantEvent(title: string, summary: string = "", feedTier: FeedTier = "world"): boolean {
   if (shouldExclude(title, summary)) return false;
+  if (isRoutineMarketNoise(title)) {
+    console.log(`[RELEVANCE] routine-noise drop title="${title}"`);
+    return false;
+  }
   // Finance-category RSS feeds: accept all non-excluded business/market headlines
   if (feedTier === "finance") return true;
   return matchesKeywords((title + " " + summary).toLowerCase());
