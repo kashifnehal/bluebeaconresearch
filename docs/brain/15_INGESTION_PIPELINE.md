@@ -1,6 +1,8 @@
 # 15_INGESTION_PIPELINE.md — News Ingestion Logic, Filters & Display Rules
 
-> **📍 Doc status — current as of 2026-09-28 for the RSS feed roster and ingestion cadence; 2026-09-20 for the materiality-gate path.** This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-07 for the GDELT record cap, retry, and DOC-list freeze; 2026-09-28 for the RSS feed roster and ingestion cadence; 2026-09-20 for the materiality-gate path.**
+>
+> ⚠️ UPDATED 2026-10-07 — also on the ingestion path: a cleaned excerpt goes to the classifier when the feed stored one (`cf0711f`; a missing summary, including every GDELT item, leaves the prompt unchanged); one email when the daily ingestion classification budget closes (`41c19ce`); ACLED and the dormant classifier do not store a deferred result (`5707819`); read-only view `feed_yield_daily` (`b4b52f1`, migration written, not applied). This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
 
 This document describes **exactly** how Blue Beacon Research fetches news, filters it, stores it, and displays it on the dashboard. Read this before changing collectors or wondering why certain headlines appear (or don't).
 
@@ -110,7 +112,7 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 
 **Auth:** None  
 **API:** `https://api.gdeltproject.org/api/v2/doc/doc`  
-**Max records:** 50 per run  
+**Max records:** 250 per run (`maxrecords=250` since 2026-09-26, `3d5e244`)  
 **Sort:** `DateDesc`  
 **Dedup key:** `gdelt-{base64(url)[0:32]}`  
 **DB source value:** `gdelt`
@@ -121,7 +123,8 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 (conflict OR war OR sanctions OR military OR oil OR stock market OR trade OR inflation OR fed OR earnings)
 ```
 
-**Rate limits:** HTTP 429 common → **30-second retry** once per run.  
+**Rate limits:** On HTTP 429, one retry then stop (`e677efc`, 2026-09-06). Delay is 5 seconds times 2 to the attempt, plus up to 10 seconds of jitter (`gdelt-collector.ts` on `7438ec9`, 2026-10-06). A non-429 error is not retried.
+**DOC artlist:** frozen from 2026-10-05 12:00 to 2026-10-06 07:00 UTC, recovered at 10:00 UTC. `48f77ce` (2026-10-06) recorded one HTTP 200 whose newest `seendate` was still 2026-10-02T10:45:00Z.  
 **Filter:** `isRelevantEvent(title)` — title only (GDELT often has no summary).
 **Fields (DOC 2.0 artlist response):** `url, title, seendate, socialimage, domain, language, sourcecountry` — no `ActionGeo_*`/Goldstein/CAMEO fields exist in this response; those belong to GDELT's separate Event Export CSV product, which this collector doesn't call (confirmed #188, 2026-09-24; `docs/claude_project/16_DATA_PIPELINE.md` §2.1 previously claimed otherwise).
 **Country caveat (#188):** `sourcecountry` is the publishing outlet's country, not the event's location — `raw_events.country` keeps it as the raw value, but the classifier's own `country` field (see `18_AI_ENGINE.md`) is what's now used for the signal's displayed country and map coordinates.
@@ -209,6 +212,7 @@ After passing the filter and dedup check:
 1. Insert row into `raw_events`
 2. Call `ClaudeService.classifyEvent()`:
    - If Anthropic API has credit → Claude 3.5 Haiku JSON classification
+   > ⚠️ UPDATED 2026-10-06 (`0c9b4b6`, `7438ec9`) — a temporary Anthropic error defers classification instead of a keyword guess. The keyword fallback applies only when no research-model client is configured. A closed daily budget pauses collection (`c468485`).
    > ⚠️ UPDATED 2026-08-19 — Anthropic API credit is currently exhausted, so this branch is not the one running in production right now; every classification is currently going through the heuristic fallback below.
    - If API fails → **heuristic fallback** (local, zero cost) with conservative commodity impact assignment
      - never invent commodity exposure without evidence
@@ -226,6 +230,7 @@ After passing the filter and dedup check:
    - **`event_date`** = article publish time (from RSS `pubDate`, GNews `publishedAt`, GDELT `seendate`)
    - **#141/#142 columns** = `relevance`, `novelty`, `event_category`, `market_mechanism`, `is_preview`, `source_confirmation`, `materiality_pass`, `materiality_reasoning`, `media_impact_entity`
 
+> ⚠️ UPDATED 2026-09-25 (`d67ae2b`) — after classification, `insertOrMergeSignal()` merges on Jaccard similarity of the summary at **0.33**. A note that the live bar is still 0.55 is out of date.
 > ⚠️ UPDATED 2026-08-19 — Step 3 is no longer an unconditional insert in the 3 live collectors (`rss-collector.ts`, `gnews-collector.ts`, `gdelt-collector.ts`). After classification returns, `insertOrMergeSignal()` (`apps/backend/src/workers/signal-merge.ts`) checks recent same-region signals for a plausible cross-source match on the classified summary. No match → inserts exactly as described above. A match with lower/equal severity → merges into the existing signal instead (`raw_event_ids` grows, `sources_count` increments, no new row, Sonnet briefing reused not regenerated). A match with higher severity → treated as an escalation: updates the existing signal's `severity` and regenerates its briefing rather than creating a second row. **Classification itself is never skipped** — this only changes what happens to an already-classified result. Full design and thresholds: `10_DECISIONS.md` ADR 010; `14_CHANGELOG.md` v0.27.0. Not wired into `reconciliation.ts`'s orphan-recovery insert path — that one is unchanged.
 
 - `created_at` = first ingestion time into BBR

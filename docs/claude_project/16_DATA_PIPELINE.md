@@ -1,9 +1,11 @@
 # 16_DATA_PIPELINE.md — Complete Data Pipeline Documentation
 
-> **📍 Doc status — current as of 2026-09-20 for the materiality-gate note below.** ASCII diagrams further down are older. Authoritative pipeline: `docs/brain/15_INGESTION_PIPELINE.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-07 for the GDELT volume, freeze, and yield-view notes; 2026-09-20 for the materiality-gate note below.** ASCII diagrams further down are older. Authoritative pipeline: `docs/brain/15_INGESTION_PIPELINE.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
+> ⚠️ UPDATED 2026-10-06 — a temporary Anthropic error defers classification (`0c9b4b6`). The classifier prompt includes a cleaned excerpt when the feed stored one (`cf0711f`); every GDELT item has no summary, so that prompt stays title-only. One email is sent when the daily ingestion classification budget closes (`41c19ce`). A closed budget pauses collection and the status copy names the pause (`c468485`). ACLED and the dormant classifier do not store a deferred result (`5707819`).
+>
 > ⚠️ UPDATED 2026-09-13 (#141 / #142) — after `classifyEvent()` (and the heuristic fallback), a **materiality gate** runs at all 5 live insert sites. `materiality_pass = false` skips the `signals` insert; `raw_events` is kept. The communicators list is live `public.media_impact_watchlist`, not the #141 hardcoded array. The ASCII diagram below still shows the older "classify → always store" shape — do not treat that as current. Authoritative pipeline: `docs/brain/15_INGESTION_PIPELINE.md`.
 
 ---
@@ -81,7 +83,7 @@ no Goldstein scale, and no `ActionGeo_*` fields anywhere in this pipeline.
 **Format:** JSON (`mode=artlist`)
 **Update frequency:** Every 30 minutes (ingestion cron cycle — `INGESTION_INTERVAL_CRON`, see `docs/brain/15_INGESTION_PIPELINE.md` §1)
 **Cost:** Free, no API key, no authenticated tier
-**Volume:** Up to 50 articles per run (`maxrecords=50`)
+**Volume:** Up to 250 articles per run (`maxrecords=250` since 2026-09-26, `3d5e244`)
 
 **Query (URL-encoded):**
 ```
@@ -110,7 +112,7 @@ to GDELT's separate Event Export CSV product, which this collector does not call
 
 **GDELT collection logic (gdelt-collector.ts):**
 ```typescript
-// Single GET to the DOC 2.0 artlist endpoint above (sourcelang:eng, maxrecords=50, sort=DateDesc)
+// Single GET to the DOC 2.0 artlist endpoint above (sourcelang:eng, maxrecords=250, sort=DateDesc)
 // Filter: article.language !== "english" excluded, then isRelevantEvent(title)
 // Insert raw_events with country = sourcecountry (raw/internal value, kept as-is)
 // classifyEvent() (Claude) derives its own `country` field from the article
@@ -126,7 +128,9 @@ to GDELT's separate Event Export CSV product, which this collector does not call
   from the article text; see 18_AI_ENGINE.md)
 - Contains non-geopolitical events (sports, entertainment with "conflict" tone) — filtered by `isRelevantEvent`
 - No article summary/body in this response — filtering and classification both work title-only for GDELT
-- Keyless DOC API has no SLA; a 429 can reflect an IP-level block (shared Railway egress IP) lasting up to ~15 min
+- Keyless DOC API has no SLA; a 429 can reflect an IP-level block (shared Railway egress IP) lasting up to ~15 min. On HTTP 429 the collector retries once then stops (`e677efc`, 2026-09-06): delay is 5 seconds times 2 to the attempt, plus up to 10 seconds of jitter (`gdelt-collector.ts` on `7438ec9`, 2026-10-06).
+- The DOC artlist was frozen from 2026-10-05 12:00 to 2026-10-06 07:00 UTC and recovered at 10:00 UTC. `48f77ce` (2026-10-06) recorded one HTTP 200 whose newest `seendate` was still 2026-10-02T10:45:00Z.
+- Read-only view `feed_yield_daily` (`b4b52f1`, 2026-10-06) counts rows saved against rows that appear on a signal, by UTC day. Migration written, not applied. No threshold. `SELECT` for `service_role` only.
 
 ---
 

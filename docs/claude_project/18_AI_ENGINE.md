@@ -1,6 +1,6 @@
 # 18_AI_ENGINE.md — AI Engine: Prompts, Models, Fallbacks
 
-> **📍 Doc status — current as of 2026-09-20** for classify (#141/#142), briefing (#120), chat (#111), and Cmd+K search assist (§3c, FAQ indexed as of #155). JSON blocks lower in the file are older intended spec — do not copy them over live `claude.service.ts`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-07** for the classifier defer and excerpt notes below; **2026-09-20** for classify (#141/#142), briefing (#120), chat (#111), and Cmd+K search assist (§3c, FAQ indexed as of #155). JSON blocks lower in the file are older intended spec — do not copy them over live `claude.service.ts`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
@@ -42,6 +42,10 @@
 ---
 
 ## 2. CLASSIFICATION PROMPT (claude.service.ts)
+
+> ⚠️ UPDATED 2026-10-06 (`cf0711f`) — the classifier user prompt includes a cleaned article excerpt when the feed stored one. A missing summary, including every GDELT item, leaves the prompt unchanged.
+>
+> ⚠️ UPDATED 2026-10-06 (`0c9b4b6`, `7438ec9`) — a temporary Anthropic error defers classification instead of a keyword guess. The keyword fallback applies only when no research-model client is configured. A closed daily budget also pauses collection (`c468485`); one email is sent when that ingestion cap closes (`41c19ce`). ACLED and the dormant classifier do not store a deferred result (`5707819`).
 
 > ⚠️ UPDATED 2026-09-13 (#141 / #142) — `classifyEvent()` (`max_tokens` 500→900) still returns the original fields (severity/confidence/commodityImpacts/currencyPairImpacts/isBreaking/summary/region) and **also** asks for: `relevance`, `novelty` (0–1), `eventCategory` (9-value enum, not the older list in the JSON block below), `marketMechanism` (plain language or null), `isPreview`, `sourceConfirmation` (`official`|`reported`|`speculative`), `materialityPass` + `materialityReasoning`, and `mediaImpactEntity`. The watchlist is live `public.media_impact_watchlist` via a 10-min cache — not the #141 hardcoded array. `materialityPass` fails closed to `false` unless explicitly `true`. Unsourced entity names sanitize to null. Heuristic fallback only passes the gate with a validated impact or a watchlist hit. The JSON block below is the older intended spec — do not copy it into new work.
 

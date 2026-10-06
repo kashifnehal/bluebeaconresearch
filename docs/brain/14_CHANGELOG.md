@@ -1,6 +1,6 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-07 (v0.148.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-07 (v0.149.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
@@ -8,11 +8,30 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.148.0 — W12-C: drop routine insider-trade and analyst-rating headlines (2026-10-07)
+### v0.149.0 — Docs sync for the 2026-10-06 ships (2026-10-07)
+
+Docs only. Each line is a commit already on `main`. Renumbered from v0.148.0 because `199081c` already claimed v0.148.0.
+
+- `0c9b4b6` — temporary Anthropic errors defer classification instead of a keyword guess. One bad article does not stop the batch.
+- `c468485` — when the daily classification budget is closed, Data Pipeline shows Degraded and Intelligence Feed keeps its status with a pause suffix. No dollar amount and no reopen clock time.
+- `cf0711f` — the classifier user prompt includes a cleaned article excerpt when the feed stored one. A missing summary, including every GDELT item, leaves the prompt unchanged.
+- `41c19ce` — one email when the daily ingestion classification budget closes. The spend-limit mail no longer describes a keyword fallback that no longer runs.
+- `5707819` — a deferred `classifyEvent()` result is not stored as a signal and is not treated as a real rejection on ACLED or the dormant classifier. `materiality_checked_at` stays unset.
+- `c0e1f60` — homepage and How It Works copy matches the pause-instead-of-guessing path. ACLED is not described as a scanned source.
+- `a186404` — outcome reads are paged and one duplicate no longer drops the batch. No outcome had been scored since 2026-09-13. 723 outcome rows were written on 2026-10-06.
+- `e51bb1e` — planning-note ids that are not in git were removed from comments and the listed docs. Recorded as v0.147.0 below; the SHA is named here.
+- `6a88053` — events POST logic lives in `lib/events-post-handler.ts`. The route file exports `POST(request)` only.
+- `b4b52f1` — read-only view `feed_yield_daily`. Migration written, not applied. Counts rows saved against rows that appear on a signal. `SELECT` for `service_role` only. No threshold.
+- `48f77ce` — GDELT DOC artlist freeze: one request returned HTTP 200 whose newest `seendate` was still 2026-10-02T10:45:00Z. The list was frozen from 2026-10-05 12:00 to 2026-10-06 07:00 UTC and recovered at 10:00 UTC.
+- `7438ec9` — when the classifier cannot run, collection pauses and no signal is created from a keyword guess. The keyword fallback applies only when no research-model client is configured.
+
+Corrections recorded with these ships: GDELT `maxrecords` is 250 (`3d5e244`, 2026-09-26). An HTTP 429 from GDELT gets one retry then stops (`e677efc`, 2026-09-06; delay is 5 seconds times 2 to the attempt, plus up to 10 seconds of jitter, as in `gdelt-collector.ts` on `7438ec9`). Cross-source merge uses Jaccard 0.33 on summaries since 2026-09-25 (`d67ae2b`). The v0.26.0 bullet below that still prints threshold 0.55 describes the original bar only.
+
+### v0.148.0 — W12-C: drop routine insider-trade and analyst-rating headlines (2026-10-07, `199081c`)
 
 `apps/backend` only. `isRoutineMarketNoise()` in `relevance-filter.ts` returns true for insider-trade titles and analyst-rating titles. `isRelevantEvent` calls it right after `shouldExclude` and before the finance-tier early return; a match logs `[RELEVANCE] routine-noise drop title="..."` and returns false. Measured 2026-10-07 on 1,111 articles: 103 headlines matched these patterns and none became a signal. Patterns were fit on that same sample, so every drop is logged. Tests: `relevance-filter.test.ts`, 6 real drops and 6 keepers, registered in `package.json`.
 
-### v0.147.0 — Citation cleanup: drop external document ids from comments and repo docs (2026-10-06)
+### v0.147.0 — Citation cleanup: drop external document ids from comments and repo docs (2026-10-06, `e51bb1e`)
 
 Comments and markdown only. Removed pointers at planning notes that are not in git from backend comments (`alert-dispatcher.ts`, `digest-sender.ts`, `routes/telegram.ts`, `lib/entitlements.ts`) and from the docs this task names. Each removed pointer keeps the fact and the date already in the sentence. Where a free/paid split or a service-health spec could not be restated from this repo, the sentence says GAP: source recorded outside the repo. In-repo ADR headings in both `10_DECISIONS.md` files are unchanged. No runtime behavior change.
 
@@ -1384,7 +1403,7 @@ A dedicated 7-part pass over the same ground as v0.21.0. **The headline result i
 
 - **GNews API key rotated at gnews.io**, closing the founder action item open since the 2026-08-16 hardcoded-key incident (see below) — the old key, exposed in git history, is dead.
 - **Env var standardized on `GNEWS_API_KEY`** everywhere (code, `turbo.json`, `README.md`, all `.env`/`.env.example`/`.env.local` files) — previously split inconsistently between `NEWS_API_KEY` and `GNEWS_API_KEY` across the repo and Vercel, which had also let the two local `.env.local` files (root and `apps/web`) drift to two different key values, one of them invalid. `apps/backend/src/env.ts`'s `getEnv()` fallback direction flipped: `GNEWS_API_KEY` is now canonical, with `NEWS_API_KEY` kept only as a legacy fallback for anything not yet updated.
-- **GDELT collector retry/backoff tightened** (`gdelt-collector.ts`). Investigated whether "rotate the GDELT key" was a viable fix for its 429s — it isn't: GDELT's DOC 2.0 API is keyless with no authenticated/paid tier (confirmed against GDELT's own blog and third-party client issue trackers), and a 429 there reflects an IP-level block that can last up to ~15 min, not a per-key quota. The old handling (flat 30s wait, one retry) often re-hit the same block window and then gave up for the rest of the 15-min cron cycle — a real timeliness risk for a business selling pre-market alerts. Replaced with exponential backoff (60s, then 120s, +jitter, 3 attempts total, ~3 min worst case) matching GDELT's own documented guidance, still failing fast well within the 15-min cycle so it never delays GNews/RSS (they run concurrently via `Promise.allSettled`). Pre-insert `external_id` dedup was already in place and untouched — no redundant-request reduction available since the collector only issues one GDELT request per cycle already.
+- **GDELT collector retry/backoff tightened** (`gdelt-collector.ts`). Investigated whether "rotate the GDELT key" was a viable fix for its 429s — it isn't: GDELT's DOC 2.0 API is keyless with no authenticated/paid tier (confirmed against GDELT's own blog and third-party client issue trackers), and a 429 there reflects an IP-level block that can last up to ~15 min, not a per-key quota. The old handling (flat 30s wait, one retry) often re-hit the same block window and then gave up for the rest of the 15-min cron cycle — a real timeliness risk for a business selling pre-market alerts. Replaced with exponential backoff (60s, then 120s, +jitter, 3 attempts total, ~3 min worst case — this bar was superseded 2026-09-06 by `e677efc`, one retry then stop) matching GDELT's own documented guidance, still failing fast well within the 15-min cycle so it never delays GNews/RSS (they run concurrently via `Promise.allSettled`). Pre-insert `external_id` dedup was already in place and untouched — no redundant-request reduction available since the collector only issues one GDELT request per cycle already.
 
 ### v0.28.0 — Escalation Re-Alerts, Phase-1 Launch QA, Sonnet Temperature Bug Found & Fixed (2026-08-19)
 
@@ -1413,7 +1432,7 @@ A dedicated 7-part pass over the same ground as v0.21.0. **The headline result i
 - **New: post-classification cross-source signal merge** (`apps/backend/src/workers/signal-merge.ts`, wired into `gnews-collector.ts`/`gdelt-collector.ts`/`rss-collector.ts` only — not `acled-collector.ts`, not the dormant `ai-classifier.ts` path, not `reconciliation.ts`). Full design in `10_DECISIONS.md` ADR 010; summary:
   - **Classification is never skipped, under any condition** — an earlier design that pre-filtered on raw title text before classifying was explicitly rejected (risk of silently suppressing a genuinely distinct event, and freezing severity at the first source's read forever). This version only decides what to do with an *already-classified* result.
   - Match candidates: signals in the same `region` (exact match, skipped when region is missing/"global"), within ±8h of `event_date` (article publish time, not ingestion time — chosen so GNews's known ~12h cache lag doesn't force a wider window).
-  - Match basis: Jaccard token-overlap similarity on `classification.summary`, threshold **0.55** — tuned against 500 real production signals (see backtest below), not guessed.
+  - Match basis: Jaccard token-overlap similarity on `classification.summary`, threshold **0.55** at the time of this entry — tuned against 500 real production signals (see backtest below), not guessed. Live threshold since 2026-09-25 (`d67ae2b`) is **0.33** on summaries.
   - Lower/equal severity match → duplicate: `raw_event_ids` appended, `sources_count` incremented, existing `ai_analysis` reused, Sonnet call skipped, logged as `[SIGNAL-MERGE:duplicate]`.
   - Higher severity match → escalation: `severity` updated, `raw_event_ids`/`sources_count` updated, Sonnet briefing **regenerated** (gated on the new severity crossing >=7, the same rule used everywhere else — an explicit judgment call where the task spec was ambiguous), logged as `[SIGNAL-MERGE:escalation]` with old→new severity.
   - Deliberately **not** wired to re-dispatch alerts on escalation, and **not** wired into `reconciliation.ts` — both flagged as scope decisions, not oversights.

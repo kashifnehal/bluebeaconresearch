@@ -1,12 +1,31 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-07 (PHASE 124).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-07 (PHASE 125).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
 
-## PHASE 124 — W12-C: drop routine insider-trade and analyst-rating headlines (2026-10-07)
+## PHASE 125 — Docs sync for the 2026-10-06 ships (2026-10-07)
+
+Docs only. Each line is a commit already on `main`. Renumbered from PHASE 124 because `199081c` already claimed PHASE 124.
+
+- `0c9b4b6` — temporary Anthropic errors defer classification instead of a keyword guess. One bad article does not stop the batch.
+- `c468485` — when the daily classification budget is closed, Data Pipeline shows Degraded and Intelligence Feed keeps its status with a pause suffix. No dollar amount and no reopen clock time.
+- `cf0711f` — the classifier user prompt includes a cleaned article excerpt when the feed stored one. A missing summary, including every GDELT item, leaves the prompt unchanged.
+- `41c19ce` — one email when the daily ingestion classification budget closes. The spend-limit mail no longer describes a keyword fallback that no longer runs.
+- `5707819` — a deferred `classifyEvent()` result is not stored as a signal and is not treated as a real rejection on ACLED or the dormant classifier. `materiality_checked_at` stays unset.
+- `c0e1f60` — homepage and How It Works copy matches the pause-instead-of-guessing path. ACLED is not described as a scanned source.
+- `a186404` — outcome reads are paged and one duplicate no longer drops the batch. No outcome had been scored since 2026-09-13. 723 outcome rows were written on 2026-10-06.
+- `e51bb1e` — planning-note ids that are not in git were removed from comments and the listed docs. Already recorded as brain changelog v0.147.0; the SHA is named here.
+- `6a88053` — events POST logic lives in `lib/events-post-handler.ts`. The route file exports `POST(request)` only.
+- `b4b52f1` — read-only view `feed_yield_daily`. Migration written, not applied. Counts rows saved against rows that appear on a signal. `SELECT` for `service_role` only. No threshold.
+- `48f77ce` — GDELT DOC artlist freeze: one request returned HTTP 200 whose newest `seendate` was still 2026-10-02T10:45:00Z. The list was frozen from 2026-10-05 12:00 to 2026-10-06 07:00 UTC and recovered at 10:00 UTC.
+- `7438ec9` — when the classifier cannot run, collection pauses and no signal is created from a keyword guess. The keyword fallback applies only when no research-model client is configured.
+
+Corrections recorded with these ships: GDELT `maxrecords` is 250 (`3d5e244`, 2026-09-26). An HTTP 429 from GDELT gets one retry then stops (`e677efc`, 2026-09-06; delay is 5 seconds times 2 to the attempt, plus up to 10 seconds of jitter, as in `gdelt-collector.ts` on `7438ec9`). Cross-source merge uses Jaccard 0.33 on summaries since 2026-09-25 (`d67ae2b`).
+
+## PHASE 124 — W12-C: drop routine insider-trade and analyst-rating headlines (2026-10-07, `199081c`)
 
 `apps/backend` only. Insider-trade and analyst-rating titles are dropped in the shared relevance filter after the hard exclude and before the finance-tier pass-through. Each drop is logged. Measured 2026-10-07: 103 of 1,111 headlines matched and none became a signal; the patterns are in-sample. Full detail: `docs/brain/14_CHANGELOG.md` v0.148.0.
 

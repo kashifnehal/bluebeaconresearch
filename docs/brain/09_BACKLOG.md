@@ -2,6 +2,8 @@
 
 > **📍 Doc status — historical P0–P3 list.** Live tickets: `docs/claude_project/09_BACKLOG.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-07 — the 2026-10-06 ships are recorded with their commits in the canonical backlog: `0c9b4b6`, `c468485`, `cf0711f`, `41c19ce`, `5707819`, `c0e1f60`, `a186404` (723 outcome rows written on 2026-10-06), `e51bb1e`, `6a88053`, `b4b52f1` (view `feed_yield_daily`, not applied), `48f77ce` (GDELT DOC list frozen 2026-10-05 12:00 to 2026-10-06 07:00 UTC, recovered at 10:00 UTC), `7438ec9`. GDELT `maxrecords` is 250 (`3d5e244`, 2026-09-26). A GDELT HTTP 429 gets one retry then stops (`e677efc`, 2026-09-06). Merge threshold is 0.33 on summaries since 2026-09-25 (`d67ae2b`).
+
 This document outlines prioritized tasks, technical debt resolution, feature enhancements, and future milestones for Blue Beacon Research.
 
 > ⚠️ UPDATED 2026-08-19 — Per `00_PROJECT.md`'s "Future Scope" framing, this entire backlog is future/deferred roadmap content, not a currently-open active work queue.
