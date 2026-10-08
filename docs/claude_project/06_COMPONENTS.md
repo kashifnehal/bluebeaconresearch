@@ -23,6 +23,10 @@ Responsive behavior (this is the whole reason it exists): `px-4 md:px-8`, `min-w
 
 Fixed bottom navigation bar, `md:hidden`, rendered from `(dashboard)/layout.tsx` alongside `Sidebar`/`TopBar`. Five slots: **Feed** (`/dashboard`), **Map** (`/map`), **Alerts** (`/alerts`, unread badge — same `unreadCount` as `Sidebar`), **Watchlist** (`/watchlist`), **More** (opens the existing off-canvas drawer via `useUIStore`'s `mobileSidebarOpen`, same drawer `Sidebar` already renders — Calendar/Backtesting/Settings/Help/Logout all live there, not duplicated into the tab bar). Reuses `Sidebar`'s exact Material Symbols icon names so mobile and desktop share iconography. All 5 tap targets are ≥44px tall. `TopBar`'s old mobile hamburger button was removed in the same change — it opened the identical drawer, now redundant with More.
 
+### About page (`apps/web/app/about/page.tsx`) — added 2026-10-09
+
+Public page, `AboutPage`. Same chrome as `/how-it-works` (`PublicHeader`, dark tokens, monospace footer). Copy covers what the platform is, the three homepage steps, the existing no-investment-advice sentences, and support@bluebeaconresearch.com. No founder name, address, or legal entity.
+
 ### Privacy page (`apps/web/app/privacy/page.tsx`) — rewritten 2026-10-09
 
 Public page, `PrivacyPage`. Keeps the previous paragraphs and adds headed sections for collection, processors, retention, cookies and analytics, data sent to Anthropic, and export/deletion by email. Copy is limited to facts confirmed in migrations and application code. `Last updated: October 2026`.

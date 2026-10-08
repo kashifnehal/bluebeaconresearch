@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-09.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-09 — public `/about` page shipped (brain changelog v0.152.0 / PHASE 128). No prior backlog line existed for this page — confirmed by grep for `/about`, nothing struck.
+
 > ⚠️ UPDATED 2026-10-09 — `/privacy` rewritten from verified code (brain changelog v0.151.0 / PHASE 127). No prior backlog line existed for this page — confirmed by grep for `privacy`, nothing struck.
 
 > ⚠️ UPDATED 2026-10-09 — public `/terms` page rewritten from the "Legal Protocol" stub into a Terms of Service (brain changelog v0.150.0 / PHASE 126). Homepage footer no longer says "full docs coming soon." No prior numbered backlog line existed for this page (the only `/terms` mention below is the #186 "no Stitch mock" note, which is a layout note, not an open terms-copy ticket — left as-is). Subscriptions and billing was not added; there is no live checkout in `apps/web`.

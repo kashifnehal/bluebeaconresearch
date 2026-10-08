@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (privacy page — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-09 (public About page — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-09 (public About page, `apps/web` only) — `/about` describes the platform, repeats the homepage's three steps, restates the existing no-investment-advice sentences, and lists support@bluebeaconresearch.com. No founder name, address, or legal entity. Homepage Research column links to it. Full detail: `docs/brain/14_CHANGELOG.md` v0.152.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 128.
 
 > ⚠️ NEW 2026-10-09 (privacy page, `apps/web` only) — `/privacy` states only data practices confirmed in code: user-linked tables, processors, retention windows, cookies and analytics calls, and the fields sent to Anthropic, including a cleaned publisher excerpt when the feed stored one. Export or deletion is by email to support@bluebeaconresearch.com. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.151.0. This tree: PHASE 127.
 

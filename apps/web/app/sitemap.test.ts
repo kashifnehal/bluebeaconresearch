@@ -21,3 +21,12 @@ runTest("sitemap includes /how-it-works", () => {
     `expected a /how-it-works entry, got: ${urls.join(", ")}`,
   );
 });
+
+runTest("sitemap includes /about", () => {
+  const entries = sitemap();
+  const urls = entries.map((e) => e.url);
+  assert.ok(
+    urls.some((u) => u.endsWith("/about")),
+    `expected a /about entry, got: ${urls.join(", ")}`,
+  );
+});

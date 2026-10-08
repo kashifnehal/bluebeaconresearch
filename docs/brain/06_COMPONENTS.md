@@ -39,6 +39,10 @@ Mobile-critical classes: `px-4 md:px-8` · `min-w-0` on the left group · `trunc
 
 Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — mounted once from `(dashboard)/layout.tsx` alongside `Sidebar`/`TopBar`. Five slots: FEED `/dashboard`, MAP `/map`, ALERTS `/alerts` (badge from `useUIStore.unreadCount`, same source `Sidebar` uses), WATCHLIST `/watchlist`, and a MORE button that calls `useUIStore.setMobileSidebarOpen(true)` — opens `Sidebar`'s existing off-canvas drawer rather than a second nav surface, so CALENDAR/BACKTESTING/SETTINGS/Help/Logout stay reachable without duplicating them. Active-route highlighting: `pathname === item.href || pathname.startsWith(`${item.href}/`)`, same pattern `Sidebar.tsx`'s `NAV.map` uses. Icon names (`rss_feed`/`public`/`notifications_active`/`visibility`) are copied verbatim from `Sidebar.tsx`'s `NAV` array so desktop and mobile iconography never drift independently. `<main>` in `(dashboard)/layout.tsx` gained `pb-[60px] md:pb-0` so page content clears the fixed bar's height. `TopBar.tsx`'s mobile hamburger (`md:hidden`, opened the same drawer) was deleted in the same change as now-redundant.
 
+### About page (`apps/web/app/about/page.tsx`) — added 2026-10-09
+
+`AboutPage`. Public page in the `/how-it-works` layout (`PublicHeader` badge "ABOUT"). Sections: what the platform is, the homepage's three steps, the `/terms` no-investment-advice sentences, and a Contact mailto for support@bluebeaconresearch.com. `LegalDisclaimerFooter` is not mounted here.
+
 ### Privacy page (`apps/web/app/privacy/page.tsx`) — rewritten 2026-10-09
 
 `PrivacyPage`. Existing paragraphs kept. New sections list user-linked tables the app writes, processors confirmed in dependencies or env vars, the weekly retention windows, Supabase auth cookies and analytics calls, and the Anthropic payload fields. Export or deletion: email support@bluebeaconresearch.com.
