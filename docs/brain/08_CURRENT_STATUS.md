@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-09 (W8-TERMS: public Terms of Service page, v0.150.0)
+Last updated: 2026-10-09 (privacy page, v0.151.0)
+
+> ⚠️ NEW 2026-10-09 (privacy page, `apps/web` only) — `/privacy` now states the user-linked tables the app writes, the processors confirmed in package.json or env usage, the weekly retention windows (commodity prices 90 days; raw events 180 days only when a signal already references them), Supabase auth cookies plus PostHog and Vercel Analytics calls, and the Anthropic request fields, including a cleaned publisher excerpt when the feed stored one. No account id, email, or name is attached to those requests. No payment processor is listed in the new section. Full detail: `14_CHANGELOG.md` v0.151.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-09 (W8-TERMS, public Terms of Service, `apps/web` only) — `/terms` heading "Legal Protocol" → "Terms of Service"; "Blue Beacon Researchs" → "Blue Beacon Research's"; $100 / 12-month liability cap unchanged. Homepage footer "Terms (full docs coming soon)" → "Terms". Subscriptions and billing section omitted (no `checkout` / `stripe` / `razorpay` in `apps/web`). No legal entity, governing law, jurisdiction, or address. Full detail: `14_CHANGELOG.md` v0.150.0, `LIVE_TODO.md`.
 

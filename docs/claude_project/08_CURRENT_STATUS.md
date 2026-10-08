@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (W8-TERMS — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-09 (privacy page — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-09 (privacy page, `apps/web` only) — `/privacy` states only data practices confirmed in code: user-linked tables, processors, retention windows, cookies and analytics calls, and the fields sent to Anthropic, including a cleaned publisher excerpt when the feed stored one. Export or deletion is by email to support@bluebeaconresearch.com. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.151.0. This tree: PHASE 127.
 
 > ⚠️ NEW 2026-10-09 (W8-TERMS, public Terms of Service, `apps/web` only) — `/terms` is no longer a stub titled "Legal Protocol." Heading is "Terms of Service," the liability possessive is "Blue Beacon Research's," and the $100 / 12-month cap is unchanged. Homepage footer link now reads "Terms" (the "full docs coming soon" note is gone). Subscriptions and billing was not added: no live checkout in `apps/web`. No entity name, governing law, jurisdiction, or address. Full detail: `docs/brain/14_CHANGELOG.md` v0.150.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 126.
 
