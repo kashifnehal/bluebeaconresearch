@@ -4,11 +4,12 @@ import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
-import { isRelevantEvent, type FeedTier } from "../lib/relevance-filter.js";
+import { isRelevantEvent, shouldExclude, isRoutineMarketNoise, type FeedTier } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
 import { tryTitlePreFilterSkip } from "./title-prefilter.js";
+import { buildDropSample, type Drop, type DropReason } from "./rss-drop-sample.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 import { findSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
@@ -113,7 +114,16 @@ export const RSS_FEED_COUNT = RSS_FEEDS.length;
 // feeds (NYT/BBC/Guardian Business, MarketWatch, WSJ Markets, Investing.com) yield
 // almost no new raw_events despite fetching 10-51 items successfully every cycle,
 // when claude/237 found only 1-3 finance-tier items/day landing across all 6 combined.
-type FeedDiag = { fetched: number; tooOld: number; filteredIrrelevant: number; duplicate: number; new: number };
+type FeedDiag = {
+  fetched: number;
+  tooOld: number;
+  old4to12: number;
+  old12to24: number;
+  oldOver24: number;
+  filteredIrrelevant: number;
+  duplicate: number;
+  new: number;
+};
 
 export async function runRssCollectorOnce() {
   // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
@@ -148,7 +158,16 @@ export async function runRssCollectorOnce() {
 
   const feedDiag: Record<string, FeedDiag> = {};
   for (const feed of RSS_FEEDS) {
-    feedDiag[feed.label] = { fetched: 0, tooOld: 0, filteredIrrelevant: 0, duplicate: 0, new: 0 };
+    feedDiag[feed.label] = {
+      fetched: 0,
+      tooOld: 0,
+      old4to12: 0,
+      old12to24: 0,
+      oldOver24: 0,
+      filteredIrrelevant: 0,
+      duplicate: 0,
+      new: 0,
+    };
   }
 
   for (const feed of RSS_FEEDS) {
@@ -184,8 +203,13 @@ export async function runRssCollectorOnce() {
           pubDate = new Date().toISOString();
         }
 
-        if (Date.now() - new Date(pubDate).getTime() > MAX_ARTICLE_AGE_MS) {
+        const ageMs = Date.now() - new Date(pubDate).getTime();
+        if (ageMs > MAX_ARTICLE_AGE_MS) {
           feedDiag[feed.label].tooOld++;
+          const ageHours = ageMs / (60 * 60 * 1000);
+          if (ageHours <= 12) feedDiag[feed.label].old4to12++;
+          else if (ageHours <= 24) feedDiag[feed.label].old12to24++;
+          else feedDiag[feed.label].oldOver24++;
           continue;
         }
 
@@ -256,11 +280,18 @@ export async function runRssCollectorOnce() {
 
   let passedFilters = 0;
   let alreadySeen = 0;
+  const drops: Drop[] = [];
 
   for (const item of items) {
     if (!isRelevantEvent(item.title, item.summary, item.tier)) {
       filtered++;
       feedDiag[item.label].filteredIrrelevant++;
+      const reason: DropReason = shouldExclude(item.title, item.summary)
+        ? "exclude"
+        : isRoutineMarketNoise(item.title)
+          ? "noise"
+          : "nokeyword";
+      drops.push({ feed: item.label, tier: item.tier, title: item.title, reason });
       continue;
     }
     passedFilters++;
@@ -450,7 +481,16 @@ export async function runRssCollectorOnce() {
     const d = feedDiag[feed.label];
     console.log(
       `[RSS-DIAG] feed="${feed.label}" tier=${feed.tier} fetched=${d.fetched} tooOld=${d.tooOld} ` +
-        `filteredIrrelevant=${d.filteredIrrelevant} duplicate=${d.duplicate} new=${d.new}`,
+        `filteredIrrelevant=${d.filteredIrrelevant} duplicate=${d.duplicate} new=${d.new} ` +
+        `old4to12=${d.old4to12} old12to24=${d.old12to24} oldOver24=${d.oldOver24}`,
+    );
+  }
+
+  // claude/rss-drop-sample — one line per feed with at least one relevance-filter
+  // drop, showing the actual titles lost and why (exclude/noise/nokeyword).
+  for (const ds of buildDropSample(drops)) {
+    console.log(
+      `[RSS-DROP] feed="${ds.feed}" tier=${ds.tier} n=${ds.n} sample=${JSON.stringify(ds.sample)}`,
     );
   }
 
