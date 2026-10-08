@@ -260,7 +260,7 @@ Last updated: 2026-10-07 (docs sync for the 2026-10-06 ships, PHASE 125)
 
 ## 2. Data Pipeline State (as of 2026-08-12)
 
-- **`raw_events`**: Ingestion active on deploy startup + 15-min cron. Typical run: `inserted: 0–2`, `duplicates: 15–40`, `filtered: 40–80`.
+- **`raw_events`**: Ingestion active on deploy startup + 30-min cron. Typical run: `inserted: 0–2`, `duplicates: 15–40`, `filtered: 40–80`.
 - **`signals`**: 20+ signals in 24h `event_date` window, plus active ongoing events older than 24h are preserved in the default feed.
 - **`Global Map`**: `/map` now plots geolocated events from real `lat`/`lng` values in `/api/signals`; missing Mapbox tokens gracefully fall back to a neutral overlay.
 
@@ -354,7 +354,8 @@ Running initial ingestion immediately on startup...
 startup:rss → { inserted: N, signals: N, ... }
 workers: cron schedulers active, health server listening
 workers:heartbeat → every 5 min
-rss-collector / price-sync → every 15 min
+rss-collector → every 30 min
+price-sync → every 15 min
 ```
 
 Supabase SQL:

@@ -50,6 +50,8 @@ Decouple the backend API into a dedicated Fastify REST server (`apps/backend`) r
 
 Ingesting 350+ global news feeds every 15 minutes and dispatching sub-second alerts requires reliable queue management with retry logic.
 
+> Updated 2026-10-07: news ingestion now runs every 30 minutes (INGESTION_INTERVAL_CRON)
+
 ### Decision
 
 Utilize BullMQ backed by Upstash serverless Redis.
@@ -128,6 +130,8 @@ Both `gnews-collector.ts` and `gdelt-collector.ts` now **classify and insert sig
 ### Context
 
 GNews API free tier caches articles with a 12-hour lag, serving stale news despite workers running every 15 minutes. Additionally, simple substring keyword filters (`"war"`) produced false positives from historical or benign articles (e.g., _"1970 anti-war protests"_, _"tug-of-war"_).
+
+> Updated 2026-10-07: news ingestion now runs every 30 minutes (INGESTION_INTERVAL_CRON)
 
 ### Decision
 

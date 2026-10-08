@@ -14,7 +14,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    DATA SOURCES (every 15-30 min)           │
+│                    DATA SOURCES (every 30 min)              │
 │  GDELT  │  ACLED  │  GNews  │  Guardian  │  RSS Feeds       │
 └────────────────────┬────────────────────────────────────────┘
                      │ raw events

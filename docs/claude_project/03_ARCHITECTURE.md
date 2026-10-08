@@ -35,7 +35,7 @@ Blue Beacon Research uses a decoupled, event-driven monorepo architecture manage
                 │                               │
 ┌───────────────┴───────────────────────────────┴────────────────────────────────────────────────┐
 │                                   Async Background Workers                                     │
-│  - node-cron Scheduler (15-min intervals)                                                      │
+│  - node-cron Scheduler (30-min intervals)                                                      │
 │  - Collectors: GDELT, ACLED, GNews API                                                         │
 │  - AI Signal Generator Queue Processor                                                         │
 │  - Sub-second Multi-channel Alert Dispatcher Worker                                            │
@@ -54,7 +54,7 @@ Blue Beacon Research uses a decoupled, event-driven monorepo architecture manage
 └────────┬────────┘       └────────┬────────┘       └────────┬────────┘
          │                         │                         │
          └────────────────────┬────┴─────────────────────────┘
-                              │ Cron Trigger (every 15 min)
+                              │ Cron Trigger (every 30 min)
                               ▼
                 ┌───────────────────────────┐
                 │ Insert into `raw_events`  │ Deduplication by source
@@ -104,8 +104,8 @@ Blue Beacon Research uses a decoupled, event-driven monorepo architecture manage
 
 The worker processes run independently in `apps/backend/src/workers.ts` managed by BullMQ and Upstash Redis:
 
-1. **`rss-collector.ts`**: Fetches live wire-feed RSS (BBC World, Al Jazeera, Guardian, DW World, plus market/finance feeds) every 15 minutes — no API key, no rate limit. The platform's primary real-time source; see ADR 007 in `10_DECISIONS.md`.
-2. **`gdelt-collector.ts`**: Fetches real-time GDELT 2.0 API events every 15 minutes, parsing conflict location and news URL metadata.
+1. **`rss-collector.ts`**: Fetches live wire-feed RSS (BBC World, Al Jazeera, Guardian, DW World, plus market/finance feeds) every 30 minutes — no API key, no rate limit. The platform's primary real-time source; see ADR 007 in `10_DECISIONS.md`.
+2. **`gdelt-collector.ts`**: Fetches real-time GDELT 2.0 API events every 30 minutes, parsing conflict location and news URL metadata.
 3. **`acled-collector.ts`**: Queries Armed Conflict Location & Event Data Project API for verified military engagement data.
 4. **`gnews-collector.ts`**: Searches global news feeds for military, oil pipeline, and maritime conflict keywords.
 5. **`ai-classifier.ts`**: Consumes pending events from `ai-classification` queue, sends structured prompts to Claude 3.5, and parses JSON signal outputs.

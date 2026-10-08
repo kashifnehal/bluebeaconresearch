@@ -144,7 +144,7 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 ## DATA PIPELINE — HOW IT ACTUALLY WORKS NOW
 
 ```
-Railway workers (startup + every 15m)
+Railway workers (startup + every 30m)
   RSS (BBC, Al Jazeera, Guardian, NPR, UN News) + GNews + GDELT
         ↓
 isRelevantEvent() / title-prefilter — most articles dropped
@@ -179,7 +179,7 @@ If `created_at` is recent but `event_date` shows old times — this is normal. `
 ```
 startup:rss → { inserted: N, signals: N }     ← should appear within 30s of deploy
 workers:heartbeat                              ← every 5 min
-rss-collector                                 ← every 15 min
+rss-collector                                 ← every 30 min
 price-sync                                    ← every 15 min
 ```
 

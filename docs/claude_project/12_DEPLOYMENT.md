@@ -82,7 +82,7 @@ Railway deploys two distinct services from the backend codebase:
 > **IMPORTANT**:
 > 1. Workers service **must** use config file `/apps/backend/railway.workers.json` (not `railway.json`). Settings are locked in Railway UI when config-as-code is active — change the file in GitHub and redeploy.
 > 2. `"sleepApplication": false` in `railway.workers.json` is **required**. Serverless/sleep mode scales workers to zero with no HTTP traffic, killing 15-minute cron jobs.
-> 3. After deploy, verify logs: `startup:rss` within 30s, `workers:heartbeat` every 5 min, `rss-collector` every 15 min.
+> 3. After deploy, verify logs: `startup:rss` within 30s, `workers:heartbeat` every 5 min, `rss-collector` every 30 min.
 > 4. Add `SUPABASE_SERVICE_ROLE_KEY` to **Vercel** (not just Railway) so `/api/signals` reads reliably on dashboard refresh.
 > 5. `NIXPACKS_NO_FROZEN_LOCKFILE=1` in `nixpacks.toml` prevents lockfile errors during Railway builds.
 > 6. Pre-deploy `npm run migrate` is a no-op in `package.json` — safe if left configured in Railway UI.

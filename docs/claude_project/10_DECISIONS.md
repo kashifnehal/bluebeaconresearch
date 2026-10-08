@@ -147,6 +147,7 @@
 - BullMQ is the most mature Node.js queue library with concurrency, retry, priority
 - Upstash Redis: serverless Redis compatible with BullMQ, free tier, no server to manage
 - Decouples collection from classification — GDELT runs every 15 min, AI classification can process at its own rate
+  - Updated 2026-10-07: news ingestion now runs every 30 minutes (INGESTION_INTERVAL_CRON)
 - Priority queuing: severity 10 events jump the queue and get classified first
 - Retry logic: if Claude fails or rate-limits, job retries automatically
 - Dead letter queue: failed jobs visible for debugging
