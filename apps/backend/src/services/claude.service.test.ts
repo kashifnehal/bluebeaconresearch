@@ -87,7 +87,7 @@ const TEST_WATCHLIST: MediaImpactWatchlistEntry[] = [
 setWatchlistCacheForTests(TEST_WATCHLIST);
 
 process.env.NODE_ENV = "test";
-process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
+process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://127.0.0.1:9";
 process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || "test-supabase-role-key";
 // W8-BUDGET-DEFER's "spend-limit" test below exercises classifyEvent()'s real
