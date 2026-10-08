@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
+process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://127.0.0.1:9";
 process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || "test-supabase-role-key";
 process.env.NODE_ENV = process.env.NODE_ENV || "test";
@@ -59,7 +59,9 @@ async function main() {
   });
 
   // isAnthropicBudgetAvailable's real counter read goes through getSupabaseAdmin()
-  // (SUPABASE_URL=http://localhost here, no server listening), so every call below
+  // (SUPABASE_URL=http://127.0.0.1:9 here, the discard port — nothing ever listens
+  // there, so the connect fails fast regardless of what else is running locally),
+  // so every call below
   // deterministically hits the catch block's fail-open/fail-closed branch — this
   // repo's test runner (plain tsx + node:assert) has no module-mocking facility to
   // inject a fake Supabase row instead (see spend-limit-alert.test.ts and

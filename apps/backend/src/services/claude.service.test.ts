@@ -90,7 +90,7 @@ const TEST_WATCHLIST: MediaImpactWatchlistEntry[] = [
 setWatchlistCacheForTests(TEST_WATCHLIST);
 
 process.env.NODE_ENV = "test";
-process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
+process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://127.0.0.1:9";
 process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || "test-supabase-role-key";
 // W8-BUDGET-DEFER's "spend-limit" test below exercises classifyEvent()'s real
@@ -1431,7 +1431,8 @@ async function main() {
     };
 
     // isAnthropicBudgetAvailable("ingestion") makes a real Supabase call against
-    // SUPABASE_URL=http://localhost (no server there), which always throws; its
+    // SUPABASE_URL=http://127.0.0.1:9 (discard port, nothing ever listens there,
+    // connect fails fast regardless of what else is running locally), which always throws; its
     // catch block fails OPEN unless NODE_ENV==="production" (see anthropic-budget.ts).
     // Flipping NODE_ENV here is the only way to deterministically force the
     // "budget closed" branch in this repo's plain tsx+node:assert test runner,
