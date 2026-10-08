@@ -32,9 +32,9 @@ function withCron(expr: string | undefined, fn: () => void) {
   }
 }
 
-runTest("unset env var returns the 15-minute default", () => {
+runTest("unset env var returns the 30-minute default", () => {
   withCron(undefined, () => {
-    assert.equal(getIngestionIntervalMinutes(), 15);
+    assert.equal(getIngestionIntervalMinutes(), 30);
   });
 });
 
@@ -82,13 +82,13 @@ runTest('a comma list given out of order still returns the smallest gap', () => 
 
 runTest("an invalid cron expression falls back to the default and does not throw", () => {
   withCron("not a cron expression", () => {
-    assert.equal(getIngestionIntervalMinutes(), 15);
+    assert.equal(getIngestionIntervalMinutes(), 30);
   });
 });
 
 runTest("a valid but unrecognized shape (seconds field) falls back to the default", () => {
   withCron("*/10 * * * * *", () => {
-    assert.equal(getIngestionIntervalMinutes(), 15);
+    assert.equal(getIngestionIntervalMinutes(), 30);
   });
 });
 

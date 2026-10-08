@@ -70,11 +70,11 @@ export type PipelineRunStatus = {
 };
 
 const REDIS_KEY = "pipeline:last_run";
-const DEFAULT_INGESTION_INTERVAL_MINUTES = 15;
+const DEFAULT_INGESTION_INTERVAL_MINUTES = 30;
 
 // W7-IO-FIX-v2: the old version here only matched "*/N * * * *" — any other valid
 // cron shape (e.g. "0 */2 * * *", "0 * * * *", a comma minute-list) silently fell
-// back to the 15-minute default, which fed a wrong number into the "/status" page,
+// back to the 30-minute default, which fed a wrong number into the "/status" page,
 // the "next run in" banner, and the zero-yield alert's cadence math. This mirrors
 // workers.ts's own cron.validate() gate (node-cron is already a dependency; it's
 // used here only to reject malformed expressions, not to do the minute-math).
@@ -142,7 +142,7 @@ export function resetCronWarningStateForTests() {
   lastWarnedInvalidCronExpr = undefined;
 }
 const ZERO_YIELD_STREAK_KEY = "pipeline:consecutive_zero_yield";
-// 3 consecutive 15-min cycles with literally nothing fetched from any source is a
+// 3 consecutive 30-min cycles with literally nothing fetched from any source is a
 // different signal than normal per-source degradation (rate limits, one feed 404ing) —
 // it's the "a shared format change broke every collector at once" scenario, and
 // nothing currently distinguishes that from a slow news day without this counter.

@@ -77,9 +77,9 @@ function isWorkersEntrypoint() {
 
 // Pre-launch, this runs 24/7 with zero real user traffic — pure fixed Railway cost for
 // no current benefit. Configurable via env so the interval can be widened now (e.g.
-// "*/30 * * * *" or hourly) without a redeploy, and tightened back to 15 min for launch
-// the same way. Default matches the existing always-on behavior unless overridden.
-const DEFAULT_INGESTION_CRON = "*/15 * * * *";
+// hourly) without a redeploy, and tightened back down for launch the same way.
+// Default matches the existing always-on behavior unless overridden.
+const DEFAULT_INGESTION_CRON = "*/30 * * * *";
 const INGESTION_CRON =
   process.env.INGESTION_INTERVAL_CRON && cron.validate(process.env.INGESTION_INTERVAL_CRON)
     ? process.env.INGESTION_INTERVAL_CRON
@@ -174,14 +174,14 @@ async function main() {
     app.log.info("workers: BullMQ workers disabled (ENABLE_BULLMQ_WORKERS not set) — dormant scaffolding skipped");
   }
 
-  // ── Run collectors IMMEDIATELY on startup (don't wait up to 15 min for first cron tick) ──
+  // ── Run collectors IMMEDIATELY on startup (don't wait up to 30 min for first cron tick) ──
   // This means after a Railway deploy or restart, data is fresh within ~30 seconds.
   app.log.info("Running initial ingestion immediately on startup...");
   runIngestionCycle(app).then(({ collectors, writeVolume }) => {
     app.log.info({ collectors, writeVolume }, "startup:ingestion complete");
   }).catch(() => {});
 
-  // ── Collect news signals — interval set by INGESTION_INTERVAL_CRON, default 15 min ──
+  // ── Collect news signals — interval set by INGESTION_INTERVAL_CRON, default 30 min ──
   app.log.info({ schedule: INGESTION_CRON }, "workers: ingestion cron schedule");
   cron.schedule(INGESTION_CRON, async () => {
     try {

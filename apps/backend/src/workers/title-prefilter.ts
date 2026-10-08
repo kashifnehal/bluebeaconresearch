@@ -20,7 +20,7 @@ type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
  *      via NEWS_SOURCE_GROUP below. GDELT/ACLED/manual are each their own bucket
  *      and never match against the newsapi/rss group.
  *   3. The prior row was collected within PREFILTER_WINDOW_MINUTES. Collectors run
- *      every 15 min and classify inline right after insert, so a real re-fetch of
+ *      every 30 min and classify inline right after insert, so a real re-fetch of
  *      the identical article reappears on the next run or two. 45 min = 3 collector
  *      cycles: wide enough to catch the re-fetch, tight enough that a same-title
  *      follow-up published hours later (a genuinely new development) is out of scope.

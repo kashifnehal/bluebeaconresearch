@@ -43,10 +43,10 @@ const GDELT_API_URL =
 
 // GDELT's DOC API is keyless with no authenticated tier, and a 429 can reflect an
 // IP-level block lasting up to ~15 min (shared Railway egress IP, not our own request
-// rate — we only issue one request per 15-min cron cycle). That block never clears
+// rate — we only issue one request per 30-min cron cycle). That block never clears
 // within a single run, so a retry-with-backoff just burns wall-clock and still fails.
 // Allow one short retry (covers a genuine transient 429), then give up — the next cron
-// tick 15 min later is past a typical block window and is the real recovery path.
+// tick 30 min later is past a typical block window and is the real recovery path.
 const GDELT_MAX_RETRIES = 1;
 const GDELT_BACKOFF_BASE_MS = 5_000;
 
