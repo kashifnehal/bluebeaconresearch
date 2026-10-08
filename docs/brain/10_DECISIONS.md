@@ -203,7 +203,7 @@ An earlier version of this design proposed skipping the Haiku classification cal
 
 The new step (`apps/backend/src/workers/signal-merge.ts`, `insertOrMergeSignal()`) runs after classification returns, using its structured output — not raw article text:
 - **Match candidates**: recent `signals` (±8h window on `event_date`, the article's real publish time, not our ingestion time — chosen so GNews's ~12h ingestion-side cache lag doesn't force a wider window) with the same `region` (exact match; skipped entirely when region is missing/"global" — too broad a bucket to be a useful signal, confirmed live as the single largest region bucket mixing unrelated stories).
-- **Similarity**: Jaccard token-overlap on `classification.summary`, threshold 0.55 — tuned against 500 real production signals, sitting above the zone where same-region pairs start looking like genuinely different developments of an evolving story rather than the same event.
+- **Similarity**: Jaccard token-overlap on `classification.summary`, threshold 0.33 (lowered from the original 0.55 on 2026-09-25 — see `SIMILARITY_THRESHOLD` in `signal-merge.ts`; the original value missed real duplicates like the Iranian oil tanker strikes and the Marine-in-Russia release, which scored 0.38–0.55 and never merged) — sitting above the zone where same-region pairs start looking like genuinely different developments of an evolving story rather than the same event.
 - **No match** → insert new signal exactly as before, existing `severity >= 7` Sonnet gate unchanged.
 - **Match, new severity <= existing** → duplicate: append `raw_event_ids`, increment `sources_count`, reuse existing `ai_analysis`, skip Sonnet entirely.
 - **Match, new severity > existing** → escalation: update `severity`, append `raw_event_ids`, increment `sources_count`, regenerate the Sonnet briefing (gated on the *new* severity crossing >=7, same rule as everywhere else — an explicit judgment call, since the task spec was ambiguous on whether regeneration should be unconditional).
@@ -211,7 +211,7 @@ The new step (`apps/backend/src/workers/signal-merge.ts`, `insertOrMergeSignal()
 
 ### Rationale
 
-- **Bias toward not merging when uncertain, by design**: a missed duplicate costs one extra Sonnet call (a few cents); a wrongful merge or a missed escalation costs the user real information. The 0.55 similarity threshold, the 8h window, and the exact (not fuzzy) region match were all chosen on the conservative side of that tradeoff, backed by a real backtest rather than picked blind.
+- **Bias toward not merging when uncertain, by design**: a missed duplicate costs one extra Sonnet call (a few cents); a wrongful merge or a missed escalation costs the user real information. The 0.33 similarity threshold (lowered from 0.55 on 2026-09-25), the 8h window, and the exact (not fuzzy) region match were all chosen on the conservative side of that tradeoff, backed by a real backtest rather than picked blind.
 - **Structured classification output is a higher-confidence match signal than raw article text** — comparing two independent AI classifications of the same event (region, severity, a paraphrased summary) is far less noisy than comparing raw, differently-styled headlines across outlets.
 - **Escalation handling is the reason classification can never be skipped**: a design that skips classification on a text match can never know a second article represents a worse outcome than the first. This design always knows, because it always classifies first.
 - **Not extended to `reconciliation.ts`** — deliberately scoped to the 3 live collectors only; the orphan-recovery job still inserts signals the old way, a small residual gap (rare, capped at 200/run) rather than an oversight.
@@ -785,3 +785,21 @@ The classifier saw only titles, proven in code on 2026-10-06. Oct 5 average inpu
 ### Cross-tree mapping
 
 Recorded as **D41** in `docs/claude_project/10_DECISIONS.md`.
+
+## 39. ADR 038: Daily Anthropic ingestion-classification budget cap, time-boxed (founder decision 2026-10-08)
+
+### Context
+
+`ANTHROPIC_DAILY_BUDGET_USD_INGESTION` (read by `isAnthropicBudgetAvailable("ingestion")` in `apps/backend/src/lib/anthropic-budget.ts`) already defaults to $2/day (`DEFAULT_DAILY_BUDGET_USD`, also `apps/backend/.env.example`) when the env var is unset. A prior docs-sync pass (`docs/brain/LIVE_TODO.md`, W8-DOCS-SYNC, 2026-10-07) flagged this ADR as owed — "no cap sentence was pasted into this task, so nothing written about a cap amount" — and left it unwritten pending a founder-stated figure.
+
+### Decision
+
+Budget cap is $2/day for 7 days from 2026-10-08. Review on 2026-10-16.
+
+### Rationale
+
+Confirms the existing $2/day default as the deliberate, founder-set figure rather than an unreviewed fallback, and puts a short, dated review window on it instead of leaving it open-ended.
+
+### Cross-tree mapping
+
+Recorded as **D42** in `docs/claude_project/10_DECISIONS.md`.

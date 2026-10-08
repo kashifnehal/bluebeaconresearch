@@ -795,3 +795,13 @@ Also decided as part of this same pass:
 **Rationale:** The classifier saw only titles, proven in code on 2026-10-06. Oct 5 average input was 2,588 tokens per call and $0.00438 per call. About 100 extra tokens at $1 per million input tokens is about $0.0001 per call (about 2 to 3 percent of that call cost), roughly $0.07 a day at 685 calls.
 
 **Cross-tree mapping:** Recorded as **ADR 037** in `docs/brain/10_DECISIONS.md`.
+
+## D42: Daily Anthropic ingestion-classification budget cap, time-boxed (founder decision 2026-10-08)
+
+**Decision:** Budget cap is $2/day for 7 days from 2026-10-08. Review on 2026-10-16.
+
+**Context:** `ANTHROPIC_DAILY_BUDGET_USD_INGESTION` already defaults to $2/day (`DEFAULT_DAILY_BUDGET_USD` in `apps/backend/src/lib/anthropic-budget.ts`, also `apps/backend/.env.example`) when the env var is unset. A prior docs-sync pass flagged this ADR as owed and left it unwritten pending a founder-stated figure.
+
+**Rationale:** Confirms the existing $2/day default as the deliberate, founder-set figure rather than an unreviewed fallback, and puts a short, dated review window on it instead of leaving it open-ended.
+
+**Cross-tree mapping:** Recorded as **ADR 038** in `docs/brain/10_DECISIONS.md`.

@@ -177,7 +177,7 @@ export default async function Home(props: {
               <div>
                 <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Latest signal</p>
                 <h3 className="text-2xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-2">Recent research feed</h3>
-                <p className="text-on-surface-variant max-w-lg font-medium text-sm md:text-base">The most recent signal from the collector pipeline. New events are ingested on a regular schedule, typically every 15–30 minutes — not in real time.</p>
+                <p className="text-on-surface-variant max-w-lg font-medium text-sm md:text-base">The most recent signal from the collector pipeline. New events are ingested on a regular schedule, typically every 30 minutes — not in real time.</p>
                 <p className="text-on-surface-variant/70 max-w-lg font-medium text-sm md:text-base mt-2">Unlike a headline-only feed, each signal here comes with a written summary and lists the named sources it came from.</p>
               </div>
               {homepageStats.totalSignals != null ? (

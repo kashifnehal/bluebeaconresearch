@@ -10,8 +10,11 @@
 
 /** Hard drops — sports, entertainment, lifestyle (never show regardless of source) */
 export const EXCLUDE_KEYWORDS = [
-  "sports", "football", "soccer", "fifa", "nfl", "nba", "mlb", "nhl", "olympics", "marathon",
-  "celebrity", "music", "album", "concert", "movie", "film", "award", "oscar", "grammy", "emmy",
+  "sports", "football", "soccer", "fifa", "nfl", "nba", "mlb", "nhl", "olympics",
+  "marathon runner", "marathon race", "half marathon",
+  "celebrity", "music", "album", "concert", "movie",
+  "film festival", "film review", "box office",
+  "awards ceremony", "award show", "oscar", "grammy", "emmy",
   "fashion", "lifestyle", "recipe", "cooking", "horoscope",
   "tug-of-war", "war movie", "war film", "star wars", "war game", "wargame",
   "bcci", "cricket", "ipl", "tennis", "golf", "basketball", "baseball",
@@ -24,13 +27,10 @@ export const EXCLUDE_KEYWORDS = [
   "net worth", "revolutionary war", "trade deadline",
 ];
 
-/** Historical year strings in headlines (legacy archive noise) */
-const HISTORICAL_YEARS = [
-  "1970", "1971", "1972", "1973", "1974", "1975", "1976", "1977", "1978", "1979",
-  "1980", "1981", "1982", "1983", "1984", "1985", "1986", "1987", "1988", "1989",
-  "1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999",
-  "2000", "2001", "2002", "2003", "2004", "2005",
-];
+/** Matches a historical-noise year (1970-2005) only as a standalone number, not as a
+ * substring of a larger number (e.g. must not match "2000" inside "12000" or "1970"
+ * inside "41970"). */
+const HISTORICAL_YEAR_PATTERN = /(?<!\d)(19[7-9]\d|200[0-5])(?!\d)/;
 
 /** Short tokens requiring word-boundary match */
 const EXACT_WORD_KEYWORDS = new Set([
@@ -102,8 +102,10 @@ export function shouldExclude(title: string, summary: string = ""): boolean {
   // contain "nfl" as a substring) — dropping some of the most important geopolitical/
   // macro headlines for this product with no trace, since filtered items are never logged.
   if (EXCLUDE_KEYWORDS.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text))) return true;
-  // Drop headlines anchored on historical years (e.g. "1973 oil crisis retrospective")
-  if (HISTORICAL_YEARS.some((yr) => text.includes(yr))) return true;
+  // Drop headlines anchored on historical years (e.g. "1973 oil crisis retrospective") —
+  // whole-number match only, so it can't fire on a year substring inside a larger number
+  // (e.g. "2000" inside "12000 barrels", "1970" inside "41970").
+  if (HISTORICAL_YEAR_PATTERN.test(text)) return true;
   return false;
 }
 

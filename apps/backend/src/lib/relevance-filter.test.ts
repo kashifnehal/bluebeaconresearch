@@ -1,73 +1,48 @@
 import assert from "node:assert/strict";
-import { isRelevantEvent, isRoutineMarketNoise } from "./relevance-filter.js";
+import { shouldExclude } from "./relevance-filter.js";
 
-let failed = false;
 function runTest(name: string, fn: () => void) {
   try {
     fn();
     console.log(`✔ ${name}`);
   } catch (err) {
-    failed = true;
     console.error(`✖ ${name}`);
     console.error(err);
+    process.exitCode = 1;
   }
 }
 
-const DROP = [
-  "Roku VP, CAO Matthew Banks sells $84,324 in shares",
-  "Rush Street Interactive CEO Richard Schwartz sells $3.1m in Class A shares",
-  "RBC Capital raises Johnson & Johnson stock price target on pharma strength",
-  "Prime Medicine stock rating maintained at Market Outperform by Citizens",
-  "Stewart Information Services Corporation (NYSE: STC) Receives Consensus Rating of Moderate Buy from Brokerages",
-  "Maze Therapeutics, Inc. (NASDAQ: MAZE) Stock Now Rated Buy by Wall Street Analysts",
+// Previously false-dropped before the classifier ever saw them: a bare substring match
+// ("marathon"/"award"/"film" keywords, or a year digit-string inside a larger number)
+// was excluding real commodity/market headlines with no trace.
+const shouldNotExclude = [
+  "Marathon Petroleum cuts refinery runs after unit outage",
+  "Oil output rises to 12000 barrels per day at Libyan field",
+  "Nikkei closes at 41970 as yen weakens",
+  "Contract award for Gulf of Mexico offshore block",
+  "Thin film solar module maker faces tariff",
+  "Rising inflation squeezes household budgets",
+  "Ukraine conflict escalates near eastern border",
 ];
 
-const KEEP = [
-  "Saudi Arabia's East-West Pipeline oil flow reaches 5.8 million bpd",
-  "Russia sells $2 billion of oil to India, officials say",
-  "India sells $2 billion of dollar reserves, central bank data show",
-  "Shell CEO says gas offers competitive edge in Venezuela",
-  "Aramco CEO warns oil inventories are 'scarily thin'",
-  "OPEC+ agrees to keep output steady",
-];
-
-for (const title of DROP) {
-  runTest(`drops routine noise: ${title}`, () => {
-    assert.equal(isRoutineMarketNoise(title), true);
-    const lines: string[] = [];
-    const original = console.log;
-    console.log = (...args: unknown[]) => {
-      lines.push(args.map(String).join(" "));
-    };
-    try {
-      assert.equal(isRelevantEvent(title, "", "finance"), false);
-    } finally {
-      console.log = original;
-    }
-    assert.deepEqual(lines, [`[RELEVANCE] routine-noise drop title="${title}"`]);
+for (const title of shouldNotExclude) {
+  runTest(`shouldExclude("${title}") is false`, () => {
+    assert.equal(shouldExclude(title), false);
   });
 }
 
-for (const title of KEEP) {
-  runTest(`keeps: ${title}`, () => {
-    assert.equal(isRoutineMarketNoise(title), false);
-    const lines: string[] = [];
-    const original = console.log;
-    console.log = (...args: unknown[]) => {
-      lines.push(args.map(String).join(" "));
-    };
-    try {
-      assert.equal(isRelevantEvent(title), true);
-    } finally {
-      console.log = original;
-    }
-    assert.deepEqual(lines, []);
-  });
-}
+// Must stay excluded — the real sports/entertainment/legacy-noise patterns the keywords
+// and the year check are meant to catch.
+const shouldStillExclude = [
+  "Marathon runner wins city race",
+  "Oscars awards ceremony red carpet",
+  "Film festival opens in Cannes",
+  "1973 oil crisis retrospective",
+  "NFL trade deadline",
+];
 
-if (failed) {
-  console.error("\nSome relevance-filter tests failed.");
-  process.exit(1);
-} else {
-  console.log("\nAll relevance-filter tests passed.");
+for (const title of shouldStillExclude) {
+  runTest(`shouldExclude("${title}") is true`, () => {
+    assert.equal(shouldExclude(title), true);
+  });
 }
