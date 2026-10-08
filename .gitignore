@@ -49,3 +49,6 @@ yarn-error.log*
 .demo-accounts.local.json
 **/.demo-accounts.local.json
 .audit-screenshots/
+
+# replay-gate.ts script output (local analysis only, not source)
+apps/backend/replay-gate-output.json
