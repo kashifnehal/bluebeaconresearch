@@ -368,7 +368,7 @@ export default async function Home(props: {
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/backtesting">Backtesting Lab</Link></li>
               <li>
                 <Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] flex items-center gap-1" href="/terms">
-                  Terms <span className="text-[12px] md:text-[8px] text-primary lowercase font-mono">(full docs coming soon)</span>
+                  Terms
                 </Link>
               </li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/privacy">Privacy</Link></li>

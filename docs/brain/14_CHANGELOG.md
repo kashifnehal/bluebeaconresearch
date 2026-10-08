@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-07 (v0.149.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-09 (v0.150.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.150.0 — Public Terms of Service page (2026-10-09)
+
+`apps/web` only. `app/terms/page.tsx`: h1 "Legal Protocol" → "Terms of Service"; "Blue Beacon Researchs" → "Blue Beacon Research's". Every prior clause kept, including the greater of (a) amounts paid in the twelve (12) months preceding the claim or (b) one hundred U.S. dollars ($100). Sections, in order: About the service (AI-powered research platform); No investment advice (existing two sentences); Limitation of liability (existing cap and the existing "trading decisions" / no-accuracy-guarantee sentences — retained, not newly drafted); Accounts and access; Acceptable use (existing fair-use, rate-limit, and scraping sentence); Automated analysis (public news sources, automated systems including Anthropic's Claude models, can be wrong or late); Changes to these terms; Contact (support@bluebeaconresearch.com); "Last updated: October 2026." Subscriptions and billing omitted after a grep of `apps/web` for `checkout|stripe|razorpay` found no payment integration. No legal entity name, governing law, jurisdiction, or address. `app/page.tsx` footer: "Terms (full docs coming soon)" → "Terms"; the link's className is unchanged. Verified: `tsc --noEmit` and eslint on the two touched files. Not Playwright-checked. Full detail: `LIVE_TODO.md`.
 
 ### v0.149.0 — Docs sync for the 2026-10-06 ships (2026-10-07)
 

@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-09-20.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-09 — public `/terms` page rewritten from the "Legal Protocol" stub into a Terms of Service (brain changelog v0.150.0 / PHASE 126). Homepage footer no longer says "full docs coming soon." No prior numbered backlog line existed for this page (the only `/terms` mention below is the #186 "no Stitch mock" note, which is a layout note, not an open terms-copy ticket — left as-is). Subscriptions and billing was not added; there is no live checkout in `apps/web`.
+
 > ⚠️ UPDATED 2026-10-07 — shipped 2026-10-06, recorded here with the commit: classifier defer `0c9b4b6`; budget-closed status copy `c468485`; classifier excerpt `cf0711f`; cap-closed email `41c19ce`; deferred classify on ACLED and the dormant classifier `5707819`; public copy `c0e1f60`; outcome tracker `a186404` (723 outcome rows written on 2026-10-06); citation cleanup `e51bb1e`; events POST moved out of the route file `6a88053`; view `feed_yield_daily` `b4b52f1` (written, not applied); GDELT DOC diagnosis `48f77ce` (list frozen 2026-10-05 12:00 to 2026-10-06 07:00 UTC, recovered at 10:00 UTC); keyword-fallback copy `7438ec9`. GDELT `maxrecords` is 250 (`3d5e244`, 2026-09-26). A GDELT HTTP 429 gets one retry then stops (`e677efc`, 2026-09-06). Merge threshold is 0.33 on summaries since 2026-09-25 (`d67ae2b`). None of these were numbered tickets in the table below.
 
 **Classification: Internal — CTO Level**

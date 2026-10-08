@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-07 (docs sync for the 2026-10-06 ships, v0.149.0; W12-C routine-noise filter remains v0.148.0)
+Last updated: 2026-10-09 (W8-TERMS: public Terms of Service page, v0.150.0)
+
+> ⚠️ NEW 2026-10-09 (W8-TERMS, public Terms of Service, `apps/web` only) — `/terms` heading "Legal Protocol" → "Terms of Service"; "Blue Beacon Researchs" → "Blue Beacon Research's"; $100 / 12-month liability cap unchanged. Homepage footer "Terms (full docs coming soon)" → "Terms". Subscriptions and billing section omitted (no `checkout` / `stripe` / `razorpay` in `apps/web`). No legal entity, governing law, jurisdiction, or address. Full detail: `14_CHANGELOG.md` v0.150.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-07 (docs sync) — temporary Anthropic errors defer classification (`0c9b4b6`); a closed daily budget pauses collection and the status copy names that pause (`c468485`); the classifier prompt includes a cleaned excerpt when the feed stored one (`cf0711f`); one email fires when the ingestion classification budget closes (`41c19ce`); ACLED and the dormant classifier leave a deferred result unstored (`5707819`); public copy matches that pause (`c0e1f60`, `7438ec9`). Outcome scoring can resume (`a186404`); 723 outcome rows were written on 2026-10-06. View `feed_yield_daily` is written and not applied (`b4b52f1`). The GDELT DOC list was frozen from 2026-10-05 12:00 to 2026-10-06 07:00 UTC and recovered at 10:00 UTC (`48f77ce`). GDELT `maxrecords` is 250 (`3d5e244`, 2026-09-26). A GDELT HTTP 429 gets one retry then stops (`e677efc`, 2026-09-06). Merge threshold is 0.33 on summaries since 2026-09-25 (`d67ae2b`). Events POST logic is outside the route file (`6a88053`). Citation cleanup remains `e51bb1e`.
 

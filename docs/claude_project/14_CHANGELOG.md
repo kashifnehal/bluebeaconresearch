@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-07 (PHASE 125).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-09 (PHASE 126).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 126 — Public Terms of Service page (2026-10-09)
+
+`apps/web` only. `/terms` was a short stub titled "Legal Protocol," with a missing apostrophe in "Blue Beacon Researchs" and a homepage footer that still said "Terms (full docs coming soon)." The page is now headed "Terms of Service," the possessive is fixed, and the existing clauses — including the twelve-month / $100 aggregate liability cap — are unchanged. New short sections cover the service (an AI-powered research platform), the existing no-investment-advice wording, accounts, acceptable use (the existing fair-use / rate-limit / scraping sentence), automated analysis (public news sources classified by automated systems, including Anthropic's Claude models, and able to be wrong or late), changes, and contact at support@bluebeaconresearch.com, plus "Last updated: October 2026." Subscriptions and billing was not written: `apps/web` has no live checkout (no `stripe`, `razorpay`, or `checkout` usage). No legal entity, governing law, jurisdiction, or address. Footer link text is now "Terms"; its classes are unchanged. Full detail: `docs/brain/14_CHANGELOG.md` v0.150.0.
 
 ## PHASE 125 — Docs sync for the 2026-10-06 ships (2026-10-07)
 
