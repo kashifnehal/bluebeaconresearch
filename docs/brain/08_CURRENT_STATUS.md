@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-09 (public Claude disclosure, v0.153.0)
+Last updated: 2026-10-09 (sitemap `/accuracy` and `/status`, v0.154.0)
+
+> ⚠️ NEW 2026-10-09 (sitemap, `apps/web` only) — `/accuracy` and `/status` added to `sitemap.ts` (monthly, priority 0.5). Both pages already existed. `robots.ts` unchanged. Base URL is `NEXT_PUBLIC_APP_URL`. Full detail: `14_CHANGELOG.md` v0.154.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-09 (public Claude disclosure, `apps/web` only) — homepage step "02. Research Assessment" names Anthropic's Claude models, states that the keyword fallback runs only when no Claude client is configured, and states that classification waits if Claude is unavailable. `/how-it-works` adds a seventh claim: market-impact classification, no position/size/entry/exit recommendation. Full detail: `14_CHANGELOG.md` v0.153.0, `LIVE_TODO.md`.
 

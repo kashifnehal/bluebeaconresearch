@@ -30,3 +30,13 @@ runTest("sitemap includes /about", () => {
     `expected a /about entry, got: ${urls.join(", ")}`,
   );
 });
+
+runTest("sitemap includes /accuracy and /status monthly at priority 0.5", () => {
+  const entries = sitemap();
+  for (const path of ["/accuracy", "/status"]) {
+    const entry = entries.find((e) => e.url.endsWith(path));
+    assert.ok(entry, `expected a ${path} entry, got: ${entries.map((e) => e.url).join(", ")}`);
+    assert.equal(entry.changeFrequency, "monthly");
+    assert.equal(entry.priority, 0.5);
+  }
+});

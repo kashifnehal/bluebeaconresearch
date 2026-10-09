@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (public Claude disclosure — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-09 (sitemap `/accuracy` and `/status` — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-09 (sitemap, `apps/web` only) — `/accuracy` and `/status` added to the public sitemap (monthly, priority 0.5). `robots.ts` unchanged. Sitemap base is `NEXT_PUBLIC_APP_URL`; live `<loc>` values already use `https://bluebeaconresearch.com`. Full detail: `docs/brain/14_CHANGELOG.md` v0.154.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 130.
 
 > ⚠️ NEW 2026-10-09 (public Claude disclosure, `apps/web` only) — homepage step "02. Research Assessment" states that classification uses Anthropic's Claude models, that a keyword fallback runs only when no Claude client is configured, and that classification waits if Claude is unavailable. `/how-it-works` adds a seventh claim/proof row: Claude records market impact and does not recommend a position, a size, or an entry or exit. No model versions and no logo. Full detail: `docs/brain/14_CHANGELOG.md` v0.153.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 129.
 

@@ -193,7 +193,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | S7 | Build /accuracy public page | 1 day | Most powerful marketing asset |
 | S8 | Populate settings Notifications tab | 1 day | Tab is empty, users expect it |
 | S9 | Populate settings Security tab (change password, sessions) | 1 day | Security feature expected |
-| S10 | sitemap.xml and robots.txt | 1 hr | SEO basic requirement |
+| S10 | sitemap.xml and robots.txt | 1 hr | SEO basic requirement. **2026-10-09:** `/accuracy` and `/status` added (monthly, priority 0.5). `robots.ts` unchanged. |
 | S11 | Guardian API as second news source | 1 day | Better policy/economics coverage |
 | S12 | Pipeline health endpoint (/v1/health/pipeline) | 2 hr | Visibility into worker status |
 | S13 | Severity 9+ audio alert (Web Audio API) | 2 hr | FinancialJuice-inspired, high impact |
