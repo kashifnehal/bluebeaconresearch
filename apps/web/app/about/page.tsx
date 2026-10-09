@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const STEPS = [
   {
     title: "01. Event Detection",
-    body: "Public sources such as ACLED and GNews are scanned on a regular collector schedule and turned into structured events.",
+    body: "Public sources, including GDELT, news APIs and RSS feeds, are scanned on a regular collector schedule and turned into structured events.",
   },
   {
     title: "02. Research Assessment",
