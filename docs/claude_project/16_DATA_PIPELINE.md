@@ -1,6 +1,6 @@
 # 16_DATA_PIPELINE.md — Complete Data Pipeline Documentation
 
-> **📍 Doc status — current as of 2026-10-07 for the GDELT volume, freeze, and yield-view notes; 2026-09-20 for the materiality-gate note below.** ASCII diagrams further down are older. Authoritative pipeline: `docs/brain/15_INGESTION_PIPELINE.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-09 for the RSS official-tier/exclude-list/price-cron changes (`96ff0e7`, detail in `docs/brain/15_INGESTION_PIPELINE.md` §2.1/§3); 2026-10-07 for the GDELT volume, freeze, and yield-view notes; 2026-09-20 for the materiality-gate note below.** ASCII diagrams further down are older. Authoritative pipeline: `docs/brain/15_INGESTION_PIPELINE.md`. `claude/23_TODO.md` is not in this repo.
 
 **Classification: Internal — CTO Level**
 
@@ -377,7 +377,7 @@ await fetch('https://exp.host/--/api/v2/push/send', {
 ## 5. PRICE SYNC PIPELINE
 
 **Worker:** price-syncer.ts
-**Cron:** Every 30 minutes (bundled in the ingestion cycle — `INGESTION_INTERVAL_CRON`, currently `*/30 * * * *`)
+**Cron:** Own schedule, `PRICE_SYNC_CRON` (default `*/15 * * * *`, every 15 minutes) — decoupled from the news ingestion cron since `96ff0e7` (2026-10-09); previously bundled into `INGESTION_INTERVAL_CRON`.
 **Data source:** Yahoo Finance (yahoo-finance2 npm package — unlimited, free)
 
 **Flow:**

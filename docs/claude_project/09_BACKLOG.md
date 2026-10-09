@@ -2,6 +2,10 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-09.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-09 — W14-W: `PriceTicker` stale threshold now 60 min, `LegalDisclaimerFooter` links GDELT Project attribution, dashboard/map/watchlist show a "Data as of" stamp (`8edc57d`, brain changelog v0.159.0 / PHASE 136). No prior numbered backlog line — nothing struck.
+
+> ⚠️ UPDATED 2026-10-09 — W14-1: RSS official-tier feeds (EIA/Fed/ECB/BoE/USTR/RBI/BoJ) get a 24h age window and skip the keyword gate; exclude keywords split hard/ambiguous; historical-year exclude is log-only; price sync decoupled to its own `PRICE_SYNC_CRON` (`96ff0e7`, brain changelog v0.158.0 / PHASE 135). No prior numbered backlog line — nothing struck.
+
 > ⚠️ UPDATED 2026-10-09 — `/about` "01. Event Detection" sentence corrected to drop "ACLED and GNews" in favor of "GDELT, news APIs and RSS feeds" (`8025544`, brain LIVE_TODO, PHASE 134). No prior numbered backlog line existed for this — confirmed by grep for the old sentence, nothing struck.
 
 > ⚠️ UPDATED 2026-10-09 — real logo/favicon shipped across `apps/web` + `apps/mobile` (brain changelog v0.157.0 / PHASE 133). Replaced Next's default scaffold favicon, a generic Lucide `Shield` icon stand-in on `login`/`signup`, and Expo's default mobile-icon scaffold with the founder's real logo. No prior numbered backlog line existed for this — confirmed by grep for a logo/favicon/branding ticket, nothing struck.

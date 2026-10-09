@@ -1,10 +1,18 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-09 (PHASE 131).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-09 (PHASE 136).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 136 — W14-W: price stale threshold, GDELT credit, Data-as-of stamps (2026-10-09, `8edc57d`)
+
+`apps/web` only. `PriceTicker` stale threshold widened to 60 min to match the decoupled 15-min price-sync cadence (PHASE 135). `LegalDisclaimerFooter` links a GDELT Project attribution. Dashboard, map, and watchlist each show a "Data as of" timestamp from already-fetched data, no new queries. Full detail: `docs/brain/LIVE_TODO.md`.
+
+## PHASE 135 — W14-1: RSS official-tier age window/keyword bypass, exclude-list split, log-only year rule, decoupled price cron (2026-10-09, `96ff0e7`)
+
+`apps/backend` only. Official agency RSS feeds (EIA, Fed, ECB, BoE, USTR, RBI, BoJ) get a 24h age window and skip the keyword gate; world/finance stay at 4h. Exclude keywords split into hard (always drops) and ambiguous (drops only with no geopolitical/commodity anchor). Historical-year exclude is now log-only. Price sync moved to its own `PRICE_SYNC_CRON` (default every 15 min), off the news ingestion cron. Full detail: `docs/brain/LIVE_TODO.md`, `docs/brain/15_INGESTION_PIPELINE.md`.
 
 ## PHASE 134 — About page event-detection sentence corrected (2026-10-09, `8025544`)
 

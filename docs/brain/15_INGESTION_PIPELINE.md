@@ -1,6 +1,6 @@
 # 15_INGESTION_PIPELINE.md — News Ingestion Logic, Filters & Display Rules
 
-> **📍 Doc status — current as of 2026-10-07 for the GDELT record cap, retry, and DOC-list freeze; 2026-09-28 for the RSS feed roster and ingestion cadence; 2026-09-20 for the materiality-gate path.**
+> **📍 Doc status — current as of 2026-10-09 for the RSS official-tier age window/keyword bypass, hard/ambiguous exclude split, log-only year rule, and decoupled price-sync cron (`96ff0e7`); 2026-10-07 for the GDELT record cap, retry, and DOC-list freeze; 2026-09-28 for the RSS feed roster; 2026-09-20 for the materiality-gate path.**
 >
 > ⚠️ UPDATED 2026-10-07 — also on the ingestion path: a cleaned excerpt goes to the classifier when the feed stored one (`cf0711f`; a missing summary, including every GDELT item, leaves the prompt unchanged); one email when the daily ingestion classification budget closes (`41c19ce`); ACLED and the dormant classifier do not store a deferred result (`5707819`); read-only view `feed_yield_daily` (`b4b52f1`, migration written, not applied). This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
 
@@ -44,7 +44,7 @@ Railway workers (startup + every 30 min)
 
 **Auth:** None (public RSS/Atom feeds)  
 **Run interval:** Every 30 min + startup (see §1 — `INGESTION_INTERVAL_CRON`)  
-**Article age window:** **4 hours** (articles older than 4h are skipped)  
+**Article age window:** **4 hours** for `world`/`finance` tiers; **24 hours** for the `official` tier (central-bank/agency feeds), and the `official` tier also skips the Step 3 keyword gate entirely — any non-excluded headline from those feeds passes (`96ff0e7`, 2026-10-09).  
 **Dedup key:** `rss-{base64(url)[0:32]}` in `raw_events.external_id`
 
 | Feed                            | Tier      | Filter strictness                        |
@@ -55,14 +55,14 @@ Railway workers (startup + every 30 min)
 | France24                        | `world`   | Exclude spam + keyword match             |
 | DW World                        | `world`   | Exclude spam + keyword match             |
 | Guardian World                  | `world`   | Exclude spam + keyword match             |
-| EIA Press Releases              | `world`   | Exclude spam + keyword match             |
-| Federal Reserve                 | `world`   | Exclude spam + keyword match             |
-| ECB                              | `world`   | Exclude spam + keyword match             |
-| Bank of England                 | `world`   | Exclude spam + keyword match             |
-| USTR                             | `world`   | Exclude spam + keyword match             |
-| Reserve Bank of India            | `world`   | Exclude spam + keyword match             |
-| Bank of Japan                    | `world`   | Exclude spam + keyword match             |
-| EIA Today in Energy              | `world`   | Exclude spam + keyword match             |
+| **EIA Press Releases**          | `official`| **Only hard-exclude, 24h window, no keyword gate** |
+| **Federal Reserve**             | `official`| **Only hard-exclude, 24h window, no keyword gate** |
+| **ECB**                         | `official`| **Only hard-exclude, 24h window, no keyword gate** |
+| **Bank of England**             | `official`| **Only hard-exclude, 24h window, no keyword gate** |
+| **USTR**                        | `official`| **Only hard-exclude, 24h window, no keyword gate** |
+| **Reserve Bank of India**       | `official`| **Only hard-exclude, 24h window, no keyword gate** |
+| **Bank of Japan**               | `official`| **Only hard-exclude, 24h window, no keyword gate** |
+| **EIA Today in Energy**         | `official`| **Only hard-exclude, 24h window, no keyword gate** |
 | **BBC Business**                | `finance` | **Only hard-exclude** (sports/celebrity) |
 | **Guardian Business**           | `finance` | **Only hard-exclude**                    |
 | **NYT Business**                | `finance` | **Only hard-exclude**                    |
@@ -103,6 +103,7 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 ```
 
 **Filter:** Same as RSS `world` tier — `isRelevantEvent(title, summary)`.
+**Article age window:** no explicit code-level age filter — the API call has no `from`/`to` date param; freshness comes only from `sortby=publishedAt` returning the newest matches first.
 
 **Known limitation:** GNews free tier caches results; many runs return duplicates already in DB.
 
@@ -126,6 +127,7 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 **Rate limits:** On HTTP 429, one retry then stop (`e677efc`, 2026-09-06). Delay is 5 seconds times 2 to the attempt, plus up to 10 seconds of jitter (`gdelt-collector.ts` on `7438ec9`, 2026-10-06). A non-429 error is not retried.
 **DOC artlist:** frozen from 2026-10-05 12:00 to 2026-10-06 07:00 UTC, recovered at 10:00 UTC. `48f77ce` (2026-10-06) recorded one HTTP 200 whose newest `seendate` was still 2026-10-02T10:45:00Z.  
 **Filter:** `isRelevantEvent(title)` — title only (GDELT often has no summary).
+**Article age window:** no explicit code-level age filter — the DOC API query has no date param either; `maxrecords=250` sorted `DateDesc` is the only recency control.
 **Fields (DOC 2.0 artlist response):** `url, title, seendate, socialimage, domain, language, sourcecountry` — no `ActionGeo_*`/Goldstein/CAMEO fields exist in this response; those belong to GDELT's separate Event Export CSV product, which this collector doesn't call (confirmed #188, 2026-09-24; `docs/claude_project/16_DATA_PIPELINE.md` §2.1 previously claimed otherwise).
 **Country caveat (#188):** `sourcecountry` is the publishing outlet's country, not the event's location — `raw_events.country` keeps it as the raw value, but the classifier's own `country` field (see `18_AI_ENGINE.md`) is what's now used for the signal's displayed country and map coordinates.
 
@@ -143,7 +145,7 @@ conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed
 
 **Source:** Yahoo Finance (`yahoo-finance2`)  
 **Symbols:** 8 commodities (WTI, Brent, Gold, NatGas, Wheat, Copper, Silver, Corn) + **6 forex pairs** (EURUSD, GBPUSD, USDJPY, USDCHF, USDRUB, USDCNY — Yahoo `<PAIR>=X` tickers) — the forex set added by #87 phase 1 (`a15e2fd`, 2026-09-09), synced in the same loop.  
-**Interval:** Every 30 min (bundled in ingestion cycle)  
+**Interval:** Own schedule, `PRICE_SYNC_CRON` (default `*/15 * * * *`, every 15 min) — decoupled from the news ingestion cron since `96ff0e7` (2026-10-09); previously bundled into the 30-min ingestion cycle.  
 **Storage:** `commodity_prices` table (a generic symbol/price time-series despite the name) + Redis `prices:{SYMBOL}` (900s TTL)
 
 ---
@@ -174,13 +176,11 @@ All news collectors share one filter module.
 
 ### Step 1 — Hard exclude (`shouldExclude`)
 
-Drop if title+summary contains (word-boundary match as of `b0783ab`, not substring):
+Drop if title+summary contains (word-boundary match as of `b0783ab`, not substring). Since `96ff0e7` (2026-10-09), the exclude list is split into two tiers:
 
-- **Sports:** football, soccer, nfl, nba, cricket, tennis, golf, olympics…
-- **Entertainment:** celebrity, music, movie, award, oscar…
-- **Lifestyle:** fashion, recipe, cooking, horoscope
-- **False-positive phrases:** star wars, war movie, tug-of-war, oil painting, farmers market, dollar tree, military fitness, net worth, trade deadline…
-- **Historical years:** 1970–2005 in headline (archive retrospectives)
+- **`EXCLUDE_KEYWORDS_HARD`** (sports, entertainment, lifestyle, false-positive phrases — football, soccer, nfl, nba, cricket, tennis, golf, olympics, celebrity, music, movie, award, oscar, fashion, recipe, cooking, horoscope, star wars, war movie, tug-of-war, oil painting, farmers market, dollar tree, military fitness, net worth…) — always drops, no exception.
+- **`EXCLUDE_KEYWORDS_AMBIGUOUS`** (`trade deadline`, `fashion`, `war game`/`wargame`) — drops **only when the combined title+summary has no "anchor"** (`hasAnchor()`: an existing geopolitical word or a tracked commodity name). With an anchor present, the headline is kept.
+- **Historical years:** 1970–2005 in headline is now **log-only** (`[RELEVANCE] exclude-year would-drop`) — it no longer actually drops the article, and no longer misfires on dollar amounts like "$2000".
 
 ### Step 1b — Routine market noise (`isRoutineMarketNoise`), 2026-10-07
 
@@ -190,6 +190,7 @@ After the hard exclude and before the finance-tier pass-through, drop a title th
 
 | Tier                            | Rule                                                |
 | :------------------------------ | :-------------------------------------------------- |
+| **`official`** RSS feeds (central banks/agencies) | Pass if NOT excluded (no routine-noise or keyword check) — `96ff0e7`, 2026-10-09 |
 | **`finance`** RSS feeds         | Pass if NOT excluded and NOT routine market noise (no keyword required) |
 | **`world`** RSS + GNews + GDELT | Pass if NOT excluded, NOT routine market noise, AND matches keyword list below |
 
