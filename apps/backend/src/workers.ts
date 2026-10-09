@@ -106,20 +106,34 @@ if (
   );
 }
 
+// Price sync used to ride along inside runIngestionCycle on INGESTION_CRON (30
+// min default). Split onto its own schedule so it can run more often than news
+// ingestion without touching the news cron itself — commodity/forex prices are
+// cheap to poll and don't need to wait on GDELT/GNews/RSS each cycle.
+const DEFAULT_PRICE_SYNC_CRON = "*/15 * * * *";
+const PRICE_SYNC_CRON =
+  process.env.PRICE_SYNC_CRON && cron.validate(process.env.PRICE_SYNC_CRON)
+    ? process.env.PRICE_SYNC_CRON
+    : DEFAULT_PRICE_SYNC_CRON;
+
+if (process.env.PRICE_SYNC_CRON && PRICE_SYNC_CRON !== process.env.PRICE_SYNC_CRON) {
+  console.warn(
+    `[workers] PRICE_SYNC_CRON="${process.env.PRICE_SYNC_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_PRICE_SYNC_CRON}"`,
+  );
+}
+
 async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
   const cycleStartedAt = Date.now();
-  const [gdelt, gnews, rss, prices] = await Promise.allSettled([
+  const [gdelt, gnews, rss] = await Promise.allSettled([
     runGdeltCollectorOnce(),
     runGnewsCollectorOnce(),
     runRssCollectorOnce(),
-    runPriceSyncOnce(),
   ]);
 
   const collectors = {
     gdelt: gdelt.status === "fulfilled" ? gdelt.value : { error: String(gdelt.reason) },
     gnews: gnews.status === "fulfilled" ? gnews.value : { error: String(gnews.reason) },
     rss: rss.status === "fulfilled" ? rss.value : { error: String(rss.reason) },
-    prices: prices.status === "fulfilled" ? prices.value : { error: String(prices.reason) },
   };
 
   const recorded = await recordPipelineRun(buildPipelineStatus(collectors));
@@ -180,6 +194,23 @@ async function main() {
   runIngestionCycle(app).then(({ collectors, writeVolume }) => {
     app.log.info({ collectors, writeVolume }, "startup:ingestion complete");
   }).catch(() => {});
+  runPriceSyncOnce().then((res) => {
+    app.log.info({ res }, "startup:price-sync complete");
+  }).catch((e) => {
+    app.log.error({ err: e }, "startup:price-sync failed");
+  });
+
+  // ── Prices — own schedule, set by PRICE_SYNC_CRON, default 15 min ──
+  app.log.info({ schedule: PRICE_SYNC_CRON }, "workers: price-sync cron schedule");
+  cron.schedule(PRICE_SYNC_CRON, async () => {
+    try {
+      const res = await runPriceSyncOnce();
+      app.log.info({ res }, "price-sync complete");
+    } catch (e) {
+      app.log.error({ err: e }, "price-sync failed");
+      Sentry.captureException(e);
+    }
+  });
 
   // ── Collect news signals — interval set by INGESTION_INTERVAL_CRON, default 30 min ──
   app.log.info({ schedule: INGESTION_CRON }, "workers: ingestion cron schedule");

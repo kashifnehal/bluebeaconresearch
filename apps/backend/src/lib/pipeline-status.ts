@@ -28,8 +28,11 @@ export type CollectorResult = {
 };
 
 // Collectors we track run-to-run health for. Order/keys must match what
-// runIngestionCycle assembles into `collectors`.
-export const COLLECTOR_KEYS = ["gdelt", "gnews", "rss", "prices"] as const;
+// runIngestionCycle assembles into `collectors`. "prices" moved to its own
+// PRICE_SYNC_CRON schedule (apps/backend/src/workers.ts) and is no longer part
+// of that object — tracking it here against an always-absent key would have
+// shown it as perpetually failing.
+export const COLLECTOR_KEYS = ["gdelt", "gnews", "rss"] as const;
 export type CollectorKey = (typeof COLLECTOR_KEYS)[number];
 
 export type PipelineRunStatus = {

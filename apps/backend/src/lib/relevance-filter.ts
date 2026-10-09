@@ -1,22 +1,27 @@
 /**
  * Shared relevance filter for all ingestion collectors.
  *
- * Two tiers:
+ * Three feed tiers:
+ *  - "official" feeds (central banks, EIA, USTR, etc.): hard-exclude spam/sports
+ *    + the routine-noise drop below, but skip the geopolitical/market keyword
+ *    gate — a government/agency press release is assumed material on its own.
  *  - "finance" feeds (BBC Business, MarketWatch, etc.): only hard-exclude spam/sports,
  *    then the routine-noise drop below
- *  - "world" feeds + APIs: exclude spam, drop routine insider-trade and analyst-rating
- *    titles, then match geopolitical OR market/finance keywords
+ *  - "world" feeds + APIs (broadcasters/aggregators, GDELT, GNews): exclude spam,
+ *    drop routine insider-trade and analyst-rating titles, then match geopolitical
+ *    OR market/finance keywords
  */
 
-/** Hard drops — sports, entertainment, lifestyle (never show regardless of source) */
-export const EXCLUDE_KEYWORDS = [
+/** Hard drops — unambiguous spam/noise regardless of context: sports, celebrity,
+ * recipes/lifestyle, legacy noise patterns. Never show regardless of source. */
+export const EXCLUDE_KEYWORDS_HARD = [
   "sports", "football", "soccer", "fifa", "nfl", "nba", "mlb", "nhl", "olympics",
   "marathon runner", "marathon race", "half marathon",
   "celebrity", "music", "album", "concert", "movie",
   "film festival", "film review", "box office",
   "awards ceremony", "award show", "oscar", "grammy", "emmy",
-  "fashion", "lifestyle", "recipe", "cooking", "horoscope",
-  "tug-of-war", "war movie", "war film", "star wars", "war game", "wargame",
+  "lifestyle", "recipe", "cooking", "horoscope",
+  "tug-of-war", "war movie", "war film", "star wars",
   "bcci", "cricket", "ipl", "tennis", "golf", "basketball", "baseball",
   "oil painting", "anti-war protest 1970",
   // Added 2026-08-25 (Batch 2 / Prompt 5) — confirmed recurring false-positive patterns,
@@ -24,13 +29,22 @@ export const EXCLUDE_KEYWORDS = [
   "farmers market", "farmer's market", "farmer market", "community market",
   "dollar tree", "dollar general",
   "military fitness", "military history", "military hall of fame",
-  "net worth", "revolutionary war", "trade deadline",
+  "net worth", "revolutionary war",
 ];
+
+/** Ambiguous drops — noise in most headlines, but real in a geopolitical or
+ * commodity one (a "trade deadline" at a border crossing, a "war game" run by a
+ * military alliance, a "fashion" headline about a sanctions-hit retailer). Only
+ * dropped when the title+summary has no anchor — see hasAnchor() below. */
+export const EXCLUDE_KEYWORDS_AMBIGUOUS = ["trade deadline", "fashion", "war game", "wargame"];
+
+/** Combined list, kept for existing external imports (gdelt-collector.ts re-export). */
+export const EXCLUDE_KEYWORDS = [...EXCLUDE_KEYWORDS_HARD, ...EXCLUDE_KEYWORDS_AMBIGUOUS];
 
 /** Matches a historical-noise year (1970-2005) only as a standalone number, not as a
  * substring of a larger number (e.g. must not match "2000" inside "12000" or "1970"
- * inside "41970"). */
-const HISTORICAL_YEAR_PATTERN = /(?<!\d)(19[7-9]\d|200[0-5])(?!\d)/;
+ * inside "41970"), and not a dollar amount (e.g. "$2000" is a price, not a year). */
+const HISTORICAL_YEAR_PATTERN = /(?<![\d$])(19[7-9]\d|200[0-5])(?!\d)/;
 
 /** Short tokens requiring word-boundary match */
 const EXACT_WORD_KEYWORDS = new Set([
@@ -88,10 +102,21 @@ export const MARKET_FINANCE_KEYWORDS = [
   //    real macro stories still caught via recession/inflation/gdp/growth/country names/etc.
 ];
 
-export type FeedTier = "world" | "finance";
+export type FeedTier = "world" | "finance" | "official";
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Mirrors price-syncer.ts's COMMODITY_SYMBOLS (USOIL/UKOIL/XAUUSD/NGAS/WHEAT/
+ * COPPER/XAGUSD/CORN) as the plain-English words a headline would actually use. */
+const TRACKED_COMMODITY_NAMES = ["crude", "oil", "gold", "silver", "natural gas", "wheat", "copper", "corn"];
+
+/** An anchor is an existing geopolitical word or a tracked commodity name —
+ * enough context that an AMBIGUOUS exclude keyword shouldn't drop the title. */
+function hasAnchor(text: string): boolean {
+  if (GEOPOLITICAL_KEYWORDS.some((kw) => text.includes(kw))) return true;
+  return TRACKED_COMMODITY_NAMES.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text));
 }
 
 export function shouldExclude(title: string, summary: string = ""): boolean {
@@ -101,12 +126,45 @@ export function shouldExclude(title: string, summary: string = ""): boolean {
   // hard-exclude any headline containing "inflation", "conflict", or "influence" (all
   // contain "nfl" as a substring) — dropping some of the most important geopolitical/
   // macro headlines for this product with no trace, since filtered items are never logged.
-  if (EXCLUDE_KEYWORDS.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text))) return true;
-  // Drop headlines anchored on historical years (e.g. "1973 oil crisis retrospective") —
-  // whole-number match only, so it can't fire on a year substring inside a larger number
-  // (e.g. "2000" inside "12000 barrels", "1970" inside "41970").
-  if (HISTORICAL_YEAR_PATTERN.test(text)) return true;
+  if (EXCLUDE_KEYWORDS_HARD.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text))) return true;
+  if (
+    EXCLUDE_KEYWORDS_AMBIGUOUS.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text)) &&
+    !hasAnchor(text)
+  ) {
+    return true;
+  }
+  // Historical-year headlines (e.g. "1973 oil crisis retrospective") are log-only,
+  // not a drop — whole-number match only, so it can't fire on a year substring
+  // inside a larger number (e.g. "2000" inside "12000 barrels") or a dollar amount.
+  if (HISTORICAL_YEAR_PATTERN.test(text)) {
+    console.log(`[RELEVANCE] exclude-year would-drop title="${title}"`);
+  }
   return false;
+}
+
+/** Diagnostic only: which exclude phrase actually matched shouldExclude(), and
+ * whether it matched in the title alone or only once the (usually hidden)
+ * summary text was included. Used by the [RSS-DROP] sample log so an
+ * "exclude" drop is traceable instead of silent. */
+export function findExcludeMatch(
+  title: string,
+  summary: string = "",
+): { phrase: string; location: "title" | "summary" } | null {
+  const titleText = title.toLowerCase();
+  const combinedText = (title + " " + summary).toLowerCase();
+  const anchored = hasAnchor(combinedText);
+
+  for (const kw of EXCLUDE_KEYWORDS_HARD) {
+    const re = new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i");
+    if (re.test(combinedText)) return { phrase: kw, location: re.test(titleText) ? "title" : "summary" };
+  }
+  if (!anchored) {
+    for (const kw of EXCLUDE_KEYWORDS_AMBIGUOUS) {
+      const re = new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i");
+      if (re.test(combinedText)) return { phrase: kw, location: re.test(titleText) ? "title" : "summary" };
+    }
+  }
+  return null;
 }
 
 function matchesKeywords(text: string): boolean {
@@ -145,8 +203,10 @@ export function isRelevantEvent(title: string, summary: string = "", feedTier: F
     console.log(`[RELEVANCE] routine-noise drop title="${title}"`);
     return false;
   }
-  // Finance-category RSS feeds: accept all non-excluded business/market headlines
-  if (feedTier === "finance") return true;
+  // Finance-category and official-agency RSS feeds: accept all non-excluded
+  // headlines — a central-bank/agency press release is assumed material
+  // without the geopolitical/market keyword gate below.
+  if (feedTier === "finance" || feedTier === "official") return true;
   return matchesKeywords((title + " " + summary).toLowerCase());
 }
 

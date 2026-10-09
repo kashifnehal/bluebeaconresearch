@@ -4,7 +4,7 @@ import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
-import { isRelevantEvent, shouldExclude, isRoutineMarketNoise, type FeedTier } from "../lib/relevance-filter.js";
+import { isRelevantEvent, shouldExclude, isRoutineMarketNoise, findExcludeMatch, type FeedTier } from "../lib/relevance-filter.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
@@ -36,8 +36,15 @@ const parser = new Parser({
   },
 });
 
-/** Max article age — 4h window per product requirement for market-moving news */
-const MAX_ARTICLE_AGE_MS = 4 * 60 * 60 * 1000;
+/** Article age window per feed tier — 4h for broadcasters/aggregators (world) and
+ * finance-tier feeds, per product requirement for market-moving news. "official"
+ * feeds (central banks, EIA, USTR — tagged in RSS_FEEDS below) get a 24h window:
+ * low cadence, but a press release is still material a day later. */
+const AGE_WINDOW_MS: Record<FeedTier, number> = {
+  world: 4 * 60 * 60 * 1000,
+  finance: 4 * 60 * 60 * 1000,
+  official: 24 * 60 * 60 * 1000,
+};
 
 // W8-INTAKE-GUARDS — clock-skew allowance, no source.
 const CLOCK_SKEW_ALLOWANCE_MS = 5 * 60 * 1000;
@@ -54,14 +61,15 @@ const RSS_FEEDS: RssFeed[] = [
   { url: "https://www.france24.com/en/rss", label: "France24", tier: "world" },
   { url: "https://rss.dw.com/rdf/rss-en-world", label: "DW World", tier: "world" },
   { url: "https://www.theguardian.com/world/rss", label: "Guardian World", tier: "world" },
-  { url: "https://www.eia.gov/rss/press_rss.xml", label: "EIA Press Releases", tier: "world" },
-  { url: "https://www.federalreserve.gov/feeds/press_all.xml", label: "Federal Reserve", tier: "world" },
-  { url: "https://www.ecb.europa.eu/rss/press.xml", label: "ECB", tier: "world" },
-  { url: "https://www.bankofengland.co.uk/rss/news", label: "Bank of England", tier: "world" },
-  { url: "https://ustr.gov/rss.xml", label: "USTR", tier: "world" },
-  { url: "https://rbi.org.in/pressreleases_rss.xml", label: "Reserve Bank of India", tier: "world" },
-  { url: "https://www.boj.or.jp/en/rss/whatsnew.xml", label: "Bank of Japan", tier: "world" },
-  { url: "https://www.eia.gov/rss/todayinenergy.xml", label: "EIA Today in Energy", tier: "world" },
+  // ── Official / agency (government, central bank — 24h age window, no keyword gate) ──
+  { url: "https://www.eia.gov/rss/press_rss.xml", label: "EIA Press Releases", tier: "official" },
+  { url: "https://www.federalreserve.gov/feeds/press_all.xml", label: "Federal Reserve", tier: "official" },
+  { url: "https://www.ecb.europa.eu/rss/press.xml", label: "ECB", tier: "official" },
+  { url: "https://www.bankofengland.co.uk/rss/news", label: "Bank of England", tier: "official" },
+  { url: "https://ustr.gov/rss.xml", label: "USTR", tier: "official" },
+  { url: "https://rbi.org.in/pressreleases_rss.xml", label: "Reserve Bank of India", tier: "official" },
+  { url: "https://www.boj.or.jp/en/rss/whatsnew.xml", label: "Bank of Japan", tier: "official" },
+  { url: "https://www.eia.gov/rss/todayinenergy.xml", label: "EIA Today in Energy", tier: "official" },
   // IMF News (https://www.imf.org/en/news/rss) — evaluated 2026-09-28 (#238):
   // Akamai (server: AkamaiGHost) returns a hard 403 "Access Denied" on every
   // request, same bot-fingerprinting pattern as the USDA feed above. NOT added.
@@ -123,14 +131,18 @@ type FeedDiag = {
   filteredIrrelevant: number;
   duplicate: number;
   new: number;
+  // Of the too-old items, how many are not in the 7-day raw_events id prefetch
+  // below — i.e. genuinely new articles this feed's window was too narrow to
+  // catch, as opposed to an old entry we've already stored from a prior cycle.
+  neverSeenOld: number;
 };
 
 export async function runRssCollectorOnce() {
   // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
-  // budget is closed, fetch nothing and write nothing. RSS's MAX_ARTICLE_AGE_MS
-  // window (4h) means skipping a fetch here is the most lossy of the 3 collectors
-  // if the budget stays closed for multiple cycles — see ADR 035's explicit
-  // trade-off note.
+  // budget is closed, fetch nothing and write nothing. RSS's AGE_WINDOW_MS
+  // (4h for world/finance tiers) means skipping a fetch here is the most lossy
+  // of the 3 collectors if the budget stays closed for multiple cycles — see
+  // ADR 035's explicit trade-off note.
   if (!(await isAnthropicBudgetAvailable("ingestion"))) {
     console.log("[RSS] budget closed, skipping cycle");
     return {
@@ -167,8 +179,13 @@ export async function runRssCollectorOnce() {
       filteredIrrelevant: 0,
       duplicate: 0,
       new: 0,
+      neverSeenOld: 0,
     };
   }
+
+  // Too-old items, held until the 7-day id prefetch below exists so neverSeenOld
+  // can be computed against it.
+  const tooOldItems: { label: string; externalId: string; canonUrl: string }[] = [];
 
   for (const feed of RSS_FEEDS) {
     const feedStartedAt = Date.now();
@@ -204,12 +221,17 @@ export async function runRssCollectorOnce() {
         }
 
         const ageMs = Date.now() - new Date(pubDate).getTime();
-        if (ageMs > MAX_ARTICLE_AGE_MS) {
+        if (ageMs > AGE_WINDOW_MS[feed.tier]) {
           feedDiag[feed.label].tooOld++;
           const ageHours = ageMs / (60 * 60 * 1000);
           if (ageHours <= 12) feedDiag[feed.label].old4to12++;
           else if (ageHours <= 24) feedDiag[feed.label].old12to24++;
           else feedDiag[feed.label].oldOver24++;
+          tooOldItems.push({
+            label: feed.label,
+            externalId: articleExternalId("rss", item.link),
+            canonUrl: canonicalUrl(item.link),
+          });
           continue;
         }
 
@@ -278,6 +300,12 @@ export async function runRssCollectorOnce() {
     if (url) seenCanonicalUrls.add(canonicalUrl(url));
   }
 
+  for (const old of tooOldItems) {
+    if (!seenExternalIds.has(old.externalId) && !seenCanonicalUrls.has(old.canonUrl)) {
+      feedDiag[old.label].neverSeenOld++;
+    }
+  }
+
   let passedFilters = 0;
   let alreadySeen = 0;
   const drops: Drop[] = [];
@@ -286,12 +314,18 @@ export async function runRssCollectorOnce() {
     if (!isRelevantEvent(item.title, item.summary, item.tier)) {
       filtered++;
       feedDiag[item.label].filteredIrrelevant++;
-      const reason: DropReason = shouldExclude(item.title, item.summary)
-        ? "exclude"
-        : isRoutineMarketNoise(item.title)
-          ? "noise"
-          : "nokeyword";
-      drops.push({ feed: item.label, tier: item.tier, title: item.title, reason });
+      let reason: DropReason;
+      let detail: string | undefined;
+      if (shouldExclude(item.title, item.summary)) {
+        reason = "exclude-phrase";
+        const match = findExcludeMatch(item.title, item.summary);
+        if (match) detail = `${match.phrase}@${match.location}`;
+      } else if (isRoutineMarketNoise(item.title)) {
+        reason = "noise";
+      } else {
+        reason = "nokeyword";
+      }
+      drops.push({ feed: item.label, tier: item.tier, title: item.title, reason, detail });
       continue;
     }
     passedFilters++;
@@ -482,7 +516,7 @@ export async function runRssCollectorOnce() {
     console.log(
       `[RSS-DIAG] feed="${feed.label}" tier=${feed.tier} fetched=${d.fetched} tooOld=${d.tooOld} ` +
         `filteredIrrelevant=${d.filteredIrrelevant} duplicate=${d.duplicate} new=${d.new} ` +
-        `old4to12=${d.old4to12} old12to24=${d.old12to24} oldOver24=${d.oldOver24}`,
+        `old4to12=${d.old4to12} old12to24=${d.old12to24} oldOver24=${d.oldOver24} neverSeenOld=${d.neverSeenOld}`,
     );
   }
 
