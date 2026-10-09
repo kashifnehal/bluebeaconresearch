@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { shouldExclude, findExcludeMatch, isRelevantEvent } from "./relevance-filter.js";
+import { shouldExclude, findExcludeMatch, isRelevantEvent, dropReason, type FeedTier } from "./relevance-filter.js";
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -127,4 +127,66 @@ runTest('isRelevantEvent("world" tier) still requires a keyword match', () => {
 
 runTest('isRelevantEvent("official" tier) still drops a HARD-excluded headline', () => {
   assert.equal(isRelevantEvent("Federal Reserve staffer runs marathon race for charity", "", "official"), false);
+});
+
+// "cooking" moved from HARD to AMBIGUOUS (2026-10-10) — real commodity headlines with
+// an anchor are no longer silently dropped.
+runTest('isRelevantEvent("Cooking oil prices surge after Indonesia export ban") is true (anchor: oil)', () => {
+  assert.equal(isRelevantEvent("Cooking oil prices surge after Indonesia export ban"), true);
+});
+
+runTest('isRelevantEvent("India raises cooking gas cylinder price") is true (anchor: gas)', () => {
+  assert.equal(isRelevantEvent("India raises cooking gas cylinder price"), true);
+});
+
+runTest('shouldExclude("Cooking show returns for a new season") is true (no anchor)', () => {
+  assert.equal(shouldExclude("Cooking show returns for a new season"), true);
+});
+
+// dropReason() parity — must give the same keep/drop answer as isRelevantEvent() for
+// every fixture used above, just with a named reason instead of a boolean.
+const dropReasonParityFixtures: { title: string; summary?: string; tier?: FeedTier }[] = [
+  ...shouldNotExclude.map((title) => ({ title })),
+  ...shouldStillExclude.map((title) => ({ title })),
+  { title: "1973 oil crisis retrospective" },
+  { title: "Contract worth $2000 awarded for pipeline maintenance" },
+  { title: "Fashion week highlights draw record crowds" },
+  { title: "Fashion retailer faces embargo amid sanctions" },
+  { title: "War game video released for consoles this fall" },
+  { title: "War game exercise held by military alliance" },
+  { title: "Trade deadline passes quietly this afternoon" },
+  { title: "Oil tanker trade deadline dispute at the Strait of Hormuz" },
+  { title: "Federal Reserve announces routine staff appointment", tier: "official" },
+  { title: "Local bakery announces routine staff appointment", tier: "world" },
+  { title: "Federal Reserve staffer runs marathon race for charity", tier: "official" },
+  { title: "Cooking oil prices surge after Indonesia export ban" },
+  { title: "India raises cooking gas cylinder price" },
+  { title: "Cooking show returns for a new season" },
+];
+
+for (const { title, summary = "", tier = "world" } of dropReasonParityFixtures) {
+  runTest(`dropReason/isRelevantEvent parity for "${title}" (tier=${tier})`, () => {
+    const kept = isRelevantEvent(title, summary, tier);
+    const reason = dropReason(title, summary, tier);
+    assert.equal(reason === null, kept);
+  });
+}
+
+runTest('dropReason() names the exclude phrase and location', () => {
+  assert.equal(dropReason("Oscars awards ceremony red carpet", "A quiet night in Hollywood"), "exclude:awards ceremony@title");
+});
+
+runTest('dropReason() names the noise pattern', () => {
+  assert.equal(
+    dropReason("Jane Smith, Chief Financial Officer, sells $1.2M in company shares"),
+    "noise:insider",
+  );
+});
+
+runTest('dropReason() returns "nokeyword" for a world-tier miss with no year', () => {
+  assert.equal(dropReason("Local bakery announces routine staff appointment", "", "world"), "nokeyword");
+});
+
+runTest('dropReason() returns null for a finance/official-tier keep', () => {
+  assert.equal(dropReason("Federal Reserve announces routine staff appointment", "", "official"), null);
 });

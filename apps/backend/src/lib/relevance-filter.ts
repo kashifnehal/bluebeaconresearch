@@ -20,7 +20,7 @@ export const EXCLUDE_KEYWORDS_HARD = [
   "celebrity", "music", "album", "concert", "movie",
   "film festival", "film review", "box office",
   "awards ceremony", "award show", "oscar", "grammy", "emmy",
-  "lifestyle", "recipe", "cooking", "horoscope",
+  "lifestyle", "recipe", "horoscope",
   "tug-of-war", "war movie", "war film", "star wars",
   "bcci", "cricket", "ipl", "tennis", "golf", "basketball", "baseball",
   "oil painting", "anti-war protest 1970",
@@ -36,7 +36,11 @@ export const EXCLUDE_KEYWORDS_HARD = [
  * commodity one (a "trade deadline" at a border crossing, a "war game" run by a
  * military alliance, a "fashion" headline about a sanctions-hit retailer). Only
  * dropped when the title+summary has no anchor — see hasAnchor() below. */
-export const EXCLUDE_KEYWORDS_AMBIGUOUS = ["trade deadline", "fashion", "war game", "wargame"];
+// "cooking" moved here from HARD 2026-10-10 — a probe on origin/main found it hard-dropping
+// real commodity headlines ("Cooking oil prices surge after Indonesia export ban", "India
+// raises cooking gas cylinder price") with no anchor exemption available. "Cooking show
+// returns for a new season" (no anchor) still drops.
+export const EXCLUDE_KEYWORDS_AMBIGUOUS = ["trade deadline", "fashion", "war game", "wargame", "cooking"];
 
 /** Combined list, kept for existing external imports (gdelt-collector.ts re-export). */
 export const EXCLUDE_KEYWORDS = [...EXCLUDE_KEYWORDS_HARD, ...EXCLUDE_KEYWORDS_AMBIGUOUS];
@@ -46,8 +50,11 @@ export const EXCLUDE_KEYWORDS = [...EXCLUDE_KEYWORDS_HARD, ...EXCLUDE_KEYWORDS_A
  * inside "41970"), and not a dollar amount (e.g. "$2000" is a price, not a year). */
 const HISTORICAL_YEAR_PATTERN = /(?<![\d$])(19[7-9]\d|200[0-5])(?!\d)/;
 
-/** Short tokens requiring word-boundary match */
-const EXACT_WORD_KEYWORDS = new Set([
+/** Short tokens requiring word-boundary match. Exported (claude/w16a) so
+ * rss-collector.ts's midwordOnly diagnostic can test the same list against a
+ * plain substring to see if word-boundary protection is the only reason a
+ * nokeyword drop didn't pass. */
+export const EXACT_WORD_KEYWORDS = new Set([
   "war", "oil", "gas", "fed", "sec", "ipo", "etf", "gdp", "cpi", "ppe",
   "bomb", "coup", "riot", "gold", "corn", "opec",
   // "bank" and "deal" removed 2026-08-25 — confirmed too generic even with word-boundary
@@ -114,9 +121,14 @@ const TRACKED_COMMODITY_NAMES = ["crude", "oil", "gold", "silver", "natural gas"
 
 /** An anchor is an existing geopolitical word or a tracked commodity name —
  * enough context that an AMBIGUOUS exclude keyword shouldn't drop the title. */
-function hasAnchor(text: string): boolean {
+export function hasAnchor(text: string): boolean {
   if (GEOPOLITICAL_KEYWORDS.some((kw) => text.includes(kw))) return true;
-  return TRACKED_COMMODITY_NAMES.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text));
+  if (TRACKED_COMMODITY_NAMES.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text))) return true;
+  // "gas" isn't in TRACKED_COMMODITY_NAMES (only "natural gas" is), but it's already
+  // treated as a relevant anchor elsewhere via EXACT_WORD_KEYWORDS (matchesKeywords()
+  // below) — added here too so "cooking gas" (now an AMBIGUOUS exclude, see
+  // EXCLUDE_KEYWORDS_AMBIGUOUS) isn't dropped on a headline matchesKeywords() would keep.
+  return /\bgas\b/i.test(text);
 }
 
 export function shouldExclude(title: string, summary: string = ""): boolean {
@@ -208,6 +220,35 @@ export function isRelevantEvent(title: string, summary: string = "", feedTier: F
   // without the geopolitical/market keyword gate below.
   if (feedTier === "finance" || feedTier === "official") return true;
   return matchesKeywords((title + " " + summary).toLowerCase());
+}
+
+/**
+ * Diagnostic only: why isRelevantEvent() would drop (or keep) a given input.
+ * Mirrors isRelevantEvent()'s own check order exactly, using the same functions,
+ * so (dropReason(...) === null) always equals isRelevantEvent(...) — never
+ * changes a keep/drop decision, only names the reason.
+ *
+ * Returns "exclude:<phrase>@title|summary", "noise:<insider|shares|rating>",
+ * "year" (world/world-keyword-gate drop that also hit the log-only historical
+ * year pattern), "nokeyword", or null (kept).
+ */
+export function dropReason(title: string, summary: string = "", feedTier: FeedTier = "world"): string | null {
+  const match = findExcludeMatch(title, summary);
+  if (match) return `exclude:${match.phrase}@${match.location}`;
+
+  if (isRoutineMarketNoise(title)) {
+    let pattern: "insider" | "shares" | "rating";
+    if (INSIDER_TRADE_TITLE.test(title)) pattern = "insider";
+    else if (INSIDER_TRADE_SHARES.test(title)) pattern = "shares";
+    else pattern = "rating";
+    return `noise:${pattern}`;
+  }
+
+  if (feedTier === "finance" || feedTier === "official") return null;
+
+  const text = (title + " " + summary).toLowerCase();
+  if (matchesKeywords(text)) return null;
+  return HISTORICAL_YEAR_PATTERN.test(text) ? "year" : "nokeyword";
 }
 
 // Re-export for backward compatibility with existing imports from gdelt-collector
