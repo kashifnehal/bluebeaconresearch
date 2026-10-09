@@ -4,7 +4,17 @@ import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
-import { isRelevantEvent, shouldExclude, isRoutineMarketNoise, findExcludeMatch, type FeedTier } from "../lib/relevance-filter.js";
+import {
+  isRelevantEvent,
+  shouldExclude,
+  isRoutineMarketNoise,
+  findExcludeMatch,
+  hasAnchor,
+  EXACT_WORD_KEYWORDS,
+  type FeedTier,
+} from "../lib/relevance-filter.js";
+import { matchShadowGroups } from "../lib/shadow-terms.js";
+import { recordDrops, type DropRecord } from "./drop-sample-store.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
@@ -116,6 +126,22 @@ const RSS_FEEDS: RssFeed[] = [
 ];
 
 export const RSS_FEED_COUNT = RSS_FEEDS.length;
+
+/** Diagnostic only (claude/w16a) — true when `text` contains an EXACT_WORD_KEYWORDS
+ * term only as a substring of a longer word (e.g. "war" inside "Warsaw"), not as its
+ * own word. isRelevantEvent()'s real word-boundary check already correctly excludes
+ * this case; this just names that a nokeyword drop was a "near miss" rather than a
+ * clean no-match. Never changes a keep/drop decision. */
+function isMidwordOnlyMatch(text: string): boolean {
+  const lower = text.toLowerCase();
+  let hasWordBoundaryMatch = false;
+  let hasSubstringMatch = false;
+  for (const kw of EXACT_WORD_KEYWORDS) {
+    if (new RegExp(`\\b${kw}\\b`, "i").test(lower)) hasWordBoundaryMatch = true;
+    if (lower.includes(kw)) hasSubstringMatch = true;
+  }
+  return !hasWordBoundaryMatch && hasSubstringMatch;
+}
 
 // TEMPORARY (claude/237) — remove after ~24-48h once the finance-tier yield data
 // is captured. Goal: find out, with real per-feed numbers, why the 6 finance-tier
@@ -309,6 +335,15 @@ export async function runRssCollectorOnce() {
   let passedFilters = 0;
   let alreadySeen = 0;
   const drops: Drop[] = [];
+  // Full per-drop detail for drop-sample-store.ts (step 7) — the [RSS-DROP] sample log
+  // below only ever prints up to 6 titles/feed; this carries every drop of the cycle.
+  const dropRecords: DropRecord[] = [];
+  // feed+title -> "shadow=<ids or ->" suffix, computed only for nokeyword drops, used
+  // when printing the [RSS-DROP] line below. Never affects the keep/drop decision.
+  const shadowSuffixByFeedTitle = new Map<string, string>();
+  // [FIN-SHADOW] diag (step 5) — per finance-tier feed label, kept-item count and the
+  // titles that had no anchor at all (hasAnchor() false AND no shadow-group match).
+  const finShadowDiag = new Map<string, { kept: number; noAnchorTitles: string[] }>();
 
   for (const item of items) {
     if (!isRelevantEvent(item.title, item.summary, item.tier)) {
@@ -316,6 +351,8 @@ export async function runRssCollectorOnce() {
       feedDiag[item.label].filteredIrrelevant++;
       let reason: DropReason;
       let detail: string | undefined;
+      let shadowGroups: string[] | undefined;
+      let midwordOnly = false;
       if (shouldExclude(item.title, item.summary)) {
         reason = "exclude-phrase";
         const match = findExcludeMatch(item.title, item.summary);
@@ -324,11 +361,43 @@ export async function runRssCollectorOnce() {
         reason = "noise";
       } else {
         reason = "nokeyword";
+        const combined = `${item.title} ${item.summary}`;
+        shadowGroups = matchShadowGroups(combined);
+        midwordOnly = isMidwordOnlyMatch(combined);
+        // Keyed on the same title truncation buildDropSample() applies by default
+        // (maxTitleChars=110) so the lookup below matches the printed sample title.
+        shadowSuffixByFeedTitle.set(
+          `${item.label}\u0000${item.title.slice(0, 110)}`,
+          shadowGroups.length ? shadowGroups.join(",") : "-",
+        );
       }
       drops.push({ feed: item.label, tier: item.tier, title: item.title, reason, detail });
+      dropRecords.push({
+        feed: item.label,
+        tier: item.tier,
+        reason: detail ? `exclude:${detail}` : reason,
+        title: item.title,
+        summary: item.summary,
+        url: item.url,
+        shadowGroups,
+        midwordOnly,
+      });
       continue;
     }
     passedFilters++;
+
+    // [FIN-SHADOW] diag (step 5, log-only) — for finance-tier feeds (which skip the
+    // keyword gate entirely in isRelevantEvent), track whether each kept item has
+    // any anchor at all so the no-anchor rate/sample is visible per feed per cycle.
+    if (item.tier === "finance") {
+      const combined = `${item.title} ${item.summary}`;
+      const diag = finShadowDiag.get(item.label) ?? { kept: 0, noAnchorTitles: [] as string[] };
+      diag.kept++;
+      if (!hasAnchor(combined) && matchShadowGroups(combined).length === 0) {
+        diag.noAnchorTitles.push(item.title);
+      }
+      finShadowDiag.set(item.label, diag);
+    }
 
     const externalId = articleExternalId("rss", item.url);
 
@@ -522,9 +591,30 @@ export async function runRssCollectorOnce() {
 
   // claude/rss-drop-sample — one line per feed with at least one relevance-filter
   // drop, showing the actual titles lost and why (exclude/noise/nokeyword).
+  // claude/w16a — each sampled item also carries a "shadow" field: the shadow-term
+  // group ids it matched, or "-" for exclude/noise drops (shadow is only computed
+  // for nokeyword drops) or when no group matched. Log-only, no decision change.
   for (const ds of buildDropSample(drops)) {
+    const sampleWithShadow = ds.sample.map((s) => ({
+      ...s,
+      shadow: shadowSuffixByFeedTitle.get(`${ds.feed}\u0000${s.t}`) ?? "-",
+    }));
     console.log(
-      `[RSS-DROP] feed="${ds.feed}" tier=${ds.tier} n=${ds.n} sample=${JSON.stringify(ds.sample)}`,
+      `[RSS-DROP] feed="${ds.feed}" tier=${ds.tier} n=${ds.n} sample=${JSON.stringify(sampleWithShadow)}`,
+    );
+  }
+
+  // claude/w16a step 7 — persist every drop of the cycle (not just the sampled 6/feed
+  // above) behind DROP_SAMPLE_STORE; no-ops and never throws when the flag is off or
+  // the table isn't there yet.
+  await recordDrops(supabase, dropRecords);
+
+  // [FIN-SHADOW] (step 5, log-only) — one line per finance-tier feed with at least
+  // one kept item this cycle, showing how many kept items had no anchor at all.
+  for (const [label, diag] of finShadowDiag) {
+    console.log(
+      `[FIN-SHADOW] feed="${label}" n=${diag.kept} noanchor=${diag.noAnchorTitles.length} ` +
+        `sample=${JSON.stringify(diag.noAnchorTitles.slice(0, 6))}`,
     );
   }
 
