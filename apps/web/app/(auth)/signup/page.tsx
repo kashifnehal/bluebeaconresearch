@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { Suspense } from "react";
-import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { getSupabaseEmailAuthClient } from "@/lib/supabase-email-auth";
 import { throwIfNoSupabase, userFacingCaughtError } from "@/lib/user-error-copy";
@@ -262,7 +262,7 @@ function SignupForm() {
         {/* Header */}
         <header style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "32px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "24px" }}>
-            <Shield size={28} color={C.primaryContainer} />
+            <img src="/brand/mark-white.png" alt="" aria-hidden="true" width={28} height={28} />
             <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em", color: C.onSurface, textTransform: "uppercase" }}>
               Blue Beacon Research
             </span>

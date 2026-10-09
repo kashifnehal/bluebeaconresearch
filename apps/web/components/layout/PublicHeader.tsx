@@ -5,7 +5,7 @@ export function PublicHeader({ badge }: { badge: string }) {
   return (
     <header className="h-16 border-b border-[#2a2a2a] px-4 md:px-8 flex items-center justify-between gap-2 bg-[#000000]">
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
-        <Logo className="h-6 shrink-0" />
+        <Logo variant="icon" className="h-6 shrink-0" />
         <Link
           href="/"
           className="font-extrabold text-sm tracking-tight text-white uppercase truncate inline-flex items-center min-h-[44px] md:min-h-0"

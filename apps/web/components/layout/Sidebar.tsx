@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOutAndRedirect } from "@/lib/supabase";
 import { useUIStore } from "@/store/useUIStore";
+import { Logo } from "@/components/Logo";
 
 type NavItem = { href: string; label: string; icon: string; showBadge?: boolean };
 
@@ -71,7 +72,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center gap-3 mb-8">
-          <Link href="/dashboard">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Logo variant="icon" className="h-5 shrink-0" />
             <span className="font-headline font-bold text-sm tracking-tighter text-white">
               Blue Beacon Research
             </span>

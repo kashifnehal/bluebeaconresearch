@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 133 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, this commit)
+
+Favicon, apple-touch-icon (new), `Logo.tsx`, `PublicHeader`/homepage/auth-page/Sidebar/login/signup brand marks, and all 6 mobile icon/splash files replaced with the founder's real logo, derived from 3 clean source crops via Pillow color-keying (the other 4 supplied crops have baked-in shadows/rounded-tile mockup treatment and were not used as sources). Full technical detail: `docs/brain/14_CHANGELOG.md` v0.157.0, `docs/brain/LIVE_TODO.md`.
+
 ## PHASE 132 — Homepage pricing honesty + terms age line (2026-10-09, `711aff8`)
 
 `apps/web` only. Homepage pricing keeps the Monitor button as "Get started" and labels Analyst and Pro "Paid plans opening soon". A short note under the grid says paid plans are not open for purchase yet. `/terms` "Accounts and access" now starts with an 18-or-older sentence. Last updated stays October 2026. No form, waitlist, or new route. Full detail: `docs/brain/14_CHANGELOG.md` v0.156.0.

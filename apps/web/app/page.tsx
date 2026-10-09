@@ -348,7 +348,7 @@ export default async function Home(props: {
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-20">
           <div className="col-span-1">
             <div className="flex items-center gap-2 mb-4 md:mb-8">
-              <Logo className="h-6" />
+              <Logo variant="icon" className="h-6" />
               <span className="text-lg font-extrabold tracking-tighter uppercase font-headline text-white">Blue Beacon</span>
             </div>
             <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-[0.2em]">

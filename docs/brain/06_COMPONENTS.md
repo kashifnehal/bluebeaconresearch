@@ -17,11 +17,12 @@ This document presents a complete inventory of all UI components in `apps/web/co
 - **Dependencies**: Lucide Icons (`Lock`, `CheckCircle2`, `Mail`), `sonner` toast.
 - **Styling**: Dark glassmorphic modal with glowing blue border accent (`border-blue-500/30 bg-neutral-900/95`).
 
-### 1.2 `Logo.tsx`
-- **Purpose**: Renders the Blue Beacon Research brand identity icon and typography.
-- **Props**: `{ className?: string; showText?: boolean }`
-- **Parent**: `Sidebar.tsx`, `TopBar.tsx`, Landing Page header.
-- **Styling**: Lucide `Shield` icon with cyan/blue gradient fill and crisp uppercase tracking.
+### 1.2 `Logo.tsx` — rewritten 2026-10-09
+- **Purpose**: Renders the real Blue Beacon Research logo (navy "B" mark + wordmark) the founder supplied, derived into transparent white-on-dark PNGs via Pillow color-keying. Previously rendered as plain CSS/Tailwind text (green/white/dim "BLUE"/"BEACON"/"RESEARCH"), not an image — and this doc entry was itself stale before that: it described a Lucide `Shield` icon with a gradient fill that was never actually in this file (that pattern was really in `login`/`signup`'s inline markup, unrelated to this component — see below).
+- **Props**: `{ className?: string; variant?: "full" | "icon" }` (default `"full"`). `"full"` renders `/brand/lockup-white.png` (icon + wordmark); `"icon"` renders `/brand/mark-white.png` (mark only) — used where the brand name already appears as adjacent text, so the wordmark isn't duplicated.
+- **Parent**: `Sidebar.tsx` (icon, new — previously had no mark at all), `PublicHeader.tsx` (icon), homepage header (full) + footer (icon) in `app/page.tsx`, `/verify`, `/confirm`, `/forgot-password`, `/reset-password` (full, standalone). `TopBar.tsx` does not use `Logo` and never did (prior doc line was wrong).
+- **Related:** `login`/`signup` pages render `/brand/mark-white.png` directly via a plain `<img>` (28px, not through this component — those files use inline style objects throughout, not Tailwind) in place of the generic Lucide `Shield` icon they used before.
+- **Assets**: `apps/web/public/brand/{lockup-white,mark-white,icon-navy-1024}.png`. The third is the favicon/`app/icon.png`/`app/apple-icon.png` source — not consumed by this component.
 
 ---
 

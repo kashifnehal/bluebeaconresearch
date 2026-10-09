@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.157.0 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, this commit)
+
+`apps/web` + `apps/mobile`. Favicon was Next's default scaffold black-circle/triangle; no apple-touch-icon existed; `login`/`signup` used a generic Lucide `Shield` icon as a stand-in mark; all mobile icon/splash files were still Expo's default scaffold. Production assets derived via Pillow color-keying from the 3 clean (non-shadowed, non-padded) source crops the founder supplied, out of 7 total — the other 4 are app-icon-tile mockups with baked-in shadows/rounding, deliberately not used as sources. New `app/icon.png` (256) + `app/apple-icon.png` (180); `app/favicon.ico` regenerated (hit and fixed a real Pillow RGB-vs-RGBA ICO bug that Next's image pipeline rejected outright). `Logo.tsx` rewritten from CSS/Tailwind text to the real image, new `variant: "icon" | "full"` prop so spots with adjacent brand-name text don't duplicate the wordmark. `Sidebar.tsx` gained a mark it never had. Mobile `app.json` adaptive-icon background color updated to brand navy (`#0A2643`). Verified live in-browser across desktop/375px widths and 4 page types (homepage, login, signup, PublicHeader); dashboard `Sidebar` not live-verified (auth-gated, no credentials in session). Full detail: `LIVE_TODO.md`.
+
 ### v0.156.0 — Homepage pricing honesty + terms age line (2026-10-09, `711aff8`)
 
 `apps/web` only. Homepage `#pricing` keeps Monitor on "Get started" and labels Analyst and Pro "Paid plans opening soon". Signup links, class names, plan names, prices, and features are unchanged. A muted note under the grid says paid plans are not open for purchase yet. `/terms` "Accounts and access" now starts with "You must be 18 years or older to use Blue Beacon Research." Last updated stays October 2026. No form, waitlist, or new route. No Playwright. Full detail: `LIVE_TODO.md`.

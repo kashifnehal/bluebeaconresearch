@@ -11,6 +11,10 @@
 
 ## 1. LAYOUT COMPONENTS
 
+### Logo (`components/Logo.tsx`) — rewritten 2026-10-09
+
+Renders the founder's real logo (navy "B" mark + wordmark) as an image — previously plain CSS/Tailwind text. Props: `{ className?: string; variant?: "full" | "icon" }`, default `"full"` (`/brand/lockup-white.png`, icon+wordmark). `"icon"` (`/brand/mark-white.png`, mark only) is used wherever the brand name already renders as adjacent text (`PublicHeader`, homepage footer, `Sidebar`) so the wordmark isn't duplicated. `login`/`signup` use the same `mark-white.png` asset directly via a plain `<img>`, not through this component, replacing a generic Lucide `Shield` icon. Full detail: `docs/brain/06_COMPONENTS.md` §1.2, `docs/brain/14_CHANGELOG.md` v0.157.0.
+
 ### PublicHeader (`components/layout/PublicHeader.tsx`) — added 2026-09-23 (#186 Phase 2)
 
 Shared chrome for the logged-out public pages `/accuracy` and `/status`, which previously carried a byte-identical copy of the same header and drifted independently. Takes one prop, `badge: string` ("TRACK RECORD" / "SYSTEM MONITOR").
@@ -42,7 +46,7 @@ Site-wide legal disclaimer footer (not-investment-advice / not-a-registered-advi
 Props: None (reads auth + route from hooks)
 
 Sections:
-- Logo: "Blue Beacon Research" brand text wrapped in `<Link href="/dashboard">` (2026-09-18); ALPHA badge beside it is not a link
+- Logo: real `Logo` component (`variant="icon"`, the real navy/white "B" mark — 2026-10-09, previously no mark at all) + "Blue Beacon Research" brand text, both inside `<Link href="/dashboard">` (2026-09-18); ALPHA badge beside it is not a link
 - Nav items (each 44px height, hover bg-elevated, active: green left border + text-accent):
   - Intelligence Feed → /dashboard
   - Global Map → /map
