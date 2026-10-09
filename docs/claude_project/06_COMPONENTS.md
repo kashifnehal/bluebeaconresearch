@@ -29,7 +29,7 @@ Public page, `AboutPage`. Same chrome as `/how-it-works` (`PublicHeader`, dark t
 
 ### Privacy page (`apps/web/app/privacy/page.tsx`) — rewritten 2026-10-09
 
-Public page, `PrivacyPage`. Keeps the previous paragraphs and adds headed sections for collection, processors, retention, cookies and analytics, data sent to Anthropic, and export/deletion by email. Copy is limited to facts confirmed in migrations and application code. `Last updated: October 2026`.
+Public page, `PrivacyPage`. Keeps the previous paragraphs and adds headed sections for collection, processors, retention, cookies and analytics, data sent to Anthropic, and export/deletion by email. Copy is limited to facts confirmed in migrations and application code. `Last updated: October 2026`. The opening payment paragraph (same day) states that paid plans cannot be purchased on this site yet. The analytics sentence points questions to support@bluebeaconresearch.com.
 
 ### LegalDisclaimerFooter (`components/layout/LegalDisclaimerFooter.tsx`) — added 2026-09-26
 

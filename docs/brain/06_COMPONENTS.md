@@ -45,7 +45,7 @@ Client component, no props. `fixed bottom-0 left-0 right-0 z-40 md:hidden` — m
 
 ### Privacy page (`apps/web/app/privacy/page.tsx`) — rewritten 2026-10-09
 
-`PrivacyPage`. Existing paragraphs kept. New sections list user-linked tables the app writes, processors confirmed in dependencies or env vars, the weekly retention windows, Supabase auth cookies and analytics calls, and the Anthropic payload fields. Export or deletion: email support@bluebeaconresearch.com.
+`PrivacyPage`. Existing paragraphs kept. New sections list user-linked tables the app writes, processors confirmed in dependencies or env vars, the weekly retention windows, Supabase auth cookies and analytics calls, and the Anthropic payload fields. Export or deletion: email support@bluebeaconresearch.com. Same day, the opening payment paragraph no longer claims a live processor or stored subscription identifiers, and the analytics sentence is a support email rather than an opt-out.
 
 ### `LegalDisclaimerFooter.tsx` — added 2026-09-26
 

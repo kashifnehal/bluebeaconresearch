@@ -3,6 +3,10 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## Privacy page — payment and analytics sentences corrected, `apps/web/app/privacy/page.tsx`, 2026-10-09, this commit
+
+- Two leftover sentences were not backed by code. Case-sensitive grep of `apps/web` and `apps/backend` for `checkout|stripe|razorpay` returned no matches. Case-insensitive `billing` hits are comments that #84 billing does not exist, plus the `AuthCheckOutcome` substring in `proxy.ts`. `stripe_customer_id` and `stripe_subscription_id` exist only as unused migration columns, so the subscription-identifier sentence was dropped. Plan tier is already stated in the collection section. The payment paragraph now says paid plans cannot be purchased through this site yet, and that before any payment details are collected, payments will be handled by a third-party payment processor and this policy will be updated. `lib/analytics.ts` initializes PostHog with no opt-out, and no opt-out control exists, so the opt-out sentence is now "Questions about analytics can be sent to support@bluebeaconresearch.com." Last updated stays October 2026. No Playwright.
+
 ## Sitemap — `/accuracy` and `/status`, `apps/web/app/sitemap.ts` + `sitemap.test.ts`, 2026-10-09, this commit
 
 - Public `/accuracy` and `/status` pages already exist and were missing from the sitemap. Both added as monthly, priority 0.5, next to `/about`. `robots.ts` unchanged. `sitemap()` reads `NEXT_PUBLIC_APP_URL` (fallback `http://localhost:3000`). Live `sitemap.xml` `<loc>` values already use `https://bluebeaconresearch.com` (request to the apex URL redirects to `www`, response still lists the apex host). No buy/sell language. No Playwright.

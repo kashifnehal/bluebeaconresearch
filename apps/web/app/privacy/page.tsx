@@ -15,12 +15,12 @@ export default function PrivacyPage() {
         </p>
         <div className="mt-6 space-y-3 text-sm text-text-secondary">
           <p>
-            Payment details are handled by our payment processor. We store subscription identifiers and plan tier to
-            provide access.
+            Paid plans cannot be purchased through this site yet. Before any payment details are collected, payments
+            will be handled by a third-party payment processor and this policy will be updated.
           </p>
           <p>
-            Analytics may be used to improve product reliability and user experience. You can opt out of non-essential
-            analytics where available.
+            Analytics may be used to improve product reliability and user experience. Questions about analytics can be
+            sent to support@bluebeaconresearch.com.
           </p>
           <p>Contact support if you want to request export or deletion of your data.</p>
 

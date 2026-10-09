@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-09 (sitemap `/accuracy` and `/status`, v0.154.0)
+Last updated: 2026-10-09 (privacy payment and analytics sentences, v0.155.0)
+
+> ⚠️ NEW 2026-10-09 (privacy page correction, `apps/web` only) — the opening payment paragraph no longer claims a live processor or stored subscription identifiers. Paid plans cannot be purchased on this site yet. The analytics opt-out sentence is now a support email. Last updated stays October 2026. Full detail: `14_CHANGELOG.md` v0.155.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-09 (sitemap, `apps/web` only) — `/accuracy` and `/status` added to `sitemap.ts` (monthly, priority 0.5). Both pages already existed. `robots.ts` unchanged. Base URL is `NEXT_PUBLIC_APP_URL`. Full detail: `14_CHANGELOG.md` v0.154.0, `LIVE_TODO.md`.
 
