@@ -121,6 +121,20 @@ These were explicitly discussed and rejected or deferred:
 
 > **Market-size note (2026-08-30):** The per-tier population figures previously stated in this section ("2.5M+", "~800K", "800K+", "~50K") were not traceable to any regulator, exchange body, or trade-association count and have been removed rather than replaced with a new estimate. Do not reintroduce a precise figure until one can be cited to a checkable source. See internal research on user segments and market scope, and ADR 012 (`docs/brain/10_DECISIONS.md`) / D16 (`docs/claude_project/10_DECISIONS.md`).
 
+**Who geopolitical signals may help (2026-10-09):**
+
+| Segment | Evidence |
+| :------ | :------- |
+| Independent/retail commodity and futures traders | no sourced user count |
+| Small desks and discretionary macro analysts | no sourced user count |
+| Asset managers and family offices | no sourced user count |
+| Corporate importers, exporters, procurement and treasury | McKinsey CFO Pulse late 2025 (152 leaders): 37% name geopolitical instability the biggest growth risk |
+| Shipping and logistics | no sourced user count |
+| FX traders | BIS Triennial Survey April 2025: FX turnover $9.6 trillion a day (market size, not users) |
+| Agri-business | no sourced user count |
+| Energy utilities and hedgers | no sourced user count |
+| Researchers and journalists | no sourced user count |
+
 ### Secondary Users (Free Tier, Convert Later)
 - Financial journalists needing market context
 - Graduate students doing economic research

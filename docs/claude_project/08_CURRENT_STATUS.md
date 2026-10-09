@@ -1,6 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (About page event-detection sentence corrected — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-09 (W14-W price/GDELT/Data-as-of — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-09 (W14-W: price stale threshold, GDELT credit, Data-as-of stamps, `apps/web` only, `8edc57d`) — `PriceTicker` stale threshold now 60 min (matches the 15-min price-sync cadence below); `LegalDisclaimerFooter` links GDELT Project attribution; dashboard/map/watchlist show a "Data as of" timestamp from already-fetched data. Full detail: `docs/brain/LIVE_TODO.md`. This tree: PHASE 136.
+
+> ⚠️ NEW 2026-10-09 (W14-1: RSS official-tier/exclude-split/price-cron, `apps/backend` only, `96ff0e7`) — Official agency RSS feeds (EIA/Fed/ECB/BoE/USTR/RBI/BoJ) get a 24h age window and skip the keyword gate; exclude keywords split hard/ambiguous; historical-year exclude is log-only; price sync decoupled to its own `PRICE_SYNC_CRON` (default every 15 min). Full detail: `docs/brain/LIVE_TODO.md`, `docs/brain/15_INGESTION_PIPELINE.md`. This tree: PHASE 135.
 
 > ⚠️ NEW 2026-10-09 (About page copy, `apps/web` only, `8025544`) — "01. Event Detection" step on `/about` no longer names "ACLED and GNews" (ACLED isn't live yet; GNews isn't a collector here); now says sources "including GDELT, news APIs and RSS feeds." No other change. Full detail: `docs/brain/LIVE_TODO.md`. This tree: PHASE 134.
 

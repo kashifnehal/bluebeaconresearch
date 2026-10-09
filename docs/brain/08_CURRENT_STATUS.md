@@ -2,7 +2,11 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-09 (real logo/favicon across web + mobile, v0.157.0, this commit)
+Last updated: 2026-10-09 (W14-W: price stale threshold, GDELT credit, Data-as-of stamps, v0.159.0, `8edc57d`)
+
+> ⚠️ NEW 2026-10-09 (W14-W: price stale threshold, GDELT credit, Data-as-of stamps, `apps/web` only, `8edc57d`) — `PriceTicker` stale threshold now 60 min to match the decoupled 15-min price-sync cadence (see v0.158.0 below); `LegalDisclaimerFooter` links GDELT Project attribution; dashboard/map/watchlist show a "Data as of" timestamp sourced from already-fetched data, no new queries. Full detail: `14_CHANGELOG.md` v0.159.0, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-09 (W14-1: RSS official-tier age window/keyword bypass, hard/ambiguous exclude split, log-only year rule, decoupled price cron, `apps/backend` only, `96ff0e7`) — Official agency feeds (EIA/Fed/ECB/BoE/USTR/RBI/BoJ) get a 24h age window and skip the keyword gate; world/finance stay at 4h. Exclude keywords split hard (always drops) / ambiguous (drops only with no geopolitical/commodity anchor). Historical-year exclude is now log-only. Price sync moved to its own `PRICE_SYNC_CRON` (default every 15 min), off the news ingestion cron. Full detail: `14_CHANGELOG.md` v0.158.0, `LIVE_TODO.md`, `15_INGESTION_PIPELINE.md`.
 
 > ⚠️ NEW 2026-10-09 (real logo/favicon, `apps/web` + `apps/mobile`, this commit) — Favicon, apple-touch-icon (new — none existed before), `Logo.tsx`, `PublicHeader`/homepage/auth-page/`Sidebar`/`login`/`signup` brand marks, and all 6 mobile icon/splash files replaced with the founder's real logo (was Next's default scaffold favicon, a generic Lucide `Shield` icon stand-in, and Expo's default mobile-icon scaffold). Full detail: `14_CHANGELOG.md` v0.157.0, `LIVE_TODO.md`.
 

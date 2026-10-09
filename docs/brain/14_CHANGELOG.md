@@ -1,12 +1,20 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-09 (v0.156.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-09 (v0.159.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.159.0 — W14-W: price stale threshold, GDELT credit, Data-as-of stamps (2026-10-09, `8edc57d`)
+
+`apps/web` only. `PriceTicker` stale threshold widened from its old value to 60 min, to match W14-1's decoupled 15-min price-sync cadence. `LegalDisclaimerFooter` now links a GDELT Project attribution (`noopener/noreferrer`). Dashboard, map, and watchlist pages each show a "Data as of &lt;time&gt;" stamp sourced from already-fetched signal/price query timestamps — no new queries added. Full detail: `LIVE_TODO.md`.
+
+### v0.158.0 — W14-1: RSS official-tier age window/keyword bypass, hard/ambiguous exclude split, log-only year rule, decoupled price cron (2026-10-09, `96ff0e7`)
+
+`apps/backend` only. Official agency RSS feeds (EIA, Federal Reserve, ECB, Bank of England, USTR, Reserve Bank of India, Bank of Japan) get a 24h age window (world/finance stay at 4h) and skip the Step 3 keyword gate entirely. `EXCLUDE_KEYWORDS` split into `EXCLUDE_KEYWORDS_HARD` (always drops) and `EXCLUDE_KEYWORDS_AMBIGUOUS` (drops only when the title+summary has no geopolitical/commodity anchor). The 1970–2005 historical-year exclude is now log-only (`[RELEVANCE] exclude-year would-drop`), and no longer misfires on dollar amounts like "$2000". `[RSS-DROP]` reasons split into exclude-phrase/noise/nokeyword, with the matched phrase and its title/summary location logged for exclude-phrase. New per-feed `neverSeenOld` counter appended to `[RSS-DIAG]`. Price sync moved off the news ingestion cron onto its own `PRICE_SYNC_CRON` (default `*/15 * * * *`). Full detail: `LIVE_TODO.md`, `docs/brain/15_INGESTION_PIPELINE.md` §2.1/§3.
 
 ### v0.157.0 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, this commit)
 
