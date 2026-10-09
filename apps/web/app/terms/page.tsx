@@ -60,7 +60,7 @@ export default function TermsPage() {
             Accounts and access
           </h2>
           <p className="text-on-surface/60 leading-relaxed font-medium">
-            Signed-in areas of the platform require an account. You are
+            You must be 18 years or older to use Blue Beacon Research. Signed-in areas of the platform require an account. You are
             responsible for keeping your sign-in credentials confidential and
             for activity under your account.
           </p>

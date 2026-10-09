@@ -332,11 +332,14 @@ export default async function Home(props: {
                     ))}
                   </ul>
                   <Link href="/signup" className={`w-full block py-4 text-center rounded-xl font-label text-[12px] md:text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
-                    Get started
+                    {tier.title === "Monitor" ? "Get started" : "Paid plans opening soon"}
                   </Link>
                 </div>
               ))}
             </div>
+            <p className="text-on-surface-variant font-medium max-w-xl mx-auto text-sm text-center mt-10">
+              Paid plans are not open for purchase yet. Create a free Monitor account today; we will update this page when Analyst and Pro open.
+            </p>
           </div>
         </section>
       </main>
