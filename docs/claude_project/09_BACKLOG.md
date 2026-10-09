@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-09.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-09 — homepage pricing buttons and `/terms` age line (`711aff8`, brain changelog v0.156.0 / PHASE 132). Analyst and Pro say "Paid plans opening soon"; Monitor stays "Get started". Accounts and access now requires age 18. No prior numbered backlog line — confirmed by grep for a pricing-button or age-gate ticket, nothing struck.
+
 > ⚠️ UPDATED 2026-10-09 — `/privacy` payment and analytics sentences corrected to match the code (brain changelog v0.155.0 / PHASE 131). No prior numbered backlog line — the earlier privacy note below stays as the rewrite record.
 
 > ⚠️ UPDATED 2026-10-09 — homepage step 02 and a seventh `/how-it-works` claim row now state what Claude does (market-impact classification) and does not do (no position, size, or entry/exit recommendation). Brain changelog v0.153.0 / PHASE 129. No prior numbered backlog line — confirmed by grep for a Claude-disclosure ticket, nothing struck.

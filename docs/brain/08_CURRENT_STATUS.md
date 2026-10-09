@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-09 (privacy payment and analytics sentences, v0.155.0)
+Last updated: 2026-10-09 (homepage pricing honesty + terms age line, v0.156.0, `711aff8`)
+
+> ⚠️ NEW 2026-10-09 (homepage pricing + terms age, `apps/web` only, `711aff8`) — Analyst and Pro buttons say "Paid plans opening soon"; Monitor stays "Get started". A note under the pricing grid says paid plans are not open for purchase yet. `/terms` "Accounts and access" requires age 18. Last updated stays October 2026. Full detail: `14_CHANGELOG.md` v0.156.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-09 (privacy page correction, `apps/web` only) — the opening payment paragraph no longer claims a live processor or stored subscription identifiers. Paid plans cannot be purchased on this site yet. The analytics opt-out sentence is now a support email. Last updated stays October 2026. Full detail: `14_CHANGELOG.md` v0.155.0, `LIVE_TODO.md`.
 

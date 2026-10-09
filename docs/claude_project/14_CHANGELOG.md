@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 132 — Homepage pricing honesty + terms age line (2026-10-09, `711aff8`)
+
+`apps/web` only. Homepage pricing keeps the Monitor button as "Get started" and labels Analyst and Pro "Paid plans opening soon". A short note under the grid says paid plans are not open for purchase yet. `/terms` "Accounts and access" now starts with an 18-or-older sentence. Last updated stays October 2026. No form, waitlist, or new route. Full detail: `docs/brain/14_CHANGELOG.md` v0.156.0.
+
 ## PHASE 131 — Privacy page payment and analytics sentences corrected (2026-10-09)
 
 `apps/web` only. `/privacy` no longer says a payment processor already handles payment details, and it no longer says subscription identifiers are stored. There is no live checkout in `apps/web` or `apps/backend`. The analytics sentence no longer claims an opt-out; questions go to support@bluebeaconresearch.com. Last updated stays October 2026. Full detail: `docs/brain/14_CHANGELOG.md` v0.155.0.

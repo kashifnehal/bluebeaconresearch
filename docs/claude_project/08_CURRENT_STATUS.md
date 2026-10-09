@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (privacy payment and analytics sentences — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-09 (homepage pricing honesty + terms age line — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-09 (homepage pricing + terms age, `apps/web` only, `711aff8`) — Analyst and Pro buttons say "Paid plans opening soon"; Monitor stays "Get started". A note under the pricing grid says paid plans are not open for purchase yet. `/terms` requires age 18. Last updated stays October 2026. Full detail: `docs/brain/14_CHANGELOG.md` v0.156.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 132.
 
 > ⚠️ NEW 2026-10-09 (privacy page correction, `apps/web` only) — `/privacy` no longer says a payment processor already handles payment details or that subscription identifiers are stored. There is no live checkout. Analytics questions go to support@bluebeaconresearch.com. Last updated stays October 2026. Full detail: `docs/brain/14_CHANGELOG.md` v0.155.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 131.
 
