@@ -26,6 +26,7 @@ import {
 } from "../lib/media-impact-watchlist.js";
 import type { HeadlinePlacement } from "../lib/headline-placement.js";
 import { buildClassifierSnippet } from "../lib/classifier-snippet.js";
+import { maybeScheduleGateShadow } from "../lib/gate-shadow.js";
 
 // chatAboutSignal() truncation safety net (quality bug found in live testing,
 // 2026-09-12): max_tokens stays at 600 (do not raise it — see chatAboutSignal),
@@ -121,7 +122,10 @@ function anthropicHttpStatus(err: { status?: unknown; response?: { status?: unkn
 // every classify call.
 let usageLimitAlertedLocally = false;
 
-const HAIKU_MODEL = "claude-haiku-4-5-20251001";
+// Exported so gate-shadow.ts's shadow call can use the identical model —
+// gate-shadow.ts deliberately does not import this file (circular import),
+// so the caller passes this constant through instead.
+export const HAIKU_MODEL = "claude-haiku-4-5-20251001";
 const SONNET_MODEL = "claude-sonnet-5";
 
 /**
@@ -676,6 +680,25 @@ export class ClaudeService {
           await setAnthropicUsageLimitAlerted(false);
           usageLimitAlertedLocally = false;
         }
+
+        // Gate-shadow experiment (w16b) — fire-and-forget, never awaited, and
+        // the LIVE verdict above has already been fully recorded. See
+        // gate-shadow.ts for what this does and why it can never affect
+        // `parsed` or anything returned to the caller.
+        maybeScheduleGateShadow({
+          client,
+          model: HAIKU_MODEL,
+          liveInstruction: MATERIALITY_GATE_INSTRUCTION,
+          rawEvent,
+          title,
+          snippet,
+          watchlist,
+          similarRecentSignal: options?.similarRecentSignal,
+          similarStoryLast48h,
+          liveVerdict: parsed.materialityPass,
+          liveReason: parsed.materialityReasoning,
+        });
+
         return parsed;
       } catch (err: any) {
         fallbackReason = err instanceof SyntaxError

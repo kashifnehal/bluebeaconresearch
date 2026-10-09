@@ -6,7 +6,10 @@ import {
   maybeSendBudgetClosedAlert,
 } from "./budget-closed-alert.js";
 
-export type AnthropicBudgetBucket = "ingestion" | "chat";
+// "shadow" added for gate-shadow.ts (the materiality-gate prompt experiment) —
+// shadow calls use this bucket exclusively, never "ingestion", so they can
+// never compete with real ingestion classification for the same daily cap.
+export type AnthropicBudgetBucket = "ingestion" | "chat" | "shadow";
 
 export class AnthropicBudgetExceededError extends Error {
   readonly bucket: AnthropicBudgetBucket;
@@ -29,9 +32,14 @@ const PRICE_USD_PER_MTOK: Record<string, { input: number; output: number }> = {
 };
 
 const DEFAULT_DAILY_BUDGET_USD = 2;
+// Shadow gate experiment default cap (GATE_SHADOW task spec) — deliberately
+// much lower than the generic $2 default since this bucket is pure research
+// spend, not a real classification path.
+const DEFAULT_SHADOW_DAILY_BUDGET_USD = 0.5;
 
 let warnedMissingIngestion = false;
 let warnedMissingChat = false;
+let warnedMissingShadow = false;
 
 export function estimateCostUsd(
   model: string,
@@ -48,25 +56,35 @@ export function utcUsageDate(now = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
-function parseBudgetEnv(raw: string | undefined, bucket: AnthropicBudgetBucket): number {
+function parseBudgetEnv(
+  raw: string | undefined,
+  bucket: AnthropicBudgetBucket,
+  fallback: number = DEFAULT_DAILY_BUDGET_USD,
+): number {
   const trimmed = raw?.trim();
   if (!trimmed) {
     if (bucket === "ingestion" && !warnedMissingIngestion) {
       warnedMissingIngestion = true;
       console.warn(
-        `[ANTHROPIC BUDGET] ANTHROPIC_DAILY_BUDGET_USD_INGESTION unset — defaulting to $${DEFAULT_DAILY_BUDGET_USD}/day`,
+        `[ANTHROPIC BUDGET] ANTHROPIC_DAILY_BUDGET_USD_INGESTION unset — defaulting to $${fallback}/day`,
       );
     }
     if (bucket === "chat" && !warnedMissingChat) {
       warnedMissingChat = true;
       console.warn(
-        `[ANTHROPIC BUDGET] ANTHROPIC_DAILY_BUDGET_USD_CHAT unset — defaulting to $${DEFAULT_DAILY_BUDGET_USD}/day`,
+        `[ANTHROPIC BUDGET] ANTHROPIC_DAILY_BUDGET_USD_CHAT unset — defaulting to $${fallback}/day`,
       );
     }
-    return DEFAULT_DAILY_BUDGET_USD;
+    if (bucket === "shadow" && !warnedMissingShadow) {
+      warnedMissingShadow = true;
+      console.warn(
+        `[ANTHROPIC BUDGET] ANTHROPIC_DAILY_BUDGET_USD_SHADOW unset — defaulting to $${fallback}/day`,
+      );
+    }
+    return fallback;
   }
   const n = Number(trimmed);
-  if (!Number.isFinite(n) || n <= 0) return DEFAULT_DAILY_BUDGET_USD;
+  if (!Number.isFinite(n) || n <= 0) return fallback;
   return n;
 }
 
@@ -74,6 +92,13 @@ export function getDailyBudgetUsd(bucket: AnthropicBudgetBucket): number {
   const env = getEnv();
   if (bucket === "ingestion") {
     return parseBudgetEnv(env.ANTHROPIC_DAILY_BUDGET_USD_INGESTION, "ingestion");
+  }
+  if (bucket === "shadow") {
+    return parseBudgetEnv(
+      env.ANTHROPIC_DAILY_BUDGET_USD_SHADOW,
+      "shadow",
+      DEFAULT_SHADOW_DAILY_BUDGET_USD,
+    );
   }
   return parseBudgetEnv(env.ANTHROPIC_DAILY_BUDGET_USD_CHAT, "chat");
 }

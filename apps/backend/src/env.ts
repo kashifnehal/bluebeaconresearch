@@ -37,6 +37,14 @@ const envSchema = z.object({
   // anthropic-budget.ts ($2 each) when unset.
   ANTHROPIC_DAILY_BUDGET_USD_INGESTION: z.string().optional(),
   ANTHROPIC_DAILY_BUDGET_USD_CHAT: z.string().optional(),
+  // Shadow materiality-gate prompt experiment (gate-shadow.ts). Default $0.50/day
+  // — getDailyBudgetUsd's shadow branch uses this default, not the generic
+  // DEFAULT_DAILY_BUDGET_USD ($2) ingestion/chat fall back to.
+  ANTHROPIC_DAILY_BUDGET_USD_SHADOW: z.string().optional(),
+  // Off by default — the shadow gate call only ever fires when this is exactly "true".
+  GATE_SHADOW_ENABLED: z.string().optional(),
+  GATE_SHADOW_MAX_REJECTS_PER_DAY: z.string().optional(),
+  GATE_SHADOW_MAX_PASSES_PER_DAY: z.string().optional(),
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
