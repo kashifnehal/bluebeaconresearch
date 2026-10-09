@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 134 — About page event-detection sentence corrected (2026-10-09, `8025544`)
+
+`apps/web` only. The "01. Event Detection" step on `/about` named sources ("ACLED and GNews") that aren't real collectors in this codebase; it now says "Public sources, including GDELT, news APIs and RSS feeds, are scanned on a regular collector schedule and turned into structured events." No other line, file, or test touched. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## PHASE 133 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, this commit)
 
 Favicon, apple-touch-icon (new), `Logo.tsx`, `PublicHeader`/homepage/auth-page/Sidebar/login/signup brand marks, and all 6 mobile icon/splash files replaced with the founder's real logo, derived from 3 clean source crops via Pillow color-keying (the other 4 supplied crops have baked-in shadows/rounded-tile mockup treatment and were not used as sources). Full technical detail: `docs/brain/14_CHANGELOG.md` v0.157.0, `docs/brain/LIVE_TODO.md`.

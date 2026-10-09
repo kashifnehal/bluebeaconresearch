@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-09.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-09 — `/about` "01. Event Detection" sentence corrected to drop "ACLED and GNews" in favor of "GDELT, news APIs and RSS feeds" (`8025544`, brain LIVE_TODO, PHASE 134). No prior numbered backlog line existed for this — confirmed by grep for the old sentence, nothing struck.
+
 > ⚠️ UPDATED 2026-10-09 — real logo/favicon shipped across `apps/web` + `apps/mobile` (brain changelog v0.157.0 / PHASE 133). Replaced Next's default scaffold favicon, a generic Lucide `Shield` icon stand-in on `login`/`signup`, and Expo's default mobile-icon scaffold with the founder's real logo. No prior numbered backlog line existed for this — confirmed by grep for a logo/favicon/branding ticket, nothing struck.
 
 > ⚠️ UPDATED 2026-10-09 — homepage pricing buttons and `/terms` age line (`711aff8`, brain changelog v0.156.0 / PHASE 132). Analyst and Pro say "Paid plans opening soon"; Monitor stays "Get started". Accounts and access now requires age 18. No prior numbered backlog line — confirmed by grep for a pricing-button or age-gate ticket, nothing struck.

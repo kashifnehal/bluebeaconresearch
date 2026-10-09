@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (real logo/favicon across web + mobile — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-09 (About page event-detection sentence corrected — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-09 (About page copy, `apps/web` only, `8025544`) — "01. Event Detection" step on `/about` no longer names "ACLED and GNews" (ACLED isn't live yet; GNews isn't a collector here); now says sources "including GDELT, news APIs and RSS feeds." No other change. Full detail: `docs/brain/LIVE_TODO.md`. This tree: PHASE 134.
 
 > ⚠️ NEW 2026-10-09 (real logo/favicon, `apps/web` + `apps/mobile`, this commit) — Favicon, apple-touch-icon (new — none existed before), `Logo.tsx`, `PublicHeader`/homepage/auth-page/`Sidebar`/`login`/`signup` brand marks, and all 6 mobile icon/splash files replaced with the founder's real logo (was Next's default scaffold favicon, a generic Lucide `Shield` icon stand-in, and Expo's default mobile-icon scaffold). Full detail: `docs/brain/14_CHANGELOG.md` v0.157.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 133.
 
