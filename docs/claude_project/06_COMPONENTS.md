@@ -615,10 +615,14 @@ feeds, `packages/shared/src/constants/ingestion.ts`) plus `OTHER_COLLECTOR_COUNT
 `gdelt-collector.ts`, `gnews-collector.ts`, `acled-collector.ts`, named in a code
 comment). A failed query hides that stat rather than rendering 0.
 
-**Claim/proof table**: 6 claims (sources-tab links, heuristic-fallback disclosure,
-zero headline-placement bonus, confidence-vs-report-count copy, reports-not-outlets
-counting, published track record) — each checked against code or live data before
-being written; the full Step 0 table is in `docs/brain/LIVE_TODO.md`'s W2-TRUST entry.
+**Claim/proof table**: 7 claims (sources-tab links, pause-instead-of-guessing
+disclosure, zero headline-placement bonus, confidence-vs-report-count copy,
+reports-not-outlets counting, published track record, and — added 2026-10-09 —
+what Claude does and does not do: market-impact classification, including an
+up/down/volatile reading, and no position, size, or entry/exit recommendation).
+The original six were checked against code or live data before being written;
+the seventh is backed by `classifyEvent()` and the briefing/chat instructions
+(`docs/brain/LIVE_TODO.md`). The original Step 0 table is in that file's W2-TRUST entry.
 Laid out as a responsive CSS grid, not an HTML `<table>`, so it never needs horizontal
 scroll at phone width. A short **Limits** list follows, including a line on ACLED not
 yet ingesting — checked live against `service_health_events` (still failing auth at

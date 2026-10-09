@@ -111,6 +111,10 @@ const CLAIM_ROWS: ClaimRow[] = [
     claim: "We publish our track record.",
     proof: "See the Accuracy page — including when the number is not flattering.",
   },
+  {
+    claim: "Claude classifies an event for market impact, including a possible up, down, or volatile move in a listed commodity or currency pair, and does not recommend a position, a size, or an entry or exit.",
+    proof: "The briefing and research-chat instructions state that limit. A direction on a signal is an impact reading, not an instruction to act.",
+  },
 ];
 
 const LIMITS = [
@@ -188,7 +192,7 @@ export default async function HowItWorksPage() {
             className="text-xs font-bold text-[#86948a] uppercase tracking-widest"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
-            Limits — what we don't do yet
+            Limits — what we don&apos;t do yet
           </h2>
           <ul className="space-y-2 rounded-lg border border-[#3c4a42] bg-[#131313] p-5">
             {LIMITS.map((item) => (

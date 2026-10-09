@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-09 (PHASE 128).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-09 (PHASE 129).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 129 — Public Claude disclosure (2026-10-09)
+
+`apps/web` only. Homepage step "02. Research Assessment" adds one sentence: classification uses Anthropic's Claude models; a keyword fallback runs only when no Claude client is configured; if Claude is unavailable, classification waits. `/how-it-works` claim/proof table gains a seventh row: Claude records market impact (including an up, down, or volatile reading) and does not recommend a position, a size, or an entry or exit. No model version names and no logo. Full detail: `docs/brain/14_CHANGELOG.md` v0.153.0.
 
 ## PHASE 128 — Public About page (2026-10-09)
 

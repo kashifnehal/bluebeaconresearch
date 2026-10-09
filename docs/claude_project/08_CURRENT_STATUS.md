@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (public About page — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-09 (public Claude disclosure — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-09 (public Claude disclosure, `apps/web` only) — homepage step "02. Research Assessment" states that classification uses Anthropic's Claude models, that a keyword fallback runs only when no Claude client is configured, and that classification waits if Claude is unavailable. `/how-it-works` adds a seventh claim/proof row: Claude records market impact and does not recommend a position, a size, or an entry or exit. No model versions and no logo. Full detail: `docs/brain/14_CHANGELOG.md` v0.153.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 129.
 
 > ⚠️ NEW 2026-10-09 (public About page, `apps/web` only) — `/about` describes the platform, repeats the homepage's three steps, restates the existing no-investment-advice sentences, and lists support@bluebeaconresearch.com. No founder name, address, or legal entity. Homepage Research column links to it. Full detail: `docs/brain/14_CHANGELOG.md` v0.152.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 128.
 

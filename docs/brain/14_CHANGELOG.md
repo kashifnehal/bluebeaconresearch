@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-09 (v0.152.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-09 (v0.153.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.153.0 — Public Claude disclosure (2026-10-09)
+
+`apps/web` only. Homepage `#features` step "02. Research Assessment" adds one sentence. `/how-it-works` `CLAIM_ROWS` gains a seventh `{ claim, proof }` row. Copy follows `classifyEvent()`: Claude model call at `HAIKU_MODEL`; keyword fallback only for `no_client`; budget, spend limit, API error, and bad JSON defer. The new row states market-impact classification and the briefing/chat limit against position, size, and entry/exit recommendations. No model versions, no logo, no buy/sell wording. No Playwright. Full detail: `LIVE_TODO.md`.
 
 ### v0.152.0 — Public About page (2026-10-09)
 

@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-09.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-09 — homepage step 02 and a seventh `/how-it-works` claim row now state what Claude does (market-impact classification) and does not do (no position, size, or entry/exit recommendation). Brain changelog v0.153.0 / PHASE 129. No prior numbered backlog line — confirmed by grep for a Claude-disclosure ticket, nothing struck.
+
 > ⚠️ UPDATED 2026-10-09 — public `/about` page shipped (brain changelog v0.152.0 / PHASE 128). No prior backlog line existed for this page — confirmed by grep for `/about`, nothing struck.
 
 > ⚠️ UPDATED 2026-10-09 — `/privacy` rewritten from verified code (brain changelog v0.151.0 / PHASE 127). No prior backlog line existed for this page — confirmed by grep for `privacy`, nothing struck.
