@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Signal, CommodityImpact } from "@blue-beacon-research/shared";
 import { CHOKEPOINTS } from "@blue-beacon-research/shared";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
-import { safeFormatDistanceToNow } from "@/lib/utils";
+import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
@@ -192,6 +192,7 @@ export default function MapPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    dataUpdatedAt,
   } = useSignalFeed({
     commodity: filters.commodity,
     region: filters.region,
@@ -933,11 +934,20 @@ export default function MapPage() {
       {/* Visually hidden — the page is a full-bleed map with no visible title slot,
           but it still needs a level-one heading (axe `page-has-heading-one`, /map). */}
       <h1 className="sr-only">Global tension map</h1>
-      <div className="absolute top-3 left-3 z-30">
+      <div className="absolute top-3 left-3 z-30 flex flex-col gap-1.5">
         <Breadcrumbs
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Map" }]}
           className="bg-black/50 backdrop-blur px-3 py-1.5 rounded-md"
         />
+        {formatDataAsOf(dataUpdatedAt) ? (
+          <span
+            data-testid="data-as-of"
+            className="text-[11px] md:text-[10px] text-on-surface-variant/80 bg-black/50 backdrop-blur px-3 py-1 rounded-md"
+            suppressHydrationWarning
+          >
+            {formatDataAsOf(dataUpdatedAt)}
+          </span>
+        ) : null}
       </div>
       <div className="absolute top-3 right-3 z-30">
         <button

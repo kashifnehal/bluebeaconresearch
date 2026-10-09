@@ -34,6 +34,7 @@ export function useSignalFeed({
 }: Options = {}) {
   const {
     data,
+    dataUpdatedAt,
     isLoading,
     isError,
     fetchNextPage,
@@ -188,5 +189,6 @@ export function useSignalFeed({
     hasNextPage: !!hasNextPage,
     isFetchingNextPage,
     sentinelRef,
+    dataUpdatedAt,
   };
 }

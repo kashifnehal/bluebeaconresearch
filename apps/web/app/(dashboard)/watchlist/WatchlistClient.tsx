@@ -10,6 +10,7 @@ import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { logUsageEvent } from "@/lib/funnel-events";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { formatDataAsOf } from "@/lib/utils";
 
 // Commodities + forex pairs (#87) share one watchlist. The forex entries carry
 // the same {symbol,label,unit,category} shape, so meta lookups, the add-asset
@@ -332,6 +333,15 @@ export function WatchlistClient() {
                 Add Asset
               </button>
             </div>
+            {formatDataAsOf(lastFetchAt) ? (
+              <p
+                data-testid="data-as-of"
+                className="mt-2 text-[12px] text-on-surface-variant font-mono"
+                suppressHydrationWarning
+              >
+                {formatDataAsOf(lastFetchAt)}
+              </p>
+            ) : null}
             {showingSuggested && (
               <p
                 data-testid="watchlist-suggested-banner"

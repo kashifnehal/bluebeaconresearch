@@ -14,7 +14,7 @@ type Price = {
 
 // Price syncer runs every 15 min (price-syncer.ts) — two missed cycles is a
 // reasonable "something's actually wrong" threshold, not just normal cron jitter.
-const STALE_THRESHOLD_MS = 30 * 60 * 1000;
+const STALE_THRESHOLD_MS = 60 * 60 * 1000;
 
 function isStale(fetchedAt?: string): boolean {
   if (!fetchedAt) return false;

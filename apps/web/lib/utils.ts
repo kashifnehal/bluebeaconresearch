@@ -37,6 +37,15 @@ export function safeFormatDistanceToNow(
   }
 }
 
+/** "Data as of 3:45:12 PM" from a timestamp already fetched elsewhere (a
+ * react-query `dataUpdatedAt` or a row's `fetched_at`) — never a new query. */
+export function formatDataAsOf(ts?: number | string | null): string | null {
+  if (!ts) return null;
+  const d = typeof ts === "number" ? new Date(ts) : new Date(ts);
+  if (isNaN(d.getTime())) return null;
+  return `Data as of ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" })}`;
+}
+
 /**
  * Shared visual treatment for every native <select> dropdown across the app
  * (Map filters, Watchlist commodity picker, Backtesting selectors). These were

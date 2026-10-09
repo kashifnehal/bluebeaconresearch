@@ -18,7 +18,7 @@ import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
-import { safeFormatDistanceToNow } from "@/lib/utils";
+import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 import { signalsToCsv, downloadCsv } from "@/lib/signal-csv";
 import { countryToFlagEmoji } from "@/lib/country-flags";
@@ -124,6 +124,7 @@ export default function DashboardPage() {
     hasNextPage,
     isFetchingNextPage,
     sentinelRef,
+    dataUpdatedAt,
   } = useSignalFeed({
     enabled: true,
     personalized,
@@ -330,6 +331,16 @@ export default function DashboardPage() {
           >
             Global signal monitoring, updates roughly every 30 minutes
           </p>
+          {formatDataAsOf(dataUpdatedAt) ? (
+            <p
+              data-testid="data-as-of"
+              className="text-[12px] md:text-[11px] mt-2"
+              style={{ color: "#86948a", fontFamily: "'JetBrains Mono', monospace" }}
+              suppressHydrationWarning
+            >
+              {formatDataAsOf(dataUpdatedAt)}
+            </p>
+          ) : null}
           {coverageLine ? (
             <p
               data-testid="coverage-line"
