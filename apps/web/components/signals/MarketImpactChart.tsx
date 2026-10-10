@@ -19,6 +19,7 @@ export function MarketImpactChart({
     label: `${c.checkpointHours}h`,
     medianMovePct: c.medianMovePct,
     sampleSize: c.sampleSize,
+    unchangedCount: c.unchangedCount,
   }));
 
   return (
@@ -35,9 +36,15 @@ export function MarketImpactChart({
           <Tooltip
             cursor={{ fill: "rgba(255,255,255,0.04)" }}
             formatter={(value, _name, item) => {
-              const sampleSize = (item?.payload as { sampleSize?: number } | undefined)
-                ?.sampleSize;
-              return [`${Number(value).toFixed(2)}% (n=${sampleSize ?? "?"})`, "Median move"];
+              const payload = item?.payload as
+                | { sampleSize?: number; unchangedCount?: number }
+                | undefined;
+              const sampleSize = payload?.sampleSize;
+              const unchangedCount = payload?.unchangedCount;
+              return [
+                `${Number(value).toFixed(2)}% (n=${sampleSize ?? "?"}; ${unchangedCount ?? 0} unchanged left out)`,
+                "Median move",
+              ];
             }}
             contentStyle={{
               background: "#131313",

@@ -6,6 +6,7 @@ import type { CommodityImpact, Direction, Region } from "@blue-beacon-research/s
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+// BBR working value. No published source.
 const WINDOW_DAYS = 7;
 const CANDIDATE_LIMIT = 100;
 // Up to 10 dated candidates, not "the" explanation — copy never implies any one
@@ -165,6 +166,7 @@ export async function GET(req: NextRequest) {
         // get silently hidden for scoring low on direction/recency/severity.
         if (!assetMatch && !regionMatch) return null;
 
+        // BBR working value. No published source.
         const assetScore = assetMatch ? 3 : 0;
         const directionScore = impact && impact.direction === direction ? 2 : 0;
         const recencyScore = 2 * (1 - hoursBefore / (WINDOW_DAYS * 24));

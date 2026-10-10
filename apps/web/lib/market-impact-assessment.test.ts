@@ -236,6 +236,51 @@ runTest("checkpoint chart data is empty (not zeros) when nothing clears the gate
   assert.deepEqual(computeMarketImpactCheckpoints(rows, "EURUSD"), []);
 });
 
+runTest("magnitude with all rows moved reports zero unchangedCount", () => {
+  const rows = outcomeRows("USOIL", 24, new Array(20).fill(2));
+  const result = computeMarketImpactMagnitude(rows, "USOIL", 24);
+  assert.ok(result);
+  assert.equal(result?.sampleSize, 20);
+  assert.equal(result?.unchangedCount, 0);
+});
+
+runTest("rows exactly 0 are excluded from the median and counted in unchangedCount", () => {
+  const rows = [
+    ...outcomeRows("USOIL", 1, new Array(20).fill(2)),
+    ...outcomeRows("USOIL", 1, new Array(10).fill(0)),
+  ];
+  const result = computeMarketImpactMagnitude(rows, "USOIL", 1);
+  assert.ok(result);
+  assert.equal(result?.medianMovePct, 2);
+  assert.equal(result?.sampleSize, 20);
+  assert.equal(result?.unchangedCount, 10);
+});
+
+runTest("all rows exactly 0 returns null (nothing to median)", () => {
+  const rows = outcomeRows("USOIL", 1, new Array(25).fill(0));
+  assert.equal(computeMarketImpactMagnitude(rows, "USOIL", 1), null);
+});
+
+runTest("minimum-sample check applies to the moved count, not total rows", () => {
+  // 25 rows total but only 15 moved — moved count is below the gate (20)
+  // even though total row count is above it.
+  const rows = [
+    ...outcomeRows("USOIL", 1, new Array(15).fill(2)),
+    ...outcomeRows("USOIL", 1, new Array(10).fill(0)),
+  ];
+  assert.equal(computeMarketImpactMagnitude(rows, "USOIL", 1), null);
+
+  // 20 moved + any number of zeros clears the gate.
+  const rows2 = [
+    ...outcomeRows("USOIL", 1, new Array(20).fill(2)),
+    ...outcomeRows("USOIL", 1, new Array(50).fill(0)),
+  ];
+  const result2 = computeMarketImpactMagnitude(rows2, "USOIL", 1);
+  assert.ok(result2);
+  assert.equal(result2?.sampleSize, 20);
+  assert.equal(result2?.unchangedCount, 50);
+});
+
 runTest("grain fallback sentence is exact and cites Dai, Dai & Zhou without a specific percentage", () => {
   assert.equal(isGrainAsset("WHEAT"), true);
   assert.equal(isGrainAsset("CORN"), true);

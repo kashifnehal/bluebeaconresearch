@@ -3,6 +3,7 @@ import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
 import {
+  MARKET_IMPACT_CHECKPOINT_HOURS,
   computeMarketImpactCheckpoints,
   computeMarketImpactMagnitude,
   deriveTimeHorizonLabel,
@@ -10,8 +11,6 @@ import {
   type MarketImpactMagnitude,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
-
-const MARKET_IMPACT_CHECKPOINT_HOURS = 24;
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

@@ -153,7 +153,7 @@ runTest("source confirmation and novelty render only when set, never as N/A", ()
   assert.equal(withoutGateText.includes("N/A"), false);
 });
 
-runTest("magnitude and time-horizon lines render when the asset clears the sample-size gate", () => {
+runTest("magnitude line renders when the asset clears the sample-size gate, no horizon line", () => {
   const html = renderToStaticMarkup(
     createElement(MarketImpactAssessment, {
       signal: baseSignal({
@@ -162,7 +162,7 @@ runTest("magnitude and time-horizon lines render when the asset clears the sampl
       }),
       marketImpactMagnitudes: {
         USOIL: {
-          magnitude: { medianMovePct: 0.97, sampleSize: 1232 },
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
           timeHorizonLabel: "multi-day",
         },
       },
@@ -170,11 +170,51 @@ runTest("magnitude and time-horizon lines render when the asset clears the sampl
   );
   const text = visibleText(html);
   assert.match(html, /data-testid="market-impact-magnitude"/);
-  assert.match(html, /data-testid="market-impact-horizon"/);
+  assert.equal(html.includes('data-testid="market-impact-horizon"'), false);
   assert.match(text, /historically moved USOIL by ~0\.97% within 24h/);
-  assert.match(text, /based on 1232 tracked BBR signals/);
-  assert.match(text, /multi-day/);
+  assert.match(text, /based on 1232 tracked BBR signals with a recorded price change/);
   assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
+});
+
+runTest("unchanged-count note renders only when unchangedCount is greater than zero", () => {
+  const withUnchanged = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "OPEC+ output cut tightens crude supply.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 844 },
+          timeHorizonLabel: "multi-day",
+        },
+      },
+    }),
+  );
+  assert.match(withUnchanged, /data-testid="market-impact-unchanged-note"/);
+  assert.match(
+    visibleText(withUnchanged),
+    /844 other tracked signals had an unchanged recorded price \(usually a closed market\) and are left out\./,
+  );
+
+  const withoutUnchanged = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "OPEC+ output cut tightens crude supply.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+          timeHorizonLabel: "multi-day",
+        },
+      },
+    }),
+  );
+  assert.equal(
+    withoutUnchanged.includes('data-testid="market-impact-unchanged-note"'),
+    false,
+  );
 });
 
 runTest("historical-pattern chart is collapsed by default behind a toggle, disclaimer stays visible", () => {
@@ -186,11 +226,11 @@ runTest("historical-pattern chart is collapsed by default behind a toggle, discl
       }),
       marketImpactMagnitudes: {
         USOIL: {
-          magnitude: { medianMovePct: 0.97, sampleSize: 1232 },
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
           timeHorizonLabel: "multi-day",
           checkpoints: [
-            { checkpointHours: 24, medianMovePct: 0.97, sampleSize: 1232 },
-            { checkpointHours: 48, medianMovePct: 1.4, sampleSize: 900 },
+            { checkpointHours: 24, medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+            { checkpointHours: 48, medianMovePct: 1.4, sampleSize: 900, unchangedCount: 0 },
           ],
         },
       },
@@ -213,7 +253,7 @@ runTest("no chart toggle renders when the asset has no checkpoint data", () => {
       }),
       marketImpactMagnitudes: {
         USOIL: {
-          magnitude: { medianMovePct: 0.97, sampleSize: 1232 },
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
           timeHorizonLabel: "multi-day",
           checkpoints: [],
         },

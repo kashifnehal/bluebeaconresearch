@@ -5,6 +5,7 @@
  */
 
 export const HIGH_SEVERITY_THRESHOLD = 7;
+// BBR working value. No published source.
 export const FLAT_PRICE_CHANGE_THRESHOLD_PCT = 0.05;
 
 export type HistoryErrorCode =
@@ -57,6 +58,9 @@ export function formatPriceSinceFiredSubtext(
   priceAtSignal: number,
   currentPrice: number,
 ): string {
+  if (currentPrice === priceAtSignal) {
+    return "Recorded price unchanged since this fired (the market may be closed)";
+  }
   const pct = priceChangePercent(priceAtSignal, currentPrice);
   if (Math.abs(pct) < FLAT_PRICE_CHANGE_THRESHOLD_PCT) {
     return "No price move recorded yet since this fired";

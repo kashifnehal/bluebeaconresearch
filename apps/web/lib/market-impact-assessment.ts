@@ -96,11 +96,13 @@ export function isGrainAsset(asset: string): boolean {
 export const PREVIEW_NOTE =
   "This is a preview of a scheduled event, not the event itself — see the Economic Calendar for the confirmed schedule";
 
-// Duplicated from apps/backend/src/routes/accuracy.routes.ts's MIN_SAMPLE_SIZE —
-// same judgment call (below this many scored outcomes, a headline number is more
-// misleading than informative), kept identical rather than introducing a second
-// tunable threshold for the same underlying question.
+// BBR working value (same as the accuracy route). No published source.
 export const MARKET_IMPACT_MIN_SAMPLE_SIZE = 20;
+
+// The checkpoint the magnitude sentence reports against. Shared by
+// /api/market-impact, /api/signals/[id], and the Calendar page so the
+// "within Nh" wording always matches the checkpoint actually queried.
+export const MARKET_IMPACT_CHECKPOINT_HOURS = 24;
 
 export type SignalOutcomeRow = {
   asset: string;
@@ -111,6 +113,7 @@ export type SignalOutcomeRow = {
 export type MarketImpactMagnitude = {
   medianMovePct: number;
   sampleSize: number;
+  unchangedCount: number;
 };
 
 export type TimeHorizonLabel = "within hours" | "within a day" | "multi-day";
@@ -149,11 +152,15 @@ export function computeMarketImpactMagnitude(
     .map((r) => r.actual_pct_change)
     .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
 
-  if (values.length < minSampleSize) return null;
+  const moved = values.filter((v) => v !== 0);
+  const unchangedCount = values.length - moved.length;
+
+  if (moved.length < minSampleSize) return null;
 
   return {
-    medianMovePct: median(values.map((v) => Math.abs(v))),
-    sampleSize: values.length,
+    medianMovePct: median(moved.map((v) => Math.abs(v))),
+    sampleSize: moved.length,
+    unchangedCount,
   };
 }
 
@@ -167,6 +174,7 @@ export type MarketImpactCheckpointPoint = {
   checkpointHours: number;
   medianMovePct: number;
   sampleSize: number;
+  unchangedCount: number;
 };
 
 /**
@@ -193,6 +201,7 @@ export function computeMarketImpactCheckpoints(
         checkpointHours,
         medianMovePct: magnitude.medianMovePct,
         sampleSize: magnitude.sampleSize,
+        unchangedCount: magnitude.unchangedCount,
       });
     }
   }

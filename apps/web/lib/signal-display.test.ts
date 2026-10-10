@@ -65,12 +65,19 @@ runTest("CommodityChip aria-label names model classification confidence, not a p
   assert.equal(commodityChipAriaLabel("USOIL", "up", 0.88).includes("% confidence"), false);
 });
 
-runTest("flat price change does not render (+0.0%)", () => {
-  const flat = formatPriceSinceFiredSubtext("USOIL", 100.05, 100.05);
-  assert.equal(flat, "No price move recorded yet since this fired");
-  assert.equal(flat.includes("+0.0%"), false);
+runTest("exact-equal price shows the unchanged/closed-market copy, not +0.0%", () => {
+  const unchanged = formatPriceSinceFiredSubtext("USOIL", 100.05, 100.05);
+  assert.equal(
+    unchanged,
+    "Recorded price unchanged since this fired (the market may be closed)",
+  );
+  assert.equal(unchanged.includes("+0.0%"), false);
+});
+
+runTest("tiny non-zero price change does not render (+0.0%)", () => {
   const tiny = formatPriceSinceFiredSubtext("USOIL", 100, 100.04);
   assert.equal(tiny, "No price move recorded yet since this fired");
+  assert.equal(tiny.includes("+0.0%"), false);
 });
 
 runTest("real price move still shows fired / now / percent", () => {

@@ -10,7 +10,11 @@ import {
   type CalendarFilterValue,
   type CalendarImpact,
 } from "@/lib/calendar-filters";
-import type { MarketImpactMagnitude, TimeHorizonLabel } from "@/lib/market-impact-assessment";
+import {
+  MARKET_IMPACT_CHECKPOINT_HOURS,
+  type MarketImpactMagnitude,
+  type TimeHorizonLabel,
+} from "@/lib/market-impact-assessment";
 
 type Impact = CalendarImpact;
 
@@ -59,9 +63,9 @@ function magnitudeLinesForEvent(
   const lines: string[] = [];
   for (const asset of assets) {
     const entry = marketImpact[asset];
-    if (entry?.magnitude && entry.timeHorizonLabel) {
+    if (entry?.magnitude) {
       lines.push(
-        `Events like this have historically moved ${asset} by ~${entry.magnitude.medianMovePct.toFixed(2)}% within ${entry.timeHorizonLabel}, based on ${entry.magnitude.sampleSize} tracked BBR signals.`,
+        `Events like this have historically moved ${asset} by ~${entry.magnitude.medianMovePct.toFixed(2)}% within ${MARKET_IMPACT_CHECKPOINT_HOURS}h, based on ${entry.magnitude.sampleSize} tracked BBR signals with a recorded price change.`,
       );
     }
   }

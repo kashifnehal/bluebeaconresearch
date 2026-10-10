@@ -34,6 +34,7 @@ const CHART_ATTRIBUTION_HINT_ID = "chart_attribution";
 // once it crosses this threshold — mirrors the language signals already use for
 // commodity_impacts.direction, so the attribution query's direction match means
 // the same thing on both sides.
+// BBR working value. No published source.
 const VOLATILITY_THRESHOLD_PCT = 3;
 
 type AttributionResult = {
@@ -53,6 +54,13 @@ function formatTimeBefore(hoursBefore: number): string {
   }
   const days = Math.round(hoursBefore / 24);
   return `${days} day${days === 1 ? "" : "s"} before this move`;
+}
+
+function formatUtcHHMM(iso: string): string {
+  const d = new Date(iso);
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${hh}:${mm} UTC`;
 }
 
 type Price = {
@@ -124,6 +132,15 @@ function computeEventPriceMove(points: PricePoint[], eventIso: string) {
     return { status: "insufficient-data" as const };
   }
 
+  if (baseline.price === target.price) {
+    return {
+      status: "unchanged" as const,
+      windowHours,
+      baselineFetchedAt: baseline.fetchedAt,
+      targetFetchedAt: target.fetchedAt,
+    };
+  }
+
   const pct = ((target.price - baseline.price) / baseline.price) * 100;
   return {
     status: "ok" as const,
@@ -131,6 +148,8 @@ function computeEventPriceMove(points: PricePoint[], eventIso: string) {
     windowHours,
     baselinePrice: baseline.price,
     targetPrice: target.price,
+    baselineFetchedAt: baseline.fetchedAt,
+    targetFetchedAt: target.fetchedAt,
   };
 }
 
@@ -338,6 +357,7 @@ export default function WatchlistSymbolPage() {
     }
     const point = chartData[index];
     if (!point) return;
+    logUsageEvent("chart_point_clicked", { symbol }, false);
     setAttributionPoint(point);
     setAttributionResults(null);
     setAttributionError(false);
@@ -889,8 +909,10 @@ export default function WatchlistSymbolPage() {
                         "Signaled less than an hour ago — not enough time has passed to measure a price move yet."}
                       {move.status === "insufficient-data" &&
                         "Not enough price history around this signal to measure a move."}
+                      {move.status === "unchanged" &&
+                        `Recorded price unchanged in the ${move.windowHours}h after this signal (the market may have been closed).`}
                       {move.status === "ok" &&
-                        `Price moved ${move.pct >= 0 ? "+" : ""}${move.pct.toFixed(2)}% in the ${move.windowHours}h following this signal ($${move.baselinePrice.toFixed(2)} → $${move.targetPrice.toFixed(2)}).`}
+                        `Price moved ${move.pct >= 0 ? "+" : ""}${move.pct.toFixed(2)}% in the ${move.windowHours}h following this signal ($${move.baselinePrice.toFixed(2)} at ${formatUtcHHMM(move.baselineFetchedAt)} → $${move.targetPrice.toFixed(2)} at ${formatUtcHHMM(move.targetFetchedAt)}).`}
                     </p>
                   </a>
                 );

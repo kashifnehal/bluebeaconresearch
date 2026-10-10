@@ -153,7 +153,6 @@ export function MarketImpactAssessment({
                   const priceInfo = pricesAtSignal.find((p) => p.asset === c.asset);
                   const entry = marketImpactMagnitudes[c.asset];
                   const magnitude = entry?.magnitude ?? null;
-                  const timeHorizonLabel = entry?.timeHorizonLabel ?? null;
                   return (
                     <div key={`${c.asset}-${c.direction}`} className="space-y-1">
                       <CommodityChip
@@ -176,14 +175,27 @@ export function MarketImpactAssessment({
                         </p>
                       ) : null}
                       {magnitude ? (
-                        <p
-                          data-testid="market-impact-magnitude"
-                          className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-text-secondary"
-                        >
-                          Events like this have historically moved {c.asset} by ~
-                          {magnitude.medianMovePct.toFixed(2)}% within 24h, based on{" "}
-                          {magnitude.sampleSize} tracked BBR signals.
-                        </p>
+                        <>
+                          <p
+                            data-testid="market-impact-magnitude"
+                            className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-text-secondary"
+                          >
+                            Events like this have historically moved {c.asset} by ~
+                            {magnitude.medianMovePct.toFixed(2)}% within 24h, based on{" "}
+                            {magnitude.sampleSize} tracked BBR signals with a recorded
+                            price change.
+                          </p>
+                          {magnitude.unchangedCount > 0 ? (
+                            <p
+                              data-testid="market-impact-unchanged-note"
+                              className="pl-1 text-[11px] leading-snug text-muted"
+                            >
+                              {magnitude.unchangedCount} other tracked signals had an
+                              unchanged recorded price (usually a closed market) and
+                              are left out.
+                            </p>
+                          ) : null}
+                        </>
                       ) : isGrainAsset(c.asset) ? (
                         <p className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-text-secondary">
                           {GRAIN_FALLBACK_SENTENCE}
@@ -193,14 +205,6 @@ export function MarketImpactAssessment({
                           Not enough tracked history for {c.asset} yet.
                         </p>
                       )}
-                      {magnitude && timeHorizonLabel ? (
-                        <p
-                          data-testid="market-impact-horizon"
-                          className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-muted"
-                        >
-                          Historically, moves like this have played out {timeHorizonLabel}.
-                        </p>
-                      ) : null}
                       {magnitude && entry?.checkpoints && entry.checkpoints.length > 0 ? (
                         <details className="group pl-1">
                           <summary
