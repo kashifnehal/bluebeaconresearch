@@ -22,6 +22,7 @@ export const COMMODITIES = [
   // route's own hand-kept list needs the entry too.
   { symbol: "TTF_GAS", label: "European Gas (TTF)", unit: "EUR/MWh", category: "energy" },
   { symbol: "RBOB", label: "RBOB Gasoline", unit: "USD/gal", category: "energy" },
+  { symbol: "HEATING_OIL", label: "Heating Oil / ULSD", unit: "USD/gal", category: "energy" },
 ] as const;
 
 export async function commoditiesRoutes(app: FastifyInstance) {

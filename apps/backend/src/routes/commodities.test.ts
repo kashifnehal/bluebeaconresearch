@@ -55,3 +55,17 @@ runTest("RBOB entry has the energy category and USD/gal unit", () => {
   assert.equal(rbob?.category, "energy");
   assert.equal(rbob?.unit, "USD/gal");
 });
+
+// W-ASSETS-ENERGY-3: HEATING_OIL added to the /v1/commodities catalog.
+runTest("COMMODITIES includes HEATING_OIL with no duplicate symbols", () => {
+  const symbols = COMMODITIES.map((c) => c.symbol);
+  assert.ok(symbols.includes("HEATING_OIL"));
+  assert.equal(new Set(symbols).size, symbols.length);
+});
+
+runTest("HEATING_OIL entry has the energy category and USD/gal unit", () => {
+  const ho = COMMODITIES.find((c) => c.symbol === "HEATING_OIL");
+  assert.ok(ho, "expected a HEATING_OIL entry");
+  assert.equal(ho?.category, "energy");
+  assert.equal(ho?.unit, "USD/gal");
+});

@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.163.0 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, this commit)
+
+`packages/shared` + `apps/backend` + `apps/web`. Final of 3 new energy assets: `HEATING_OIL` (Heating Oil / ULSD, `HO=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias/filter anchor ("diesel") sourced only from words already in stored `signals.title` — no literal "heating oil"/"ULSD" headline exists, diesel is the real-world term. Real Anthropic classification check against all 15 stored headlines: 15/15 correct; 21/21 across the full TTF_GAS/RBOB/HEATING_OIL batch. Full detail: `LIVE_TODO.md`.
+
 ### v0.162.0 — W-ASSETS-ENERGY-3 part 2/3: RBOB added (2026-10-10, this commit)
 
 `packages/shared` + `apps/backend` + `apps/web`. Second of 3 new energy assets: `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias/filter anchor ("gasoline") sourced only from words already in stored `signals.title`. Real Anthropic classification check against 2 stored headlines: 2/2 correct. Full detail: `LIVE_TODO.md`.

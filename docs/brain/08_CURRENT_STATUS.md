@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-10 (W-ASSETS-ENERGY-3 part 2/3: RBOB added, v0.162.0, this commit)
+Last updated: 2026-10-10 (W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, v0.163.0, this commit)
+
+> ⚠️ NEW 2026-10-10 (W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, `packages/shared` + `apps/backend` + `apps/web`, this commit) — added `HEATING_OIL` (Heating Oil / ULSD, `HO=F`, USD/gal) to `COMMODITY_REGISTRY` and the hand-kept catalog lists — final of 3 new energy assets (TTF_GAS, RBOB, HEATING_OIL all now live, W-ASSETS-ENERGY-3 complete). Yahoo ticker verified live (2026-10-10 probe). Alias/filter anchor ("DIESEL"/"diesel") sourced only from words already present in stored `signals.title` text — no literal "heating oil"/"ULSD" headline exists yet; "diesel" is the real-world fuel this NYMEX contract tracks and the term actually used in news. Real Anthropic classification verified against all 15 stored "diesel" headlines (same direct-API-call technique as parts 1–2, ingestion budget still exhausted today): 15/15 correct. Across all 3 assets: 21/21 real headlines correctly classified. Full detail: `14_CHANGELOG.md` v0.163.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-10 (W-ASSETS-ENERGY-3 part 2/3: RBOB added, `packages/shared` + `apps/backend` + `apps/web`, this commit) — added `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) to `COMMODITY_REGISTRY` and the hand-kept catalog lists — second of 3 new energy assets (HEATING_OIL follows). Yahoo ticker verified live (2026-10-10 probe). Alias/filter anchor ("GASOLINE"/"gasoline") sourced only from words already present in stored `signals.title` text — no literal "RBOB" headline exists yet. Real Anthropic classification verified against the 2 stored "gasoline" headlines (same direct-API-call technique as the TTF_GAS commit, since the live ingestion budget remains exhausted today): 2/2 correct. Full detail: `14_CHANGELOG.md` v0.162.0, `LIVE_TODO.md`.
 

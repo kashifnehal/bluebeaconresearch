@@ -140,6 +140,23 @@ export const COMMODITY_REGISTRY = [
     aliases: ["GASOLINE"],
     filterAnchors: ["gasoline"],
   },
+  // HEATING_OIL added 2026-10-10 (W-ASSETS-ENERGY-3 part 3/3): quoteCurrency
+  // USD per the probe (HO=F, price ~4.74). Alias/filterAnchor sourced from
+  // real stored headlines — no literal "heating oil"/"ULSD" headline exists
+  // yet, but "diesel" (the real-world fuel this NYMEX contract tracks)
+  // appears repeatedly in signals.title (e.g. "Diesel prices soar past $6 a
+  // gallon").
+  {
+    symbol: "HEATING_OIL",
+    label: "Heating Oil / ULSD",
+    unit: "USD/gal",
+    category: "energy",
+    yahooTicker: "HO=F",
+    provider: "yahoo",
+    quoteCurrency: "USD",
+    aliases: ["DIESEL"],
+    filterAnchors: ["diesel"],
+  },
 ] as const;
 
 export const COMMODITIES = [
@@ -165,6 +182,7 @@ export const COMMODITIES = [
   // list must too or they never show up anywhere in the product.
   { symbol: "TTF_GAS", label: "European Gas (TTF)", unit: "EUR/MWh", category: "energy" },
   { symbol: "RBOB", label: "RBOB Gasoline", unit: "USD/gal", category: "energy" },
+  { symbol: "HEATING_OIL", label: "Heating Oil / ULSD", unit: "USD/gal", category: "energy" },
 ] as const;
 
 // Forex pairs (#87). The same six the classifier emits

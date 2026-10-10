@@ -13,6 +13,17 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Docs: this entry; brain/claude_project `06_COMPONENTS.md`, `05_API.md`. Skipped `04_DATABASE` (no migration), `18_AI_ENGINE` (no prompt/model change), both `10_DECISIONS.md` (not a standing rule — a wording/display change), claude_project `09_BACKLOG`/`08_CURRENT_STATUS`/`14_CHANGELOG` (no existing backlog ticket for this ad-hoc task).
 - Verification: `pnpm --filter web test` — 240/240 passing (incl. new `price-baseline.test.ts`), 0 failures. `pnpm --filter web exec tsc --noEmit` clean. `pnpm --filter web run build` (real `next build`, Turbopack) succeeded, all routes compiled. Not browser-walked (data-correctness/backend-logic change, not a rendering/interaction bug — see CLAUDE.md session-efficiency rule).
 
+## W-ASSETS-ENERGY-3 part 3/3 — HEATING_OIL added, `packages/shared` + `apps/backend` + `apps/web`, 2026-10-10, this commit
+
+- Added `HEATING_OIL` ("Heating Oil / ULSD", `HO=F`, USD/gal, category `energy`) to `COMMODITY_REGISTRY`, the hand-kept `COMMODITIES` display list, `apps/backend/src/routes/commodities.ts`, and `apps/web/lib/signal-filters.ts`'s `FILTER_COMMODITIES`. **W-ASSETS-ENERGY-3 is now complete — TTF_GAS, RBOB, and HEATING_OIL are all live.**
+- Yahoo ticker/currency verified against the 2026-10-10 probe (`HO=F`, USD, price ~4.74 — consistent with USD/gal).
+- Alias (`"DIESEL"`) and filter anchor (`"diesel"`) sourced only from real stored `signals.title` text (15 rows, e.g. "Diesel prices soar past $6 a gallon", "Russian Diesel Export Ban Offsets Crude Sales Growth"). No literal "heating oil" or "ULSD" headline exists in stored data — diesel is the real-world fuel this NYMEX heating-oil/ULSD contract actually tracks and the term news coverage uses, so it was used instead of inventing an alias that doesn't appear anywhere.
+- `apps/backend/src/workers/gnews-collector.ts`'s search query gained `OR diesel`.
+- Parity fixture updated with the new `HEATING_OIL` entries.
+- Tests added: `claude.service.test.ts` ("'Diesel' returns HEATING_OIL"), `commodities.test.ts`, `signal-filters.test.ts` — same shape as parts 1–2.
+- **Verification:** `pnpm --filter backend test` and `pnpm --filter web test`: all passing. Type-check clean (same pre-existing unrelated `probe-yahoo-tickers.ts` error noted in part 1/3). Live classification check (same direct-Anthropic-call technique, ingestion budget still exhausted all day): all 15 real stored "diesel" headlines correctly tagged HEATING_OIL — **15 correct of 15**. Across the full W-ASSETS-ENERGY-3 batch: **21 correct of 21** real stored headlines (4 TTF_GAS + 2 RBOB + 15 HEATING_OIL).
+- Docs: this entry; brain `14_CHANGELOG` v0.163.0, `08_CURRENT_STATUS`; claude_project `14_CHANGELOG` PHASE 140, `08_CURRENT_STATUS`. Skipped the same doc set as parts 1–2, for the same reasons.
+
 ## W-ASSETS-ENERGY-3 part 1/3 — TTF_GAS added, `packages/shared` + `apps/backend` + `apps/web`, 2026-10-10, this commit
 
 - Added `TTF_GAS` ("European Gas (TTF)", `TTF=F`, EUR/MWh, category `energy`) to `COMMODITY_REGISTRY` (`packages/shared/src/constants/commodities.ts`), plus the hand-kept `COMMODITIES` display list, `apps/backend/src/routes/commodities.ts`, and `apps/web/lib/signal-filters.ts`'s `FILTER_COMMODITIES` — same per-asset pattern as COPPER/XAGUSD/USDINR (W7-ASSET-LISTS).

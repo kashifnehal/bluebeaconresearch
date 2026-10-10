@@ -93,3 +93,19 @@ runTest("symbolsForCommodityFilter(cat:energy) includes RBOB", () => {
 runTest("symbolsForCommodityFilter(RBOB) returns just RBOB", () => {
   assert.deepStrictEqual(symbolsForCommodityFilter("RBOB"), ["RBOB"]);
 });
+
+// W-ASSETS-ENERGY-3: HEATING_OIL added to the filter catalog.
+runTest("FILTER_COMMODITIES includes HEATING_OIL with no duplicate symbols", () => {
+  const symbols = FILTER_COMMODITIES.map((c) => c.symbol);
+  assert.ok(symbols.includes("HEATING_OIL"));
+  assert.equal(new Set(symbols).size, symbols.length);
+});
+
+runTest("symbolsForCommodityFilter(cat:energy) includes HEATING_OIL", () => {
+  const symbols = symbolsForCommodityFilter("cat:energy");
+  assert.ok(symbols.includes("HEATING_OIL"));
+});
+
+runTest("symbolsForCommodityFilter(HEATING_OIL) returns just HEATING_OIL", () => {
+  assert.deepStrictEqual(symbolsForCommodityFilter("HEATING_OIL"), ["HEATING_OIL"]);
+});

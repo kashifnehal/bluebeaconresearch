@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-10 (W-ASSETS-ENERGY-3 part 2/3 — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-10 (W-ASSETS-ENERGY-3 part 3/3, complete — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-10 (W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, `packages/shared` + `apps/backend` + `apps/web`, this commit) — added `HEATING_OIL` (Heating Oil / ULSD, `HO=F`, USD/gal) to `COMMODITY_REGISTRY` and the hand-kept catalog lists — final of 3 new energy assets; W-ASSETS-ENERGY-3 complete (TTF_GAS, RBOB, HEATING_OIL). Alias/filter anchor sourced only from words already in stored headlines ("diesel"). Real Anthropic classification verified against all 15 stored headlines: 15/15 correct (21/21 across all 3 assets). Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.163.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 140.
 
 > ⚠️ NEW 2026-10-10 (W-ASSETS-ENERGY-3 part 2/3: RBOB added, `packages/shared` + `apps/backend` + `apps/web`, this commit) — added `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) to `COMMODITY_REGISTRY` and the hand-kept catalog lists — second of 3 new energy assets. Alias/filter anchor sourced only from words already in stored headlines ("gasoline"). Real Anthropic classification verified against 2 stored headlines: 2/2 correct. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.162.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 139.
 
