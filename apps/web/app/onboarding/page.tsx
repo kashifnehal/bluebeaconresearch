@@ -125,6 +125,10 @@ export default function OnboardingPage() {
     { value: "trader", label: "Trader" },
     { value: "analyst", label: "Analyst" },
     { value: "risk", label: "Risk Manager" },
+    { value: "physical", label: "Physical trader / merchant" },
+    { value: "procurement", label: "Procurement / buyer" },
+    { value: "researcher", label: "Research / strategy" },
+    { value: "treasury", label: "Treasury / FX" },
     { value: "other", label: "Other" },
   ];
 

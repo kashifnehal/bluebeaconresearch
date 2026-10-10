@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## Onboarding use-case options expanded, `apps/web/app/onboarding/page.tsx`, 2026-10-10
+
+- Added 4 use-case chips to step 1 (`useCaseOptions`): "physical" = Physical trader / merchant, "procurement" = Procurement / buyer, "researcher" = Research / strategy, "treasury" = Treasury / FX. Kept trader/analyst/risk/other. Saved value/column (`user_preferences.use_case`, free text) unchanged.
+- Step 2 market-chip picker (commodities/forex/regions) was untouched — already reads from `COMMODITIES`/`FOREX_PAIRS`/`REGIONS` in `@blue-beacon-research/shared`, no new asset hard-coded.
+- **Did not add** the "Another market you follow (optional)" free-text field: checked all `user_preferences` migrations (`20260101000000_init_schema.sql` through `20260911063000_user_preferences_watchlist.sql`) and there is no jsonb or spare free-text column it could write to without a new migration — `use_case` is already spoken for, `equity_tickers`/`forex_pairs`/`commodities`/`watchlist_symbols` are all typed symbol arrays, not freeform text. Per the task's explicit stop condition, no migration was written. A real fix needs a new column (e.g. `requested_market text`) added deliberately, not squeezed into this task.
+- Skip-for-now behavior (empty arrays) and copy ("AI-powered research platform", no buy/sell wording) were already correct, no change needed.
+- Docs: this entry only. Skipped `05_API` (no route), `04_DATABASE` (no migration — see note above), `18_AI_ENGINE` (no prompt change), `06_COMPONENTS` (no new component, edit to an existing page), both `10_DECISIONS.md` (not a standing rule), claude_project `09_BACKLOG`/`08_CURRENT_STATUS`/`14_CHANGELOG` (no existing backlog ticket to close — this was a direct ad-hoc request, not a tracked item).
+- Verification: `pnpm --filter web exec tsc --noEmit` clean; `pnpm --filter web test -- --run` full suite passing. No onboarding-specific test file exists. Not browser-walked (not required for this change).
+
 ## W16c — market-impact magnitude excludes unchanged (closed-market) rows, `apps/web` only, 2026-10-10 (`f65439a`)
 
 - `signal_outcomes` has 30.6% of 1h rows / 25.7% of 4h rows at `actual_pct_change` exactly 0 (844 of 876 weekend-UTC 1h rows) — the recorded price didn't move at all, usually because the market was closed, but these were being counted as real zero moves in the magnitude median and sample size. `computeMarketImpactMagnitude` (`lib/market-impact-assessment.ts`) now splits moved (`!== 0`) vs. unchanged (`=== 0`) values, medians only the moved ones, gates `minSampleSize` against the moved count, and returns a new `unchangedCount`. Magnitude sentence (`MarketImpactAssessment.tsx`) now ends "…based on {n} tracked BBR signals with a recorded price change," plus a new line when `unchangedCount > 0`. `MarketImpactChart.tsx` tooltip: `"<value>% (n=<moved>; <unchanged> unchanged left out)"`.
