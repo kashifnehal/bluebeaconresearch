@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { throwIfNoSupabase } from "@/lib/user-error-copy";
 import { COMMODITIES, FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
+import { logUsageEvent } from "@/lib/funnel-events";
 import { ArrowRight, Terminal } from "lucide-react";
 import Image from "next/image";
 
@@ -20,6 +21,7 @@ export default function OnboardingPage() {
   const [commodities, setCommodities] = useState<string[]>([]);
   const [forexPairs, setForexPairs] = useState<string[]>([]);
   const [regions, setRegions] = useState<string[]>([]);
+  const [otherMarket, setOtherMarket] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Pre-fill name from OAuth metadata; redirect to /dashboard if already onboarded
@@ -104,6 +106,11 @@ export default function OnboardingPage() {
             { onConflict: "user_id" },
           );
         if (prefsError) throw prefsError;
+
+        const trimmedOtherMarket = otherMarket.trim();
+        if (trimmedOtherMarket) {
+          logUsageEvent("market_requested", { text: trimmedOtherMarket }, false);
+        }
       }
 
       toast.success("Profile initialized successfully");
@@ -438,6 +445,36 @@ export default function OnboardingPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <label
+                  style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    fontSize: "11px",
+                    color: "#bbcac0",
+                  }}
+                >
+                  Another market you follow (optional)
+                </label>
+                <input
+                  type="text"
+                  value={otherMarket}
+                  onChange={(e) => setOtherMarket(e.target.value.slice(0, 120))}
+                  maxLength={120}
+                  placeholder="e.g. lithium, palladium, USD/ZAR"
+                  style={{
+                    backgroundColor: "#1c1b1b",
+                    border: "1px solid rgba(60,74,66,0.3)",
+                    borderRadius: "4px",
+                    padding: "10px 14px",
+                    color: "#e5e2e1",
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: "14px",
+                  }}
+                />
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
