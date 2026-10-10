@@ -345,6 +345,8 @@ Event-detail ANALYSIS tab also has a "Why this signal" `<details>` (below Full A
 
 > ⚠️ UPDATED 2026-09-27 (Phase 2 of #227 — historical-pattern chart) — new `MarketImpactChart.tsx` component: a small `recharts` bar chart of the same per-checkpoint (1h/4h/24h/48h) median % move Phase 1 already computes, rendered next to the magnitude sentence behind a collapsed-by-default `<details>` toggle. No new dependency, no new DB query. Full detail: `docs/brain/06_COMPONENTS.md` §3.3b, `docs/brain/05_API.md`.
 
+> ⚠️ UPDATED 2026-10-10 (`da119e6`) — `signal_outcomes` has a large share of rows (30.6% at 1h, 25.7% at 4h) where the recorded price didn't change at all (usually a closed weekend market); these were previously counted as real zero moves in the magnitude's median/sample size. The magnitude calculation now excludes them from the median and reports them separately as `unchangedCount`; the sentence now ends "…based on {n} tracked BBR signals **with a recorded price change**," with a new line when any were excluded: "{n} other tracked signals had an unchanged recorded price (usually a closed market) and are left out." The "played out {within hours/within a day/multi-day}" time-horizon line was removed — the 48h checkpoint has the largest median move for all 6 tracked assets, so that line always said "multi-day" and carried no information. The Calendar page's per-asset magnitude line and the Watchlist drill-down's price-move sentence got matching wording. Full detail: `docs/brain/06_COMPONENTS.md` §3.3b.
+
 ---
 
 ### BreakingAlertBanner (apps/web/components/signals/BreakingAlertBanner.tsx)
