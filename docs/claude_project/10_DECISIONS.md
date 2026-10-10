@@ -429,6 +429,8 @@
 - Never add features that WorldMonitor already does well (raw feed breadth, country risk scores, webcams)
 - BBR's moat is: geopolitical event → specific commodity impact → personalized alert → before markets open
 
+**Clarification (2026-10-10):** This bans a race for the longest asset list. It does not ban adding assets inside our domain when users need them and coverage-state evidence exists.
+
 ---
 
 ## D15: Validation-Before-Build Discipline
@@ -470,6 +472,8 @@
 **Rationale:**
 - Cheap to build if bundled with planned personalization work, but not validated enough to build blind.
 - Keeping it explicitly "evaluation-stage" prevents it drifting into roadmap docs as a commitment.
+
+**Superseded in practice by ADR 034 (no equities).**
 
 **Cross-tree mapping:** Recorded as **ADR 013** in `docs/brain/10_DECISIONS.md`.
 
@@ -805,3 +809,13 @@ Also decided as part of this same pass:
 **Rationale:** Confirms the existing $2/day default as the deliberate, founder-set figure rather than an unreviewed fallback, and puts a short, dated review window on it instead of leaving it open-ended.
 
 **Cross-tree mapping:** Recorded as **ADR 038** in `docs/brain/10_DECISIONS.md`.
+
+## D43: Price-Data Rights Memo Required Before Paid-Product Use
+
+**Decision:** A price-data rights memo must be completed before any price-data source is used for the paid product. Yahoo Finance (via `yahoo-finance2`) is a development and test source only until then.
+
+**Context:** BBR's live price sync (`price-syncer.ts`, `price-history.ts`, `prices.ts`) currently uses Yahoo Finance data via the `yahoo-finance2` package. No rights/licensing review of that source for paid-product use has been done.
+
+**Rationale:** Shipping a paid product on a data source without a completed rights review is a legal exposure the team has not evaluated; gating paid-product use behind a memo keeps Yahoo usable for development and testing without implying it has been cleared for commercial use.
+
+**Cross-tree mapping:** Recorded as **ADR 039** in `docs/brain/10_DECISIONS.md`.

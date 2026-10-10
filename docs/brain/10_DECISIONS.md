@@ -276,6 +276,8 @@ Forex and equity swing/day-trader expansion is a scoped, prompt-ready, evaluatio
 - The schema extension is cheap if bundled with planned personalization work, but not validated enough to build blind.
 - Keeping it explicitly "evaluation-stage" prevents it drifting into roadmap docs as a commitment — the framing error ADR 012 addresses for market size, applied to roadmap.
 
+**Superseded in practice by ADR 034 (no equities).**
+
 ### Cross-tree mapping
 
 Recorded as **D17** in `docs/claude_project/10_DECISIONS.md`.
@@ -803,3 +805,21 @@ Confirms the existing $2/day default as the deliberate, founder-set figure rathe
 ### Cross-tree mapping
 
 Recorded as **D42** in `docs/claude_project/10_DECISIONS.md`.
+
+## 40. ADR 039: Price-Data Rights Memo Required Before Paid-Product Use
+
+### Context
+
+BBR's live price sync (`price-syncer.ts`, `price-history.ts`, `prices.ts`) currently uses Yahoo Finance data via the `yahoo-finance2` package. No rights/licensing review of that source for paid-product use has been done.
+
+### Decision
+
+A price-data rights memo must be completed before any price-data source is used for the paid product. Yahoo Finance (via `yahoo-finance2`) is a development and test source only until then.
+
+### Rationale
+
+Shipping a paid product on a data source without a completed rights review is a legal exposure the team has not evaluated; gating paid-product use behind a memo keeps Yahoo usable for development and testing without implying it has been cleared for commercial use.
+
+### Cross-tree mapping
+
+Recorded as **D43** in `docs/claude_project/10_DECISIONS.md`.

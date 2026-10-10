@@ -184,18 +184,18 @@ FX/macro traders are the second major fit because central-bank decisions, econom
 
 Potential BBR user-mix hypothesis (NOT market statistics; these are internal hypotheses):
 
-| User type | Hypothesized BBR share | Why they care |
-|---|---:|---|
-| Discretionary commodity/futures trader | 22% | Needs fast, relevant interpretation of events affecting contracts |
-| FX/macro trader | 15% | Needs geopolitical + macro context and market mechanism |
-| Energy/physical commodity trader | 12% | Needs supply, logistics, sanctions and disruption intelligence |
-| Hedge-fund / prop portfolio manager | 10% | Needs cross-asset event intelligence and risk context |
-| Equity swing / macro trader | 9% | Needs company/sector exposure to macro/geopolitical events |
-| Quant / systematic researcher | 8% | Needs point-in-time event data and historical outcomes |
-| Multi-asset independent trader/investor | 8% | Wants a single place to understand important world events |
-| Corporate treasury / procurement / hedging | 6% | Needs event-driven exposure/risk awareness |
-| Sell-side / independent market researcher | 6% | Needs structured evidence and historical context |
-| Geopolitical / country-risk professional | 4% | Needs event monitoring and market relevance |
+| User type | Why they care | Evidence status |
+|---|---|---|
+| Discretionary commodity/futures trader | Needs fast, relevant interpretation of events affecting contracts | Internal hypothesis, no source |
+| FX/macro trader | Needs geopolitical + macro context and market mechanism | Internal hypothesis, no source |
+| Energy/physical commodity trader | Needs supply, logistics, sanctions and disruption intelligence | Internal hypothesis, no source |
+| Hedge-fund / prop portfolio manager | Needs cross-asset event intelligence and risk context | Internal hypothesis, no source |
+| Equity swing / macro trader | Needs company/sector exposure to macro/geopolitical events | Conflicts with ADR 034 (no equities). Not a target segment. |
+| Quant / systematic researcher | Needs point-in-time event data and historical outcomes | Internal hypothesis, no source |
+| Multi-asset independent trader/investor | Wants a single place to understand important world events | Internal hypothesis, no source |
+| Corporate treasury / procurement / hedging | Needs event-driven exposure/risk awareness | Internal hypothesis, no source |
+| Sell-side / independent market researcher | Needs structured evidence and historical context | Internal hypothesis, no source |
+| Geopolitical / country-risk professional | Needs event monitoring and market relevance | Internal hypothesis, no source |
 
 These percentages must **not** be presented as externally validated market shares.
 

@@ -77,7 +77,7 @@ These were explicitly discussed and rejected or deferred:
 
 6. **Not a general news aggregator.** We are not Reuters, Bloomberg News, or Google News. We are a signal engine, not a news feed.
 
-7. **Not a 25-layer OSINT dashboard.** WorldMonitor already exists and is free with 59K GitHub stars. Competing on breadth of data layers is a losing strategy. We compete on depth of analysis and personalization.
+7. **Not a 25-layer OSINT dashboard.** WorldMonitor already exists and is free with 59K GitHub stars. Competing on breadth of data layers is a losing strategy. We compete on depth of analysis and personalization. This bans a race for the longest asset list. It does not ban adding assets inside our domain when users need them and coverage-state evidence exists.
 
 8. **Not a military intelligence tool.** Despite the dark terminal aesthetic, BBR is for market participants, not government agencies or defense contractors.
 
@@ -95,28 +95,28 @@ These were explicitly discussed and rejected or deferred:
 - Does not have access to Bloomberg Terminal ($24K/year)
 - Currently cobbling together information from Twitter, CNBC, WhatsApp groups
 - Pain point: finds out about overnight geopolitical events AFTER markets have already moved
-- Willingness to pay: $49–$199/month
+- Willingness to pay: $49–$199/month (not independently sourced as of 2026-10-10)
 - Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
 
 **Tier 2: Small Investment Teams / Independent Analysts**
 - 2–10 person shops: boutique hedge funds, family offices, independent research shops
 - Have Bloomberg for data but need faster geopolitical context
 - Pain point: manually monitoring geopolitical developments is a full-time job
-- Willingness to pay: $199–$499/month per seat
+- Willingness to pay: $199–$499/month per seat (not independently sourced as of 2026-10-10)
 - Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
 
 **Tier 3: Import/Export SMBs**
 - Businesses importing commodities with direct price exposure: food importers, fuel distributors, textile manufacturers using cotton/synthetic inputs
 - Currently have NO early warning system for supply chain geopolitical risk
 - Pain point: found out about Black Sea grain disruption from their supplier, not before
-- Willingness to pay: $49–$199/month
+- Willingness to pay: $49–$199/month (not independently sourced as of 2026-10-10)
 - Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
 
 **Tier 4: Quant/Algo Traders (API Tier)**
 - Building automated trading systems that need structured geopolitical signal data
 - Need JSON API with webhook delivery
 - Want signal taxonomy that maps to commodity instrument codes
-- Willingness to pay: $499/month for API access
+- Willingness to pay: $499/month for API access (not independently sourced as of 2026-10-10)
 - Size of market: not independently sourced as of 2026-08-30 (see market-size note below)
 
 > **Market-size note (2026-08-30):** The per-tier population figures previously stated in this section ("2.5M+", "~800K", "800K+", "~50K") were not traceable to any regulator, exchange body, or trade-association count and have been removed rather than replaced with a new estimate. Do not reintroduce a precise figure until one can be cited to a checkable source. See internal research on user segments and market scope, and ADR 012 (`docs/brain/10_DECISIONS.md`) / D16 (`docs/claude_project/10_DECISIONS.md`).
@@ -208,6 +208,6 @@ These guardrails were established and must be maintained by any future CTO:
 2. Must never position as "an AI tool" — always "AI-powered research platform with analyst team"
 3. Must never focus only on India — global positioning is non-negotiable
 4. Must never clutter the UI with data layers — simplicity is the product
-5. Must never compete on breadth against WorldMonitor — compete on depth and personalization
+5. Must never compete on breadth against WorldMonitor — compete on depth and personalization. This bans a race for the longest asset list. It does not ban adding assets inside our domain when users need them and coverage-state evidence exists.
 6. Must never promise specific returns or accuracy guarantees in marketing
 7. Must always include the disclaimer: "Intelligence for informational purposes only. Not financial advice."

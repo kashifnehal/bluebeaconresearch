@@ -131,7 +131,7 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 
 **What it is:** Geopolitical intelligence → structured market signals → Telegram alerts before markets open. 1/40th the cost of Bloomberg.
 
-**Domain (2026-10-09):** BBR is an AI-powered research platform that turns geopolitical and economic events into commodity- and currency-relevant signals. Breadth means more markets and event channels within that domain; it does not mean general news, equities research or crypto.
+**Domain (2026-10-09):** BBR is an AI-powered research platform that turns geopolitical and economic events into commodity- and currency-relevant signals. Breadth means more markets and event channels within that domain; it does not mean general news, equities research or crypto. Domain unchanged: geopolitical and economic events turned into commodity and currency signals.
 
 **Who it's for:** Commodity traders (oil, gold, wheat futures), import/export SMBs, boutique fund analysts, quant/algo builders.
 - **Forex traders — shipped.** Currency-pair signals, personalization, and alert/digest matching for the 6 majors (EUR/USD, GBP/USD, USD/JPY, USD/CHF, USD/RUB, USD/CNY) are live end-to-end (#87, all 3 phases, 2026-09-09).
@@ -324,7 +324,7 @@ slack_connected_at   TIMESTAMPTZ
 
 **What to NEVER do:**
 - Never suggest rewriting the stack
-- Never add features competing with WorldMonitor on breadth (more data feeds, data layers)
+- Never add features competing with WorldMonitor on breadth (more data feeds, data layers). This bans a race for the longest asset list. It does not ban adding assets inside our domain when users need them and coverage-state evidence exists.
 - Never make buy/sell recommendations in signal copy or UI
 - Never call it "an AI tool" — always "a research platform"
 - Never state or imply how recently BBR's real data history began (D19 / ADR 015)

@@ -3,6 +3,18 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## Doc cleanup — willingness-to-pay sourcing caveats, breadth-ban clarification, user-mix evidence column, ADR 013/034 cross-link, new price-data-rights ADR (docs only, 2026-10-10)
+
+- Task as pasted named two source files, `claude/328_BREADTH_USERS_AND_ASSETS_RESEARCH_2026-10-10.md` and `claude/314_COMPETITOR_FULL_FEATURE_REGISTER_PERMUTABLE_RAVENPACK_ALPHASENSE_2026-10-07.md` (items 1-2), plus a `claude/336` cross-reference (items 3/5/6). None exist anywhere in this repo or its git history. Per founder direction, items 1-2 were **skipped entirely** — not fabricated from scratch — and the dangling `(see claude/336)` citation was dropped from the clarification sentence written into items 3/5/6 rather than pointing at a file that doesn't exist.
+- `docs/claude_project/00_PROJECT.md`: appended "(not independently sourced as of 2026-10-10)" to the 4 per-tier willingness-to-pay lines (lines 98/105/112/119 as given in the task). Appended a breadth-ban clarification sentence to guardrail #7 (line 80) and standing-rule #5 (line 211): "This bans a race for the longest asset list. It does not ban adding assets inside our domain when users need them and coverage-state evidence exists."
+- `docs/brain/00_CURRENT_BBR_CONTEXT.md`: user-mix hypothesis table — removed the percentage column, added an "Evidence status" column ("Internal hypothesis, no source" per row except Equity swing/macro trader, which now reads "Conflicts with ADR 034 (no equities). Not a target segment."). Kept the existing "do not treat as market statistics" sentence near the table per the task's instruction.
+- `docs/claude_project/10_DECISIONS.md` D14 and `docs/claude_project/21_PROJECT_BRIEFING.md` (line ~326 "no breadth" bullet): same clarification sentence appended.
+- `docs/claude_project/21_PROJECT_BRIEFING.md` domain statement (line ~134): appended "Domain unchanged: geopolitical and economic events turned into commodity and currency signals."
+- ADR 013 (`docs/brain/10_DECISIONS.md`) / D17 (`docs/claude_project/10_DECISIONS.md`): both gained "Superseded in practice by ADR 034 (no equities)." — verified against the actual ADR 034/D38 text (founder decision Oct 5 2026 confirms D2b, no equities, stands) before writing.
+- New decision pair added to both `10_DECISIONS.md` files (D43 / ADR 039): price-data rights memo required before any price-data source is used for the paid product; Yahoo via `yahoo-finance2` stays dev/test-only until then.
+- Docs: all changes above ARE the doc-sync requirement for this task — no `05_API`/`04_DATABASE`/`18_AI_ENGINE`/`06_COMPONENTS` touch (no route/table/prompt/component changed), no `claude_project` 09/08/14 touch (not a shipped feature, nothing to close in the backlog/status/changelog trio).
+- Verification: grepped for the two missing source files and `claude/336` across the full repo + git history (none found); read ADR 013/ADR 034 and D17/D38 in full before writing the "superseded in practice" line; no code changed, no test run needed.
+
 ## Onboarding use-case options expanded, `apps/web/app/onboarding/page.tsx`, 2026-10-10
 
 - Added 4 use-case chips to step 1 (`useCaseOptions`): "physical" = Physical trader / merchant, "procurement" = Procurement / buyer, "researcher" = Research / strategy, "treasury" = Treasury / FX. Kept trader/analyst/risk/other. Saved value/column (`user_preferences.use_case`, free text) unchanged.
