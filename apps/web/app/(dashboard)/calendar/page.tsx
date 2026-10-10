@@ -15,6 +15,7 @@ import {
   type MarketImpactMagnitude,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
+import type { WindowMoveBaseline } from "@/lib/price-baseline";
 
 type Impact = CalendarImpact;
 
@@ -41,6 +42,7 @@ type TimeZoneMode = "utc" | "local";
 type CalendarMarketImpactEntry = {
   magnitude: MarketImpactMagnitude | null;
   timeHorizonLabel: TimeHorizonLabel | null;
+  baselines?: WindowMoveBaseline[];
 };
 
 // Which #227-tracked assets a calendar category's magnitude line should draw
@@ -65,8 +67,16 @@ function magnitudeLinesForEvent(
     const entry = marketImpact[asset];
     if (entry?.magnitude) {
       lines.push(
-        `Events like this have historically moved ${asset} by ~${entry.magnitude.medianMovePct.toFixed(2)}% within ${MARKET_IMPACT_CHECKPOINT_HOURS}h, based on ${entry.magnitude.sampleSize} tracked BBR signals with a recorded price change.`,
+        `Across ${entry.magnitude.sampleSize} tracked BBR signals that listed ${asset}, the price ${MARKET_IMPACT_CHECKPOINT_HOURS} hours after the event time differed from the price at the event time by a median of ~${entry.magnitude.medianMovePct.toFixed(2)}% (up or down).`,
       );
+      const baseline = entry.baselines?.find(
+        (b) => b.windowHours === MARKET_IMPACT_CHECKPOINT_HOURS,
+      );
+      if (baseline) {
+        lines.push(
+          `For comparison, across ${baseline.windowCount} ${asset} price windows from the last ${baseline.spanDays} days (all windows, including ones that had tracked signals; start hours weighted like the tracked signals), the price ${MARKET_IMPACT_CHECKPOINT_HOURS} hours later differed by a median of ~${baseline.medianMovePct.toFixed(2)}% (up or down).`,
+        );
+      }
     }
   }
   return lines;

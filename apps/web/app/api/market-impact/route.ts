@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
+import { fetchMatchedBaselines } from "@/lib/price-baseline-server";
+import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
   computeMarketImpactCheckpoints,
@@ -19,6 +21,7 @@ export type MarketImpactAssessmentEntry = {
   magnitude: MarketImpactMagnitude | null;
   timeHorizonLabel: TimeHorizonLabel | null;
   checkpoints: MarketImpactCheckpointPoint[];
+  baselines: WindowMoveBaseline[];
 };
 
 /**
@@ -61,6 +64,8 @@ export async function GET(req: NextRequest) {
     return apiErrorLogged(500, "db_error", error);
   }
 
+  const baselinesByAsset = await fetchMatchedBaselines(supabase, assets, rows);
+
   const magnitudes: Record<string, MarketImpactAssessmentEntry> = Object.fromEntries(
     assets.map((asset) => [
       asset,
@@ -68,6 +73,7 @@ export async function GET(req: NextRequest) {
         magnitude: computeMarketImpactMagnitude(rows, asset, MARKET_IMPACT_CHECKPOINT_HOURS),
         timeHorizonLabel: deriveTimeHorizonLabel(rows, asset),
         checkpoints: computeMarketImpactCheckpoints(rows, asset),
+        baselines: baselinesByAsset[asset] ?? [],
       } satisfies MarketImpactAssessmentEntry,
     ]),
   );

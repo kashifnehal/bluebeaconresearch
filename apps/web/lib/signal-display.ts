@@ -59,7 +59,7 @@ export function formatPriceSinceFiredSubtext(
   currentPrice: number,
 ): string {
   if (currentPrice === priceAtSignal) {
-    return "Recorded price unchanged since this fired (the market may be closed)";
+    return "Recorded price unchanged since this fired (closed market or unchanged quote)";
   }
   const pct = priceChangePercent(priceAtSignal, currentPrice);
   if (Math.abs(pct) < FLAT_PRICE_CHANGE_THRESHOLD_PCT) {

@@ -87,6 +87,9 @@ export const GRAIN_FALLBACK_SENTENCE =
 export const MARKET_IMPACT_DISCLAIMER =
   "Historical pattern only — not a prediction or investment advice.";
 
+export const MARKET_IMPACT_BASELINE_NOTE =
+  "These are observed price moves, not a test of cause.";
+
 const GRAIN_ASSETS = new Set(["WHEAT", "CORN"]);
 
 export function isGrainAsset(asset: string): boolean {
@@ -108,6 +111,7 @@ export type SignalOutcomeRow = {
   asset: string;
   checkpoint_hours: number;
   actual_pct_change: number | null;
+  eventDate?: string | null;
 };
 
 export type MarketImpactMagnitude = {
@@ -118,7 +122,7 @@ export type MarketImpactMagnitude = {
 
 export type TimeHorizonLabel = "within hours" | "within a day" | "multi-day";
 
-const TIME_HORIZON_CHECKPOINTS = [1, 4, 24, 48] as const;
+export const TIME_HORIZON_CHECKPOINTS = [1, 4, 24, 48] as const;
 
 function timeHorizonLabelForCheckpoint(checkpointHours: number): TimeHorizonLabel {
   if (checkpointHours === 24) return "within a day";
@@ -152,6 +156,16 @@ export function computeMarketImpactMagnitude(
     .map((r) => r.actual_pct_change)
     .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
 
+  // Measured 2026-10-10: of one-hour signal_outcomes rows whose event_date
+  // falls on a Saturday or Sunday (UTC), 839 of 871 have actual_pct_change
+  // exactly 0 (96%); for event_date Monday-Friday (UTC), 200 of 2,666 are
+  // exactly 0 (7.5%). About half of those weekday zeros are in hours where
+  // that asset's unchanged share is 50% or more; for the rest the cause is
+  // not known (closed, halted, or an unchanged quote). This function takes
+  // every tracked signal that listed the asset — it does not select signals
+  // similar to the one on screen — and compares the price nearest
+  // signals.event_date with the price nearest event_date + checkpoint_hours,
+  // i.e. a change between two points, not the largest move inside the window.
   const moved = values.filter((v) => v !== 0);
   const unchangedCount = values.length - moved.length;
 

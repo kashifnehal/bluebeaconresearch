@@ -8,6 +8,8 @@ import { MarketImpactChart } from "@/components/signals/MarketImpactChart";
 import {
   GPR_FALLBACK_SENTENCE,
   GRAIN_FALLBACK_SENTENCE,
+  MARKET_IMPACT_BASELINE_NOTE,
+  MARKET_IMPACT_CHECKPOINT_HOURS,
   MARKET_IMPACT_DISCLAIMER,
   PREVIEW_NOTE,
   collectMarketImpacts,
@@ -21,6 +23,7 @@ import {
   type MarketImpactMagnitude,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
+import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { formatPriceSinceFiredSubtext } from "@/lib/signal-display";
 
 export type MarketImpactPriceRow = {
@@ -53,6 +56,7 @@ export type MarketImpactAssessmentEntry = {
   magnitude: MarketImpactMagnitude | null;
   timeHorizonLabel: TimeHorizonLabel | null;
   checkpoints?: MarketImpactCheckpointPoint[];
+  baselines?: WindowMoveBaseline[];
 };
 
 export function MarketImpactAssessment({
@@ -79,6 +83,11 @@ export function MarketImpactAssessment({
   const novelty = noveltyLabel(signal.novelty);
   const direction = formatImpactDirections(impacts);
   const preview = signal.isPreview === true;
+  const hasAnyBaseline = impacts.some((c) =>
+    marketImpactMagnitudes[c.asset]?.baselines?.some(
+      (b) => b.windowHours === MARKET_IMPACT_CHECKPOINT_HOURS,
+    ),
+  );
 
   return (
     <div data-testid="market-impact-assessment" className="relative space-y-4">
@@ -153,6 +162,9 @@ export function MarketImpactAssessment({
                   const priceInfo = pricesAtSignal.find((p) => p.asset === c.asset);
                   const entry = marketImpactMagnitudes[c.asset];
                   const magnitude = entry?.magnitude ?? null;
+                  const baseline = entry?.baselines?.find(
+                    (b) => b.windowHours === MARKET_IMPACT_CHECKPOINT_HOURS,
+                  );
                   return (
                     <div key={`${c.asset}-${c.direction}`} className="space-y-1">
                       <CommodityChip
@@ -180,10 +192,11 @@ export function MarketImpactAssessment({
                             data-testid="market-impact-magnitude"
                             className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-text-secondary"
                           >
-                            Events like this have historically moved {c.asset} by ~
-                            {magnitude.medianMovePct.toFixed(2)}% within 24h, based on{" "}
-                            {magnitude.sampleSize} tracked BBR signals with a recorded
-                            price change.
+                            Across {magnitude.sampleSize} tracked BBR signals that
+                            listed {c.asset}, the price {MARKET_IMPACT_CHECKPOINT_HOURS}{" "}
+                            hours after the event time differed from the price at the
+                            event time by a median of ~{magnitude.medianMovePct.toFixed(2)}%
+                            (up or down).
                           </p>
                           {magnitude.unchangedCount > 0 ? (
                             <p
@@ -191,8 +204,22 @@ export function MarketImpactAssessment({
                               className="pl-1 text-[11px] leading-snug text-muted"
                             >
                               {magnitude.unchangedCount} other tracked signals had an
-                              unchanged recorded price (usually a closed market) and
-                              are left out.
+                              unchanged recorded price (a closed market or an
+                              unchanged quote) and are left out.
+                            </p>
+                          ) : null}
+                          {baseline ? (
+                            <p
+                              data-testid="market-impact-baseline"
+                              className="pl-1 text-[11px] leading-snug text-muted"
+                            >
+                              For comparison, across {baseline.windowCount} {c.asset}{" "}
+                              price windows from the last {baseline.spanDays} days (all
+                              windows, including ones that had tracked signals; start
+                              hours weighted like the tracked signals), the price{" "}
+                              {MARKET_IMPACT_CHECKPOINT_HOURS} hours later differed by a
+                              median of ~{baseline.medianMovePct.toFixed(2)}% (up or
+                              down).
                             </p>
                           ) : null}
                         </>
@@ -224,6 +251,14 @@ export function MarketImpactAssessment({
                 <p className="pl-1 text-[11px] leading-snug text-muted italic">
                   {MARKET_IMPACT_DISCLAIMER}
                 </p>
+                {hasAnyBaseline ? (
+                  <p
+                    data-testid="market-impact-baseline-note"
+                    className="pl-1 text-[11px] leading-snug text-muted italic"
+                  >
+                    {MARKET_IMPACT_BASELINE_NOTE}
+                  </p>
+                ) : null}
               </div>
             </Part>
           ) : null}

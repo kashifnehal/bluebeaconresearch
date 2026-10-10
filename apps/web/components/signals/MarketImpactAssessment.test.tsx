@@ -7,6 +7,8 @@ import { MarketImpactAssessment } from "./MarketImpactAssessment";
 import {
   GPR_FALLBACK_SENTENCE,
   GRAIN_FALLBACK_SENTENCE,
+  MARKET_IMPACT_BASELINE_NOTE,
+  MARKET_IMPACT_CHECKPOINT_HOURS,
   MARKET_IMPACT_DISCLAIMER,
   PREVIEW_NOTE,
 } from "@/lib/market-impact-assessment";
@@ -171,9 +173,13 @@ runTest("magnitude line renders when the asset clears the sample-size gate, no h
   const text = visibleText(html);
   assert.match(html, /data-testid="market-impact-magnitude"/);
   assert.equal(html.includes('data-testid="market-impact-horizon"'), false);
-  assert.match(text, /historically moved USOIL by ~0\.97% within 24h/);
-  assert.match(text, /based on 1232 tracked BBR signals with a recorded price change/);
+  assert.match(
+    text,
+    /Across 1232 tracked BBR signals that listed USOIL, the price 24 hours after the event time differed from the price at the event time by a median of ~0\.97% \(up or down\)\./,
+  );
   assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
+  assert.equal(text.includes("Events like this have historically moved"), false);
+  assert.equal(text.includes("within 24h"), false);
 });
 
 runTest("unchanged-count note renders only when unchangedCount is greater than zero", () => {
@@ -194,7 +200,7 @@ runTest("unchanged-count note renders only when unchangedCount is greater than z
   assert.match(withUnchanged, /data-testid="market-impact-unchanged-note"/);
   assert.match(
     visibleText(withUnchanged),
-    /844 other tracked signals had an unchanged recorded price \(usually a closed market\) and are left out\./,
+    /844 other tracked signals had an unchanged recorded price \(a closed market or an unchanged quote\) and are left out\./,
   );
 
   const withoutUnchanged = renderToStaticMarkup(
@@ -293,6 +299,76 @@ runTest("grain fallback sentence renders for WHEAT/CORN with no magnitude entry,
   const text = visibleText(html);
   assert.equal(text.includes(GRAIN_FALLBACK_SENTENCE), true);
   assert.equal(text.includes("Not enough tracked history"), false);
+});
+
+runTest("baseline line renders alongside the tracked-signal number; baseline note renders once", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "OPEC+ output cut tightens crude supply.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+          timeHorizonLabel: "multi-day",
+          baselines: [
+            {
+              windowHours: MARKET_IMPACT_CHECKPOINT_HOURS,
+              medianMovePct: 1.46,
+              windowCount: 1204,
+              eventRowsMatched: 1232,
+              spanDays: 88,
+            },
+          ],
+        },
+      },
+    }),
+  );
+  const text = visibleText(html);
+  assert.match(html, /data-testid="market-impact-baseline"/);
+  assert.match(
+    text,
+    /For comparison, across 1204 USOIL price windows from the last 88 days \(all windows, including ones that had tracked signals; start hours weighted like the tracked signals\), the price 24 hours later differed by a median of ~1\.46% \(up or down\)\./,
+  );
+  assert.match(html, /data-testid="market-impact-baseline-note"/);
+  assert.equal(text.includes(MARKET_IMPACT_BASELINE_NOTE), true);
+  for (const forbidden of [
+    "higher",
+    "lower",
+    "more than",
+    "less than",
+    "bigger",
+    "smaller",
+    "unusual",
+    "normal",
+    "event-free",
+  ]) {
+    assert.equal(
+      text.toLowerCase().includes(forbidden),
+      false,
+      `forbidden word rendered: ${forbidden}`,
+    );
+  }
+});
+
+runTest("baseline note does not render when no asset has a matching baseline", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "OPEC+ output cut tightens crude supply.",
+        commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+          timeHorizonLabel: "multi-day",
+        },
+      },
+    }),
+  );
+  assert.equal(html.includes('data-testid="market-impact-baseline-note"'), false);
+  assert.equal(html.includes('data-testid="market-impact-baseline"'), false);
 });
 
 runTest("is_preview shows the calendar note and link", () => {

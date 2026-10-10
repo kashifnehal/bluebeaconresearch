@@ -910,7 +910,7 @@ export default function WatchlistSymbolPage() {
                       {move.status === "insufficient-data" &&
                         "Not enough price history around this signal to measure a move."}
                       {move.status === "unchanged" &&
-                        `Recorded price unchanged in the ${move.windowHours}h after this signal (the market may have been closed).`}
+                        `Recorded price unchanged in the ${move.windowHours}h after this signal (closed market or unchanged quote).`}
                       {move.status === "ok" &&
                         `Price moved ${move.pct >= 0 ? "+" : ""}${move.pct.toFixed(2)}% in the ${move.windowHours}h following this signal ($${move.baselinePrice.toFixed(2)} at ${formatUtcHHMM(move.baselineFetchedAt)} → $${move.targetPrice.toFixed(2)} at ${formatUtcHHMM(move.targetFetchedAt)}).`}
                     </p>

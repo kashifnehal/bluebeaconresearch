@@ -69,7 +69,7 @@ runTest("exact-equal price shows the unchanged/closed-market copy, not +0.0%", (
   const unchanged = formatPriceSinceFiredSubtext("USOIL", 100.05, 100.05);
   assert.equal(
     unchanged,
-    "Recorded price unchanged since this fired (the market may be closed)",
+    "Recorded price unchanged since this fired (closed market or unchanged quote)",
   );
   assert.equal(unchanged.includes("+0.0%"), false);
 });

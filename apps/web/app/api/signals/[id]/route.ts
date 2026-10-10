@@ -4,6 +4,8 @@ import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
+import { fetchMatchedBaselines } from "@/lib/price-baseline-server";
+import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
 import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
 import {
@@ -63,6 +65,7 @@ export type MarketImpactAssessmentEntry = {
   magnitude: MarketImpactMagnitude | null;
   timeHorizonLabel: TimeHorizonLabel | null;
   checkpoints: MarketImpactCheckpointPoint[];
+  baselines: WindowMoveBaseline[];
 };
 
 export type EventDetailResponse = {
@@ -326,6 +329,7 @@ export async function GET(
   let marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry> = {};
   if (magnitudeAssets.length > 0) {
     const rows = await fetchSignalOutcomeRows(supabase, magnitudeAssets);
+    const baselinesByAsset = await fetchMatchedBaselines(supabase, magnitudeAssets, rows);
     marketImpactMagnitudes = Object.fromEntries(
       magnitudeAssets.map((asset) => [
         asset,
@@ -337,6 +341,7 @@ export async function GET(
           ),
           timeHorizonLabel: deriveTimeHorizonLabel(rows, asset),
           checkpoints: computeMarketImpactCheckpoints(rows, asset),
+          baselines: baselinesByAsset[asset] ?? [],
         } satisfies MarketImpactAssessmentEntry,
       ]),
     );
