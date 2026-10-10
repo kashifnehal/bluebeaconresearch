@@ -22,6 +22,9 @@ export const FILTER_COMMODITIES = [
   { symbol: "COPPER", label: "Copper", unit: "USD/lb", category: "metals" },
   { symbol: "XAGUSD", label: "Silver", unit: "USD/oz", category: "metals" },
   { symbol: "USDINR", label: "USD/INR", unit: "", category: "fx" },
+  // TTF_GAS / RBOB / HEATING_OIL added W-ASSETS-ENERGY-3 (2026-10-10), same
+  // reasoning as the comment above.
+  { symbol: "TTF_GAS", label: "European Gas (TTF)", unit: "EUR/MWh", category: "energy" },
 ] as const;
 
 export type FilterCommodity = (typeof FILTER_COMMODITIES)[number];

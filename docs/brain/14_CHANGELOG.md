@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.161.0 — W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added (2026-10-10, this commit)
+
+`packages/shared` + `apps/backend` + `apps/web`. First of 3 new energy assets added to `COMMODITY_REGISTRY`, each its own commit: `TTF_GAS` (European Gas/TTF, `TTF=F`, EUR/MWh). Yahoo ticker/currency verified via the 2026-10-10 probe; alias/filter anchor ("european gas") sourced only from words already in stored `signals.title`. Also fixed 3 files that hand-listed the commodity ticker union in a prompt string instead of deriving it from the registry (`claude.service.ts`, `replay-gate.ts`, `backfill-commodity-impacts.ts`) and `apps/web/app/api/prices/route.ts`'s hardcoded `SYMBOLS`. Real Anthropic classification check against 4 stored headlines: 4/4 correct. Full detail: `LIVE_TODO.md`.
+
 ### v0.160.0 — W-REGISTRY: single commodity-asset registry (2026-10-10, this commit)
 
 `packages/shared` + 4 `apps/backend` files. New `COMMODITY_REGISTRY` export (`packages/shared/src/constants/commodities.ts`) consolidates every per-commodity-asset fact — Yahoo ticker, Claude classifier allowlist/aliases, RSS relevance-filter anchor words — that was hand-duplicated across `price-syncer.ts` (`COMMODITY_SYMBOLS`), `claude.service.ts` (`ALLOWED_COMMODITY_ASSETS`/`COMMODITY_ASSET_ALIASES`), `relevance-filter.ts` (`TRACKED_COMMODITY_NAMES`), and `price-history.ts` (`YAHOO_TICKERS`'s commodity half). All four now derive from the registry; no asset added, no ticker/alias/anchor value changed, forex logic (`FOREX_SYMBOLS`/`FOREX_PAIRS`) untouched. `COMMODITIES` itself stays a separate hand-kept literal (guards a literal-union type `chokepoints.ts` depends on), checked against the registry by a parity test. Required adding `@blue-beacon-research/shared` as an `apps/backend` dependency — see ADR 040 — and `"type": "module"` in `packages/shared/package.json` to fix `tsx`/Node ESM-CJS interop silently dropping the package's named exports. Full detail: `LIVE_TODO.md`.

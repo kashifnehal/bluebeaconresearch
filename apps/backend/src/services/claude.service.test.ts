@@ -1232,6 +1232,52 @@ async function main() {
     }
   });
 
+  // ── W-ASSETS-ENERGY-3 — TTF_GAS alias normalization ────────────────────
+
+  await runTest("normalizeCommodityAsset: 'European Gas' returns TTF_GAS", async () => {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 6,
+                confidence: 0.7,
+                commodityImpacts: [{ asset: "European Gas", direction: "up", confidence: 0.8 }],
+                currencyPairImpacts: [],
+                isBreaking: false,
+                summary: "European gas prices climb on supply risk",
+                region: "eastern-europe",
+                materialityPass: true,
+                materialityReasoning: "real market mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Hormuz tensions push european gas prices higher",
+        summary: "Shipping disruption raises supply concerns.",
+        event_type: "news",
+        country: "Iran",
+        event_date: new Date().toISOString(),
+      });
+      assert.deepStrictEqual(
+        classification.commodityImpacts.map((impact) => impact.asset),
+        ["TTF_GAS"],
+      );
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
+
   await runTest(
     "normalizeCommodityAsset: a Chile copper strike story tagged 'Copper' no longer returns USOIL",
     async () => {

@@ -61,3 +61,19 @@ runTest("symbolsForCommodityFilter(cat:metals) includes COPPER and XAGUSD", () =
 runTest("symbolsForCommodityFilter(USDINR) returns just USDINR", () => {
   assert.deepStrictEqual(symbolsForCommodityFilter("USDINR"), ["USDINR"]);
 });
+
+// W-ASSETS-ENERGY-3: TTF_GAS added to the filter catalog.
+runTest("FILTER_COMMODITIES includes TTF_GAS with no duplicate symbols", () => {
+  const symbols = FILTER_COMMODITIES.map((c) => c.symbol);
+  assert.ok(symbols.includes("TTF_GAS"));
+  assert.equal(new Set(symbols).size, symbols.length);
+});
+
+runTest("symbolsForCommodityFilter(cat:energy) includes TTF_GAS", () => {
+  const symbols = symbolsForCommodityFilter("cat:energy");
+  assert.ok(symbols.includes("TTF_GAS"));
+});
+
+runTest("symbolsForCommodityFilter(TTF_GAS) returns just TTF_GAS", () => {
+  assert.deepStrictEqual(symbolsForCommodityFilter("TTF_GAS"), ["TTF_GAS"]);
+});

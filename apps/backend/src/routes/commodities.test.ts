@@ -27,3 +27,17 @@ runTest("USDINR entry has the fx category and USD/INR label", () => {
   assert.equal(usdinr?.category, "fx");
   assert.equal(usdinr?.label, "USD/INR");
 });
+
+// W-ASSETS-ENERGY-3: TTF_GAS added to the /v1/commodities catalog.
+runTest("COMMODITIES includes TTF_GAS with no duplicate symbols", () => {
+  const symbols = COMMODITIES.map((c) => c.symbol);
+  assert.ok(symbols.includes("TTF_GAS"));
+  assert.equal(new Set(symbols).size, symbols.length);
+});
+
+runTest("TTF_GAS entry has the energy category and EUR/MWh unit", () => {
+  const ttf = COMMODITIES.find((c) => c.symbol === "TTF_GAS");
+  assert.ok(ttf, "expected a TTF_GAS entry");
+  assert.equal(ttf?.category, "energy");
+  assert.equal(ttf?.unit, "EUR/MWh");
+});

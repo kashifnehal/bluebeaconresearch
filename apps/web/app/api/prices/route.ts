@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { Redis } from "@upstash/redis";
+import { COMMODITY_REGISTRY, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 
 type CommodityPriceRow = {
@@ -16,12 +17,12 @@ type CommodityPriceRow = {
 
 // Tier-2 (Redis fallback) symbol list. Tier 1 (the commodity_prices table query
 // below) already returns every symbol the price-syncer writes, forex included;
-// this list only bounds which symbols the Redis fallback re-hydrates, so the six
-// forex pairs (#87) are appended here to keep the fallback path in parity.
+// this list only bounds which symbols the Redis fallback re-hydrates. Derived
+// from the shared registry + FOREX_PAIRS instead of hand-duplicated here.
 export const SYMBOLS = [
-  "USOIL", "UKOIL", "XAUUSD", "NGAS", "WHEAT", "COPPER", "XAGUSD", "CORN",
-  "EURUSD", "GBPUSD", "USDJPY", "USDCHF", "USDRUB", "USDCNY", "USDINR",
-] as const;
+  ...COMMODITY_REGISTRY.map((c) => c.symbol),
+  ...FOREX_PAIRS.map((f) => f.symbol),
+];
 
 // Step 3: Server-side in-memory cache for /api/prices (60s TTL)
 let _cachedPrices: { payload: { prices: CommodityPriceRow[] }; timestamp: number } | null = null;

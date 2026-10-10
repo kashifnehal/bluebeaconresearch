@@ -341,6 +341,10 @@ export const COMMODITY_ASSET_ALIASES: Record<string, string> = Object.fromEntrie
   COMMODITY_REGISTRY.flatMap((c) => c.aliases.map((alias) => [alias, c.symbol])),
 );
 
+// Derived from the registry instead of hand-listed in the prompt string below —
+// adding a commodity to COMMODITY_REGISTRY now flows into the prompt automatically.
+const COMMODITY_ASSET_PROMPT_OPTIONS = COMMODITY_REGISTRY.map((c) => `"${c.symbol}"`).join("|");
+
 export class ClaudeService {
   private client: Anthropic | null = null;
 
@@ -529,7 +533,7 @@ export class ClaudeService {
           `{\n` +
           `  "severity": integer between 1 and 10,\n` +
           `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
-          `  "commodityImpacts": [{ "asset": one of exactly "USOIL"|"UKOIL"|"NGAS"|"XAUUSD"|"WHEAT"|"CORN"|"COPPER"|"XAGUSD" (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+          `  "commodityImpacts": [{ "asset": one of exactly ${COMMODITY_ASSET_PROMPT_OPTIONS} (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY"|"USDINR" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
           `  "isBreaking": boolean,\n` +
           `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n` +

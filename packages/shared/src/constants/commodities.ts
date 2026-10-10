@@ -107,6 +107,23 @@ export const COMMODITY_REGISTRY = [
     aliases: ["SILVER", "XAG", "XAG/USD", "SILVER FUTURES"],
     filterAnchors: ["silver"],
   },
+  // TTF_GAS added 2026-10-10 (W-ASSETS-ENERGY-3): quoteCurrency EUR per the
+  // 2026-10-10 Yahoo ticker probe (docs/claude_project/probe-yahoo-tickers-2026-10-10.md,
+  // TTF=F returned EUR, price ~81.4 — consistent with EUR/MWh, the unit TTF is
+  // quoted in). Alias/filterAnchor sourced from real stored headlines ("european
+  // gas" appears repeatedly in signals.title, e.g. "Hormuz tensions push european
+  // gas prices to 3.5-year high") — no literal "TTF" headline exists yet.
+  {
+    symbol: "TTF_GAS",
+    label: "European Gas (TTF)",
+    unit: "EUR/MWh",
+    category: "energy",
+    yahooTicker: "TTF=F",
+    provider: "yahoo",
+    quoteCurrency: "EUR",
+    aliases: ["EUROPEAN GAS"],
+    filterAnchors: ["european gas"],
+  },
 ] as const;
 
 export const COMMODITIES = [
@@ -127,6 +144,10 @@ export const COMMODITIES = [
   // flat "— 0.00%" placeholder. Re-add only once the price-syncer worker actually
   // ingests FX pairs from Yahoo Finance.
   { symbol: "XAGUSD", label: "Silver", unit: "USD/oz", category: "metals" },
+  // TTF_GAS / RBOB / HEATING_OIL added W-ASSETS-ENERGY-3 (2026-10-10), same
+  // reasoning as COPPER/XAGUSD above: registry carries them, this hand-kept
+  // list must too or they never show up anywhere in the product.
+  { symbol: "TTF_GAS", label: "European Gas (TTF)", unit: "EUR/MWh", category: "energy" },
 ] as const;
 
 // Forex pairs (#87). The same six the classifier emits
