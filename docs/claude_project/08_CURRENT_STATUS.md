@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live status banners as of 2026-10-10 (W-ASSETS-ENERGY-3 part 3/3, complete — see the banner immediately below).**
 
-> ⚠️ CORRECTION 2026-10-10 (backend build fix, `244dd75`) — the three W-ASSETS-ENERGY-3 banners below (TTF_GAS, RBOB, HEATING_OIL) are **merged in code, not live in the product**. `apps/backend/src/scripts/probe-yahoo-tickers.ts` (commit `8187d26`, which landed before all three asset commits) broke `pnpm run build`/`pnpm type-check`, so Railway skipped every backend and workers deploy since `f7847d0` — none of TTF_GAS/RBOB/HEATING_OIL ever actually shipped to the running backend. Fixed in `244dd75` (type-error fix + removed apps/backend's runtime dependency on packages/shared, see D44/ADR 040 reversal). The three assets go live only once the next Railway backend deploy succeeds.
+> ✅ RESOLVED 2026-10-10 — the backend build fix (`244dd75`) deployed successfully on Railway (`backend` + `workers`, both `SUCCESS`, 2026-10-10 14:28:39–14:30:39 UTC) — the first successful deploy of either service since `f7847d0`. **TTF_GAS, RBOB, and HEATING_OIL are now live**, not just merged.
+
+> ⚠️ CORRECTION 2026-10-10 (backend build fix, `244dd75`, superseded by the ✅ RESOLVED banner above) — the three W-ASSETS-ENERGY-3 banners below (TTF_GAS, RBOB, HEATING_OIL) were **merged in code but not live in the product**. `apps/backend/src/scripts/probe-yahoo-tickers.ts` (commit `8187d26`, which landed before all three asset commits) broke `pnpm run build`/`pnpm type-check`, so Railway skipped every backend and workers deploy since `f7847d0` — none of TTF_GAS/RBOB/HEATING_OIL had actually shipped to the running backend. Fixed in `244dd75` (type-error fix + removed apps/backend's runtime dependency on packages/shared, see D44/ADR 040 reversal).
 
 > ⚠️ NEW 2026-10-10 (onboarding "request a market" field, `apps/web`, `cfa4e54`) — `/onboarding` step 2 gained an optional 120-char trimmed text input logging a `market_requested` event via `POST /api/events`; no migration, no backend change.
 
