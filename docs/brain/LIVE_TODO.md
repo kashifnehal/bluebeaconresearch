@@ -3,6 +3,13 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## P-TA-2 — probe Yahoo futures quote fields, `apps/backend` only (read-only), 2026-10-10, this commit
+
+- New `apps/backend/src/scripts/probe-futures-quote-fields.ts` (+ `probe:futures-quote` script in `apps/backend/package.json`), same read-only style as the `8187d26` ticker probe. Calls `yf.quote()` for the eight live `COMMODITY_SYMBOLS` futures tickers (`price-syncer.ts`): `CL=F`, `BZ=F`, `GC=F`, `NG=F`, `ZW=F`, `HG=F`, `SI=F`, `ZC=F`. No DB writes, no change to `price-syncer.ts` or any asset list.
+- Result (run 2026-10-10 14:00 UTC, a Saturday — markets closed): all eight returned `marketState: "CLOSED"`. None returned `underlyingSymbol` or `expireDate` as absent — both were present for all eight (e.g. `CL=F` → `underlyingSymbol: "CLX26.NYM"`, `expireDate: "2026-10-20"`). `regularMarketTime` was ~1020–1180 minutes old at probe time (no staleness threshold asserted here, per task scope — see full table in commit/PR report).
+- Docs: this entry only. Skipped `05_API` (no route), `04_DATABASE` (no table/migration), `18_AI_ENGINE` (no prompt), `06_COMPONENTS` (no UI), both `10_DECISIONS.md` (a probe result, not a standing rule), claude_project `09_BACKLOG`/`08_CURRENT_STATUS`/`14_CHANGELOG` (nothing shipped to the product — a read-only diagnostic script).
+- Verification: ran `pnpm probe:futures-quote` once from `apps/backend` after a worktree `pnpm install`; all eight symbols returned `ok` with no per-symbol errors. Not browser-walked (backend script, not a UI change).
+
 ## P-TA-5 — baseline fetch speed + stable paging, `apps/web` only, 2026-10-10, this commit
 
 - `price-baseline-server.ts`: replaced the per-asset-+-window-length cache (16 DB reads per asset: 4 window lengths × 4 pages) with a per-asset cache of the raw `commodity_prices` points (1 read pass per asset: 4 pages, shared across all 4 window lengths via `buildHourlyWindows`). Concurrent requests for the same asset share one in-flight read via a second `Map`, cleared when the read settles. `fetchMatchedBaselines` now runs its assets in `Promise.all` (was sequential); still never caches an error result, never throws.

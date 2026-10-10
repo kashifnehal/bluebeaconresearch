@@ -19,7 +19,8 @@
     "backfill:commodity-impacts": "tsx src/scripts/backfill-commodity-impacts.ts",
     "outcome-tracker:once": "tsx src/scripts/run-outcome-tracker-once.ts",
     "seed:demo-accounts": "tsx src/scripts/seed-demo-accounts.ts",
-    "replay:gate": "tsx src/scripts/replay-gate.ts"
+    "replay:gate": "tsx src/scripts/replay-gate.ts",
+    "probe:futures-quote": "tsx src/scripts/probe-futures-quote-fields.ts"
   },
   "keywords": [],
   "author": "",
