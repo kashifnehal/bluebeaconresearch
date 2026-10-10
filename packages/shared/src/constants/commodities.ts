@@ -124,6 +124,22 @@ export const COMMODITY_REGISTRY = [
     aliases: ["EUROPEAN GAS"],
     filterAnchors: ["european gas"],
   },
+  // RBOB added 2026-10-10 (W-ASSETS-ENERGY-3 part 2/3): quoteCurrency USD per
+  // the probe (RB=F, price ~3.15). Alias/filterAnchor sourced from real stored
+  // headlines ("gasoline" appears in signals.title, e.g. "Iran fuel crisis
+  // deepens as regime faces growing gasoline shortfall") — no literal "RBOB"
+  // headline exists yet.
+  {
+    symbol: "RBOB",
+    label: "RBOB Gasoline",
+    unit: "USD/gal",
+    category: "energy",
+    yahooTicker: "RB=F",
+    provider: "yahoo",
+    quoteCurrency: "USD",
+    aliases: ["GASOLINE"],
+    filterAnchors: ["gasoline"],
+  },
 ] as const;
 
 export const COMMODITIES = [
@@ -148,6 +164,7 @@ export const COMMODITIES = [
   // reasoning as COPPER/XAGUSD above: registry carries them, this hand-kept
   // list must too or they never show up anywhere in the product.
   { symbol: "TTF_GAS", label: "European Gas (TTF)", unit: "EUR/MWh", category: "energy" },
+  { symbol: "RBOB", label: "RBOB Gasoline", unit: "USD/gal", category: "energy" },
 ] as const;
 
 // Forex pairs (#87). The same six the classifier emits

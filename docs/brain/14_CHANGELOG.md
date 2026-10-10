@@ -8,6 +8,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.162.0 — W-ASSETS-ENERGY-3 part 2/3: RBOB added (2026-10-10, this commit)
+
+`packages/shared` + `apps/backend` + `apps/web`. Second of 3 new energy assets: `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias/filter anchor ("gasoline") sourced only from words already in stored `signals.title`. Real Anthropic classification check against 2 stored headlines: 2/2 correct. Full detail: `LIVE_TODO.md`.
+
 ### v0.161.0 — W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added (2026-10-10, this commit)
 
 `packages/shared` + `apps/backend` + `apps/web`. First of 3 new energy assets added to `COMMODITY_REGISTRY`, each its own commit: `TTF_GAS` (European Gas/TTF, `TTF=F`, EUR/MWh). Yahoo ticker/currency verified via the 2026-10-10 probe; alias/filter anchor ("european gas") sourced only from words already in stored `signals.title`. Also fixed 3 files that hand-listed the commodity ticker union in a prompt string instead of deriving it from the registry (`claude.service.ts`, `replay-gate.ts`, `backfill-commodity-impacts.ts`) and `apps/web/app/api/prices/route.ts`'s hardcoded `SYMBOLS`. Real Anthropic classification check against 4 stored headlines: 4/4 correct. Full detail: `LIVE_TODO.md`.

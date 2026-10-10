@@ -8,7 +8,8 @@
     { "symbol": "CORN", "label": "Corn", "unit": "USc/bu", "category": "agriculture" },
     { "symbol": "COPPER", "label": "Copper", "unit": "USD/lb", "category": "metals" },
     { "symbol": "XAGUSD", "label": "Silver", "unit": "USD/oz", "category": "metals" },
-    { "symbol": "TTF_GAS", "label": "European Gas (TTF)", "unit": "EUR/MWh", "category": "energy" }
+    { "symbol": "TTF_GAS", "label": "European Gas (TTF)", "unit": "EUR/MWh", "category": "energy" },
+    { "symbol": "RBOB", "label": "RBOB Gasoline", "unit": "USD/gal", "category": "energy" }
   ],
   "COMMODITY_SYMBOLS": {
     "USOIL": "CL=F",
@@ -19,7 +20,8 @@
     "COPPER": "HG=F",
     "XAGUSD": "SI=F",
     "CORN": "ZC=F",
-    "TTF_GAS": "TTF=F"
+    "TTF_GAS": "TTF=F",
+    "RBOB": "RB=F"
   },
   "FOREX_SYMBOLS": {
     "EURUSD": "EURUSD=X",
@@ -30,7 +32,7 @@
     "USDCNY": "USDCNY=X",
     "USDINR": "USDINR=X"
   },
-  "ALLOWED_COMMODITY_ASSETS": ["USOIL", "UKOIL", "NGAS", "XAUUSD", "WHEAT", "CORN", "COPPER", "XAGUSD", "TTF_GAS"],
+  "ALLOWED_COMMODITY_ASSETS": ["USOIL", "UKOIL", "NGAS", "XAUUSD", "WHEAT", "CORN", "COPPER", "XAGUSD", "TTF_GAS", "RBOB"],
   "COMMODITY_ASSET_ALIASES": {
     "OIL": "USOIL",
     "CRUDE OIL": "USOIL",
@@ -58,9 +60,10 @@
     "XAG": "XAGUSD",
     "XAG/USD": "XAGUSD",
     "SILVER FUTURES": "XAGUSD",
-    "EUROPEAN GAS": "TTF_GAS"
+    "EUROPEAN GAS": "TTF_GAS",
+    "GASOLINE": "RBOB"
   },
-  "TRACKED_COMMODITY_NAMES": ["crude", "oil", "gold", "silver", "natural gas", "wheat", "copper", "corn", "european gas"],
+  "TRACKED_COMMODITY_NAMES": ["crude", "oil", "gold", "silver", "natural gas", "wheat", "copper", "corn", "european gas", "gasoline"],
   "YAHOO_TICKERS": {
     "USOIL": "CL=F",
     "UKOIL": "BZ=F",
@@ -71,6 +74,7 @@
     "XAGUSD": "SI=F",
     "CORN": "ZC=F",
     "TTF_GAS": "TTF=F",
+    "RBOB": "RB=F",
     "EURUSD": "EURUSD=X",
     "GBPUSD": "GBPUSD=X",
     "USDJPY": "USDJPY=X",

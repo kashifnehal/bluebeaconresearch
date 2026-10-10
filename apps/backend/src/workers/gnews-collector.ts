@@ -31,8 +31,8 @@ const GNEWS_QUERIES = [
   "conflict OR war OR sanctions OR trade OR stock market OR inflation OR fed OR earnings", // geopolitics and markets
   // Metals/energy terms from ALLOWED_COMMODITY_ASSETS + COMMODITY_ASSET_ALIASES in
   // claude.service.ts: USOIL/UKOIL ("oil", "crude", "brent"), NGAS ("natural gas"),
-  // XAUUSD ("gold"), COPPER, XAGUSD ("silver"), TTF_GAS ("european gas").
-  "oil OR crude OR brent OR \"natural gas\" OR OPEC OR pipeline OR refinery OR gold OR copper OR silver OR \"european gas\"",
+  // XAUUSD ("gold"), COPPER, XAGUSD ("silver"), TTF_GAS ("european gas"), RBOB ("gasoline").
+  "oil OR crude OR brent OR \"natural gas\" OR OPEC OR pipeline OR refinery OR gold OR copper OR silver OR \"european gas\" OR gasoline",
   // Shipping/sanctions: no asset in ALLOWED_COMMODITY_ASSETS maps to "shipping" —
   // these are route/trade-disruption terms, not ticker-derived.
   "shipping OR tanker OR port OR canal OR sanctions OR embargo OR \"export ban\" OR tariff OR blockade",

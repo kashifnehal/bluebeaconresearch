@@ -41,3 +41,17 @@ runTest("TTF_GAS entry has the energy category and EUR/MWh unit", () => {
   assert.equal(ttf?.category, "energy");
   assert.equal(ttf?.unit, "EUR/MWh");
 });
+
+// W-ASSETS-ENERGY-3: RBOB added to the /v1/commodities catalog.
+runTest("COMMODITIES includes RBOB with no duplicate symbols", () => {
+  const symbols = COMMODITIES.map((c) => c.symbol);
+  assert.ok(symbols.includes("RBOB"));
+  assert.equal(new Set(symbols).size, symbols.length);
+});
+
+runTest("RBOB entry has the energy category and USD/gal unit", () => {
+  const rbob = COMMODITIES.find((c) => c.symbol === "RBOB");
+  assert.ok(rbob, "expected a RBOB entry");
+  assert.equal(rbob?.category, "energy");
+  assert.equal(rbob?.unit, "USD/gal");
+});

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-10 (W-ASSETS-ENERGY-3 part 1/3 — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-10 (W-ASSETS-ENERGY-3 part 2/3 — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-10 (W-ASSETS-ENERGY-3 part 2/3: RBOB added, `packages/shared` + `apps/backend` + `apps/web`, this commit) — added `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) to `COMMODITY_REGISTRY` and the hand-kept catalog lists — second of 3 new energy assets. Alias/filter anchor sourced only from words already in stored headlines ("gasoline"). Real Anthropic classification verified against 2 stored headlines: 2/2 correct. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.162.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 139.
 
 > ⚠️ NEW 2026-10-10 (W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added, `packages/shared` + `apps/backend` + `apps/web`, this commit) — added `TTF_GAS` (European Gas/TTF, `TTF=F`, EUR/MWh) to `COMMODITY_REGISTRY` — first of 3 new energy assets, each its own commit (RBOB and HEATING_OIL follow). Yahoo ticker verified live (2026-10-10 probe). Alias/filter anchor sourced only from words already in stored headlines ("european gas"). Hand-kept lists (`COMMODITIES`, backend `commodities.ts` route, `apps/web/lib/signal-filters.ts`) updated to match, same pattern as COPPER/XAGUSD/USDINR. Also derived 3 previously hand-listed commodity ticker strings from the registry (`claude.service.ts` prompt, `replay-gate.ts`, `backfill-commodity-impacts.ts`) and `apps/web/app/api/prices/route.ts`'s `SYMBOLS`. Real Anthropic classification verified against 4 stored headlines: 4/4 correct. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.161.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 138.
 

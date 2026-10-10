@@ -1278,6 +1278,52 @@ async function main() {
     }
   });
 
+  // ── W-ASSETS-ENERGY-3 — RBOB alias normalization ───────────────────────
+
+  await runTest("normalizeCommodityAsset: 'Gasoline' returns RBOB", async () => {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 6,
+                confidence: 0.7,
+                commodityImpacts: [{ asset: "Gasoline", direction: "up", confidence: 0.8 }],
+                currencyPairImpacts: [],
+                isBreaking: false,
+                summary: "Gasoline shortfall deepens fuel crisis",
+                region: "middle-east",
+                materialityPass: true,
+                materialityReasoning: "real market mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Iran fuel crisis deepens as regime faces growing gasoline shortfall",
+        summary: "Refinery outages strain domestic supply.",
+        event_type: "news",
+        country: "Iran",
+        event_date: new Date().toISOString(),
+      });
+      assert.deepStrictEqual(
+        classification.commodityImpacts.map((impact) => impact.asset),
+        ["RBOB"],
+      );
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  });
+
   await runTest(
     "normalizeCommodityAsset: a Chile copper strike story tagged 'Copper' no longer returns USOIL",
     async () => {

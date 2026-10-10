@@ -25,6 +25,7 @@ export const FILTER_COMMODITIES = [
   // TTF_GAS / RBOB / HEATING_OIL added W-ASSETS-ENERGY-3 (2026-10-10), same
   // reasoning as the comment above.
   { symbol: "TTF_GAS", label: "European Gas (TTF)", unit: "EUR/MWh", category: "energy" },
+  { symbol: "RBOB", label: "RBOB Gasoline", unit: "USD/gal", category: "energy" },
 ] as const;
 
 export type FilterCommodity = (typeof FILTER_COMMODITIES)[number];

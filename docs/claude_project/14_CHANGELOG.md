@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-10 (PHASE 138).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-10 (PHASE 139).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 139 — W-ASSETS-ENERGY-3 part 2/3: RBOB added (2026-10-10, this commit)
+
+`packages/shared` + `apps/backend` + `apps/web`. Second of 3 new energy assets: `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias sourced only from words already in stored headlines ("gasoline"). Full detail: `docs/brain/14_CHANGELOG.md` v0.162.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 138 — W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added (2026-10-10, this commit)
 

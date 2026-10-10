@@ -77,3 +77,19 @@ runTest("symbolsForCommodityFilter(cat:energy) includes TTF_GAS", () => {
 runTest("symbolsForCommodityFilter(TTF_GAS) returns just TTF_GAS", () => {
   assert.deepStrictEqual(symbolsForCommodityFilter("TTF_GAS"), ["TTF_GAS"]);
 });
+
+// W-ASSETS-ENERGY-3: RBOB added to the filter catalog.
+runTest("FILTER_COMMODITIES includes RBOB with no duplicate symbols", () => {
+  const symbols = FILTER_COMMODITIES.map((c) => c.symbol);
+  assert.ok(symbols.includes("RBOB"));
+  assert.equal(new Set(symbols).size, symbols.length);
+});
+
+runTest("symbolsForCommodityFilter(cat:energy) includes RBOB", () => {
+  const symbols = symbolsForCommodityFilter("cat:energy");
+  assert.ok(symbols.includes("RBOB"));
+});
+
+runTest("symbolsForCommodityFilter(RBOB) returns just RBOB", () => {
+  assert.deepStrictEqual(symbolsForCommodityFilter("RBOB"), ["RBOB"]);
+});
