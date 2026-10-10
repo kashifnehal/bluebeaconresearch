@@ -109,7 +109,7 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 
 ## DECISIONS ALREADY MADE AND IMPLEMENTED (DO NOT RE-LITIGATE)
 
-1. **Yahoo Finance, not Alpha Vantage** — Alpha Vantage free = 25 req/day (exhausted immediately). Yahoo Finance = unlimited free via `yahoo-finance2`
+1. **Yahoo Finance, not Alpha Vantage** — Alpha Vantage free = 25 req/day (exhausted immediately). Yahoo Finance = unlimited free via `yahoo-finance2`. Update 2026-10-10: free for development and testing only. Yahoo's terms of service appear to restrict automated collection, database building and commercial reuse. A price-data rights memo must be completed before any price source is used for the paid product.
 2. **Heuristic fallback classifier** — When Anthropic credits = $0, heuristic scoring (55–90% confidence, keyword-based) keeps the pipeline alive. Always maintain this fallback.
 3. **`event_date` not `created_at` shown in UI** — Dashboard timestamps show when articles were **published**, not when BBR ingested them. A signal ingested 5 minutes ago from a 12-hour-old BBC article shows "12 hours ago." This is intentional (v0.10.0 decision).
 4. **Price 3-tier fallback** — `apps/web/app/api/prices/route.ts`: Supabase DB → Redis cache → Hardcoded static fallback. Frontend NEVER receives null prices.

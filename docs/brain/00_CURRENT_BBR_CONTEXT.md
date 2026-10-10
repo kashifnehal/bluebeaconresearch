@@ -289,6 +289,8 @@ Its product includes:
 
 RavenPack has extremely broad source and NLP infrastructure. BBR should **not** attempt to compete on source volume or general NLP breadth.
 
+More than 100 commodities mapped and tracked (vendor-stated, RavenPack commodities page, read 2026-10-10; not independently audited).
+
 BBR opportunity:
 
 > Make the geopolitical event itself a structured, human-readable research object with evidence, market mechanism, exposure, and outcome.
@@ -586,6 +588,8 @@ Claims found include:
 - 80+ languages
 - 11+ years of history
 - hourly updates
+- 30+ commodity assets (vendor-stated, Permutable commodities page, read 2026-10-10; the page also lists Henry Hub, TTF and LNG separately)
+- 70+ assets (AI Market Intelligence Engine page; assets, not commodities)
 
 A published commodities strategy case study reported approximately:
 
@@ -594,6 +598,8 @@ A published commodities strategy case study reported approximately:
 - -2.95% max drawdown
 
 The case study was not independently audited and should not be treated as proof of future performance.
+
+A later Permutable page (28 Sep 2026) describes a live paper evaluation that grew from six markets (Oct 2024) to 19 assets. It states the evaluation excludes costs, fees and slippage, is not a traded or marketed product return, and says the model trailed BCOM in 2026. Vendor claim, not independently audited.
 
 Permutable customers are not broadly disclosed. A real named testimonial from Vontobel Asset Management was found; other logos such as Macquarie Bank and Petroineos were present but usage/payment status was not independently established.
 

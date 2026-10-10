@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-10.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-10 — Backend build fix (`244dd75`) + onboarding "request a market" field (`cfa4e54`) + ADR 041/D45 asset-admission-by-coverage-state docs. No prior numbered backlog line for any of the three — the build fix and onboarding field were ad-hoc, not queued tickets, and the ADR is a docs-only decision. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-10 — W-REGISTRY: single `COMMODITY_REGISTRY` (`packages/shared`) now sources every per-commodity-asset fact (Yahoo ticker, Claude allowlist/alias, RSS filter anchor) that `price-syncer.ts`, `claude.service.ts`, `relevance-filter.ts`, and `price-history.ts` previously hand-duplicated (brain changelog v0.160.0 / PHASE 137). No asset or behavior changed. No prior numbered backlog line — this was an internal code-structure cleanup, not a queued ticket.
 
 > ⚠️ UPDATED 2026-10-09 — W14-W: `PriceTicker` stale threshold now 60 min, `LegalDisclaimerFooter` links GDELT Project attribution, dashboard/map/watchlist show a "Data as of" stamp (`8edc57d`, brain changelog v0.159.0 / PHASE 136). No prior numbered backlog line — nothing struck.

@@ -3,12 +3,27 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## Backend build fix — remove runtime dependency on shared, fix probe script type error, `apps/backend` + `packages/shared`, 2026-10-10
+## Backend build fix — remove runtime dependency on shared, fix probe script type error, `apps/backend` + `packages/shared`, 2026-10-10, `244dd75`
 
 - `probe-yahoo-tickers.ts` (`8187d26`) and `probe-futures-quote-fields.ts` (`d52611c`) both used `YahooFinance` as a type instead of `InstanceType<typeof YahooFinance>` — TS2749, broke `pnpm run build`/`pnpm type-check` since `8187d26`. Railway skipped every backend/workers deploy since `f7847d0` as a result: **W-REGISTRY, TTF_GAS, RBOB, and HEATING_OIL (below) were code-merged but never actually deployed** until this fix lands and a Railway deploy succeeds.
 - Reversed ADR 040/D44: `apps/backend` no longer depends on `@blue-beacon-research/shared` at runtime (compiled `dist/` can't load shared's TS source; Railway builds backend/workers with root dir `/apps/backend`, so `packages/shared` isn't present — `node dist/server.js` failed `ERR_MODULE_NOT_FOUND`). Registry duplicated in `apps/backend/src/lib/commodity-registry.ts`; six backend files re-pointed to it; `@blue-beacon-research/shared` dropped from `apps/backend/package.json`. New `packages/shared/src/constants/commodities.parity.test.ts` (run via relative `tsx` path from the backend `test` script) keeps the two copies deep-equal.
 - Docs: this entry; `10_DECISIONS.md` (both trees, ADR 040/D44 reversal note); canonical trio `claude_project/08_CURRENT_STATUS`, `09_BACKLOG`, `14_CHANGELOG` corrected to say TTF_GAS/RBOB/HEATING_OIL are merged, not live.
 - Verification: `pnpm install --frozen-lockfile` exit 0; `pnpm type-check` exit 0; `cd apps/backend && pnpm run build` exit 0; `node -e "import('./dist/lib/relevance-filter.js')"` prints `ok`; `node dist/server.js` with dummy Supabase env started and listened, no `ERR_MODULE_NOT_FOUND`; `pnpm --filter backend test` and `pnpm --filter web test` exit 0.
+
+## Docs: ADR 041/D45 asset-admission-by-coverage-state + Permutable/RavenPack claims + Yahoo rights update, docs only, 2026-10-10, this commit
+
+- `docs/brain/10_DECISIONS.md` (ADR 041) and `docs/claude_project/10_DECISIONS.md` (D45): "Asset admission by coverage state" — event coverage → price coverage → historical validation, no headline-count or numeric-breadth threshold. Roadmap T1/T2/T3 recorded (T1 = TTF gas/RBOB/heating oil, code-merged per the backend-build-fix entry above, plus a shipping lens; T2 event-coverage-first list; T3 catalogue-only list). Noted sugar/cotton `yf.quote()` schema-validation failure on yahoo-finance2 4.0.0.
+- `docs/brain/00_CURRENT_BBR_CONTEXT.md`: added two more vendor-stated Permutable claims (30+ commodity assets; 70+ assets) and a note on Permutable's 28 Sep 2026 live-paper-evaluation page (6→19 assets, excludes costs/fees/slippage, trailed BCOM in 2026 — vendor claim, not audited), plus a RavenPack vendor claim (100+ commodities mapped).
+- `docs/claude_project/21_PROJECT_BRIEFING.md`: appended a 2026-10-10 update to the Yahoo Finance decision — free for dev/test only, ToS appears to restrict automated collection/database-building/commercial reuse, a price-data-rights memo is required before paid-product use.
+- This entry records the SHAs of the two preceding commits in this batch: backend build fix `244dd75`; onboarding free-text field `cfa4e54`. This commit's own SHA is intentionally not self-referenced here (would require an amend) — see the next `git log` for it.
+- Docs-only; no `apps/` or `packages/` files touched. Skipped `05_API`/`04_DATABASE`/`18_AI_ENGINE`/`06_COMPONENTS` (no route, table, prompt, or component change).
+
+## Onboarding "request a market" free-text field, `apps/web` only, 2026-10-10, `cfa4e54`
+
+- Step 2 of `/onboarding` gained an optional text input ("Another market you follow (optional)", 120-char max, trimmed) under the asset chips, before the regions chips. Not stored in `user_preferences` — no migration. Non-empty values fire `market_requested` via `logUsageEvent` (`apps/web/lib/funnel-events.ts`) → `POST /api/events` (`apps/web/lib/events-post-handler.ts`, which accepts any `eventType` string + metadata object, no allowlist to extend) with `{ text: <trimmed value> }`, after the existing `user_preferences` upsert succeeds. No `once: true` — `logUsageEvent`'s own fire-and-forget try/catch already guarantees a logging failure can't block onboarding. Step 1 and `use_case` values unchanged.
+- No test added — no existing test file for `funnel-events.ts` to extend.
+- Docs: this entry only. Skipped `05_API` (no new route), `04_DATABASE` (no migration), `18_AI_ENGINE` (no prompt), `06_COMPONENTS` (no new component, same onboarding page), both `10_DECISIONS.md` (not a standing rule), claude_project `09_BACKLOG`/`08_CURRENT_STATUS`/`14_CHANGELOG` (no existing backlog ticket for this ad-hoc capture field).
+- Verification: `pnpm --filter web exec tsc --noEmit` clean; `pnpm --filter web test` all green; `pnpm --filter web run build` (real `next build`) succeeded, `/onboarding` compiled.
 
 ## P-TA-2 — probe Yahoo futures quote fields, `apps/backend` only (read-only), 2026-10-10, this commit
 

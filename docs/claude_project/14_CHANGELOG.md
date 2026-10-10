@@ -1,12 +1,20 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-10 (PHASE 140).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-10 (PHASE 143).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
 
-## PHASE 141 — Backend: remove runtime dependency on shared, fix probe script type error (2026-10-10, this commit)
+## PHASE 143 — Docs: ADR 041/D45 asset admission by coverage state + Permutable/RavenPack claims + Yahoo rights update (2026-10-10, this commit)
+
+Docs only. New `ADR 041`/`D45`: asset admission now goes by coverage state (event coverage → price coverage → historical validation), not a headline-count or numeric-breadth threshold; roadmap T1/T2/T3 recorded. Updated `docs/brain/00_CURRENT_BBR_CONTEXT.md`'s Permutable section with two more vendor-stated claims and its 28 Sep 2026 live-paper-evaluation page, plus a RavenPack vendor claim. Appended a 2026-10-10 update to the Yahoo Finance decision in `21_PROJECT_BRIEFING.md` (dev/test only pending a price-data-rights memo). Full detail: `docs/brain/LIVE_TODO.md`.
+
+## PHASE 142 — Onboarding: add optional "request a market" free-text field (2026-10-10, `cfa4e54`)
+
+`apps/web` only. Step 2 of `/onboarding` gained an optional 120-char trimmed text input under the asset chips. Non-empty values log a `market_requested` event via `logUsageEvent` → `POST /api/events` (no `once: true`), after the existing `user_preferences` upsert succeeds. No migration, no backend change, no change to step 1 or `use_case`. Full detail: `docs/brain/LIVE_TODO.md`.
+
+## PHASE 141 — Backend: remove runtime dependency on shared, fix probe script type error (2026-10-10, `244dd75`)
 
 `apps/backend`, `packages/shared`, docs. `probe-yahoo-tickers.ts` (`8187d26`) and `probe-futures-quote-fields.ts` (`d52611c`) used `YahooFinance` as a type instead of `InstanceType<typeof YahooFinance>`, breaking `pnpm run build`/`pnpm type-check` since `8187d26` — Railway skipped every backend/workers deploy since `f7847d0`, so PHASE 137–140 (W-REGISTRY, TTF_GAS, RBOB, HEATING_OIL below) never actually shipped to the running backend. Fixed both type errors. Reversed PHASE 137/D44/ADR 040: `apps/backend` no longer depends on `@blue-beacon-research/shared` at runtime — the compiled `dist/` output can't load shared's TypeScript source, and Railway builds with root directory `/apps/backend`, so `packages/shared` isn't present in that build. The registry is now duplicated in `apps/backend/src/lib/commodity-registry.ts`, kept in sync with `packages/shared` by a new parity test. Full detail: `docs/brain/14_CHANGELOG.md` v0.164.0, `docs/brain/LIVE_TODO.md`.
 

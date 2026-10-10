@@ -8,7 +8,15 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.164.0 — Backend: remove runtime dependency on shared, fix probe script type error (2026-10-10, this commit)
+### v0.166.0 — Docs: ADR 041/D45 asset admission by coverage state + Permutable/RavenPack claims + Yahoo rights update (2026-10-10, this commit)
+
+Docs only. New ADR 041 (`D45` in `claude_project/10_DECISIONS.md`): asset admission by coverage state (event coverage → price coverage → historical validation), not a headline-count or numeric-breadth threshold; records the T1 (TTF gas/RBOB/heating oil + shipping lens)/T2 (event-coverage-first)/T3 (catalogue-only) roadmap, and the sugar/cotton `yf.quote()` schema-validation failure on yahoo-finance2 4.0.0. `00_CURRENT_BBR_CONTEXT.md`'s Permutable section gained two more vendor-stated claims (30+ commodity assets; 70+ assets) and a note on its 28 Sep 2026 live-paper-evaluation page (6→19 assets, excludes costs/fees/slippage, trailed BCOM in 2026); RavenPack section gained a "100+ commodities mapped" vendor claim. `claude_project/21_PROJECT_BRIEFING.md`'s Yahoo Finance decision item got a 2026-10-10 update: dev/test only, ToS appears to restrict automated collection/database-building/commercial reuse, pending a price-data-rights memo. Full detail: `LIVE_TODO.md`.
+
+### v0.165.0 — Onboarding: add optional "request a market" free-text field (2026-10-10, `cfa4e54`)
+
+`apps/web` only. Step 2 of `/onboarding` gained an optional text input ("Another market you follow (optional)", 120-char max, trimmed) under the asset chips, before the regions chips. Not stored in `user_preferences` — no migration. Non-empty values fire a `market_requested` event via `logUsageEvent` (`funnel-events.ts`) → `POST /api/events` (accepts any `eventType` string + metadata object already, no allowlist to extend) with `{ text: <trimmed value> }`, sent after the existing `user_preferences` upsert succeeds. No `once: true` — `logUsageEvent`'s own fire-and-forget try/catch already guarantees a logging failure can't block onboarding. Step 1 and the saved `use_case` values unchanged. No test added (no existing `funnel-events.ts` test file to extend). Verification: `pnpm --filter web exec tsc --noEmit` clean, `pnpm --filter web test` all green, real `next build` succeeded (`/onboarding` compiled). Full detail: `LIVE_TODO.md`.
+
+### v0.164.0 — Backend: remove runtime dependency on shared, fix probe script type error (2026-10-10, `244dd75`)
 
 `apps/backend`, `packages/shared`, docs. `probe-yahoo-tickers.ts` (`8187d26`) used `YahooFinance` (the default-exported class) as a *type* for the `probeSymbol` parameter instead of `InstanceType<typeof YahooFinance>`; `probe-futures-quote-fields.ts` (`d52611c`) had the identical bug. Both broke `pnpm run build` and `pnpm type-check` with TS2749 — since `8187d26` landed before all of v0.160.0–v0.163.0 (W-REGISTRY, TTF_GAS, RBOB, HEATING_OIL below), Railway skipped every backend/workers deploy since `f7847d0` and none of those four shipped to the running backend. Fixed both.
 

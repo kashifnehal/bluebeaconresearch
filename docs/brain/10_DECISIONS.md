@@ -845,3 +845,25 @@ Recorded as **D44** in `docs/claude_project/10_DECISIONS.md`.
 ### Reversed 2026-10-10
 
 apps/backend does not depend on packages/shared at runtime. Compiled node output cannot load shared's TypeScript source, and Railway builds from root directory /apps/backend. The registry is duplicated in apps/backend/src/lib/commodity-registry.ts and a parity test keeps both copies equal.
+
+## 42. ADR 041: Asset admission by coverage state, 2026-10-10
+
+### Context
+
+BBR's roadmap for which commodities/currencies to add next had been judged partly by how many assets competitors claim to cover (vendor-stated numbers that differ from each other and are not independently audited) and partly by an unwritten headline-count threshold. Neither is a sound admission bar.
+
+### Decision
+
+An asset moves up three states. (1) Event coverage: a named exposure from an allowed source type (agency report, peer-reviewed study, regulation, BBR's own data, or a competitor's published coverage) plus a classifier mapping test reported as "N correct of M." No headline-count threshold. (2) Price coverage: a verified ticker plus acceptable data rights. (3) Historical validation: enough valid observations; the minimum count has no source, so it is an open gap; the out-of-sample rule stays. User evidence orders the queue but does not block event coverage. No numeric breadth target (no "30+" or "20+").
+
+Roadmap: T1 — TTF gas, RBOB gasoline, heating oil (code merged 2026-10-10; backend deploy pending) and a shipping lens built on existing fields (event_category, shipping_proximity, market_mechanism). T2, event coverage first — vegetable oils, soybeans and soybean oil, sugar, aluminium, nickel, coffee, cocoa. T3, catalogue only — cotton, rice, livestock, fertiliser, iron ore and steel, lumber, oats.
+
+Note: sugar (SB=F) and cotton (CT=F) fail yf.quote() with a schema validation error on yahoo-finance2 4.0.0 (chart() works); whether 4.0.3 fixes it is untested.
+
+### Rationale
+
+A probe on 2026-10-09 showed 18 of 20 candidate tickers return clean daily data; competitor coverage numbers are vendor-stated and differ from each other.
+
+### Cross-tree mapping
+
+Recorded as **D45** in `docs/claude_project/10_DECISIONS.md`.
