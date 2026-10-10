@@ -21,7 +21,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Anthropic } from "@anthropic-ai/sdk";
-import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
+import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
 import { getEnv } from "../env.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { ClaudeService } from "../services/claude.service.js";

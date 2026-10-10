@@ -25,7 +25,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { Anthropic } from "@anthropic-ai/sdk";
-import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
+import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
 import { getEnv } from "../env.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { estimateCostUsd } from "../lib/anthropic-budget.js";

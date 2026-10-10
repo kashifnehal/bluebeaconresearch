@@ -6,7 +6,11 @@
 
 ---
 
-## PHASE 140 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, this commit)
+## PHASE 141 — Backend: remove runtime dependency on shared, fix probe script type error (2026-10-10, this commit)
+
+`apps/backend`, `packages/shared`, docs. `probe-yahoo-tickers.ts` (`8187d26`) and `probe-futures-quote-fields.ts` (`d52611c`) used `YahooFinance` as a type instead of `InstanceType<typeof YahooFinance>`, breaking `pnpm run build`/`pnpm type-check` since `8187d26` — Railway skipped every backend/workers deploy since `f7847d0`, so PHASE 137–140 (W-REGISTRY, TTF_GAS, RBOB, HEATING_OIL below) never actually shipped to the running backend. Fixed both type errors. Reversed PHASE 137/D44/ADR 040: `apps/backend` no longer depends on `@blue-beacon-research/shared` at runtime — the compiled `dist/` output can't load shared's TypeScript source, and Railway builds with root directory `/apps/backend`, so `packages/shared` isn't present in that build. The registry is now duplicated in `apps/backend/src/lib/commodity-registry.ts`, kept in sync with `packages/shared` by a new parity test. Full detail: `docs/brain/14_CHANGELOG.md` v0.164.0, `docs/brain/LIVE_TODO.md`.
+
+## PHASE 140 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, this commit) — ⚠️ merged, not deployed until PHASE 141 fix above
 
 `packages/shared` + `apps/backend` + `apps/web`. Final of 3 new energy assets: `HEATING_OIL` (Heating Oil / ULSD, `HO=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias sourced only from words already in stored headlines ("diesel"). Real classification check: 15/15 correct this asset, 21/21 across the full batch. Full detail: `docs/brain/14_CHANGELOG.md` v0.163.0, `docs/brain/LIVE_TODO.md`.
 

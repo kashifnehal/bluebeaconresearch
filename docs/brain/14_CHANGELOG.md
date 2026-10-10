@@ -8,7 +8,15 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.163.0 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, this commit)
+### v0.164.0 — Backend: remove runtime dependency on shared, fix probe script type error (2026-10-10, this commit)
+
+`apps/backend`, `packages/shared`, docs. `probe-yahoo-tickers.ts` (`8187d26`) used `YahooFinance` (the default-exported class) as a *type* for the `probeSymbol` parameter instead of `InstanceType<typeof YahooFinance>`; `probe-futures-quote-fields.ts` (`d52611c`) had the identical bug. Both broke `pnpm run build` and `pnpm type-check` with TS2749 — since `8187d26` landed before all of v0.160.0–v0.163.0 (W-REGISTRY, TTF_GAS, RBOB, HEATING_OIL below), Railway skipped every backend/workers deploy since `f7847d0` and none of those four shipped to the running backend. Fixed both.
+
+Also reverses ADR 040/D44: `apps/backend` no longer depends on `@blue-beacon-research/shared` at runtime. The compiled `node dist/...` output cannot load shared's TypeScript source (`main`/`exports` point at `./src/index.ts`), and Railway's backend/workers services build with root directory `/apps/backend`, so `packages/shared` is never present in that build — `node dist/lib/relevance-filter.js` and `node dist/server.js` failed with `ERR_MODULE_NOT_FOUND`. `COMMODITY_REGISTRY` is now duplicated verbatim in `apps/backend/src/lib/commodity-registry.ts`; the six backend files that imported it from `@blue-beacon-research/shared` now import the local copy. `@blue-beacon-research/shared` removed from `apps/backend/package.json`. New `packages/shared/src/constants/commodities.parity.test.ts` (run from the backend `test` script via a relative `tsx` path) asserts the two registries stay deep-equal and that `COMMODITIES` matches the registry's symbol/label/unit/category in order; `apps/backend/src/lib/commodity-registry-parity.test.ts`'s own `COMMODITIES` check was dropped (that import is gone) but its other five frozen-fixture checks are unchanged. `packages/shared` gained `@types/node` + `"types": ["node"]` so the new test file type-checks.
+
+Verification: `pnpm install --frozen-lockfile`, `pnpm type-check`, `cd apps/backend && pnpm run build`, `node -e "import('./dist/lib/relevance-filter.js')..."`, and a timed `node dist/server.js` (no `ERR_MODULE_NOT_FOUND`) all passed; `pnpm --filter backend test` and `pnpm --filter web test` both green. Full detail: `LIVE_TODO.md`.
+
+### v0.163.0 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, this commit) — ⚠️ merged, not deployed until v0.164.0 fix above
 
 `packages/shared` + `apps/backend` + `apps/web`. Final of 3 new energy assets: `HEATING_OIL` (Heating Oil / ULSD, `HO=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias/filter anchor ("diesel") sourced only from words already in stored `signals.title` — no literal "heating oil"/"ULSD" headline exists, diesel is the real-world term. Real Anthropic classification check against all 15 stored headlines: 15/15 correct; 21/21 across the full TTF_GAS/RBOB/HEATING_OIL batch. Full detail: `LIVE_TODO.md`.
 

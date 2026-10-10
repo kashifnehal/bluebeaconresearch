@@ -63,7 +63,7 @@ function countGapsOver5Days(timestamps: number[]): number {
   return gaps;
 }
 
-async function probeSymbol(yf: YahooFinance, symbol: string): Promise<Row> {
+async function probeSymbol(yf: InstanceType<typeof YahooFinance>, symbol: string): Promise<Row> {
   const row: Row = {
     symbol,
     status: "ok",

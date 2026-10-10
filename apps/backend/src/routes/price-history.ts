@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import YahooFinance from "yahoo-finance2";
-import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
+import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
 
 // On-demand 5-year weekly chart (#106). The commodity half is now derived from
 // the shared COMMODITY_REGISTRY; the forex half stays a deliberately separate,

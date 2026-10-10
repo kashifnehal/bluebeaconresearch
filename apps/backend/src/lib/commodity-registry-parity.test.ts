@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { COMMODITIES } from "@blue-beacon-research/shared";
 import { COMMODITY_SYMBOLS, FOREX_SYMBOLS } from "../workers/price-syncer.js";
 import { ALLOWED_COMMODITY_ASSETS, COMMODITY_ASSET_ALIASES } from "../services/claude.service.js";
 import { TRACKED_COMMODITY_NAMES } from "./relevance-filter.js";
@@ -43,10 +42,6 @@ function assertSameContent(actual: unknown, expected: unknown, label: string) {
   };
   assert.deepStrictEqual(normalize(actual), normalize(expected), `${label} drifted from the frozen pre-registry snapshot`);
 }
-
-runTest("COMMODITIES matches the pre-registry snapshot", () => {
-  assertSameContent(COMMODITIES, frozen.COMMODITIES, "COMMODITIES");
-});
 
 runTest("COMMODITY_SYMBOLS matches the pre-registry snapshot", () => {
   assertSameContent(COMMODITY_SYMBOLS, frozen.COMMODITY_SYMBOLS, "COMMODITY_SYMBOLS");

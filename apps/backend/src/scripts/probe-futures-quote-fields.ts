@@ -32,7 +32,7 @@ function fmtDate(value: unknown): string {
   return Number.isNaN(d.getTime()) ? "absent" : d.toISOString();
 }
 
-async function probeSymbol(yf: YahooFinance, symbol: string): Promise<Row> {
+async function probeSymbol(yf: InstanceType<typeof YahooFinance>, symbol: string): Promise<Row> {
   const row: Row = {
     symbol,
     quoteType: "absent",

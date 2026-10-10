@@ -1,4 +1,4 @@
-import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
+import { COMMODITY_REGISTRY } from "./commodity-registry.js";
 
 /**
  * Shared relevance filter for all ingestion collectors.

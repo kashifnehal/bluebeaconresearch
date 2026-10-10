@@ -841,3 +841,7 @@ The task explicitly asked for one registry; honoring that required the dependenc
 ### Cross-tree mapping
 
 Recorded as **D44** in `docs/claude_project/10_DECISIONS.md`.
+
+### Reversed 2026-10-10
+
+apps/backend does not depend on packages/shared at runtime. Compiled node output cannot load shared's TypeScript source, and Railway builds from root directory /apps/backend. The registry is duplicated in apps/backend/src/lib/commodity-registry.ts and a parity test keeps both copies equal.

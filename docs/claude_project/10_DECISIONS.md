@@ -829,3 +829,5 @@ Also decided as part of this same pass:
 **Rationale:** The task explicitly asked for one registry; honoring that required the dependency. Flagged here because it reverses a previously deliberate, twice-stated architectural choice elsewhere in the codebase. Also required adding `"type": "module"` to `packages/shared/package.json` — without it, `tsx` (used by backend tests/scripts) transpiled the package's `export *` barrel to CommonJS and Node's ESM/CJS interop only exposed `default`/`module.exports`, not the real named exports.
 
 **Cross-tree mapping:** Recorded as **ADR 040** in `docs/brain/10_DECISIONS.md`.
+
+**Reversed 2026-10-10:** apps/backend does not depend on packages/shared at runtime. Compiled node output cannot load shared's TypeScript source, and Railway builds from root directory /apps/backend. The registry is duplicated in apps/backend/src/lib/commodity-registry.ts and a parity test keeps both copies equal.

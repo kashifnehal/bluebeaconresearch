@@ -1,6 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as Sentry from "@sentry/node";
-import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
+import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
 import { getEnv } from "../env.js";
 import {
   assertAnthropicBudget,

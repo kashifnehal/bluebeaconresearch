@@ -1,5 +1,5 @@
 import YahooFinance from "yahoo-finance2";
-import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
+import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
 import { getRedis, recordRedisError } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { recordServiceHealth } from "../lib/service-health.js";

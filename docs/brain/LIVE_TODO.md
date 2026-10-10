@@ -3,6 +3,13 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## Backend build fix — remove runtime dependency on shared, fix probe script type error, `apps/backend` + `packages/shared`, 2026-10-10
+
+- `probe-yahoo-tickers.ts` (`8187d26`) and `probe-futures-quote-fields.ts` (`d52611c`) both used `YahooFinance` as a type instead of `InstanceType<typeof YahooFinance>` — TS2749, broke `pnpm run build`/`pnpm type-check` since `8187d26`. Railway skipped every backend/workers deploy since `f7847d0` as a result: **W-REGISTRY, TTF_GAS, RBOB, and HEATING_OIL (below) were code-merged but never actually deployed** until this fix lands and a Railway deploy succeeds.
+- Reversed ADR 040/D44: `apps/backend` no longer depends on `@blue-beacon-research/shared` at runtime (compiled `dist/` can't load shared's TS source; Railway builds backend/workers with root dir `/apps/backend`, so `packages/shared` isn't present — `node dist/server.js` failed `ERR_MODULE_NOT_FOUND`). Registry duplicated in `apps/backend/src/lib/commodity-registry.ts`; six backend files re-pointed to it; `@blue-beacon-research/shared` dropped from `apps/backend/package.json`. New `packages/shared/src/constants/commodities.parity.test.ts` (run via relative `tsx` path from the backend `test` script) keeps the two copies deep-equal.
+- Docs: this entry; `10_DECISIONS.md` (both trees, ADR 040/D44 reversal note); canonical trio `claude_project/08_CURRENT_STATUS`, `09_BACKLOG`, `14_CHANGELOG` corrected to say TTF_GAS/RBOB/HEATING_OIL are merged, not live.
+- Verification: `pnpm install --frozen-lockfile` exit 0; `pnpm type-check` exit 0; `cd apps/backend && pnpm run build` exit 0; `node -e "import('./dist/lib/relevance-filter.js')"` prints `ok`; `node dist/server.js` with dummy Supabase env started and listened, no `ERR_MODULE_NOT_FOUND`; `pnpm --filter backend test` and `pnpm --filter web test` exit 0.
+
 ## P-TA-2 — probe Yahoo futures quote fields, `apps/backend` only (read-only), 2026-10-10, this commit
 
 - New `apps/backend/src/scripts/probe-futures-quote-fields.ts` (+ `probe:futures-quote` script in `apps/backend/package.json`), same read-only style as the `8187d26` ticker probe. Calls `yf.quote()` for the eight live `COMMODITY_SYMBOLS` futures tickers (`price-syncer.ts`): `CL=F`, `BZ=F`, `GC=F`, `NG=F`, `ZW=F`, `HG=F`, `SI=F`, `ZC=F`. No DB writes, no change to `price-syncer.ts` or any asset list.
@@ -31,7 +38,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 ## W-ASSETS-ENERGY-3 part 3/3 — HEATING_OIL added, `packages/shared` + `apps/backend` + `apps/web`, 2026-10-10, this commit
 
-- Added `HEATING_OIL` ("Heating Oil / ULSD", `HO=F`, USD/gal, category `energy`) to `COMMODITY_REGISTRY`, the hand-kept `COMMODITIES` display list, `apps/backend/src/routes/commodities.ts`, and `apps/web/lib/signal-filters.ts`'s `FILTER_COMMODITIES`. **W-ASSETS-ENERGY-3 is now complete — TTF_GAS, RBOB, and HEATING_OIL are all live.**
+- Added `HEATING_OIL` ("Heating Oil / ULSD", `HO=F`, USD/gal, category `energy`) to `COMMODITY_REGISTRY`, the hand-kept `COMMODITIES` display list, `apps/backend/src/routes/commodities.ts`, and `apps/web/lib/signal-filters.ts`'s `FILTER_COMMODITIES`. **W-ASSETS-ENERGY-3 is code-complete — TTF_GAS, RBOB, and HEATING_OIL are all merged — but see the "Backend build fix" entry above: none of the three were actually live until that fix deploys** (the backend build had been broken since before this commit).
 - Yahoo ticker/currency verified against the 2026-10-10 probe (`HO=F`, USD, price ~4.74 — consistent with USD/gal).
 - Alias (`"DIESEL"`) and filter anchor (`"diesel"`) sourced only from real stored `signals.title` text (15 rows, e.g. "Diesel prices soar past $6 a gallon", "Russian Diesel Export Ban Offsets Crude Sales Growth"). No literal "heating oil" or "ULSD" headline exists in stored data — diesel is the real-world fuel this NYMEX heating-oil/ULSD contract actually tracks and the term news coverage uses, so it was used instead of inventing an alias that doesn't appear anywhere.
 - `apps/backend/src/workers/gnews-collector.ts`'s search query gained `OR diesel`.
