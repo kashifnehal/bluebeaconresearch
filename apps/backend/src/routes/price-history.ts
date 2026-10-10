@@ -1,19 +1,13 @@
 import type { FastifyInstance } from "fastify";
 import YahooFinance from "yahoo-finance2";
+import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
 
-// On-demand 5-year weekly chart (#106). Mirrors the Yahoo ticker map in
-// workers/price-syncer.ts but is deliberately a separate copy — that job is
-// unrelated (live quotes into commodity_prices on a schedule) and is not
-// touched here. Unknown symbols never pass through to Yahoo (closed set).
-export const YAHOO_TICKERS: Record<string, string> = {
-  USOIL: "CL=F",
-  UKOIL: "BZ=F",
-  XAUUSD: "GC=F",
-  NGAS: "NG=F",
-  WHEAT: "ZW=F",
-  COPPER: "HG=F",
-  XAGUSD: "SI=F",
-  CORN: "ZC=F",
+// On-demand 5-year weekly chart (#106). The commodity half is now derived from
+// the shared COMMODITY_REGISTRY; the forex half stays a deliberately separate,
+// hand-kept copy (not FOREX_SYMBOLS from workers/price-syncer.ts — that job is
+// unrelated: live quotes into commodity_prices on a schedule). Unknown symbols
+// never pass through to Yahoo (closed set).
+const FOREX_YAHOO_TICKERS: Record<string, string> = {
   EURUSD: "EURUSD=X",
   GBPUSD: "GBPUSD=X",
   USDJPY: "USDJPY=X",
@@ -21,6 +15,11 @@ export const YAHOO_TICKERS: Record<string, string> = {
   USDRUB: "USDRUB=X",
   USDCNY: "USDCNY=X",
   USDINR: "USDINR=X", // W7-ASSET-LISTS, 2026-10-05
+};
+
+export const YAHOO_TICKERS: Record<string, string> = {
+  ...Object.fromEntries(COMMODITY_REGISTRY.map((c) => [c.symbol, c.yahooTicker])),
+  ...FOREX_YAHOO_TICKERS,
 };
 
 const CACHE_TTL_MS = 15 * 60 * 1000;

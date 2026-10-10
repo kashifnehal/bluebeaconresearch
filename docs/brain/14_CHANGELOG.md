@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-09 (v0.159.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-10 (v0.160.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.160.0 — W-REGISTRY: single commodity-asset registry (2026-10-10, this commit)
+
+`packages/shared` + 4 `apps/backend` files. New `COMMODITY_REGISTRY` export (`packages/shared/src/constants/commodities.ts`) consolidates every per-commodity-asset fact — Yahoo ticker, Claude classifier allowlist/aliases, RSS relevance-filter anchor words — that was hand-duplicated across `price-syncer.ts` (`COMMODITY_SYMBOLS`), `claude.service.ts` (`ALLOWED_COMMODITY_ASSETS`/`COMMODITY_ASSET_ALIASES`), `relevance-filter.ts` (`TRACKED_COMMODITY_NAMES`), and `price-history.ts` (`YAHOO_TICKERS`'s commodity half). All four now derive from the registry; no asset added, no ticker/alias/anchor value changed, forex logic (`FOREX_SYMBOLS`/`FOREX_PAIRS`) untouched. `COMMODITIES` itself stays a separate hand-kept literal (guards a literal-union type `chokepoints.ts` depends on), checked against the registry by a parity test. Required adding `@blue-beacon-research/shared` as an `apps/backend` dependency — see ADR 040 — and `"type": "module"` in `packages/shared/package.json` to fix `tsx`/Node ESM-CJS interop silently dropping the package's named exports. Full detail: `LIVE_TODO.md`.
 
 ### v0.159.0 — W14-W: price stale threshold, GDELT credit, Data-as-of stamps (2026-10-09, `8edc57d`)
 

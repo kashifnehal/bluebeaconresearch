@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-09 (W14-W price/GDELT/Data-as-of — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-10 (W-REGISTRY — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-10 (W-REGISTRY: single commodity-asset registry, `packages/shared` + `apps/backend`, this commit) — `COMMODITY_REGISTRY` (`packages/shared`) is now the single source for each commodity asset's Yahoo ticker, Claude classifier allowlist/alias, and RSS relevance-filter anchor words; `price-syncer.ts`, `claude.service.ts`, `relevance-filter.ts`, and `price-history.ts` all derive from it instead of hand-duplicating the same values. No asset added, no behavior change — verified by a parity test against a frozen pre-refactor snapshot. Required adding `@blue-beacon-research/shared` as an `apps/backend` dependency (ADR 040/D44), reversing a prior "duplicate rather than depend" pattern elsewhere in the backend. Full detail: `docs/brain/14_CHANGELOG.md` v0.160.0, `docs/brain/LIVE_TODO.md`. This tree: PHASE 137.
 
 > ⚠️ NEW 2026-10-09 (W14-W: price stale threshold, GDELT credit, Data-as-of stamps, `apps/web` only, `8edc57d`) — `PriceTicker` stale threshold now 60 min (matches the 15-min price-sync cadence below); `LegalDisclaimerFooter` links GDELT Project attribution; dashboard/map/watchlist show a "Data as of" timestamp from already-fetched data. Full detail: `docs/brain/LIVE_TODO.md`. This tree: PHASE 136.
 

@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-09 (PHASE 136).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-10 (PHASE 137).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 137 — W-REGISTRY: single commodity-asset registry (2026-10-10, this commit)
+
+`packages/shared` + 4 `apps/backend` files. Consolidated every per-commodity-asset fact (Yahoo ticker, Claude allowlist/aliases, RSS filter anchor words) hand-duplicated across 5 files into one `COMMODITY_REGISTRY` export; no asset or value changed, forex untouched. Required adding `@blue-beacon-research/shared` as an `apps/backend` dependency (see ADR 040/D44 in `10_DECISIONS.md`) — a reversal of a prior "duplicate rather than depend" pattern elsewhere in the backend, flagged explicitly rather than applied silently. Full detail: `docs/brain/14_CHANGELOG.md` v0.160.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 136 — W14-W: price stale threshold, GDELT credit, Data-as-of stamps (2026-10-09, `8edc57d`)
 

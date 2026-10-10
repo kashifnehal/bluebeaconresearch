@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-09 (W14-W: price stale threshold, GDELT credit, Data-as-of stamps, v0.159.0, `8edc57d`)
+Last updated: 2026-10-10 (W-REGISTRY: single commodity-asset registry, v0.160.0, this commit)
+
+> ⚠️ NEW 2026-10-10 (W-REGISTRY: single commodity-asset registry, `packages/shared` + `apps/backend`, this commit) — `COMMODITY_REGISTRY` is now the single source for each commodity asset's Yahoo ticker, Claude classifier allowlist/alias, and RSS relevance-filter anchor words; `price-syncer.ts`'s `COMMODITY_SYMBOLS`, `claude.service.ts`'s `ALLOWED_COMMODITY_ASSETS`/`COMMODITY_ASSET_ALIASES`, `relevance-filter.ts`'s `TRACKED_COMMODITY_NAMES`, and `price-history.ts`'s `YAHOO_TICKERS` (commodity half) all derive from it now instead of hand-duplicating the same values 5 ways. No asset added, no ticker/alias/anchor value changed, forex untouched — verified by a new parity test (`apps/backend/src/lib/commodity-registry-parity.test.ts`) against a frozen pre-refactor snapshot, plus a clean full `pnpm --filter backend test` and 3-package type-check. Required adding `@blue-beacon-research/shared` as an `apps/backend` dependency and `"type": "module"` to `packages/shared/package.json` — see ADR 040. Full detail: `14_CHANGELOG.md` v0.160.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-09 (W14-W: price stale threshold, GDELT credit, Data-as-of stamps, `apps/web` only, `8edc57d`) — `PriceTicker` stale threshold now 60 min to match the decoupled 15-min price-sync cadence (see v0.158.0 below); `LegalDisclaimerFooter` links GDELT Project attribution; dashboard/map/watchlist show a "Data as of" timestamp sourced from already-fetched data, no new queries. Full detail: `14_CHANGELOG.md` v0.159.0, `LIVE_TODO.md`.
 

@@ -1,18 +1,14 @@
 import YahooFinance from "yahoo-finance2";
+import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
 import { getRedis, recordRedisError } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 
-const COMMODITY_SYMBOLS = {
-  USOIL: "CL=F",   // WTI Crude Oil futures
-  UKOIL: "BZ=F",   // Brent Crude Oil futures
-  XAUUSD: "GC=F",  // Gold futures
-  NGAS: "NG=F",    // Natural Gas futures
-  WHEAT: "ZW=F",   // Wheat futures (CBOT)
-  COPPER: "HG=F",  // Copper futures
-  XAGUSD: "SI=F",  // Silver futures
-  CORN: "ZC=F",    // Corn futures
-} as const;
+// Derived from the shared COMMODITY_REGISTRY (one entry per asset, ticker
+// values unchanged) instead of being hand-duplicated here.
+export const COMMODITY_SYMBOLS: Record<string, string> = Object.fromEntries(
+  COMMODITY_REGISTRY.map((c) => [c.symbol, c.yahooTicker]),
+);
 
 // Forex pairs (#87). Yahoo Finance forex ticker format is "<PAIR>=X". All six
 // verified against a real yf.quote() call on 2026-09-09 — USDRUB=X and USDCNY=X

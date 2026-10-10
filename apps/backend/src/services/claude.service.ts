@@ -1,5 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as Sentry from "@sentry/node";
+import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
 import { getEnv } from "../env.js";
 import {
   assertAnthropicBudget,
@@ -331,22 +332,17 @@ export type ClassificationResult = {
   invalidationCondition?: string | null;
 };
 
+// Derived from the shared COMMODITY_REGISTRY instead of being hand-duplicated
+// here. COPPER / XAGUSD (W7-ASSETS-COPPER-SILVER) and the alias map below are
+// both sourced from the same registry entries now.
+export const ALLOWED_COMMODITY_ASSETS = new Set<string>(COMMODITY_REGISTRY.map((c) => c.symbol));
+
+export const COMMODITY_ASSET_ALIASES: Record<string, string> = Object.fromEntries(
+  COMMODITY_REGISTRY.flatMap((c) => c.aliases.map((alias) => [alias, c.symbol])),
+);
+
 export class ClaudeService {
   private client: Anthropic | null = null;
-
-  private static readonly ALLOWED_COMMODITY_ASSETS = new Set([
-    "USOIL",
-    "UKOIL",
-    "NGAS",
-    "XAUUSD",
-    "WHEAT",
-    "CORN",
-    // COPPER / XAGUSD added W7-ASSETS-COPPER-SILVER: both had zero tagged
-    // signals in 30 days although price-syncer.ts already syncs them
-    // (HG=F / SI=F) — see COMMODITY_ASSET_ALIASES below.
-    "COPPER",
-    "XAGUSD",
-  ]);
 
   // Forex pairs (#87). Kept as its own allowlist rather than folded into
   // ALLOWED_COMMODITY_ASSETS — EURUSD/USDRUB used to live in that set (a
@@ -371,48 +367,17 @@ export class ClaudeService {
   // real claude-haiku-4-5-20251001 call for a Black Sea grain/oil disruption event
   // returned assets ["Wheat","Corn","Barley","Crude Oil","Shipping Costs"] — none of
   // which case-sensitively match the ticker allowlist, so sanitizeCommodityImpacts
-  // silently zeroed the array out on every real-Claude classification. This alias map
-  // normalizes the common natural-language names (and case variants) Claude actually
-  // returns onto the canonical tickers before the allowlist filter runs. Names with no
-  // canonical ticker in our allowlist (e.g. "Barley", "Shipping Costs") intentionally
-  // still drop — that's the same scope restriction the allowlist already enforces, not
-  // a new gap.
-  private static readonly COMMODITY_ASSET_ALIASES: Record<string, string> = {
-    OIL: "USOIL",
-    "CRUDE OIL": "USOIL",
-    CRUDE: "USOIL",
-    WTI: "USOIL",
-    "WTI CRUDE": "USOIL",
-    "US OIL": "USOIL",
-    BRENT: "UKOIL",
-    "BRENT CRUDE": "UKOIL",
-    "BRENT OIL": "UKOIL",
-    "UK OIL": "UKOIL",
-    "NATURAL GAS": "NGAS",
-    "NAT GAS": "NGAS",
-    NG: "NGAS",
-    LNG: "NGAS",
-    GAS: "NGAS",
-    GOLD: "XAUUSD",
-    "XAU/USD": "XAUUSD",
-    XAU: "XAUUSD",
-    MAIZE: "CORN",
-    // W7-ASSETS-COPPER-SILVER: price-syncer.ts uses HG=F for COPPER and SI=F
-    // for XAGUSD — these aliases normalize Claude's natural-language asset
-    // names onto those same tickers.
-    COPPER: "COPPER",
-    "COPPER FUTURES": "COPPER",
-    HG: "COPPER",
-    SILVER: "XAGUSD",
-    XAG: "XAGUSD",
-    "XAG/USD": "XAGUSD",
-    "SILVER FUTURES": "XAGUSD",
-  };
+  // silently zeroed the array out on every real-Claude classification. COMMODITY_ASSET_ALIASES
+  // (derived from the registry above) normalizes the common natural-language names
+  // (and case variants) Claude actually returns onto the canonical tickers before the
+  // allowlist filter runs. Names with no canonical ticker in our allowlist (e.g.
+  // "Barley", "Shipping Costs") intentionally still drop — that's the same scope
+  // restriction the allowlist already enforces, not a new gap.
 
   private normalizeCommodityAsset(asset: string): string | null {
     const upper = String(asset ?? "").trim().toUpperCase();
-    if (ClaudeService.ALLOWED_COMMODITY_ASSETS.has(upper)) return upper;
-    const aliased = ClaudeService.COMMODITY_ASSET_ALIASES[upper];
+    if (ALLOWED_COMMODITY_ASSETS.has(upper)) return upper;
+    const aliased = COMMODITY_ASSET_ALIASES[upper];
     return aliased ?? null;
   }
 

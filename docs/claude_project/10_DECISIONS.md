@@ -819,3 +819,13 @@ Also decided as part of this same pass:
 **Rationale:** Shipping a paid product on a data source without a completed rights review is a legal exposure the team has not evaluated; gating paid-product use behind a memo keeps Yahoo usable for development and testing without implying it has been cleared for commercial use.
 
 **Cross-tree mapping:** Recorded as **ADR 039** in `docs/brain/10_DECISIONS.md`.
+
+## D44: `apps/backend` now depends on `@blue-beacon-research/shared` (W-REGISTRY commodity registry)
+
+**Decision:** `apps/backend` now has `@blue-beacon-research/shared` as a `workspace:*` dependency and imports the new `COMMODITY_REGISTRY` from it in `price-syncer.ts`, `claude.service.ts`, `relevance-filter.ts`, and `price-history.ts`. The prior "duplicate rather than depend" pattern in `signals.ts` / `relevance-rank.ts` is unchanged — this covers only the commodity-registry imports, not a blanket reversal.
+
+**Context:** `signals.ts` and `relevance-rank.ts` both carried a comment stating apps/backend deliberately avoids depending on `@blue-beacon-research/shared`. W-REGISTRY (2026-10-10) consolidated every per-commodity-asset fact hand-duplicated across five files into one `COMMODITY_REGISTRY` export in the shared package, and the task required the four backend consumers to derive from it.
+
+**Rationale:** The task explicitly asked for one registry; honoring that required the dependency. Flagged here because it reverses a previously deliberate, twice-stated architectural choice elsewhere in the codebase. Also required adding `"type": "module"` to `packages/shared/package.json` — without it, `tsx` (used by backend tests/scripts) transpiled the package's `export *` barrel to CommonJS and Node's ESM/CJS interop only exposed `default`/`module.exports`, not the real named exports.
+
+**Cross-tree mapping:** Recorded as **ADR 040** in `docs/brain/10_DECISIONS.md`.

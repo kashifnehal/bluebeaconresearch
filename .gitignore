@@ -52,3 +52,7 @@ yarn-error.log*
 
 # replay-gate.ts script output (local analysis only, not source)
 apps/backend/replay-gate-output.json
+
+# W-REGISTRY before/after snapshots used to prove the commodity-registry
+# refactor was behavior-preserving (local analysis only, not source)
+apps/backend/tmp/

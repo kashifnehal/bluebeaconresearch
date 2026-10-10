@@ -1,3 +1,5 @@
+import { COMMODITY_REGISTRY } from "@blue-beacon-research/shared";
+
 /**
  * Shared relevance filter for all ingestion collectors.
  *
@@ -115,9 +117,11 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Mirrors price-syncer.ts's COMMODITY_SYMBOLS (USOIL/UKOIL/XAUUSD/NGAS/WHEAT/
- * COPPER/XAGUSD/CORN) as the plain-English words a headline would actually use. */
-const TRACKED_COMMODITY_NAMES = ["crude", "oil", "gold", "silver", "natural gas", "wheat", "copper", "corn"];
+/** Derived from the shared COMMODITY_REGISTRY's filterAnchors — the plain-English
+ * words a headline would actually use for each tracked commodity. */
+export const TRACKED_COMMODITY_NAMES: string[] = [
+  ...new Set(COMMODITY_REGISTRY.flatMap((c) => c.filterAnchors)),
+];
 
 /** An anchor is an existing geopolitical word or a tracked commodity name —
  * enough context that an AMBIGUOUS exclude keyword shouldn't drop the title. */

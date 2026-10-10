@@ -823,3 +823,21 @@ Shipping a paid product on a data source without a completed rights review is a 
 ### Cross-tree mapping
 
 Recorded as **D43** in `docs/claude_project/10_DECISIONS.md`.
+
+## 41. ADR 040: `apps/backend` now depends on `@blue-beacon-research/shared` (W-REGISTRY commodity registry)
+
+### Context
+
+`apps/backend/src/routes/signals.ts` and `apps/backend/src/lib/relevance-rank.ts` both carried a comment stating apps/backend deliberately does not depend on `@blue-beacon-research/shared`, duplicating small literal lists instead of adding that cross-app dependency. W-REGISTRY (2026-10-10) consolidated every per-commodity-asset fact (Yahoo ticker, Claude classifier allowlist/aliases, RSS relevance-filter anchor words) that was hand-duplicated across `packages/shared/src/constants/commodities.ts`, `price-syncer.ts`, `claude.service.ts`, `relevance-filter.ts`, and `price-history.ts` into one `COMMODITY_REGISTRY` export in the shared package, and the task explicitly required the four backend consumers to derive their lists from it.
+
+### Decision
+
+`apps/backend` now has `@blue-beacon-research/shared` as a `workspace:*` dependency (added to `apps/backend/package.json`) and imports `COMMODITY_REGISTRY` from it in `price-syncer.ts`, `claude.service.ts`, `relevance-filter.ts`, and `price-history.ts`. The prior "duplicate rather than depend" pattern in `signals.ts` / `relevance-rank.ts` is unchanged and not retroactively converted — this decision covers only the new commodity-registry imports, not a blanket reversal.
+
+### Rationale
+
+The task explicitly asked for one registry; honoring that required the dependency. Flagged here rather than applied silently because it reverses a previously deliberate, twice-stated architectural choice elsewhere in the same codebase. Required an unrelated fix to make it work: `packages/shared/package.json` was missing `"type": "module"`, so tsx (used by all backend tests/scripts) transpiled the package's `export *` barrel to CommonJS and Node's ESM/CJS interop only exposed `default`/`module.exports`, not the real named exports — added `"type": "module"` to fix resolution for `tsx`-run code (Next.js's bundler in `apps/web` was unaffected either way).
+
+### Cross-tree mapping
+
+Recorded as **D44** in `docs/claude_project/10_DECISIONS.md`.
