@@ -3,15 +3,6 @@ import type { SignalOutcomeRow } from "@/lib/market-impact-assessment";
 
 const OUTCOME_ROWS_PAGE_SIZE = 1000;
 
-/**
- * Pages through signal_outcomes for the given assets. PostgREST caps a single
- * response at its configured max-rows (this project's signal_outcomes easily
- * exceeds that per asset), so a single unranged .select() would silently
- * truncate and undercount every asset/checkpoint — the same bug
- * app/api/signals/[id]/route.ts's magnitude query was fixed for. Extracted
- * here so the calendar's asset-level market-impact endpoint reuses this exact
- * query instead of reimplementing the paging loop.
- */
 type RawOutcomeRow = {
   asset: string;
   checkpoint_hours: number;
@@ -49,6 +40,7 @@ export async function fetchSignalOutcomeRows(
       .select("asset, checkpoint_hours, actual_pct_change, signals(event_date)")
       .in("asset", assets)
       .not("actual_pct_change", "is", null)
+      .order("id", { ascending: true })
       .range(from, from + OUTCOME_ROWS_PAGE_SIZE - 1);
 
     if (error) {

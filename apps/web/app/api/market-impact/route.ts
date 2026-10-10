@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
-import { fetchMatchedBaselines } from "@/lib/price-baseline-server";
+import { fetchMatchedBaselinesWithTimeout } from "@/lib/price-baseline-server";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     return apiErrorLogged(500, "db_error", error);
   }
 
-  const baselinesByAsset = await fetchMatchedBaselines(supabase, assets, rows);
+  const baselinesByAsset = await fetchMatchedBaselinesWithTimeout(supabase, assets, rows);
 
   const magnitudes: Record<string, MarketImpactAssessmentEntry> = Object.fromEntries(
     assets.map((asset) => [
