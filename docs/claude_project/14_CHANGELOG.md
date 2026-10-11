@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-10 (PHASE 143).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-11 (PHASE 144).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 144 — Fix empty price charts for logged-in users (2026-10-11, this commit)
+
+`apps/web` only. `/api/prices/history` and `/api/prices` built a cookie client from the raw project URL, but login routes through the separate auth-proxy URL — the cookie names never matched, so logged-in users read as anonymous and got empty charts/sparklines site-wide. Both routes now resolve auth/data through `getRouteSupabaseClients()`; a real DB failure now returns `502`, not a silent empty `200`. The sparkline and drill-down chart show an honest "Price history unavailable right now" + Retry on failure instead of the old "not enough history" text. Fixed a `WatchlistClient` hydration mismatch (React error #418, 11 placeholder cards visible before the real list loaded). New "Price History" `/status` check. Full detail: `docs/brain/14_CHANGELOG.md` v0.167.0, ADR 042/D46, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 143 — Docs: ADR 041/D45 asset admission by coverage state + Permutable/RavenPack claims + Yahoo rights update (2026-10-10, this commit)
 

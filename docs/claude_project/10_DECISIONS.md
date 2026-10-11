@@ -845,3 +845,13 @@ Note: sugar (SB=F) and cotton (CT=F) fail yf.quote() with a schema validation er
 **Rationale:** A probe on 2026-10-09 showed 18 of 20 candidate tickers return clean daily data; competitor coverage numbers are vendor-stated and differ from each other.
 
 **Cross-tree mapping:** Recorded as **ADR 041** in `docs/brain/10_DECISIONS.md`.
+
+## D46: Price history reads — auth decision from the auth-address client, data reads use the server key (2026-10-11)
+
+**Context:** `/api/prices/history` and `/api/prices` (Tier 1) built their own cookie-scoped Supabase client from `NEXT_PUBLIC_SUPABASE_URL` + `cookies()`. Login runs through `NEXT_PUBLIC_SUPABASE_AUTH_URL` (the auth proxy, added 2026-09-27), so the cookie names Supabase sets at login never matched what a client built from the raw project URL expects. Both routes saw no valid session, fell back to anonymous RLS, and returned zero rows — logged-in users got empty price charts and sparklines site-wide (the 1M chart and every watchlist sparkline use `/api/prices/history`); Vercel logs showed "Invalid Refresh Token: Refresh Token Not Found" on both routes.
+
+**Decision:** Price history reads. Auth decision comes from the auth-address client (`getRouteSupabaseClients`); data reads use the server key. No route builds a cookie client from the raw project URL for session decisions, because the cookie name depends on the address and login uses the auth proxy address (env var created 2026-09-27).
+
+**Rationale:** `lib/supabase-server.ts`'s `getRouteSupabaseClients()` already resolves `user` through the auth-proxy-routed client and separately exposes a service-role `supabase` client for the actual table read — exactly the split these two routes were missing. Reusing it instead of hand-rolling a third cookie client avoids reintroducing this exact class of bug a third time (see the SSE 401 history already documented in `lib/supabase-server.ts`).
+
+**Cross-tree mapping:** Recorded as **ADR 042** in `docs/brain/10_DECISIONS.md`.

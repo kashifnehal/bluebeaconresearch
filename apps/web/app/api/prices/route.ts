@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { Redis } from "@upstash/redis";
 import { COMMODITY_REGISTRY, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import { rateLimitOrPass } from "@/lib/ratelimit";
+import { getRouteSupabaseClients } from "@/lib/supabase-server";
 
 type CommodityPriceRow = {
   symbol: string;
@@ -79,17 +78,10 @@ export async function GET(req: NextRequest) {
 
   // Tier 1: Try querying Supabase commodity_prices table first
   try {
-    const cookieStore = await cookies();
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const clients = await getRouteSupabaseClients();
 
-    if (supabaseUrl && supabaseAnonKey) {
-      const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-        cookies: {
-          getAll: () => cookieStore.getAll(),
-          setAll: () => {},
-        },
-      });
+    if (clients) {
+      const { supabase } = clients;
 
       const { data, error } = await supabase
         .from("commodity_prices")

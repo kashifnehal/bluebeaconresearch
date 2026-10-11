@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 import { apiError } from "@/lib/api-response";
+import { getRouteSupabaseClients, type RouteSupabaseClients } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -12,7 +11,17 @@ const MAX_DAYS = 90;
 const RANGE_PAGE_SIZE = 1000;
 const MAX_RANGE_PAGES = 20;
 
-export async function GET(req: NextRequest) {
+// Injectable deps — same pattern as lib/events-post-handler.ts — so route
+// tests can supply fakes for the Supabase client and rate limiter without a
+// module-mocking framework.
+export type PricesHistoryDeps = {
+  rateLimitOrPass: (key: string) => Promise<{ success: boolean }>;
+  getRouteSupabaseClients: () => Promise<RouteSupabaseClients | null>;
+};
+
+const defaultDeps: PricesHistoryDeps = { rateLimitOrPass, getRouteSupabaseClients };
+
+export async function handleHistoryGet(req: NextRequest, deps: PricesHistoryDeps = defaultDeps) {
   const url = new URL(req.url);
   const symbol = url.searchParams.get("symbol");
   if (!symbol) {
@@ -23,13 +32,12 @@ export async function GET(req: NextRequest) {
   const daysParam = url.searchParams.get("days");
   const days = daysParam ? Math.min(MAX_DAYS, Math.max(1, Number(daysParam) || 0)) : null;
 
-  // No auth check (same as /api/prices — public market data), but still rate-limited.
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
     "unknown";
   try {
-    const rl = await rateLimitOrPass(`prices-history:${ip}`);
+    const rl = await deps.rateLimitOrPass(`prices-history:${ip}`);
     if (!rl.success) {
       // Same hybrid shape as /api/prices' 429 — keeps `points: []` so existing
       // consumers (`json.points ?? []`) keep working, while adding the standard
@@ -44,19 +52,23 @@ export async function GET(req: NextRequest) {
     console.warn("⚠️ [API Prices History] Rate limit check failed, continuing:", err);
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return NextResponse.json({ points: [] });
+  const clients = await deps.getRouteSupabaseClients();
+  if (!clients) {
+    return NextResponse.json(
+      { points: [], error: { code: "unavailable", message: "unavailable" } },
+      { status: 503 },
+    );
   }
-
-  const cookieStore = await cookies();
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll: () => cookieStore.getAll(),
-      setAll: () => {},
-    },
-  });
+  const { supabase, user } = clients;
+  // Auth decision comes from `user` (resolved via the auth-proxy client inside
+  // getRouteSupabaseClients), never from whether a cookie client happens to exist —
+  // see docs/claude_project/10_DECISIONS.md D46.
+  if (!user && process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { points: [], error: { code: "unauthenticated", message: "unauthenticated" } },
+      { status: 401 },
+    );
+  }
 
   if (days) {
     const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
@@ -76,7 +88,11 @@ export async function GET(req: NextRequest) {
         .range(from, from + RANGE_PAGE_SIZE - 1);
 
       if (error || !data) {
-        return NextResponse.json({ points: [] });
+        console.error("[API Prices History] db_error (range):", error?.message);
+        return NextResponse.json(
+          { points: [], error: { code: "db_error", message: "db_error" } },
+          { status: 502 },
+        );
       }
       rows.push(...data);
       if (data.length < RANGE_PAGE_SIZE) break;
@@ -94,9 +110,17 @@ export async function GET(req: NextRequest) {
     .limit(HISTORY_POINTS);
 
   if (error || !data) {
-    return NextResponse.json({ points: [] });
+    console.error("[API Prices History] db_error:", error?.message);
+    return NextResponse.json(
+      { points: [], error: { code: "db_error", message: "db_error" } },
+      { status: 502 },
+    );
   }
 
   const points = [...data].reverse().map((r) => ({ price: r.price, fetchedAt: r.fetched_at as string }));
   return NextResponse.json({ points });
+}
+
+export async function GET(req: NextRequest) {
+  return handleHistoryGet(req);
 }

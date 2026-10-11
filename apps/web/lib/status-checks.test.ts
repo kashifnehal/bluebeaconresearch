@@ -4,6 +4,7 @@ import {
   evaluateIntelligenceFeedHealth,
   evaluateClassifierHealth,
   evaluateDataPipelineFreshness,
+  evaluatePriceHistoryHealth,
   BUDGET_CLOSED_DETAIL,
   DATA_PIPELINE_BUDGET_CLOSED_DETAIL,
   INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX,
@@ -206,4 +207,31 @@ runTest("Intelligence Feed appends the paused suffix only when budgetClosed is t
   assert.equal(degradedClosed.status, "Degraded");
   assert.equal(degradedClosed.detail, `${degradedOpen.detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
   assert.doesNotMatch(degradedOpen.detail, /Collection is paused/);
+});
+
+runTest("Price History is Unknown when the freshness query could not run", () => {
+  const result = evaluatePriceHistoryHealth(0, null);
+  assert.equal(result.status, "Unknown");
+  assert.equal(result.name, "Price History");
+});
+
+runTest("Price History is Operational with enough rows and a fresh newest row", () => {
+  const result = evaluatePriceHistoryHealth(1550, 10);
+  assert.equal(result.status, "Operational");
+  assert.match(result.detail, /1550 rows in last 30d/);
+});
+
+runTest("Price History is Degraded when rows exist but the newest is stale", () => {
+  const result = evaluatePriceHistoryHealth(1550, 46);
+  assert.equal(result.status, "Degraded");
+});
+
+runTest("Price History is Degraded when fresh but row count is too low", () => {
+  const result = evaluatePriceHistoryHealth(5, 10);
+  assert.equal(result.status, "Degraded");
+});
+
+runTest("Price History boundary: exactly 100 rows and exactly 45 minutes is still Operational", () => {
+  const result = evaluatePriceHistoryHealth(100, 45);
+  assert.equal(result.status, "Operational");
 });

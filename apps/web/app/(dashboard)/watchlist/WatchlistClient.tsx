@@ -59,25 +59,56 @@ type Price = {
   changePct24h?: number;
 };
 
+export type PriceHistoryResponseBody = {
+  points: { price: number; fetchedAt: string }[];
+  error?: { code: string; message: string };
+};
+
+// Shared by every /api/prices/history caller (the sparkline here, and the
+// drill-down chart in watchlist/[symbol]/page.tsx): a rate-limit/db/auth
+// failure comes back as a 200-shaped `{ points: [] }` body is no longer
+// treated the same as "no history yet" — it must surface as a query error so
+// the UI can tell the two apart instead of silently showing an empty chart.
+export function parsePriceHistoryPoints(ok: boolean, json: PriceHistoryResponseBody) {
+  if (!ok || json.error) {
+    throw new Error(json.error?.code ?? "price_history_failed");
+  }
+  return json.points ?? [];
+}
+
+export type SparklineDisplay = "loading" | "error" | "insufficient" | "chart";
+
+export function sparklineDisplayState(
+  isLoading: boolean,
+  isError: boolean,
+  pointsLength: number,
+): SparklineDisplay {
+  if (isLoading) return "loading";
+  if (isError) return "error";
+  if (pointsLength < 2) return "insufficient";
+  return "chart";
+}
+
 /**
  * Real recent-price sparkline (replaces a previous Math.random() placeholder that
  * presented fabricated bars as a "LIVE VOLATILITY INDEX" — same pattern already
  * removed elsewhere in this product; not okay to leave in a paying trader's view).
  */
 function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["price-history", symbol],
     queryFn: async () => {
       const res = await fetch(`/api/prices/history?symbol=${encodeURIComponent(symbol)}`);
-      const json = (await res.json()) as { points: { price: number; fetchedAt: string }[] };
-      return json.points ?? [];
+      const json = (await res.json()) as PriceHistoryResponseBody;
+      return parsePriceHistoryPoints(res.ok, json);
     },
     staleTime: 60_000,
   });
 
   const points = (data ?? []).map((p) => p.price);
+  const display = sparklineDisplayState(isLoading, isError, points.length);
 
-  if (isLoading) {
+  if (display === "loading") {
     return (
       <div
         className="absolute inset-x-6 top-6 bottom-12 flex items-end gap-1"
@@ -90,7 +121,24 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
     );
   }
 
-  if (points.length < 2) {
+  if (display === "error") {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
+          Price history unavailable right now
+        </p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="pointer-events-auto text-primary hover:text-primary-container font-label text-[11px] uppercase tracking-widest font-bold transition-colors cursor-pointer"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (display === "insufficient") {
     return (
       <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
         Not enough price history yet for a trend view
@@ -128,7 +176,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
   );
 }
 
-function withPreselect(symbols: string[], preselect: string | null): string[] {
+export function withPreselect(symbols: string[], preselect: string | null): string[] {
   if (!preselect || symbols.includes(preselect)) return symbols;
   return [...symbols, preselect];
 }
@@ -136,28 +184,12 @@ function withPreselect(symbols: string[], preselect: string | null): string[] {
 export function WatchlistClient() {
   const params = useSearchParams();
   const preselect = params.get("symbol");
-  const [watch, setWatch] = useState<string[]>(() => {
-    const stored = readStoredWatchlist();
-    const fallback = [...DEFAULT_WATCHLIST];
-    if (preselect) {
-      return withPreselect(
-        stored?.symbols && stored.symbols.length > 0 ? stored.symbols : fallback,
-        preselect,
-      );
-    }
-    // Seeded + not suggested + possibly empty = the user cleared the list.
-    if (stored && stored.seeded && stored.suggested === false) {
-      return stored.symbols;
-    }
-    if (stored?.symbols && stored.symbols.length > 0) return stored.symbols;
-    return fallback;
-  });
-  const [isSuggested, setIsSuggested] = useState(() => {
-    if (preselect) return false;
-    const stored = readStoredWatchlist();
-    if (stored && stored.seeded && stored.suggested === false) return false;
-    return stored?.suggested ?? true;
-  });
+  // Deterministic initial values — must match server-rendered HTML exactly, so
+  // localStorage (only available client-side) cannot be read here (React error
+  // #418 hydration mismatch). The real list is read inside the hydration effect
+  // below instead, and the card grid stays hidden behind a skeleton until then.
+  const [watch, setWatch] = useState<string[]>([]);
+  const [isSuggested, setIsSuggested] = useState(true);
   const [hydrated, setHydrated] = useState(false);
 
   // Preference-aware default (#89, extended for forex in #87): when the user has
@@ -383,6 +415,16 @@ export function WatchlistClient() {
         </div>
 
         {/* Commodity Cards Grid */}
+        {!hydrated ? (
+          <div
+            className="grid grid-cols-1 xl:grid-cols-3 gap-6"
+            data-testid="watchlist-grid-skeleton"
+          >
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="rounded-xl h-[280px]" />
+            ))}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {watch.map((sym) => {
             const meta = WATCHLIST_ASSETS.find((c) => c.symbol === sym);
@@ -453,6 +495,7 @@ export function WatchlistClient() {
             );
           })}
         </div>
+        )}
 
         {/* Dashboard Analytics Section */}
         <div className="grid grid-cols-12 gap-6 mt-12 mb-12">

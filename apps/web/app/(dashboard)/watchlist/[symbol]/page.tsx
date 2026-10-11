@@ -27,6 +27,7 @@ import { safeFormatDistanceToNow } from "@/lib/utils";
 import { logUsageEvent } from "@/lib/funnel-events";
 import { isHintSeen, markHintSeen } from "@/lib/feature-hints";
 import { toggleWatchlistSymbol } from "@/lib/watchlist-follow";
+import { parsePriceHistoryPoints, sparklineDisplayState } from "../WatchlistClient";
 import type { Direction } from "@blue-beacon-research/shared";
 
 const CHART_ATTRIBUTION_HINT_ID = "chart_attribution";
@@ -223,14 +224,19 @@ export default function WatchlistSymbolPage() {
   const price = pricesData?.prices.find((p) => p.symbol === symbol);
   const pct = price ? (price.change_pct_24h ?? price.changePct24h ?? 0) : 0;
 
-  const { data: historyPoints, isLoading: historyLoading } = useQuery({
+  const {
+    data: historyPoints,
+    isLoading: historyLoading,
+    isError: historyError,
+    refetch: refetchHistory,
+  } = useQuery({
     queryKey: ["price-history", symbol, HISTORY_DAYS],
     queryFn: async () => {
       const res = await fetch(
         `/api/prices/history?symbol=${encodeURIComponent(symbol)}&days=${HISTORY_DAYS}`,
       );
-      const json = (await res.json()) as { points: PricePoint[] };
-      return json.points ?? [];
+      const json = (await res.json()) as { points: PricePoint[]; error?: { code: string; message: string } };
+      return parsePriceHistoryPoints(res.ok, json);
     },
   });
   const points = historyPoints ?? [];
@@ -276,8 +282,8 @@ export default function WatchlistSymbolPage() {
       const res = await fetch(
         `/api/prices/history?symbol=${encodeURIComponent(overlaySymbol as string)}&days=${HISTORY_DAYS}`,
       );
-      const json = (await res.json()) as { points: PricePoint[] };
-      return json.points ?? [];
+      const json = (await res.json()) as { points: PricePoint[]; error?: { code: string; message: string } };
+      return parsePriceHistoryPoints(res.ok, json);
     },
     enabled: Boolean(overlaySymbol),
   });
@@ -454,6 +460,8 @@ export default function WatchlistSymbolPage() {
 
   const chartLoading =
     activeRange.source === "db" ? historyLoading : history5yLoading;
+  const chartError = activeRange.source === "db" && historyError;
+  const chartDisplay = sparklineDisplayState(chartLoading, Boolean(chartError), chartData.length);
   const isFiveYearRange = activeRange.id === "5Y";
   const showYahooIncomplete =
     isFiveYearRange &&
@@ -636,9 +644,22 @@ export default function WatchlistSymbolPage() {
               What happened around this time
             </p>
           )}
-          {chartLoading ? (
+          {chartDisplay === "loading" ? (
             <Skeleton className="h-[340px] w-full rounded-lg" data-testid="price-chart-skeleton" />
-          ) : chartData.length < 2 ? (
+          ) : chartDisplay === "error" ? (
+            <div className="flex flex-col items-center gap-3 py-20" data-testid="price-chart-error">
+              <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+                Price history unavailable right now
+              </p>
+              <button
+                type="button"
+                onClick={() => refetchHistory()}
+                className="text-primary hover:text-primary-container font-label text-[11px] uppercase tracking-widest font-bold transition-colors cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          ) : chartDisplay === "insufficient" ? (
             <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
               {isFiveYearRange
                 ? "Not enough 5-year price history available for this symbol"

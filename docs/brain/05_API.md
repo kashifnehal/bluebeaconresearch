@@ -272,8 +272,15 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 #### `GET /api/prices`
 
-- **Description**: Returns latest cached 24h prices for the symbols the price-syncer worker writes into `commodity_prices` — 8 commodities (`USOIL`, `UKOIL`, `XAUUSD`, `NGAS`, `WHEAT`, `COPPER`, `XAGUSD`, `CORN`) **and, since #87 phase 1, 6 forex pairs** (`EURUSD`, `GBPUSD`, `USDJPY`, `USDCHF`, `USDRUB`, `USDCNY`). Tier 1 (the `commodity_prices` query) returns every symbol present; the Tier-2 Redis fallback allow-list was widened to include the forex pairs in #87 phase 2 (`55df380`, 2026-09-09).
-- **Auth**: None (Public/Cached).
+- **Description**: Returns latest cached 24h prices for the symbols the price-syncer worker writes into `commodity_prices` — 8 commodities (`USOIL`, `UKOIL`, `XAUUSD`, `NGAS`, `WHEAT`, `COPPER`, `XAGUSD`, `CORN`) **and, since #87 phase 1, 6 forex pairs** (`EURUSD`, `GBPUSD`, `USDJPY`, `USDCHF`, `USDRUB`, `USDCNY`). Tier 1 (the `commodity_prices` query) returns every symbol present; the Tier-2 Redis fallback allow-list was widened to include the forex pairs in #87 phase 2 (`55df380`, 2026-09-09). Tier 1's reads go through `getRouteSupabaseClients()` as of ADR 042/D46 (2026-10-11) — previously a hand-built cookie client pointed at the raw project URL, which silently never matched a session (see `GET /api/prices/history` below for the same bug).
+- **Auth**: None (Public/Cached) — this route is deliberately open to anonymous callers; the client change above is a plumbing fix, not a new auth gate.
+
+#### `GET /api/prices/history` (`apps/web/app/api/prices/history/route.ts`)
+
+- **Description**: Returns `{ points: [{ price, fetchedAt }] }` for one `symbol` from `commodity_prices` — either the last 12 snapshots (no `days` param, used by watchlist sparklines) or a paged date-range window up to `days` (used by the drill-down chart's 1M/3M windows; max 90). Powers every "recent price trend" sparkline and the default drill-down chart range.
+- **Auth** (ADR 042/D46, 2026-10-11): resolved via `getRouteSupabaseClients()` — `user` comes from the auth-proxy-routed client, never from a cookie client built off the raw project URL (those cookie names don't match what login actually sets). In production, no user → `401 { points: [], error: { code: "unauthenticated" } }`. Reads use the service-role client when configured.
+- **Errors**: `429 { error: { code: "rate_limited" } }` on rate limit; `502 { error: { code: "db_error" } }` on an actual Supabase read failure (never a silent `200 { points: [] }` — that shape is reserved for "no history found", not "the read failed"); `503 { error: { code: "unavailable" } }` if Supabase env isn't configured at all.
+- **Testability**: exported as `handleHistoryGet(req, deps)` with an injectable `{ rateLimitOrPass, getRouteSupabaseClients }` — same dependency-injection pattern as `lib/events-post-handler.ts` — so `route.test.ts` can supply fakes without a mocking framework.
 
 #### `GET /v1/accuracy` (#121, 2026-09-11)
 

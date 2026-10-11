@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-10 (W-ASSETS-ENERGY-3 part 3/3, complete — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-11 (empty price charts for logged-in users, fixed — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-11 (fix empty price charts for logged-in users, `apps/web` only, this commit) — `/api/prices/history` and `/api/prices` (Tier 1) built a cookie client from `NEXT_PUBLIC_SUPABASE_URL`, but login runs through the separate `NEXT_PUBLIC_SUPABASE_AUTH_URL` auth proxy — the cookie names never matched, so logged-in users read as anonymous and got empty price charts/sparklines everywhere. Both routes now resolve auth via `getRouteSupabaseClients()`; a real DB failure now returns `502`, not a silent empty `200`. Sparkline/drill-down chart now show "Price history unavailable right now" + Retry instead of a misleading "not enough history yet." Fixed the `WatchlistClient` hydration mismatch (React error #418) that showed 11 placeholder cards before the real list loaded. New "Price History" `/status` check. See D46/ADR 042 and `docs/brain/LIVE_TODO.md` for full detail.
 
 > ✅ RESOLVED 2026-10-10 — the backend build fix (`244dd75`) deployed successfully on Railway (`backend` + `workers`, both `SUCCESS`, 2026-10-10 14:28:39–14:30:39 UTC) — the first successful deploy of either service since `f7847d0`. **TTF_GAS, RBOB, and HEATING_OIL are now live**, not just merged.
 

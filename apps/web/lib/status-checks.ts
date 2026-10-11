@@ -148,6 +148,37 @@ export function evaluateDataPipelineFreshness(
   return { name, status: fresh ? "Operational" : "Degraded", detail };
 }
 
+// Thresholds below are checks of "data exists and is fresh" for the price-history
+// read path (commodity_prices), not a research claim about market behavior.
+const PRICE_HISTORY_MIN_ROWS_30D = 100;
+const PRICE_HISTORY_MAX_AGE_MINUTES = 45;
+
+/**
+ * Pure decision logic for the Price History check, split out so it's unit
+ * testable. `rowCount30d` is the count of USOIL rows in commodity_prices over
+ * the last 30 days; `newestAgeMinutes` is how old the newest row is, or null
+ * when the freshness query itself couldn't run (distinct from "ran and found
+ * nothing stale" below the threshold).
+ */
+export function evaluatePriceHistoryHealth(
+  rowCount30d: number,
+  newestAgeMinutes: number | null,
+): SystemCheck {
+  const name = "Price History";
+  if (newestAgeMinutes === null) {
+    return {
+      name,
+      status: "Unknown",
+      detail: "Could not read commodity_prices to check row count or freshness",
+    };
+  }
+
+  const detail = `USOIL: ${rowCount30d} rows in last 30d, newest ${Math.round(newestAgeMinutes)} min ago`;
+  const healthy =
+    rowCount30d >= PRICE_HISTORY_MIN_ROWS_30D && newestAgeMinutes <= PRICE_HISTORY_MAX_AGE_MINUTES;
+  return { name, status: healthy ? "Operational" : "Degraded", detail };
+}
+
 function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
@@ -326,20 +357,66 @@ async function checkClassifier(budgetClosed: boolean): Promise<SystemCheck> {
   }
 }
 
+async function checkPriceHistory(): Promise<SystemCheck> {
+  const supabase = getAdminSupabase();
+  if (!supabase) return evaluatePriceHistoryHealth(0, null);
+
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const [countResult, newestResult] = await Promise.all([
+      withTimeout(
+        supabase
+          .from("commodity_prices")
+          .select("id", { count: "exact", head: true })
+          .eq("symbol", "USOIL")
+          .gte("fetched_at", thirtyDaysAgo),
+        CHECK_TIMEOUT_MS,
+      ),
+      withTimeout(
+        supabase
+          .from("commodity_prices")
+          .select("fetched_at")
+          .eq("symbol", "USOIL")
+          .order("fetched_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        CHECK_TIMEOUT_MS,
+      ),
+    ]);
+
+    if (countResult.error || newestResult.error) return evaluatePriceHistoryHealth(0, null);
+
+    const newestFetchedAt = newestResult.data?.fetched_at as string | undefined;
+    if (!newestFetchedAt) return evaluatePriceHistoryHealth(0, null);
+
+    const newestAgeMinutes = (Date.now() - new Date(newestFetchedAt).getTime()) / 60000;
+    return evaluatePriceHistoryHealth(countResult.count ?? 0, newestAgeMinutes);
+  } catch {
+    return evaluatePriceHistoryHealth(0, null);
+  }
+}
+
 export async function getSystemChecks(): Promise<SystemCheck[]> {
   // getPipelineRunStatus is awaited once and fanned out to both Intelligence Feed
   // and Data Pipeline, which share its intervalMinutes cutoff basis — keeps this
   // concurrent with the other checks rather than blocking them on it.
   const pipelineRun = getPipelineRunStatus();
-  const [{ lastFetchedAt, intervalMinutes, usedFallback, budgetClosed }, intelligenceFeed, alertDelivery, globalMap, classifier] =
-    await Promise.all([
-      pipelineRun,
-      pipelineRun.then(({ intervalMinutes, budgetClosed }) => checkIntelligenceFeed(intervalMinutes, budgetClosed)),
-      checkAlertDelivery(),
-      checkGlobalMap(),
-      pipelineRun.then(({ budgetClosed }) => checkClassifier(budgetClosed)),
-    ]);
+  const [
+    { lastFetchedAt, intervalMinutes, usedFallback, budgetClosed },
+    intelligenceFeed,
+    alertDelivery,
+    globalMap,
+    classifier,
+    priceHistory,
+  ] = await Promise.all([
+    pipelineRun,
+    pipelineRun.then(({ intervalMinutes, budgetClosed }) => checkIntelligenceFeed(intervalMinutes, budgetClosed)),
+    checkAlertDelivery(),
+    checkGlobalMap(),
+    pipelineRun.then(({ budgetClosed }) => checkClassifier(budgetClosed)),
+    checkPriceHistory(),
+  ]);
 
   const dataPipeline = evaluateDataPipelineFreshness(lastFetchedAt, intervalMinutes, usedFallback, Date.now(), budgetClosed);
-  return [intelligenceFeed, alertDelivery, globalMap, dataPipeline, classifier];
+  return [intelligenceFeed, alertDelivery, globalMap, dataPipeline, classifier, priceHistory];
 }

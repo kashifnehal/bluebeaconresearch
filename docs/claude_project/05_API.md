@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-11 (ADR 042/D46) — the Next.js BFF's `GET /api/prices/history` and `GET /api/prices` (`apps/web`, not the Fastify `/v1` API below) were returning empty price data for logged-in users: both built a cookie client against the raw Supabase project URL, but login's cookies are scoped to the separate auth-proxy URL. Both now resolve auth/data through `getRouteSupabaseClients()`; `/api/prices/history` 401s with no user in production and returns `502` (not a silent empty `200`) on a real DB failure. Full endpoint detail: `docs/brain/05_API.md` §2.4.
+>
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** a public developer portal. Registers only when `NODE_ENV` is `development` or `test`. Live production previously returned 200 + OpenAPI JSON with no auth. Global Fastify rate limit in code is 60/min in-memory (`apps/backend/src/app.ts`), not the 100/min Redis figures below (those are stale planning numbers).
 >
 > ⚠️ UPDATED 2026-09-13 (#138) — Next.js BFF `apiError()` shape is unchanged (`{ error: { code, message } }`). DB/config failures now use `apiErrorLogged()` so `message` is a fixed user-safe sentence; provider `.message` is `console.error` only. Fastify `/v1` contract untouched.
