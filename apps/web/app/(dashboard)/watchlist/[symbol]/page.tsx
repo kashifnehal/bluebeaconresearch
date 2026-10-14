@@ -14,6 +14,12 @@ import {
   ReferenceLine,
 } from "recharts";
 import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
+import {
+  NEWS_ONLY_FEED_LABEL,
+  fetchPriceRequest,
+  isNewsOnlySymbol,
+  newsOnlyAsset,
+} from "@/lib/news-only-assets";
 import type { Signal } from "@blue-beacon-research/shared";
 import { toast } from "sonner";
 import { CommodityChip } from "@/components/signals/CommodityChip";
@@ -170,11 +176,14 @@ function directionAtIndex(
 export default function WatchlistSymbolPage() {
   const params = useParams<{ symbol: string }>();
   const symbol = decodeURIComponent(params.symbol || "").toUpperCase();
-  // Resolve the symbol against commodities first, then forex pairs (#87) — a
-  // followed forex pair (e.g. EURUSD) otherwise falls through to its raw code
-  // and never matches signals, since forex impacts live in a separate column.
-  const forexMeta = FOREX_PAIRS.find((f) => f.symbol === symbol);
-  const meta = COMMODITIES.find((c) => c.symbol === symbol) ?? forexMeta;
+  // News-only commodities have no price series. Resolve those before forex
+  // so a news-only code is never treated as a priced instrument. A followed
+  // forex pair otherwise falls through to its raw code and never matches
+  // signals, since forex impacts live in a separate column.
+  const newsOnlyMeta = newsOnlyAsset(symbol);
+  const isNewsOnly = newsOnlyMeta != null || isNewsOnlySymbol(symbol);
+  const forexMeta = isNewsOnly ? undefined : FOREX_PAIRS.find((f) => f.symbol === symbol);
+  const meta = newsOnlyMeta ?? COMMODITIES.find((c) => c.symbol === symbol) ?? forexMeta;
   const isForex = Boolean(forexMeta);
   const { data: myPrefs, isFetched: prefsFetched, persistWatchlist } = useMyPreferences();
   const isFollowed = Boolean(
@@ -215,8 +224,10 @@ export default function WatchlistSymbolPage() {
 
   const { data: pricesData } = useQuery({
     queryKey: ["prices"],
+    enabled: !isNewsOnly,
     queryFn: async () => {
-      const res = await fetch("/api/prices");
+      const res = await fetchPriceRequest(symbol, "latest");
+      if (!res) return { prices: [] as Price[] };
       const json = (await res.json()) as { prices: Price[] };
       return json;
     },
@@ -231,10 +242,10 @@ export default function WatchlistSymbolPage() {
     refetch: refetchHistory,
   } = useQuery({
     queryKey: ["price-history", symbol, HISTORY_DAYS],
+    enabled: !isNewsOnly,
     queryFn: async () => {
-      const res = await fetch(
-        `/api/prices/history?symbol=${encodeURIComponent(symbol)}&days=${HISTORY_DAYS}`,
-      );
+      const res = await fetchPriceRequest(symbol, "history");
+      if (!res) return [];
       const json = (await res.json()) as { points: PricePoint[]; error?: { code: string; message: string } };
       return parsePriceHistoryPoints(res.ok, json);
     },
@@ -251,10 +262,12 @@ export default function WatchlistSymbolPage() {
   };
   const { data: history5y, isLoading: history5yLoading } = useQuery({
     queryKey: ["price-history-5y", symbol],
+    enabled: !isNewsOnly,
     queryFn: async () => {
-      const res = await fetch(
-        `/api/prices/history-5y?symbol=${encodeURIComponent(symbol)}`,
-      );
+      const res = await fetchPriceRequest(symbol, "history5y");
+      if (!res) {
+        return { points: [] as PricePoint[], incomplete: false, availableFrom: null };
+      }
       const json = (await res.json()) as History5y;
       return {
         points: json.points ?? [],
@@ -279,24 +292,22 @@ export default function WatchlistSymbolPage() {
   const { data: overlayHistoryPoints } = useQuery({
     queryKey: ["price-history", overlaySymbol, HISTORY_DAYS],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/prices/history?symbol=${encodeURIComponent(overlaySymbol as string)}&days=${HISTORY_DAYS}`,
-      );
+      const res = await fetchPriceRequest(overlaySymbol as string, "history");
+      if (!res) return [];
       const json = (await res.json()) as { points: PricePoint[]; error?: { code: string; message: string } };
       return parsePriceHistoryPoints(res.ok, json);
     },
-    enabled: Boolean(overlaySymbol),
+    enabled: !isNewsOnly && Boolean(overlaySymbol),
   });
   const { data: overlayHistory5y } = useQuery({
     queryKey: ["price-history-5y", overlaySymbol],
     queryFn: async () => {
-      const res = await fetch(
-        `/api/prices/history-5y?symbol=${encodeURIComponent(overlaySymbol as string)}`,
-      );
+      const res = await fetchPriceRequest(overlaySymbol as string, "history5y");
+      if (!res) return [];
       const json = (await res.json()) as History5y;
       return json.points ?? [];
     },
-    enabled: Boolean(overlaySymbol),
+    enabled: !isNewsOnly && Boolean(overlaySymbol),
     staleTime: 15 * 60 * 1000,
   });
 
@@ -505,6 +516,14 @@ export default function WatchlistSymbolPage() {
               {meta?.label || symbol}
             </h1>
             <p className="font-mono text-xs text-on-surface-variant mt-1">{symbol}</p>
+            {isNewsOnly && (
+              <p
+                data-testid="news-only-detail-label"
+                className="mt-3 text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest"
+              >
+                {NEWS_ONLY_FEED_LABEL}
+              </p>
+            )}
           </div>
           <div className="flex items-baseline gap-4">
             <button
@@ -528,28 +547,35 @@ export default function WatchlistSymbolPage() {
               </span>
               {isWatchlisted ? "Following" : "Follow"}
             </button>
-            <span className="font-mono text-3xl font-bold text-on-surface tracking-tighter">
-              {price
-                ? Number(price.price).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                : "—"}
-            </span>
-            <span
-              className={`font-mono text-sm flex items-center font-bold ${pct >= 0 ? "text-primary" : "text-error"}`}
-            >
-              <span className="material-symbols-outlined text-sm">
-                {pct >= 0 ? "arrow_drop_up" : "arrow_drop_down"}
-              </span>
-              {Math.abs(pct).toFixed(2)}%
-            </span>
+            {!isNewsOnly && (
+              <>
+                <span className="font-mono text-3xl font-bold text-on-surface tracking-tighter">
+                  {price
+                    ? Number(price.price).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "—"}
+                </span>
+                <span
+                  className={`font-mono text-sm flex items-center font-bold ${pct >= 0 ? "text-primary" : "text-error"}`}
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    {pct >= 0 ? "arrow_drop_up" : "arrow_drop_down"}
+                  </span>
+                  {Math.abs(pct).toFixed(2)}%
+                </span>
+              </>
+            )}
           </div>
         </div>
 
         {/* Single price chart + range selector (replaces the fixed 90-day chart
             and the separate 5-year Yahoo panel). 1M reads the 90-day DB series;
-            6M/1Y/3Y/5Y slice the existing Yahoo weekly-bars fetch. */}
+            6M/1Y/3Y/5Y slice the existing Yahoo weekly-bars fetch.
+            News-only symbols skip this block entirely — no chart, no range
+            controls, and the queries above stay disabled. */}
+        {!isNewsOnly && (
         <div className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-6 mb-8">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
@@ -876,6 +902,7 @@ export default function WatchlistSymbolPage() {
             </div>
           )}
         </div>
+        )}
 
         <DriverBreakdownChart
           symbol={symbol}
@@ -906,7 +933,9 @@ export default function WatchlistSymbolPage() {
                 const impact = isForex
                   ? ev.currencyPairImpacts?.find((c) => c.asset === symbol)
                   : ev.commodityImpacts.find((c) => c.asset === symbol);
-                const move = computeEventPriceMove(points, ev.eventDate ?? ev.createdAt);
+                const move = isNewsOnly
+                  ? null
+                  : computeEventPriceMove(points, ev.eventDate ?? ev.createdAt);
                 return (
                   <a
                     key={ev.id}
@@ -925,6 +954,7 @@ export default function WatchlistSymbolPage() {
                       {ev.country} · {safeFormatDistanceToNow(ev.eventDate ?? ev.createdAt, { addSuffix: true })} ·
                       Severity {ev.severity}
                     </p>
+                    {move && (
                     <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/80">
                       {move.status === "too-recent" &&
                         "Signaled less than an hour ago — not enough time has passed to measure a price move yet."}
@@ -935,6 +965,7 @@ export default function WatchlistSymbolPage() {
                       {move.status === "ok" &&
                         `Price moved ${move.pct >= 0 ? "+" : ""}${move.pct.toFixed(2)}% in the ${move.windowHours}h following this signal ($${move.baselinePrice.toFixed(2)} at ${formatUtcHHMM(move.baselineFetchedAt)} → $${move.targetPrice.toFixed(2)} at ${formatUtcHHMM(move.targetFetchedAt)}).`}
                     </p>
+                    )}
                   </a>
                 );
               })}

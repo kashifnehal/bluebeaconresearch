@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { throwIfNoSupabase } from "@/lib/user-error-copy";
-import { COMMODITIES, FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
+import { FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
+import { followMarketOptions } from "@/lib/news-only-assets";
 import { logUsageEvent } from "@/lib/funnel-events";
 import { ArrowRight, Terminal } from "lucide-react";
 import Image from "next/image";
@@ -406,7 +407,7 @@ export default function OnboardingPage() {
                   COMMODITIES YOU FOLLOW
                 </label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {COMMODITIES.map((c) => (
+                  {followMarketOptions().map((c) => (
                     <button
                       key={c.symbol}
                       type="button"

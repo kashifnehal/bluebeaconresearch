@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { fetchPriceRequest, isNewsOnlySymbol } from "@/lib/news-only-assets";
+
 // This page renders inside next/navigation's useParams, which throws outside
 // a mounted App Router — renderToStaticMarkup can't exercise it in this
 // plain-node test runner (same constraint as components/layout/Sidebar.test.tsx
@@ -46,4 +48,59 @@ runTest("the insufficient-data branch keeps the original 5-year vs 1-month copy"
   assert.ok(block, "expected to find the chartDisplay 'insufficient' branch");
   assert.match(block![1], /Not enough 5-year price history available for this symbol/);
   assert.match(block![1], /Not enough price history yet for a chart view/);
+});
+
+runTest("a priced symbol still takes the chart path", () => {
+  assert.equal(isNewsOnlySymbol("USOIL"), false);
+  const gate = source.indexOf("{!isNewsOnly && (");
+  const chart = source.indexOf('data-testid="watchlist-chart-ranges"');
+  const drivers = source.indexOf("<DriverBreakdownChart");
+  assert.ok(gate > -1 && chart > gate && drivers > chart);
+  assert.match(source, /<LineChart/);
+});
+
+runTest("news-only detail queries go through fetchPriceRequest and stay disabled", () => {
+  assert.equal(isNewsOnlySymbol("COCOA"), true);
+  assert.match(source, /enabled: !isNewsOnly/);
+  assert.match(source, /fetchPriceRequest\(symbol, "latest"\)/);
+  assert.match(source, /fetchPriceRequest\(symbol, "history"\)/);
+  assert.match(source, /fetchPriceRequest\(symbol, "history5y"\)/);
+  assert.match(source, /enabled: !isNewsOnly && Boolean\(overlaySymbol\)/);
+  assert.match(source, /data-testid="news-only-detail-label"/);
+  assert.match(source, /data-testid="watchlist-follow-toggle"/);
+});
+
+async function runAsync(name: string, fn: () => Promise<void>) {
+  try {
+    await fn();
+    console.log(`✔ ${name}`);
+  } catch (err) {
+    console.error(`✖ ${name}`);
+    console.error(err);
+    process.exitCode = 1;
+  }
+}
+
+void runAsync("a news-only symbol makes no price request; a priced symbol still requests the chart routes", async () => {
+  const calls: string[] = [];
+  const mockFetch = (async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+    return new Response("{}", { status: 200 });
+  }) as typeof fetch;
+
+  for (const kind of ["latest", "history", "history5y"] as const) {
+    const res = await fetchPriceRequest("COCOA", kind, mockFetch);
+    assert.equal(res, null);
+  }
+  assert.deepEqual(calls, []);
+
+  for (const kind of ["latest", "history", "history5y"] as const) {
+    const res = await fetchPriceRequest("USOIL", kind, mockFetch);
+    assert.ok(res);
+  }
+  assert.deepEqual(calls, [
+    "/api/prices",
+    "/api/prices/history?symbol=USOIL&days=90",
+    "/api/prices/history-5y?symbol=USOIL",
+  ]);
 });

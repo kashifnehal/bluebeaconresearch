@@ -28,14 +28,14 @@ export const FILTER_COMMODITIES = [
   { symbol: "RBOB", label: "RBOB Gasoline", unit: "USD/gal", category: "energy" },
   { symbol: "HEATING_OIL", label: "Heating Oil / ULSD", unit: "USD/gal", category: "energy" },
   // News-only tags added 2026-10-14. Same filter list as the priced symbols.
-  // No price unit. Onboarding, settings, and the watchlist do not read this list.
-  { symbol: "VEG_OILS", label: "Vegetable Oils", unit: "", category: "agriculture" },
-  { symbol: "SOYBEANS", label: "Soybeans and Soy Oil", unit: "", category: "agriculture" },
-  { symbol: "SUGAR", label: "Sugar", unit: "", category: "agriculture" },
-  { symbol: "COFFEE", label: "Coffee", unit: "", category: "agriculture" },
-  { symbol: "COCOA", label: "Cocoa", unit: "", category: "agriculture" },
-  { symbol: "ALUMINIUM", label: "Aluminium", unit: "", category: "metals" },
-  { symbol: "NICKEL", label: "Nickel", unit: "", category: "metals" },
+  // The "(news only)" suffix is the market-list label. No price unit.
+  { symbol: "VEG_OILS", label: "Vegetable Oils (news only)", unit: "", category: "agriculture" },
+  { symbol: "SOYBEANS", label: "Soybeans and Soy Oil (news only)", unit: "", category: "agriculture" },
+  { symbol: "SUGAR", label: "Sugar (news only)", unit: "", category: "agriculture" },
+  { symbol: "COFFEE", label: "Coffee (news only)", unit: "", category: "agriculture" },
+  { symbol: "COCOA", label: "Cocoa (news only)", unit: "", category: "agriculture" },
+  { symbol: "ALUMINIUM", label: "Aluminium (news only)", unit: "", category: "metals" },
+  { symbol: "NICKEL", label: "Nickel (news only)", unit: "", category: "metals" },
 ] as const;
 
 export type FilterCommodity = (typeof FILTER_COMMODITIES)[number];

@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ News-only watchlist cards and detail pages, `apps/web` only, 2026-10-14, this commit
+
+- The seven news-only commodities (`VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL`) can be added from the watchlist Add control, followed, and opened at `/watchlist/[symbol]`. `DEFAULT_WATCHLIST` stays the priced commodity list. `user_preferences.watchlist_symbols` is a `text[]` with no symbol check in migrations, so no migration was added.
+- A news-only card shows the name, "News only (no price feed)", the 7-day signal count, and the latest headline (with its age). The count is `total` from the same `GET /api/signals` call the detail page uses (`commodity`, `window=7d`, `sort=newest`, `limit=1`). If `total` is missing, the card says the 7-day count is unavailable and still shows the headline. No sparkline, price, or change percentage. The card does not call `/api/prices`. The grid's `/api/prices` query runs only after hydration and only when the list contains a priced symbol.
+- The detail page skips `/api/prices`, `/api/prices/history`, and `/api/prices/history-5y` for a news-only symbol (`enabled: false`, and `fetchPriceRequest` returns null before `fetch`). The price header, price chart, and range controls are hidden. The name, the same "News only (no price feed)" label, Follow, the signal-driver chart, and the correlated-signals list stay. The per-signal price-move line is omitted. A priced symbol still loads the chart.
+- Feed filters, the archive commodity menu, onboarding chips, and the watchlist Add menu label these seven "(news only)". Settings has no commodity picker. `KNOWN_WATCHLIST` and the commodities preference filter both keep the seven, so a follow and an onboarding selection are read back.
+- No open priority-queue line for this. Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.176.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 153, `06_COMPONENTS.md`. Skipped both `05_API.md` — no new route. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` exit 0 (4 cases in `lib/news-only-assets.test.ts`, 4 new in `WatchlistClient.test.tsx`, 3 new in `watchlist/[symbol]/page.test.tsx`, plus the existing seven-tag filter test now checks the "(news only)" suffix). `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. No browser run.
+
 ## ✅ Daily limit on pair-only keeps, `apps/backend` only, 2026-10-14, this commit
 
 - A headline kept only by the commodity-and-event pair rule can go on to a gate call. `T2_PAIR_DAILY_MAX` is an integer of 0 or more, default 20. 20 gate calls x $0.0049 is about $0.10 a day, about 5% of the $2 cap. No published source. Unset or blank stays 20. A negative or non-integer value fails startup.

@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-14.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-14 — News-only watchlist cards and detail pages (`apps/web`, this commit, PHASE 153 / v0.176.0). The seven news-only commodities can be added, followed, and opened without a price. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-14 — Daily limit on pair-only keeps (`apps/backend`, this commit, PHASE 152 / v0.175.0). At most 20 headlines a UTC day are kept only by the commodity-and-event pair rule, counted in memory, and the count also resets on process restart. No prior numbered backlog line — nothing struck. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-14 — Feed table hide-summaries and loaded-row count (`apps/web`, this commit, PHASE 151 / v0.174.0). Table mode can hide Summary. A line above the table counts loaded rows, UTC days, Up, Down, and Other. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

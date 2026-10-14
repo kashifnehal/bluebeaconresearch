@@ -2,9 +2,20 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { QueryClient, QueryObserver } from "@tanstack/react-query";
+import { COMMODITIES } from "@blue-beacon-research/shared";
 
-import { parsePriceHistoryPoints, sparklineDisplayState, withPreselect } from "./WatchlistClient";
+import {
+  DEFAULT_WATCHLIST,
+  NewsOnlyCardSummary,
+  WATCHLIST_ASSETS,
+  parsePriceHistoryPoints,
+  sparklineDisplayState,
+  withPreselect,
+} from "./WatchlistClient";
+import { NEWS_ONLY_SYMBOLS } from "@/lib/news-only-assets";
 
 // WatchlistClient renders inside next/navigation's useSearchParams, which
 // throws outside a mounted App Router — renderToStaticMarkup can't exercise
@@ -113,6 +124,55 @@ runTest("readStoredWatchlist is only called inside the hydration effect", () => 
 runTest("the card grid is gated behind `hydrated`, with a skeleton shown otherwise", () => {
   assert.match(source, /!hydrated \? \(/);
   assert.match(source, /data-testid="watchlist-grid-skeleton"/);
+});
+
+runTest("DEFAULT_WATCHLIST stays the priced commodity list", () => {
+  assert.deepEqual(DEFAULT_WATCHLIST, COMMODITIES.map((c) => c.symbol));
+  const defaults: string[] = [...DEFAULT_WATCHLIST];
+  for (const symbol of NEWS_ONLY_SYMBOLS) {
+    assert.equal(defaults.includes(symbol), false);
+  }
+});
+
+runTest("WATCHLIST_ASSETS includes the seven news-only symbols", () => {
+  const symbols = WATCHLIST_ASSETS.map((a) => a.symbol);
+  for (const symbol of NEWS_ONLY_SYMBOLS) {
+    assert.ok(symbols.includes(symbol), symbol);
+  }
+  assert.equal(NEWS_ONLY_SYMBOLS.length, 7);
+});
+
+runTest("a news-only card summary has no sparkline and no price", () => {
+  const html = renderToStaticMarkup(
+    createElement(NewsOnlyCardSummary, {
+      label: "Cocoa",
+      count: 3,
+      headline: "West Africa cocoa harvest delayed",
+      headlineAge: "2 hours ago",
+    }),
+  );
+  assert.match(html, /Cocoa/);
+  assert.match(html, /News only \(no price feed\)/);
+  assert.match(html, /3 signals in the last 7 days/);
+  assert.match(html, /West Africa cocoa harvest delayed/);
+  assert.match(html, /2 hours ago/);
+  assert.doesNotMatch(html, /Recent price trend/);
+  assert.doesNotMatch(html, /PriceSparkline/);
+  assert.doesNotMatch(html, /%/);
+  assert.doesNotMatch(html, /arrow_drop/);
+});
+
+runTest("the news-only card component does not render a sparkline or call a price route", () => {
+  const start = source.indexOf("function NewsOnlyWatchlistCard");
+  const end = source.indexOf("export function withPreselect");
+  assert.ok(start > -1 && end > start);
+  const card = source.slice(start, end);
+  assert.doesNotMatch(card, /PriceSparkline/);
+  assert.doesNotMatch(card, /\/api\/prices/);
+  assert.match(card, /fetchNewsOnlyCardSignals/);
+  assert.match(source, /const hasPricedSymbol = watch\.some\(\(sym\) => !isNewsOnlySymbol\(sym\)\)/);
+  assert.match(source, /enabled: hydrated && hasPricedSymbol/);
+  assert.match(source, /isNewsOnlySymbol\(sym\)/);
 });
 
 async function runAsync(name: string, fn: () => Promise<void>) {

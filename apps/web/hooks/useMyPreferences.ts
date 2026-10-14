@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { COMMODITIES, FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { KNOWN_WATCHLIST, NEWS_ONLY_SYMBOLS } from "@/lib/news-only-assets";
 
 export type MyPreferences = {
   commodities: string[];
@@ -33,10 +34,12 @@ const EMPTY: MyPreferences = {
   watchlistSuggested: false,
 };
 
-const KNOWN_COMMODITIES = new Set<string>(COMMODITIES.map((c) => c.symbol));
+const KNOWN_COMMODITIES = new Set<string>([
+  ...COMMODITIES.map((c) => c.symbol),
+  ...NEWS_ONLY_SYMBOLS,
+]);
 const KNOWN_FOREX_PAIRS = new Set<string>(FOREX_PAIRS.map((f) => f.symbol));
 const KNOWN_REGIONS = new Set<string>(REGIONS.map((r) => r.id));
-const KNOWN_WATCHLIST = new Set<string>([...KNOWN_COMMODITIES, ...KNOWN_FOREX_PAIRS]);
 
 function parseWatchlistSymbols(raw: string[] | null | undefined): string[] | null {
   if (raw == null) return null;

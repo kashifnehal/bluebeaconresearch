@@ -4,24 +4,41 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
-import { SELECT_CLASSES } from "@/lib/utils";
+import { COMMODITIES, FOREX_PAIRS, NEWS_ONLY_COMMODITIES } from "@blue-beacon-research/shared";
+import { SELECT_CLASSES, formatDataAsOf, safeFormatDistanceToNow } from "@/lib/utils";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { logUsageEvent } from "@/lib/funnel-events";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
-import { formatDataAsOf } from "@/lib/utils";
+import {
+  NEWS_ONLY_FEED_LABEL,
+  fetchNewsOnlyCardSignals,
+  isNewsOnlySymbol,
+  newsOnlyMarketLabel,
+  signalCountLabel,
+} from "@/lib/news-only-assets";
 
-// Commodities + forex pairs (#87) share one watchlist. The forex entries carry
-// the same {symbol,label,unit,category} shape, so meta lookups, the add-asset
-// dropdown, and the "Show All" set all work off this combined list unchanged.
-const WATCHLIST_ASSETS = [...COMMODITIES, ...FOREX_PAIRS];
+// Priced commodities, forex pairs, and the seven news-only commodities share
+// one watchlist. News-only entries use the same {symbol,label,unit,category}
+// shape. The default seed stays the priced commodity list — news-only assets
+// are added with the existing Add control.
+const NEWS_ONLY_WATCHLIST_ASSETS = NEWS_ONLY_COMMODITIES.map((c) => ({
+  symbol: c.symbol,
+  label: c.label,
+  unit: c.unit,
+  category: c.category,
+}));
+export const WATCHLIST_ASSETS = [
+  ...COMMODITIES,
+  ...FOREX_PAIRS,
+  ...NEWS_ONLY_WATCHLIST_ASSETS,
+];
 
-// First-paint / no-selection seed: the shared commodity list, so the page is
+// First-paint / no-selection seed: the priced commodity list, so the page is
 // never an empty dropdown while prefs/localStorage hydrate. A later remove is
 // persisted and not silently re-added. Prefs (commodities ∪ forex) still win
-// once they load (#89 / #107). Forex stays addable via the dropdown.
-const DEFAULT_WATCHLIST = COMMODITIES.map((c) => c.symbol);
+// once they load. Forex and news-only assets stay addable via the dropdown.
+export const DEFAULT_WATCHLIST = COMMODITIES.map((c) => c.symbol);
 
 const WATCHLIST_STORAGE_KEY = "bbr.watchlist.v1";
 
@@ -193,6 +210,118 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
   );
 }
 
+export function NewsOnlyCardSummary({
+  label,
+  count,
+  headline,
+  headlineAge,
+}: {
+  label: string;
+  count: number | null;
+  headline: string | null;
+  headlineAge: string | null;
+}) {
+  return (
+    <div data-testid="news-only-card-summary">
+      <h2 className="text-xl font-headline font-bold text-on-surface">{label}</h2>
+      <p
+        data-testid="news-only-feed-label"
+        className="mt-2 text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest"
+      >
+        {NEWS_ONLY_FEED_LABEL}
+      </p>
+      {count == null ? (
+        <p className="mt-4 text-sm text-on-surface-variant">7-day signal count unavailable</p>
+      ) : (
+        <p className="mt-4 text-sm text-on-surface">{signalCountLabel(count)}</p>
+      )}
+      {headline ? (
+        <p className="mt-2 text-sm text-on-surface leading-snug">
+          {headline}
+          {headlineAge ? (
+            <span className="text-on-surface-variant"> · {headlineAge}</span>
+          ) : null}
+        </p>
+      ) : (
+        <p className="mt-2 text-sm text-on-surface-variant">No signal in the last 7 days</p>
+      )}
+    </div>
+  );
+}
+
+function NewsOnlyWatchlistCard({
+  symbol,
+  label,
+  category,
+  onRemove,
+}: {
+  symbol: string;
+  label: string;
+  category: string;
+  onRemove: () => void;
+}) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["news-only-card-signals", symbol],
+    queryFn: () => fetchNewsOnlyCardSignals(symbol),
+    staleTime: 60_000,
+  });
+  const headlineAge = data?.headlineAt
+    ? safeFormatDistanceToNow(data.headlineAt, { addSuffix: true })
+    : null;
+
+  return (
+    <div
+      data-testid="news-only-watchlist-card"
+      className="relative bg-surface-container/40 border border-outline-variant/30 rounded-xl overflow-hidden group hover:border-primary/50 transition-colors"
+    >
+      <Link
+        href={`/watchlist/${encodeURIComponent(symbol)}`}
+        aria-label={`Open ${label} drill-down`}
+        className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-container-lowest"
+      />
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${label} from watchlist`}
+        className="absolute right-4 top-4 z-20 text-on-surface-variant hover:text-error transition-colors p-[13px] md:p-1"
+      >
+        <span className="material-symbols-outlined text-lg">close</span>
+      </button>
+      <div className="p-6 bg-black/40 relative z-10 pointer-events-none min-h-[220px]">
+        <span className="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[9px] text-on-surface-variant tracking-widest mb-2 inline-block uppercase">
+          {category}
+        </span>
+        {isLoading ? (
+          <div data-testid="news-only-card-loading">
+            <h2 className="text-xl font-headline font-bold text-on-surface">{label}</h2>
+            <p className="mt-2 text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest">
+              {NEWS_ONLY_FEED_LABEL}
+            </p>
+            <p className="mt-4 text-sm text-on-surface-variant">Loading signals from the last 7 days</p>
+          </div>
+        ) : isError ? (
+          <div data-testid="news-only-card-error">
+            <h2 className="text-xl font-headline font-bold text-on-surface">{label}</h2>
+            <p className="mt-2 text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest">
+              {NEWS_ONLY_FEED_LABEL}
+            </p>
+            <p className="mt-4 text-sm text-on-surface-variant">
+              Could not load signals for the last 7 days
+            </p>
+          </div>
+        ) : (
+          <NewsOnlyCardSummary
+            label={label}
+            count={data?.count ?? null}
+            headline={data?.headline ?? null}
+            headlineAge={headlineAge}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function withPreselect(symbols: string[], preselect: string | null): string[] {
   if (!preselect || symbols.includes(preselect)) return symbols;
   return [...symbols, preselect];
@@ -299,6 +428,7 @@ export function WatchlistClient() {
     logUsageEvent("watchlist_viewed");
   }, []);
 
+  const hasPricedSymbol = watch.some((sym) => !isNewsOnlySymbol(sym));
   const { data, refetch, dataUpdatedAt } = useQuery({
     queryKey: ["prices"],
     queryFn: async () => {
@@ -306,6 +436,7 @@ export function WatchlistClient() {
       const json = (await res.json()) as { prices: Price[] };
       return json;
     },
+    enabled: hydrated && hasPricedSymbol,
     refetchInterval: 15_000,
   });
 
@@ -418,7 +549,7 @@ export function WatchlistClient() {
                 )}
                 {available.map((c) => (
                   <option key={c.symbol} value={c.symbol}>
-                    {c.label}
+                    {isNewsOnlySymbol(c.symbol) ? newsOnlyMarketLabel(c.label) : c.label}
                   </option>
                 ))}
               </select>
@@ -445,11 +576,22 @@ export function WatchlistClient() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {watch.map((sym) => {
             const meta = WATCHLIST_ASSETS.find((c) => c.symbol === sym);
+            const label = meta?.label || sym;
+            if (isNewsOnlySymbol(sym)) {
+              return (
+                <NewsOnlyWatchlistCard
+                  key={sym}
+                  symbol={sym}
+                  label={label}
+                  category={meta?.category ?? "MARKET"}
+                  onRemove={() => handleRemove(sym)}
+                />
+              );
+            }
             const p = priceBySymbol.get(sym);
             const pct = p ? (p.change_pct_24h ?? p.changePct24h ?? 0) : 0;
             const isUp = pct >= 0;
 
-            const label = meta?.label || sym;
             return (
               // No interactive wrapper: a full-bleed <Link> is the navigation
               // target and the remove <button> is a CSS-positioned sibling, not a

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (pair-only daily limit — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (news-only watchlist pages — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (news-only watchlist cards and detail pages, `apps/web` only, this commit) — vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel appear on the watchlist as news-only cards, have a detail page, and can be followed. They do not show or request a price. See `docs/brain/LIVE_TODO.md`, PHASE 153.
 
 > ⚠️ NEW 2026-10-14 (daily limit on pair-only keeps, `apps/backend` only, this commit) — GNews, GDELT, and RSS keep at most `T2_PAIR_DAILY_MAX` headlines a UTC day when the commodity-and-event pair rule is the only reason to keep them. The default is 20. The count lives in memory and also resets on process restart. A closed slot drops the item as before. The flag off uses no slot. See `docs/brain/LIVE_TODO.md`, PHASE 152.
 

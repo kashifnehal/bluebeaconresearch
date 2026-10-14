@@ -126,6 +126,12 @@ runTest("FILTER_COMMODITIES includes the seven news-only tags with no duplicate 
     assert.ok(symbols.includes(entry.symbol));
     assert.deepStrictEqual(symbolsForCommodityFilter(entry.symbol), [entry.symbol]);
     assert.ok(symbolsForCommodityFilter(`cat:${entry.category}`).includes(entry.symbol));
+    const row = FILTER_COMMODITIES.find((c) => c.symbol === entry.symbol);
+    assert.ok(row);
+    assert.match(row.label, /\(news only\)$/);
   }
   assert.equal(new Set(symbols).size, symbols.length);
+  const usoil = FILTER_COMMODITIES.find((c) => c.symbol === "USOIL");
+  assert.ok(usoil);
+  assert.equal(usoil.label.endsWith("(news only)"), false);
 });
