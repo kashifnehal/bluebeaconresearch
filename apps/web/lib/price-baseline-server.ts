@@ -75,6 +75,25 @@ async function getAssetPricePoints(
 }
 
 /**
+ * Starts the per-asset commodity_prices read so it can overlap the
+ * signal_outcomes fetch. Returns immediately. Never throws.
+ */
+export function prefetchAssetPricePoints(
+  supabase: RouteSupabaseClients["supabase"],
+  assets: string[],
+): void {
+  try {
+    for (const asset of assets) {
+      void getAssetPricePoints(supabase, asset).catch((error) => {
+        console.error("[price-baseline] prefetchAssetPricePoints error:", error);
+      });
+    }
+  } catch (error) {
+    console.error("[price-baseline] prefetchAssetPricePoints error:", error);
+  }
+}
+
+/**
  * Asset-level matched price-window baseline for every window length in
  * TIME_HORIZON_CHECKPOINTS, built from the exact signal_outcomes rows the
  * caller already fetched (never refetches signal_outcomes). Never throws —

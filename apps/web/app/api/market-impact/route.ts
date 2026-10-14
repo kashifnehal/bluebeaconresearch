@@ -2,7 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
-import { fetchMatchedBaselinesWithTimeout } from "@/lib/price-baseline-server";
+import {
+  fetchMatchedBaselinesWithTimeout,
+  prefetchAssetPricePoints,
+} from "@/lib/price-baseline-server";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
@@ -56,6 +59,8 @@ export async function GET(req: NextRequest) {
   if (assets.length === 0) {
     return apiError(400, "missing_assets");
   }
+
+  prefetchAssetPricePoints(supabase, assets);
 
   let rows;
   try {

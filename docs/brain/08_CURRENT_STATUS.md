@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-14 (weekend-proof watchlist sparkline, this commit)
+Last updated: 2026-10-14 (faster USOIL market-impact reads, this commit)
+
+> ⚠️ NEW 2026-10-14 (faster USOIL market-impact reads, `apps/web` only, this commit) — `fetchSignalOutcomeRows` reads the first 1000 `signal_outcomes` rows, then one exact count and the remaining pages together. Successful reads are cached 5 minutes per sorted asset list; a failed page is not cached. Both market-impact routes start the commodity-price read first via `prefetchAssetPricePoints`. Response shape and the 3000 ms baseline limit are unchanged. See `14_CHANGELOG.md` v0.171.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-14 (weekend-proof watchlist sparkline, `apps/web` only, this commit) — `PriceSparkline` no longer charts the last 12 snapshots (identical on a closed market, so every bar was the minimum height). It requests `days=7&points=14`. `GET /api/prices/history` buckets that window via `bucketLastPrice` when `points` is sent with `days` (clamped 2..60); a flat series shows "No price change in the last 7 days" instead of equal bars. The bar formula is unchanged. No-`days` still returns 12 snapshots. See `14_CHANGELOG.md` v0.170.0, `LIVE_TODO.md`.
 

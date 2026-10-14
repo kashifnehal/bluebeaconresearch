@@ -4,7 +4,10 @@ import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
-import { fetchMatchedBaselinesWithTimeout } from "@/lib/price-baseline-server";
+import {
+  fetchMatchedBaselinesWithTimeout,
+  prefetchAssetPricePoints,
+} from "@/lib/price-baseline-server";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
 import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
@@ -328,6 +331,7 @@ export async function GET(
 
   let marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry> = {};
   if (magnitudeAssets.length > 0) {
+    prefetchAssetPricePoints(supabase, magnitudeAssets);
     const rows = await fetchSignalOutcomeRows(supabase, magnitudeAssets);
     const baselinesByAsset = await fetchMatchedBaselinesWithTimeout(supabase, magnitudeAssets, rows);
     marketImpactMagnitudes = Object.fromEntries(

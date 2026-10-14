@@ -6,6 +6,10 @@
 
 ---
 
+## PHASE 148 — Faster USOIL market-impact reads (2026-10-14, this commit)
+
+`apps/web` only. `signal_outcomes` pages after the first are read together, and a successful read is cached 5 minutes per sorted asset list. A failed page is not cached. Both market-impact routes start the commodity-price read before waiting on outcome rows. Response shape, copy, and the 3000 ms baseline limit are unchanged. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.171.0.
+
 ## PHASE 147 — Weekend-proof watchlist sparkline (2026-10-14, this commit)
 
 `apps/web` only. The watchlist sparkline samples 7 days into 14 points and, when the price did not change, says so instead of drawing equal bars. `GET /api/prices/history` accepts `points` only with `days`. Full detail: `docs/brain/14_CHANGELOG.md` v0.170.0, `docs/brain/LIVE_TODO.md`.

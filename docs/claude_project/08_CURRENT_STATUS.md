@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (weekend-proof watchlist sparkline — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (faster USOIL market-impact reads — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (faster USOIL market-impact reads, `apps/web` only, this commit) — outcome rows for `GET /api/market-impact` and `GET /api/signals/:id` are read in parallel after the first page, and a successful read is reused for 5 minutes. The price-history read starts before the outcome wait. Response shape and the 3s baseline limit are unchanged. See `docs/brain/LIVE_TODO.md`, PHASE 148.
 
 > ⚠️ NEW 2026-10-14 (weekend-proof watchlist sparkline, `apps/web` only, this commit) — the watchlist sparkline requests a 7-day window sampled to 14 points, and shows "No price change in the last 7 days" when every price in that window is the same, instead of a row of equal bars. `points` on `GET /api/prices/history` applies only with `days`. See `docs/brain/LIVE_TODO.md`, PHASE 147.
 

@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Faster USOIL market-impact reads, `apps/web` only, 2026-10-14, this commit
+
+- `GET /api/market-impact` and `GET /api/signals/:id` were spending 5–8s on USOIL because `fetchSignalOutcomeRows` walked `signal_outcomes` one 1000-row page at a time and nothing was reused between requests. The first page is still 1000 rows ordered by `id`. A full page now runs one exact count with the same filters, then the remaining pages are read together (`Promise.all`, still `.order("id").range()`, page size still 1000). A failed page still logs and returns the rows collected before it, and that result is not cached.
+- Successful reads sit in memory for `OUTCOME_ROWS_CACHE_TTL_MS` (5 minutes; BBR working value, no published source), keyed by the sorted asset list. Two requests for the same key share one in-flight read. `prefetchAssetPricePoints` starts each asset's `commodity_prices` read and returns without awaiting; it swallows errors. Both routes call it, then `await fetchSignalOutcomeRows`, then `fetchMatchedBaselinesWithTimeout`. Response JSON, copy, numbers, and `BASELINE_FETCH_TIMEOUT_MS` (3000) are unchanged. `apps/backend` untouched.
+- No open priority-queue line for this — ad-hoc production latency on the existing market-impact read, not a queued ticket.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.171.0, `05_API.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 148, `05_API.md`. Skipped both `06_COMPONENTS.md` — no React component change. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
+- Verification: `pnpm --filter web test` exit 0 (includes `lib/signal-outcomes-server.test.ts` on the existing tsx chain; this repo has no vitest runner); `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. No browser run — PW-1 times the live endpoints after deploy.
+
 ## ✅ Weekend-proof watchlist sparkline, `apps/web` only, 2026-10-14, this commit
 
 - On a closed market the last 12 saved prices (no-`days` history default: `HISTORY_POINTS = 12`, about 3 hours at a 15-minute cadence) are identical, so `PriceSparkline` drew 12 equal minimum-height bars. The bar formula (`h = 15 + ((price - min) / range) * 85`) is unchanged.
