@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Ingestion banner when the daily classification budget is closed, `apps/web` only, 2026-10-15, this commit
+
+- The dashboard, map, and alerts "Live ingestion" box kept saying "Last fetched …" and "Next run in ~…" after every collector had `budgetClosed: true` and fetched 0. Checked 2026-10-14 16:44 UTC: GDELT, GNews, and RSS were all closed, `lastFetchedAt` 16:30 UTC, `nextFetchEstimate` 17:00 UTC. That reads as a healthy cycle. The status page already says collection is paused until the next UTC day.
+- When every collector on `GET /api/ingestion/status` has `budgetClosed === true`, the box label is "Collection paused" and the two lines are replaced by "Collection is paused until the next UTC day." That is the status page Intelligence Feed sentence, without the leading space used when that sentence is appended. The "Every 30 min" line is hidden in that state. A missing `budgetClosed` field is not closed. If at least one collector is not closed, the box is unchanged.
+- "Last collected:" plus the relative time is shown only when the same response already includes `newestStoredArticleAt`. `lastFetchedAt` is the collector cycle clock, including a cycle that stored nothing, so it is not used. The current status route does not send an article time, so the line is omitted until that field is present. No second request.
+- No open priority-queue line for this. Nothing struck.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.178.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 155, `06_COMPONENTS.md`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new route, table, prompt, or standing rule.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0 (47 files, including 6 cases in `lib/ingestion-budget-banner.test.ts`). `pnpm --filter web run build` (`next build`) exit 0. No browser run.
+
 ## ✅ Map locations list, `apps/web` only, 2026-10-14, this commit
 
 - The map had pins and a chokepoint popup, and no list of signals grouped by place. Checked 2026-10-09: 513 of 543 signals in 30 days have lat and lng. This list uses the map's existing filtered signal array. No new query.

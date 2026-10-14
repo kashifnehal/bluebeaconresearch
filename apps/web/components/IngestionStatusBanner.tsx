@@ -1,6 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import {
+  allCollectorsBudgetClosed,
+  COLLECTION_PAUSED_SENTENCE,
+  newestStoredArticleIso,
+  type CollectorBudgetSnapshot,
+} from "@/lib/ingestion-budget-banner";
 import { COLLECTOR_HEALTH_UNAVAILABLE } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 
@@ -9,6 +15,9 @@ type IngestionStatusResponse = {
     lastFetchedAt: string;
     nextFetchEstimate: string;
     totals: { inserted: number; signals: number; fetched: number };
+    collectors?: Record<string, CollectorBudgetSnapshot | null>;
+    /** Present only when the payload already carries a stored-article time. */
+    newestStoredArticleAt?: string;
   } | null;
   cronIntervalMinutes: number;
   // degraded = the pipeline:last_run health feed itself is unavailable (Redis
@@ -34,10 +43,16 @@ export function IngestionStatusBanner() {
     refetchInterval: 30_000,
   });
 
+  return <IngestionStatusBannerView data={data} />;
+}
+
+export function IngestionStatusBannerView({ data }: { data: IngestionStatusResponse | undefined }) {
   const status = data?.status;
   if (!status?.lastFetchedAt) return null;
 
   const degraded = data?.degraded ?? false;
+  const budgetPaused = allCollectorsBudgetClosed(status.collectors);
+  const articleIso = newestStoredArticleIso(status);
   const lastFetched = new Date(status.lastFetchedAt);
   const nextFetch = status.nextFetchEstimate ? new Date(status.nextFetchEstimate) : null;
   // Scales with the real cadence (cronIntervalMinutes) rather than a fixed 20 min —
@@ -46,7 +61,7 @@ export function IngestionStatusBanner() {
   // a real miss is flagged.
   const cronIntervalMinutes = data?.cronIntervalMinutes ?? 15;
   const isStale = Date.now() - lastFetched.getTime() > cronIntervalMinutes * 1.5 * 60 * 1000;
-  const notHealthy = isStale || degraded;
+  const notHealthy = isStale || degraded || budgetPaused;
 
   return (
     <div
@@ -64,18 +79,37 @@ export function IngestionStatusBanner() {
           style={{ backgroundColor: notHealthy ? "#ef4444" : "#4edea3" }}
         />
         <span className="font-bold uppercase" style={{ color: notHealthy ? "#f0a0a0" : "#4edea3" }}>
-          {degraded ? "Ingestion status unavailable" : isStale ? "Ingestion delayed" : "Live ingestion"}
+          {budgetPaused
+            ? "Collection paused"
+            : degraded
+              ? "Ingestion status unavailable"
+              : isStale
+                ? "Ingestion delayed"
+                : "Live ingestion"}
         </span>
       </span>
 
-      <span>
-        Last fetched{" "}
-        <strong style={{ color: "#e5e2e1" }}>
-          {safeFormatDistanceToNow(lastFetched, { addSuffix: true })}
-        </strong>
-      </span>
+      {budgetPaused ? (
+        <span>{COLLECTION_PAUSED_SENTENCE}</span>
+      ) : (
+        <span>
+          Last fetched{" "}
+          <strong style={{ color: "#e5e2e1" }}>
+            {safeFormatDistanceToNow(lastFetched, { addSuffix: true })}
+          </strong>
+        </span>
+      )}
 
-      {nextFetch && !degraded && (
+      {budgetPaused && articleIso && (
+        <span>
+          Last collected:{" "}
+          <strong style={{ color: "#e5e2e1" }}>
+            {safeFormatDistanceToNow(articleIso, { addSuffix: true })}
+          </strong>
+        </span>
+      )}
+
+      {nextFetch && !degraded && !budgetPaused && (
         <span>
           {nextFetch.getTime() < Date.now() ? "Next run overdue by ~" : "Next run in ~"}
           <strong style={{ color: "#e5e2e1" }}>
@@ -105,7 +139,9 @@ export function IngestionStatusBanner() {
         </span>
       )}
 
-      <span className="opacity-70">Every {cronIntervalMinutes} min · RSS · GNews · GDELT</span>
+      {!budgetPaused && (
+        <span className="opacity-70">Every {cronIntervalMinutes} min · RSS · GNews · GDELT</span>
+      )}
     </div>
   );
 }

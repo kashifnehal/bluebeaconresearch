@@ -191,6 +191,12 @@ On error: console.error only, never expose stack trace to user.
 
 ---
 
+### IngestionStatusBanner (`components/IngestionStatusBanner.tsx`) — 2026-10-15
+
+Shown on the dashboard, map, and alerts. When every collector in the ingestion status response has `budgetClosed` true, the label is "Collection paused" and the sentence is "Collection is paused until the next UTC day." The last-fetched, next-run, and cadence lines stay only when at least one collector is not closed. "Last collected" uses `newestStoredArticleAt` only when that field is already on the response.
+
+---
+
 ### EmptyState (apps/web/components/EmptyState.tsx)
 **Reusable empty state for all pages**
 

@@ -1,6 +1,8 @@
 # 09_BACKLOG.md — Complete Product Backlog
 
-> **📍 Doc status — live numbered-ticket queue as of 2026-10-14.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-15 — Ingestion banner when the daily classification budget is closed (`apps/web`, this commit, PHASE 155 / v0.178.0). The live-ingestion box no longer reads as a healthy cycle when every collector is budget-closed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-14 — Map locations list (`apps/web`, this commit, PHASE 154 / v0.177.0). The map groups its current signals by country and lists each chokepoint with a count inside 500 km. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

@@ -99,6 +99,10 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - **Parent**: near the top of all 11 pages under `apps/web/app/(dashboard)` (dashboard, map, watchlist, watchlist/[symbol], alerts, backtesting, calendar, archive, events/[id], settings, help). On `/map` it's an absolutely-positioned overlay (`top-3 left-3`, backdrop pill) since the page is a full-bleed canvas with no chrome header; every other page sits inline near the top of normal content flow.
 - **Note**: replaced a single non-trail "Back to X" button on `events/[id]/page.tsx` and `watchlist/[symbol]/page.tsx`. Adding it to `events/[id]/page.tsx` exposed a pre-existing layout bug — that page's root wrapper had no top offset for the fixed 64px `TopBar`, so the old back-button (and initially the new breadcrumb) rendered hidden underneath it at all widths; fixed with `pt-16`, matching the convention every sibling `(dashboard)` page already used.
 
+### 2.6 `IngestionStatusBanner.tsx` — budget-closed copy, 2026-10-15
+- **Purpose**: Dashboard, map, and alerts strip for `GET /api/ingestion/status`. When every collector has `budgetClosed === true`, the label is "Collection paused" and the body is "Collection is paused until the next UTC day." Last-fetched, next-run, and "Every N min" stay only when at least one collector is not closed. A missing `budgetClosed` field is not closed. "Last collected:" is the relative time of `newestStoredArticleAt` when that field is already on the response.
+- **Parent**: `(dashboard)/dashboard/page.tsx`, `(dashboard)/map/page.tsx`, `(dashboard)/alerts/page.tsx`.
+
 ---
 
 ## 3. Tactical Intelligence Components (`apps/web/components/signals`)
