@@ -198,14 +198,16 @@ runTest("Intelligence Feed appends the paused suffix only when budgetClosed is t
   assert.equal(open.status, "Operational");
   assert.doesNotMatch(open.detail, /Collection is paused/);
   assert.equal(closed.status, open.status);
-  assert.equal(closed.detail, `${open.detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
+  assert.equal(open.detail.endsWith("."), false);
+  assert.equal(closed.detail, `${open.detail}.${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
   assert.equal(closed.detail.endsWith(" Collection is paused until the next UTC day."), true);
 
   const degradedOpen = evaluateIntelligenceFeedHealth(null, null, 30, NOW, false);
   const degradedClosed = evaluateIntelligenceFeedHealth(null, null, 30, NOW, true);
   assert.equal(degradedClosed.status, degradedOpen.status);
   assert.equal(degradedClosed.status, "Degraded");
-  assert.equal(degradedClosed.detail, `${degradedOpen.detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
+  assert.equal(degradedOpen.detail.endsWith("."), false);
+  assert.equal(degradedClosed.detail, `${degradedOpen.detail}.${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
   assert.doesNotMatch(degradedOpen.detail, /Collection is paused/);
 });
 

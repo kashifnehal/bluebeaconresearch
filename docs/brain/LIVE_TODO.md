@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Intelligence Feed pause sentence has a period, `apps/web` only, 2026-10-15, this commit
+
+- On `/status`, a closed daily classification budget appended " Collection is paused until the next UTC day." onto the Intelligence Feed detail with no period between them. The Unknown line ends "...reported healthy recently", so it read as one glued sentence.
+- `withBudgetPausedNote` adds "." when the detail does not already end with one, then appends the same suffix. The suffix words are unchanged and still match the dashboard sentence. An open budget leaves the detail unchanged. Status is unchanged.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web test` exit 0. `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web run build` (`next build`) exit 0. No browser run. The period is in the unit test for the closed cap; the open cap stays the base detail.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.182.0; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 159. Skipped both `05_API.md`, both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new route, component, table, prompt, or standing rule.
+
 ## ✅ Underscore symbols on driver-breakdown and the signals feed filter, `apps/web` only, 2026-10-15, this commit
 
 - `GET /api/signals/driver-breakdown` rejected `VEG_OILS`, `TTF_GAS`, and `HEATING_OIL` at `^[A-Z0-9]+$` before the known-symbol check. Those three are in the shared registry.

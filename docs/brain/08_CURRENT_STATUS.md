@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-15 (underscore registry symbols on driver-breakdown, this commit)
+Last updated: 2026-10-15 (Intelligence Feed pause sentence has a period, this commit)
+
+> ⚠️ NEW 2026-10-15 (Intelligence Feed pause sentence, `apps/web` only, this commit) — a closed daily classification budget puts a period before " Collection is paused until the next UTC day." on the Intelligence Feed detail. An open budget is unchanged. See `14_CHANGELOG.md` v0.182.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (underscore registry symbols, `apps/web` only, this commit) — `GET /api/signals/driver-breakdown` allows `_` in `symbol` and still returns `400` for a symbol outside `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, and `FOREX_PAIRS`. `GET /api/signals` uses the same charset on commodity, forex, and saved-preference symbols. Attribution `asset` is unchanged. See `14_CHANGELOG.md` v0.181.0, `LIVE_TODO.md`.
 

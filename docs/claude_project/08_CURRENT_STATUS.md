@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (underscore registry symbols on driver-breakdown — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (Intelligence Feed pause sentence has a period — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (Intelligence Feed pause sentence, `apps/web` only, this commit) — a closed daily classification budget puts a period before the pause sentence on the Intelligence Feed detail. An open budget is unchanged. See `docs/brain/LIVE_TODO.md`, PHASE 159.
 
 > ⚠️ NEW 2026-10-15 (underscore registry symbols, `apps/web` only, this commit) — driver-breakdown allows `_` in `symbol` and still `400`s an unknown symbol. The signals feed filter uses the same charset. Attribution `asset` is unchanged. See `docs/brain/LIVE_TODO.md`, PHASE 158.
 

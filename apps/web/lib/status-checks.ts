@@ -35,8 +35,9 @@ function formatMinutesAgo(ms: number): string {
  * recent status:'ok' row across INGESTION_COLLECTOR_SERVICES (or null if none exist
  * within the lookback window the caller queried); `latestSignalCreatedAt` is used
  * only to add age-of-newest-signal as extra detail text, never as the pass/fail rule.
- * `budgetClosed` does not change the status. When true, the existing detail gets
- * INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX appended.
+ * `budgetClosed` does not change the status. When true, a trailing period is
+ * added if the detail does not already end with one, then
+ * INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX is appended.
  */
 export function evaluateIntelligenceFeedHealth(
   latestOkHealthRow: { service: string; created_at: string } | null,
@@ -86,7 +87,8 @@ export const INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX = " Collection is paused unt
 
 function withBudgetPausedNote(check: SystemCheck, budgetClosed: boolean): SystemCheck {
   if (!budgetClosed) return check;
-  return { ...check, detail: `${check.detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}` };
+  const detail = check.detail.endsWith(".") ? check.detail : `${check.detail}.`;
+  return { ...check, detail: `${detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}` };
 }
 
 /**

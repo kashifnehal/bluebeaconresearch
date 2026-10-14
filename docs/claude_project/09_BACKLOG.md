@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — Intelligence Feed pause sentence (`apps/web`, this commit, PHASE 159 / v0.182.0). A closed daily classification budget puts a period before the pause sentence on the `/status` Intelligence Feed detail. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — Underscore registry symbols (`apps/web`, this commit, PHASE 158 / v0.181.0). `VEG_OILS`, `TTF_GAS`, and `HEATING_OIL` pass the driver-breakdown charset and still have to be a known symbol. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — News-only symbols on the driver-breakdown route (`apps/web`, this commit, PHASE 157 / v0.180.0). `COFFEE` and the other news-only symbols that pass the existing symbol pattern are no longer `400 unknown symbol`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
