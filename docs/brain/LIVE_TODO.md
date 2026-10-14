@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Signal detail step timings, `apps/web` only, 2026-10-15, this commit
+
+- Production `GET /api/signals/:id` for a USOIL signal was still about 5.7s, 2.3s, and 5.4s after the 5-minute outcome-row cache. Repeat `GET /api/market-impact?assets=USOIL` was about 0.5s. Which step is slow is unknown. Serverless instances may not share that in-memory cache.
+- This route does not call the rate limiter. The list route does. The `auth` step here is session and client setup only.
+- When `SERVER_TIMING` is exactly `true`, the response adds a `Server-Timing` header. Any other value, including unset, sends no header. Body, status codes, and queries are unchanged. The header is step names and whole milliseconds only: `auth`, `signal`, `raw_events`, `historical`, `related`, `price_at_signal`, `outcomes` (`hit`, `miss`, `inflight`, or `skip`), `prices` (`hit`, `miss`, `open`, or `skip`), `baselines` (`timeout`, `ok`, or `skip`), `media`, `response`. `prices` is the commodity-price history read used for baselines. It starts before the outcome read, so those two overlap. `open` means that history read was still running when the response was sent. `price_at_signal` is the at-event and latest quote pair. No ids or account data.
+- The variable is not set on Vercel in this commit. A later pass turns it on, reads the header for 5 requests, and writes the fix from those numbers.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0 (48 files, including 2 cases in `app/api/signals/[id]/route.test.ts`). `pnpm --filter web run build` (`next build`) exit 0. No browser run. `SERVER_TIMING` was not set on Vercel.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.179.0, `05_API.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 156, `05_API.md`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new component, table, prompt, or standing rule.
+
 ## ✅ Ingestion banner when the daily classification budget is closed, `apps/web` only, 2026-10-15, this commit
 
 - The dashboard, map, and alerts "Live ingestion" box kept saying "Last fetched …" and "Next run in ~…" after every collector had `budgetClosed: true` and fetched 0. Checked 2026-10-14 16:44 UTC: GDELT, GNews, and RSS were all closed, `lastFetchedAt` 16:30 UTC, `nextFetchEstimate` 17:00 UTC. That reads as a healthy cycle. The status page already says collection is paused until the next UTC day.

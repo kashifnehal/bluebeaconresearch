@@ -6,7 +6,7 @@ import {
   computeMarketImpactMagnitude,
   type SignalOutcomeRow,
 } from "./market-impact-assessment";
-import { fetchSignalOutcomeRows } from "./signal-outcomes-server";
+import { fetchSignalOutcomeRows, type OutcomeRowsObservation } from "./signal-outcomes-server";
 import type { RouteSupabaseClients } from "./supabase-server";
 
 function runTest(name: string, fn: () => Promise<void> | void) {
@@ -159,24 +159,31 @@ async function main() {
 
   await runTest("a second call within the time-to-live does not call the client again", async () => {
     const fake = makeOutcomeClient(rowsWithPct(3, "TTL_A").concat(rowsWithPct(2, "TTL_B")));
-    const first = await fetchSignalOutcomeRows(fake.client, ["TTL_B", "TTL_A"]);
+    const firstWatch: OutcomeRowsObservation = { cacheStatus: "hit" };
+    const first = await fetchSignalOutcomeRows(fake.client, ["TTL_B", "TTL_A"], firstWatch);
     const callsAfterFirst = fake.rangeCalls.length + fake.countCalls;
     assert.equal(first.length, 5);
+    assert.equal(firstWatch.cacheStatus, "miss");
 
-    const second = await fetchSignalOutcomeRows(fake.client, ["TTL_A", "TTL_B"]);
+    const secondWatch: OutcomeRowsObservation = { cacheStatus: "miss" };
+    const second = await fetchSignalOutcomeRows(fake.client, ["TTL_A", "TTL_B"], secondWatch);
     assert.equal(fake.rangeCalls.length + fake.countCalls, callsAfterFirst);
     assert.deepEqual(second, first);
+    assert.equal(secondWatch.cacheStatus, "hit");
   });
 
   await runTest("two simultaneous calls share one read", async () => {
     const fake = makeOutcomeClient(rowsWithPct(2500, "SHARE"));
+    const leftWatch: OutcomeRowsObservation = { cacheStatus: "hit" };
+    const rightWatch: OutcomeRowsObservation = { cacheStatus: "hit" };
     const [first, second] = await Promise.all([
-      fetchSignalOutcomeRows(fake.client, ["SHARE"]),
-      fetchSignalOutcomeRows(fake.client, ["SHARE"]),
+      fetchSignalOutcomeRows(fake.client, ["SHARE"], leftWatch),
+      fetchSignalOutcomeRows(fake.client, ["SHARE"], rightWatch),
     ]);
 
     assert.equal(first.length, 2500);
     assert.deepEqual(second, first);
+    assert.deepEqual([leftWatch.cacheStatus, rightWatch.cacheStatus].sort(), ["inflight", "miss"]);
     assert.equal(fake.rangeCalls.length, 3);
     assert.equal(fake.countCalls, 1);
   });

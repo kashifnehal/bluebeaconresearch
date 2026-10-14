@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (ingestion banner when the daily classification budget is closed — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (signal detail step timings — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (signal detail step timings, `apps/web` only, this commit) — `GET /api/signals/:id` adds `Server-Timing` only when `SERVER_TIMING` is exactly `true`. The body, status codes, and queries are unchanged. This route does not call the rate limiter. See `docs/brain/LIVE_TODO.md`, PHASE 156.
 
 > ⚠️ NEW 2026-10-15 (ingestion banner when the daily classification budget is closed, `apps/web` only, this commit) — when every collector is budget-closed, the live-ingestion box says collection is paused until the next UTC day and hides the healthy cycle lines. See `docs/brain/LIVE_TODO.md`, PHASE 155.
 

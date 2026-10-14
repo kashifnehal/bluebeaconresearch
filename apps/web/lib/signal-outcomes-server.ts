@@ -138,20 +138,31 @@ async function loadSignalOutcomeRows(
  * so callers can match tracked signals to their event start time without a
  * second query.
  */
+export type OutcomeCacheStatus = "hit" | "miss" | "inflight";
+
+export type OutcomeRowsObservation = {
+  cacheStatus: OutcomeCacheStatus;
+};
+
 export async function fetchSignalOutcomeRows(
   supabase: RouteSupabaseClients["supabase"],
   assets: string[],
+  observation?: OutcomeRowsObservation,
 ): Promise<SignalOutcomeRow[]> {
   const key = outcomeRowsCacheKey(assets);
   const cached = outcomeRowsCache.get(key);
   if (cached && cached.expiresAt > Date.now()) {
+    if (observation) observation.cacheStatus = "hit";
     return cached.rows;
   }
 
   const existing = inFlightOutcomeRows.get(key);
   if (existing) {
+    if (observation) observation.cacheStatus = "inflight";
     return existing;
   }
+
+  if (observation) observation.cacheStatus = "miss";
 
   const fetchPromise = loadSignalOutcomeRows(supabase, assets).then((result) => {
     if (result.cacheable) {

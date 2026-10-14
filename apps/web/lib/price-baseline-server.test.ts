@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   fetchMatchedBaselines,
   fetchMatchedBaselinesWithTimeout,
+  type PricePointsTiming,
 } from "./price-baseline-server";
 import type { RouteSupabaseClients } from "./supabase-server";
 
@@ -135,6 +136,29 @@ async function main() {
     assert.equal(getRangeCalls(), 2);
   });
 
+  await runTest("price timing reports a miss, then a cache hit", async () => {
+    const { client } = makeFakeSupabase([[{ price: 100, fetched_at: "2026-01-01T00:00:00Z" }]]);
+    const first: PricePointsTiming = { ms: 0, pending: 0, startedAt: null, cacheStatus: "hit" };
+    await fetchMatchedBaselines(
+      client as unknown as RouteSupabaseClients["supabase"],
+      ["ASSET_PRICE_TIMING"],
+      [],
+      first,
+    );
+    assert.equal(first.cacheStatus, "miss");
+    assert.equal(first.pending, 0);
+
+    const second: PricePointsTiming = { ms: 0, pending: 0, startedAt: null, cacheStatus: "hit" };
+    await fetchMatchedBaselines(
+      client as unknown as RouteSupabaseClients["supabase"],
+      ["ASSET_PRICE_TIMING"],
+      [],
+      second,
+    );
+    assert.equal(second.cacheStatus, "hit");
+    assert.equal(second.pending, 0);
+  });
+
   await runTest(
     "the timeout helper returns the empty result when the fetch is slow",
     async () => {
@@ -149,13 +173,16 @@ async function main() {
       global.clearTimeout = (() => {}) as typeof clearTimeout;
 
       try {
+        const timing = { timedOut: false };
         const result = await fetchMatchedBaselinesWithTimeout(
           makeNeverResolvingSupabase() as unknown as RouteSupabaseClients["supabase"],
           ["ASSET_TIMEOUT"],
           [],
           5000,
+          timing,
         );
         assert.deepEqual(result, {});
+        assert.equal(timing.timedOut, true);
       } finally {
         global.setTimeout = realSetTimeout;
         global.clearTimeout = realClearTimeout;

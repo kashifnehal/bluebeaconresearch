@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-15 — `GET /api/signals/:id` sends `Server-Timing` only when `SERVER_TIMING` is exactly `true`. Body, status codes, and queries are unchanged. This route does not call the rate limiter. Full header detail: `docs/brain/05_API.md`.
+>
 > ⚠️ UPDATED 2026-10-14 — `GET /v1/prices/history-5y/:symbol` returns 404 for a news-only commodity (`provider: "none"`). `GET /api/prices` still lists the 18 priced symbols only. Full endpoint detail: `docs/brain/05_API.md`.
 >
 > ⚠️ UPDATED 2026-10-14 — `GET /api/prices/history` (`apps/web`) accepts optional `points` (integer, clamped 2..60) only together with `days`. The paged window is then reduced to the last price in each equal time bucket (`bucketLastPrice`); empty buckets are skipped. No `days` still returns the last 12 snapshots. The watchlist sparkline uses `days=7&points=14`. Full endpoint detail: `docs/brain/05_API.md` §2.4.

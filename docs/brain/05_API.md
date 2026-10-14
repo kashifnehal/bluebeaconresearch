@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-15 — `GET /api/signals/:id` (`apps/web`) adds a `Server-Timing` header only when `SERVER_TIMING` is exactly `true`. Body, status codes, and queries are unchanged. This route does not call the rate limiter. Steps are `auth`, `signal`, `raw_events`, `historical`, `related`, `price_at_signal`, `outcomes` (`hit`/`miss`/`inflight`/`skip`), `prices` (`hit`/`miss`/`open`/`skip`), `baselines` (`timeout`/`ok`/`skip`), `media`, `response`. Durations are whole milliseconds. No ids or account data. The host variable is not set in this commit.
+>
 > ⚠️ UPDATED 2026-10-14 — `GET /v1/prices/history-5y/:symbol` returns `404 { error: "no_price_data", symbol }` for a commodity whose `provider` is `"none"` (`VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL`) and does not call Yahoo. Priced symbols and forex pairs are unchanged. `GET /api/prices` (`apps/web`) still bounds its Redis fallback to the 18 priced symbols.
 >
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** public. It registers only when `NODE_ENV` is `development` or `test`. Production previously served unauthenticated OpenAPI at `https://api.bluebeaconresearch.com/docs`. Auth hook no longer skips `/docs` in production. Global rate limit remains `@fastify/rate-limit` 60/min in-memory (see `apps/backend/src/app.ts`).

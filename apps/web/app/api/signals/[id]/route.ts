@@ -3,11 +3,18 @@ import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 import type { Signal } from "@blue-beacon-research/shared";
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
-import { fetchSignalOutcomeRows } from "@/lib/signal-outcomes-server";
 import {
+  fetchSignalOutcomeRows,
+  type OutcomeRowsObservation,
+} from "@/lib/signal-outcomes-server";
+import {
+  BASELINE_FETCH_TIMEOUT_MS,
   fetchMatchedBaselinesWithTimeout,
   prefetchAssetPricePoints,
+  type BaselineFetchTiming,
+  type PricePointsTiming,
 } from "@/lib/price-baseline-server";
+import { formatServerTiming, serverTimingEnabled, type ServerTimingStep } from "@/lib/server-timing";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
 import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
@@ -87,6 +94,39 @@ export type EventDetailResponse = {
 // real traffic. See signal-merge.ts's SIMILARITY_THRESHOLD comment for the same
 // pattern applied to a value that *does* have real backtest evidence behind it.
 const RELATED_EVENTS_WINDOW_DAYS = 7;
+
+type SignalDetailDeps = {
+  getRouteSupabaseClients: typeof getRouteSupabaseClients;
+  fetchSignalOutcomeRows: typeof fetchSignalOutcomeRows;
+  prefetchAssetPricePoints: typeof prefetchAssetPricePoints;
+  fetchMatchedBaselinesWithTimeout: typeof fetchMatchedBaselinesWithTimeout;
+  loadMediaImpactCaveats: typeof loadMediaImpactCaveats;
+};
+
+const defaultSignalDetailDeps: SignalDetailDeps = {
+  getRouteSupabaseClients,
+  fetchSignalOutcomeRows,
+  prefetchAssetPricePoints,
+  fetchMatchedBaselinesWithTimeout,
+  loadMediaImpactCaveats,
+};
+
+function timeAwait<T>(
+  promise: PromiseLike<T>,
+  timingOn: boolean,
+): { promise: PromiseLike<T>; ms: () => number } {
+  if (!timingOn) return { promise, ms: () => 0 };
+  let dur = 0;
+  const timed = (async () => {
+    const started = performance.now();
+    try {
+      return await promise;
+    } finally {
+      dur = performance.now() - started;
+    }
+  })();
+  return { promise: timed, ms: () => dur };
+}
 // RELATED_EVENTS_PAGE_SIZE (display count, not a query cap) lives in
 // @/lib/related-events — see that file for why it isn't re-exported from here.
 
@@ -111,22 +151,42 @@ function seendateToIso(seendate: unknown): string | null {
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
+  deps: SignalDetailDeps = defaultSignalDetailDeps,
 ) {
   const { id } = await params;
   if (!id) {
     return apiError(400, "missing_id");
   }
 
-  const clients = await getRouteSupabaseClients();
+  const timingOn = serverTimingEnabled();
+  const steps: ServerTimingStep[] | null = timingOn ? [] : null;
+  const withTiming = (response: NextResponse) => {
+    if (steps && steps.length > 0) {
+      response.headers.set("Server-Timing", formatServerTiming(steps));
+    }
+    return response;
+  };
+  const started = () => (timingOn ? performance.now() : 0);
+  const note = (name: string, t0: number, desc?: string) => {
+    if (!steps) return;
+    steps.push({ name, durMs: performance.now() - t0, desc });
+  };
+
+  const authStarted = started();
+  const clients = await deps.getRouteSupabaseClients();
   if (!clients) {
-    return apiError(500, "config_error");
+    note("auth", authStarted);
+    return withTiming(apiError(500, "config_error"));
   }
   const { supabase, user } = clients;
 
   if (!user && process.env.NODE_ENV === "production") {
-    return apiError(401, "unauthorized");
+    note("auth", authStarted);
+    return withTiming(apiError(401, "unauthorized"));
   }
+  note("auth", authStarted);
 
+  const signalStarted = started();
   const { data: row, error } = await supabase
     .from("signals")
     .select("*")
@@ -134,13 +194,16 @@ export async function GET(
     .maybeSingle();
 
   if (error) {
+    note("signal", signalStarted);
     console.error("[signals/:id] DB error:", error.message);
-    return apiErrorLogged(500, "db_error", error);
+    return withTiming(apiErrorLogged(500, "db_error", error));
   }
 
   if (!row) {
-    return apiError(404, "not_found");
+    note("signal", signalStarted);
+    return withTiming(apiError(404, "not_found"));
   }
+  note("signal", signalStarted);
 
   const rawEventIds: string[] = row.raw_event_ids ?? [];
   const ownCommodityAssets: string[] = ((row.commodity_impacts ?? []) as Signal["commodityImpacts"]).map(
@@ -155,35 +218,36 @@ export async function GET(
     relatedAnchor - RELATED_EVENTS_WINDOW_DAYS * 24 * 3_600_000,
   ).toISOString();
 
-  const [rawEventsRes, historicalRes, relatedRes] = await Promise.all([
+  const rawEventsPromise =
     rawEventIds.length > 0
       ? supabase
           .from("raw_events")
           .select("id, title, event_date, created_at, raw_data")
           .in("id", rawEventIds)
-      : Promise.resolve({ data: [] as any[], error: null }),
-    supabase
-      .from("signals")
-      .select("id, title, event_date, created_at, severity, country, commodity_impacts")
-      .neq("id", id)
-      .or(
-        [row.event_type ? `event_type.eq.${row.event_type}` : null, row.region ? `region.eq.${row.region}` : null]
-          .filter(Boolean)
-          .join(","),
-      )
-      .order("event_date", { ascending: false })
-      .limit(4),
-    // Related Events (Phase 2): same country AND overlapping commodity, not the
-    // broader region-based guess historicalComparisons above uses — an AND with
-    // country, not an OR with region, per the explicit correction that a
-    // region-only match would make almost everything "related".
-    //
-    // Paged with .range() rather than a bare .limit(50) — the same proven pattern
-    // as apps/web/app/api/signals/driver-breakdown/route.ts's fetchImpactRows. A
-    // fixed .limit(50) candidate pool meant the real highest-relevance matches
-    // beyond the 50th DB row were never even considered, let alone shown (audit
-    // #276). The response-level display cap is RELATED_EVENTS_PAGE_SIZE, applied
-    // after scoring, below.
+      : Promise.resolve({ data: [] as any[], error: null });
+  const historicalPromise = supabase
+    .from("signals")
+    .select("id, title, event_date, created_at, severity, country, commodity_impacts")
+    .neq("id", id)
+    .or(
+      [row.event_type ? `event_type.eq.${row.event_type}` : null, row.region ? `region.eq.${row.region}` : null]
+        .filter(Boolean)
+        .join(","),
+    )
+    .order("event_date", { ascending: false })
+    .limit(4);
+  // Related Events (Phase 2): same country AND overlapping commodity, not the
+  // broader region-based guess historicalComparisons above uses — an AND with
+  // country, not an OR with region, per the explicit correction that a
+  // region-only match would make almost everything "related".
+  //
+  // Paged with .range() rather than a bare .limit(50) — the same proven pattern
+  // as apps/web/app/api/signals/driver-breakdown/route.ts's fetchImpactRows. A
+  // fixed .limit(50) candidate pool meant the real highest-relevance matches
+  // beyond the 50th DB row were never even considered, let alone shown (audit
+  // #276). The response-level display cap is RELATED_EVENTS_PAGE_SIZE, applied
+  // after scoring, below.
+  const relatedPromise =
     row.country && ownCommodityAssets.length > 0
       ? fetchAllRangedRows<RelatedCandidateRow>((from, to) =>
           supabase
@@ -196,8 +260,25 @@ export async function GET(
             .order("event_date", { ascending: false })
             .range(from, to),
         )
-      : Promise.resolve({ rows: [] as RelatedCandidateRow[], error: null }),
-  ]);
+      : Promise.resolve({ rows: [] as RelatedCandidateRow[], error: null });
+  const watchedRawEvents = timeAwait(rawEventsPromise, timingOn);
+  const watchedHistorical = timeAwait(historicalPromise, timingOn);
+  const watchedRelated = timeAwait(relatedPromise, timingOn);
+
+  const [rawEventsRes, historicalRes, relatedRes] = (await Promise.all([
+    watchedRawEvents.promise,
+    watchedHistorical.promise,
+    watchedRelated.promise,
+  ])) as [
+    { data: any[] | null; error: { message: string } | null },
+    { data: any[] | null; error: { message: string } | null },
+    { rows: RelatedCandidateRow[]; error: string | null },
+  ];
+  if (steps) {
+    steps.push({ name: "raw_events", durMs: watchedRawEvents.ms() });
+    steps.push({ name: "historical", durMs: watchedHistorical.ms() });
+    steps.push({ name: "related", durMs: watchedRelated.ms() });
+  }
 
   const sources: EventSource[] = (rawEventsRes.data ?? [])
     .map((re: any) => ({
@@ -293,7 +374,7 @@ export async function GET(
   >;
   const eventDate = row.event_date ?? row.created_at;
 
-  const pricesAtSignal: PriceAtSignal[] = await Promise.all(
+  const pricesAtSignalPromise = Promise.all(
     commodityImpacts.map(async (impact) => {
       const [historicalPriceRes, currentPriceRes] = await Promise.all([
         supabase
@@ -322,6 +403,11 @@ export async function GET(
       };
     }),
   );
+  const watchedPricesAtSignal = timeAwait(pricesAtSignalPromise, timingOn);
+  const pricesAtSignal: PriceAtSignal[] = await watchedPricesAtSignal.promise;
+  if (steps) {
+    steps.push({ name: "price_at_signal", durMs: watchedPricesAtSignal.ms() });
+  }
 
   const magnitudeAssets = [
     ...new Set([
@@ -331,10 +417,59 @@ export async function GET(
   ];
 
   let marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry> = {};
+  let responseMs = 0;
   if (magnitudeAssets.length > 0) {
-    prefetchAssetPricePoints(supabase, magnitudeAssets);
-    const rows = await fetchSignalOutcomeRows(supabase, magnitudeAssets);
-    const baselinesByAsset = await fetchMatchedBaselinesWithTimeout(supabase, magnitudeAssets, rows);
+    const pricePoints: PricePointsTiming | undefined = timingOn
+      ? { ms: 0, pending: 0, startedAt: null, cacheStatus: "hit" }
+      : undefined;
+    const outcomeWatch: OutcomeRowsObservation | undefined = timingOn
+      ? { cacheStatus: "miss" }
+      : undefined;
+    const baselineTiming: BaselineFetchTiming | undefined = timingOn
+      ? { timedOut: false, pricePoints }
+      : undefined;
+
+    if (pricePoints) deps.prefetchAssetPricePoints(supabase, magnitudeAssets, pricePoints);
+    else deps.prefetchAssetPricePoints(supabase, magnitudeAssets);
+
+    const outcomesStarted = started();
+    const rows = outcomeWatch
+      ? await deps.fetchSignalOutcomeRows(supabase, magnitudeAssets, outcomeWatch)
+      : await deps.fetchSignalOutcomeRows(supabase, magnitudeAssets);
+    const outcomesMs = timingOn ? performance.now() - outcomesStarted : 0;
+
+    const baselinesStarted = started();
+    const baselinesByAsset = baselineTiming
+      ? await deps.fetchMatchedBaselinesWithTimeout(
+          supabase,
+          magnitudeAssets,
+          rows,
+          BASELINE_FETCH_TIMEOUT_MS,
+          baselineTiming,
+        )
+      : await deps.fetchMatchedBaselinesWithTimeout(supabase, magnitudeAssets, rows);
+    const baselinesMs = timingOn ? performance.now() - baselinesStarted : 0;
+
+    if (steps && pricePoints) {
+      const stillOpen = pricePoints.pending > 0 && pricePoints.startedAt !== null;
+      steps.push({
+        name: "outcomes",
+        durMs: outcomesMs,
+        desc: outcomeWatch?.cacheStatus ?? "miss",
+      });
+      steps.push({
+        name: "prices",
+        durMs: stillOpen ? performance.now() - (pricePoints.startedAt as number) : pricePoints.ms,
+        desc: stillOpen ? "open" : pricePoints.cacheStatus,
+      });
+      steps.push({
+        name: "baselines",
+        durMs: baselinesMs,
+        desc: baselineTiming?.timedOut ? "timeout" : "ok",
+      });
+    }
+
+    const buildStarted = started();
     marketImpactMagnitudes = Object.fromEntries(
       magnitudeAssets.map((asset) => [
         asset,
@@ -350,9 +485,17 @@ export async function GET(
         } satisfies MarketImpactAssessmentEntry,
       ]),
     );
+    if (timingOn) responseMs += performance.now() - buildStarted;
+  } else if (steps) {
+    steps.push({ name: "outcomes", durMs: 0, desc: "skip" });
+    steps.push({ name: "prices", durMs: 0, desc: "skip" });
+    steps.push({ name: "baselines", durMs: 0, desc: "skip" });
   }
 
-  const mediaImpactCaveats = await loadMediaImpactCaveats(supabase);
+  const mediaStarted = started();
+  const mediaImpactCaveats = await deps.loadMediaImpactCaveats(supabase);
+  note("media", mediaStarted);
+  const assembleStarted = started();
   const mediaImpactEntity =
     typeof row.media_impact_entity === "string" && row.media_impact_entity.trim()
       ? row.media_impact_entity
@@ -414,5 +557,8 @@ export async function GET(
     marketImpactMagnitudes,
   };
 
-  return NextResponse.json(payload);
+  const response = NextResponse.json(payload);
+  if (timingOn) responseMs += performance.now() - assembleStarted;
+  if (steps) steps.push({ name: "response", durMs: responseMs });
+  return withTiming(response);
 }

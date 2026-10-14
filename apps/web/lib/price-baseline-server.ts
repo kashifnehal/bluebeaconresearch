@@ -29,12 +29,46 @@ const pricePointsCache = new Map<string, PointsCacheEntry>();
 // this one in-flight read instead of both re-reading the table.
 const inFlightPricePoints = new Map<string, Promise<PricePoint[]>>();
 
+export type PricePointsTiming = {
+  ms: number;
+  pending: number;
+  startedAt: number | null;
+  cacheStatus: "hit" | "miss";
+};
+
 async function getAssetPricePoints(
   supabase: RouteSupabaseClients["supabase"],
   asset: string,
+  timing?: PricePointsTiming,
+): Promise<PricePoint[]> {
+  const startedAt = timing ? performance.now() : 0;
+  if (timing) {
+    timing.pending += 1;
+    if (timing.startedAt === null) timing.startedAt = startedAt;
+  }
+  let fromCache = false;
+  try {
+    return await readAssetPricePoints(supabase, asset, () => {
+      fromCache = true;
+    });
+  } finally {
+    if (timing) {
+      timing.pending -= 1;
+      const dur = performance.now() - startedAt;
+      if (dur > timing.ms) timing.ms = dur;
+      if (!fromCache) timing.cacheStatus = "miss";
+    }
+  }
+}
+
+async function readAssetPricePoints(
+  supabase: RouteSupabaseClients["supabase"],
+  asset: string,
+  onCacheHit: () => void,
 ): Promise<PricePoint[]> {
   const cached = pricePointsCache.get(asset);
   if (cached && cached.expiresAt > Date.now()) {
+    onCacheHit();
     return cached.points;
   }
 
@@ -81,10 +115,11 @@ async function getAssetPricePoints(
 export function prefetchAssetPricePoints(
   supabase: RouteSupabaseClients["supabase"],
   assets: string[],
+  pricePoints?: PricePointsTiming,
 ): void {
   try {
     for (const asset of assets) {
-      void getAssetPricePoints(supabase, asset).catch((error) => {
+      void getAssetPricePoints(supabase, asset, pricePoints).catch((error) => {
         console.error("[price-baseline] prefetchAssetPricePoints error:", error);
       });
     }
@@ -104,11 +139,12 @@ export async function fetchMatchedBaselines(
   supabase: RouteSupabaseClients["supabase"],
   assets: string[],
   outcomeRows: SignalOutcomeRow[],
+  pricePoints?: PricePointsTiming,
 ): Promise<Record<string, WindowMoveBaseline[]>> {
   const entries = await Promise.all(
     assets.map(async (asset): Promise<[string, WindowMoveBaseline[]]> => {
       try {
-        const points = await getAssetPricePoints(supabase, asset);
+        const points = await getAssetPricePoints(supabase, asset, pricePoints);
         const baselines: WindowMoveBaseline[] = [];
         for (const windowHours of TIME_HORIZON_CHECKPOINTS) {
           const windows = buildHourlyWindows(points, windowHours);
@@ -146,11 +182,17 @@ export async function fetchMatchedBaselines(
  * timeoutMs. The underlying fetch keeps running (and still populates the
  * cache for the next request) even after the timer wins.
  */
+export type BaselineFetchTiming = {
+  timedOut: boolean;
+  pricePoints?: PricePointsTiming;
+};
+
 export async function fetchMatchedBaselinesWithTimeout(
   supabase: RouteSupabaseClients["supabase"],
   assets: string[],
   outcomeRows: SignalOutcomeRow[],
   timeoutMs: number = BASELINE_FETCH_TIMEOUT_MS,
+  timing?: BaselineFetchTiming,
 ): Promise<Record<string, WindowMoveBaseline[]>> {
   let timedOut = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -163,7 +205,7 @@ export async function fetchMatchedBaselinesWithTimeout(
   });
 
   const result = await Promise.race([
-    fetchMatchedBaselines(supabase, assets, outcomeRows),
+    fetchMatchedBaselines(supabase, assets, outcomeRows, timing?.pricePoints),
     timeoutPromise,
   ]);
 
@@ -173,5 +215,6 @@ export async function fetchMatchedBaselinesWithTimeout(
       `[price-baseline] fetchMatchedBaselines timed out after ${timeoutMs}ms for ${assets.length} asset(s)`,
     );
   }
+  if (timing) timing.timedOut = timedOut;
   return result;
 }
