@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-14 — `GET /v1/prices/history-5y/:symbol` returns 404 for a news-only commodity (`provider: "none"`). `GET /api/prices` still lists the 18 priced symbols only. Full endpoint detail: `docs/brain/05_API.md`.
+>
 > ⚠️ UPDATED 2026-10-14 — `GET /api/prices/history` (`apps/web`) accepts optional `points` (integer, clamped 2..60) only together with `days`. The paged window is then reduced to the last price in each equal time bucket (`bucketLastPrice`); empty buckets are skipped. No `days` still returns the last 12 snapshots. The watchlist sparkline uses `days=7&points=14`. Full endpoint detail: `docs/brain/05_API.md` §2.4.
 >
 > ⚠️ UPDATED 2026-10-11 (ADR 042/D46) — the Next.js BFF's `GET /api/prices/history` and `GET /api/prices` (`apps/web`, not the Fastify `/v1` API below) were returning empty price data for logged-in users: both built a cookie client against the raw Supabase project URL, but login's cookies are scoped to the separate auth-proxy URL. Both now resolve auth/data through `getRouteSupabaseClients()`; `/api/prices/history` 401s with no user in production and returns `502` (not a silent empty `200`) on a real DB failure. Full endpoint detail: `docs/brain/05_API.md` §2.4.

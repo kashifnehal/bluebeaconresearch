@@ -55,6 +55,8 @@
 >
 > ⚠️ UPDATED 2026-09-28 (#216) — `classifyEvent()` also asks for `invalidationCondition`: a single plain-language sentence naming the SPECIFIC fact this story reports that, if false/unconfirmed/different, would undercut this event's market-impact assessment — grounded in a concrete claim the article makes (e.g. "if the reported drone strike is not independently confirmed"), never a generic disclaimer or a probability score. Sanitized by `sanitizeInvalidationCondition()` (same null/empty/"null" handling as `sanitizeMarketMechanism()`, capped at 400 chars — no fixed prompt char target since a real falsifiable-fact sentence runs longer than `marketMechanism`'s ~140). Heuristic fallback never sets it (no real article read to ground it in). Persisted as `signals.invalidation_condition` (migration `20260928140000_signals_invalidation_condition.sql`). UI: event detail Analysis tab only — see ADR 032/D36 in `10_DECISIONS.md`.
 >
+> ⚠️ UPDATED 2026-10-14 — Live `commodityImpacts` asset enum, derived from the registry: `USOIL|UKOIL|XAUUSD|WHEAT|NGAS|CORN|COPPER|XAGUSD|TTF_GAS|RBOB|HEATING_OIL|VEG_OILS|SOYBEANS|SUGAR|COFFEE|COCOA|ALUMINIUM|NICKEL`. The last seven have no price series. The materiality-gate instruction text is unchanged. `currencyPairImpacts` is unchanged: `EURUSD|GBPUSD|USDJPY|USDCHF|USDRUB|USDCNY|USDINR`. No equities or stocks.
+
 > ⚠️ UPDATED 2026-10-05 (W7-ASSET-LISTS) — Live tagged assets after this change: `commodityImpacts` asset enum is `USOIL|UKOIL|NGAS|XAUUSD|WHEAT|CORN|COPPER|XAGUSD`; `currencyPairImpacts` asset enum is `EURUSD|GBPUSD|USDJPY|USDCHF|USDRUB|USDCNY|USDINR` (USDINR added per founder decision D2a, Oct 5). No equities or stocks are tagged (D2b) — this remains commodities + forex pairs only.
 
 ```

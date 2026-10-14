@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-14 — `GET /v1/prices/history-5y/:symbol` returns `404 { error: "no_price_data", symbol }` for a commodity whose `provider` is `"none"` (`VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL`) and does not call Yahoo. Priced symbols and forex pairs are unchanged. `GET /api/prices` (`apps/web`) still bounds its Redis fallback to the 18 priced symbols.
+>
 > ⚠️ UPDATED 2026-09-19 — Fastify Swagger UI at `/docs` is **not** public. It registers only when `NODE_ENV` is `development` or `test`. Production previously served unauthenticated OpenAPI at `https://api.bluebeaconresearch.com/docs`. Auth hook no longer skips `/docs` in production. Global rate limit remains `@fastify/rate-limit` 60/min in-memory (see `apps/backend/src/app.ts`).
 >
 > ⚠️ UPDATED 2026-09-13 (#138) — Fastify `/v1` unchanged. Next.js BFF `apiErrorLogged()` no longer forwards provider `.message` in the JSON `message` field (see `apps/web/lib/api-response.ts`).

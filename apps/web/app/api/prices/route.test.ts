@@ -24,6 +24,14 @@ runTest("SYMBOLS has no duplicates", () => {
   assert.equal(new Set(SYMBOLS).size, SYMBOLS.length);
 });
 
+runTest("SYMBOLS stays the 18 priced symbols and excludes news-only tags", () => {
+  const symbols: readonly string[] = SYMBOLS;
+  assert.equal(symbols.length, 18);
+  for (const symbol of ["VEG_OILS", "SOYBEANS", "SUGAR", "COFFEE", "COCOA", "ALUMINIUM", "NICKEL"]) {
+    assert.equal(symbols.includes(symbol), false);
+  }
+});
+
 // Tier-1 now reads through getRouteSupabaseClients() (lib/supabase-server.ts)
 // instead of a cookie client built from the raw project URL — this route has
 // no env-configured Supabase/Redis in the test process, so it should fall

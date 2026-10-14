@@ -1,9 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import YahooFinance from "yahoo-finance2";
-import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
+import { COMMODITY_REGISTRY, PRICED_COMMODITIES } from "../lib/commodity-registry.js";
 
-// On-demand 5-year weekly chart (#106). The commodity half is now derived from
-// the shared COMMODITY_REGISTRY; the forex half stays a deliberately separate,
+// On-demand 5-year weekly chart. The commodity half is priced entries only
+// (provider "yahoo"). A provider "none" symbol returns 404 and never reaches
+// Yahoo. The forex half stays a deliberately separate,
 // hand-kept copy (not FOREX_SYMBOLS from workers/price-syncer.ts — that job is
 // unrelated: live quotes into commodity_prices on a schedule). Unknown symbols
 // never pass through to Yahoo (closed set).
@@ -18,9 +19,20 @@ const FOREX_YAHOO_TICKERS: Record<string, string> = {
 };
 
 export const YAHOO_TICKERS: Record<string, string> = {
-  ...Object.fromEntries(COMMODITY_REGISTRY.map((c) => [c.symbol, c.yahooTicker])),
+  ...Object.fromEntries(PRICED_COMMODITIES.map((c) => [c.symbol, c.yahooTicker])),
   ...FOREX_YAHOO_TICKERS,
 };
+
+export const NO_PRICE_SYMBOLS = new Set<string>(
+  COMMODITY_REGISTRY.filter((c) => c.provider === "none").map((c) => c.symbol),
+);
+
+export function newsOnlyHistoryRejection(
+  symbol: string,
+): { error: "no_price_data"; symbol: string } | null {
+  if (!NO_PRICE_SYMBOLS.has(symbol)) return null;
+  return { error: "no_price_data", symbol };
+}
 
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const INTERVAL = "1wk" as const;
@@ -150,6 +162,9 @@ export async function priceHistoryRoutes(app: FastifyInstance) {
       .trim()
       .toUpperCase();
     if (!symbol) return reply.status(400).send({ error: "missing_symbol", points: [] });
+
+    const rejected = newsOnlyHistoryRejection(symbol);
+    if (rejected) return reply.status(404).send(rejected);
 
     try {
       const data = await historyFor(symbol);

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  ALLOWED_COMMODITY_ASSETS,
   ClaudeService,
   isAnthropicUsageLimitError,
   isAnthropicSpendLimitError,
@@ -1455,6 +1456,85 @@ async function main() {
     } finally {
       delete process.env.ANTHROPIC_API_KEY;
     }
+  });
+
+  // News-only tags (2026-10-14). Model text maps onto the symbol; unknown text
+  // still drops. The materiality-gate instruction does not list these symbols.
+  await runTest("MATERIALITY_GATE_INSTRUCTION does not list news-only symbols", async () => {
+    for (const symbol of ["VEG_OILS", "SOYBEANS", "SUGAR", "COFFEE", "COCOA", "ALUMINIUM", "NICKEL"]) {
+      assert.equal(MATERIALITY_GATE_INSTRUCTION.includes(symbol), false);
+      assert.equal(ALLOWED_COMMODITY_ASSETS.has(symbol), true);
+    }
+  });
+
+  async function impactsForModelAsset(asset: string): Promise<string[]> {
+    const assetService = new ClaudeService();
+    (assetService as unknown as { client: unknown }).client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                severity: 5,
+                confidence: 0.6,
+                commodityImpacts: [{ asset, direction: "up", confidence: 0.7 }],
+                currencyPairImpacts: [],
+                isBreaking: false,
+                summary: "Supply change reported",
+                region: "global",
+                materialityPass: true,
+                materialityReasoning: "real market mechanism",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 20 },
+        }),
+      },
+    };
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    try {
+      const classification = await assetService.classifyEvent({
+        title: "Reported change in commodity supply",
+        summary: "A sourced supply change.",
+        event_type: "news",
+        country: "BR",
+        event_date: new Date().toISOString(),
+      });
+      return classification.commodityImpacts.map((impact) => impact.asset);
+    } finally {
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  }
+
+  const NEWS_ONLY_ALIAS_CASES: Array<[string, string]> = [
+    ["Palm Oil", "VEG_OILS"],
+    ["Sunflower Oil", "VEG_OILS"],
+    ["Rapeseed Oil", "VEG_OILS"],
+    ["Canola Oil", "VEG_OILS"],
+    ["Vegetable Oil", "VEG_OILS"],
+    ["Edible Oil", "VEG_OILS"],
+    ["Soybeans", "SOYBEANS"],
+    ["Soybean", "SOYBEANS"],
+    ["Soy Oil", "SOYBEANS"],
+    ["Soybean Oil", "SOYBEANS"],
+    ["Soybean Meal", "SOYBEANS"],
+    ["Sugar", "SUGAR"],
+    ["Coffee", "COFFEE"],
+    ["Cocoa", "COCOA"],
+    ["Aluminium", "ALUMINIUM"],
+    ["Aluminum", "ALUMINIUM"],
+    ["Nickel", "NICKEL"],
+  ];
+
+  for (const [text, symbol] of NEWS_ONLY_ALIAS_CASES) {
+    await runTest(`normalizeCommodityAsset: '${text}' returns ${symbol}`, async () => {
+      assert.deepStrictEqual(await impactsForModelAsset(text), [symbol]);
+    });
+  }
+
+  await runTest("normalizeCommodityAsset: 'Cotton' is still dropped", async () => {
+    assert.deepStrictEqual(await impactsForModelAsset("Cotton"), []);
   });
 
   // ── W7-ASSET-LISTS — USDINR forex pair alias normalization ─────────────────

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (faster USOIL market-impact reads — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (news-only commodity tags — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (news-only commodity tags, `packages/shared` + `apps/backend` + `apps/web`, this commit) — seven tags (`VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL`) can be classified and used as feed filters. They have no price. The priced symbol set stays 18 on `GET /api/prices`. See `docs/brain/LIVE_TODO.md`, PHASE 149.
 
 > ⚠️ NEW 2026-10-14 (faster USOIL market-impact reads, `apps/web` only, this commit) — outcome rows for `GET /api/market-impact` and `GET /api/signals/:id` are read in parallel after the first page, and a successful read is reused for 5 minutes. The price-history read starts before the outcome wait. Response shape and the 3s baseline limit are unchanged. See `docs/brain/LIVE_TODO.md`, PHASE 148.
 

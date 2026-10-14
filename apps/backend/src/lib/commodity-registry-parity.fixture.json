@@ -34,7 +34,7 @@
     "USDCNY": "USDCNY=X",
     "USDINR": "USDINR=X"
   },
-  "ALLOWED_COMMODITY_ASSETS": ["USOIL", "UKOIL", "NGAS", "XAUUSD", "WHEAT", "CORN", "COPPER", "XAGUSD", "TTF_GAS", "RBOB", "HEATING_OIL"],
+  "ALLOWED_COMMODITY_ASSETS": ["USOIL", "UKOIL", "NGAS", "XAUUSD", "WHEAT", "CORN", "COPPER", "XAGUSD", "TTF_GAS", "RBOB", "HEATING_OIL", "VEG_OILS", "SOYBEANS", "SUGAR", "COFFEE", "COCOA", "ALUMINIUM", "NICKEL"],
   "COMMODITY_ASSET_ALIASES": {
     "OIL": "USOIL",
     "CRUDE OIL": "USOIL",
@@ -64,7 +64,24 @@
     "SILVER FUTURES": "XAGUSD",
     "EUROPEAN GAS": "TTF_GAS",
     "GASOLINE": "RBOB",
-    "DIESEL": "HEATING_OIL"
+    "DIESEL": "HEATING_OIL",
+    "PALM OIL": "VEG_OILS",
+    "SUNFLOWER OIL": "VEG_OILS",
+    "RAPESEED OIL": "VEG_OILS",
+    "CANOLA OIL": "VEG_OILS",
+    "VEGETABLE OIL": "VEG_OILS",
+    "EDIBLE OIL": "VEG_OILS",
+    "SOYBEANS": "SOYBEANS",
+    "SOYBEAN": "SOYBEANS",
+    "SOY OIL": "SOYBEANS",
+    "SOYBEAN OIL": "SOYBEANS",
+    "SOYBEAN MEAL": "SOYBEANS",
+    "SUGAR": "SUGAR",
+    "COFFEE": "COFFEE",
+    "COCOA": "COCOA",
+    "ALUMINIUM": "ALUMINIUM",
+    "ALUMINUM": "ALUMINIUM",
+    "NICKEL": "NICKEL"
   },
   "TRACKED_COMMODITY_NAMES": ["crude", "oil", "gold", "silver", "natural gas", "wheat", "copper", "corn", "european gas", "gasoline", "diesel"],
   "YAHOO_TICKERS": {

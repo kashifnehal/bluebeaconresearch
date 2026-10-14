@@ -23,6 +23,14 @@ export const COMMODITIES = [
   { symbol: "TTF_GAS", label: "European Gas (TTF)", unit: "EUR/MWh", category: "energy" },
   { symbol: "RBOB", label: "RBOB Gasoline", unit: "USD/gal", category: "energy" },
   { symbol: "HEATING_OIL", label: "Heating Oil / ULSD", unit: "USD/gal", category: "energy" },
+  // News-only tags added 2026-10-14. No price unit: these assets have no quote.
+  { symbol: "VEG_OILS", label: "Vegetable Oils", unit: "", category: "agriculture" },
+  { symbol: "SOYBEANS", label: "Soybeans and Soy Oil", unit: "", category: "agriculture" },
+  { symbol: "SUGAR", label: "Sugar", unit: "", category: "agriculture" },
+  { symbol: "COFFEE", label: "Coffee", unit: "", category: "agriculture" },
+  { symbol: "COCOA", label: "Cocoa", unit: "", category: "agriculture" },
+  { symbol: "ALUMINIUM", label: "Aluminium", unit: "", category: "metals" },
+  { symbol: "NICKEL", label: "Nickel", unit: "", category: "metals" },
 ] as const;
 
 export async function commoditiesRoutes(app: FastifyInstance) {

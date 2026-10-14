@@ -69,3 +69,25 @@ runTest("HEATING_OIL entry has the energy category and USD/gal unit", () => {
   assert.equal(ho?.category, "energy");
   assert.equal(ho?.unit, "USD/gal");
 });
+
+const NEWS_ONLY_CATALOG = [
+  { symbol: "VEG_OILS", label: "Vegetable Oils", category: "agriculture" },
+  { symbol: "SOYBEANS", label: "Soybeans and Soy Oil", category: "agriculture" },
+  { symbol: "SUGAR", label: "Sugar", category: "agriculture" },
+  { symbol: "COFFEE", label: "Coffee", category: "agriculture" },
+  { symbol: "COCOA", label: "Cocoa", category: "agriculture" },
+  { symbol: "ALUMINIUM", label: "Aluminium", category: "metals" },
+  { symbol: "NICKEL", label: "Nickel", category: "metals" },
+] as const;
+
+runTest("COMMODITIES includes the seven news-only tags with no duplicate symbols", () => {
+  const symbols = COMMODITIES.map((c) => c.symbol);
+  for (const entry of NEWS_ONLY_CATALOG) {
+    const row = COMMODITIES.find((c) => c.symbol === entry.symbol);
+    assert.ok(row, `expected ${entry.symbol}`);
+    assert.equal(row?.label, entry.label);
+    assert.equal(row?.category, entry.category);
+    assert.equal(row?.unit, "");
+  }
+  assert.equal(new Set(symbols).size, symbols.length);
+});

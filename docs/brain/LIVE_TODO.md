@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ News-only commodity tags, `packages/shared` + `apps/backend` + `apps/web`, 2026-10-14, this commit
+
+- Seven tags the classifier can emit and the feed can filter by, with no price series: `VEG_OILS` (Vegetable Oils), `SOYBEANS` (Soybeans and Soy Oil), `SUGAR` (Sugar), `COFFEE` (Coffee), `COCOA` (Cocoa) — agriculture; `ALUMINIUM` (Aluminium), `NICKEL` (Nickel) — metals. `provider` is `"yahoo"` or `"none"`. These seven are `"none"`: no `yahooTicker`, no `quoteCurrency`, empty `filterAnchors`.
+- Both registry copies export `PRICED_COMMODITIES`. `packages/shared` also exports `NEWS_ONLY_COMMODITIES`. Shared `COMMODITIES` stays the priced display list (watchlist, onboarding, command palette). The parity test now checks that list against priced entries, and checks that priced plus news-only cover the registry once.
+- Price paths read priced entries only. `COMMODITY_SYMBOLS` stays the same 11 tickers. `GET /v1/prices/history-5y/:symbol` returns `404 { error: "no_price_data", symbol }` for a `"none"` symbol and does not call Yahoo. `GET /api/prices` `SYMBOLS` stays 18 (11 commodities + 7 forex).
+- Classifier aliases (uppercase): palm/sunflower/rapeseed/canola/vegetable/edible oil → `VEG_OILS`; soybeans/soybean/soy oil/soybean oil/soybean meal → `SOYBEANS`; sugar, coffee, cocoa, nickel map to themselves; aluminium and aluminum → `ALUMINIUM`. Unknown text such as Cotton still drops. The materiality-gate instruction text is unchanged. The only prompt line that changes is the derived `commodityImpacts` asset enum.
+- Feed filters: `FILTER_COMMODITIES` and `GET /v1/commodities` list the seven. Empty anchors on purpose: an anchor only exempts an ambiguous exclude word; it does not widen keyword retrieval. `relevance-filter.ts`, `shadow-terms.ts`, `t2-terms.ts`, `gnews-collector.ts`, and `gdelt-collector.ts` were not edited. Onboarding, settings, and watchlist components were not edited.
+- No open priority-queue line for these tags. Nothing struck.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.172.0, `05_API.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 149, `05_API.md`, `18_AI_ENGINE.md`. Skipped both `06_COMPONENTS.md` — `FilterBar` and the archive dropdown were not edited; they already map `FILTER_COMMODITIES`. Skipped both `04_DATABASE.md` and both `10_DECISIONS.md` — no table and no new standing rule. Skipped `docs/brain/09_BACKLOG.md` — the live queue is `docs/claude_project/09_BACKLOG.md`.
+
 ## ✅ Faster USOIL market-impact reads, `apps/web` only, 2026-10-14, this commit
 
 - `GET /api/market-impact` and `GET /api/signals/:id` were spending 5–8s on USOIL because `fetchSignalOutcomeRows` walked `signal_outcomes` one 1000-row page at a time and nothing was reused between requests. The first page is still 1000 rows ordered by `id`. A full page now runs one exact count with the same filters, then the remaining pages are read together (`Promise.all`, still `.order("id").range()`, page size still 1000). A failed page still logs and returns the rows collected before it, and that result is not cached.

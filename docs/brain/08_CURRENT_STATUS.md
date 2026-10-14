@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-14 (faster USOIL market-impact reads, this commit)
+Last updated: 2026-10-14 (news-only commodity tags, this commit)
+
+> ⚠️ NEW 2026-10-14 (news-only commodity tags, `packages/shared` + `apps/backend` + `apps/web`, this commit) — `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, and `NICKEL` are classifier and feed-filter tags with `provider: "none"` (no Yahoo ticker, no quote currency, empty filter anchors). Price sync, `YAHOO_TICKERS`, and `GET /api/prices` stay on the existing priced set (11 commodity tickers + 7 forex = 18). `GET /v1/prices/history-5y/:symbol` returns 404 for a news-only symbol. The materiality-gate instruction is unchanged. See `14_CHANGELOG.md` v0.172.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-14 (faster USOIL market-impact reads, `apps/web` only, this commit) — `fetchSignalOutcomeRows` reads the first 1000 `signal_outcomes` rows, then one exact count and the remaining pages together. Successful reads are cached 5 minutes per sorted asset list; a failed page is not cached. Both market-impact routes start the commodity-price read first via `prefetchAssetPricePoints`. Response shape and the 3000 ms baseline limit are unchanged. See `14_CHANGELOG.md` v0.171.0, `LIVE_TODO.md`.
 

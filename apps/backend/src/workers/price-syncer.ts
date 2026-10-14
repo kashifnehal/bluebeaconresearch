@@ -1,13 +1,13 @@
 import YahooFinance from "yahoo-finance2";
-import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
+import { PRICED_COMMODITIES } from "../lib/commodity-registry.js";
 import { getRedis, recordRedisError } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { recordServiceHealth } from "../lib/service-health.js";
 
-// Derived from the shared COMMODITY_REGISTRY (one entry per asset, ticker
-// values unchanged) instead of being hand-duplicated here.
+// Priced entries only (provider "yahoo"). News-only tags have no ticker, so
+// this map stays the 11 commodity symbols synced with the 7 forex pairs.
 export const COMMODITY_SYMBOLS: Record<string, string> = Object.fromEntries(
-  COMMODITY_REGISTRY.map((c) => [c.symbol, c.yahooTicker]),
+  PRICED_COMMODITIES.map((c) => [c.symbol, c.yahooTicker]),
 );
 
 // Forex pairs (#87). Yahoo Finance forex ticker format is "<PAIR>=X". All six

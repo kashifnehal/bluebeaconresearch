@@ -109,3 +109,23 @@ runTest("symbolsForCommodityFilter(cat:energy) includes HEATING_OIL", () => {
 runTest("symbolsForCommodityFilter(HEATING_OIL) returns just HEATING_OIL", () => {
   assert.deepStrictEqual(symbolsForCommodityFilter("HEATING_OIL"), ["HEATING_OIL"]);
 });
+
+const NEWS_ONLY_FILTERS = [
+  { symbol: "VEG_OILS", category: "agriculture" },
+  { symbol: "SOYBEANS", category: "agriculture" },
+  { symbol: "SUGAR", category: "agriculture" },
+  { symbol: "COFFEE", category: "agriculture" },
+  { symbol: "COCOA", category: "agriculture" },
+  { symbol: "ALUMINIUM", category: "metals" },
+  { symbol: "NICKEL", category: "metals" },
+] as const;
+
+runTest("FILTER_COMMODITIES includes the seven news-only tags with no duplicate symbols", () => {
+  const symbols = FILTER_COMMODITIES.map((c) => c.symbol);
+  for (const entry of NEWS_ONLY_FILTERS) {
+    assert.ok(symbols.includes(entry.symbol));
+    assert.deepStrictEqual(symbolsForCommodityFilter(entry.symbol), [entry.symbol]);
+    assert.ok(symbolsForCommodityFilter(`cat:${entry.category}`).includes(entry.symbol));
+  }
+  assert.equal(new Set(symbols).size, symbols.length);
+});

@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-14 (PHASE 147).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-14 (PHASE 149).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 149 — News-only commodity tags (2026-10-14, this commit)
+
+`packages/shared` + `apps/backend` + `apps/web`. Vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel are classifier and feed-filter tags with no price series. Price sync and `GET /api/prices` stay on the existing 18 symbols. A news-only symbol on the 5-year history route is a 404. Full detail: `docs/brain/14_CHANGELOG.md` v0.172.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 148 — Faster USOIL market-impact reads (2026-10-14, this commit)
 

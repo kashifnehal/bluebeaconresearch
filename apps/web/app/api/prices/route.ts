@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { Redis } from "@upstash/redis";
-import { COMMODITY_REGISTRY, FOREX_PAIRS } from "@blue-beacon-research/shared";
+import { FOREX_PAIRS, PRICED_COMMODITIES } from "@blue-beacon-research/shared";
 import { rateLimitOrPass } from "@/lib/ratelimit";
 import { getRouteSupabaseClients } from "@/lib/supabase-server";
 
@@ -17,9 +17,10 @@ type CommodityPriceRow = {
 // Tier-2 (Redis fallback) symbol list. Tier 1 (the commodity_prices table query
 // below) already returns every symbol the price-syncer writes, forex included;
 // this list only bounds which symbols the Redis fallback re-hydrates. Derived
-// from the shared registry + FOREX_PAIRS instead of hand-duplicated here.
+// from priced registry entries + FOREX_PAIRS. News-only tags (provider "none")
+// are not in this list and are not written by the price sync.
 export const SYMBOLS = [
-  ...COMMODITY_REGISTRY.map((c) => c.symbol),
+  ...PRICED_COMMODITIES.map((c) => c.symbol),
   ...FOREX_PAIRS.map((f) => f.symbol),
 ];
 

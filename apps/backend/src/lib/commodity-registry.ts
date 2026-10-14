@@ -1,13 +1,31 @@
-// Single source of truth for every per-commodity fact (Yahoo ticker, Claude
-// classifier allowlist/aliases, RSS relevance-filter anchor words) that used to
-// be duplicated across packages/shared, apps/backend/src/workers/price-syncer.ts,
-// apps/backend/src/services/claude.service.ts, apps/backend/src/lib/relevance-filter.ts,
-// and apps/backend/src/routes/price-history.ts. COMMODITIES below is still the
-// plain display list apps/web consumes; it is NOT derived from this registry to
-// avoid widening its literal `symbol` union type (chokepoints.ts depends on it
-// staying a literal union) — the two are hand-kept in sync and a test enforces
-// that they match. Forex pairs (FOREX_PAIRS, FOREX_SYMBOLS, YAHOO_TICKERS' forex
-// entries) are intentionally out of scope for this registry.
+// Hand-kept copy of packages/shared/src/constants/commodities.ts. The backend
+// must not import that package at runtime. A parity test keeps the two arrays
+// equal. `provider` is "yahoo" or "none" (2026-10-14): "none" has no
+// yahooTicker and no quoteCurrency. Price jobs read PRICED_COMMODITIES only.
+export const COMMODITY_PROVIDERS = ["yahoo", "none"] as const;
+export type CommodityProvider = (typeof COMMODITY_PROVIDERS)[number];
+
+type RegistryBase = {
+  symbol: string;
+  label: string;
+  unit: string;
+  category: "energy" | "agriculture" | "metals";
+  aliases: readonly string[];
+  filterAnchors: readonly string[];
+};
+
+export type PricedCommodityEntry = RegistryBase & {
+  provider: "yahoo";
+  yahooTicker: string;
+  quoteCurrency: string;
+};
+
+export type NewsOnlyCommodityEntry = RegistryBase & {
+  provider: "none";
+};
+
+export type CommodityRegistryEntry = PricedCommodityEntry | NewsOnlyCommodityEntry;
+
 export const COMMODITY_REGISTRY = [
   {
     symbol: "USOIL",
@@ -157,4 +175,78 @@ export const COMMODITY_REGISTRY = [
     aliases: ["DIESEL"],
     filterAnchors: ["diesel"],
   },
-] as const;
+  // News-only tags added 2026-10-14. No Yahoo ticker and no quote currency.
+  // filterAnchors stay empty: an anchor only keeps a headline that an
+  // ambiguous exclude word would otherwise drop. It does not add retrieval.
+  {
+    symbol: "VEG_OILS",
+    label: "Vegetable Oils",
+    unit: "",
+    category: "agriculture",
+    provider: "none",
+    aliases: ["PALM OIL", "SUNFLOWER OIL", "RAPESEED OIL", "CANOLA OIL", "VEGETABLE OIL", "EDIBLE OIL"],
+    filterAnchors: [] as string[],
+  },
+  {
+    symbol: "SOYBEANS",
+    label: "Soybeans and Soy Oil",
+    unit: "",
+    category: "agriculture",
+    provider: "none",
+    aliases: ["SOYBEANS", "SOYBEAN", "SOY OIL", "SOYBEAN OIL", "SOYBEAN MEAL"],
+    filterAnchors: [] as string[],
+  },
+  {
+    symbol: "SUGAR",
+    label: "Sugar",
+    unit: "",
+    category: "agriculture",
+    provider: "none",
+    aliases: ["SUGAR"],
+    filterAnchors: [] as string[],
+  },
+  {
+    symbol: "COFFEE",
+    label: "Coffee",
+    unit: "",
+    category: "agriculture",
+    provider: "none",
+    aliases: ["COFFEE"],
+    filterAnchors: [] as string[],
+  },
+  {
+    symbol: "COCOA",
+    label: "Cocoa",
+    unit: "",
+    category: "agriculture",
+    provider: "none",
+    aliases: ["COCOA"],
+    filterAnchors: [] as string[],
+  },
+  {
+    symbol: "ALUMINIUM",
+    label: "Aluminium",
+    unit: "",
+    category: "metals",
+    provider: "none",
+    aliases: ["ALUMINIUM", "ALUMINUM"],
+    filterAnchors: [] as string[],
+  },
+  {
+    symbol: "NICKEL",
+    label: "Nickel",
+    unit: "",
+    category: "metals",
+    provider: "none",
+    aliases: ["NICKEL"],
+    filterAnchors: [] as string[],
+  },
+] as const satisfies readonly CommodityRegistryEntry[];
+
+function isPricedCommodity<T extends { provider: CommodityProvider }>(
+  entry: T,
+): entry is Extract<T, { provider: "yahoo" }> {
+  return entry.provider === "yahoo";
+}
+
+export const PRICED_COMMODITIES = COMMODITY_REGISTRY.filter(isPricedCommodity);
