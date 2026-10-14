@@ -11,6 +11,7 @@ import {
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
 import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
+import { sourceHostname } from "@/lib/source-host";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
   computeMarketImpactCheckpoints,
@@ -203,7 +204,7 @@ export async function GET(
       title: re.title ?? "Untitled source",
       url: re.raw_data?.url ?? null,
       sourceLabel: re.raw_data?.source ?? null,
-      domain: re.raw_data?.domain ?? null,
+      domain: re.raw_data?.domain ?? sourceHostname(re.raw_data?.url) ?? null,
       publishedAt: re.event_date ?? seendateToIso(re.raw_data?.seendate) ?? re.created_at ?? null,
     }))
     // Timeline is oldest-first; entries with no resolvable date sort last.

@@ -165,6 +165,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - **#143**: "Commodity impacts" section replaced by `MarketImpactAssessment`.
 - **2026-09-20**: header no longer shows a raw `{n}% confidence` badge (#140 leftover). Source confirmation, when present on the Signal, is already in `MarketImpactAssessment` below.
 - **2026-09-25**: deliberately NOT extended with Timeline/Related Events — stays a briefing-excerpt-only preview, defers everything else to `events/[id]/page.tsx` via "View full details".
+- **2026-10-14:** while a signal is open, the drawer fetches `GET /api/signals/:id` and aborts that request on close. Under the summary: `{n} reports` from `signal.sourcesCount`, ` · {m} unique sources` when `uniqueSourceCount` is not null (`domain`, else `sourceLabel`), and "Last updated {relative}" only when `shouldShowLastUpdated` is true. A Headlines part lists up to 5 sources (title link when `url` is set, domain and published time below). A failed fetch shows none of those lines. Width stays `w-1/2`. No language line. Historical comparisons and related events stay on the full event page.
 
 ### 3.5 `events/[id]/page.tsx` Deep Dive tabs (2026-09-25)
 - Tab row: analysis / historical / map / "timeline" (tab value stays `sources` — same underlying data, deep links unaffected) / related events (new).

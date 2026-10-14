@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import type { Signal } from "@blue-beacon-research/shared";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
@@ -11,6 +11,77 @@ import {
   eventCategoryLabel,
   sourceConfirmationLabel,
 } from "@/lib/market-impact-assessment";
+import { shouldShowLastUpdated } from "@/lib/signal-display";
+import { uniqueSourceCount } from "@/lib/source-host";
+import { safeFormatDistanceToNow } from "@/lib/utils";
+
+const HEADLINE_LIMIT = 5;
+
+export type QuickViewHeadline = {
+  title: string;
+  url: string | null;
+  sourceLabel: string | null;
+  domain: string | null;
+  publishedAt: string | null;
+};
+
+type DetailState =
+  | { status: "idle" }
+  | { status: "loading"; id: string }
+  | { status: "ready"; id: string; sources: QuickViewHeadline[] }
+  | { status: "error"; id: string };
+
+const detailCache = new Map<string, DetailState>();
+
+export function clearQuickViewDetailCache(): void {
+  detailCache.clear();
+}
+
+function asString(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function isAbortError(err: unknown): boolean {
+  return err instanceof Error && err.name === "AbortError";
+}
+
+async function loadQuickViewDetail(
+  id: string,
+  signal?: AbortSignal,
+): Promise<DetailState> {
+  try {
+    const res = await fetch(`/api/signals/${id}`, { signal });
+    if (!res.ok) {
+      const failed: DetailState = { status: "error", id };
+      detailCache.set(id, failed);
+      return failed;
+    }
+    const body = (await res.json()) as { sources?: unknown };
+    if (!Array.isArray(body?.sources)) {
+      const failed: DetailState = { status: "error", id };
+      detailCache.set(id, failed);
+      return failed;
+    }
+    const sources: QuickViewHeadline[] = body.sources.map((row) => {
+      const source = row && typeof row === "object" ? (row as Record<string, unknown>) : {};
+      return {
+        title: asString(source.title) ?? "Untitled source",
+        url: asString(source.url),
+        sourceLabel: asString(source.sourceLabel),
+        domain: asString(source.domain),
+        publishedAt: asString(source.publishedAt),
+      };
+    });
+    const ready: DetailState = { status: "ready", id, sources };
+    detailCache.set(id, ready);
+    return ready;
+  } catch (err) {
+    if (isAbortError(err)) throw err;
+    const failed: DetailState = { status: "error", id };
+    detailCache.set(id, failed);
+    return failed;
+  }
+}
 
 function Part({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -26,11 +97,12 @@ function Part({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-// Content order is deliberate (claude/226 Task 2 in the BBR Claude Project):
-// headline+summary, source confirmation, event category, severity+mechanism,
-// commodity/FX impact chips, then a link to the full event page — nothing
-// else. This is the fast-scan drawer, not a second copy of the full event
-// page; keep it to exactly these sections.
+// Content order is deliberate: headline and summary, report count and unique
+// sources, last updated when a later update exists, source confirmation,
+// event category, severity and mechanism, commodity and FX impact chips,
+// headlines, then a link to the full event page. This is the fast-scan
+// drawer, not a second copy of the full event page; keep it to exactly
+// these sections.
 export function SignalQuickView({
   signal,
   onClose,
@@ -39,6 +111,41 @@ export function SignalQuickView({
   onClose: () => void;
 }) {
   const open = signal != null;
+  const [detail, setDetail] = useState<DetailState>(() => {
+    if (!signal) return { status: "idle" };
+    return detailCache.get(signal.id) ?? { status: "idle" };
+  });
+
+  useEffect(() => {
+    if (!signal) {
+      setDetail({ status: "idle" });
+      return;
+    }
+    const id = signal.id;
+    const ac = new AbortController();
+    const cached = detailCache.get(id);
+    if (cached?.status === "ready" || cached?.status === "error") {
+      setDetail(cached);
+    } else {
+      setDetail({ status: "loading", id });
+    }
+    let active = true;
+    loadQuickViewDetail(id, ac.signal)
+      .then((next) => {
+        if (!active) return;
+        setDetail(next);
+      })
+      .catch((err: unknown) => {
+        if (!active || isAbortError(err)) return;
+        const failed: DetailState = { status: "error", id };
+        detailCache.set(id, failed);
+        setDetail(failed);
+      });
+    return () => {
+      active = false;
+      ac.abort();
+    };
+  }, [signal?.id]);
   const sourceConfirmation = signal
     ? sourceConfirmationLabel(signal.sourceConfirmation)
     : null;
@@ -50,6 +157,15 @@ export function SignalQuickView({
       ? signal.marketMechanism.trim()
       : null;
   const impacts = signal ? collectMarketImpacts(signal) : [];
+  const readySources =
+    signal && detail.status === "ready" && detail.id === signal.id ? detail.sources : null;
+  const uniqueSources =
+    readySources != null ? uniqueSourceCount(readySources) : null;
+  const showLastUpdated =
+    signal != null &&
+    readySources != null &&
+    shouldShowLastUpdated(signal.sourcesCount, signal.createdAt, signal.updatedAt);
+  const headlines = readySources != null ? readySources.slice(0, HEADLINE_LIMIT) : [];
 
   return (
     <SheetPrimitive.Root
@@ -86,6 +202,20 @@ export function SignalQuickView({
                   >
                     {signal.summary}
                   </SheetPrimitive.Description>
+                  {readySources != null ? (
+                    <div data-testid="quick-view-reports" className="space-y-1">
+                      <p className="text-[12px]" style={{ color: "#86948a" }}>
+                        {signal.sourcesCount} reports
+                        {uniqueSources != null ? ` · ${uniqueSources} unique sources` : ""}
+                      </p>
+                      {showLastUpdated ? (
+                        <p className="text-[12px]" style={{ color: "#86948a" }}>
+                          Last updated{" "}
+                          {safeFormatDistanceToNow(signal.updatedAt, { addSuffix: true })}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 <SheetPrimitive.Close
                   data-testid="signal-quick-view-close"
@@ -139,6 +269,42 @@ export function SignalQuickView({
                           confidence={c.confidence}
                           size="md"
                         />
+                      ))}
+                    </div>
+                  </Part>
+                ) : null}
+
+                {headlines.length > 0 ? (
+                  <Part label="Headlines">
+                    <div className="space-y-3">
+                      {headlines.map((source, index) => (
+                        <div key={`${source.url ?? source.title}-${index}`} className="space-y-0.5">
+                          {source.url ? (
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              data-testid="quick-view-headline"
+                              className="block text-[13px] leading-snug underline-offset-2 hover:underline"
+                              style={{ color: "#e5e2e1" }}
+                            >
+                              {source.title}
+                            </a>
+                          ) : (
+                            <p className="text-[13px] leading-snug" style={{ color: "#e5e2e1" }}>
+                              {source.title}
+                            </p>
+                          )}
+                          {source.domain || source.publishedAt ? (
+                            <p className="text-[12px]" style={{ color: "#86948a" }}>
+                              {source.domain}
+                              {source.domain && source.publishedAt ? " · " : ""}
+                              {source.publishedAt
+                                ? safeFormatDistanceToNow(source.publishedAt, { addSuffix: true })
+                                : ""}
+                            </p>
+                          ) : null}
+                        </div>
                       ))}
                     </div>
                   </Part>

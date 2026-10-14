@@ -228,6 +228,8 @@ Usage instances:
 > untouched — it only shows a briefing excerpt + "View full details" link, and defers
 > everything else (sources, historical, related) to this full page.
 
+> ⚠️ UPDATED 2026-10-14 — the drawer now also shows the report count, unique outlets when a domain or source label exists, "Last updated" only for a later update on a merged signal, and up to five headline links from `GET /api/signals/:id`. A failed fetch shows none of those lines. Historical comparisons and related events stay on the full event page. Width unchanged.
+
 ---
 
 ## 2. SIGNAL COMPONENTS

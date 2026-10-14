@@ -754,7 +754,9 @@ apps/web/app/api/
 │                                tab); new `relatedEvents[]` (same country + overlapping
 │                                commodity, placeholder 7-day window anchored to this
 │                                event's own event_date, reinforcing/conflicting/mixed
-│                                label) — see `docs/brain/05_API.md` for the full note
+│                                label) — see `docs/brain/05_API.md` for the full note.
+│                                2026-10-14: `domain` is `raw_data.domain`, otherwise the
+│                                lowercased URL hostname with a leading `www.` removed.
 ├── signals/[id]/chat/route.ts → #111 BFF: GET+POST, forwards the caller's Supabase
 │                                session as Bearer to Fastify `/v1/signals/:id/chat`
 │                                (same auth-forwarding pattern as telegram/connect-code)

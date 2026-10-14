@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-14 (PHASE 149).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-14 (PHASE 150).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 150 — Quick-view report count, unique sources, and headlines (2026-10-14, this commit)
+
+`apps/web` only. The signal drawer fetches the signal detail route while open and shows the report count, unique outlets, a last-updated time when a merged signal was updated later, and up to five headline links. `domain` falls back to the article URL hostname. A failed fetch leaves the rest of the drawer in place. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.173.0.
 
 ## PHASE 149 — News-only commodity tags (2026-10-14, this commit)
 
