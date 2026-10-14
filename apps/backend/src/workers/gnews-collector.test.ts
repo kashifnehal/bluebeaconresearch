@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { T2_GNEWS_QUERIES } from "../lib/t2-terms.js";
 
 process.env.NODE_ENV = "test";
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
@@ -7,7 +8,7 @@ process.env.SUPABASE_SERVICE_ROLE_KEY =
 
 // selectGnewsQuery is pure (cycleIndex in, {query, index} out) — no network/Supabase
 // involved, so this only exercises the rotation math introduced by W7-GNEWS-ROTATE.
-const { selectGnewsQuery, GNEWS_QUERY_COUNT } = await import("./gnews-collector.js");
+const { selectGnewsQuery, selectGnewsT2Query, gnewsT2Selection, GNEWS_QUERY_COUNT } = await import("./gnews-collector.js");
 
 let failed = false;
 function runTest(name: string, fn: () => void) {
@@ -54,6 +55,31 @@ runTest("index always stays within query bounds regardless of cycleIndex", () =>
   for (const cycleIndex of [0, 1, 2, 3, 4, 47, 48, 95, 96, 1000]) {
     const { index } = selectGnewsQuery(cycleIndex);
     assert.ok(index >= 0 && index < GNEWS_QUERY_COUNT, `index ${index} out of bounds for cycleIndex ${cycleIndex}`);
+  }
+});
+
+runTest("selectGnewsT2Query returns null on cycles 0 and 1 and a query on cycle 2", () => {
+  assert.equal(selectGnewsT2Query(0), null);
+  assert.equal(selectGnewsT2Query(1), null);
+  assert.deepEqual(selectGnewsT2Query(2), { query: T2_GNEWS_QUERIES[0], index: 0 });
+  assert.deepEqual(selectGnewsT2Query(5), { query: T2_GNEWS_QUERIES[1], index: 1 });
+  assert.deepEqual(selectGnewsT2Query(8), { query: T2_GNEWS_QUERIES[0], index: 0 });
+});
+
+runTest("GNEWS_T2_QUERY off selects nothing even on a T2 cycle", () => {
+  const previous = process.env.GNEWS_T2_QUERY;
+  try {
+    delete process.env.GNEWS_T2_QUERY;
+    assert.equal(gnewsT2Selection(2), null);
+    process.env.GNEWS_T2_QUERY = "false";
+    assert.equal(gnewsT2Selection(2), null);
+    process.env.GNEWS_T2_QUERY = "true";
+    assert.deepEqual(gnewsT2Selection(2), { query: T2_GNEWS_QUERIES[0], index: 0 });
+    assert.equal(gnewsT2Selection(0), null);
+    assert.equal(gnewsT2Selection(1), null);
+  } finally {
+    if (previous === undefined) delete process.env.GNEWS_T2_QUERY;
+    else process.env.GNEWS_T2_QUERY = previous;
   }
 });
 

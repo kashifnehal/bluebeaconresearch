@@ -1,3 +1,5 @@
+import { T2_ASSET_TERMS, T2_COMMON_POLICY, T2_COMMON_SUPPLY, T2_SHADOW_SOURCE } from "./t2-terms.js";
+
 /**
  * Shadow term groups — diagnostic-only match groups for [RSS-DROP]/[FIN-SHADOW]
  * logging (claude/w16a). Never used to change a keep/drop decision anywhere.
@@ -78,6 +80,26 @@ export const SHADOW_TERM_GROUPS: ShadowTermGroup[] = [
     label: "trade restrictions",
     source: "https://permutable.ai/energy-and-commodity-traders/ (read 2026-10-10) — names \"trade restrictions\" directly.",
     terms: ["export ban", "export curbs", "quota", "licence"],
+  },
+  {
+    id: "t2-commodity",
+    label: "T2 commodity aliases",
+    source: T2_SHADOW_SOURCE,
+    // Labels only. Does not change a keep or drop (2026-10-14).
+    terms: [...new Set(T2_ASSET_TERMS.flatMap((asset) => asset.aliases))],
+  },
+  {
+    id: "t2-event",
+    label: "T2 events and common policy or supply terms",
+    source: T2_SHADOW_SOURCE,
+    // Labels only. Does not change a keep or drop (2026-10-14).
+    terms: [
+      ...new Set([
+        ...T2_ASSET_TERMS.flatMap((asset) => asset.events),
+        ...T2_COMMON_POLICY.terms,
+        ...T2_COMMON_SUPPLY.terms,
+      ]),
+    ],
   },
 ];
 

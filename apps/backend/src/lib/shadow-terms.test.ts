@@ -29,7 +29,8 @@ runTest('matchShadowGroups matches "chokepoints" on a Hormuz headline', () => {
 });
 
 runTest('matchShadowGroups matches "commodity-names" on a cotton headline', () => {
-  assert.deepEqual(matchShadowGroups("Cotton harvest report shows lower yields this season"), ["commodity-names"]);
+  // "harvest" is also a T2 supply term, so the drop is labeled t2-event as well.
+  assert.deepEqual(matchShadowGroups("Cotton harvest report shows lower yields this season"), ["commodity-names", "t2-event"]);
 });
 
 runTest("matchShadowGroups matches multiple groups when both terms are present", () => {
@@ -37,6 +38,31 @@ runTest("matchShadowGroups matches multiple groups when both terms are present",
   assert.ok(ids.includes("chokepoints"));
   assert.ok(ids.includes("commodity-names"));
   assert.ok(ids.includes("event-weather"));
+  assert.ok(ids.includes("t2-event"));
+});
+
+runTest("existing groups stay ahead of the two T2 label groups", () => {
+  assert.deepEqual(
+    SHADOW_TERM_GROUPS.map((group) => group.id),
+    [
+      "chokepoints",
+      "commodity-names",
+      "event-natural-disasters",
+      "event-weather",
+      "event-inventory",
+      "event-trade-restrictions",
+      "t2-commodity",
+      "t2-event",
+    ],
+  );
+  const commodity = SHADOW_TERM_GROUPS.find((group) => group.id === "t2-commodity");
+  const event = SHADOW_TERM_GROUPS.find((group) => group.id === "t2-event");
+  assert.equal(commodity?.source, event?.source);
+  assert.ok((commodity?.source.length ?? 0) > 0);
+});
+
+runTest("t2 groups label an alias and an event without replacing older groups", () => {
+  assert.deepEqual(matchShadowGroups("Palm oil export levy rises"), ["t2-commodity", "t2-event"]);
 });
 
 runTest("matchShadowGroups returns empty array when nothing matches", () => {

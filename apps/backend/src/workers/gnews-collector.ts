@@ -17,6 +17,7 @@ import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
 import { collectRelevanceDrop, recordDrops, type DropRecord } from "./drop-sample-store.js";
 import { isWithinIntakeWindow } from "../lib/article-age.js";
+import { T2_GNEWS_QUERIES } from "../lib/t2-terms.js";
 
 const claude = new ClaudeService();
 
@@ -49,6 +50,25 @@ export function selectGnewsQuery(cycleIndex: number): { query: string; index: nu
 }
 
 export const GNEWS_QUERY_COUNT = GNEWS_QUERIES.length;
+
+// Extra commodity query. Off unless GNEWS_T2_QUERY is exactly "true".
+// Every third cycle (cycleIndex % 3 === 2) alternates the two T2 queries.
+// The collector waits 1.1s after the normal fetch (vendor limit: 1 request a second).
+// A failure of that extra fetch is logged and ignored: it does not fail the cycle
+// and it does not count as a rate-limit failure for the normal query. 2026-10-14.
+export function selectGnewsT2Query(cycleIndex: number): { query: string; index: number } | null {
+  const mod = ((cycleIndex % 3) + 3) % 3;
+  if (mod !== 2) return null;
+  const slot = Math.floor((cycleIndex - 2) / 3);
+  const index = ((slot % T2_GNEWS_QUERIES.length) + T2_GNEWS_QUERIES.length) % T2_GNEWS_QUERIES.length;
+  return { query: T2_GNEWS_QUERIES[index]!, index };
+}
+
+/** Null when the flag is off, including on a cycle that would otherwise send a T2 query. */
+export function gnewsT2Selection(cycleIndex: number): { query: string; index: number } | null {
+  if (process.env.GNEWS_T2_QUERY !== "true") return null;
+  return selectGnewsT2Query(cycleIndex);
+}
 
 // Process-lifetime counter — resets on deploy/restart, which just means rotation
 // restarts from query 0. Not persisted; 48 cycles/day comfortably covers all
@@ -114,6 +134,19 @@ export async function runGnewsCollectorOnce() {
   }
 
   const fetchLatencyMs = Date.now() - fetchStartedAt;
+
+  const t2Selection = gnewsT2Selection(cycleIndex);
+  if (t2Selection) {
+    await new Promise((r) => setTimeout(r, 1_100));
+    try {
+      const t2Articles = await fetchGnewsArticles(t2Selection.query, env.GNEWS_API_KEY);
+      allArticles.push(...t2Articles);
+      console.log(`[GNews] T2 query #${t2Selection.index} returned ${t2Articles.length} article(s)`);
+    } catch (e: any) {
+      const message = String(e?.message ?? e).split(env.GNEWS_API_KEY).join("[redacted]");
+      console.warn(`[GNews] T2 query #${t2Selection.index} failed: ${message}`);
+    }
+  }
 
   // A run that fetched nothing and hit an error is a failed run for health tracking.
   if (allArticles.length === 0 && fetchError) {

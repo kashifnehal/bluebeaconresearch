@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { shouldExclude, findExcludeMatch, isRelevantEvent, dropReason, type FeedTier } from "./relevance-filter.js";
 
+// Existing fixtures below are the flag-off answers. Read the pair rule at call time
+// only after those assertions, then restore it.
+delete process.env.T2_PAIR_RULE;
+
 function runTest(name: string, fn: () => void) {
   try {
     fn();
@@ -162,6 +166,30 @@ const dropReasonParityFixtures: { title: string; summary?: string; tier?: FeedTi
   { title: "Cooking oil prices surge after Indonesia export ban" },
   { title: "India raises cooking gas cylinder price" },
   { title: "Cooking show returns for a new season" },
+  { title: "India extends sugar export ban through September" },
+  { title: "Brazil sugar mills divert more cane to ethanol as gasoline prices rise" },
+  { title: "Thailand drought cuts sugar cane output forecast" },
+  { title: "Severe frost damages Brazil coffee crop" },
+  { title: "US removes tariff on Brazilian coffee imports" },
+  { title: "Coffee prices jump as Vietnam harvest delayed by floods" },
+  { title: "Ghana raises cocoa farmgate price for 2026/27 season" },
+  { title: "Ivory Coast cocoa arrivals fall as swollen shoot disease spreads" },
+  { title: "EU delays deforestation rules, cocoa traders welcome reprieve" },
+  { title: "Indonesia raises palm oil export levy to fund biodiesel" },
+  { title: "India cuts import duty on edible oils" },
+  { title: "China imposes anti-dumping duties on Canadian canola" },
+  { title: "Black Sea port attacks disrupt sunflower oil shipments" },
+  { title: "China cuts soybean purchases from US amid tariff dispute" },
+  { title: "Argentina lowers soybean export tax" },
+  { title: "Brazil soybean planting delayed by dry weather" },
+  { title: "LME bans new Russian aluminium after sanctions" },
+  { title: "Gulf aluminium smelters cut output after Hormuz closure" },
+  { title: "US doubles tariff on aluminium imports" },
+  { title: "Indonesia cuts nickel ore mining quota" },
+  { title: "Nickel jumps as Indonesia halts mine permits" },
+  { title: "Nornickel output hit by sanctions on Russian metals" },
+  { title: "Starbucks sugar-free drink lawsuit settled" },
+  { title: "Purebread to acquire Caffe Artigiano coffee chain" },
 ];
 
 for (const { title, summary = "", tier = "world" } of dropReasonParityFixtures) {
@@ -189,4 +217,18 @@ runTest('dropReason() returns "nokeyword" for a world-tier miss with no year', (
 
 runTest('dropReason() returns null for a finance/official-tier keep', () => {
   assert.equal(dropReason("Federal Reserve announces routine staff appointment", "", "official"), null);
+});
+
+runTest("dropReason/isRelevantEvent parity holds with the pair rule on, and finance stays unchanged", () => {
+  process.env.T2_PAIR_RULE = "true";
+  try {
+    for (const { title, summary = "", tier = "world" } of dropReasonParityFixtures) {
+      assert.equal(dropReason(title, summary, tier) === null, isRelevantEvent(title, summary, tier), title);
+    }
+    assert.equal(isRelevantEvent("Local bakery announces routine staff appointment", "", "finance"), true);
+    assert.equal(dropReason("Local bakery announces routine staff appointment", "", "finance"), null);
+    assert.equal(isRelevantEvent("Football league extends sugar export ban"), false);
+  } finally {
+    delete process.env.T2_PAIR_RULE;
+  }
 });

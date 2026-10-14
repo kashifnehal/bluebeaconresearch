@@ -1,4 +1,5 @@
 import { COMMODITY_REGISTRY } from "./commodity-registry.js";
+import { isT2PairRuleEnabled, matchesT2Pair } from "./t2-terms.js";
 
 /**
  * Shared relevance filter for all ingestion collectors.
@@ -223,7 +224,19 @@ export function isRelevantEvent(title: string, summary: string = "", feedTier: F
   // headlines — a central-bank/agency press release is assumed material
   // without the geopolitical/market keyword gate below.
   if (feedTier === "finance" || feedTier === "official") return true;
-  return matchesKeywords((title + " " + summary).toLowerCase());
+  const lower = (title + " " + summary).toLowerCase();
+  if (matchesKeywords(lower)) return true;
+  // World tier only. Off unless T2_PAIR_RULE is exactly "true" (2026-10-14),
+  // so an unset flag keeps the keyword step as the only keep.
+  if (isT2PairRuleEnabled()) {
+    const pair = matchesT2Pair(lower);
+    if (pair) {
+      const shown = title.slice(0, 100).replace(/[\r\n]/g, " ");
+      console.log(`[RELEVANCE] t2-pair keep asset=${pair.asset} title="${shown}"`);
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -252,6 +265,7 @@ export function dropReason(title: string, summary: string = "", feedTier: FeedTi
 
   const text = (title + " " + summary).toLowerCase();
   if (matchesKeywords(text)) return null;
+  if (isT2PairRuleEnabled() && matchesT2Pair(text) !== null) return null;
   return HISTORICAL_YEAR_PATTERN.test(text) ? "year" : "nokeyword";
 }
 

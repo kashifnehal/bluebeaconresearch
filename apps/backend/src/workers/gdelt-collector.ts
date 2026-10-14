@@ -18,6 +18,7 @@ import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
 import { collectRelevanceDrop, recordDrops, type DropRecord } from "./drop-sample-store.js";
 import { isWithinIntakeWindow } from "../lib/article-age.js";
+import { gdeltDocRequestUrl, T2_GDELT_QUERY_CANDIDATES, T2_GDELT_QUERY_INDEX } from "../lib/t2-terms.js";
 
 // Re-export for backward compatibility
 export { isRelevantEvent, shouldExclude, HIGH_RELEVANCE_KEYWORDS, EXCLUDE_KEYWORDS, GEOPOLITICAL_KEYWORDS, MARKET_FINANCE_KEYWORDS } from "../lib/relevance-filter.js";
@@ -119,6 +120,36 @@ export async function runGdeltCollectorOnce() {
   }
 
   const articles: GdeltArticle[] = res.data?.articles ?? [];
+
+  // Extra commodity DOC request. Off unless GDELT_T2_QUERY is exactly "true".
+  // Waits 6s after the normal request. HTTP 429 or any other error is logged
+  // and the cycle continues with the normal results. 2026-10-14.
+  if (process.env.GDELT_T2_QUERY === "true") {
+    await new Promise((r) => setTimeout(r, 6_000));
+    try {
+      const t2Res = await axios.get(gdeltDocRequestUrl(T2_GDELT_QUERY_CANDIDATES[T2_GDELT_QUERY_INDEX]), {
+        timeout: 40_000,
+      });
+      const extra: GdeltArticle[] = Array.isArray(t2Res.data?.articles) ? t2Res.data.articles : [];
+      if (!Array.isArray(t2Res.data?.articles)) {
+        console.warn("[GDELT] T2 query returned no article list — continuing with the normal results");
+      }
+      const seen = new Set(articles.map((a) => a.url).filter((url): url is string => Boolean(url)));
+      let added = 0;
+      for (const article of extra) {
+        if (!article.url || seen.has(article.url)) continue;
+        seen.add(article.url);
+        articles.push(article);
+        added += 1;
+      }
+      console.log(`[GDELT] T2 query returned ${extra.length} article(s), added ${added}`);
+    } catch (e: any) {
+      const status = e?.response?.status;
+      console.warn(
+        `[GDELT] T2 query failed${status ? ` HTTP ${status}` : ""}: ${e?.message ?? e} — continuing with the normal results`,
+      );
+    }
+  }
 
   // W7-DEDUPE-KEY diag (2026-10-05): check whether GDELT's keyless DOC API returns
   // the same article list every cycle — PROBABLE, not proven: the
