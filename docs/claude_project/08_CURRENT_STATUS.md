@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (reconciliation recovered-signal alerts honor the 24h intake window — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (replay gate: live excerpt, seeded draw, `--ids`/`--repeat` — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (replay gate matches the live classifier excerpt, `apps/backend` only, this commit) — the replay user message now includes the article excerpt from `buildClassifierSnippet` and the live materiality-gate instruction. Row pick is a seeded draw (`--seed`); `--ids` and `--repeat` added. Publisher labels no longer print `[object Object]`. JSON flips go to `apps/backend/.tmp/`. No live Anthropic call. See `docs/brain/LIVE_TODO.md`, PHASE 146.
 
 > ⚠️ NEW 2026-10-14 (reconciliation recovered-signal alerts honor the 24h intake window, `apps/backend` only, this commit) — recovering an orphan still inserts a signal and still runs `generateSignalAnalysis`; `dispatchAlertsForSignal` now runs only when `event_date` (else `created_at`) is within 24h. `ORPHAN_MAX_AGE_HOURS` stays 36. See `docs/brain/LIVE_TODO.md`, PHASE 145.
 

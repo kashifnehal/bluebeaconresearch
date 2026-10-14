@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat`, `apps/backend` only, 2026-10-14, this commit
+
+- Run F (2026-10-10): the replay user message had no article excerpt. `buildPrompt` now calls `buildClassifierSnippet` (the same function `classifyEvent` has used since `cf0711f`) and imports `MATERIALITY_GATE_INSTRUCTION`, which was already exported. The local copy was missing the "Clarification of (a)" sentence. `claude.service.ts` was not edited. The script still does not call `classifyEvent()` — that would record usage on the ingestion budget.
+- Feed label: GNews stores the article, so `raw_data.source` is `{ name, url }`. RSS stores a string on `raw_data.source`. GDELT stores the DOC article (`raw_data.domain`, no `source`). `feedLabel` prints `source.name`, else the string, else `domain`, else `unknown-<source_type>`. It never stringifies an object, which is what printed `[object Object]` on the 35 GNews rows.
+- The 150 rows were already a Fisher-Yates shuffle of uncovered rows, but it used `Math.random`, so a run could not be repeated. It is now a seeded mulberry32 draw. The seed is printed, and `--seed <n>` repeats that draw. `--ids <comma list>` skips the draw and keeps the listed order. `--repeat <n>` prints every verdict for that id and whether the set is stable. Temperature `0.2` (the live `messages.create` value) is printed and stored in the JSON.
+- The JSON lists every flip as `{ id, title, feed, oldReason, newReason }` and is written to `apps/backend/.tmp/replay-gate-output.json`. `apps/backend/.gitignore` now ignores `.tmp/`. The $1.50 hard stop, `--dry`, and `--count-prefix` are unchanged. No live Anthropic call was run.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/14_CHANGELOG.md` v0.169.0; `docs/claude_project/08_CURRENT_STATUS.md`, `09_BACKLOG.md`, `14_CHANGELOG.md` PHASE 146. Skipped `05_API` / `04_DATABASE` / `18_AI_ENGINE` / `06_COMPONENTS` / both `10_DECISIONS.md` / `docs/brain/09_BACKLOG.md` — no new route, table, Claude prompt, UI component, or standing rule. The live instruction text was not changed; the replay script now imports it.
+
 ## ✅ Reconciliation recovered-signal alerts honor the 24h intake window, `apps/backend` only, 2026-10-14, this commit
 
 - Since 2026-10-11 08:00 UTC the Anthropic account has been refusing calls; orphaned `raw_events` can sit up to `ORPHAN_MAX_AGE_HOURS = 36` and, on recovery, previously always called `dispatchAlertsForSignal` even though intake policy since 2026-10-05 is 24h (`DEFAULT_INTAKE_MAX_AGE_MS` in `article-age.ts`).

@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-14 (reconciliation recovered-signal alerts honor the 24h intake window, this commit)
+Last updated: 2026-10-14 (replay gate: live excerpt, seeded draw, `--ids`/`--repeat`, this commit)
+
+> ⚠️ NEW 2026-10-14 (replay gate matches the live classifier excerpt, `apps/backend` only, this commit) — `replay-gate.ts` now builds the article excerpt with `buildClassifierSnippet` and imports `MATERIALITY_GATE_INSTRUCTION` (already exported; `claude.service.ts` unchanged). The 150-row pick is a seeded mulberry32 draw (`--seed`); `--ids` and `--repeat` added. Feed labels print `source.name` / string / domain / `unknown-<source_type>` and no longer print `[object Object]`. JSON flips go to `apps/backend/.tmp/`. No live Anthropic call. See `14_CHANGELOG.md` v0.169.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-14 (reconciliation recovered-signal alerts honor the 24h intake window, `apps/backend` only, this commit) — recovering an orphaned `raw_event` still inserts a signal and still runs `generateSignalAnalysis`, but `dispatchAlertsForSignal` now runs only when `event_date` (else `created_at`) is within `DEFAULT_INTAKE_MAX_AGE_MS` (24h). `ORPHAN_MAX_AGE_HOURS` stays 36. See `LIVE_TODO.md`, `14_CHANGELOG.md` v0.168.0.
 

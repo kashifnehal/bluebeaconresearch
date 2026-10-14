@@ -1,12 +1,16 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-14 (v0.168.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-14 (v0.169.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
+
+### v0.169.0 — Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat` (2026-10-14, this commit)
+
+`apps/backend` only. Run F (2026-10-10) replayed the materiality gate without the article excerpt `classifyEvent` has sent via `buildClassifierSnippet` since `cf0711f`, and printed `[object Object]` for GNews rows (`raw_data.source` is `{ name, url }`) plus `unknown` where no publisher string existed. `replay-gate.ts` now imports `MATERIALITY_GATE_INSTRUCTION` (already exported; the hand copy was missing the "Clarification of (a)" sentence) and calls `buildClassifierSnippet`. `claude.service.ts` was not edited, and the script still does not call `classifyEvent()`. Feed label order: `source.name`, else a string `source`, else `domain` (GDELT), else `unknown-<source_type>`. The 150-row selector was an unseeded `Math.random` Fisher-Yates; it is now mulberry32 with the seed printed and `--seed <n>`. `--ids` keeps listed order (not a draw). `--repeat <n>` prints every verdict and whether that id is stable. Temperature `0.2` is recorded. JSON lists every flip (`id`, `title`, `feed`, `oldReason`, `newReason`) under `apps/backend/.tmp/` (gitignored). $1.50 hard stop, `--dry`, and `--count-prefix` unchanged. No live Anthropic call. New `replay-gate.test.ts` appended to the backend test chain. Full detail: `LIVE_TODO.md`.
 
 ### v0.168.0 — Reconciliation recovered-signal alerts honor the 24h intake window (2026-10-14, this commit)
 
