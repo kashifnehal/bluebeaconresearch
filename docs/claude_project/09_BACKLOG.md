@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — Breadth close (docs only, PHASE 160 / v0.183.0). Seven tier-2 assets are event-only. `DROP_SAMPLE_STORE` is on; `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `GATE_SHADOW_ENABLED` are off. Still open: the classifier mapping test, a tier-2 reference set, and switching the retrieval flags on one at a time. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — Intelligence Feed pause sentence (`apps/web`, this commit, PHASE 159 / v0.182.0). A closed daily classification budget puts a period before the pause sentence on the `/status` Intelligence Feed detail. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Underscore registry symbols (`apps/web`, this commit, PHASE 158 / v0.181.0). `VEG_OILS`, `TTF_GAS`, and `HEATING_OIL` pass the driver-breakdown charset and still have to be a known symbol. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

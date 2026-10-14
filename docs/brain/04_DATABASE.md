@@ -224,10 +224,17 @@ Per-user, per-signal chat turns. This table is the conversation log only — **n
 - **RLS**: same user-owns-their-rows convention as `alert_rules` / `watchlist_entries` / `saved_signals` — `select`/`insert` where `user_id = auth.uid()`. Fastify writes via the service-role client (bypasses RLS); the policies exist so a user-scoped key cannot read someone else's chat.
 
 ### Table 13c: `anthropic_daily_usage` (#111 governance, migration `20260912120000_anthropic_daily_usage.sql`, applied to `evavcgfmemwryggdkjmx` 2026-09-12)
-UTC-day running spend estimates. Two rows per day max (`ingestion` | `chat`). Service-role write only; RLS enabled, no policies (same fail-closed pattern as `service_health_events`).
+UTC-day running spend estimates. Service-role write only; RLS enabled, no policies (same fail-closed pattern as `service_health_events`).
 - PK `(usage_date, bucket)`
+- Bucket check, as of 2026-10-14: `'ingestion'`, `'chat'`, `'shadow'`
 - `estimated_usd numeric(12,6)`, `input_tokens`, `output_tokens`, `call_count`
 - `warned_50` / `warned_90` / `chat_50pct_emailed_at` — so 50%/90% logs and the chat 50% email fire once per UTC day
+
+### Table 13d: `rss_drop_samples` (applied 2026-10-14)
+Diagnostic store for relevance-filter drops. `public.rss_drop_samples`. RLS on, no policy, service_role only.
+
+### Table 13e: `gate_shadow_results` (applied 2026-10-14)
+Shadow materiality-gate results. `public.gate_shadow_results`. RLS on, no policy, service_role only. Not read by the live classification path.
 
 ### Table 14: `subscriptions`
 - `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL)

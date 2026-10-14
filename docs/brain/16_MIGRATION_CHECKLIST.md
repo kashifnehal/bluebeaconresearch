@@ -112,6 +112,8 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 - `20261010100000_gate_shadow_results.sql` — w16b gate-shadow prompt experiment. New schema `internal_ops` + table `internal_ops.gate_shadow_results` (raw_event_id, prompt_version, live/shadow verdict+reason, tokens, cost_usd; RLS on, no policies; unique on `raw_event_id, prompt_version`); also widens `public.anthropic_daily_usage`'s bucket CHECK to add `'shadow'`. **Written, NOT applied.** Until applied, `GATE_SHADOW_ENABLED=true` shadow calls run but their DB write fails quietly (by design) and their usage record against the "shadow" budget bucket also fails quietly (caught in `recordAnthropicUsage`).
 - `20261010140000_rss_drop_samples.sql` — claude/w16a (relevance-filter drop measurement). New `internal_ops.rss_drop_samples` table (diagnostic store for drop-sample-store.ts, behind `DROP_SAMPLE_STORE` env flag, default off). **Written, NOT applied.** RLS on, no policies (service-role only). Also creates `internal_ops` schema (`create schema if not exists`, same as the gate-shadow migration directly above — idempotent, order-independent whichever applies first).
 
+- **2026-10-14 apply (supersedes the two lines directly above):** `public.rss_drop_samples` and `public.gate_shadow_results` were applied on 2026-10-14. RLS is on, there is no policy, and access is service_role only. The applied tables are in `public`, not `internal_ops`. The `anthropic_daily_usage` bucket check now allows `'ingestion'`, `'chat'`, and `'shadow'`.
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.

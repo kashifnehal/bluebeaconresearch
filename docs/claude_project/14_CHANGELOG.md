@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-15 (PHASE 159).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-15 (PHASE 160).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 160 — Breadth close: price-source policy, event-only tier-2 assets, filter-expansion rules (2026-10-15, docs only)
+
+Docs only. Seven tier-2 assets are event-only. `DROP_SAMPLE_STORE` is on; the other retrieval flags and `GATE_SHADOW_ENABLED` are off. Yahoo-sourced prices stay development and test only while there are no paying customers (2026-10-11). Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.183.0.
 
 ## PHASE 159 — Intelligence Feed pause sentence has a period (2026-10-15, this commit)
 

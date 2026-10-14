@@ -111,6 +111,7 @@ A usage review showed **93% of spend happened at >150k context** and **~11% came
 ## Current known-open items (check `docs/brain/08_CURRENT_STATUS.md` for the live version)
 
 - Anthropic API credit — restore real Claude classification (heuristic fallback currently covering).
-- `SUPABASE_SERVICE_ROLE_KEY` on Vercel.
 - Telegram alerts — intentionally deferred by founder decision, not a bug.
 - ACLED collector credentials.
+
+`SUPABASE_SECRET_KEY` is set in Vercel production since 2026-08-17, and the code accepts it.

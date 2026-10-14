@@ -123,7 +123,9 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 
 > ⚠️ UPDATED 2026-09-11 (#111, `dcdc877`) — new table `signal_chat_messages` (id, signal_id → signals, user_id → profiles, role user|assistant, content, created_at; index on `(signal_id, user_id, created_at)`; RLS select/insert own rows). Applied live via `20260911180000_signal_chat_messages.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 13b. This is the conversation log, not a retrieval corpus — grounding is the parent signal row (D21 / ADR 017, `18_AI_ENGINE.md` §3b). Same #103 buy/sell rule as the briefing, plus personalized-advice refusal.
 
-> ⚠️ UPDATED 2026-09-12 (#111 governance) — new table `anthropic_daily_usage` (PK `usage_date` + `bucket` `ingestion`|`chat`). Running UTC-day spend estimates for the two independent Anthropic ceilings. RLS on, no policies. Full columns: `docs/brain/04_DATABASE.md` Table 13c.
+> ⚠️ UPDATED 2026-09-12 (#111 governance) — new table `anthropic_daily_usage` (PK `usage_date` + `bucket`). Running UTC-day spend estimates. RLS on, no policies. As of 2026-10-14 the bucket check allows `ingestion`, `chat`, and `shadow`. Full columns: `docs/brain/04_DATABASE.md` Table 13c.
+
+> ⚠️ UPDATED 2026-10-14 — `public.rss_drop_samples` and `public.gate_shadow_results` applied. RLS on, no policy, service_role only. Full note: `docs/brain/04_DATABASE.md` Tables 13d and 13e; `docs/brain/16_MIGRATION_CHECKLIST.md`.
 
 > ⚠️ UPDATED 2026-09-11 (#121 backend half) — new table `signal_outcomes` (id, signal_id → signals, asset, predicted_direction, predicted_confidence, price_at_event, price_at_checkpoint, checkpoint_hours, actual_pct_change, actual_direction, is_directionally_correct, computed_at; unique `(signal_id, asset)`; index on `signal_id`; RLS public read, service-role write only). Applied live via `20260911190000_signal_outcomes.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 18. Permanent because `commodity_prices` is 90-day retained (D22 / ADR 018, `17_SIGNAL_ENGINE.md` §7). Prerequisite #53; quality context #115.
 >

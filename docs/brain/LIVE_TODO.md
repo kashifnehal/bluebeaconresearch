@@ -3,6 +3,18 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ 2026-10-15 breadth close, docs only
+
+- Price-source policy, 2026-10-11: Yahoo-sourced prices are development and test only while BBR has no paying customers. No new Yahoo assets are added. Before the first paying customer each priced asset moves to a free source with clear display rights, events-only coverage, or a licence funded by revenue. A lawyer reviews the price-data questions before go-live. Free sources with clear terms: EIA (US petroleum spot, weekly lag), ECB (6 of 7 FX pairs), World Bank Pink Sheet (monthly; licence default CC BY 4.0 with per-dataset exceptions, Pink Sheet file line unconfirmed).
+- Tier-2 assets are event-only, 2026-10-12: `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL` use provider `"none"`, have no price feed or chart, and add no ingestion filter anchors until a measured test shows no harm to existing assets. Pages show "NEWS ONLY (NO PRICE FEED)". Tag precision is checked by reading the first 15 tagged signals.
+- Filter expansion rules, 2026-10-12: `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` default off and are switched on one at a time, 24 hours apart, only after drop-store data is read. `T2_PAIR_DAILY_MAX` defaults to 20 per UTC day, in memory, and resets on restart. The rule may only add keeps, never remove one. Rollback is unsetting the flag. Old-asset guard: compare 3-day per-asset signal counts before and after each flag; roll back if any old asset falls below its lowest Oct 6–10 value two days running. `GATE_SHADOW_ENABLED` stays off. `ANTHROPIC_DAILY_BUDGET_USD_SHADOW` defaults to $0.50 a day. Those thresholds are working rules from BBR's own data, not published standards.
+- Flag state: `DROP_SAMPLE_STORE` is on. `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `GATE_SHADOW_ENABLED` are off.
+- Still open: the classifier mapping test, a tier-2 reference set, and switching the retrieval flags on one at a time.
+- SHAs on the matching lines below: P2 `874c216`, P3 `ad6651a`, P4 daily-limit add-on `53f2543`, P5 `e4a5409`, P6 `5261650`, F-BREADTH-1 `95c13bd`, F-BREADTH-2 `5345bdf`. P1 `4cc10c2` (diagnostic tables in `public`, shadow reject sampling, GNews/GDELT drop logging) and P4 `32872dc` (off-by-default tier-2 retrieval terms) had no earlier line that said "this commit".
+- `public.rss_drop_samples` and `public.gate_shadow_results` were applied on 2026-10-14 (RLS on, no policy, service_role only). The `anthropic_daily_usage` bucket check allows `ingestion`, `chat`, and `shadow`.
+- No priority-queue line for this. Nothing struck.
+- Docs: this entry; both `10_DECISIONS.md`; both `08_CURRENT_STATUS.md`; both `14_CHANGELOG.md`; `docs/claude_project/09_BACKLOG.md`; both `04_DATABASE.md`; `docs/brain/16_MIGRATION_CHECKLIST.md`; `CLAUDE.md`. Skipped both `05_API.md`, both `06_COMPONENTS.md`, and `18_AI_ENGINE.md` — no new route, component, or prompt in this docs pass.
+
 ## ✅ Intelligence Feed pause sentence has a period, `apps/web` only, 2026-10-15, this commit
 
 - On `/status`, a closed daily classification budget appended " Collection is paused until the next UTC day." onto the Intelligence Feed detail with no period between them. The Unknown line ends "...reported healthy recently", so it read as one glued sentence.
@@ -11,7 +23,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Verification: `pnpm --filter web test` exit 0. `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web run build` (`next build`) exit 0. No browser run. The period is in the unit test for the closed cap; the open cap stays the base detail.
 - Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.182.0; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 159. Skipped both `05_API.md`, both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new route, component, table, prompt, or standing rule.
 
-## ✅ Underscore symbols on driver-breakdown and the signals feed filter, `apps/web` only, 2026-10-15, this commit
+## ✅ Underscore symbols on driver-breakdown and the signals feed filter, `apps/web` only, 2026-10-15, `5345bdf`
 
 - `GET /api/signals/driver-breakdown` rejected `VEG_OILS`, `TTF_GAS`, and `HEATING_OIL` at `^[A-Z0-9]+$` before the known-symbol check. Those three are in the shared registry.
 - The charset is now `^[A-Z0-9_]+$`. A symbol still has to be in `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`. `NOTREAL` is still `400 unknown symbol`.
@@ -21,7 +33,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0, including `VEG_OILS` 200 with `rows`, `TTF_GAS` 200 with `rows`, `NOTREAL` 400, `USOIL` 200 with `rows`. `pnpm --filter web run build` (`next build`) exit 0. No browser run. The underscore cases hit the no-Supabase-client path (`rows: []`), not a live database.
 - Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.181.0, `05_API.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 158, `05_API.md`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new component, table, prompt, or standing rule.
 
-## ✅ News-only symbols on the driver-breakdown route, `apps/web` only, 2026-10-15, this commit
+## ✅ News-only symbols on the driver-breakdown route, `apps/web` only, 2026-10-15, `95c13bd`
 
 - `GET /api/signals/driver-breakdown` treated a symbol as a commodity only when it was in `COMMODITIES`. The seven news-only symbols live in `NEWS_ONLY_COMMODITIES`, so `COFFEE` (and the other six that pass the existing symbol pattern) came back `400 unknown symbol`. The watchlist detail page still asks this route for the signal-driver chart.
 - A symbol is now a commodity when it is in `COMMODITIES` or `NEWS_ONLY_COMMODITIES`. It still reads `commodity_impacts` only. Forex, paging, the rate limit, and the window limit are unchanged.
@@ -58,7 +70,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.177.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 154, `06_COMPONENTS.md`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new route, table, prompt, or standing rule.
 - Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0, including 35 asserts in `lib/location-groups.test.ts` (blank country, equal-confidence direction, equal-key sort ties, and each order). `pnpm --filter web run build` (`next build`) exit 0. Could not verify in a browser: port 3000 is already serving another app, and `apps/web/.env.playwright.local` is missing.
 
-## ✅ News-only watchlist cards and detail pages, `apps/web` only, 2026-10-14, this commit
+## ✅ News-only watchlist cards and detail pages, `apps/web` only, 2026-10-14, `5261650`
 
 - The seven news-only commodities (`VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL`) can be added from the watchlist Add control, followed, and opened at `/watchlist/[symbol]`. `DEFAULT_WATCHLIST` stays the priced commodity list. `user_preferences.watchlist_symbols` is a `text[]` with no symbol check in migrations, so no migration was added.
 - A news-only card shows the name, "News only (no price feed)", the 7-day signal count, and the latest headline (with its age). The count is `total` from the same `GET /api/signals` call the detail page uses (`commodity`, `window=7d`, `sort=newest`, `limit=1`). If `total` is missing, the card says the 7-day count is unavailable and still shows the headline. No sparkline, price, or change percentage. The card does not call `/api/prices`. The grid's `/api/prices` query runs only after hydration and only when the list contains a priced symbol.
@@ -67,7 +79,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - No open priority-queue line for this. Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.176.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 153, `06_COMPONENTS.md`. Skipped both `05_API.md` — no new route. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
 - Verification: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` exit 0 (4 cases in `lib/news-only-assets.test.ts`, 4 new in `WatchlistClient.test.tsx`, 3 new in `watchlist/[symbol]/page.test.tsx`, plus the existing seven-tag filter test now checks the "(news only)" suffix). `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. No browser run.
 
-## ✅ Daily limit on pair-only keeps, `apps/backend` only, 2026-10-14, this commit
+## ✅ Daily limit on pair-only keeps, `apps/backend` only, 2026-10-14, `53f2543`
 
 - A headline kept only by the commodity-and-event pair rule can go on to a gate call. `T2_PAIR_DAILY_MAX` is an integer of 0 or more, default 20. 20 gate calls x $0.0049 is about $0.10 a day, about 5% of the $2 cap. No published source. Unset or blank stays 20. A negative or non-integer value fails startup.
 - `t2SlotsLeft` and `consumeT2Slot` count those pair-only keeps in memory for the current UTC date. The count starts again at 0 on a new UTC day. It also resets when the process restarts, so the real daily limit can be higher after a restart; it is a safety brake, not an exact budget.
@@ -96,7 +108,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - No open priority-queue line for this. Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.173.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 150, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
 - Verification: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` exit 0 (5 cases in `lib/source-host.test.ts`, 3 in `components/signals/SignalQuickView.test.tsx`, on the existing tsx chain); `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. Could not time `GET /api/signals/:id` against this checkout: port 3000 is already serving another checkout, and this build's production server would reject an anonymous call.
 
-## ✅ News-only commodity tags, `packages/shared` + `apps/backend` + `apps/web`, 2026-10-14, this commit
+## ✅ News-only commodity tags, `packages/shared` + `apps/backend` + `apps/web`, 2026-10-14, `e4a5409`
 
 - Seven tags the classifier can emit and the feed can filter by, with no price series: `VEG_OILS` (Vegetable Oils), `SOYBEANS` (Soybeans and Soy Oil), `SUGAR` (Sugar), `COFFEE` (Coffee), `COCOA` (Cocoa) — agriculture; `ALUMINIUM` (Aluminium), `NICKEL` (Nickel) — metals. `provider` is `"yahoo"` or `"none"`. These seven are `"none"`: no `yahooTicker`, no `quoteCurrency`, empty `filterAnchors`.
 - Both registry copies export `PRICED_COMMODITIES`. `packages/shared` also exports `NEWS_ONLY_COMMODITIES`. Shared `COMMODITIES` stays the priced display list (watchlist, onboarding, command palette). The parity test now checks that list against priced entries, and checks that priced plus news-only cover the registry once.
@@ -114,15 +126,15 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.171.0, `05_API.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 148, `05_API.md`. Skipped both `06_COMPONENTS.md` — no React component change. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
 - Verification: `pnpm --filter web test` exit 0 (includes `lib/signal-outcomes-server.test.ts` on the existing tsx chain; this repo has no vitest runner); `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. No browser run — PW-1 times the live endpoints after deploy.
 
-## ✅ Weekend-proof watchlist sparkline, `apps/web` only, 2026-10-14, this commit
+## ✅ Weekend-proof watchlist sparkline, `apps/web` only, 2026-10-14, `874c216`
 
 - On a closed market the last 12 saved prices (no-`days` history default: `HISTORY_POINTS = 12`, about 3 hours at a 15-minute cadence) are identical, so `PriceSparkline` drew 12 equal minimum-height bars. The bar formula (`h = 15 + ((price - min) / range) * 85`) is unchanged.
 - `GET /api/prices/history` takes optional `points` (integer, clamped 2..60) only together with `days`. After the existing paged read, exported `bucketLastPrice(rows, cutoffMs, nowMs, n)` splits `[cutoff, now]` into `n` equal buckets and returns each non-empty bucket's last `price` and `fetched_at`. `rows.length <= n` returns the rows unchanged. No `days` still returns the last 12 snapshots. 401 / 502 / 429 unchanged.
 - The sparkline query key is `["price-history", symbol, "spark7d"]` and fetches `/api/prices/history?symbol=…&days=7&points=14`. At least 2 points with `min === max` shows "No price change in the last 7 days" in the same text style as the insufficient state, instead of bars. Loading, error (with Retry), insufficient, and chart states are unchanged. The 7-day window and 14 bars are a UI choice, not a researched value (comment in `WatchlistClient.tsx`).
 - Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.170.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 147, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule. Skipped `docs/brain/09_BACKLOG.md` — that file is the deferred roadmap; the live queue is `docs/claude_project/09_BACKLOG.md`.
-- Verification: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` exit 0 (including `app/api/prices/history/route.test.ts` and `WatchlistClient.test.tsx`); `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. No browser run — PW-1 does that. Deploy status is checked after push, not in this commit.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` exit 0 (including `app/api/prices/history/route.test.ts` and `WatchlistClient.test.tsx`); `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. No browser run — PW-1 does that. Deploy status is checked after push, not in `874c216`.
 
-## ✅ Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat`, `apps/backend` only, 2026-10-14, this commit
+## ✅ Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat`, `apps/backend` only, 2026-10-14, `ad6651a`
 
 - Run F (2026-10-10): the replay user message had no article excerpt. `buildPrompt` now calls `buildClassifierSnippet` (the same function `classifyEvent` has used since `cf0711f`) and imports `MATERIALITY_GATE_INSTRUCTION`, which was already exported. The local copy was missing the "Clarification of (a)" sentence. `claude.service.ts` was not edited. The script still does not call `classifyEvent()` — that would record usage on the ingestion budget.
 - Feed label: GNews stores the article, so `raw_data.source` is `{ name, url }`. RSS stores a string on `raw_data.source`. GDELT stores the DOC article (`raw_data.domain`, no `source`). `feedLabel` prints `source.name`, else the string, else `domain`, else `unknown-<source_type>`. It never stringifies an object, which is what printed `[object Object]` on the 35 GNews rows.

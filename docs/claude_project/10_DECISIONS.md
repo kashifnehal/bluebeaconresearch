@@ -855,3 +855,41 @@ Note: sugar (SB=F) and cotton (CT=F) fail yf.quote() with a schema validation er
 **Rationale:** `lib/supabase-server.ts`'s `getRouteSupabaseClients()` already resolves `user` through the auth-proxy-routed client and separately exposes a service-role `supabase` client for the actual table read — exactly the split these two routes were missing. Reusing it instead of hand-rolling a third cookie client avoids reintroducing this exact class of bug a third time (see the SSE 401 history already documented in `lib/supabase-server.ts`).
 
 **Cross-tree mapping:** Recorded as **ADR 042** in `docs/brain/10_DECISIONS.md`.
+
+## D47: Price-source policy, 2026-10-11
+
+**Context:** Live prices come from Yahoo Finance through `yahoo-finance2`. On 2026-10-10 a price-data rights review was required before any price source is used in a paid product, and Yahoo was limited to development and test until that review. BBR has no paying customers.
+
+**Decision:** Yahoo-sourced prices are development and test only while BBR has no paying customers. No new Yahoo assets are added. Before the first paying customer, each priced asset moves to a free source with clear display rights, events-only coverage, or a licence funded by revenue. A lawyer reviews the price-data questions before go-live.
+
+Free sources with clear terms found: EIA (US petroleum spot, weekly lag), ECB (6 of 7 FX pairs), World Bank Pink Sheet (monthly; licence default CC BY 4.0 with per-dataset exceptions, Pink Sheet file line unconfirmed).
+
+**Rationale:** A paid product needs a price source whose display rights are known. The three sources above publish terms. The Pink Sheet file's own licence line is still unconfirmed, so it is not treated as cleared.
+
+**Cross-tree mapping:** Recorded as **ADR 043** in `docs/brain/10_DECISIONS.md`.
+
+## D48: Tier-2 assets are event-only, 2026-10-12
+
+**Context:** On 2026-10-10, asset admission moved to coverage state. Vegetable oils, soybeans and soybean oil, sugar, aluminium, nickel, coffee, and cocoa were the event-coverage-first list. They had no cleared price source.
+
+**Decision:** `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, and `NICKEL` use provider `"none"`. They have no price feed or chart, and they add no ingestion filter anchors until a measured test shows no harm to existing assets. Pages show "NEWS ONLY (NO PRICE FEED)". Tag precision is checked by reading the first 15 tagged signals.
+
+**Rationale:** Event coverage can ship without a price series. Empty filter anchors leave the existing keyword path unchanged until a test shows the new tags do not change keep or drop results for assets that already have prices.
+
+**Cross-tree mapping:** Recorded as **ADR 044** in `docs/brain/10_DECISIONS.md`.
+
+## D49: Filter expansion rules, 2026-10-12
+
+**Context:** The tier-2 assets have no filter anchors. Extra retrieval would change which headlines reach the materiality gate and could change yield on assets that already have coverage.
+
+**Decision:** New retrieval flags `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` default OFF. They are switched on one at a time, 24 hours apart, only after drop-store data is read. `T2_PAIR_DAILY_MAX` (default 20 per UTC day, in memory, resets on restart) bounds extra gate calls. The rule may only add keeps, never remove one (property test). Rollback is unsetting the flag.
+
+Old-asset guard: compare 3-day per-asset signal counts before and after each flag. Roll back if any old asset falls below its lowest Oct 6–10 value two days running.
+
+`GATE_SHADOW_ENABLED` stays off. Its own bucket `ANTHROPIC_DAILY_BUDGET_USD_SHADOW` defaults to $0.50 a day.
+
+The thresholds above are working rules from BBR's own data, not published standards.
+
+**Rationale:** Turning every retrieval change on at once would make a yield drop impossible to attribute. The pair rule is written so it can only add a keep. The daily slot and the shadow budget cap the extra paid calls. The Oct 6–10 floor is taken from BBR's own counts.
+
+**Cross-tree mapping:** Recorded as **ADR 045** in `docs/brain/10_DECISIONS.md`.
