@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
 
-import { handleHistoryGet as GET, type PricesHistoryDeps } from "./route";
+import { bucketLastPrice, handleHistoryGet as GET, type PricesHistoryDeps } from "./route";
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   return Promise.resolve()
@@ -155,6 +155,96 @@ async function main() {
     assert.equal(res.status, 429);
     const json = await res.json();
     assert.equal(json.error.code, "rate_limited");
+  });
+
+  await runTest("bucketLastPrice keeps the last price in each bucket and skips empty ones", () => {
+    const cutoffMs = 1_000_000;
+    const nowMs = 1_004_000;
+    const rows: Row[] = [
+      { price: 10, fetched_at: new Date(1_000_100).toISOString() },
+      { price: 11, fetched_at: new Date(1_000_500).toISOString() },
+      { price: 20, fetched_at: new Date(1_002_000).toISOString() },
+      { price: 21, fetched_at: new Date(1_002_500).toISOString() },
+      { price: 30, fetched_at: new Date(1_003_999).toISOString() },
+      { price: 31, fetched_at: new Date(nowMs).toISOString() },
+    ];
+    const sampled = bucketLastPrice(rows, cutoffMs, nowMs, 4);
+    assert.deepEqual(
+      sampled.map((r) => r.price),
+      [11, 21, 31],
+    );
+    assert.equal(sampled[0]!.fetched_at, rows[1]!.fetched_at);
+    assert.equal(sampled[2]!.fetched_at, rows[5]!.fetched_at);
+  });
+
+  await runTest("bucketLastPrice returns the rows unchanged when there are not more than `points`", () => {
+    const rows: Row[] = [
+      { price: 1, fetched_at: "2026-10-11T00:00:00.000Z" },
+      { price: 1, fetched_at: "2026-10-11T00:00:00.000Z" },
+      { price: 1, fetched_at: "2026-10-11T00:00:00.000Z" },
+    ];
+    const sampled = bucketLastPrice(rows, 0, 7 * 24 * 60 * 60 * 1000, 14);
+    assert.equal(sampled, rows);
+  });
+
+  await runTest("`points` is ignored when `days` is absent", async () => {
+    const { supabase, calls } = fakeDb([
+      [
+        { price: 3, fetched_at: "2026-10-03T00:00:00.000Z" },
+        { price: 2, fetched_at: "2026-10-02T00:00:00.000Z" },
+        { price: 1, fetched_at: "2026-10-01T00:00:00.000Z" },
+      ],
+    ]);
+    const res = await GET(req("symbol=USOIL&points=14"), deps({ supabase, user: { id: "u1" } }));
+    assert.equal(res.status, 200);
+    assert.equal(calls.range.length, 0);
+    assert.equal(calls.gte.length, 0);
+    const json = await res.json();
+    assert.deepEqual(
+      json.points.map((p: { price: number }) => p.price),
+      [1, 2, 3],
+    );
+  });
+
+  await runTest("`points` clamps to 2..60 and is applied only inside the days window", async () => {
+    const nowMs = 1_700_000_000_000;
+    const days = 7;
+    const cutoffMs = nowMs - days * 24 * 60 * 60 * 1000;
+    const span = nowMs - cutoffMs;
+    const originalNow = Date.now;
+    Date.now = () => nowMs;
+    try {
+      const twoHalves: Row[] = [0.25, 0.75].map((frac, i) => ({
+        price: i + 1,
+        fetched_at: new Date(cutoffMs + frac * span).toISOString(),
+      }));
+      const low = await GET(
+        req("symbol=USOIL&days=7&points=1"),
+        deps({ supabase: fakeDb([twoHalves]).supabase, user: { id: "u1" } }),
+      );
+      assert.equal(low.status, 200);
+      const lowJson = await low.json();
+      assert.deepEqual(
+        lowJson.points.map((p: { price: number }) => p.price),
+        [1, 2],
+      );
+
+      const many: Row[] = Array.from({ length: 80 }, (_, i) => ({
+        price: i + 1,
+        fetched_at: new Date(cutoffMs + ((i + 0.5) * span) / 80).toISOString(),
+      }));
+      const high = await GET(
+        req("symbol=USOIL&days=7&points=100"),
+        deps({ supabase: fakeDb([many]).supabase, user: { id: "u1" } }),
+      );
+      assert.equal(high.status, 200);
+      const highJson = await high.json();
+      assert.equal(highJson.points.length, 60);
+      assert.equal(highJson.points[0].price, 1);
+      assert.equal(highJson.points[59].price, 80);
+    } finally {
+      Date.now = originalNow;
+    }
   });
 
   setNodeEnv(prevEnv);

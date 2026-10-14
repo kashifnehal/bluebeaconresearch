@@ -41,6 +41,15 @@ runTest("sparklineDisplayState shows the chart once loaded, not errored, with >=
   assert.equal(sparklineDisplayState(false, false, 2), "chart");
 });
 
+runTest("sparklineDisplayState shows flat when at least 2 prices are identical", () => {
+  assert.equal(sparklineDisplayState(false, false, 12, Array(12).fill(81.5)), "flat");
+});
+
+runTest("sparklineDisplayState shows the chart for 14 points with different prices", () => {
+  const prices = Array.from({ length: 14 }, (_, i) => 70 + i);
+  assert.equal(sparklineDisplayState(false, false, prices.length, prices), "chart");
+});
+
 runTest("parsePriceHistoryPoints throws on a non-ok response, even with points present", () => {
   assert.throws(() => parsePriceHistoryPoints(false, { points: [{ price: 1, fetchedAt: "2026-01-01" }] }));
 });
@@ -67,6 +76,16 @@ runTest("withPreselect is a no-op when the symbol is already present or there is
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(path.join(dir, "WatchlistClient.tsx"), "utf8");
+
+runTest("flat state uses the same text style as the insufficient state", () => {
+  assert.match(source, /No price change in the last 7 days/);
+  const flatIdx = source.indexOf("No price change in the last 7 days");
+  const insufficientIdx = source.indexOf("Not enough price history yet for a trend view");
+  const flatTag = source.lastIndexOf("<p", flatIdx);
+  const insufficientTag = source.lastIndexOf("<p", insufficientIdx);
+  assert.ok(flatTag > -1 && insufficientTag > -1);
+  assert.equal(source.slice(flatTag, flatIdx), source.slice(insufficientTag, insufficientIdx));
+});
 
 runTest("watch/isSuggested initial state does not read localStorage during render (no hydration mismatch)", () => {
   const watchInit = source.match(/const \[watch, setWatch\] = useState<string\[\]>\(([^)]*)\)/);

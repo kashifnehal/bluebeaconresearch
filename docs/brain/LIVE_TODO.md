@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Weekend-proof watchlist sparkline, `apps/web` only, 2026-10-14, this commit
+
+- On a closed market the last 12 saved prices (no-`days` history default: `HISTORY_POINTS = 12`, about 3 hours at a 15-minute cadence) are identical, so `PriceSparkline` drew 12 equal minimum-height bars. The bar formula (`h = 15 + ((price - min) / range) * 85`) is unchanged.
+- `GET /api/prices/history` takes optional `points` (integer, clamped 2..60) only together with `days`. After the existing paged read, exported `bucketLastPrice(rows, cutoffMs, nowMs, n)` splits `[cutoff, now]` into `n` equal buckets and returns each non-empty bucket's last `price` and `fetched_at`. `rows.length <= n` returns the rows unchanged. No `days` still returns the last 12 snapshots. 401 / 502 / 429 unchanged.
+- The sparkline query key is `["price-history", symbol, "spark7d"]` and fetches `/api/prices/history?symbol=…&days=7&points=14`. At least 2 points with `min === max` shows "No price change in the last 7 days" in the same text style as the insufficient state, instead of bars. Loading, error (with Retry), insufficient, and chart states are unchanged. The 7-day window and 14 bars are a UI choice, not a researched value (comment in `WatchlistClient.tsx`).
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.170.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 147, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule. Skipped `docs/brain/09_BACKLOG.md` — that file is the deferred roadmap; the live queue is `docs/claude_project/09_BACKLOG.md`.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` exit 0 (including `app/api/prices/history/route.test.ts` and `WatchlistClient.test.tsx`); `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. No browser run — PW-1 does that. Deploy status is checked after push, not in this commit.
+
 ## ✅ Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat`, `apps/backend` only, 2026-10-14, this commit
 
 - Run F (2026-10-10): the replay user message had no article excerpt. `buildPrompt` now calls `buildClassifierSnippet` (the same function `classifyEvent` has used since `cf0711f`) and imports `MATERIALITY_GATE_INSTRUCTION`, which was already exported. The local copy was missing the "Clarification of (a)" sentence. `claude.service.ts` was not edited. The script still does not call `classifyEvent()` — that would record usage on the ingestion budget.

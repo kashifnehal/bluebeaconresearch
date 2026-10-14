@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (replay gate: live excerpt, seeded draw, `--ids`/`--repeat` — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (weekend-proof watchlist sparkline — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (weekend-proof watchlist sparkline, `apps/web` only, this commit) — the watchlist sparkline requests a 7-day window sampled to 14 points, and shows "No price change in the last 7 days" when every price in that window is the same, instead of a row of equal bars. `points` on `GET /api/prices/history` applies only with `days`. See `docs/brain/LIVE_TODO.md`, PHASE 147.
 
 > ⚠️ NEW 2026-10-14 (replay gate matches the live classifier excerpt, `apps/backend` only, this commit) — the replay user message now includes the article excerpt from `buildClassifierSnippet` and the live materiality-gate instruction. Row pick is a seeded draw (`--seed`); `--ids` and `--repeat` added. Publisher labels no longer print `[object Object]`. JSON flips go to `apps/backend/.tmp/`. No live Anthropic call. See `docs/brain/LIVE_TODO.md`, PHASE 146.
 

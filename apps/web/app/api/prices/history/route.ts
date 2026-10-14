@@ -8,8 +8,50 @@ export const revalidate = 0;
 
 const HISTORY_POINTS = 12;
 const MAX_DAYS = 90;
+const MIN_BUCKET_POINTS = 2;
+const MAX_BUCKET_POINTS = 60;
 const RANGE_PAGE_SIZE = 1000;
 const MAX_RANGE_PAGES = 20;
+
+export type PriceHistoryRow = { price: number; fetched_at: string };
+
+// Split [cutoffMs, nowMs] into `n` equal buckets and keep the latest row in
+// each non-empty bucket. Fewer rows than buckets is returned as-is — there is
+// nothing to collapse. Rows are matched by fetched_at, so input order does not
+// matter; a tie keeps the later row.
+export function bucketLastPrice(
+  rows: PriceHistoryRow[],
+  cutoffMs: number,
+  nowMs: number,
+  n: number,
+): PriceHistoryRow[] {
+  if (rows.length <= n) return rows;
+  const span = nowMs - cutoffMs;
+  if (!(span > 0) || !(n > 0)) return rows;
+  const width = span / n;
+  const chosen: (PriceHistoryRow | undefined)[] = new Array(n);
+  for (const row of rows) {
+    const t = Date.parse(row.fetched_at);
+    if (!Number.isFinite(t)) continue;
+    let idx = Math.floor((t - cutoffMs) / width);
+    if (idx < 0) idx = 0;
+    else if (idx >= n) idx = n - 1;
+    const prev = chosen[idx];
+    if (!prev || t >= Date.parse(prev.fetched_at)) chosen[idx] = row;
+  }
+  const out: PriceHistoryRow[] = [];
+  for (const row of chosen) {
+    if (row) out.push(row);
+  }
+  return out;
+}
+
+function clampBucketPoints(raw: string | null): number | null {
+  if (raw == null || raw.trim() === "") return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(MAX_BUCKET_POINTS, Math.max(MIN_BUCKET_POINTS, Math.trunc(n)));
+}
 
 // Injectable deps — same pattern as lib/events-post-handler.ts — so route
 // tests can supply fakes for the Supabase client and rate limiter without a
@@ -27,8 +69,8 @@ export async function handleHistoryGet(req: NextRequest, deps: PricesHistoryDeps
   if (!symbol) {
     return apiError(400, "missing_symbol");
   }
-  // `days` opts into a date-range window (used by the watchlist drill-down chart);
-  // omitting it preserves the original "last N snapshots" behavior the sparkline relies on.
+  // `days` opts into a date-range window (drill-down chart, and the sparkline
+  // when `points` is also set). Omitting it preserves the last-N-snapshots default.
   const daysParam = url.searchParams.get("days");
   const days = daysParam ? Math.min(MAX_DAYS, Math.max(1, Number(daysParam) || 0)) : null;
 
@@ -71,12 +113,14 @@ export async function handleHistoryGet(req: NextRequest, deps: PricesHistoryDeps
   }
 
   if (days) {
-    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    const nowMs = Date.now();
+    const cutoffMs = nowMs - days * 24 * 60 * 60 * 1000;
+    const cutoff = new Date(cutoffMs).toISOString();
     // PostgREST silently caps any single response at its configured max-rows,
     // so a single .limit() here would truncate to the OLDEST rows in the
     // ascending window instead of the requested count — same bug class fixed
     // in lib/signal-outcomes-server.ts (fetchSignalOutcomeRows). Page instead.
-    const rows: { price: number; fetched_at: string }[] = [];
+    const rows: PriceHistoryRow[] = [];
     for (let page = 0; page < MAX_RANGE_PAGES; page++) {
       const from = page * RANGE_PAGE_SIZE;
       const { data, error } = await supabase
@@ -98,7 +142,11 @@ export async function handleHistoryGet(req: NextRequest, deps: PricesHistoryDeps
       if (data.length < RANGE_PAGE_SIZE) break;
     }
 
-    const points = rows.map((r) => ({ price: r.price, fetchedAt: r.fetched_at }));
+    // `points` is honoured only together with `days`. Absent, non-numeric, or
+    // blank leaves the paged window unchanged. Out-of-range integers clamp to 2..60.
+    const bucketN = clampBucketPoints(url.searchParams.get("points"));
+    const sampled = bucketN == null ? rows : bucketLastPrice(rows, cutoffMs, nowMs, bucketN);
+    const points = sampled.map((r) => ({ price: r.price, fetchedAt: r.fetched_at }));
     return NextResponse.json({ points });
   }
 

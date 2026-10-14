@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-14 (replay gate: live excerpt, seeded draw, `--ids`/`--repeat`, this commit)
+Last updated: 2026-10-14 (weekend-proof watchlist sparkline, this commit)
+
+> ⚠️ NEW 2026-10-14 (weekend-proof watchlist sparkline, `apps/web` only, this commit) — `PriceSparkline` no longer charts the last 12 snapshots (identical on a closed market, so every bar was the minimum height). It requests `days=7&points=14`. `GET /api/prices/history` buckets that window via `bucketLastPrice` when `points` is sent with `days` (clamped 2..60); a flat series shows "No price change in the last 7 days" instead of equal bars. The bar formula is unchanged. No-`days` still returns 12 snapshots. See `14_CHANGELOG.md` v0.170.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-14 (replay gate matches the live classifier excerpt, `apps/backend` only, this commit) — `replay-gate.ts` now builds the article excerpt with `buildClassifierSnippet` and imports `MATERIALITY_GATE_INSTRUCTION` (already exported; `claude.service.ts` unchanged). The 150-row pick is a seeded mulberry32 draw (`--seed`); `--ids` and `--repeat` added. Feed labels print `source.name` / string / domain / `unknown-<source_type>` and no longer print `[object Object]`. JSON flips go to `apps/backend/.tmp/`. No live Anthropic call. See `14_CHANGELOG.md` v0.169.0, `LIVE_TODO.md`.
 

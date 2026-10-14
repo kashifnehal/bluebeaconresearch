@@ -76,16 +76,22 @@ export function parsePriceHistoryPoints(ok: boolean, json: PriceHistoryResponseB
   return json.points ?? [];
 }
 
-export type SparklineDisplay = "loading" | "error" | "insufficient" | "chart";
+export type SparklineDisplay = "loading" | "error" | "insufficient" | "flat" | "chart";
 
 export function sparklineDisplayState(
   isLoading: boolean,
   isError: boolean,
   pointsLength: number,
+  prices?: readonly number[],
 ): SparklineDisplay {
   if (isLoading) return "loading";
   if (isError) return "error";
   if (pointsLength < 2) return "insufficient";
+  if (prices && prices.length >= 2) {
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    if (min === max) return "flat";
+  }
   return "chart";
 }
 
@@ -95,10 +101,13 @@ export function sparklineDisplayState(
  * removed elsewhere in this product; not okay to leave in a paying trader's view).
  */
 function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
+  // The 7-day window and 14 bars are a UI choice, not a researched value.
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["price-history", symbol],
+    queryKey: ["price-history", symbol, "spark7d"],
     queryFn: async () => {
-      const res = await fetch(`/api/prices/history?symbol=${encodeURIComponent(symbol)}`);
+      const res = await fetch(
+        `/api/prices/history?symbol=${encodeURIComponent(symbol)}&days=7&points=14`,
+      );
       const json = (await res.json()) as PriceHistoryResponseBody;
       return parsePriceHistoryPoints(res.ok, json);
     },
@@ -106,7 +115,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
   });
 
   const points = (data ?? []).map((p) => p.price);
-  const display = sparklineDisplayState(isLoading, isError, points.length);
+  const display = sparklineDisplayState(isLoading, isError, points.length, points);
 
   if (display === "loading") {
     return (
@@ -142,6 +151,14 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
     return (
       <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
         Not enough price history yet for a trend view
+      </p>
+    );
+  }
+
+  if (display === "flat") {
+    return (
+      <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
+        No price change in the last 7 days
       </p>
     );
   }
