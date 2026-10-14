@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-14 (news-only watchlist pages, this commit)
+Last updated: 2026-10-14 (map locations list, this commit)
+
+> ⚠️ NEW 2026-10-14 (map locations list, `apps/web` only, this commit) — the map groups the signals it already shows by country. A blank country is counted, not listed. Desktop shows a Locations panel on the map; mobile opens a bottom sheet. A country row limits markers to that country and opens the existing signal popup. Chokepoints are listed with the count inside 500 km. See `14_CHANGELOG.md` v0.177.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-14 (news-only watchlist cards and detail pages, `apps/web` only, this commit) — vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel can be added to the watchlist and followed. Cards and detail pages show "News only (no price feed)" and signals, and do not request a price. The priced default list is unchanged. See `14_CHANGELOG.md` v0.176.0, `LIVE_TODO.md`.
 

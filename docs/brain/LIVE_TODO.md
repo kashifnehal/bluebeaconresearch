@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Map locations list, `apps/web` only, 2026-10-14, this commit
+
+- The map had pins and a chokepoint popup, and no list of signals grouped by place. Checked 2026-10-09: 513 of 543 signals in 30 days have lat and lng. This list uses the map's existing filtered signal array. No new query.
+- `groupSignalsByLocation` groups by trimmed `country`. A blank country is counted as no location and is not a group. Each group has a count, Up, Down, and other. Other is a volatile impact, a neutral impact, or no commodity impact. The direction is the highest-confidence commodity impact. Equal confidence keeps the earlier impact. `latest` is the max of `updatedAt`, or `createdAt` when `updatedAt` is missing. Order is recent, count, Up, Down, or A–Z. A tie breaks by country name.
+- Desktop shows a Locations panel on the map, between the filters panel and the intelligence stream, with a hide control. Mobile opens it as a bottom sheet the same way as the tension sheet: a peek bar, tap to expand. The stats line is "Signals with a location: X of Y · Up: U · Down: D · Unique locations: Z". A row shows the country, the count, and Up and Down. Choosing a row limits the map markers to that country, narrows the stream to those signals, and opens the same signal popup the feed already uses, on the newest signal in the group. Show all clears that. The Chokepoints section lists every chokepoint, the count within 500 km, and the direction tally. A chokepoint row flies the map there. Marker drawing is unchanged.
+- No open priority-queue line for this. Nothing struck.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.177.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 154, `06_COMPONENTS.md`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new route, table, prompt, or standing rule.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0, including 35 asserts in `lib/location-groups.test.ts` (blank country, equal-confidence direction, equal-key sort ties, and each order). `pnpm --filter web run build` (`next build`) exit 0. Could not verify in a browser: port 3000 is already serving another app, and `apps/web/.env.playwright.local` is missing.
+
 ## ✅ News-only watchlist cards and detail pages, `apps/web` only, 2026-10-14, this commit
 
 - The seven news-only commodities (`VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL`) can be added from the watchlist Add control, followed, and opened at `/watchlist/[symbol]`. `DEFAULT_WATCHLIST` stays the priced commodity list. `user_preferences.watchlist_symbols` is a `text[]` with no symbol check in migrations, so no migration was added.

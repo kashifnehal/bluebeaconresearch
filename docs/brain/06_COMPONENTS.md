@@ -236,6 +236,12 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - 4 new unit tests appended to `apps/web/lib/chokepoints.test.ts` (existing `CHOKEPOINTS` validity tests kept, unchanged) for `signalsNearChokepoint`: signal inside radius + overlapping commodity counts; outside radius does not; no overlapping commodity does not; chokepoint with empty commodities counts 0.
 - `FilterBar` and the dashboard untouched, as instructed. **Verified:** `pnpm --filter web test` full suite green, `pnpm --filter web exec tsc --noEmit` and `pnpm --filter shared exec tsc --noEmit` both clean. **Not live-browser-verified** — the list panel was not opened in a real browser this session.
 
+### 3.5i Map locations list (`components/map/LocationList.tsx`, `app/(dashboard)/map/page.tsx`) (2026-10-14)
+
+- Groups the map's existing filtered signals by trimmed country. A blank country increments a no-location count and is not a row. Each row shows the country, the count, Up, and Down. The direction is the highest-confidence commodity impact; equal confidence keeps the earlier impact. Order: recent, count, Up, Down, A–Z, with a country-name tie break. `data-testid="location-row"` and `data-testid="location-order"`.
+- Desktop: a Locations panel on the map, between the filters panel and the intelligence stream. Mobile: a bottom sheet opened like the tension sheet (peek, tap to expand).
+- A country row limits the markers already drawn to that country and opens the same signal popup the feed uses, on the newest signal in the group (`updatedAt`, else `createdAt`). Show all restores the full filtered set. The Chokepoints section lists every chokepoint with `signalsNearChokepoint` at 500 km and `chokepointDirectionTally`. A chokepoint row flies the map there. `data-testid="chokepoint-row"`. Marker drawing is unchanged.
+
 ### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
 - **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
 - **How**: server component, direct server-side fetch (same pattern as `admin/metrics/page.tsx`, no client proxy route needed); dark-terminal styling matches `/status`.

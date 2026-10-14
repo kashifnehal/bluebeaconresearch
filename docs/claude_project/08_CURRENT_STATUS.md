@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (news-only watchlist pages — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (map locations list — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (map locations list, `apps/web` only, this commit) — the map groups current signals by country and lists each chokepoint with a count inside 500 km. A country row limits the markers and opens the existing signal popup. See `docs/brain/LIVE_TODO.md`, PHASE 154.
 
 > ⚠️ NEW 2026-10-14 (news-only watchlist cards and detail pages, `apps/web` only, this commit) — vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel appear on the watchlist as news-only cards, have a detail page, and can be followed. They do not show or request a price. See `docs/brain/LIVE_TODO.md`, PHASE 153.
 

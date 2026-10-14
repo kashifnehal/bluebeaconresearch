@@ -490,6 +490,10 @@ A toggleable "Chokepoints" button (top-right of the map, default off) shows/hide
 
 **2026-10-01 update (doc claude/278 item 4.6):** the popup's inline matching logic was extracted unchanged into a pure `signalsNearChokepoint()` in new `apps/web/lib/chokepoints.ts` (same `haversineDistanceKm` + commodity-overlap rule; the popup now calls it instead of filtering inline), alongside a new `chokepointDirectionTally()`. A new "Chokepoints" list panel renders under the toggle button when it's on — one real `<button>` row per chokepoint, name + live count + direction split (Up/Down/Volatile/Neutral, non-zero only), or "No commodity link found (no source)" for any chokepoint with an empty `commodities` list (now Gibraltar, Panama Canal, and Turkish Straits — see the same-day `chokepoints.ts` sourcing cleanup in `LIVE_TODO.md`); sorted count desc then name; a row click flies the map to that chokepoint (`map.flyTo`); a static note below reads "Counts are signals within 500 km (a display choice, not a sourced threshold)." `FilterBar` and the dashboard untouched. Not live-browser-verified this session either. Full detail: `docs/brain/06_COMPONENTS.md` §3.5h 2026-10-01 update, `docs/brain/LIVE_TODO.md`.
 
+### Locations list (`components/map/LocationList.tsx`) — added 2026-10-14
+
+Groups the signals already on the map by country. Blank countries are counted and not listed. Desktop shows a Locations panel on the map; mobile opens a bottom sheet the same way as the tension sheet. A country row limits markers to that country and opens the existing signal popup. The Chokepoints section lists every chokepoint with the count inside 500 km and the direction tally. Marker drawing is unchanged. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
+
 ---
 
 ## 5. WATCHLIST COMPONENTS

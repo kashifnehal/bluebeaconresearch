@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-14.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-14 — Map locations list (`apps/web`, this commit, PHASE 154 / v0.177.0). The map groups its current signals by country and lists each chokepoint with a count inside 500 km. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-14 — News-only watchlist cards and detail pages (`apps/web`, this commit, PHASE 153 / v0.176.0). The seven news-only commodities can be added, followed, and opened without a price. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-14 — Daily limit on pair-only keeps (`apps/backend`, this commit, PHASE 152 / v0.175.0). At most 20 headlines a UTC day are kept only by the commodity-and-event pair rule, counted in memory, and the count also resets on process restart. No prior numbered backlog line — nothing struck. Full detail: `docs/brain/LIVE_TODO.md`.

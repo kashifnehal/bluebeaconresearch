@@ -10,6 +10,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { MapSignalPopup } from "@/components/map/MapSignalPopup";
+import { LocationList } from "@/components/map/LocationList";
 import { MobileTensionSheet } from "@/components/map/MobileTensionSheet";
 import { FilterBar } from "@/components/signals/FilterBar";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -26,6 +27,7 @@ import {
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { getSignalCoordinates } from "@/lib/geo-coords";
 import { signalsNearChokepoint, chokepointDirectionTally } from "@/lib/chokepoints";
+import { countryKey, signalRecencyMs } from "@/lib/location-groups";
 import {
   DEFAULT_FILTERS,
   regionsMatch,
@@ -283,6 +285,9 @@ export default function MapPage() {
   // control which UI is shown on a phone, no new data or business logic.
   const [mobileSheetExpanded, setMobileSheetExpanded] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [locationsPanelOpen, setLocationsPanelOpen] = useState(true);
+  const [locationsSheetExpanded, setLocationsSheetExpanded] = useState(false);
+  const [locationCountry, setLocationCountry] = useState<string | null>(null);
   const [selectedSignalId, setSelectedSignalId] = useState<string | null>(null);
   const [popupSignal, setPopupSignal] = useState<Signal | null>(null);
 
@@ -835,6 +840,7 @@ export default function MapPage() {
   // writer to the map source, so there's no race between this fetch and the live feed.
   useEffect(() => {
     setClusterStreamSignals(null);
+    setLocationCountry(null);
   }, [filters]);
 
   useEffect(() => {
@@ -877,7 +883,11 @@ export default function MapPage() {
     const map = mapRef.current;
 
     // Update GeoJSON source data for signals while preserving camera position
-    const fc = signalsToGeoJSON(geolocatedSignals);
+    const visibleSignals =
+      locationCountry == null
+        ? geolocatedSignals
+        : geolocatedSignals.filter((s) => countryKey(s.country) === locationCountry);
+    const fc = signalsToGeoJSON(visibleSignals);
     signalsGeoJsonRef.current = fc;
     const src = map.getSource("signals") as any;
     if (src) {
@@ -888,7 +898,7 @@ export default function MapPage() {
         setTimeout(() => src.setData(fc), 50);
       }
     }
-  }, [geolocatedSignals, router]);
+  }, [geolocatedSignals, locationCountry, router]);
 
   // Real tally, not a synthesized index (#backlog fix — the prior version derived
   // a fabricated 0-99 "tension score" plus cyber/kinetic/diplomatic percentages
@@ -927,6 +937,29 @@ export default function MapPage() {
     const map = mapRef.current;
     if (!map) return;
     map.flyTo({ center: [cp.lng, cp.lat], zoom: Math.max(map.getZoom(), 5) });
+  }
+
+  function handleLocationSelect(country: string) {
+    const matched = geolocatedSignals.filter((s) => countryKey(s.country) === country);
+    setLocationCountry(country);
+    setLocationsSheetExpanded(false);
+    setClusterStreamSignals(matched);
+    let latest: GeoSignal | null = null;
+    let latestMs = Number.NEGATIVE_INFINITY;
+    for (const signal of matched) {
+      const ms = signalRecencyMs(signal);
+      if (!latest || ms > latestMs) {
+        latest = signal;
+        latestMs = ms;
+      }
+    }
+    if (latest) handleFeedSelect(latest);
+  }
+
+  function clearLocationFilter() {
+    setLocationCountry(null);
+    clearClusterStream();
+    closePopup();
   }
 
   return (
@@ -1293,6 +1326,21 @@ export default function MapPage() {
           <span className="material-symbols-outlined text-[16px]">chevron_left</span>
         </button>
       )}
+
+      <LocationList
+        signals={geolocatedSignals}
+        radiusKm={CHOKEPOINT_SIGNAL_RADIUS_KM}
+        selectedCountry={locationCountry}
+        onSelectCountry={handleLocationSelect}
+        onClearCountry={clearLocationFilter}
+        onSelectChokepoint={handleChokepointRowClick}
+        desktopOpen={locationsPanelOpen}
+        onToggleDesktop={() => setLocationsPanelOpen((open) => !open)}
+        desktopLeft={filtersCollapsed ? "2rem" : "23rem"}
+        desktopRight={streamCollapsed ? "2rem" : "21rem"}
+        mobileExpanded={locationsSheetExpanded}
+        onToggleMobile={() => setLocationsSheetExpanded((open) => !open)}
+      />
 
       <MobileTensionSheet
         expanded={mobileSheetExpanded}
