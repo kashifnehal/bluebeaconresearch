@@ -10,7 +10,7 @@ import {
   isRoutineMarketNoise,
   findExcludeMatch,
   hasAnchor,
-  EXACT_WORD_KEYWORDS,
+  isMidwordOnlyMatch,
   type FeedTier,
 } from "../lib/relevance-filter.js";
 import { matchShadowGroups } from "../lib/shadow-terms.js";
@@ -126,22 +126,6 @@ const RSS_FEEDS: RssFeed[] = [
 ];
 
 export const RSS_FEED_COUNT = RSS_FEEDS.length;
-
-/** Diagnostic only (claude/w16a) — true when `text` contains an EXACT_WORD_KEYWORDS
- * term only as a substring of a longer word (e.g. "war" inside "Warsaw"), not as its
- * own word. isRelevantEvent()'s real word-boundary check already correctly excludes
- * this case; this just names that a nokeyword drop was a "near miss" rather than a
- * clean no-match. Never changes a keep/drop decision. */
-function isMidwordOnlyMatch(text: string): boolean {
-  const lower = text.toLowerCase();
-  let hasWordBoundaryMatch = false;
-  let hasSubstringMatch = false;
-  for (const kw of EXACT_WORD_KEYWORDS) {
-    if (new RegExp(`\\b${kw}\\b`, "i").test(lower)) hasWordBoundaryMatch = true;
-    if (lower.includes(kw)) hasSubstringMatch = true;
-  }
-  return !hasWordBoundaryMatch && hasSubstringMatch;
-}
 
 // TEMPORARY (claude/237) — remove after ~24-48h once the finance-tier yield data
 // is captured. Goal: find out, with real per-feed numbers, why the 6 finance-tier

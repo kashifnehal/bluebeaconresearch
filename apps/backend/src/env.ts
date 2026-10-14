@@ -19,6 +19,14 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 import { z } from "zod";
+
+// Number 0..1; unset, blank or invalid values fall back to the default instead of failing startup.
+const rateEnv = (fallback: number) =>
+  z.preprocess((v) => {
+    if (v === undefined || v === null || String(v).trim() === "") return fallback;
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 && n <= 1 ? n : fallback;
+  }, z.number().min(0).max(1));
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
   PORT: z.coerce.number().int().positive().default(3001),
@@ -45,6 +53,12 @@ const envSchema = z.object({
   GATE_SHADOW_ENABLED: z.string().optional(),
   GATE_SHADOW_MAX_REJECTS_PER_DAY: z.string().optional(),
   GATE_SHADOW_MAX_PASSES_PER_DAY: z.string().optional(),
+  // Probability (0..1) that a live-gate reject is sampled for the shadow trial. Default 0.25
+  // (engineering choice from ~430-600 rejects/day; not a researched value).
+  GATE_SHADOW_REJECT_SAMPLE_RATE: rateEnv(0.25),
+  // Probability (0..1) of recording a non-shadow-group relevance drop in rss_drop_samples. Default 0.1
+  // (engineering choice to keep volume small; not a researched value).
+  DROP_SAMPLE_BACKGROUND_RATE: rateEnv(0.1),
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),

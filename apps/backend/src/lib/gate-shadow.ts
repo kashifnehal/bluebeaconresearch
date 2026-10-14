@@ -105,6 +105,9 @@ const SHADOW_TIMEOUT_MS = 20_000;
 // just the per-item sampling probability feeding into that cap.
 const PASS_SAMPLE_DENOMINATOR = 20;
 const DEFAULT_MAX_REJECTS_PER_DAY = 100;
+const FALLBACK_RETURN_SPEC = `Return ONLY valid JSON (no markdown): {"materialityPass": boolean, "materialityReasoning": a short string (max ~200 chars)}`;
+
+
 const DEFAULT_MAX_PASSES_PER_DAY = 20;
 
 // Concurrency 1: every scheduled shadow call is chained onto this single
@@ -132,6 +135,13 @@ function resetCountersIfNewDay(): void {
 function parsePositiveIntEnv(raw: string | undefined, fallback: number): number {
   const n = Number(raw?.trim());
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
+}
+
+function cleanMechanism(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const str = value.trim();
+  if (!str || /^(null|unknown|unclear|n\/a|none)$/i.test(str)) return null;
+  return str.slice(0, 300);
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -162,6 +172,13 @@ export type GateShadowCallParams = {
   similarStoryLast48h: boolean;
   liveVerdict: boolean;
   liveReason: string;
+  liveMarketMechanism?: string | null;
+  /** The live call's exact "Return ONLY valid JSON..." block, so the shadow call returns the same fields. */
+  returnSpec?: string;
+  /** Injected random source (0..1) so tests are deterministic. Defaults to Math.random. */
+  rand?: () => number;
+  /** Test seam: Supabase client override. Defaults to getSupabaseAdmin(). */
+  supabase?: ReturnType<typeof getSupabaseAdmin>;
 };
 
 /**
@@ -201,6 +218,7 @@ export function maybeScheduleGateShadow(params: GateShadowCallParams): void {
 async function runGateShadow(params: GateShadowCallParams): Promise<void> {
   resetCountersIfNewDay();
   const env = getEnv();
+  const rand = params.rand ?? Math.random;
   const maxRejects = parsePositiveIntEnv(
     env.GATE_SHADOW_MAX_REJECTS_PER_DAY,
     DEFAULT_MAX_REJECTS_PER_DAY,
@@ -212,9 +230,12 @@ async function runGateShadow(params: GateShadowCallParams): Promise<void> {
 
   if (params.liveVerdict) {
     if (passesProcessedToday >= maxPasses) return;
-    if (Math.random() >= 1 / PASS_SAMPLE_DENOMINATOR) return;
+    if (rand() >= 1 / PASS_SAMPLE_DENOMINATOR) return;
   } else {
     if (rejectsProcessedToday >= maxRejects) return;
+    // Random sampling (not first-N-of-the-day, which biased toward early-day rejects).
+    const rate = env.GATE_SHADOW_REJECT_SAMPLE_RATE;
+    if (rand() >= rate) return;
   }
 
   // Shadow calls never count against (or share a ceiling with) "ingestion" —
@@ -254,13 +275,13 @@ async function runGateShadow(params: GateShadowCallParams): Promise<void> {
       : "") +
     `${noveltyHintLine}\n\n` +
     `${shadowGateText}\n\n` +
-    `Return ONLY valid JSON (no markdown): {"materialityPass": boolean, "materialityReasoning": a short string (max ~200 chars)}`;
+    (params.returnSpec ?? FALLBACK_RETURN_SPEC);
 
   try {
     const msg = await withTimeout(
       params.client.messages.create({
         model: params.model,
-        max_tokens: 300,
+        max_tokens: params.returnSpec ? 900 : 300,
         temperature: 0.2,
         system,
         messages: [{ role: "user", content: user }],
@@ -275,10 +296,16 @@ async function runGateShadow(params: GateShadowCallParams): Promise<void> {
     const jsonStart = text.indexOf("{");
     const jsonEnd = text.lastIndexOf("}");
     const raw = jsonStart >= 0 && jsonEnd >= 0 ? text.slice(jsonStart, jsonEnd + 1) : text;
-    const parsed = JSON.parse(raw) as { materialityPass?: unknown; materialityReasoning?: unknown };
+    const parsed = JSON.parse(raw) as {
+      materialityPass?: unknown;
+      materialityReasoning?: unknown;
+      marketMechanism?: unknown;
+    };
     const shadowVerdict = parsed.materialityPass === true;
     const shadowReason =
       typeof parsed.materialityReasoning === "string" ? parsed.materialityReasoning.slice(0, 500) : null;
+
+    const shadowMechanism = cleanMechanism(parsed.marketMechanism);
 
     const inputTokens = msg.usage?.input_tokens ?? 0;
     const outputTokens = msg.usage?.output_tokens ?? 0;
@@ -287,8 +314,7 @@ async function runGateShadow(params: GateShadowCallParams): Promise<void> {
     const rawEventId = params.rawEvent.id;
     if (typeof rawEventId === "string") {
       try {
-        await getSupabaseAdmin()
-          .schema("internal_ops")
+        const { error: upsertError } = await (params.supabase ?? getSupabaseAdmin())
           .from("gate_shadow_results")
           .upsert(
             {
@@ -298,12 +324,15 @@ async function runGateShadow(params: GateShadowCallParams): Promise<void> {
               live_reason: params.liveReason,
               shadow_verdict: shadowVerdict ? "pass" : "reject",
               shadow_reason: shadowReason,
+              live_market_mechanism: cleanMechanism(params.liveMarketMechanism),
+              shadow_market_mechanism: shadowMechanism,
               input_tokens: inputTokens,
               output_tokens: outputTokens,
               cost_usd: estimateCostUsd(params.model, inputTokens, outputTokens),
             },
             { onConflict: "raw_event_id,prompt_version" },
           );
+        if (upsertError) throw new Error(upsertError.message);
       } catch (writeErr) {
         // Table not applied yet (migration written, not applied — see
         // docs/brain/16_MIGRATION_CHECKLIST.md) or any other write failure:

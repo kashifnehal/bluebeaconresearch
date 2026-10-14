@@ -15,6 +15,7 @@ import { findSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
+import { collectRelevanceDrop, recordDrops, type DropRecord } from "./drop-sample-store.js";
 import { isWithinIntakeWindow } from "../lib/article-age.js";
 
 const claude = new ClaudeService();
@@ -171,6 +172,7 @@ export async function runGnewsCollectorOnce() {
   let passedFilters = 0;
   let alreadySeen = 0;
 
+  const dropRecords: DropRecord[] = [];
   for (const a of articles) {
     if (!a.url) continue;
     const externalId = articleExternalId("gnews", a.url);
@@ -179,6 +181,7 @@ export async function runGnewsCollectorOnce() {
     const summary = a.description?.slice(0, 1000) ?? "";
     if (!isRelevantEvent(title, summary)) {
       filtered += 1;
+      collectRelevanceDrop(dropRecords, "gnews", title, summary, a.url, getEnv().DROP_SAMPLE_BACKGROUND_RATE);
       continue;
     }
     passedFilters += 1;
@@ -365,6 +368,7 @@ export async function runGnewsCollectorOnce() {
       console.error("[GNews] Classification/signal insert failed:", e.message);
     }
   }
+  await recordDrops(supabase, dropRecords);
 
   // W7-DEDUPE-KEY diag: one line per cycle — fetched/passed-filters/already-seen/inserted.
   // staleSkipped (W8-INTAKE-GUARDS) added separately so the existing counters stay comparable.

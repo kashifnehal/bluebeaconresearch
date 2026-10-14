@@ -1,6 +1,7 @@
 import axios from "axios";
 import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { getEnv } from "../env.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
@@ -15,6 +16,7 @@ import { findSimilarRecentSignal } from "../lib/novelty-hint.js";
 import { logMaterialityRejection } from "../lib/materiality-gate.js";
 import { detectHeadlinePlacement } from "../lib/headline-placement.js";
 import { articleExternalId, canonicalUrl } from "../lib/external-id.js";
+import { collectRelevanceDrop, recordDrops, type DropRecord } from "./drop-sample-store.js";
 import { isWithinIntakeWindow } from "../lib/article-age.js";
 
 // Re-export for backward compatibility
@@ -167,6 +169,7 @@ export async function runGdeltCollectorOnce() {
   let passedLanguageAndRelevance = 0;
   let alreadySeen = 0;
 
+  const dropRecords: DropRecord[] = [];
   for (const a of articles) {
     if (!a.url) continue;
     const externalId = articleExternalId("gdelt", a.url);
@@ -183,6 +186,7 @@ export async function runGdeltCollectorOnce() {
 
     if (!isRelevantEvent(title)) {
       filtered += 1;
+      collectRelevanceDrop(dropRecords, "gdelt", title, "", a.url, getEnv().DROP_SAMPLE_BACKGROUND_RATE);
       continue;
     }
     passedLanguageAndRelevance += 1;
@@ -377,6 +381,7 @@ export async function runGdeltCollectorOnce() {
       console.error("[GDELT] Classification/signal insert failed:", e.message);
     }
   }
+  await recordDrops(supabase, dropRecords);
 
   // W7-DEDUPE-KEY diag: one line per cycle — fetched/passed-filters/already-seen/inserted.
   // staleSkipped (W8-INTAKE-GUARDS) added separately so the existing counters stay comparable.

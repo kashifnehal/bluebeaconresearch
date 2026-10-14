@@ -4,9 +4,7 @@
 -- have decided, WITHOUT changing the live verdict. Written NOT APPLIED —
 -- see docs/brain/16_MIGRATION_CHECKLIST.md.
 
-create schema if not exists internal_ops;
-
-create table if not exists internal_ops.gate_shadow_results (
+create table if not exists public.gate_shadow_results (
   id uuid primary key default gen_random_uuid(),
   raw_event_id uuid not null,
   prompt_version text not null,
@@ -14,6 +12,8 @@ create table if not exists internal_ops.gate_shadow_results (
   live_reason text,
   shadow_verdict text not null,
   shadow_reason text,
+  live_market_mechanism text,
+  shadow_market_mechanism text,
   input_tokens integer,
   output_tokens integer,
   cost_usd numeric(10, 6),
@@ -21,11 +21,13 @@ create table if not exists internal_ops.gate_shadow_results (
   unique (raw_event_id, prompt_version)
 );
 
-alter table internal_ops.gate_shadow_results enable row level security;
+alter table public.gate_shadow_results enable row level security;
 -- No policies — service-role only, same fail-closed pattern as
 -- public.anthropic_daily_usage / public.service_health_events.
+revoke all on public.gate_shadow_results from anon, authenticated;
+grant select, insert, update, delete on public.gate_shadow_results to service_role;
 
-comment on table internal_ops.gate_shadow_results is
+comment on table public.gate_shadow_results is
   'Shadow materiality-gate prompt experiment results. Never read by any live classification path.';
 
 -- Extend the existing anthropic_daily_usage bucket CHECK so the shadow

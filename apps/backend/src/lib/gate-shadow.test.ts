@@ -164,13 +164,13 @@ async function main() {
     process.env.GATE_SHADOW_ENABLED = "true";
     __resetGateShadowCountersForTests();
     const failing = makeMockClient({ fail: true });
-    maybeScheduleGateShadow({ ...baseParams(), client: failing.client, model: "test-model" });
+    maybeScheduleGateShadow({ ...baseParams(), client: failing.client, model: "test-model", rand: () => 0 });
     await __flushGateShadowQueueForTests();
     assert.equal(failing.callCount(), 1);
 
     // Queue must still be usable afterwards — one failure must not wedge it.
     const healthy = makeMockClient();
-    maybeScheduleGateShadow({ ...baseParams(), client: healthy.client, model: "test-model" });
+    maybeScheduleGateShadow({ ...baseParams(), client: healthy.client, model: "test-model", rand: () => 0 });
     await __flushGateShadowQueueForTests();
     assert.equal(healthy.callCount(), 1);
   });
@@ -181,7 +181,7 @@ async function main() {
     __resetGateShadowCountersForTests();
     const { client, callCount } = makeMockClient();
     for (let i = 0; i < 5; i++) {
-      maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "test-model" });
+      maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "test-model", rand: () => 0 });
     }
     await __flushGateShadowQueueForTests();
     assert.equal(callCount(), 2);
@@ -199,6 +199,103 @@ async function main() {
     await __flushGateShadowQueueForTests();
     assert.ok(callCount() <= 3, `expected at most 3 calls, got ${callCount()}`);
     delete process.env.GATE_SHADOW_MAX_PASSES_PER_DAY;
+  });
+
+  function fakeSupabase() {
+    const calls: { schema: number; table?: string; row?: Record<string, unknown> } = { schema: 0 };
+    const sb = {
+      schema() {
+        calls.schema += 1;
+        throw new Error("schema() must not be called");
+      },
+      from(table: string) {
+        calls.table = table;
+        return {
+          upsert: async (row: Record<string, unknown>) => {
+            calls.row = row;
+            return { error: null };
+          },
+        };
+      },
+    };
+    return { sb: sb as unknown as GateShadowCallParams["supabase"], calls };
+  }
+
+  await runTest("reject sample rate 0 never samples", async () => {
+    process.env.GATE_SHADOW_ENABLED = "true";
+    process.env.GATE_SHADOW_REJECT_SAMPLE_RATE = "0";
+    __resetGateShadowCountersForTests();
+    const { client, callCount } = makeMockClient();
+    for (let i = 0; i < 20; i++) {
+      maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "m", rand: () => 0 });
+    }
+    await __flushGateShadowQueueForTests();
+    assert.equal(callCount(), 0);
+    delete process.env.GATE_SHADOW_REJECT_SAMPLE_RATE;
+  });
+
+  await runTest("reject sample rate 1 always samples (up to the daily cap)", async () => {
+    process.env.GATE_SHADOW_ENABLED = "true";
+    process.env.GATE_SHADOW_REJECT_SAMPLE_RATE = "1";
+    process.env.GATE_SHADOW_MAX_REJECTS_PER_DAY = "100";
+    __resetGateShadowCountersForTests();
+    const { client, callCount } = makeMockClient();
+    for (let i = 0; i < 7; i++) {
+      maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "m", rand: () => 0.999 });
+    }
+    await __flushGateShadowQueueForTests();
+    assert.equal(callCount(), 7);
+    delete process.env.GATE_SHADOW_REJECT_SAMPLE_RATE;
+    delete process.env.GATE_SHADOW_MAX_REJECTS_PER_DAY;
+  });
+
+  await runTest("default reject sample rate is 0.25 and uses the injected random", async () => {
+    process.env.GATE_SHADOW_ENABLED = "true";
+    delete process.env.GATE_SHADOW_REJECT_SAMPLE_RATE;
+    __resetGateShadowCountersForTests();
+    const { client, callCount } = makeMockClient();
+    maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "m", rand: () => 0.24 });
+    maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "m", rand: () => 0.26 });
+    await __flushGateShadowQueueForTests();
+    assert.equal(callCount(), 1);
+  });
+
+  await runTest("result write never uses .schema() and writes both mechanism columns", async () => {
+    process.env.GATE_SHADOW_ENABLED = "true";
+    process.env.GATE_SHADOW_REJECT_SAMPLE_RATE = "1";
+    __resetGateShadowCountersForTests();
+    const { sb, calls } = fakeSupabase();
+    const client = {
+      messages: {
+        create: async () => ({
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                materialityPass: true,
+                materialityReasoning: "ok",
+                marketMechanism: "Supply outage could lift crude",
+              }),
+            },
+          ],
+          usage: { input_tokens: 10, output_tokens: 5 },
+        }),
+      },
+    } as unknown as GateShadowCallParams["client"];
+    maybeScheduleGateShadow({
+      ...baseParams({ liveVerdict: false, liveMarketMechanism: "live mech" }),
+      client,
+      model: "m",
+      rand: () => 0,
+      supabase: sb,
+      returnSpec: "Return ONLY valid JSON: {...}",
+    });
+    await __flushGateShadowQueueForTests();
+    assert.equal(calls.schema, 0);
+    assert.equal(calls.table, "gate_shadow_results");
+    assert.equal(calls.row?.live_market_mechanism, "live mech");
+    assert.equal(calls.row?.shadow_market_mechanism, "Supply outage could lift crude");
+    delete process.env.GATE_SHADOW_REJECT_SAMPLE_RATE;
   });
 }
 

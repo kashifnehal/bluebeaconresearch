@@ -1,10 +1,8 @@
--- claude/w16a — diagnostic store for relevance-filter drops (log-only today; see
--- drop-sample-store.ts). WRITTEN, NOT APPLIED — do not run until a founder decision
+-- claude/w16a — diagnostic store for relevance-filter drops (RSS, GNews, GDELT; see
+-- drop-sample-store.ts). Lives in public (service_role has no USAGE on a custom schema). WRITTEN, NOT APPLIED — do not run until a founder decision
 -- to turn it on (DROP_SAMPLE_STORE env flag, default off).
 
-create schema if not exists internal_ops;
-
-create table if not exists internal_ops.rss_drop_samples (
+create table if not exists public.rss_drop_samples (
   id uuid primary key default gen_random_uuid(),
   feed text not null,
   tier text not null,
@@ -21,7 +19,10 @@ create table if not exists internal_ops.rss_drop_samples (
   unique (feed, title_hash)
 );
 
-comment on table internal_ops.rss_drop_samples is 'retention: delete rows older than 14 days';
+comment on table public.rss_drop_samples is 'retention: delete rows older than 14 days';
 
-alter table internal_ops.rss_drop_samples enable row level security;
+alter table public.rss_drop_samples enable row level security;
 -- No policies — service role (which bypasses RLS) only.
+
+revoke all on public.rss_drop_samples from anon, authenticated;
+grant select, insert, update, delete on public.rss_drop_samples to service_role;
