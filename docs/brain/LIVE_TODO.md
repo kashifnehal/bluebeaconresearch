@@ -3,6 +3,13 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Reconciliation recovered-signal alerts honor the 24h intake window, `apps/backend` only, 2026-10-14, this commit
+
+- Since 2026-10-11 08:00 UTC the Anthropic account has been refusing calls; orphaned `raw_events` can sit up to `ORPHAN_MAX_AGE_HOURS = 36` and, on recovery, previously always called `dispatchAlertsForSignal` even though intake policy since 2026-10-05 is 24h (`DEFAULT_INTAKE_MAX_AGE_MS` in `article-age.ts`).
+- `shouldDispatchAlertsForRecovered` (pure) uses `isWithinIntakeWindow` on `event_date`, falling back to `raw_events.created_at` when `event_date` is null; invalid dates return false. Recovery still inserts the signal and still runs `generateSignalAnalysis`; only alert dispatch is skipped, with a log line and `alertsSkippedOld` on the cycle return/summary.
+- `event_date` per collector (read from insert blocks, not guessed): RSS = feed publication time (`item.pubDate` from `isoDate`/`pubDate`); GNews = article publish time (`a.publishedAt`); GDELT = first-seen/publication time (`a.seendate`); ACLED = conflict event time (`e.event_date`).
+- Docs: this entry; canonical trio `claude_project/08` / `09` / `14` + `brain/08` / `14`. Skipped `05_API` / `04_DATABASE` / `18_AI_ENGINE` / `06_COMPONENTS` / both `10_DECISIONS.md` — no route, table, prompt, UI, or new standing rule (applies the existing 24h intake policy to one more call site).
+
 ## ✅ Fix empty price charts for logged-in users, `apps/web` only, 2026-10-11, this commit
 
 - Root cause: `/api/prices/history/route.ts` and `/api/prices/route.ts` (Tier 1) each built their own cookie client from `NEXT_PUBLIC_SUPABASE_URL`. Login runs through `NEXT_PUBLIC_SUPABASE_AUTH_URL` (the auth proxy, created 2026-09-27), so the session cookies Supabase actually set never matched what a client built from the raw project URL looks for — both routes saw no session, read as anonymous under RLS, and returned `{ points: [] }` / empty prices. Confirmed live via Vercel logs: "Invalid Refresh Token: Refresh Token Not Found" on both routes.

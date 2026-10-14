@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-11 (PHASE 144).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-14 (PHASE 145).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 145 — Reconciliation recovered-signal alerts honor the 24h intake window (2026-10-14, this commit)
+
+`apps/backend` only. Recovering an orphaned `raw_event` still creates a signal and still runs `generateSignalAnalysis`; `dispatchAlertsForSignal` now runs only when the article is within the 24h intake window (`event_date`, else `created_at`). `ORPHAN_MAX_AGE_HOURS` stays 36. Full detail: `docs/brain/14_CHANGELOG.md` v0.168.0, `docs/brain/LIVE_TODO.md`.
 
 ## PHASE 144 — Fix empty price charts for logged-in users (2026-10-11, this commit)
 

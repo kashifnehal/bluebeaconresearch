@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
+import { isWithinIntakeWindow } from "../lib/article-age.js";
 import { ClaudeService, shouldStopBatch, type DeferReason } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -78,6 +79,50 @@ export function decideRawEventClassification(classification: {
   return { action: "insert", createSignal: true, setMaterialityCheckedAt: false };
 }
 
+/**
+ * Whether a recovered orphan should fire alert rules. Intake policy (since
+ * 2026-10-05) is DEFAULT_INTAKE_MAX_AGE_MS (24h): older articles keep an honest
+ * event_date and get no alerts. Reconciliation can recover rows up to
+ * ORPHAN_MAX_AGE_HOURS (36), so this is a second, tighter gate on dispatch only.
+ * generateSignalAnalysis is unaffected. eventDate is publication/event time from
+ * the collector; when it is null, fall back to raw_events.created_at.
+ */
+export function shouldDispatchAlertsForRecovered(
+  eventDate: string | null | undefined,
+  rawCreatedAt: string,
+  now: Date,
+): boolean {
+  const raw = eventDate ?? rawCreatedAt;
+  const publishedAt = new Date(raw);
+  if (Number.isNaN(publishedAt.getTime())) return false;
+  return isWithinIntakeWindow(publishedAt, now);
+}
+
+export async function dispatchAlertsForRecoveredIfFresh(
+  signalId: string,
+  eventDate: string | null | undefined,
+  rawCreatedAt: string,
+  now: Date,
+  dispatch: (id: string) => Promise<unknown> = dispatchAlertsForSignal,
+): Promise<boolean> {
+  if (!shouldDispatchAlertsForRecovered(eventDate, rawCreatedAt, now)) {
+    console.log(
+      `[Reconciliation] alert-dispatch skipped for recovered signal ${signalId}: article older than the intake window`,
+    );
+    return false;
+  }
+  try {
+    const dispatchResult = await dispatch(signalId);
+    console.log(`[Reconciliation] alert-dispatch for recovered signal ${signalId}:`, dispatchResult);
+  } catch (e) {
+    console.error(
+      `[Reconciliation] alert-dispatch failed for recovered signal ${signalId}:`,
+      e instanceof Error ? e.message : e,
+    );
+  }
+  return true;
+}
+
 export async function reconcileOrphanedRawEventsOnce() {
   // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
   // budget is closed, classifyEvent() would just defer every candidate anyway (see
@@ -85,7 +130,7 @@ export async function reconcileOrphanedRawEventsOnce() {
   // read for nothing.
   if (!(await isAnthropicBudgetAvailable("ingestion"))) {
     console.log("[Reconciliation] budget closed, skipping cycle");
-    return { checked: 0, orphaned: 0, recovered: 0, deferred: true };
+    return { checked: 0, orphaned: 0, recovered: 0, alertsSkippedOld: 0, deferred: true };
   }
 
   const supabase = getSupabaseAdmin();
@@ -110,9 +155,9 @@ export async function reconcileOrphanedRawEventsOnce() {
 
   if (candErr) {
     console.error("[Reconciliation] Failed to fetch candidate raw_events:", candErr.message);
-    return { checked: 0, orphaned: 0, recovered: 0, error: candErr.message };
+    return { checked: 0, orphaned: 0, recovered: 0, alertsSkippedOld: 0, error: candErr.message };
   }
-  if (!candidates?.length) return { checked: 0, orphaned: 0, recovered: 0 };
+  if (!candidates?.length) return { checked: 0, orphaned: 0, recovered: 0, alertsSkippedOld: 0 };
 
   // Single batched lookup (not one query per candidate) — same discipline as the
   // alert-dispatcher N+1 fix. raw_event_ids is a uuid[] on signals; `.overlaps()`
@@ -125,7 +170,7 @@ export async function reconcileOrphanedRawEventsOnce() {
 
   if (matchErr) {
     console.error("[Reconciliation] Failed to check existing signals:", matchErr.message);
-    return { checked: candidates.length, orphaned: 0, recovered: 0, error: matchErr.message };
+    return { checked: candidates.length, orphaned: 0, recovered: 0, alertsSkippedOld: 0, error: matchErr.message };
   }
 
   const coveredIds = new Set<string>(
@@ -146,13 +191,15 @@ export async function reconcileOrphanedRawEventsOnce() {
   }
 
   if (orphans.length === 0) {
-    return { checked: candidates.length, orphaned: 0, recovered: 0, skippedStale: stale.length };
+    return { checked: candidates.length, orphaned: 0, recovered: 0, alertsSkippedOld: 0, skippedStale: stale.length };
   }
 
   console.warn(`[Reconciliation] Found ${orphans.length} orphaned raw_events (insert succeeded, signal never created) — re-attempting classification`);
 
   let recovered = 0;
   let rejected = 0;
+  let alertsSkippedOld = 0;
+  const nowDate = new Date(now);
   for (const raw of orphans) {
     try {
       const eventTypeLabel = raw.event_type ?? "unknown";
@@ -270,16 +317,27 @@ export async function reconcileOrphanedRawEventsOnce() {
         }
       }
 
-      try {
-        const dispatchResult = await dispatchAlertsForSignal(sigInsert.id as string);
-        console.log(`[Reconciliation] alert-dispatch for recovered signal ${sigInsert.id}:`, dispatchResult);
-      } catch (e) {
-        console.error(`[Reconciliation] alert-dispatch failed for recovered signal ${sigInsert.id}:`, e instanceof Error ? e.message : e);
-      }
+      const dispatched = await dispatchAlertsForRecoveredIfFresh(
+        sigInsert.id as string,
+        raw.event_date as string | null | undefined,
+        raw.created_at as string,
+        nowDate,
+      );
+      if (!dispatched) alertsSkippedOld += 1;
     } catch (e) {
       console.error(`[Reconciliation] Classification failed for orphaned raw_event ${raw.id}:`, e instanceof Error ? e.message : e);
     }
   }
 
-  return { checked: candidates.length, orphaned: orphans.length, recovered, rejected, skippedStale: stale.length };
+  console.log(
+    `[Reconciliation] checked=${candidates.length} orphaned=${orphans.length} recovered=${recovered} rejected=${rejected} skippedStale=${stale.length} alertsSkippedOld=${alertsSkippedOld}`,
+  );
+  return {
+    checked: candidates.length,
+    orphaned: orphans.length,
+    recovered,
+    rejected,
+    skippedStale: stale.length,
+    alertsSkippedOld,
+  };
 }

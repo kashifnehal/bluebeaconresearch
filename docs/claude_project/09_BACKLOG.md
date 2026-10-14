@@ -1,6 +1,8 @@
 # 09_BACKLOG.md — Complete Product Backlog
 
-> **📍 Doc status — live numbered-ticket queue as of 2026-10-10.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live numbered-ticket queue as of 2026-10-14.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-14 — Reconciliation recovered-signal alerts now honor the 24h intake window (`apps/backend`, this commit, PHASE 145 / v0.168.0). No prior numbered backlog line — ad-hoc intake-policy gap on the 36h orphan recovery path, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-10 — Backend build fix (`244dd75`) + onboarding "request a market" field (`cfa4e54`) + ADR 041/D45 asset-admission-by-coverage-state docs. No prior numbered backlog line for any of the three — the build fix and onboarding field were ad-hoc, not queued tickets, and the ADR is a docs-only decision. Full detail: `docs/brain/LIVE_TODO.md`.
 
