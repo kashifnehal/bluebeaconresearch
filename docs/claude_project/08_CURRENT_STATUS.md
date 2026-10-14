@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (news-only symbols on driver-breakdown — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (underscore registry symbols on driver-breakdown — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (underscore registry symbols, `apps/web` only, this commit) — driver-breakdown allows `_` in `symbol` and still `400`s an unknown symbol. The signals feed filter uses the same charset. Attribution `asset` is unchanged. See `docs/brain/LIVE_TODO.md`, PHASE 158.
 
 > ⚠️ NEW 2026-10-15 (news-only symbols on driver-breakdown, `apps/web` only, this commit) — `GET /api/signals/driver-breakdown` accepts `COMMODITIES` and `NEWS_ONLY_COMMODITIES`. News-only symbols still read `commodity_impacts` only. See `docs/brain/LIVE_TODO.md`, PHASE 157.
 

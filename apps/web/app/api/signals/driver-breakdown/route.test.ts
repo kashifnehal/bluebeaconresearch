@@ -40,6 +40,20 @@ async function main() {
     assert.ok(Array.isArray(json.rows));
   });
 
+  await runTest("symbol=VEG_OILS returns 200 with a rows array", async () => {
+    const res = await GET(req("VEG_OILS"));
+    assert.equal(res.status, 200);
+    const json = await res.json();
+    assert.ok(Array.isArray(json.rows));
+  });
+
+  await runTest("symbol=TTF_GAS returns 200 with a rows array", async () => {
+    const res = await GET(req("TTF_GAS"));
+    assert.equal(res.status, 200);
+    const json = await res.json();
+    assert.ok(Array.isArray(json.rows));
+  });
+
   await runTest("symbol=NOTREAL still returns 400", async () => {
     const res = await GET(req("NOTREAL"));
     assert.equal(res.status, 400);

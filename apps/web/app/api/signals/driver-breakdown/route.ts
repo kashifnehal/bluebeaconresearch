@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     const fromRaw = url.searchParams.get("from")?.trim();
     const toRaw = url.searchParams.get("to")?.trim();
 
-    if (!symbol || !/^[A-Z0-9]+$/.test(symbol)) {
+    if (!symbol || !/^[A-Z0-9_]+$/.test(symbol)) {
       return NextResponse.json({ error: "symbol is required" }, { status: 400 });
     }
     const fromMs = fromRaw ? new Date(fromRaw).getTime() : NaN;

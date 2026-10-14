@@ -300,7 +300,7 @@ export async function GET(req: NextRequest) {
         [commodity, forexPair]
           .flatMap((raw) => (raw ? raw.split(",") : []))
           .map((s) => s.trim())
-          .filter((s) => /^[A-Z0-9]+$/.test(s)),
+          .filter((s) => /^[A-Z0-9_]+$/.test(s)),
       ),
     ];
 
@@ -335,7 +335,7 @@ export async function GET(req: NextRequest) {
       for (const sym of prefCommodities) {
         // `sym` originates from our own COMMODITIES constant on write; the guard
         // keeps the value free of characters that are reserved inside .or().
-        if (/^[A-Z0-9]+$/.test(sym)) {
+        if (/^[A-Z0-9_]+$/.test(sym)) {
           personalizedOrParts.push(`commodity_impacts.cs.[{"asset":"${sym}"}]`);
         }
       }
@@ -343,7 +343,7 @@ export async function GET(req: NextRequest) {
       // currency_pair_impacts, folded into the same single OR filter. `sym`
       // comes from our own FOREX_PAIRS constant on write; same char guard.
       for (const sym of prefForexPairs) {
-        if (/^[A-Z0-9]+$/.test(sym)) {
+        if (/^[A-Z0-9_]+$/.test(sym)) {
           personalizedOrParts.push(`currency_pair_impacts.cs.[{"asset":"${sym}"}]`);
         }
       }

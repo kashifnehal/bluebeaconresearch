@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Underscore symbols on driver-breakdown and the signals feed filter, `apps/web` only, 2026-10-15, this commit
+
+- `GET /api/signals/driver-breakdown` rejected `VEG_OILS`, `TTF_GAS`, and `HEATING_OIL` at `^[A-Z0-9]+$` before the known-symbol check. Those three are in the shared registry.
+- The charset is now `^[A-Z0-9_]+$`. A symbol still has to be in `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`. `NOTREAL` is still `400 unknown symbol`.
+- Same charset in `GET /api/signals` for `commodity`, `forexPair`, and saved preference symbols (those values are registry symbols, and `_` is not reserved in the `.or()` filter). `GET /api/signals/attribution` still uses `^[A-Z0-9]+$` on `asset`: that param is a client string with no registry allowlist, and it is forwarded to the backend backfill.
+- Grep `A-Z0-9]+$` under `apps/web/app/api`: attribution `route.ts:98` (left), driver-breakdown `route.ts:83` (changed), signals `route.ts` commodity/forex filter and both preference loops (changed).
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0, including `VEG_OILS` 200 with `rows`, `TTF_GAS` 200 with `rows`, `NOTREAL` 400, `USOIL` 200 with `rows`. `pnpm --filter web run build` (`next build`) exit 0. No browser run. The underscore cases hit the no-Supabase-client path (`rows: []`), not a live database.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.181.0, `05_API.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 158, `05_API.md`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new component, table, prompt, or standing rule.
+
 ## ✅ News-only symbols on the driver-breakdown route, `apps/web` only, 2026-10-15, this commit
 
 - `GET /api/signals/driver-breakdown` treated a symbol as a commodity only when it was in `COMMODITIES`. The seven news-only symbols live in `NEWS_ONLY_COMMODITIES`, so `COFFEE` (and the other six that pass the existing symbol pattern) came back `400 unknown symbol`. The watchlist detail page still asks this route for the signal-driver chart.
