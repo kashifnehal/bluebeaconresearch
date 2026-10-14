@@ -42,6 +42,76 @@ export function sortSignalTableRows<T extends SignalTableSortableRow>(
     .map((entry) => entry.row);
 }
 
+export type TableCountSignal = {
+  eventDate?: string | null;
+  createdAt?: string | null;
+  commodityImpacts?: readonly { direction: string }[] | null;
+  currencyPairImpacts?: readonly { direction: string }[] | null;
+};
+
+export type TableCountLine = {
+  loaded: number;
+  days: number;
+  up: number;
+  down: number;
+  volatile: number;
+  neutral: number;
+  noImpact: number;
+};
+
+/** First commodity impact, else the first currency-pair impact. */
+export function primaryTableImpact<T>(signal: {
+  commodityImpacts?: readonly T[] | null;
+  currencyPairImpacts?: readonly T[] | null;
+}): T | undefined {
+  return signal.commodityImpacts?.[0] ?? signal.currencyPairImpacts?.[0];
+}
+
+function utcCalendarDay(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const t = new Date(raw).getTime();
+  if (!Number.isFinite(t)) return null;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/**
+ * Counts over the rows already loaded. Direction uses the same primary
+ * impact as the table's Direction cell. `days` is distinct UTC calendar
+ * dates of `eventDate`, or `createdAt` when `eventDate` is missing.
+ * A direction outside up/down/volatile/neutral counts as no impact so the
+ * five buckets cover every loaded row.
+ */
+export function tableCountLine(signals: readonly TableCountSignal[]): TableCountLine {
+  const counts: TableCountLine = {
+    loaded: signals.length,
+    days: 0,
+    up: 0,
+    down: 0,
+    volatile: 0,
+    neutral: 0,
+    noImpact: 0,
+  };
+  const days = new Set<string>();
+  for (const signal of signals) {
+    const day = utcCalendarDay(signal.eventDate ?? signal.createdAt);
+    if (day) days.add(day);
+    const direction = primaryTableImpact(signal)?.direction;
+    if (direction === "up" || direction === "down" || direction === "volatile" || direction === "neutral") {
+      counts[direction] += 1;
+    } else {
+      counts.noImpact += 1;
+    }
+  }
+  counts.days = days.size;
+  return counts;
+}
+
+/** "Other" is volatile + neutral + no impact. "loaded" stays in the sentence. */
+export function formatTableCountLine(counts: TableCountLine): string {
+  const other = counts.volatile + counts.neutral + counts.noImpact;
+  return `${counts.loaded} signals loaded · ${counts.days} days · Up ${counts.up} · Down ${counts.down} · Other ${other}`;
+}
+
 export const SIGNAL_TABLE_SUMMARY_MAX_LENGTH = 120;
 
 /** First 120 chars of a signal's summary, with an ellipsis if it was cut. */

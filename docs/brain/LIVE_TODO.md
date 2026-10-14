@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Feed table: hide summaries and a loaded-row count, `apps/web` only, 2026-10-14, this commit
+
+- The dense feed table always showed the Summary column, and the line above it only said sorting applies to loaded rows. It did not say how many rows, days, or directions were in that loaded set.
+- `SignalTable` takes `hideSummaries`. When true, the Summary header and every Summary cell are omitted. `min-w-[900px]` and the `overflow-x-auto` wrapper stay. The dashboard remembers the choice in `localStorage` key `bbr.feed.hideSummaries` (reads and writes in `try`/`catch`, default false). A "Hide summaries" button (`data-testid="feed-hide-summaries"`, `aria-pressed`) sits next to Cards/Table and renders only in table mode.
+- `tableCountLine` counts loaded rows, distinct UTC dates of `eventDate` (else `createdAt`), and direction from the same primary impact as the Direction cell (first commodity impact, else first currency-pair impact). Buckets: up, down, volatile, neutral, noImpact. The sentence above the table is `N signals loaded · D days · Up U · Down V · Other X`, where Other is volatile + neutral + no impact. The word "loaded" stays. No Impact column, no sentiment number, no bull-day count, and no timezone chip — there is no sentiment score and no documented method for one.
+- No open priority-queue line for this. Nothing struck.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.174.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 151, `06_COMPONENTS.md`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or standing rule.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` exit 0 (3 new `tableCountLine` cases in `lib/signal-table.test.ts`, 2 new cases in `components/signals/SignalTable.test.tsx`, appended to the web test chain); `pnpm --filter web run build` (real `next build`, Turbopack) exit 0. Could not verify in a browser: `apps/web/.env.playwright.local` is missing, and port 3000 is already serving another checkout.
+
 ## ✅ Quick-view report count, unique sources, and headlines, `apps/web` only, 2026-10-14, this commit
 
 - The signal drawer showed the summary and market-impact parts, and no report count, updated time, or headline links. `GET /api/signals/:id` set each source's `domain` from `raw_data.domain` only. That field is what GDELT stores. News API and RSS rows store a URL on `raw_data.url` and leave `domain` empty, so a unique-outlet count that read `domain` alone would miss them.

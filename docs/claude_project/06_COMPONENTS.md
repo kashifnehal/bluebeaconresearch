@@ -279,6 +279,10 @@ interface SignalCardProps {
 
 > ⚠️ UPDATED 2026-10-01 (W3-P7) — `SignalCard.tsx` and the event-detail Verification block now show "Last updated {timeAgo}" next to the reports count, shown only for merged coverage (`sourcesCount >= 2`) with a real later `updatedAt` than `createdAt` — never "new reports"/"breaking", since `signals.updated_at` can also move for a non-coverage reason (severity-gated AI-briefing backfill). Full detail: `docs/brain/06_COMPONENTS.md` §3.1.
 
+### SignalTable (`apps/web/components/signals/SignalTable.tsx`) — 2026-10-14
+
+Dense table of the already-loaded dashboard feed, toggled against the card list. `hideSummaries` removes the Summary column and keeps horizontal scroll (`min-w-[900px]`, `overflow-x-auto`). The dashboard stores that choice at `bbr.feed.hideSummaries` and shows "Hide summaries" (`data-testid="feed-hide-summaries"`) only in table mode. Above the table, next to "Sorting applies to loaded rows": `N signals loaded · D days · Up U · Down V · Other X` (`tableCountLine` in `lib/signal-table.ts`). Days are distinct UTC dates. Direction is the first commodity impact, else the first currency-pair impact. Other is volatile + neutral + no impact. No sentiment number column. Full detail: `docs/brain/06_COMPONENTS.md` §3.12.
+
 ---
 
 ### SignalChatPanel (apps/web/components/signals/SignalChatPanel.tsx) — #111, `9f2aada`; visual pass 2026-09-12

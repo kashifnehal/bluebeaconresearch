@@ -107,6 +107,22 @@ export default function DashboardPage() {
       // ignore — view toggle still works for this session, just not remembered
     }
   };
+  const [hideSummaries, setHideSummaries] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.localStorage.getItem("bbr.feed.hideSummaries") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const setHideSummariesPersisted = (next: boolean) => {
+    setHideSummaries(next);
+    try {
+      window.localStorage.setItem("bbr.feed.hideSummaries", next ? "true" : "false");
+    } catch {
+      // ignore — toggle still works for this session, just not remembered
+    }
+  };
   const { data: myPrefs } = useMyPreferences();
   const {
     liveSignals,
@@ -952,6 +968,23 @@ export default function DashboardPage() {
                       );
                     })}
                   </div>
+                  {feedViewMode === "table" ? (
+                    <button
+                      type="button"
+                      data-testid="feed-hide-summaries"
+                      aria-pressed={hideSummaries}
+                      onClick={() => setHideSummariesPersisted(!hideSummaries)}
+                      className="px-3 py-1 text-[12px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer border"
+                      style={{
+                        fontFamily: "'Space Grotesk', sans-serif",
+                        borderColor: "#3c4a42",
+                        backgroundColor: hideSummaries ? "#4edea3" : "transparent",
+                        color: hideSummaries ? "#005f40" : "#86948a",
+                      }}
+                    >
+                      Hide summaries
+                    </button>
+                  ) : null}
                   <span
                     className="text-[12px] md:text-[10px]"
                     style={{
@@ -964,7 +997,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               {feedViewMode === "table" ? (
-                <SignalTable signals={streamList} />
+                <SignalTable signals={streamList} hideSummaries={hideSummaries} />
               ) : (
               <div
                 className="divide-y"

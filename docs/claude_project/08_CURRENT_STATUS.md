@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (quick-view headlines — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (feed table hide-summaries and loaded-row count — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (feed table hide-summaries and loaded-row count, `apps/web` only, this commit) — table mode can hide the Summary column. Above the table: loaded rows, distinct UTC days, Up, Down, and Other. No sentiment column. See `docs/brain/LIVE_TODO.md`, PHASE 151.
 
 > ⚠️ NEW 2026-10-14 (quick-view report count, unique sources, and headlines, `apps/web` only, this commit) — the signal drawer shows the report count, unique outlets when a domain or source label exists, "Last updated" only for a later update on a merged signal, and up to five headline links. The detail route fills `domain` from the article URL when `raw_data.domain` is empty. A failed fetch leaves the rest of the drawer in place. See `docs/brain/LIVE_TODO.md`, PHASE 150.
 

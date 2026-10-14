@@ -303,6 +303,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - Rows are links to `/events/<id>` — same destination the existing stream rows already use.
 - Horizontal scroll is contained inside the table's own wrapper (`data-testid="signal-table-scroll"`, `overflow-x-auto`) so the page itself never scrolls sideways at phone width.
 - View choice (`"cards" | "table"`) is remembered in `localStorage` (`bbr_feed_view_mode`), read/written inside `try`/`catch` — renders "cards" by default when storage is unavailable (private mode, quota, SSR). Toggling never affects the existing infinite-scroll (`sentinelRef`)/"Load more" behavior or the Export CSV button (`lib/signal-csv.ts`), both of which sit outside this component and are unchanged.
+- **Hide summaries + loaded-row count (2026-10-14):** `hideSummaries` drops the Summary `<th>` and every Summary `<td>`. `min-w-[900px]` and `data-testid="signal-table-scroll"` (`overflow-x-auto`) stay. The dashboard stores the choice at `bbr.feed.hideSummaries` (try/catch, default false) and shows `data-testid="feed-hide-summaries"` only while the feed is in table mode. Next to "Sorting applies to loaded rows", `tableCountLine` / `formatTableCountLine` render `N signals loaded · D days · Up U · Down V · Other X`. Days are distinct UTC dates of `eventDate`, else `createdAt`. Direction is `primaryTableImpact` (first commodity impact, else first currency-pair impact). Other is volatile + neutral + no impact. No Impact or sentiment number column, no bull-day count, no timezone chip.
 
 ---
 

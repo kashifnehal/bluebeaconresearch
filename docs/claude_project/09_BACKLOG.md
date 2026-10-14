@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-14.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-14 — Feed table hide-summaries and loaded-row count (`apps/web`, this commit, PHASE 151 / v0.174.0). Table mode can hide Summary. A line above the table counts loaded rows, UTC days, Up, Down, and Other. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-14 — Quick-view report count, unique sources, and headlines (`apps/web`, this commit, PHASE 150 / v0.173.0). The drawer fetches the signal detail route while open. `sources[].domain` falls back to the article URL hostname. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-14 — News-only commodity tags (`packages/shared` + `apps/backend` + `apps/web`, this commit, PHASE 149 / v0.172.0). Vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel can be classified and filtered in the feed. They have no price. No prior numbered backlog line — nothing struck. Full detail: `docs/brain/LIVE_TODO.md`.

@@ -7,7 +7,10 @@ import { eventCategoryLabel } from "@/lib/market-impact-assessment";
 import { SeverityBadge } from "./SeverityBadge";
 import { CommodityChip } from "./CommodityChip";
 import {
+  formatTableCountLine,
+  primaryTableImpact,
   sortSignalTableRows,
+  tableCountLine,
   truncateSignalSummary,
   type SignalTableSortColumn,
   type SignalTableSortDirection,
@@ -27,11 +30,18 @@ function topicSymbols(signal: Signal): string {
  * rows are already loaded; reuses the dashboard's existing infinite-scroll
  * and Export CSV, which sit outside this component.
  */
-export function SignalTable({ signals }: { signals: Signal[] }) {
+export function SignalTable({
+  signals,
+  hideSummaries,
+}: {
+  signals: Signal[];
+  hideSummaries: boolean;
+}) {
   const [sortColumn, setSortColumn] = useState<SignalTableSortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SignalTableSortDirection>("desc");
 
   const rows = sortSignalTableRows(signals, sortColumn, sortDirection);
+  const countLine = formatTableCountLine(tableCountLine(signals));
 
   const handleSort = (column: SignalTableSortColumn) => {
     if (sortColumn !== column) {
@@ -44,12 +54,21 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
 
   return (
     <div>
-      <p
-        className="px-4 pt-3 text-[12px] md:text-[11px]"
-        style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
-      >
-        Sorting applies to loaded rows
-      </p>
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-4 pt-3">
+        <p
+          className="text-[12px] md:text-[11px]"
+          style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
+        >
+          Sorting applies to loaded rows
+        </p>
+        <p
+          data-testid="signal-table-count"
+          className="text-[12px] md:text-[11px]"
+          style={{ color: "#bbcac0", fontFamily: "'JetBrains Mono', monospace" }}
+        >
+          {countLine}
+        </p>
+      </div>
       {/* Horizontal scroll stays inside this container — the page itself
           must not scroll sideways at phone width. */}
       <div
@@ -64,7 +83,11 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
             >
               <HeaderCell label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <th className="px-4 py-3 font-bold uppercase tracking-widest">Event</th>
-              <th className="px-4 py-3 font-bold uppercase tracking-widest">Summary</th>
+              {hideSummaries ? null : (
+                <th className="px-4 py-3 font-bold uppercase tracking-widest" data-testid="signal-table-summary-header">
+                  Summary
+                </th>
+              )}
               <th className="px-4 py-3 font-bold uppercase tracking-widest">Type</th>
               <th className="px-4 py-3 font-bold uppercase tracking-widest">Direction</th>
               <HeaderCell label="Severity" column="severity" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
@@ -74,7 +97,7 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
           </thead>
           <tbody className="divide-y" style={{ borderColor: "rgba(60,74,66,0.3)" }}>
             {rows.map((signal) => {
-              const primaryImpact = signal.commodityImpacts?.[0] ?? signal.currencyPairImpacts?.[0];
+              const primaryImpact = primaryTableImpact(signal);
               const type = eventCategoryLabel(signal.eventCategory) ?? signal.eventType;
               return (
                 <tr
@@ -92,11 +115,17 @@ export function SignalTable({ signals }: { signals: Signal[] }) {
                       {signal.title}
                     </a>
                   </td>
-                  <td className="px-4 py-3 max-w-[320px]" style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}>
-                    <a href={`/events/${signal.id}`} className="block">
-                      {truncateSignalSummary(signal.summary)}
-                    </a>
-                  </td>
+                  {hideSummaries ? null : (
+                    <td
+                      className="px-4 py-3 max-w-[320px]"
+                      data-testid="signal-table-summary-cell"
+                      style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}
+                    >
+                      <a href={`/events/${signal.id}`} className="block">
+                        {truncateSignalSummary(signal.summary)}
+                      </a>
+                    </td>
+                  )}
                   <td className="px-4 py-3 whitespace-nowrap" style={{ color: "#bbcac0" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {type}
