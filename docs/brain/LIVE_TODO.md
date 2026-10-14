@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ News-only symbols on the driver-breakdown route, `apps/web` only, 2026-10-15, this commit
+
+- `GET /api/signals/driver-breakdown` treated a symbol as a commodity only when it was in `COMMODITIES`. The seven news-only symbols live in `NEWS_ONLY_COMMODITIES`, so `COFFEE` (and the other six that pass the existing symbol pattern) came back `400 unknown symbol`. The watchlist detail page still asks this route for the signal-driver chart.
+- A symbol is now a commodity when it is in `COMMODITIES` or `NEWS_ONLY_COMMODITIES`. It still reads `commodity_impacts` only. Forex, paging, the rate limit, and the window limit are unchanged.
+- `VEG_OILS` still fails the route's existing `^[A-Z0-9]+$` symbol pattern (underscore), same as priced symbols `TTF_GAS` and `HEATING_OIL`. That pattern was not changed.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0, including the 3 cases in `app/api/signals/driver-breakdown/route.test.ts` (COFFEE 200 with `rows`, NOTREAL 400, USOIL 200 with `rows`). Eslint on those two route files exit 0. `pnpm --filter web lint` still exits 1 on pre-existing findings (93 errors); none are in these files. No browser run. The COFFEE/USOIL cases hit the no-Supabase-client path (`rows: []`), not a live database.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.180.0, `05_API.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 157, `05_API.md`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new component, table, prompt, or standing rule.
+
 ## ✅ Signal detail step timings, `apps/web` only, 2026-10-15, this commit
 
 - Production `GET /api/signals/:id` for a USOIL signal was still about 5.7s, 2.3s, and 5.4s after the 5-minute outcome-row cache. Repeat `GET /api/market-impact?assets=USOIL` was about 0.5s. Which step is slow is unknown. Serverless instances may not share that in-memory cache.

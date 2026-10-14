@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (signal detail step timings — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (news-only symbols on driver-breakdown — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (news-only symbols on driver-breakdown, `apps/web` only, this commit) — `GET /api/signals/driver-breakdown` accepts `COMMODITIES` and `NEWS_ONLY_COMMODITIES`. News-only symbols still read `commodity_impacts` only. See `docs/brain/LIVE_TODO.md`, PHASE 157.
 
 > ⚠️ NEW 2026-10-15 (signal detail step timings, `apps/web` only, this commit) — `GET /api/signals/:id` adds `Server-Timing` only when `SERVER_TIMING` is exactly `true`. The body, status codes, and queries are unchanged. This route does not call the rate limiter. See `docs/brain/LIVE_TODO.md`, PHASE 156.
 

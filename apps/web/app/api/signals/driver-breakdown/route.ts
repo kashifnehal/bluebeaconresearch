@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getRouteSupabaseClients, type RouteSupabaseClients } from "@/lib/supabase-server";
 import { rateLimitOrPass } from "@/lib/ratelimit";
-import { COMMODITIES, FOREX_PAIRS, type EventCategory } from "@blue-beacon-research/shared";
+import { COMMODITIES, FOREX_PAIRS, NEWS_ONLY_COMMODITIES, type EventCategory } from "@blue-beacon-research/shared";
 import { parseEventCategory } from "@/lib/market-impact-assessment";
 import { mergeSignalRows, type DriverSignalRow } from "@/lib/driver-breakdown";
 
@@ -96,7 +96,9 @@ export async function GET(req: NextRequest) {
     // currency_pair_impacts — same taxonomy split as the watchlist page and
     // /api/signals/attribution.
     const isForex = FOREX_PAIRS.some((f) => f.symbol === symbol);
-    const isCommodity = COMMODITIES.some((c) => c.symbol === symbol);
+    const isCommodity =
+      COMMODITIES.some((c) => c.symbol === symbol) ||
+      NEWS_ONLY_COMMODITIES.some((c) => c.symbol === symbol);
     if (!isForex && !isCommodity) {
       return NextResponse.json({ error: "unknown symbol" }, { status: 400 });
     }
