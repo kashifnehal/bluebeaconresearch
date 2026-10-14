@@ -6,6 +6,7 @@ import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import {
   isRelevantEvent,
+  keptOnlyByT2Pair,
   shouldExclude,
   isRoutineMarketNoise,
   findExcludeMatch,
@@ -13,6 +14,7 @@ import {
   isMidwordOnlyMatch,
   type FeedTier,
 } from "../lib/relevance-filter.js";
+import { consumeT2Slot, t2SlotsLeft } from "../lib/t2-daily-slots.js";
 import { matchShadowGroups } from "../lib/shadow-terms.js";
 import { recordDrops, type DropRecord } from "./drop-sample-store.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -330,7 +332,8 @@ export async function runRssCollectorOnce() {
   const finShadowDiag = new Map<string, { kept: number; noAnchorTitles: string[] }>();
 
   for (const item of items) {
-    if (!isRelevantEvent(item.title, item.summary, item.tier)) {
+    const allowed = t2SlotsLeft(new Date()) > 0;
+    if (!isRelevantEvent(item.title, item.summary, item.tier, { t2PairAllowed: allowed })) {
       filtered++;
       feedDiag[item.label].filteredIrrelevant++;
       let reason: DropReason;
@@ -368,6 +371,7 @@ export async function runRssCollectorOnce() {
       });
       continue;
     }
+    if (keptOnlyByT2Pair(item.title, item.summary, item.tier)) consumeT2Slot(new Date());
     passedFilters++;
 
     // [FIN-SHADOW] diag (step 5, log-only) — for finance-tier feeds (which skip the

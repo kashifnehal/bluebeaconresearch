@@ -5,7 +5,8 @@ import { getEnv } from "../env.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
-import { isRelevantEvent } from "../lib/relevance-filter.js";
+import { isRelevantEvent, keptOnlyByT2Pair } from "../lib/relevance-filter.js";
+import { consumeT2Slot, t2SlotsLeft } from "../lib/t2-daily-slots.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { insertOrMergeSignal } from "./signal-merge.js";
@@ -215,11 +216,13 @@ export async function runGdeltCollectorOnce() {
       continue;
     }
 
-    if (!isRelevantEvent(title)) {
+    const allowed = t2SlotsLeft(new Date()) > 0;
+    if (!isRelevantEvent(title, "", "world", { t2PairAllowed: allowed })) {
       filtered += 1;
       collectRelevanceDrop(dropRecords, "gdelt", title, "", a.url, getEnv().DROP_SAMPLE_BACKGROUND_RATE);
       continue;
     }
+    if (keptOnlyByT2Pair(title, "", "world")) consumeT2Slot(new Date());
     passedLanguageAndRelevance += 1;
 
     if (seenExternalIds.has(externalId) || seenCanonicalUrls.has(canonicalUrl(a.url))) {

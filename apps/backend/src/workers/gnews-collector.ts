@@ -3,6 +3,8 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { getEnv } from "../env.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { isRelevantEvent } from "./gdelt-collector.js";
+import { keptOnlyByT2Pair } from "../lib/relevance-filter.js";
+import { consumeT2Slot, t2SlotsLeft } from "../lib/t2-daily-slots.js";
 import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -212,11 +214,13 @@ export async function runGnewsCollectorOnce() {
 
     const title = a.title?.slice(0, 280) ?? "GNews article";
     const summary = a.description?.slice(0, 1000) ?? "";
-    if (!isRelevantEvent(title, summary)) {
+    const allowed = t2SlotsLeft(new Date()) > 0;
+    if (!isRelevantEvent(title, summary, "world", { t2PairAllowed: allowed })) {
       filtered += 1;
       collectRelevanceDrop(dropRecords, "gnews", title, summary, a.url, getEnv().DROP_SAMPLE_BACKGROUND_RATE);
       continue;
     }
+    if (keptOnlyByT2Pair(title, summary, "world")) consumeT2Slot(new Date());
     passedFilters += 1;
 
     if (seenExternalIds.has(externalId) || seenCanonicalUrls.has(canonicalUrl(a.url))) {

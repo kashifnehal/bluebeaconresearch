@@ -27,6 +27,13 @@ const rateEnv = (fallback: number) =>
     const n = Number(v);
     return Number.isFinite(n) && n >= 0 && n <= 1 ? n : fallback;
   }, z.number().min(0).max(1));
+
+// Integer >= 0. Unset or blank uses the fallback; anything else must parse.
+const nonNegIntEnv = (fallback: number) =>
+  z.preprocess((v) => {
+    if (v === undefined || v === null || String(v).trim() === "") return fallback;
+    return v;
+  }, z.coerce.number().int().min(0));
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
   PORT: z.coerce.number().int().positive().default(3001),
@@ -59,6 +66,8 @@ const envSchema = z.object({
   // Probability (0..1) of recording a non-shadow-group relevance drop in rss_drop_samples. Default 0.1
   // (engineering choice to keep volume small; not a researched value).
   DROP_SAMPLE_BACKGROUND_RATE: rateEnv(0.1),
+  // BBR working value. 20 gate calls x $0.0049 = about $0.10 a day, about 5% of the $2 cap. No published source.
+  T2_PAIR_DAILY_MAX: nonNegIntEnv(20),
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),

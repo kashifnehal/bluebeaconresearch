@@ -211,10 +211,23 @@ export function isRoutineMarketNoise(title: string): boolean {
   return INSIDER_TRADE_TITLE.test(title) || INSIDER_TRADE_SHARES.test(title) || ANALYST_RATING.test(title);
 }
 
+export type T2PairOptions = { t2PairAllowed?: boolean };
+
+/** Default true. False only when the caller passes t2PairAllowed: false. */
+function t2PairAllowed(options?: T2PairOptions): boolean {
+  return options?.t2PairAllowed !== false;
+}
+
 /**
  * Main relevance gate used by GDELT, GNews, and world-tier RSS feeds.
+ * `options.t2PairAllowed` defaults to true. The pair rule still requires the flag.
  */
-export function isRelevantEvent(title: string, summary: string = "", feedTier: FeedTier = "world"): boolean {
+export function isRelevantEvent(
+  title: string,
+  summary: string = "",
+  feedTier: FeedTier = "world",
+  options?: T2PairOptions,
+): boolean {
   if (shouldExclude(title, summary)) return false;
   if (isRoutineMarketNoise(title)) {
     console.log(`[RELEVANCE] routine-noise drop title="${title}"`);
@@ -226,9 +239,10 @@ export function isRelevantEvent(title: string, summary: string = "", feedTier: F
   if (feedTier === "finance" || feedTier === "official") return true;
   const lower = (title + " " + summary).toLowerCase();
   if (matchesKeywords(lower)) return true;
-  // World tier only. Off unless T2_PAIR_RULE is exactly "true" (2026-10-14),
-  // so an unset flag keeps the keyword step as the only keep.
-  if (isT2PairRuleEnabled()) {
+  // World tier only. The pair rule applies only when the caller still has a
+  // daily slot (default true) and T2_PAIR_RULE is exactly "true" (2026-10-14).
+  // An unset flag keeps the keyword step as the only keep.
+  if (t2PairAllowed(options) && isT2PairRuleEnabled()) {
     const pair = matchesT2Pair(lower);
     if (pair) {
       const shown = title.slice(0, 100).replace(/[\r\n]/g, " ");
@@ -249,7 +263,12 @@ export function isRelevantEvent(title: string, summary: string = "", feedTier: F
  * "year" (world/world-keyword-gate drop that also hit the log-only historical
  * year pattern), "nokeyword", or null (kept).
  */
-export function dropReason(title: string, summary: string = "", feedTier: FeedTier = "world"): string | null {
+export function dropReason(
+  title: string,
+  summary: string = "",
+  feedTier: FeedTier = "world",
+  options?: T2PairOptions,
+): string | null {
   const match = findExcludeMatch(title, summary);
   if (match) return `exclude:${match.phrase}@${match.location}`;
 
@@ -265,8 +284,16 @@ export function dropReason(title: string, summary: string = "", feedTier: FeedTi
 
   const text = (title + " " + summary).toLowerCase();
   if (matchesKeywords(text)) return null;
-  if (isT2PairRuleEnabled() && matchesT2Pair(text) !== null) return null;
+  if (t2PairAllowed(options) && isT2PairRuleEnabled() && matchesT2Pair(text) !== null) return null;
   return HISTORICAL_YEAR_PATTERN.test(text) ? "year" : "nokeyword";
+}
+
+/**
+ * True when the pair rule is the only reason this headline is kept.
+ * Flag off, or a keyword/tier keep, returns false, so no daily slot is used.
+ */
+export function keptOnlyByT2Pair(title: string, summary: string = "", tier: FeedTier = "world"): boolean {
+  return isRelevantEvent(title, summary, tier) && !isRelevantEvent(title, summary, tier, { t2PairAllowed: false });
 }
 
 // Re-export for backward compatibility with existing imports from gdelt-collector

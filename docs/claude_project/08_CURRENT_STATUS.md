@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-14 (feed table hide-summaries and loaded-row count — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-14 (pair-only daily limit — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-14 (daily limit on pair-only keeps, `apps/backend` only, this commit) — GNews, GDELT, and RSS keep at most `T2_PAIR_DAILY_MAX` headlines a UTC day when the commodity-and-event pair rule is the only reason to keep them. The default is 20. The count lives in memory and also resets on process restart. A closed slot drops the item as before. The flag off uses no slot. See `docs/brain/LIVE_TODO.md`, PHASE 152.
 
 > ⚠️ NEW 2026-10-14 (feed table hide-summaries and loaded-row count, `apps/web` only, this commit) — table mode can hide the Summary column. Above the table: loaded rows, distinct UTC days, Up, Down, and Other. No sentiment column. See `docs/brain/LIVE_TODO.md`, PHASE 151.
 

@@ -3,6 +3,18 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Daily limit on pair-only keeps, `apps/backend` only, 2026-10-14, this commit
+
+- A headline kept only by the commodity-and-event pair rule can go on to a gate call. `T2_PAIR_DAILY_MAX` is an integer of 0 or more, default 20. 20 gate calls x $0.0049 is about $0.10 a day, about 5% of the $2 cap. No published source. Unset or blank stays 20. A negative or non-integer value fails startup.
+- `t2SlotsLeft` and `consumeT2Slot` count those pair-only keeps in memory for the current UTC date. The count starts again at 0 on a new UTC day. It also resets when the process restarts, so the real daily limit can be higher after a restart; it is a safety brake, not an exact budget.
+- `isRelevantEvent` and `dropReason` take an optional last argument `{ t2PairAllowed }`, default true. The pair rule applies only when that is true and `T2_PAIR_RULE` is exactly `true`. `keptOnlyByT2Pair` is true when the headline is kept with the default and dropped when `t2PairAllowed` is false.
+- GNews, GDELT, and RSS set `allowed = t2SlotsLeft(new Date()) > 0` before each relevance call and pass `{ t2PairAllowed: allowed }`. A kept item with `keptOnlyByT2Pair` true consumes one slot. When `allowed` is false the item is dropped the same way as before and recorded as `nokeyword` with its shadow groups, including the t2 groups. With the flag off, no slot is used and keep/drop matches the keyword path.
+- `T2_PAIR_DAILY_MAX=0` leaves no slots, so a pair-only headline is dropped the same way as with the flag off. Finance and official tiers do not use a slot. Oil, gas, gold, silver, copper, wheat, and corn headlines the keyword path already keeps stay kept with the flag on, including when the daily slot is closed.
+- Dedupe, the materiality gate, the exclude lists, and the three existing GNews queries are unchanged.
+- No open priority-queue line for this. Nothing struck.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.175.0; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 152. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, both `06_COMPONENTS.md`, and both `10_DECISIONS.md` — no new route, table, prompt, component, or standing rule.
+- Verification: `pnpm --filter backend exec tsc --noEmit` exit 0. `pnpm --filter backend test` exit 0 (419 ✔, 0 ✖), including 6 cases in `t2-daily-slots.test.ts` and a relevance-filter property check over 83 fixtures (30 of them old-asset headlines). `apps/web` tsc, test, and `next build` did not run — no web change. No browser. No migration, no host env change, no paid API call.
+
 ## ✅ Feed table: hide summaries and a loaded-row count, `apps/web` only, 2026-10-14, this commit
 
 - The dense feed table always showed the Summary column, and the line above it only said sorting applies to loaded rows. It did not say how many rows, days, or directions were in that loaded set.

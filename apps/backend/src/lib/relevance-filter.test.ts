@@ -232,3 +232,105 @@ runTest("dropReason/isRelevantEvent parity holds with the pair rule on, and fina
     delete process.env.T2_PAIR_RULE;
   }
 });
+
+// Old assets already kept by the keyword lists. The pair rule may only add keeps.
+const oldAssetHeadlines = [
+  "Oil output rises to 13000 barrels per day at a Libyan field",
+  "Marathon Petroleum cuts refinery runs after an oil unit outage",
+  "Cooking oil prices surge after a fresh Indonesia export ban",
+  "Oil tanker traffic slows near the Strait of Hormuz",
+  "Crude oil shipments resume after a refinery fire",
+  "India raises cooking gas cylinder price for households",
+  "Natural gas flows resume after a pipeline repair",
+  "European gas storage falls as heating demand rises",
+  "A gas pipeline blast cuts flows through a southern corridor",
+  "Gas cargoes reroute away from a closed terminal",
+  "Gold price holds steady as the dollar softens",
+  "Central bank gold buying lifts bullion holdings",
+  "Gold miners halt a shift after a pit flood warning",
+  "Spot gold climbs after a fresh inflation print",
+  "Silver price jumps as solar demand firms",
+  "Silver output falls at a major Mexican mine",
+  "Industrial silver demand rises with electronics orders",
+  "Silver holdings in exchange warehouses decline",
+  "Copper shipments stall after a mine strike in Chile",
+  "Copper price firms as smelter maintenance spreads",
+  "A copper concentrate queue waits at the port",
+  "Copper stocks in warehouses fall to a multi-month low",
+  "Wheat exports slow as a drought cuts the harvest",
+  "Wheat prices rise after a Black Sea shipment delay",
+  "Winter wheat acres slip after a dry planting window",
+  "Wheat cargoes queue outside a crowded grain port",
+  "Corn exports rise after a Gulf elevator reopens",
+  "Corn crop estimates fall after a late frost",
+  "Corn demand from feed mills stays firm this month",
+  "Record corn stocks weigh on the harvest outlook",
+];
+
+const propertyFixtures: { title: string; summary?: string; tier?: FeedTier }[] = [
+  ...dropReasonParityFixtures,
+  { title: "Jane Smith, Chief Financial Officer, sells $1.2M in company shares" },
+  { title: "Oscars awards ceremony red carpet", summary: "A quiet night in Hollywood" },
+  {
+    title: "Market roundup: shares mixed in afternoon trading",
+    summary: "Also today: celebrity chef opens new restaurant downtown",
+  },
+  { title: "Football league extends sugar export ban" },
+  ...oldAssetHeadlines.map((title) => ({ title })),
+];
+
+runTest("pair rule never removes a flag-off keep, including 30 old-asset headlines", () => {
+  assert.equal(oldAssetHeadlines.length, 30);
+  const saved = process.env.T2_PAIR_RULE;
+  try {
+    delete process.env.T2_PAIR_RULE;
+    for (const title of oldAssetHeadlines) {
+      assert.equal(isRelevantEvent(title), true, `old asset dropped with the flag off: ${title}`);
+    }
+    let checked = 0;
+    for (const { title, summary = "", tier = "world" } of propertyFixtures) {
+      delete process.env.T2_PAIR_RULE;
+      const off = isRelevantEvent(title, summary, tier);
+      process.env.T2_PAIR_RULE = "true";
+      const on = isRelevantEvent(title, summary, tier);
+      const capped = isRelevantEvent(title, summary, tier, { t2PairAllowed: false });
+      if (off === true) {
+        assert.equal(on, true, `flag on dropped a keep: ${title}`);
+        assert.equal(capped, true, `daily cap dropped a keep: ${title}`);
+      }
+      assert.equal(dropReason(title, summary, tier) === null, on, `parity flag on: ${title}`);
+      assert.equal(
+        dropReason(title, summary, tier, { t2PairAllowed: false }) === null,
+        capped,
+        `parity cap: ${title}`,
+      );
+      checked += 1;
+    }
+    assert.equal(checked, propertyFixtures.length);
+    console.log(`property fixtures checked: ${checked} (includes ${oldAssetHeadlines.length} old-asset headlines)`);
+  } finally {
+    if (saved === undefined) delete process.env.T2_PAIR_RULE;
+    else process.env.T2_PAIR_RULE = saved;
+  }
+});
+
+runTest("finance and official tiers are identical with the pair rule on and off", () => {
+  const saved = process.env.T2_PAIR_RULE;
+  try {
+    for (const tier of ["finance", "official"] as const) {
+      for (const { title, summary = "" } of propertyFixtures) {
+        delete process.env.T2_PAIR_RULE;
+        const off = isRelevantEvent(title, summary, tier);
+        process.env.T2_PAIR_RULE = "true";
+        const on = isRelevantEvent(title, summary, tier);
+        const capped = isRelevantEvent(title, summary, tier, { t2PairAllowed: false });
+        assert.equal(on, off, `${tier} flag: ${title}`);
+        assert.equal(capped, off, `${tier} cap: ${title}`);
+        assert.equal(dropReason(title, summary, tier) === null, on, `${tier} parity: ${title}`);
+      }
+    }
+  } finally {
+    if (saved === undefined) delete process.env.T2_PAIR_RULE;
+    else process.env.T2_PAIR_RULE = saved;
+  }
+});

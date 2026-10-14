@@ -1,10 +1,14 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-14 (PHASE 151).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-14 (PHASE 152).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 152 — Daily limit on pair-only keeps (2026-10-14, this commit)
+
+`apps/backend` only. Pair-only keeps are capped per UTC day by an in-memory counter (`T2_PAIR_DAILY_MAX`, default 20). The counter also resets on process restart. GNews, GDELT, and RSS consume a slot only when the pair rule is the only reason the item was kept. A closed slot records the same `nokeyword` drop as before, including t2 shadow groups. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.175.0.
 
 ## PHASE 151 — Feed table hide-summaries and loaded-row count (2026-10-14, this commit)
 
