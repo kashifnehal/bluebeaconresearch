@@ -16,10 +16,12 @@ import {
 import { COMMODITIES, FOREX_PAIRS } from "@blue-beacon-research/shared";
 import {
   NEWS_ONLY_FEED_LABEL,
-  fetchPriceRequest,
   isNewsOnlySymbol,
   newsOnlyAsset,
+  priceRequestUrl,
 } from "@/lib/news-only-assets";
+import { DATA_SLOW_MESSAGE, fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
+import { SlowDataNotice } from "@/components/SlowDataNotice";
 import type { Signal } from "@blue-beacon-research/shared";
 import { toast } from "sonner";
 import { CommodityChip } from "@/components/signals/CommodityChip";
@@ -227,10 +229,9 @@ export default function WatchlistSymbolPage() {
     queryKey: ["prices"],
     enabled: !isNewsOnly,
     queryFn: async () => {
-      const res = await fetchPriceRequest(symbol, "latest");
-      if (!res) return { prices: [] as Price[] };
-      const json = (await res.json()) as { prices: Price[] };
-      return json;
+      const url = priceRequestUrl(symbol, "latest");
+      if (!url) return { prices: [] as Price[] };
+      return fetchJsonWithTimeout<{ prices: Price[] }>(url);
     },
   });
   const price = pricesData?.prices.find((p) => p.symbol === symbol);
@@ -245,10 +246,10 @@ export default function WatchlistSymbolPage() {
     queryKey: ["price-history", symbol, HISTORY_DAYS],
     enabled: !isNewsOnly,
     queryFn: async () => {
-      const res = await fetchPriceRequest(symbol, "history");
-      if (!res) return [];
-      const json = (await res.json()) as { points: PricePoint[]; error?: { code: string; message: string } };
-      return parsePriceHistoryPoints(res.ok, json);
+      const url = priceRequestUrl(symbol, "history");
+      if (!url) return [];
+      const json = await fetchJsonWithTimeout<{ points: PricePoint[]; error?: { code: string; message: string } }>(url);
+      return parsePriceHistoryPoints(true, json);
     },
   });
   const points = historyPoints ?? [];
@@ -261,15 +262,20 @@ export default function WatchlistSymbolPage() {
     incomplete: boolean;
     availableFrom: string | null;
   };
-  const { data: history5y, isLoading: history5yLoading } = useQuery({
+  const {
+    data: history5y,
+    isLoading: history5yLoading,
+    isError: history5yError,
+    refetch: refetchHistory5y,
+  } = useQuery({
     queryKey: ["price-history-5y", symbol],
     enabled: !isNewsOnly,
     queryFn: async () => {
-      const res = await fetchPriceRequest(symbol, "history5y");
-      if (!res) {
+      const url = priceRequestUrl(symbol, "history5y");
+      if (!url) {
         return { points: [] as PricePoint[], incomplete: false, availableFrom: null };
       }
-      const json = (await res.json()) as History5y;
+      const json = await fetchJsonWithTimeout<History5y>(url);
       return {
         points: json.points ?? [],
         incomplete: Boolean(json.incomplete),
@@ -290,22 +296,22 @@ export default function WatchlistSymbolPage() {
   }, [meta, isForex, symbol]);
   const [overlaySymbol, setOverlaySymbol] = useState<string | null>(null);
 
-  const { data: overlayHistoryPoints } = useQuery({
+  const { data: overlayHistoryPoints, isError: overlayHistoryError, refetch: refetchOverlayHistory } = useQuery({
     queryKey: ["price-history", overlaySymbol, HISTORY_DAYS],
     queryFn: async () => {
-      const res = await fetchPriceRequest(overlaySymbol as string, "history");
-      if (!res) return [];
-      const json = (await res.json()) as { points: PricePoint[]; error?: { code: string; message: string } };
-      return parsePriceHistoryPoints(res.ok, json);
+      const url = priceRequestUrl(overlaySymbol as string, "history");
+      if (!url) return [];
+      const json = await fetchJsonWithTimeout<{ points: PricePoint[]; error?: { code: string; message: string } }>(url);
+      return parsePriceHistoryPoints(true, json);
     },
     enabled: !isNewsOnly && Boolean(overlaySymbol),
   });
-  const { data: overlayHistory5y } = useQuery({
+  const { data: overlayHistory5y, isError: overlayHistory5yError, refetch: refetchOverlayHistory5y } = useQuery({
     queryKey: ["price-history-5y", overlaySymbol],
     queryFn: async () => {
-      const res = await fetchPriceRequest(overlaySymbol as string, "history5y");
-      if (!res) return [];
-      const json = (await res.json()) as History5y;
+      const url = priceRequestUrl(overlaySymbol as string, "history5y");
+      if (!url) return [];
+      const json = await fetchJsonWithTimeout<History5y>(url);
       return json.points ?? [];
     },
     enabled: !isNewsOnly && Boolean(overlaySymbol),
@@ -329,14 +335,16 @@ export default function WatchlistSymbolPage() {
   const {
     data: signalsData,
     isLoading: signalsLoading,
+    isError: signalsError,
     isPlaceholderData: signalsIsPlaceholder,
+    refetch: refetchSignals,
   } = useQuery({
     queryKey: ["commodity-signals", symbol, signalsPage],
     queryFn: async () => {
-      const res = await fetch(
+      const json = await fetchJsonWithTimeout<{ signals?: Signal[]; total?: number; degraded?: boolean }>(
         `/api/signals?${isForex ? "forexPair" : "commodity"}=${encodeURIComponent(symbol)}&window=${HISTORY_DAYS}d&sort=newest&limit=${SIGNALS_PAGE_SIZE}&page=${signalsPage}`,
       );
-      const json = (await res.json()) as { signals?: Signal[]; total?: number };
+      if (json.degraded) throw new Error("fetch_failed");
       return { signals: json.signals ?? [], total: json.total ?? 0 };
     },
     placeholderData: keepPreviousData,
@@ -382,11 +390,9 @@ export default function WatchlistSymbolPage() {
     setAttributionLoading(true);
     try {
       const direction = directionAtIndex(chartData, index);
-      const res = await fetch(
+      const json = await fetchJsonWithTimeout<{ results?: AttributionResult[] }>(
         `/api/signals/attribution?asset=${encodeURIComponent(symbol)}&timestamp=${encodeURIComponent(new Date(point.t).toISOString())}&direction=${direction}`,
       );
-      if (!res.ok) throw new Error(`status ${res.status}`);
-      const json = (await res.json()) as { results?: AttributionResult[] };
       setAttributionResults(json.results ?? []);
     } catch (err) {
       console.warn("[watchlist-symbol] chart attribution fetch failed:", err);
@@ -473,7 +479,8 @@ export default function WatchlistSymbolPage() {
   const chartLoading =
     activeRange.source === "db" ? historyLoading : history5yLoading;
   const chartError = activeRange.source === "db" && historyError;
-  const chartDisplay = sparklineDisplayState(chartLoading, Boolean(chartError), chartData.length);
+  const chartFailed = chartError || (activeRange.source !== "db" && history5yError);
+  const chartDisplay = sparklineDisplayState(chartLoading, Boolean(chartFailed), chartData.length);
   const isFiveYearRange = activeRange.id === "5Y";
   const showYahooIncomplete =
     isFiveYearRange &&
@@ -657,6 +664,14 @@ export default function WatchlistSymbolPage() {
               })}
             </div>
           )}
+          {overlaySymbol && (activeRange.source === "db" ? overlayHistoryError : overlayHistory5yError) ? (
+            <SlowDataNotice
+              onRetry={() => {
+                void refetchOverlayHistory();
+                void refetchOverlayHistory5y();
+              }}
+            />
+          ) : null}
           {showYahooIncomplete && history5y?.availableFrom && (
             <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
               Showing available history from{" "}
@@ -678,11 +693,14 @@ export default function WatchlistSymbolPage() {
           ) : chartDisplay === "error" ? (
             <div className="flex flex-col items-center gap-3 py-20" data-testid="price-chart-error">
               <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
-                Price history unavailable right now
+                {DATA_SLOW_MESSAGE}
               </p>
               <button
                 type="button"
-                onClick={() => refetchHistory()}
+                onClick={() => {
+                  void refetchHistory();
+                  void refetchHistory5y();
+                }}
                 className="text-primary hover:text-primary-container font-label text-[11px] uppercase tracking-widest font-bold transition-colors cursor-pointer"
               >
                 Retry
@@ -870,9 +888,12 @@ export default function WatchlistSymbolPage() {
                   <Skeleton className="h-14 w-full rounded-lg" />
                 </div>
               ) : attributionError ? (
-                <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest">
-                  Could not load related events for this point right now.
-                </p>
+                <SlowDataNotice
+                  onRetry={() => {
+                    const index = chartData.findIndex((p) => p.t === attributionPoint.t);
+                    if (index >= 0) void handleChartPointClick(index);
+                  }}
+                />
               ) : attributionResults && attributionResults.length > 0 ? (
                 <div className="space-y-2">
                   <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/80 uppercase tracking-widest">
@@ -920,7 +941,9 @@ export default function WatchlistSymbolPage() {
           <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-6">
             Correlated Signals — Last {HISTORY_DAYS} Days
           </h2>
-          {signalsLoading ? (
+          {signalsError ? (
+            <SlowDataNotice onRetry={() => void refetchSignals()} />
+          ) : signalsLoading ? (
             <div className="space-y-3" data-testid="signals-list-skeleton">
               {[...Array(3)].map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full rounded-lg" />

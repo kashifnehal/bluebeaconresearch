@@ -32,6 +32,8 @@ import {
 } from "@/lib/signal-filters";
 import type { Signal } from "@blue-beacon-research/shared";
 import { DASHBOARD_FEED_SUBHEAD } from "@/lib/ingestion-interval";
+import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
+import { SlowDataNotice } from "@/components/SlowDataNotice";
 
 // Same shape/lookup already used by PriceTicker and the watchlist pages — reusing
 // the existing /api/prices 24h-change calculation here rather than adding a new one.
@@ -132,6 +134,8 @@ export default function DashboardPage() {
     oldestEventDate,
     isLoading,
     isError,
+    degraded,
+    refetch,
     fallback,
     fallbackReason,
     fallbackLastUpdated,
@@ -158,10 +162,7 @@ export default function DashboardPage() {
   // /api/prices 24h-change endpoint PriceTicker/watchlist already fetch.
   const { data: pricesData } = useQuery({
     queryKey: ["prices"],
-    queryFn: async () => {
-      const res = await fetch("/api/prices");
-      return (await res.json()) as { prices: LatestPrice[] };
-    },
+    queryFn: () => fetchJsonWithTimeout<{ prices: LatestPrice[] }>("/api/prices"),
     refetchInterval: 60_000,
   });
   const latestPrices = pricesData?.prices ?? [];
@@ -169,23 +170,27 @@ export default function DashboardPage() {
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   const [quickViewSignal, setQuickViewSignal] = useState<Signal | null>(null);
   const [coverageLine, setCoverageLine] = useState<string | null>(null);
+  const [coverageFailed, setCoverageFailed] = useState(false);
+  const [coverageRetry, setCoverageRetry] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/signals/source-stats")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: { sourcesLast24h?: number; rssFeedCount?: number } | null) => {
+    setCoverageFailed(false);
+    fetchJsonWithTimeout<{ sourcesLast24h?: number; rssFeedCount?: number }>("/api/signals/source-stats")
+      .then((d) => {
         if (cancelled || !d) return;
         if (typeof d.sourcesLast24h !== "number" || typeof d.rssFeedCount !== "number") return;
         setCoverageLine(
           `Last 24h: signals from ${d.sourcesLast24h} sources across ${d.rssFeedCount} RSS feeds + GNews + GDELT. ACLED is configured but returning no data (access pending).`,
         );
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) setCoverageFailed(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [coverageRetry]);
 
   const applyDesk = (id: DeskPresetId) => {
     const preset = DESK_PRESETS[id];
@@ -358,7 +363,9 @@ export default function DashboardPage() {
               {formatDataAsOf(dataUpdatedAt)}
             </p>
           ) : null}
-          {coverageLine ? (
+          {coverageFailed ? (
+            <SlowDataNotice onRetry={() => setCoverageRetry((n) => n + 1)} />
+          ) : coverageLine ? (
             <p
               data-testid="coverage-line"
               className="text-[12px] md:text-[11px] mt-2"
@@ -508,7 +515,9 @@ export default function DashboardPage() {
         )}
 
         {/* ── Continuous Skeleton Loader on API Load / Error / No Data ────────────────────────── */}
-        {isLoading || isError || (liveSignals.length === 0 && !filtersActive) ? (
+        {isError || degraded ? (
+          <SlowDataNotice onRetry={() => void refetch()} />
+        ) : isLoading || (liveSignals.length === 0 && !filtersActive) ? (
           <div className="space-y-8">
             {/* Featured Card Skeleton */}
             <div className="p-8 bg-[var(--bg-primary)] border border-[var(--border)] space-y-4">

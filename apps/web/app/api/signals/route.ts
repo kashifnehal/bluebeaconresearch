@@ -13,6 +13,7 @@ import {
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import { parseEventCategory, parseNovelty, parseSourceConfirmation } from "@/lib/market-impact-assessment";
 import { sortByRelevance } from "@/lib/signal-relevance-rank";
+import { emptySignalsErrorBody } from "@/lib/fetch-with-timeout";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -890,6 +891,6 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ signals: [], nextCursor: null, total: 0 });
+    return NextResponse.json(emptySignalsErrorBody(), { status: 200 });
   }
 }

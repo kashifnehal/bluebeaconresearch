@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-16 — `GET /api/signals`, when the handler throws and there is no cached payload, still returns 200 and the body `{ signals: [], nextCursor: null, total: 0, degraded: true }`. The cached handler-exception path is unchanged (`fallback: true`, `fallbackReason: "handler-exception"`).
+
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` stops waiting after 6000 ms on raw events, historical comparisons, related events, and price lookups, started together (`426de2c`). A skipped part comes back empty and is named in `degraded`. The signal row is still required. A skipped Server-Timing step uses `desc="skipped"`.
 
 > ⚠️ UPDATED 2026-10-15 — `GET /api/signals/pulse?symbol=` counts signals BBR published for one known symbol. `created_at` is the publish time. The last 24 hours are `[now−24h, now]`; the prior 24 hours are `[now−48h, now−24h)`. `changePct` is null when the prior count is 0. `peakHourUtc` is null when the last window is empty. Up, down, and other use the impact whose asset is that symbol, over the last 24 hours only. A commodity or news-only symbol filters `commodity_impacts`. A forex symbol filters both impact columns and counts each signal once. An unknown symbol is `400`. Rate-limit, database, missing-client, and production-unauthenticated failures return `200` with `error` and no counts.

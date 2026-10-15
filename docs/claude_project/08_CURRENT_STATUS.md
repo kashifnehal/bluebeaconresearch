@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (row-security initplan and foreign-key indexes, not applied).**
+> **📍 Doc status — live status banners as of 2026-10-16 (client fetches stop after 20 seconds — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (client fetches stop after 20 seconds, `apps/web` only) — dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms and show a retry line when it fails. `GET /api/signals` adds `degraded: true` when the handler errors and has no cached payload. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (row-security and foreign-key indexes, migration written, not applied) — eight policies wrap `auth.uid()` in `(select auth.uid())`. Six foreign-key indexes are added. No other index is dropped. See `docs/brain/LIVE_TODO.md`.
 

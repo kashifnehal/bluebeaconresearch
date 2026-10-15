@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Client fetches stop after 20 seconds
+
+`apps/web` only. Dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms and show a retry line when it fails. `GET /api/signals` adds `degraded: true` on an empty error body when there is no cached payload. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Row-security initplan and foreign-key indexes
 
 Migration written, not applied. Eight policies wrap `auth.uid()` in `(select auth.uid())`. Six foreign-key indexes are added on tables that have under 200 rows. No other index is dropped.

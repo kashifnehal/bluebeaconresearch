@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Client fetches stop after 20 seconds (`apps/web`). Dashboard, map, watchlist, the symbol page, and alerts show a retry line when a fetch times out or fails. `GET /api/signals` adds `degraded: true` on an empty error body when there is no cached payload. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Row-security initplan and six foreign-key indexes (migration written, not applied). No other index is dropped. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Public pages and a closed daily cap (`apps/web`). A closed cap no longer marks the public status checks down or replaces the dashboard ingestion box with a pause. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

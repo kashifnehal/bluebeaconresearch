@@ -9,6 +9,8 @@ import { SELECT_CLASSES, formatDataAsOf, safeFormatDistanceToNow } from "@/lib/u
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { logUsageEvent } from "@/lib/funnel-events";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SlowDataNotice } from "@/components/SlowDataNotice";
+import { DATA_SLOW_MESSAGE, fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import {
   NEWS_ONLY_FEED_LABEL,
@@ -122,11 +124,10 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["price-history", symbol, "spark7d"],
     queryFn: async () => {
-      const res = await fetch(
+      const json = await fetchJsonWithTimeout<PriceHistoryResponseBody>(
         `/api/prices/history?symbol=${encodeURIComponent(symbol)}&days=7&points=14`,
       );
-      const json = (await res.json()) as PriceHistoryResponseBody;
-      return parsePriceHistoryPoints(res.ok, json);
+      return parsePriceHistoryPoints(true, json);
     },
     staleTime: 60_000,
   });
@@ -151,7 +152,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
     return (
       <div className="flex flex-col items-center gap-2">
         <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
-          Price history unavailable right now
+          {DATA_SLOW_MESSAGE}
         </p>
         <button
           type="button"
@@ -260,7 +261,7 @@ function NewsOnlyWatchlistCard({
   category: string;
   onRemove: () => void;
 }) {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["news-only-card-signals", symbol],
     queryFn: () => fetchNewsOnlyCardSignals(symbol),
     staleTime: 60_000,
@@ -305,9 +306,7 @@ function NewsOnlyWatchlistCard({
             <p className="mt-2 text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest">
               {NEWS_ONLY_FEED_LABEL}
             </p>
-            <p className="mt-4 text-sm text-on-surface-variant">
-              Could not load signals for the last 7 days
-            </p>
+            <SlowDataNotice onRetry={() => void refetch()} />
           </div>
         ) : (
           <NewsOnlyCardSummary
@@ -429,13 +428,9 @@ export function WatchlistClient() {
   }, []);
 
   const hasPricedSymbol = watch.some((sym) => !isNewsOnlySymbol(sym));
-  const { data, refetch, dataUpdatedAt } = useQuery({
+  const { data, refetch, dataUpdatedAt, isError: pricesError } = useQuery({
     queryKey: ["prices"],
-    queryFn: async () => {
-      const res = await fetch("/api/prices");
-      const json = (await res.json()) as { prices: Price[] };
-      return json;
-    },
+    queryFn: () => fetchJsonWithTimeout<{ prices: Price[] }>("/api/prices"),
     enabled: hydrated && hasPricedSymbol,
     refetchInterval: 15_000,
   });
@@ -695,6 +690,7 @@ export function WatchlistClient() {
               </div>
               <div className="flex items-end justify-between">
                 <div>
+                  {pricesError ? <SlowDataNotice onRetry={() => void refetch()} /> : null}
                   <p className="font-mono text-3xl text-on-surface font-bold tracking-tighter">
                     {lastFetchAt
                       ? `${Math.floor((Date.now() - lastFetchAt) / 1000)}s`

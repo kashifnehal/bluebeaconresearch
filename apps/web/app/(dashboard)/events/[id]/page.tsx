@@ -56,6 +56,7 @@ import {
   shouldShowLastUpdated,
 } from "@/lib/signal-display";
 import { EVENT_DETAIL_FETCH_TIMEOUT_MS, eventDetailNotice } from "@/lib/event-detail-fetch";
+import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 
 function eventTypeLabel(eventType?: string | null): string {
   if (!eventType) return "this event";
@@ -77,27 +78,16 @@ export default function EventDetailPage() {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["signal", id],
-    queryFn: async () => {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), EVENT_DETAIL_FETCH_TIMEOUT_MS);
-      try {
-        const res = await fetch(`/api/signals/${id}`, { signal: controller.signal });
-        if (!res.ok) {
+    queryFn: () =>
+      fetchJsonWithTimeout<EventDetailResponse>(`/api/signals/${id}`, {
+        timeoutMs: EVENT_DETAIL_FETCH_TIMEOUT_MS,
+        async statusError(res) {
           const body = await res.json().catch(() => ({}));
           // /api/signals/[id] standardized its error shape to { error: { code, message } }
           // on 2026-08-18 — was a bare `body.error === "not_found"` string before.
-          throw new Error(body?.error?.code === "not_found" ? "not_found" : "fetch_failed");
-        }
-        return (await res.json()) as EventDetailResponse;
-      } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") {
-          throw new Error("timeout");
-        }
-        throw err;
-      } finally {
-        clearTimeout(timer);
-      }
-    },
+          return new Error(body?.error?.code === "not_found" ? "not_found" : "fetch_failed");
+        },
+      }),
     retry: false,
   });
 

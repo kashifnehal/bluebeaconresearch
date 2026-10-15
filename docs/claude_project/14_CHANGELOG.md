@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Client fetches stop after 20 seconds
+
+`apps/web` only. Those pages abort a fetch at 20000 ms and show a retry line when it fails. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-16 — Row-security initplan and foreign-key indexes
 
 Migration written, not applied. Full detail: `docs/brain/14_CHANGELOG.md`.

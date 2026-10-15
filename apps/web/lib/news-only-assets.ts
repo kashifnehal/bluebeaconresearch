@@ -3,6 +3,7 @@ import {
   FOREX_PAIRS,
   NEWS_ONLY_COMMODITIES,
 } from "@blue-beacon-research/shared";
+import { fetchJsonWithTimeout } from "./fetch-with-timeout";
 
 /** Shown on a news-only watchlist card and on its detail page. */
 export const NEWS_ONLY_FEED_LABEL = "News only (no price feed)";
@@ -94,7 +95,12 @@ export async function fetchNewsOnlyCardSignals(
   symbol: string,
   fetchImpl: typeof fetch = fetch,
 ): Promise<NewsOnlyCardSignals> {
-  const res = await fetchImpl(newsOnlyCardSignalsUrl(symbol));
+  const url = newsOnlyCardSignalsUrl(symbol);
+  if (fetchImpl === fetch) {
+    const json = await fetchJsonWithTimeout<{ signals?: NewsOnlySignalRow[]; total?: unknown }>(url);
+    return parseNewsOnlyCardSignals(json);
+  }
+  const res = await fetchImpl(url);
   if (!res.ok) throw new Error("news_only_signals_failed");
   const json = (await res.json()) as { signals?: NewsOnlySignalRow[]; total?: unknown };
   return parseNewsOnlyCardSignals(json);

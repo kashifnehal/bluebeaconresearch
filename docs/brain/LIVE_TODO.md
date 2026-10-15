@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Client fetches stop after 20 seconds, `apps/web`, 2026-10-16
+
+- Dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms. A timeout or a failed fetch shows "This is taking longer than usual. The data service is slow right now." and Retry, in place of a skeleton or an empty "no signals" line. The event page uses the same limit and the same sentence.
+- `GET /api/signals`, when the handler errors and has no cached payload, still returns 200 and adds `degraded: true`. The cached payload path is unchanged. The feed shows the same slow line for that flag.
+- `refetchInterval` values are unchanged. A search for `refetchIntervalInBackground` under `apps/web` found no matches.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `06`, `05`; claude_project `09`, `08`, `14`, `06`, `05`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
+
 ## ✅ Row-security initplan and six foreign-key indexes, migration written not applied, 2026-10-16
 
 - Eight policies on `feedback_submissions`, `signal_chat_messages`, `user_sessions`, and `waitlist` wrap `auth.uid()` in `(select auth.uid())`. The comparisons are the ones read from production on 2026-10-16.

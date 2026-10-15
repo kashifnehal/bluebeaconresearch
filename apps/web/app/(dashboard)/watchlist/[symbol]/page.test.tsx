@@ -27,7 +27,7 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(path.join(dir, "page.tsx"), "utf8");
 
 runTest("both db-backed queries (historyPoints, overlayHistoryPoints) parse through parsePriceHistoryPoints", () => {
-  const matches = [...source.matchAll(/return parsePriceHistoryPoints\(res\.ok, json\);/g)];
+  const matches = [...source.matchAll(/return parsePriceHistoryPoints\(true, json\);/g)];
   assert.equal(matches.length, 2, "expected both the primary and overlay history queryFns to throw via parsePriceHistoryPoints");
 });
 
@@ -38,8 +38,9 @@ runTest("chartError only applies to the db source, never the 5-year (Yahoo) rang
 runTest("the chart error state shows the honest message plus a Retry button wired to refetchHistory", () => {
   const block = source.match(/chartDisplay === "error" \? \(([\s\S]*?)\) : chartDisplay === "insufficient"/);
   assert.ok(block, "expected to find the chartDisplay 'error' branch");
-  assert.match(block![1], /Price history unavailable right now/);
-  assert.match(block![1], /onClick=\{\(\) => refetchHistory\(\)\}/);
+  assert.match(block![1], /DATA_SLOW_MESSAGE/);
+  assert.match(block![1], /refetchHistory\(\)/);
+  assert.match(block![1], /refetchHistory5y\(\)/);
   assert.match(block![1], />\s*Retry\s*</);
 });
 
@@ -67,12 +68,12 @@ runTest("a priced symbol still takes the chart path", () => {
   assert.match(source, /<LineChart/);
 });
 
-runTest("news-only detail queries go through fetchPriceRequest and stay disabled", () => {
+runTest("news-only detail queries go through priceRequestUrl and stay disabled", () => {
   assert.equal(isNewsOnlySymbol("COCOA"), true);
   assert.match(source, /enabled: !isNewsOnly/);
-  assert.match(source, /fetchPriceRequest\(symbol, "latest"\)/);
-  assert.match(source, /fetchPriceRequest\(symbol, "history"\)/);
-  assert.match(source, /fetchPriceRequest\(symbol, "history5y"\)/);
+  assert.match(source, /priceRequestUrl\(symbol, "latest"\)/);
+  assert.match(source, /priceRequestUrl\(symbol, "history"\)/);
+  assert.match(source, /priceRequestUrl\(symbol, "history5y"\)/);
   assert.match(source, /enabled: !isNewsOnly && Boolean\(overlaySymbol\)/);
   assert.match(source, /data-testid="news-only-detail-label"/);
   assert.match(source, /data-testid="watchlist-follow-toggle"/);

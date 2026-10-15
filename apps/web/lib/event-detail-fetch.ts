@@ -1,11 +1,9 @@
-/**
- * 20000 ms limit for the event page fetch.
- * Engineering choice with no outside source.
- */
-export const EVENT_DETAIL_FETCH_TIMEOUT_MS = 20_000;
+import { DATA_SLOW_MESSAGE, FETCH_TIMEOUT_MS } from "./fetch-with-timeout";
 
-export const EVENT_DETAIL_SLOW_MESSAGE =
-  "This is taking longer than usual. The data service is slow right now.";
+/** Same 20000 ms limit and sentence as the shared fetch helper. */
+export const EVENT_DETAIL_FETCH_TIMEOUT_MS = FETCH_TIMEOUT_MS;
+
+export const EVENT_DETAIL_SLOW_MESSAGE = DATA_SLOW_MESSAGE;
 
 export type EventDetailFailure = "timeout" | "fetch_failed" | "not_found";
 

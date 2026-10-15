@@ -20,6 +20,8 @@ import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import { AlertRuleTrendChart, AlertRuleTrendEmptyState, isTrendSparse, type DailyCount } from "@/components/alerts/AlertRuleTrendChart";
 import { useUIStore } from "@/store/useUIStore";
+import { FETCH_TIMEOUT_MS, fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
+import { SlowDataNotice } from "@/components/SlowDataNotice";
 
 type AlertRule = {
   id: string;
@@ -81,11 +83,14 @@ async function fetchConnectedChannels(): Promise<ConnectedChannels> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return empty;
-  const { data } = await supabase
-    .from("user_channels")
-    .select("telegram_chat_id, discord_webhook_url, slack_webhook_url")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { data } = await Promise.race([
+    supabase
+      .from("user_channels")
+      .select("telegram_chat_id, discord_webhook_url, slack_webhook_url")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), FETCH_TIMEOUT_MS)),
+  ]);
   return {
     telegram: Boolean(data?.telegram_chat_id),
     discord: Boolean(data?.discord_webhook_url),
@@ -215,30 +220,27 @@ export default function AlertsPage() {
   // the save round-trips.
   const [thresholdDraft, setThresholdDraft] = useState<Record<string, number>>({});
 
-  const { data: rulesData, isLoading: rulesLoading, isError: rulesError } = useQuery({
+  const { data: rulesData, isLoading: rulesLoading, isError: rulesError, refetch: refetchRules } = useQuery({
     queryKey: ["alert-rules"],
-    queryFn: async () => {
-      const res = await fetch("/api/alert-rules");
-      if (!res.ok) throw new Error("Failed to fetch alert rules");
-      return (await res.json()) as { rules: AlertRule[] };
-    },
+    queryFn: () => fetchJsonWithTimeout<{ rules: AlertRule[] }>("/api/alert-rules"),
     refetchInterval: 30_000,
   });
 
   const {
     data: alertsPages,
     isLoading: alertsLoading,
+    isError: alertsError,
+    refetch: refetchAlerts,
     fetchNextPage: fetchMoreAlerts,
     hasNextPage: hasMoreAlerts,
     isFetchingNextPage: isFetchingMoreAlerts,
   } = useInfiniteQuery({
     queryKey: ["alerts", "recent", "for-rules"],
     initialPageParam: 0,
-    queryFn: async ({ pageParam }) => {
-      const res = await fetch(`/api/alerts/recent?limit=${ALERTS_PAGE_SIZE}&offset=${pageParam}`);
-      if (!res.ok) throw new Error("Failed to fetch recent alerts");
-      return (await res.json()) as { alerts: AlertSentRow[]; total: number; hasMore: boolean };
-    },
+    queryFn: ({ pageParam }) =>
+      fetchJsonWithTimeout<{ alerts: AlertSentRow[]; total: number; hasMore: boolean }>(
+        `/api/alerts/recent?limit=${ALERTS_PAGE_SIZE}&offset=${pageParam}`,
+      ),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.hasMore ? allPages.flatMap((p) => p.alerts).length : undefined,
     refetchInterval: 30_000,
@@ -250,7 +252,11 @@ export default function AlertsPage() {
   );
   const alertsTotal = alertsPages?.pages[0]?.total ?? alertRows.length;
 
-  const { data: connectedChannels } = useQuery({
+  const {
+    data: connectedChannels,
+    isError: channelsError,
+    refetch: refetchChannels,
+  } = useQuery({
     queryKey: ["user-channels", "connected"],
     queryFn: fetchConnectedChannels,
   });
@@ -258,13 +264,12 @@ export default function AlertsPage() {
   // Per-rule 14-day match-count trend for the small chart under each rule's name —
   // a backend aggregation (distinct-signal counts per day, plus an all-time total for
   // the sparse-history gate), not the full match history the page already fetches above.
-  const { data: ruleStatsData } = useQuery({
+  const { data: ruleStatsData, isError: statsError, refetch: refetchStats } = useQuery({
     queryKey: ["alerts", "rule-stats"],
-    queryFn: async () => {
-      const res = await fetch("/api/alerts/rule-stats");
-      if (!res.ok) throw new Error("Failed to fetch alert rule stats");
-      return (await res.json()) as { stats: { ruleId: string; totalMatches: number; dailyCounts: DailyCount[] }[] };
-    },
+    queryFn: () =>
+      fetchJsonWithTimeout<{ stats: { ruleId: string; totalMatches: number; dailyCounts: DailyCount[] }[] }>(
+        "/api/alerts/rule-stats",
+      ),
     refetchInterval: 30_000,
   });
 
@@ -460,7 +465,14 @@ export default function AlertsPage() {
         </button>
       </section>
 
-      {isLoading || rulesError ? (
+      {rulesError || alertsError ? (
+        <SlowDataNotice
+          onRetry={() => {
+            void refetchRules();
+            void refetchAlerts();
+          }}
+        />
+      ) : isLoading ? (
         <div className="space-y-6 pb-24">
           <Skeleton className="h-48 w-full bg-surface-container" />
           <Skeleton className="h-48 w-full bg-surface-container" />
@@ -487,6 +499,7 @@ export default function AlertsPage() {
         </div>
       ) : (
         <div className="space-y-6 pb-24">
+          {statsError ? <SlowDataNotice onRetry={() => void refetchStats()} /> : null}
           {rules.map((rule) => {
             const allMatches = matchesByRule.get(rule.id) ?? [];
             const matchPage = matchPageByRule[rule.id] ?? 1;
@@ -524,7 +537,7 @@ export default function AlertsPage() {
                       </span>
                     </div>
                     <div className="mb-3">
-                      {(() => {
+                      {statsError ? null : (() => {
                         const stats = ruleStatsById.get(rule.id);
                         if (!stats || isTrendSparse(stats.totalMatches, rule.created_at)) {
                           return <AlertRuleTrendEmptyState />;
@@ -853,6 +866,7 @@ export default function AlertsPage() {
               <p className="text-[12px] md:text-[10px] text-[#6b7674] mb-2">
                 Alerts go only to the channels you select. Connect them in Settings first.
               </p>
+              {channelsError ? <SlowDataNotice onRetry={() => void refetchChannels()} /> : null}
               <div className="flex flex-col gap-2">
                 {CHANNEL_OPTIONS.map((ch) => {
                   const checked = modalChannels.includes(ch.id);

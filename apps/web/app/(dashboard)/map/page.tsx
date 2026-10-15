@@ -25,6 +25,8 @@ import {
   DEFAULT_MAP_ZOOM,
 } from "@/lib/map-config";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
+import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
+import { SlowDataNotice } from "@/components/SlowDataNotice";
 import { getSignalCoordinates } from "@/lib/geo-coords";
 import { signalsNearChokepoint, chokepointDirectionTally } from "@/lib/chokepoints";
 import { countryKey, signalRecencyMs } from "@/lib/location-groups";
@@ -188,6 +190,8 @@ export default function MapPage() {
     liveSignals,
     isLoading,
     isError,
+    degraded,
+    refetch,
     fallback,
     fallbackReason,
     fallbackLastUpdated,
@@ -843,9 +847,13 @@ export default function MapPage() {
     setLocationCountry(null);
   }, [filters]);
 
+  const [filterFetchFailed, setFilterFetchFailed] = useState(false);
+  const [filterRetry, setFilterRetry] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
     async function fetchFiltered() {
+      setFilterFetchFailed(false);
       try {
         const params = new URLSearchParams();
         params.set("sort", "severity");
@@ -862,13 +870,17 @@ export default function MapPage() {
         // set, not the first page. API rowLimit is capped at 500.
         params.set("limit", "500");
 
-        const res = await fetch(`/api/signals?${params.toString()}`);
-        if (!res.ok) return;
-        const json = (await res.json()) as { signals: Signal[] };
+        const json = await fetchJsonWithTimeout<{ signals?: Signal[]; degraded?: boolean }>(
+          `/api/signals?${params.toString()}`,
+        );
         if (cancelled) return;
+        if (json.degraded) {
+          setFilterFetchFailed(true);
+          return;
+        }
         setServerFilteredSignals(json.signals ?? []);
-      } catch (err) {
-        // ignore
+      } catch {
+        if (!cancelled) setFilterFetchFailed(true);
       }
     }
 
@@ -876,7 +888,7 @@ export default function MapPage() {
     return () => {
       cancelled = true;
     };
-  }, [filters]);
+  }, [filters, filterRetry]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -1230,7 +1242,14 @@ export default function MapPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
-          {isLoading || isError ? (
+          {isError || degraded || filterFetchFailed ? (
+            <SlowDataNotice
+              onRetry={() => {
+                void refetch();
+                setFilterRetry((n) => n + 1);
+              }}
+            />
+          ) : isLoading ? (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
                 <Skeleton

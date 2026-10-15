@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
+import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import {
   symbolsForCommodityFilter,
   type FeedWindow,
@@ -37,6 +38,7 @@ export function useSignalFeed({
     dataUpdatedAt,
     isLoading,
     isError,
+    refetch,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -66,9 +68,7 @@ export function useSignalFeed({
       if (eventCategory) params.set("eventCategory", eventCategory);
       params.set("page", String(pageParam));
 
-      const res = await fetch(`/api/signals?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch signals");
-      return (await res.json()) as {
+      return fetchJsonWithTimeout<{
         signals?: Signal[];
         nextCursor?: string | null;
         total?: number;
@@ -83,7 +83,8 @@ export function useSignalFeed({
         // Only present once the default view's cursor pagination has
         // genuinely exhausted the full matching set.
         oldestEventDate?: string | null;
-      };
+        degraded?: boolean;
+      }>(`/api/signals?${params.toString()}`);
     },
     // `nextCursor` is an opaque page token from /api/signals ("2", "3", …) or
     // null at the end. Returning undefined tells react-query there's no next page.
@@ -138,6 +139,7 @@ export function useSignalFeed({
   // computes it once `hasMore` goes false) — the honest "earliest signal on
   // record" terminal copy needs this date, not a bare "no more news" label.
   const oldestEventDate = pages[pages.length - 1]?.oldestEventDate ?? null;
+  const degraded = pages.some((page) => page.degraded === true);
 
   // Scroll-triggered loading: attach `sentinelRef` to an element near the
   // bottom of the rendered list. An IntersectionObserver (not a click
@@ -180,6 +182,8 @@ export function useSignalFeed({
     oldestEventDate,
     isLoading,
     isError,
+    degraded,
+    refetch,
     fallback,
     fallbackReason,
     fallbackLastUpdated,
