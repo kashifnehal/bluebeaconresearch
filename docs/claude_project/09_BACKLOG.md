@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
-> ⚠️ UPDATED 2026-10-15 — P13 region backfill (this commit, PHASE 170 / v0.193.0). Migration `20261015150000_signals_region_raw.sql` is written, not applied. The backfill was not run with `--apply`. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Signal count line (`apps/web`, `2c977d8`, PHASE 171 / v0.194.0). "1 signal loaded" and "1 day" when the number is 1. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — P13 region backfill (`320453f`, PHASE 170 / v0.193.0). Migration `20261015150000_signals_region_raw.sql` is written, not applied. The backfill was not run with `--apply`. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — P12 region canon (`apps/backend` + `packages/shared`, this commit, PHASE 169 / v0.192.0). Eight canonical region ids. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

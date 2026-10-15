@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.194.0 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
+
+`apps/web` only. The loaded-row line says "1 signal loaded" and "1 day" when that number is 1. Every other count stays plural, including 0. The rest of the line is unchanged. Full detail: `LIVE_TODO.md`.
+
 ### v0.193.0 — Signal region backfill script (2026-10-15, this commit)
 
 `apps/backend` plus `supabase/migrations/20261015150000_signals_region_raw.sql`. The migration and the `--apply` path were not run. Dry run is the default. Full detail: `LIVE_TODO.md`.
@@ -18,7 +22,7 @@ This document records historic development milestones, schema evolutions, featur
 
 `apps/backend` and `packages/shared`. Eight region ids. Claude's region field is one of those ids, then `canonicalizeRegion`. Shared `REGIONS` matches. Legacy `americas` remains valid on old rows. The heuristic classifier is unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.191.0 — "Global" is not a map location (2026-10-15, this commit)
+### v0.191.0 — "Global" is not a map location (2026-10-15, `2c977d8`)
 
 `apps/web` only. Country "Global" (any case) adds to the no-location count and does not create a Locations row. "European Union" stays a place. Pins, chokepoints, and the Locations wording are unchanged. Full detail: `LIVE_TODO.md`.
 

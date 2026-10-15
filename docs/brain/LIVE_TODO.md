@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ U3 plurals on the loaded-row count line, `apps/web` only, 2026-10-15, `2c977d8`
+
+- The line above the signal table always said "signals" and "days", including when the number was 1.
+- `formatTableCountLine` says "1 signal loaded" and "1 day" when that number is 1. Zero and every number above 1 stay plural. The rest of the line is unchanged: `N signals loaded · D days · Up U · Down V · Other X`. The wording change was already staged and landed in `2c977d8` with the location change.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0, `pnpm --filter web test` exit 0, `pnpm --filter web run build` exit 0. That run included the pulse tests, the location-group tests, and the singular count-line tests. No browser run.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.194.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 171, `06_COMPONENTS.md`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or standing rule.
+
 ## ✅ P13 region backfill, `apps/backend` + one migration, 2026-10-15, this commit
 
 - Migration `20261015150000_signals_region_raw.sql` adds nullable `signals.region_raw`. Written, not applied.
@@ -16,7 +24,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Classifier schema `region` line names the 8 ids. After parse, `region = canonicalizeRegion(parsed.region, parsed.country)`. The heuristic block still returns the ids it returned before, including `americas`.
 - Existing `signals.region` text is unchanged until the P13 backfill is applied.
 
-## ✅ U2 map locations: "Global" is not a place, `apps/web` only, 2026-10-15, this commit
+## ✅ U2 map locations: "Global" is not a place, `apps/web` only, 2026-10-15, `2c977d8`
 
 - The Locations list treated the country value "Global" as a place. On 30 days of data as of 2026-10-15, "Global" was on 73 signals and "European Union" on 2. Production showed a Global row, and "Unique locations" included it.
 - `NON_PLACE_COUNTRIES` is `["global"]`. Comparison is lower-cased. A signal with that country is counted in `noLocation` and creates no group. "European Union" stays a place. Map pins, chokepoint code, and `LocationList.tsx` wording are unchanged, so the stats line's "Signals with a location" count drops by the Global rows.

@@ -8,6 +8,10 @@
 
 ---
 
+## PHASE 171 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
+
+`apps/web` only. One signal and one day use the singular on the loaded-row count line. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.194.0.
+
 ## PHASE 170 — Signal region backfill script (2026-10-15, this commit)
 
 Migration `20261015150000_signals_region_raw.sql` adds nullable `signals.region_raw`. Written, not applied. The backfill script was not run with `--apply`. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.193.0.

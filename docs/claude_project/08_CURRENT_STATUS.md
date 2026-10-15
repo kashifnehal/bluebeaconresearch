@@ -1,8 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (P13 region backfill — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (singular signal count line — see the banner immediately below).**
 
-> ⚠️ NEW 2026-10-15 (P13 region backfill, this commit) — nullable `signals.region_raw` is written in a migration that was not applied. The backfill script was not run with `--apply`. See `docs/brain/LIVE_TODO.md`, PHASE 170.
+> ⚠️ NEW 2026-10-15 (signal count line, `apps/web` only, `2c977d8`) — one loaded signal and one day use the singular. Other counts stay plural. See `docs/brain/LIVE_TODO.md`, PHASE 171.
+
+> ⚠️ NEW 2026-10-15 (P13 region backfill, `320453f`) — nullable `signals.region_raw` is written in a migration that was not applied. The backfill script was not run with `--apply`. See `docs/brain/LIVE_TODO.md`, PHASE 170.
 
 > ⚠️ NEW 2026-10-15 (P12 region canon, `apps/backend` + `packages/shared`, `fc9113c`) — new classifications use 8 region ids. Screens that render `REGIONS` show that list. Stored signal regions are unchanged until the backfill runs. See `docs/brain/LIVE_TODO.md`, PHASE 169.
 

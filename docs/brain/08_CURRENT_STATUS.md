@@ -2,9 +2,11 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-15 (P13 region backfill, not applied)
+Last updated: 2026-10-15 (singular signal count line)
 
-> ⚠️ NEW 2026-10-15 (P13 region backfill, this commit) — `signals.region_raw` migration is written and not applied. The backfill script defaults to a dry run. `--apply` was not run. See `14_CHANGELOG.md` v0.193.0, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-15 (signal count line, `apps/web` only, `2c977d8`) — the loaded-row line says "1 signal loaded" and "1 day" when the number is 1. Other counts stay plural. See `14_CHANGELOG.md` v0.194.0, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-15 (P13 region backfill, `320453f`) — `signals.region_raw` migration is written and not applied. The backfill script defaults to a dry run. `--apply` was not run. See `14_CHANGELOG.md` v0.193.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (P12 region canon, `apps/backend` + `packages/shared`, `fc9113c`) — new Claude classifications store one of 8 region ids. Shared `REGIONS` is that list. Existing signal region text is unchanged until the P13 backfill is applied. Legacy `americas` remains. See `14_CHANGELOG.md` v0.192.0, `LIVE_TODO.md`.
 
