@@ -181,14 +181,14 @@ Population size for these segments is not independently sourced as of 2026-08-30
 - Price: $24,000/year ($2,000/month)
 - Requires: corporate account, annual contract, sales negotiation
 - Target: Institutional professionals
-- BBR position: "Same intelligence quality. Self-serve. 1/40th the price."
+- BBR position: "Self-serve geopolitical intelligence at a fraction of the price. No claim of equal quality."
 - Users who can't afford Bloomberg are our primary market
 
 ### 6.2 Stratfor / Geopolitical Futures
 - Price: $5,000–$40,000/year
 - Format: Written reports, not real-time signals
 - Target: Government, corporate strategy teams
-- BBR position: "Real-time alerts vs. weekly PDF reports. We win on speed."
+- BBR position: "Signals with a visible clock, versus weekly PDF reports."
 
 ### 6.3 Palantir
 - Price: Enterprise contract, $1M+

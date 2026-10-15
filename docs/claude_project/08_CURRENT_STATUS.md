@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (UTC clock and open-budget badge — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (speed and timing claims — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (speed and timing claims, docs only, this commit) — site and ad copy do not use a speed superlative until a public benchmark exists. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started. See `docs/brain/LIVE_TODO.md`, PHASE 166.
 
 > ⚠️ NEW 2026-10-15 (UTC clock and open-budget badge, `apps/web` only, this commit) — signal Clock cells show UTC. The homepage badge says collection runs while the daily budget is open. See `docs/brain/LIVE_TODO.md`, PHASE 165.
 

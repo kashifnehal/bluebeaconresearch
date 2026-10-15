@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-15 (clock times in UTC; homepage badge names the open daily budget)
+Last updated: 2026-10-15 (speed and timing claims recorded; seven queue lines not started)
+
+> ⚠️ NEW 2026-10-15 (speed and timing claims, docs only, this commit) — site and ad copy do not use a speed superlative until a public benchmark exists. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started. See `14_CHANGELOG.md` v0.189.0, `10_DECISIONS.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (UTC clock and open-budget badge, `apps/web` only, this commit) — event-page Clock cells show "14 Oct 2026, 12:30 UTC", or "n/a" when the time is missing or invalid. The homepage badge says collection runs about every 30 minutes while the daily budget is open. See `14_CHANGELOG.md` v0.188.0, `LIVE_TODO.md`.
 

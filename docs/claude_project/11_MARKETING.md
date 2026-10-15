@@ -19,7 +19,7 @@
 - Measured urgency — the gravity of a Reuters wire, not a crypto influencer
 - Short sentences. Active voice. Specific numbers.
 - Examples to emulate: Stratfor briefings, Bloomberg Intelligence notes, Goldman Sachs research memos
-- Never say: "game-changer," "revolutionary," "next-gen," "AI-powered platform disrupting X"
+- Never say: "game-changer," "revolutionary," "next-gen," "AI-powered platform disrupting X", fastest, quickest, first to know, real-time, instant, before markets move, unless the speed-claim decision allows it
 
 **Visual brand:**
 - Dark (#050914 background), green accent (#10B981), white text

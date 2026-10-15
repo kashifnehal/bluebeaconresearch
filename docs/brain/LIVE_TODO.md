@@ -1093,6 +1093,16 @@ Independent Playwright audit against local dev (`acac825`), all 24 `apps/web/app
 8. Validation checkpoint — CLEARED, on desk research plus the free-first launch
    strategy, not on live interviews or a payment test.
 
+## Priority queue — 2026-10-15, speed and timing (not started)
+
+- ⚪ Paid news feed choice before go-live. Set `GNEWS_PLAN` and `INGESTION_INTERVAL_CRON` on that day.
+- ⚪ When the ingestion schedule changes, change `apps/web/lib/ingestion-interval.ts` in the same release.
+- ⚪ Speed meter and public method page (flag off) after 14 days on the new feed.
+- ⚪ A benchmark before any "fastest" claim.
+- ⚪ Add opposing-side news sources (state and domestic outlets from Iran, Russia, China) with a state-affiliated label, after a feed-terms check.
+- ⚪ Optional fixed `first_report_at` column on signals (`event_date` moves forward when a newer article merges in).
+- ⚪ Alert delivery: 34 Telegram alerts in 30 days, median 0.1 minutes after the signal was created, so the delay is before the signal.
+
 ## Priority queue (updated 2026-09-07)
 - #82, #83, and #86 closed 2026-09-07 (see "Closed, verified"). #83's prod
   cron path is now **fully end-to-end confirmed** — a one-off prod run of the

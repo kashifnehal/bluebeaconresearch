@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — Speed and timing claims (docs only, this commit, PHASE 166 / v0.189.0). A speed superlative stays off the site until a public benchmark exists. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — UTC clock and open-budget badge (`apps/web`, this commit, PHASE 165 / v0.188.0). Signal Clock cells show UTC. The homepage badge says collection runs while the daily budget is open. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Homepage and dashboard check points (`apps/web`, this commit, PHASE 164 / v0.187.0). Homepage and dashboard copy name the collection interval and where to check the clock, the sources, and the price baseline. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

@@ -949,3 +949,21 @@ Turning every retrieval change on at once would make a yield drop impossible to 
 ### Cross-tree mapping
 
 Recorded as **D49** in `docs/claude_project/10_DECISIONS.md`.
+
+## 47. ADR 046: Speed and timing claims on the site
+
+### Context
+
+Measured delay from the earliest linked report to our flag is a median of about 171 minutes over open collection hours since 2026-10-06, about 12 hours for signals whose first source was the free GNews plan, and about 43 minutes for signals whose first source was RSS. Advertising rules in the UK (CAP Code), the US (FTC substantiation) and India (CCPA 2022) treat an unqualified "fastest" as an objective comparison that needs evidence before it is printed.
+
+### Decision
+
+(a) No speed superlative (fastest, quickest, first to, real-time, instant) in site or ad copy until a public benchmark exists. (b) A speed number may be shown only if it is read live from the database, carries its window and count in the same line, and links to a public method page. (c) The tagline "Intelligence before markets move." stays parked. (d) Internal pitch lines such as "Bloomberg-grade", "same intelligence quality" and "we win on speed" are not used in site or ad copy. (e) Timestamp labels are Published or First seen by GDELT, Fetched by BBR, Flagged by BBR, and Delay measured from the earliest linked report. Times are shown in UTC.
+
+### Rationale
+
+The open-hours median is about 171 minutes, and the free GNews path is about 12 hours, so a speed superlative would not match this record. The advertising rules above treat "fastest" as a comparison that needs proof. A number on the site has to be the live figure, with its window, its count, and a method page.
+
+### Cross-tree mapping
+
+Recorded as **D50** in `docs/claude_project/10_DECISIONS.md`.

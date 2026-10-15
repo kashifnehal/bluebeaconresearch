@@ -98,10 +98,12 @@ Railway workers (startup + every 30 min)
 **Dedup key:** `gnews-{base64(url)[0:32]}`  
 **DB source value:** `newsapi` (check constraint — not `gnews`)
 
-**Current query:**
+**Queries:** three, matching `GNEWS_QUERIES` in `gnews-collector.ts`. Unset or `free`: one rotating query per cycle, max 10. Exactly `essential`: all queries every cycle, max 25.
 
 ```
-conflict OR war OR sanctions OR oil OR stock market OR trade OR inflation OR fed OR earnings OR futures
+conflict OR war OR sanctions OR trade OR stock market OR inflation OR fed OR earnings
+oil OR crude OR brent OR "natural gas" OR OPEC OR pipeline OR refinery OR gold OR copper OR silver OR "european gas" OR gasoline OR diesel
+shipping OR tanker OR port OR canal OR sanctions OR embargo OR "export ban" OR tariff OR blockade
 ```
 
 **Filter:** Same as RSS `world` tier — `isRelevantEvent(title, summary)`.

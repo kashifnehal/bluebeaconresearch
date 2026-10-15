@@ -182,7 +182,7 @@ They give you headlines in seconds. BBR gives you analysis in 2 minutes. We are 
 
 **Tagline Options Used:**
 - "Geopolitical intelligence for markets that matter." (updated 2026-09-25, was "High-fidelity geopolitical intelligence → actionable trading signals.")
-- "Intelligence before markets move."
+- "Intelligence before markets move." — HOLD (timing claim, not to ship)
 - "The signal, not the noise."
 
 **Visual Identity:**

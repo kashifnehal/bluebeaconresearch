@@ -15,6 +15,8 @@ This document specifies the marketing strategy, value proposition, landing page 
 > **Unlike** traditional news terminals (Bloomberg, Reuters) that deliver unstructured text with 30-minute delays,  
 > **Our product** couples geopolitical event coordinates directly with quantitative commodity asset impacts (`USOIL`, `GOLD`, `NG`, `COPPER`).
 
+**Never say:** fastest, quickest, first to know, real-time, instant, before markets move, unless the speed-claim decision allows it.
+
 ---
 
 ## 2. Landing Page Copy & Messaging Audit (`/`)
