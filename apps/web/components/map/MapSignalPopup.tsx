@@ -42,7 +42,7 @@ export function MapSignalPopup({
         aria-modal="true"
         aria-labelledby="map-event-title"
         data-testid="map-event-popup"
-        className="fixed md:absolute left-4 right-4 md:left-[calc(var(--popup-offset)+1rem)] md:right-auto top-24 w-auto md:w-[min(22rem,calc(100vw-26rem))] max-h-[min(70vh,32rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline-variant/40 bg-[#131313] p-4 shadow-2xl z-40"
+        className="fixed md:absolute left-4 right-4 md:left-[calc(var(--popup-offset)+1rem)] md:right-auto top-24 w-auto md:w-[min(22rem,calc(100vw-26rem))] max-h-[min(70vh,32rem)] overflow-y-auto overflow-x-hidden rounded-xl border border-outline-variant/40 bg-[var(--bg-primary)] p-4 shadow-2xl z-40"
         style={{ "--popup-offset": offsetLeft } as React.CSSProperties}
       >
         <div className="flex items-start justify-between gap-3 mb-3">

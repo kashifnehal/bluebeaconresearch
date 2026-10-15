@@ -69,16 +69,16 @@ export function IngestionStatusBannerView({ data }: { data: IngestionStatusRespo
       style={{
         fontFamily: "'Space Grotesk', sans-serif",
         backgroundColor: notHealthy ? "#2a1f1f" : "#1a2420",
-        borderColor: notHealthy ? "#6b3030" : "#3c4a42",
-        color: notHealthy ? "#f0a0a0" : "#bbcac0",
+        borderColor: notHealthy ? "#6b3030" : "var(--border)",
+        color: notHealthy ? "#f0a0a0" : "var(--text-secondary)",
       }}
     >
       <span className="flex items-center gap-2">
         <span
           className="inline-block h-2 w-2 rounded-full"
-          style={{ backgroundColor: notHealthy ? "#ef4444" : "#4edea3" }}
+          style={{ backgroundColor: notHealthy ? "#ef4444" : "var(--accent)" }}
         />
-        <span className="font-bold uppercase" style={{ color: notHealthy ? "#f0a0a0" : "#4edea3" }}>
+        <span className="font-bold uppercase" style={{ color: notHealthy ? "#f0a0a0" : "var(--accent)" }}>
           {budgetPaused
             ? "Collection paused"
             : degraded
@@ -132,7 +132,7 @@ export function IngestionStatusBannerView({ data }: { data: IngestionStatusRespo
       {status.totals.inserted > 0 && (
         <span>
           Last run:{" "}
-          <strong style={{ color: "#4edea3" }}>
+          <strong style={{ color: "var(--accent)" }}>
             +{status.totals.signals} signal{status.totals.signals !== 1 ? "s" : ""}
           </strong>{" "}
           ({status.totals.fetched} articles scanned)

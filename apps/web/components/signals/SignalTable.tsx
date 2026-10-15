@@ -57,14 +57,14 @@ export function SignalTable({
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-4 pt-3">
         <p
           className="text-[12px] md:text-[11px]"
-          style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
+          style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
         >
           Sorting applies to loaded rows
         </p>
         <p
           data-testid="signal-table-count"
           className="text-[12px] md:text-[11px]"
-          style={{ color: "#bbcac0", fontFamily: "'JetBrains Mono', monospace" }}
+          style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}
         >
           {countLine}
         </p>
@@ -79,7 +79,7 @@ export function SignalTable({
           <thead>
             <tr
               className="border-b"
-              style={{ borderColor: "#3c4a42", color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ borderColor: "var(--border)", color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               <HeaderCell label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <th className="px-4 py-3 font-bold uppercase tracking-widest">Event</th>
@@ -105,13 +105,13 @@ export function SignalTable({
                   data-testid="signal-table-row"
                   className="transition-colors hover:bg-[#1f1f1f]"
                 >
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "#86948a", fontFamily: "'JetBrains Mono', monospace" }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt, { addSuffix: true })}
                     </a>
                   </td>
                   <td className="px-4 py-3 max-w-[280px]" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
-                    <a href={`/events/${signal.id}`} className="block truncate hover:text-[#4edea3]">
+                    <a href={`/events/${signal.id}`} className="block truncate hover:text-[var(--accent)]">
                       {signal.title}
                     </a>
                   </td>
@@ -119,14 +119,14 @@ export function SignalTable({
                     <td
                       className="px-4 py-3 max-w-[320px]"
                       data-testid="signal-table-summary-cell"
-                      style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}
+                      style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}
                     >
                       <a href={`/events/${signal.id}`} className="block">
                         {truncateSignalSummary(signal.summary)}
                       </a>
                     </td>
                   )}
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "#bbcac0" }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {type}
                     </a>
@@ -140,7 +140,7 @@ export function SignalTable({
                           confidence={primaryImpact.confidence}
                         />
                       ) : (
-                        <span style={{ color: "#86948a" }}>—</span>
+                        <span style={{ color: "var(--text-muted)" }}>—</span>
                       )}
                     </a>
                   </td>
@@ -149,12 +149,12 @@ export function SignalTable({
                       <SeverityBadge score={signal.severity} />
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "#bbcac0", fontFamily: "'JetBrains Mono', monospace" }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {signal.sourcesCount}
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "#bbcac0", fontFamily: "'JetBrains Mono', monospace" }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {topicSymbols(signal)}
                     </a>
@@ -191,7 +191,7 @@ function HeaderCell({
         onClick={() => onSort(column)}
         aria-pressed={active}
         className="inline-flex items-center gap-1 cursor-pointer"
-        style={{ color: active ? "#4edea3" : "inherit" }}
+        style={{ color: active ? "var(--accent)" : "inherit" }}
       >
         {label}
         {active ? <span aria-hidden="true">{sortDirection === "asc" ? "↑" : "↓"}</span> : null}

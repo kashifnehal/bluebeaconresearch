@@ -59,21 +59,21 @@ const EVENT_STEPS: Step[] = [
 
 const TOUR_STYLES = {
   options: {
-    arrowColor: "#131313",
-    backgroundColor: "#131313",
+    arrowColor: "var(--bg-primary)",
+    backgroundColor: "var(--bg-primary)",
     overlayColor: "rgba(14,14,14,0.78)",
-    primaryColor: "#4edea3",
+    primaryColor: "var(--accent)",
     textColor: "#e5e2e1",
     zIndex: 10000,
   },
   tooltip: {
     fontFamily: "'Inter', sans-serif",
     borderRadius: 0,
-    border: "1px solid #3c4a42",
+    border: "1px solid var(--border)",
   },
   tooltipTitle: { fontFamily: "'Space Grotesk', sans-serif" },
   buttonNext: {
-    backgroundColor: "#4edea3",
+    backgroundColor: "var(--accent)",
     color: "#003824",
     fontFamily: "'Space Grotesk', sans-serif",
     fontWeight: 700,
@@ -84,12 +84,12 @@ const TOUR_STYLES = {
     padding: "8px 16px",
   },
   buttonBack: {
-    color: "#86948a",
+    color: "var(--text-muted)",
     fontFamily: "'Space Grotesk', sans-serif",
     fontSize: "11px",
   },
   buttonSkip: {
-    color: "#86948a",
+    color: "var(--text-muted)",
     fontFamily: "'Space Grotesk', sans-serif",
     fontSize: "11px",
     fontWeight: 700,

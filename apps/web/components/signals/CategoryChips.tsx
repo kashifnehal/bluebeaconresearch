@@ -45,9 +45,9 @@ export function CategoryChips({ value, onChange, className }: CategoryChipsProps
             className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[36px] md:min-h-0"
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
-              backgroundColor: selected ? "#4edea3" : "#201f1f",
-              color: selected ? "#005f40" : "#bbcac0",
-              borderColor: selected ? "#4edea3" : "#3c4a42",
+              backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+              color: selected ? "#005f40" : "var(--text-secondary)",
+              borderColor: selected ? "var(--accent)" : "var(--border)",
             }}
           >
             {opt.label}

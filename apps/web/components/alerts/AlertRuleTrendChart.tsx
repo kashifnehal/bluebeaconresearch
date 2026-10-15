@@ -38,15 +38,15 @@ export function AlertRuleTrendChart({ dailyCounts }: { dailyCounts: DailyCount[]
               formatter={(value) => [`${value} match${value === 1 ? "" : "es"}`, ""]}
               labelFormatter={(label) => formatDayLabel(String(label))}
               contentStyle={{
-                background: "#131313",
-                border: "1px solid #3c4a42",
+                background: "var(--bg-primary)",
+                border: "1px solid var(--border)",
                 borderRadius: 4,
                 fontSize: 11,
               }}
-              labelStyle={{ color: "#86948a" }}
-              itemStyle={{ color: "#4edea3" }}
+              labelStyle={{ color: "var(--text-muted)" }}
+              itemStyle={{ color: "var(--accent)" }}
             />
-            <Bar dataKey="count" fill="#4edea3" radius={[1, 1, 0, 0]} />
+            <Bar dataKey="count" fill="var(--accent)" radius={[1, 1, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

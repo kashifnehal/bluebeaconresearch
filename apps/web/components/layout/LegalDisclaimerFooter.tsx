@@ -2,7 +2,7 @@ export function LegalDisclaimerFooter() {
   return (
     <footer
       data-testid="legal-disclaimer-footer"
-      className="px-4 py-4 md:px-8 border-t border-[#2a2a2a] text-center text-[11px] leading-relaxed text-[#86948a] font-mono"
+      className="px-4 py-4 md:px-8 border-t border-[#2a2a2a] text-center text-[11px] leading-relaxed text-[var(--text-muted)] font-mono"
     >
       <p>
         Blue Beacon Research provides news-derived signals and market-impact analysis for informational and research
@@ -15,7 +15,7 @@ export function LegalDisclaimerFooter() {
           href="https://www.gdeltproject.org/"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline hover:text-[#bbcac0]"
+          className="underline hover:text-[var(--text-secondary)]"
         >
           Event data from the GDELT Project
         </a>

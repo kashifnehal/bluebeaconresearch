@@ -281,7 +281,7 @@ export function CommandPalette() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         showCloseButton={false}
-        className="top-[18%] max-w-xl translate-y-0 gap-0 rounded-lg border border-[#3c4a42] bg-[#0e0e0e] p-0 text-[#e5e2e1] ring-0 sm:max-w-xl"
+        className="top-[18%] max-w-xl translate-y-0 gap-0 rounded-lg border border-[var(--border)] bg-[#0e0e0e] p-0 text-[#e5e2e1] ring-0 sm:max-w-xl"
       >
         <DialogTitle className="sr-only">Command Palette</DialogTitle>
         <DialogDescription className="sr-only">
@@ -289,7 +289,7 @@ export function CommandPalette() {
         </DialogDescription>
 
         <div className="flex items-center gap-3 border-b border-[#2a2a2a] px-4 py-3">
-          <span className="material-symbols-outlined text-[#4edea3]" style={{ fontSize: "18px" }}>
+          <span className="material-symbols-outlined text-[var(--accent)]" style={{ fontSize: "18px" }}>
             search
           </span>
           <input
@@ -298,10 +298,10 @@ export function CommandPalette() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search signals, watchlist, alert rules, pages..."
-            className="flex-1 bg-transparent text-sm text-[#e5e2e1] outline-none placeholder:text-[#86948a]"
+            className="flex-1 bg-transparent text-sm text-[#e5e2e1] outline-none placeholder:text-[var(--text-muted)]"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           />
-          <span className="rounded-sm border border-[#3c4a42] px-1.5 py-0.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#86948a]">
+          <span className="rounded-sm border border-[var(--border)] px-1.5 py-0.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
             Esc
           </span>
         </div>
@@ -309,8 +309,8 @@ export function CommandPalette() {
         <div className="max-h-[60vh] overflow-y-auto p-2">
           {showEmptyState ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <span className="material-symbols-outlined text-3xl text-[#3c4a42]">search_off</span>
-              <p className="text-xs font-medium text-[#86948a]">
+              <span className="material-symbols-outlined text-3xl text-[var(--border)]">search_off</span>
+              <p className="text-xs font-medium text-[var(--text-muted)]">
                 No results for &ldquo;{trimmedQuery}&rdquo;
               </p>
             </div>
@@ -319,7 +319,7 @@ export function CommandPalette() {
               {groupedResults.map(({ group, items }) => (
                 <div key={group} className="mb-2 last:mb-0">
                   <div
-                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
+                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)]"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     {group}
@@ -340,7 +340,7 @@ export function CommandPalette() {
                         }`}
                       >
                         <span
-                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          className="material-symbols-outlined shrink-0 text-[var(--accent)]"
                           style={{ fontSize: "16px" }}
                         >
                           {item.icon}
@@ -348,7 +348,7 @@ export function CommandPalette() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
                           {item.sublabel && (
-                            <span className="block truncate text-[12px] md:text-[10px] text-[#86948a]">{item.sublabel}</span>
+                            <span className="block truncate text-[12px] md:text-[10px] text-[var(--text-muted)]">{item.sublabel}</span>
                           )}
                         </span>
                       </a>
@@ -362,7 +362,7 @@ export function CommandPalette() {
                         }`}
                       >
                         <span
-                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          className="material-symbols-outlined shrink-0 text-[var(--accent)]"
                           style={{ fontSize: "16px" }}
                         >
                           {item.icon}
@@ -370,7 +370,7 @@ export function CommandPalette() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-semibold text-[#e5e2e1]">{item.label}</span>
                           {item.sublabel && (
-                            <span className="block truncate text-[12px] md:text-[10px] text-[#86948a]">{item.sublabel}</span>
+                            <span className="block truncate text-[12px] md:text-[10px] text-[var(--text-muted)]">{item.sublabel}</span>
                           )}
                         </span>
                       </button>
@@ -381,7 +381,7 @@ export function CommandPalette() {
               {suggested.length > 0 && (
                 <div className="mb-2 last:mb-0 border-t border-[#2a2a2a] pt-2">
                   <div
-                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#4edea3]"
+                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[var(--accent)]"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     Suggested
@@ -399,7 +399,7 @@ export function CommandPalette() {
                         }`}
                       >
                         <span
-                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          className="material-symbols-outlined shrink-0 text-[var(--accent)]"
                           style={{ fontSize: "16px" }}
                         >
                           {item.icon}
@@ -409,7 +409,7 @@ export function CommandPalette() {
                             {item.label}
                           </span>
                           {item.sublabel && (
-                            <span className="block truncate text-[12px] md:text-[10px] text-[#86948a]">
+                            <span className="block truncate text-[12px] md:text-[10px] text-[var(--text-muted)]">
                               AI suggestion · {item.sublabel}
                             </span>
                           )}
@@ -422,7 +422,7 @@ export function CommandPalette() {
               {fallback.length > 0 && (
                 <div className="mb-2 last:mb-0 border-t border-[#2a2a2a] pt-2">
                   <div
-                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[#86948a]"
+                    className="px-2 py-1.5 text-[12px] md:text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)]"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     Not sure? Try
@@ -440,7 +440,7 @@ export function CommandPalette() {
                         }`}
                       >
                         <span
-                          className="material-symbols-outlined shrink-0 text-[#4edea3]"
+                          className="material-symbols-outlined shrink-0 text-[var(--accent)]"
                           style={{ fontSize: "16px" }}
                         >
                           {item.icon}
@@ -457,17 +457,17 @@ export function CommandPalette() {
           )}
 
           {showAssistPending && (
-            <div className="px-2 py-2 text-[12px] md:text-[10px] uppercase tracking-widest text-[#86948a]">
+            <div className="px-2 py-2 text-[12px] md:text-[10px] uppercase tracking-widest text-[var(--text-muted)]">
               Looking for a suggestion...
             </div>
           )}
 
           {hasQuery && signalsFetching && (
-            <div className="px-2 py-2 text-[12px] md:text-[10px] uppercase tracking-widest text-[#86948a]">Searching signals...</div>
+            <div className="px-2 py-2 text-[12px] md:text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Searching signals...</div>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-4 border-t border-[#2a2a2a] px-4 py-2 text-[12px] md:text-[9px] uppercase tracking-widest text-[#86948a]">
+        <div className="flex items-center justify-end gap-4 border-t border-[#2a2a2a] px-4 py-2 text-[12px] md:text-[9px] uppercase tracking-widest text-[var(--text-muted)]">
           <span>↑↓ Navigate</span>
           <span>↵ Select</span>
         </div>

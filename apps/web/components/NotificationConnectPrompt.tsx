@@ -96,7 +96,7 @@ export function NotificationConnectPrompt() {
   return (
     <div
       data-testid="notification-connect-prompt"
-      className="fixed bottom-4 right-4 z-40 w-[min(100%-2rem,360px)] bg-[#131313] border border-[#3c4a42] rounded-lg shadow-2xl p-4 text-[#e5e2e1]"
+      className="fixed bottom-4 right-4 z-40 w-[min(100%-2rem,360px)] bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg shadow-2xl p-4 text-[#e5e2e1]"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       <p
@@ -105,7 +105,7 @@ export function NotificationConnectPrompt() {
       >
         Get alerted the moment this happens again
       </p>
-      <p className="text-xs text-[#86948a] mb-4">
+      <p className="text-xs text-[var(--text-muted)] mb-4">
         Connect Telegram to receive this kind of signal as it happens. Settings
         stays the place to manage or disconnect later.
       </p>
@@ -113,7 +113,7 @@ export function NotificationConnectPrompt() {
         <button
           type="button"
           onClick={dismissForGood}
-          className="text-xs font-bold uppercase tracking-wider text-[#86948a] hover:text-[#e5e2e1] transition-colors"
+          className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] hover:text-[#e5e2e1] transition-colors"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Not now
@@ -124,7 +124,7 @@ export function NotificationConnectPrompt() {
             setSessionHidden(true);
             setNotificationConnectOpen(true);
           }}
-          className="px-4 py-2 bg-[#4edea3] text-[#003824] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
+          className="px-4 py-2 bg-[var(--accent)] text-[#003824] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Connect Telegram

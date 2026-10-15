@@ -16,12 +16,12 @@ export function NotificationConnectModal() {
       />
 
       <div
-        className="relative w-full max-w-lg bg-[#0e0e0e] border border-[#3c4a42] rounded-lg shadow-2xl z-50 flex flex-col max-h-[85vh] text-[#e5e2e1] animate-in zoom-in-95 duration-150"
+        className="relative w-full max-w-lg bg-[#0e0e0e] border border-[var(--border)] rounded-lg shadow-2xl z-50 flex flex-col max-h-[85vh] text-[#e5e2e1] animate-in zoom-in-95 duration-150"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
-        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between bg-[#131313] rounded-t-lg">
+        <div className="p-6 border-b border-[#2a2a2a] flex items-center justify-between bg-[var(--bg-primary)] rounded-t-lg">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#4edea3]/10 border border-[#4edea3]/30 flex items-center justify-center text-[#4edea3]">
+            <div className="w-8 h-8 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 flex items-center justify-center text-[var(--accent)]">
               <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
                 forum
               </span>
@@ -30,7 +30,7 @@ export function NotificationConnectModal() {
               <h2 className="font-bold text-lg" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 Get alerted the moment this happens again
               </h2>
-              <p className="text-xs text-[#86948a] font-mono">
+              <p className="text-xs text-[var(--text-muted)] font-mono">
                 Connect Telegram to receive signal alerts
               </p>
             </div>
@@ -38,7 +38,7 @@ export function NotificationConnectModal() {
 
           <button
             onClick={() => setNotificationConnectOpen(false)}
-            className="p-1 hover:text-[#4edea3] text-[#86948a] transition-colors rounded-sm"
+            className="p-1 hover:text-[var(--accent)] text-[var(--text-muted)] transition-colors rounded-sm"
             aria-label="Close"
           >
             <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>

@@ -31,7 +31,7 @@ export function MarketImpactChart({
             dataKey="label"
             tickLine={false}
             axisLine={{ stroke: "rgba(255,255,255,0.3)" }}
-            tick={{ fontSize: 10, fontFamily: "monospace", fill: "#86948a" }}
+            tick={{ fontSize: 10, fontFamily: "monospace", fill: "var(--text-muted)" }}
           />
           <Tooltip
             cursor={{ fill: "rgba(255,255,255,0.04)" }}
@@ -47,20 +47,20 @@ export function MarketImpactChart({
               ];
             }}
             contentStyle={{
-              background: "#131313",
-              border: "1px solid #3c4a42",
+              background: "var(--bg-primary)",
+              border: "1px solid var(--border)",
               borderRadius: 4,
               fontSize: 11,
             }}
-            labelStyle={{ color: "#86948a" }}
-            itemStyle={{ color: "#4edea3" }}
+            labelStyle={{ color: "var(--text-muted)" }}
+            itemStyle={{ color: "var(--accent)" }}
           />
-          <Bar dataKey="medianMovePct" fill="#4edea3" radius={[2, 2, 0, 0]}>
+          <Bar dataKey="medianMovePct" fill="var(--accent)" radius={[2, 2, 0, 0]}>
             <LabelList
               dataKey="medianMovePct"
               position="top"
               formatter={(value: unknown) => `${Number(value).toFixed(1)}%`}
-              style={{ fontSize: 10, fill: "#86948a", fontFamily: "monospace" }}
+              style={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "monospace" }}
             />
           </Bar>
         </BarChart>

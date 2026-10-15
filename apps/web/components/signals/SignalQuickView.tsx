@@ -88,7 +88,7 @@ function Part({ label, children }: { label: string; children: ReactNode }) {
     <div className="space-y-1.5">
       <div
         className="text-[12px] md:text-[9px] font-black uppercase tracking-widest"
-        style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+        style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
       >
         {label}
       </div>
@@ -181,11 +181,11 @@ export function SignalQuickView({
         />
         <SheetPrimitive.Popup
           data-testid="signal-quick-view"
-          className="fixed inset-y-0 right-0 z-50 flex h-full w-1/2 flex-col border-l border-[#3c4a42] bg-[#131313] text-sm shadow-lg outline-none transition duration-200 ease-in-out data-ending-style:translate-x-[2.5rem] data-ending-style:opacity-0 data-starting-style:translate-x-[2.5rem] data-starting-style:opacity-0"
+          className="fixed inset-y-0 right-0 z-50 flex h-full w-1/2 flex-col border-l border-[var(--border)] bg-[var(--bg-primary)] text-sm shadow-lg outline-none transition duration-200 ease-in-out data-ending-style:translate-x-[2.5rem] data-ending-style:opacity-0 data-starting-style:translate-x-[2.5rem] data-starting-style:opacity-0"
         >
           {signal ? (
             <>
-              <div className="flex items-start justify-between gap-4 border-b border-[#3c4a42] p-6">
+              <div className="flex items-start justify-between gap-4 border-b border-[var(--border)] p-6">
                 <div className="min-w-0 space-y-3">
                   <SheetPrimitive.Title
                     className="text-xl font-bold leading-tight"
@@ -198,18 +198,18 @@ export function SignalQuickView({
                   </SheetPrimitive.Title>
                   <SheetPrimitive.Description
                     className="text-sm leading-relaxed"
-                    style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}
+                    style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}
                   >
                     {signal.summary}
                   </SheetPrimitive.Description>
                   {readySources != null ? (
                     <div data-testid="quick-view-reports" className="space-y-1">
-                      <p className="text-[12px]" style={{ color: "#86948a" }}>
+                      <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
                         {signal.sourcesCount} reports
                         {uniqueSources != null ? ` · ${uniqueSources} unique sources` : ""}
                       </p>
                       {showLastUpdated ? (
-                        <p className="text-[12px]" style={{ color: "#86948a" }}>
+                        <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
                           Last updated{" "}
                           {safeFormatDistanceToNow(signal.updatedAt, { addSuffix: true })}
                         </p>
@@ -220,7 +220,7 @@ export function SignalQuickView({
                 <SheetPrimitive.Close
                   data-testid="signal-quick-view-close"
                   aria-label="Close"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center border border-[#3c4a42] text-[#86948a] transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e2e1]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--border)] text-[var(--text-muted)] transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e2e1]"
                 >
                   <span className="material-symbols-outlined text-[18px]">close</span>
                 </SheetPrimitive.Close>
@@ -231,8 +231,8 @@ export function SignalQuickView({
                   <Part label="Source confirmation">
                     <span
                       data-testid="market-impact-source-confirmation"
-                      className="inline-flex items-center rounded-sm border border-[#3c4a42] px-2 py-0.5 text-[12px] md:text-[11px] font-medium"
-                      style={{ color: "#bbcac0" }}
+                      className="inline-flex items-center rounded-sm border border-[var(--border)] px-2 py-0.5 text-[12px] md:text-[11px] font-medium"
+                      style={{ color: "var(--text-secondary)" }}
                     >
                       {sourceConfirmation}
                     </span>
@@ -241,7 +241,7 @@ export function SignalQuickView({
 
                 {category ? (
                   <Part label="Event category">
-                    <p className="text-[12px]" style={{ color: "#bbcac0" }}>
+                    <p className="text-[12px]" style={{ color: "var(--text-secondary)" }}>
                       {category}
                     </p>
                   </Part>
@@ -251,7 +251,7 @@ export function SignalQuickView({
                   <div className="flex items-center gap-3">
                     <SeverityBadge score={signal.severity} />
                     {mechanism ? (
-                      <p className="text-[12px] leading-relaxed" style={{ color: "#bbcac0" }}>
+                      <p className="text-[12px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                         {mechanism}
                       </p>
                     ) : null}
@@ -296,7 +296,7 @@ export function SignalQuickView({
                             </p>
                           )}
                           {source.domain || source.publishedAt ? (
-                            <p className="text-[12px]" style={{ color: "#86948a" }}>
+                            <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>
                               {source.domain}
                               {source.domain && source.publishedAt ? " · " : ""}
                               {source.publishedAt
@@ -311,7 +311,7 @@ export function SignalQuickView({
                 ) : null}
               </div>
 
-              <div className="border-t border-[#3c4a42] p-6">
+              <div className="border-t border-[var(--border)] p-6">
                 <a
                   href={`/events/${signal.id}`}
                   target="_blank"
@@ -326,7 +326,7 @@ export function SignalQuickView({
                   }}
                   className="inline-flex w-full items-center justify-center gap-2 px-8 py-3 text-xs font-bold tracking-widest uppercase transition-all active:scale-95"
                   style={{
-                    backgroundColor: "#4edea3",
+                    backgroundColor: "var(--accent)",
                     color: "#003824",
                     fontFamily: "'Space Grotesk', sans-serif",
                   }}

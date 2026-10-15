@@ -93,7 +93,7 @@ export function TopBar() {
           <div className="relative w-full max-w-md min-w-0">
             <span
               className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ fontSize: "16px", color: "#86948a" }}
+              style={{ fontSize: "16px", color: "var(--text-muted)" }}
             >
               search
             </span>
@@ -104,8 +104,8 @@ export function TopBar() {
               className="w-full border-none border-b focus:ring-0 text-xs py-2 pl-10 pr-8 text-left"
               style={{
                 backgroundColor: "#0e0e0e",
-                borderBottom: "1px solid #3c4a42",
-                color: "#86948a",
+                borderBottom: "1px solid var(--border)",
+                color: "var(--text-muted)",
                 fontFamily: "'JetBrains Mono', monospace",
                 outline: "none",
                 cursor: "pointer",
@@ -127,16 +127,16 @@ export function TopBar() {
               onClick={() => setNotificationConnectOpen(!notificationConnectOpen)}
               className="relative transition-colors hidden md:block"
               style={{
-                color: "#bbcac0",
+                color: "var(--text-secondary)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
               }}
               aria-label="Connect alert channel"
               title="Connect alert channel"
@@ -154,16 +154,16 @@ export function TopBar() {
               onClick={() => setNotifOpen(!notifOpen)}
               className="flex items-center justify-center transition-colors shrink-0 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
               style={{
-                color: "#bbcac0",
+                color: "var(--text-secondary)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
               }}
               title="Notifications"
             >
@@ -187,16 +187,16 @@ export function TopBar() {
               onClick={() => setHelpOpen(true)}
               className="transition-colors hidden md:block"
               style={{
-                color: "#bbcac0",
+                color: "var(--text-secondary)",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#4edea3";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "#bbcac0";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
               }}
               title="Help & Guidance"
             >
@@ -211,7 +211,7 @@ export function TopBar() {
 
           <div
             className="hidden md:block"
-            style={{ width: "1px", height: "32px", backgroundColor: "#3c4a42" }}
+            style={{ width: "1px", height: "32px", backgroundColor: "var(--border)" }}
           />
 
           {/* User Info & Avatar Dropdown */}
@@ -222,7 +222,7 @@ export function TopBar() {
                   style={{
                     fontSize: "12px",
                     fontFamily: "'Space Grotesk', sans-serif",
-                    color: "#4edea3",
+                    color: "var(--accent)",
                     letterSpacing: "0.05em",
                   }}
                 >
@@ -232,7 +232,7 @@ export function TopBar() {
                   style={{
                     fontSize: "10px",
                     fontFamily: "'JetBrains Mono', monospace",
-                    color: "#86948a",
+                    color: "var(--text-muted)",
                   }}
                 >
                   v2.4.0-STABLE
@@ -257,9 +257,9 @@ export function TopBar() {
                     height: "32px",
                     fontSize: "10px",
                     fontFamily: "'Space Grotesk', sans-serif",
-                    backgroundColor: avatarOpen ? "#4edea3" : "#2a2a2a",
-                    borderColor: "#3c4a42",
-                    color: avatarOpen ? "#003824" : "#4edea3",
+                    backgroundColor: avatarOpen ? "var(--accent)" : "#2a2a2a",
+                    borderColor: "var(--border)",
+                    color: avatarOpen ? "#003824" : "var(--accent)",
                   }}
                 >
                   {user?.initials || "GS"}
@@ -270,14 +270,14 @@ export function TopBar() {
             {/* Dropdown Menu */}
             {avatarOpen && (
               <div
-                className="absolute right-0 mt-2 w-56 bg-[#131313] border border-[#3c4a42] rounded-md shadow-2xl z-50 py-2 text-xs text-[#e5e2e1] animate-in fade-in slide-in-from-top-2 duration-150"
+                className="absolute right-0 mt-2 w-56 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md shadow-2xl z-50 py-2 text-xs text-[#e5e2e1] animate-in fade-in slide-in-from-top-2 duration-150"
                 style={{ fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 <div className="px-4 py-2 border-b border-[#2a2a2a]">
                   <p className="font-bold text-[#e5e2e1] truncate">
                     {user?.name || "Terminal User"}
                   </p>
-                  <p className="text-[12px] md:text-[10px] text-[#86948a] font-mono truncate">
+                  <p className="text-[12px] md:text-[10px] text-[var(--text-muted)] font-mono truncate">
                     {user?.email || ""}
                   </p>
                 </div>
@@ -288,7 +288,7 @@ export function TopBar() {
                       setAvatarOpen(false);
                       router.push("/help");
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[#201f1f] hover:text-[#4edea3] flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--accent)] flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="material-symbols-outlined"
@@ -304,7 +304,7 @@ export function TopBar() {
                       setAvatarOpen(false);
                       router.push("/settings");
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[#201f1f] hover:text-[#4edea3] flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--accent)] flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="material-symbols-outlined"
@@ -320,7 +320,7 @@ export function TopBar() {
                       setAvatarOpen(false);
                       router.push("/alerts");
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[#201f1f] hover:text-[#4edea3] flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--accent)] flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="material-symbols-outlined"

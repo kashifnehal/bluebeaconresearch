@@ -66,7 +66,7 @@ export function Sidebar() {
       style={{
         width: "256px",
         backgroundColor: "#000000",
-        borderRight: "1px solid #3c4a42",
+        borderRight: "1px solid var(--border)",
       }}
     >
       {/* Logo */}
@@ -93,14 +93,14 @@ export function Sidebar() {
                   fontFamily: "'Space Grotesk', sans-serif",
                   fontSize: "12px",
                   letterSpacing: "0.05em",
-                  color: active ? "#4edea3" : "rgba(229,226,225,0.6)",
-                  borderLeft: active ? "2px solid #4edea3" : "2px solid transparent",
-                  backgroundColor: active ? "#131313" : "transparent",
+                  color: active ? "var(--accent)" : "rgba(229,226,225,0.6)",
+                  borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
+                  backgroundColor: active ? "var(--bg-primary)" : "transparent",
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
                     (e.currentTarget as HTMLElement).style.color = "#e5e2e1";
-                    (e.currentTarget as HTMLElement).style.backgroundColor = "#131313";
+                    (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-primary)";
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -140,19 +140,19 @@ export function Sidebar() {
       {/* Footer */}
       <div
         className="mt-auto p-6 border-t space-y-2"
-        style={{ borderColor: "#3c4a42", backgroundColor: "#0e0e0e" }}
+        style={{ borderColor: "var(--border)", backgroundColor: "#0e0e0e" }}
       >
-        <div className="text-[12px] md:text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#4edea3" }}>
+        <div className="text-[12px] md:text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--accent)" }}>
           Node: BB-ALPHA-09
         </div>
         <Link
           href="/help"
           className="flex items-center gap-2 w-full text-left transition-colors"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: pathname === "/help" || pathname.startsWith("/help/") ? "#4edea3" : "rgba(229,226,225,0.6)", padding: 0 }}
+          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: pathname === "/help" || pathname.startsWith("/help/") ? "var(--accent)" : "rgba(229,226,225,0.6)", padding: 0 }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#e5e2e1"; }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.color =
-              pathname === "/help" || pathname.startsWith("/help/") ? "#4edea3" : "rgba(229,226,225,0.6)";
+              pathname === "/help" || pathname.startsWith("/help/") ? "var(--accent)" : "rgba(229,226,225,0.6)";
           }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>help</span>

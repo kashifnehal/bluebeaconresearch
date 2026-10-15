@@ -39,7 +39,7 @@ export function MobileTabBar() {
             key={item.href}
             href={item.href}
             className="flex-1 flex flex-col items-center justify-center gap-0.5 relative min-h-[44px]"
-            style={{ color: active ? "#4edea3" : "#86948a" }}
+            style={{ color: active ? "var(--accent)" : "var(--text-muted)" }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
               {item.icon}
@@ -70,7 +70,7 @@ export function MobileTabBar() {
         onClick={() => setMobileSidebarOpen(true)}
         aria-label="Open more navigation"
         className="flex-1 flex flex-col items-center justify-center gap-0.5 min-h-[44px]"
-        style={{ color: "#86948a", background: "none", border: "none", cursor: "pointer" }}
+        style={{ color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}
       >
         <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
           menu

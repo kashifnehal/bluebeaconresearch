@@ -1,13 +1,13 @@
 /* Dark-terminal theme for Driver.js Feature Hints (not the Joyride tour). */
 :root {
-  --driver-hint-color: #4edea3;
+  --driver-hint-color: var(--accent);
   --driver-hint-size: 18px;
 }
 
 .bbr-feature-hint.driver-popover {
-  background-color: #131313;
+  background-color: var(--bg-primary);
   color: #e5e2e1;
-  border: 1px solid #3c4a42;
+  border: 1px solid var(--border);
   border-radius: 0;
   font-family: Inter, sans-serif;
   box-shadow: none;
@@ -24,11 +24,11 @@
 .bbr-feature-hint .driver-popover-description {
   font-size: 13px;
   line-height: 1.5;
-  color: #bbcac0;
+  color: var(--text-secondary);
 }
 
 .bbr-feature-hint .driver-popover-close-btn {
-  color: #86948a;
+  color: var(--text-muted);
 }
 
 .bbr-feature-hint .driver-popover-close-btn:hover,
@@ -37,7 +37,7 @@
 }
 
 .bbr-feature-hint .driver-popover-footer-btn {
-  background-color: #4edea3;
+  background-color: var(--accent);
   color: #003824;
   border: none;
   border-radius: 0;
@@ -55,21 +55,21 @@
 }
 
 .bbr-feature-hint .driver-popover-arrow {
-  border-color: #131313;
+  border-color: var(--bg-primary);
 }
 
 .bbr-feature-hint.driver-popover-arrow-side-left {
-  border-left-color: #131313;
+  border-left-color: var(--bg-primary);
 }
 
 .bbr-feature-hint.driver-popover-arrow-side-right {
-  border-right-color: #131313;
+  border-right-color: var(--bg-primary);
 }
 
 .bbr-feature-hint.driver-popover-arrow-side-top {
-  border-top-color: #131313;
+  border-top-color: var(--bg-primary);
 }
 
 .bbr-feature-hint.driver-popover-arrow-side-bottom {
-  border-bottom-color: #131313;
+  border-bottom-color: var(--bg-primary);
 }

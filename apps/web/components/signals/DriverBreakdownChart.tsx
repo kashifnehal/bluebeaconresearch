@@ -216,7 +216,7 @@ export function DriverBreakdownChart({
                   onClick={() => toggle(s.key)}
                   className="flex items-center gap-1.5 px-2 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
                   style={{
-                    borderColor: isHidden ? "#3c4a42" : s.color,
+                    borderColor: isHidden ? "var(--border)" : s.color,
                     color: isHidden ? "#6b7570" : "#e8ece9",
                     opacity: isHidden ? 0.5 : 1,
                   }}

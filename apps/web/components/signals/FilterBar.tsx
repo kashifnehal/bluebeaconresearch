@@ -43,7 +43,7 @@ export function FilterBar({
     : "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
   const labelStyle = stacked
     ? undefined
-    : { color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" };
+    : { color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" };
   // Bar layout: full width on mobile so each select fills its grid cell (a long option
   // label like "East Asia / Korean Peninsula" was otherwise forcing the closed <select>
   // wide enough to break 3-across packing); back to auto/natural width at md+, unchanged.
@@ -172,9 +172,9 @@ export function FilterBar({
                     ? undefined
                     : {
                         fontFamily: "'Space Grotesk', sans-serif",
-                        backgroundColor: selected ? "#4edea3" : "#201f1f",
-                        color: selected ? "#005f40" : "#bbcac0",
-                        borderColor: selected ? "#4edea3" : "#3c4a42",
+                        backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+                        color: selected ? "#005f40" : "var(--text-secondary)",
+                        borderColor: selected ? "var(--accent)" : "var(--border)",
                       }
                 }
               >

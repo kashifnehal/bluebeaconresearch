@@ -73,13 +73,13 @@ export function NotificationPanel() {
 
       {/* Drawer */}
       <aside
-        className="relative w-[360px] h-full bg-[#0e0e0e] border-l border-[#3c4a42] flex flex-col z-50 text-white shadow-2xl animate-in slide-in-from-right duration-200"
+        className="relative w-[360px] h-full bg-[#0e0e0e] border-l border-[var(--border)] flex flex-col z-50 text-white shadow-2xl animate-in slide-in-from-right duration-200"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         {/* Header */}
-        <div className="p-4 border-b border-[#2a2a2a] flex items-center justify-between bg-[#131313]">
+        <div className="p-4 border-b border-[#2a2a2a] flex items-center justify-between bg-[var(--bg-primary)]">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#4edea3]" style={{ fontSize: "20px" }}>
+            <span className="material-symbols-outlined text-[var(--accent)]" style={{ fontSize: "20px" }}>
               notifications
             </span>
             <span className="font-bold text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#e5e2e1" }}>
@@ -90,14 +90,14 @@ export function NotificationPanel() {
           <div className="flex items-center gap-2">
             <button
               onClick={markAllRead}
-              className="text-[12px] md:text-[10px] uppercase font-bold tracking-wider px-2 py-1 border border-[#3c4a42] hover:border-[#4edea3] hover:text-[#4edea3] transition-colors rounded-sm"
+              className="text-[12px] md:text-[10px] uppercase font-bold tracking-wider px-2 py-1 border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors rounded-sm"
               style={{ color: "#acabaa" }}
             >
               Mark all read
             </button>
             <button
               onClick={() => setNotifOpen(false)}
-              className="p-1 hover:text-[#4edea3] text-[#86948a] transition-colors"
+              className="p-1 hover:text-[var(--accent)] text-[var(--text-muted)] transition-colors"
             >
               <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
                 close
@@ -110,11 +110,11 @@ export function NotificationPanel() {
         <div className="flex-1 overflow-y-auto divide-y divide-[#2a2a2a]">
           {isLoading ? (
             <div className="p-8 text-center flex flex-col items-center gap-3">
-              <div className="w-6 h-6 border-2 border-[#4edea3]/20 border-t-[#4edea3] rounded-full animate-spin" />
-              <span className="text-xs text-[#86948a] font-mono uppercase">Loading notifications...</span>
+              <div className="w-6 h-6 border-2 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin" />
+              <span className="text-xs text-[var(--text-muted)] font-mono uppercase">Loading notifications...</span>
             </div>
           ) : isError ? (
-            <div className="p-12 text-center flex flex-col items-center justify-center gap-4 text-[#86948a]">
+            <div className="p-12 text-center flex flex-col items-center justify-center gap-4 text-[var(--text-muted)]">
               <span className="material-symbols-outlined text-4xl text-[#ee7d77]">error_outline</span>
               <p className="text-xs font-medium text-[#acabaa]">
                 Couldn't load alerts right now — this is a fetch error, not "no alerts yet."
@@ -149,13 +149,13 @@ export function NotificationPanel() {
                     className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0"
                     style={{
                       backgroundColor:
-                        status === "failed" ? "#ee7d77" : status === "queued" ? "#e0a84e" : isHigh ? "#ee7d77" : "#4edea3",
+                        status === "failed" ? "#ee7d77" : status === "queued" ? "#e0a84e" : isHigh ? "#ee7d77" : "var(--accent)",
                     }}
                   />
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[12px] md:text-[10px] font-mono uppercase text-[#86948a]">
+                      <span className="text-[12px] md:text-[10px] font-mono uppercase text-[var(--text-muted)]">
                         {safeFormatDistanceToNow(item.created_at)} ago
                       </span>
                       {status === "failed" ? (
@@ -174,7 +174,7 @@ export function NotificationPanel() {
                         </span>
                       ) : (
                         <span
-                          className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[#4edea3] hover:underline"
+                          className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[var(--accent)] hover:underline"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           View <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>arrow_forward</span>
@@ -187,7 +187,7 @@ export function NotificationPanel() {
                     </p>
 
                     {notDelivered && (
-                      <p className="text-[12px] md:text-[10px] text-[#86948a] mt-1">
+                      <p className="text-[12px] md:text-[10px] text-[var(--text-muted)] mt-1">
                         {status === "failed"
                           ? "This alert fired but delivery failed."
                           : "This alert fired but no delivery channel is connected."}
@@ -198,8 +198,8 @@ export function NotificationPanel() {
               );
             })
           ) : (
-            <div className="p-12 text-center flex flex-col items-center justify-center gap-4 text-[#86948a]">
-              <span className="material-symbols-outlined text-4xl text-[#3c4a42]">
+            <div className="p-12 text-center flex flex-col items-center justify-center gap-4 text-[var(--text-muted)]">
+              <span className="material-symbols-outlined text-4xl text-[var(--border)]">
                 notifications_off
               </span>
               <p className="text-xs font-medium text-[#acabaa]">
@@ -210,11 +210,11 @@ export function NotificationPanel() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[#2a2a2a] bg-[#131313] text-center">
+        <div className="p-4 border-t border-[#2a2a2a] bg-[var(--bg-primary)] text-center">
           <Link
             href="/alerts"
             onClick={() => setNotifOpen(false)}
-            className="text-xs font-bold text-[#4edea3] hover:underline uppercase tracking-wider flex items-center justify-center gap-1"
+            className="text-xs font-bold text-[var(--accent)] hover:underline uppercase tracking-wider flex items-center justify-center gap-1"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Manage alert rules <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
