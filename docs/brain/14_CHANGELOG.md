@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### v0.195.0 — First-touch attribution (2026-10-15, this commit)
+
+`apps/web` only. Campaign tags (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`) and an external referrer host are stored for the browser tab and, on email signup, on the account. A signed-in session records `first_touch_recorded` once. The privacy page says no cookie is set for this. Full detail: `LIVE_TODO.md`.
+
 ### v0.194.0 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
 
 `apps/web` only. The loaded-row line says "1 signal loaded" and "1 day" when that number is 1. Every other count stays plural, including 0. The rest of the line is unchanged. Full detail: `LIVE_TODO.md`.

@@ -11,7 +11,7 @@ import { track as trackVercelAnalytics } from "@vercel/analytics";
 // user action (signup, viewing a signal, creating an alert rule).
 //
 // Funnel event types (fire-once per user): signup_started, signup_completed,
-// first_signal_viewed, first_alert_rule_created.
+// first_signal_viewed, first_alert_rule_created, first_touch_recorded.
 // Recurring usage event types (see logUsageEvent below): dashboard_viewed,
 // watchlist_viewed, signal_detail_opened, alert_rule_created.
 // Behavioral-instrumentation event types (research doc docs/claude_project/64,

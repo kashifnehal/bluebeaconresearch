@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (singular signal count line — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (first-touch attribution — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (first-touch attribution, `apps/web` only, this commit) — campaign tags and an external referrer host are kept for the visit and saved on email signup. One funnel event records them after sign-in. No cookie. See `docs/brain/LIVE_TODO.md`, PHASE 172.
 
 > ⚠️ NEW 2026-10-15 (signal count line, `apps/web` only, `2c977d8`) — one loaded signal and one day use the singular. Other counts stay plural. See `docs/brain/LIVE_TODO.md`, PHASE 171.
 

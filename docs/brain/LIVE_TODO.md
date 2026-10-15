@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ M1 first-touch attribution, `apps/web` only, 2026-10-15, this commit
+
+- A visit with a utm tag or an external referrer host is stored in sessionStorage under `bbr.firstTouch` for that tab. Values are trimmed, lowercased, and cut at 100 characters. The site's own host is not stored. Nothing is written when storage throws, and a stored value is not overwritten.
+- Email signup copies that object onto the auth user's `first_touch` metadata, next to `full_name` and `plan_tier`. The Google path is unchanged.
+- After sign-in, the dashboard layout sends one `first_touch_recorded` funnel event (`once: true`). Email uses account metadata. Google uses sessionStorage in the same tab.
+- Privacy, Cookies and analytics, adds one sentence: campaign tags and the referring site's host name are kept for that visit and saved on signup. No cookie is set for this.
+- No open priority-queue line for this. Nothing struck.
+- Verification: first-touch unit tests in this commit. Browser walk of the Google path: could not verify in a browser (this prompt forbids a browser run).
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.195.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 172, `06_COMPONENTS.md`. Skipped both `05_API.md` (existing `/api/events` already accepts any event type string; no route change), both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new route, table, prompt, or standing rule.
+
 ## ✅ U3 plurals on the loaded-row count line, `apps/web` only, 2026-10-15, `2c977d8`
 
 - The line above the signal table always said "signals" and "days", including when the number was 1.

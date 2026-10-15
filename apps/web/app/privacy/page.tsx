@@ -172,6 +172,11 @@ export default function PrivacyPage() {
             <span className="text-text-primary">events</span> table. This application does not set an analytics cookie
             by name.
           </p>
+          <p>
+            When you arrive from a link that carries campaign tags (utm parameters) or from another website, the
+            campaign tags and the referring site's host name are kept in your browser for that visit, and are
+            saved with your account if you sign up. No cookie is set for this.
+          </p>
 
           <h2 className="pt-4 text-base font-semibold text-text-primary">Data sent to Anthropic</h2>
           <p>

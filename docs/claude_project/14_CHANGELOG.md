@@ -8,6 +8,10 @@
 
 ---
 
+## PHASE 172 — First-touch attribution (2026-10-15, this commit)
+
+`apps/web` only. Campaign tags and an external referrer host are stored for the visit. Email signup saves them on the account. A signed-in session records one `first_touch_recorded` event. The privacy page states that no cookie is set for this. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## PHASE 171 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
 
 `apps/web` only. One signal and one day use the singular on the loaded-row count line. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.194.0.

@@ -10,6 +10,8 @@ This document presents a complete inventory of all UI components in `apps/web/co
 
 ---
 
+> ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` mounts once in `app/providers.tsx` and writes `bbr.firstTouch` in sessionStorage. `FirstTouchLogger` mounts once in the signed-in dashboard layout and sends `first_touch_recorded` when account metadata or that stored value has a campaign tag or an external referrer host.
+
 ## 1. Top-Level Gate & Brand Components
 
 ### 1.1 `AccessLimitedModal.tsx`

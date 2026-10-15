@@ -5,6 +5,7 @@ import { ProductTour } from "@/components/onboarding/ProductTour";
 import { FeatureHints } from "@/components/onboarding/FeatureHints";
 import { NotificationConnectPrompt } from "@/components/NotificationConnectPrompt";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
+import { FirstTouchLogger } from "@/components/FirstTouchLogger";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0e0e0e" }}>
+      <FirstTouchLogger />
       <ProductTour />
       <FeatureHints />
       <NotificationConnectPrompt />

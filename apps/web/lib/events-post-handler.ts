@@ -5,9 +5,12 @@ import { rateLimitOrPass } from "@/lib/ratelimit";
 
 // Minimal funnel-event log (2026-08-27) — see apps/web/lib/funnel-events.ts for the
 // client-side caller and supabase/migrations/013_events_table.sql for the table/RLS.
-// Only ever called for signup_completed, first_signal_viewed, and
-// first_alert_rule_created (all `once: true`) — signup_started is Vercel-Analytics
-// only and never reaches this route, since it fires before the auth user exists.
+// Called for signup_completed, first_signal_viewed, first_alert_rule_created,
+// and first_touch_recorded (all `once: true`), plus the recurring usage events.
+// The table accepts any non-empty event_type string (no check constraint), so
+// first_touch_recorded is allowed the same way those event types are.
+// signup_started is Vercel-Analytics only and never reaches this route, since it
+// fires before the auth user exists.
 
 export type EventsPostDeps = {
   getClients: typeof getRouteSupabaseClients;

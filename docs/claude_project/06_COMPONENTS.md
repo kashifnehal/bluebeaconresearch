@@ -13,6 +13,8 @@
 
 ---
 
+> ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` (all pages, via providers) and `FirstTouchLogger` (signed-in dashboard layout) record campaign tags and an external referrer host. Full detail: `docs/brain/06_COMPONENTS.md`.
+
 ## 1. LAYOUT COMPONENTS
 
 ### Logo (`components/Logo.tsx`) — rewritten 2026-10-09

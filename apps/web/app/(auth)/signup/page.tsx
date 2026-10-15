@@ -15,6 +15,7 @@ import type { PlanTier } from "@blue-beacon-research/shared";
 import { isProjectReady } from "@/lib/flags";
 import { track } from "@/lib/analytics";
 import { trackFunnelEvent, logFunnelEventOnce } from "@/lib/funnel-events";
+import { readFirstTouch } from "@/lib/first-touch";
 
 type FormValues = z.infer<typeof signupSchema>;
 
@@ -105,11 +106,16 @@ function SignupForm() {
       // lib/supabase-email-auth.ts.
       const supabase = throwIfNoSupabase(getSupabaseEmailAuthClient());
       const confirmUrl = `${window.location.origin}/confirm`;
+      const firstTouch = readFirstTouch();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
-          data: { full_name: values.fullName, plan_tier: selectedPlan },
+          data: {
+            full_name: values.fullName,
+            plan_tier: selectedPlan,
+            ...(firstTouch ? { first_touch: firstTouch } : {}),
+          },
           emailRedirectTo: confirmUrl,
         },
       });
