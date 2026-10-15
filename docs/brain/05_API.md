@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-15 — `GET /api/signals/pulse?symbol=` counts signals BBR published for one known symbol. `created_at` is the publish time. The last 24 hours are `[now−24h, now]`; the prior 24 hours are `[now−48h, now−24h)`. `changePct` is null when the prior count is 0. `peakHourUtc` is null when the last window is empty. Up, down, and other use the impact whose asset is that symbol, over the last 24 hours only. A commodity or news-only symbol filters `commodity_impacts`. A forex symbol filters both impact columns and counts each signal once. An unknown symbol is `400`. Rate-limit, database, missing-client, and production-unauthenticated failures return `200` with `error` and no counts.
+>
 > ⚠️ UPDATED 2026-10-15 — `GET /api/signals/driver-breakdown` accepts an underscore in `symbol` (`^[A-Z0-9_]+$`) and still returns `400` unless the symbol is in `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`. `GET /api/signals` uses the same charset for `commodity`, `forexPair`, and saved preference symbols before they go into the `.or()` filter. `GET /api/signals/attribution` still requires `^[A-Z0-9]+$` on `asset`.
 >
 > ⚠️ UPDATED 2026-10-15 — `GET /api/signals/:id` (`apps/web`) adds a `Server-Timing` header only when `SERVER_TIMING` is exactly `true`. Body, status codes, and queries are unchanged. This route does not call the rate limiter. Steps are `auth`, `signal`, `raw_events`, `historical`, `related`, `price_at_signal`, `outcomes` (`hit`/`miss`/`inflight`/`skip`), `prices` (`hit`/`miss`/`open`/`skip`), `baselines` (`timeout`/`ok`/`skip`), `media`, `response`. Durations are whole milliseconds. No ids or account data. The host variable is not set in this commit.
@@ -185,6 +187,16 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Rate limit**: `rateLimitOrPass('signals-driver-breakdown:<ip>')`, same pattern as the other `/api/signals/*` routes — soft-fails to `{ rows: [], error: "rate_limited" }` rather than a 429.
 - **Auth**: same as `/api/signals/attribution` — unauthenticated allowed outside production.
 - **Not a new Fastify/backend route** — implemented entirely in `apps/web` (queries Supabase directly), matching `/api/signals/attribution`'s existing pattern; no `apps/backend` change was needed.
+
+#### `GET /api/signals/pulse` (Next.js route, 2026-10-15)
+
+- **Description**: Powers the five pulse tiles under the watchlist symbol header. Query: `symbol`. Pages `signals` with `.range()` where `created_at >= now − 48h` and the impact column contains `[{"asset": symbol}]` (`JSON.stringify`, `.filter(column, "cs", …)`).
+- **Symbol check**: `^[A-Z0-9_]+$`, then `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`. Otherwise `400` (`symbol is required` or `unknown symbol`).
+- **Symbol routing**: commodity and news-only symbols read `commodity_impacts` only. Forex reads `currency_pair_impacts` and `commodity_impacts` and de-dupes by `id`.
+- **Response `200 OK`**: `{ last24h, prior24h, changePct, peakHourUtc, peakHourCount, up, down, other }`. `changePct` is null when `prior24h` is 0. `peakHourUtc` is 0–23, or null when `last24h` is 0. A tie keeps the earlier hour.
+- **Failure response**: `{ error: "rate_limited" | "db_error" | "unavailable" | "unauthenticated" }` still `200`, with no counts, so the tiles do not show zeros for a failed read.
+- **Rate limit**: `rateLimitOrPass('signals-pulse:<ip>')`.
+- **Not a Fastify route.** `apps/web` only.
 
 ---
 

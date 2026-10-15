@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ P16 pulse tiles on the watchlist symbol page, `apps/web` only, 2026-10-15, this commit
+
+- The symbol page had no count of how many signals BBR published for that asset in the last 24 hours, or how that compared with the 24 hours before. Priced and news-only assets need the same count, and no documented threshold exists for a badge.
+- `GET /api/signals/pulse?symbol=` returns `{ last24h, prior24h, changePct, peakHourUtc, peakHourCount, up, down, other }`. `changePct` is null when the prior window is 0. `peakHourUtc` is null when the last window is 0. Direction uses the impact for that symbol. Forex reads both impact columns and counts a signal once. Commodity and news-only symbols read `commodity_impacts` only. Unknown symbols are `400`.
+- `PulseTiles` sits under the header on `/watchlist/[symbol]` for every asset type. It requests only `/api/signals/pulse`. The first tile's tooltip is "Counts signals BBR published in the last 24 hours." "—" is a null, not a zero. `formatDataAsOf` uses the time that request finished.
+- Hand SQL `select count(*) from signals where created_at > now() - interval '24 hours' and commodity_impacts @> '[{"asset":"USOIL"}]'` returned 57. The route window (`created_at >= now() - 24 hours` and `<= now()`) also returned 57. Prior window returned 56. The tiles were not opened in a browser.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0. `pnpm --filter web run build` exit 0. No browser run.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.185.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 162, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
+
 ## ✅ 2026-10-15 breadth close, docs only
 
 - Price-source policy, 2026-10-11: Yahoo-sourced prices are development and test only while BBR has no paying customers. No new Yahoo assets are added. Before the first paying customer each priced asset moves to a free source with clear display rights, events-only coverage, or a licence funded by revenue. A lawyer reviews the price-data questions before go-live. Free sources with clear terms: EIA (US petroleum spot, weekly lag), ECB (6 of 7 FX pairs), World Bank Pink Sheet (monthly; licence default CC BY 4.0 with per-dataset exceptions, Pink Sheet file line unconfirmed).

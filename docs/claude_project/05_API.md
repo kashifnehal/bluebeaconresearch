@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-15 — `GET /api/signals/pulse?symbol=` counts signals published in the last 24 hours and the 24 hours before, for a known commodity, news-only commodity, or forex pair. Full detail: `docs/brain/05_API.md`.
+>
 > ⚠️ UPDATED 2026-10-15 — `GET /api/signals/driver-breakdown` allows `_` in `symbol` and still `400`s an unknown symbol. `GET /api/signals` uses the same charset on commodity, forex, and saved-preference symbols. Attribution `asset` is unchanged (`^[A-Z0-9]+$`). Full detail: `docs/brain/05_API.md`.
 >
 > ⚠️ UPDATED 2026-10-15 — `GET /api/signals/:id` sends `Server-Timing` only when `SERVER_TIMING` is exactly `true`. Body, status codes, and queries are unchanged. This route does not call the rate limiter. Full header detail: `docs/brain/05_API.md`.
@@ -285,6 +287,11 @@ Queries GDELT's historical DOC 2.0 archive (`STARTDATETIME`/`ENDDATETIME`, same 
 **Response 200:** `{ "results": [{ "id", "title", "eventDate", "hoursBefore", "severity", "backfilled": true }] }`, sorted by severity. Empty on no hits or any upstream error — never a 4xx/5xx on a GDELT/Anthropic failure.
 
 A backfilled signal deliberately never triggers `dispatchAlertsForSignal` (see D34 in `10_DECISIONS.md`) but otherwise behaves like any other signal. Draws from the **ingestion** Anthropic budget bucket (hardcoded inside `classifyEvent()`), not `chat`. Full detail, including the not-yet-applied migration this depends on, in `docs/brain/05_API.md`.
+
+---
+
+#### GET /api/signals/pulse (Next.js BFF, 2026-10-15)
+Powers the watchlist symbol page's pulse tiles. Query: `symbol`. Counts signals by `created_at` over the last 24 hours and the prior 24 hours. Forex reads both impact columns and de-dupes by id. Unknown symbol is `400`. Failure responses carry `error` and no counts. Full detail: `docs/brain/05_API.md`.
 
 ---
 

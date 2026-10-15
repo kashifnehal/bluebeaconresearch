@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (breadth close — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (watchlist pulse tiles — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (watchlist pulse tiles, `apps/web` only, this commit) — the symbol page shows five publish-count tiles under the header. News-only assets get the same tiles. The tiles do not request a price. See `docs/brain/LIVE_TODO.md`, PHASE 162.
 
 > ⚠️ NEW 2026-10-15 (breadth close, docs only) — `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, and `NICKEL` are event-only: no price feed or chart. Pages show "NEWS ONLY (NO PRICE FEED)". `DROP_SAMPLE_STORE` is on. `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `GATE_SHADOW_ENABLED` are off. Yahoo-sourced prices stay development and test only while there are no paying customers (2026-10-11). Still open: the classifier mapping test, a tier-2 reference set, and switching the retrieval flags on one at a time. See `docs/brain/LIVE_TODO.md`.
 

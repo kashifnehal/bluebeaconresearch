@@ -24,6 +24,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { toast } from "sonner";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { DriverBreakdownChart } from "@/components/signals/DriverBreakdownChart";
+import { PulseTiles } from "@/components/signals/PulseTiles";
 import { Pagination } from "@/components/ui/Pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -569,6 +570,8 @@ export default function WatchlistSymbolPage() {
             )}
           </div>
         </div>
+
+        <PulseTiles symbol={symbol} />
 
         {/* Single price chart + range selector (replaces the fixed 90-day chart
             and the separate 5-year Yahoo panel). 1M reads the 90-day DB series;

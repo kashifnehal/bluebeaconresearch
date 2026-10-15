@@ -50,6 +50,14 @@ runTest("the insufficient-data branch keeps the original 5-year vs 1-month copy"
   assert.match(block![1], /Not enough price history yet for a chart view/);
 });
 
+runTest("pulse tiles mount under the header, before the price chart", () => {
+  const header = source.indexOf("{/* Header */}");
+  const pulse = source.indexOf("<PulseTiles");
+  const chart = source.indexOf('data-testid="watchlist-chart-ranges"');
+  assert.ok(header > -1 && pulse > header && chart > pulse);
+  assert.match(source, /<PulseTiles symbol=\{symbol\} \/>/);
+});
+
 runTest("a priced symbol still takes the chart path", () => {
   assert.equal(isNewsOnlySymbol("USOIL"), false);
   const gate = source.indexOf("{!isNewsOnly && (");
