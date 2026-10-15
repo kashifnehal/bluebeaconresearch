@@ -1,0 +1,40 @@
+---
+description: Keep MCP/tool cost low — do the required work, never repeat or dump
+alwaysApply: true
+---
+
+# Token / cost discipline
+
+Do the work the prompt needs. Do not skip a required check. Do not pay twice for the same fact.
+
+## Do not repeat
+
+- Do not re-probe MCP services, health, env, ports, or auth that already succeeded this session (or the immediately prior setup turn).
+- Do not re-read a file this session already loaded unless an external edit landed.
+- Do not spawn a subagent for work this session can do directly.
+- One verification pass after the fix. Never scan → fix → scan → fix per item.
+
+## Prefer the cheap tool
+
+- Data / API / DB truth: one targeted SQL, curl, or MCP read. Not a browser.
+- Playwright / live browser only when the user asks, or the bug is visual / interaction.
+- Cap investigation at ~5 DB/API/grep calls per question. Decide the settling evidence first, then fetch that.
+
+## Do not dump into context
+
+MCP and browser results stay in the session for the rest of the chat. Treat each as a bill.
+
+- Never return a full accessibility tree, DOM dump, or API body. Counts, ids, booleans, ≤200-char samples.
+- `browser_run_code_unsafe` echoes the whole `code` string — keep it short or load from a file.
+- Do not list every MCP tool or re-discover a schema you already used this turn.
+
+## MCP access
+
+- Use the project MCP namespaces (`project-0-blueBeaconResearch-*`). Do not also call the plugin copies of the same service.
+- If a scoped call 403s, re-auth that one namespace once (`mcp_auth`), retry once, then report. Do not loop.
+- Vercel deployments/logs need `teamId` `team_CmL50Dcgvt0xDGcWeupqlIo3` and project `prj_cLob1Lt3IReJxgy532xA58zd0fzR`. `get_auth_user` / `list_teams` can 404 on this token — that is not a blocker; use those IDs.
+
+## Local reuse
+
+- One Next.js server on `:3000`. Check `lsof -ti:3000` once; reuse it. `RATE_LIMIT_SAFE_MODE=true` stays in `apps/web/.env.local`.
+- Playwright login uses `apps/web/.env.playwright.local` against `http://localhost:3000` (not `127.0.0.1`). If that file is missing, write `could not verify` and stop — do not invent credentials.
