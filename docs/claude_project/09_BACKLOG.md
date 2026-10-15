@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — P12 region canon (`apps/backend` + `packages/shared`, this commit, PHASE 169 / v0.192.0). Eight canonical region ids. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — Map locations (`apps/web`, this commit, PHASE 168 / v0.191.0). Country "Global" is not a place on the Locations list. "European Union" stays. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Watchlist pulse tiles (`apps/web`, `f2bf0f1`, PHASE 167 / v0.190.0). `/watchlist/[symbol]` counts signals published in the last 24 hours against the prior 24 hours, for priced and news-only assets. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

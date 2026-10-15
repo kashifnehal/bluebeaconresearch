@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ P12 region canon, `apps/backend` + `packages/shared`, 2026-10-15, this commit
+
+- New Claude classifications store one of 8 region ids: `middle-east`, `eastern-europe`, `europe`, `north-america`, `south-america`, `asia-pacific`, `africa`, `global`. Legacy `americas` stays on the `Region` type and on old rows.
+- `canonicalizeRegion` matches an id or label, else the first segment before `/`, `,`, or ` - `, else a synonym seen at least 3 times in the last 90 days, else `COUNTRY_REGION`, else `global`.
+- Shared `REGIONS` is those 8, same order. Onboarding and backtesting render that list. FilterBar on the dashboard, map, and archive starts with those 8 and still appends raw extras. Alerts and event-detail region fields stay free text. `apps/web` source was not edited.
+- Classifier schema `region` line names the 8 ids. After parse, `region = canonicalizeRegion(parsed.region, parsed.country)`. The heuristic block still returns the ids it returned before, including `americas`.
+- Existing `signals.region` text is unchanged until the P13 backfill is applied.
+
 ## ✅ U2 map locations: "Global" is not a place, `apps/web` only, 2026-10-15, this commit
 
 - The Locations list treated the country value "Global" as a place. On 30 days of data as of 2026-10-15, "Global" was on 73 signals and "European Union" on 2. Production showed a Global row, and "Unique locations" included it.

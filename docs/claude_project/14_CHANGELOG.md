@@ -2,11 +2,15 @@
 
 > **📍 Doc status — live changelog as of 2026-10-15 (PHASE 162).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
-> **📍 Doc status — live changelog as of 2026-10-15 (PHASE 166).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-15 (PHASE 169).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
+
+## PHASE 169 — Canonical signal regions (2026-10-15, this commit)
+
+`apps/backend` and `packages/shared`. Eight region ids replace the six-entry `REGIONS` list. `americas` stays a legacy type member. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.192.0.
 
 ## PHASE 169 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
 

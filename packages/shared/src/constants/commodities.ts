@@ -312,9 +312,11 @@ export const FOREX_PAIRS = [
 export const REGIONS = [
   { id: "middle-east", label: "Middle East", emoji: "🌍" },
   { id: "eastern-europe", label: "Eastern Europe", emoji: "🌍" },
-  { id: "africa", label: "Africa", emoji: "🌍" },
+  { id: "europe", label: "Europe", emoji: "🌍" },
+  { id: "north-america", label: "North America", emoji: "🌎" },
+  { id: "south-america", label: "South America", emoji: "🌎" },
   { id: "asia-pacific", label: "Asia-Pacific", emoji: "🌏" },
-  { id: "americas", label: "Americas", emoji: "🌎" },
+  { id: "africa", label: "Africa", emoji: "🌍" },
   { id: "global", label: "Global", emoji: "🌐" },
 ] as const;
 

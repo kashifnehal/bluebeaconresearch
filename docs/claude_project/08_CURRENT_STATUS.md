@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live status banners as of 2026-10-15 (Global is not a map location — see the banner immediately below).**
 
+> ⚠️ NEW 2026-10-15 (P12 region canon, `apps/backend` + `packages/shared`, this commit) — new classifications use 8 region ids. Screens that render `REGIONS` show that list. Stored signal regions are unchanged until the backfill runs. See `docs/brain/LIVE_TODO.md`, PHASE 169.
+
 > ⚠️ NEW 2026-10-15 (map locations, `apps/web` only, this commit) — country "Global" is counted with signals that have no country. It is not a Locations row. "European Union" stays a place. See `docs/brain/LIVE_TODO.md`, PHASE 168.
 
 > ⚠️ NEW 2026-10-15 (watchlist pulse tiles, `apps/web` only, `f2bf0f1`) — the symbol page shows five publish-count tiles under the header. News-only assets get the same tiles. The tiles do not request a price. See `docs/brain/LIVE_TODO.md`, PHASE 162.

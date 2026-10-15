@@ -1,0 +1,10 @@
+[
+  { "id": "middle-east", "label": "Middle East" },
+  { "id": "eastern-europe", "label": "Eastern Europe" },
+  { "id": "europe", "label": "Europe" },
+  { "id": "north-america", "label": "North America" },
+  { "id": "south-america", "label": "South America" },
+  { "id": "asia-pacific", "label": "Asia-Pacific" },
+  { "id": "africa", "label": "Africa" },
+  { "id": "global", "label": "Global" }
+]
