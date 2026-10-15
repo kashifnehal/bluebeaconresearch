@@ -51,6 +51,7 @@ import {
   describeReports,
   emptyBriefingCopy,
   eventAlertCta,
+  formatClockUtc,
   formatDelay,
   shouldShowLastUpdated,
 } from "@/lib/signal-display";
@@ -61,13 +62,6 @@ function eventTypeLabel(eventType?: string | null): string {
     .split("_")
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
     .join(" ");
-}
-
-function formatClockValue(iso?: string | null): string {
-  if (!iso) return "n/a";
-  const d = new Date(iso);
-  if (!Number.isFinite(d.getTime())) return "n/a";
-  return d.toLocaleString();
 }
 
 export default function EventDetailPage() {
@@ -341,7 +335,7 @@ export default function EventDetailPage() {
                           {reportLabel}
                         </span>
                         <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
-                          {formatClockValue(data.firstReportAt)}
+                          {formatClockUtc(data.firstReportAt)}
                         </span>
                       </div>
                     </div>
@@ -350,7 +344,7 @@ export default function EventDetailPage() {
                         Fetched by BBR
                       </span>
                       <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
-                        {formatClockValue(data.firstFetchedAt)}
+                        {formatClockUtc(data.firstFetchedAt)}
                       </span>
                     </div>
                     <div className="flex min-w-0 flex-col">
@@ -358,7 +352,7 @@ export default function EventDetailPage() {
                         Flagged by BBR
                       </span>
                       <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
-                        {formatClockValue(signal.createdAt)}
+                        {formatClockUtc(signal.createdAt)}
                       </span>
                     </div>
                     <div className="flex min-w-0 flex-col">

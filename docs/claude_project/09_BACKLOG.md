@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — UTC clock and open-budget badge (`apps/web`, this commit, PHASE 165 / v0.188.0). Signal Clock cells show UTC. The homepage badge says collection runs while the daily budget is open. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — Homepage and dashboard check points (`apps/web`, this commit, PHASE 164 / v0.187.0). Homepage and dashboard copy name the collection interval and where to check the clock, the sources, and the price baseline. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Signal clocks (`apps/web`, `379b782`, PHASE 163 / v0.186.0). Signal detail shows source time, fetch time, flag time, and delay. The price line is a timeline. Feed tags say "Reported" or "Flagged". No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

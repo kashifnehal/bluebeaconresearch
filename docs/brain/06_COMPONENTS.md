@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — React & React Native Component Inventory
 
-> **📍 Doc status — current as of 2026-10-15** for signal clocks (Clock group, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-15 — The three Clock values (source, fetch, flag) render in UTC as "14 Oct 2026, 12:30 UTC". A missing or invalid time is "n/a". Delay is unchanged.
 
 > ⚠️ UPDATED 2026-10-15 — `FreshTag` takes optional `eventDate`. A valid `eventDate` renders "Reported {compact age}"; otherwise "Flagged {compact age}" from `createdAt`. The word "Fresh" is not in the label. Passed at every feed, dashboard, and map usage. Event detail replaces the single Published cell with a 2×2 Clock group: source time (label "Published", "First seen by GDELT", or "Reported"), "Fetched by BBR", "Flagged by BBR", and "Delay". Verification uses `describeReports` (distinct headlines and domains) instead of `sources_count`. `MarketImpactAssessment` labels the quote block "Price timeline:" via `formatPriceTimelineLines`.
 

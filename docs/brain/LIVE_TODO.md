@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Show clock times in UTC and say when collection pauses, `apps/web` only, 2026-10-15, this commit
+
+- The event-page Clock cells used the browser's local time. The homepage badge said collection runs about every N minutes and did not say that collection pauses when the daily budget is closed.
+- The three Clock cells (source time, fetch time, flag time) render UTC as "14 Oct 2026, 12:30 UTC". A null, empty, or invalid time is "n/a". The old local-time helper had no other caller and was removed. The latest-signal card still shows GMT times.
+- The homepage badge stays on the shared interval constant and now ends with "while the daily budget is open".
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14` v0.188.0, `06`; claude_project `09`, `08`, `14` PHASE 165, `06`. Skipped both `05_API`, both `04_DATABASE`, `18_AI_ENGINE`, and both `10_DECISIONS` — no new route, table, prompt, or standing rule.
+- Verification: `pnpm --filter web test` exit 0. `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web run build` (`next build`) exit 0. Homepage at 390px: document extra scroll width 0. Badge 296px wide, right edge 353, wraps inside the pill. Logged-in event page at 390px (`/events/6d5ad0f4-dc80-48be-afe8-26697ba14506`): document extra scroll width 0. Clock group 308px wide, two columns of 146px. Values were 15 Oct 2026, 09:05 UTC, 15 Oct 2026, 09:31 UTC, 15 Oct 2026, 09:31 UTC, and Delay 26 min.
+
 ## ✅ Homepage and dashboard say where the clock and sources can be checked, `apps/web` only, 2026-10-15, this commit
 
 - The homepage badge and the latest-signal paragraph named a fixed "every 30 minutes" and said collection was not in real time. The dashboard header said updates roughly every 30 minutes. Neither page said where a reader can check the clock, the sources, or the price baseline.

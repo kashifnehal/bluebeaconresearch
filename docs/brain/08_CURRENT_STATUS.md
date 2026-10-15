@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-15 (homepage and dashboard name the collection interval and where to check it)
+Last updated: 2026-10-15 (clock times in UTC; homepage badge names the open daily budget)
+
+> ⚠️ NEW 2026-10-15 (UTC clock and open-budget badge, `apps/web` only, this commit) — event-page Clock cells show "14 Oct 2026, 12:30 UTC", or "n/a" when the time is missing or invalid. The homepage badge says collection runs about every 30 minutes while the daily budget is open. See `14_CHANGELOG.md` v0.188.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (homepage and dashboard check points, `apps/web` only, this commit) — the homepage badge, the latest-signal paragraph, and the dashboard header read a shared 30-minute collection interval. The latest-signal card shows reported time and flag time. A block under the process steps says where to check the clock, the sources, and the price baseline. See `14_CHANGELOG.md` v0.187.0, `LIVE_TODO.md`.
 

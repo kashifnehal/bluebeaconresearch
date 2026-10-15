@@ -13,6 +13,7 @@ import {
   emptyBriefingCopy,
   eventAlertCta,
   formatConfidencePercent,
+  formatClockUtc,
   formatDelay,
   formatPriceTimelineLines,
   historyErrorCodeFromResponse,
@@ -80,6 +81,13 @@ runTest("delay from the first report to the flag rounds to minutes", () => {
   assert.equal(delayMinutes(null, "2026-10-05T10:54:14Z"), null);
   assert.equal(delayMinutes("not-a-date", "2026-10-05T10:54:14Z"), null);
   assert.equal(delayMinutes("2026-10-05T10:54:14Z", "2026-10-04T20:13:41Z"), null);
+});
+
+runTest("clock times are UTC with a four-digit year", () => {
+  assert.equal(formatClockUtc("2026-10-14T12:30:00Z"), "14 Oct 2026, 12:30 UTC");
+  assert.equal(formatClockUtc("2026-10-14T00:00:00Z"), "14 Oct 2026, 00:00 UTC");
+  assert.equal(formatClockUtc("not-a-date"), "n/a");
+  assert.equal(formatClockUtc(null), "n/a");
 });
 
 runTest("price timeline names the first report, the flag, and now", () => {

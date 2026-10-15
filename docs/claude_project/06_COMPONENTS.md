@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
-> **📍 Doc status — current as of 2026-10-15** for signal clocks (Clock group, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-15 — The three Clock values (source, fetch, flag) render in UTC as "14 Oct 2026, 12:30 UTC". A missing or invalid time is "n/a". Full detail: `docs/brain/06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-10-15 — `FreshTag` takes optional `eventDate` and says "Reported" or "Flagged". Event detail shows a 2×2 Clock group (source, fetch, flag, delay) and counts distinct headlines. The price block is "Price timeline:". Full detail: `docs/brain/06_COMPONENTS.md`.
 

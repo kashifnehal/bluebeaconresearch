@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (homepage and dashboard check points — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (UTC clock and open-budget badge — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (UTC clock and open-budget badge, `apps/web` only, this commit) — signal Clock cells show UTC. The homepage badge says collection runs while the daily budget is open. See `docs/brain/LIVE_TODO.md`, PHASE 165.
 
 > ⚠️ NEW 2026-10-15 (homepage and dashboard check points, `apps/web` only, this commit) — homepage and dashboard copy name the collection interval and where to check the clock, the sources, and the price baseline. See `docs/brain/LIVE_TODO.md`, PHASE 164.
 

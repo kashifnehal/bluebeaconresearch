@@ -87,6 +87,15 @@ export function formatQuoteAsOf(iso: string): string | null {
   return `${d.getUTCDate()} ${QUOTE_MONTHS[d.getUTCMonth()]}, ${hh}:${mm} UTC`;
 }
 
+export function formatClockUtc(iso?: string | null): string {
+  if (!iso) return "n/a";
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return "n/a";
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${d.getUTCDate()} ${QUOTE_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}, ${hh}:${mm} UTC`;
+}
+
 export type PriceQuote = { price: number; at: string };
 
 function money(price: number): string {
