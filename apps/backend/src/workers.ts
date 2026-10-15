@@ -26,6 +26,7 @@ import { getLastKnownRedisUsage } from "./clients/redis.js";
 import { getSupabaseAdmin } from "./clients/supabase.js";
 import { checkMonthlySpend } from "./lib/monthly-spend-warning.js";
 import { checkFeedVolume } from "./lib/feed-volume-alarm.js";
+import { runGateDriftOnce } from "./lib/gate-drift.js";
 
 // Consecutive-failed-run thresholds before a collector going silent pages someone.
 // GDELT: 8 runs (~4h at */30). A single GDELT 429 is an expected IP-level block on
@@ -289,6 +290,21 @@ async function main() {
       app.log.info({ res }, "retention-jobs complete");
     } catch (e) {
       app.log.error({ err: e }, "retention-jobs failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // P19 — weekly gate counts. Sunday 06:00 UTC. Reports numbers only. A week
+  // with zero judged rows still writes the row and must not fail the process.
+  cron.schedule("0 6 * * 0", async () => {
+    try {
+      const report = await runGateDriftOnce(getSupabaseAdmin(), new Date());
+      app.log.info(
+        { judged: report.current.judged, passed: report.current.passed },
+        "gate-drift complete",
+      );
+    } catch (e) {
+      app.log.error({ err: e }, "gate-drift failed");
       Sentry.captureException(e);
     }
   });
