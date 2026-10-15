@@ -27,6 +27,7 @@ import { getSupabaseAdmin } from "./clients/supabase.js";
 import { checkMonthlySpend } from "./lib/monthly-spend-warning.js";
 import { checkFeedVolume } from "./lib/feed-volume-alarm.js";
 import { runGateDriftOnce } from "./lib/gate-drift.js";
+import { checkCategoryCoverage } from "./lib/category-guard.js";
 
 // Consecutive-failed-run thresholds before a collector going silent pages someone.
 // GDELT: 8 runs (~4h at */30). A single GDELT 429 is an expected IP-level block on
@@ -262,6 +263,12 @@ async function main() {
       }
     } catch (e) {
       app.log.error({ err: e }, "reconciliation failed");
+      Sentry.captureException(e);
+    }
+    try {
+      await checkCategoryCoverage(getSupabaseAdmin(), new Date());
+    } catch (e) {
+      app.log.error({ err: e }, "category-guard failed");
       Sentry.captureException(e);
     }
   });
