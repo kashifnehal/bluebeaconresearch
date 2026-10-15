@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` runs three `commodity_prices` reads per commodity impact. Flag time and latest start with the other optional reads. The report-time quote starts once the earliest raw-event stamp is known. The 6000 ms budget and the `price_at_signal` degraded name are unchanged. The query count is unchanged.
+
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals`, when the handler throws and there is no cached payload, still returns 200 and the body `{ signals: [], nextCursor: null, total: 0, degraded: true }`. The cached handler-exception path is unchanged (`fallback: true`, `fallbackReason: "handler-exception"`).
 
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` stops waiting after 6000 ms on raw events, historical comparisons, related events, and price lookups, started together (`426de2c`). A skipped part comes back empty and is named in `degraded`. The signal row is still required. A skipped Server-Timing step uses `desc="skipped"`.

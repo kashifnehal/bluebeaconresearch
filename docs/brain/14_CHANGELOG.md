@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Event price quotes overlap the raw-event read
+
+`apps/web` only. Three price queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Client fetches stop after 20 seconds
 
 `apps/web` only. Dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms and show a retry line when it fails. `GET /api/signals` adds `degraded: true` on an empty error body when there is no cached payload. Full detail: `LIVE_TODO.md`.

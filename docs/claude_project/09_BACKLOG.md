@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Event price quotes overlap the raw-event read (`apps/web`). Three queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Client fetches stop after 20 seconds (`apps/web`). Dashboard, map, watchlist, the symbol page, and alerts show a retry line when a fetch times out or fails. `GET /api/signals` adds `degraded: true` on an empty error body when there is no cached payload. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Row-security initplan and six foreign-key indexes (migration written, not applied). No other index is dropped. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

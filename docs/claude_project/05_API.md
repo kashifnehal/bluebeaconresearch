@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` starts the flag-time and latest quotes with the other optional reads. The report-time quote still waits for the earliest raw-event stamp. Three queries per commodity impact. Full detail: `docs/brain/05_API.md`.
+
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals`, when the handler throws and there is no cached payload, still returns 200 and adds `degraded: true`. The cached payload path is unchanged. Full detail: `docs/brain/05_API.md`.
 
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` stops waiting after 6000 ms on the optional reads and price lookups and names skips in `degraded` (`426de2c`). Full detail: `docs/brain/05_API.md`.

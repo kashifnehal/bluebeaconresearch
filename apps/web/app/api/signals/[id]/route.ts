@@ -318,8 +318,34 @@ export async function GET(
   const rawBudgeted = withBudget(rawEventsPromise, budgetMs, rawFallback);
   const historicalBudgeted = withBudget(historicalPromise, budgetMs, historicalFallback);
   const relatedBudgeted = withBudget(relatedPromise, budgetMs, relatedFallback);
-  const pricesBudgeted = withBudget(
-    rawBudgeted.then((rawRes) => {
+  function priceAtOrBefore(symbol: string, at: string) {
+    return supabase
+      .from("commodity_prices")
+      .select("price, fetched_at")
+      .eq("symbol", symbol)
+      .lte("fetched_at", at)
+      .order("fetched_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  }
+
+  function latestPrice(symbol: string) {
+    return supabase
+      .from("commodity_prices")
+      .select("price, fetched_at")
+      .eq("symbol", symbol)
+      .order("fetched_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  }
+
+  // Three quotes per commodity impact. Flag-time and latest do not need the
+  // raw-event stamp, so they start with the other optional reads. The
+  // report-time quote waits for that stamp. 2026-10-16.
+  const priceReads = commodityImpacts.map((impact) => {
+    const flaggedPriceRes = priceAtOrBefore(impact.asset, row.created_at);
+    const currentPriceRes = latestPrice(impact.asset);
+    const historicalPriceRes = rawBudgeted.then((rawRes) => {
       const rawRows = (rawRes.data ?? []) as Array<{
         event_date?: unknown;
         created_at?: unknown;
@@ -328,49 +354,21 @@ export async function GET(
       const earliestReport = earliestRawStamp(rawRows, "event_date");
       const reportAt = earliestReport?.at ?? validIso(row.event_date);
       const priceAtReportAnchor = reportAt ?? row.event_date ?? row.created_at;
-      return Promise.all(
-        commodityImpacts.map(async (impact) => {
-          const [historicalPriceRes, flaggedPriceRes, currentPriceRes] = await Promise.all([
-            supabase
-              .from("commodity_prices")
-              .select("price, fetched_at")
-              .eq("symbol", impact.asset)
-              .lte("fetched_at", priceAtReportAnchor)
-              .order("fetched_at", { ascending: false })
-              .limit(1)
-              .maybeSingle(),
-            supabase
-              .from("commodity_prices")
-              .select("price, fetched_at")
-              .eq("symbol", impact.asset)
-              .lte("fetched_at", row.created_at)
-              .order("fetched_at", { ascending: false })
-              .limit(1)
-              .maybeSingle(),
-            supabase
-              .from("commodity_prices")
-              .select("price, fetched_at")
-              .eq("symbol", impact.asset)
-              .order("fetched_at", { ascending: false })
-              .limit(1)
-              .maybeSingle(),
-          ]);
-
-          return {
-            asset: impact.asset,
-            priceAtSignal: historicalPriceRes.data?.price ?? null,
-            priceAtSignalDate: historicalPriceRes.data?.fetched_at ?? null,
-            priceAtFlagged: flaggedPriceRes.data?.price ?? null,
-            priceAtFlaggedDate: flaggedPriceRes.data?.fetched_at ?? null,
-            currentPrice: currentPriceRes.data?.price ?? null,
-            currentPriceDate: currentPriceRes.data?.fetched_at ?? null,
-          };
-        }),
-      );
-    }),
-    budgetMs,
-    pricesFallback,
-  );
+      return priceAtOrBefore(impact.asset, priceAtReportAnchor);
+    });
+    return Promise.all([historicalPriceRes, flaggedPriceRes, currentPriceRes]).then(
+      ([historicalPriceRes, flaggedPriceRes, currentPriceRes]) => ({
+        asset: impact.asset,
+        priceAtSignal: historicalPriceRes.data?.price ?? null,
+        priceAtSignalDate: historicalPriceRes.data?.fetched_at ?? null,
+        priceAtFlagged: flaggedPriceRes.data?.price ?? null,
+        priceAtFlaggedDate: flaggedPriceRes.data?.fetched_at ?? null,
+        currentPrice: currentPriceRes.data?.price ?? null,
+        currentPriceDate: currentPriceRes.data?.fetched_at ?? null,
+      }),
+    );
+  });
+  const pricesBudgeted = withBudget(Promise.all(priceReads), budgetMs, pricesFallback);
 
   const watchedRawEvents = timeAwait(rawBudgeted, timingOn);
   const watchedHistorical = timeAwait(historicalBudgeted, timingOn);

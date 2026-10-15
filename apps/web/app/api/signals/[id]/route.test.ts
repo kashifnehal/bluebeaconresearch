@@ -59,6 +59,10 @@ function makeSupabase(
     priceLte?: string[];
     rawSelect?: { value: string };
     hangHistorical?: boolean;
+    hangPrices?: boolean;
+    delayRawMs?: number;
+    rawGate?: { settled: boolean };
+    pricePhases?: string[];
     signalDelayMs?: number;
     signalError?: string;
     optionalReadBudgetMs?: number;
@@ -82,6 +86,7 @@ function makeSupabase(
     from(table: string) {
       const builder: Record<string, unknown> = {};
       const self = () => builder;
+      let lteValue: string | undefined;
       builder.select = (cols?: string) => {
         if (table === "raw_events" && typeof cols === "string" && options?.rawSelect) {
           options.rawSelect.value = cols;
@@ -94,14 +99,24 @@ function makeSupabase(
       builder.in = self;
       builder.gte = self;
       builder.lte = (column: string, value: string) => {
-        if (table === "commodity_prices" && column === "fetched_at" && options?.priceLte) {
-          options.priceLte.push(value);
+        if (table === "commodity_prices" && column === "fetched_at") {
+          lteValue = value;
+          options?.priceLte?.push(value);
         }
         return builder;
       };
       builder.order = self;
       builder.limit = self;
       builder.maybeSingle = () => {
+        if (table === "commodity_prices" && options?.pricePhases) {
+          const kind = lteValue === undefined ? "latest" : "bounded";
+          const phase = options.rawGate?.settled ? "after-raw" : "with-raw";
+          options.pricePhases.push(`${phase}:${kind}`);
+        }
+        if (table === "commodity_prices" && options?.hangPrices) {
+          counter.executions += 1;
+          return new Promise(() => {});
+        }
         counter.executions += 1;
         const finish = () => {
           if (table === "signals") {
@@ -137,6 +152,15 @@ function makeSupabase(
         counter.executions += 1;
         if (table === "signals" && options?.hangHistorical) return new Promise(() => {});
         const data = table === "raw_events" ? rawEvents : [];
+        if (table === "raw_events" && options?.delayRawMs) {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              if (options.rawGate) options.rawGate.settled = true;
+              resolve({ data, error: null });
+            }, options.delayRawMs);
+          }).then(onFulfilled, onRejected);
+        }
+        if (table === "raw_events" && options?.rawGate) options.rawGate.settled = true;
         return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
       };
       return builder;
@@ -309,8 +333,8 @@ async function main() {
     assert.equal(body.firstFetchedAt, "2026-10-05T01:00:00.000Z");
     assert.equal(body.signal.eventDate, "2026-10-05T12:00:00.000Z");
     assert.deepEqual(priceLte, [
-      "2026-10-04T20:13:41.000Z",
       "2026-10-05T10:54:14.000Z",
+      "2026-10-04T20:13:41.000Z",
     ]);
     assert.equal(body.pricesAtSignal[0].priceAtFlaggedDate, "2026-10-14T00:00:00.000Z");
   });
@@ -387,6 +411,39 @@ async function main() {
     } finally {
       console.error = realError;
     }
+  });
+
+  await runTest("price lookups start together, and a skipped lookup stays in degraded", async () => {
+    const pricePhases: string[] = [];
+    const rawGate = { settled: false };
+    const res = await callGet(
+      makeDeps(
+        { executions: 0 },
+        { pricePhases, rawGate, delayRawMs: 40 },
+      ),
+    );
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.pricesAtSignal[0].asset, "USOIL");
+    assert.equal(body.pricesAtSignal[0].priceAtSignal, 71.2);
+    assert.equal(body.pricesAtSignal[0].priceAtFlagged, 71.2);
+    assert.equal(body.pricesAtSignal[0].currentPrice, 71.2);
+    const withRaw = pricePhases.filter((phase) => phase.startsWith("with-raw:"));
+    assert.deepEqual(withRaw.sort(), ["with-raw:bounded", "with-raw:latest"]);
+    assert.equal(pricePhases.includes("after-raw:bounded"), true);
+    assert.equal(pricePhases.filter((phase) => phase.startsWith("with-raw:")).length, 2);
+
+    const skipped = await callGet(
+      makeDeps(
+        { executions: 0 },
+        { hangPrices: true, optionalReadBudgetMs: 30 },
+      ),
+    );
+    assert.equal(skipped.status, 200);
+    const skippedBody = await skipped.json();
+    assert.equal(skippedBody.signal.id, SIGNAL_ID);
+    assert.deepEqual(skippedBody.pricesAtSignal, []);
+    assert.deepEqual(skippedBody.degraded, ["price_at_signal"]);
   });
 
   await runTest("withBudget clears its timer when the promise settles", async () => {

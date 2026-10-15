@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Event price quotes overlap the raw-event read, `apps/web`, 2026-10-16
+
+- Three price queries run per commodity impact: report time, flag time, and latest. They already ran together, but only after raw events returned. Flag time and latest do not need that stamp, so they now start with the other optional reads. The report-time quote still waits for the earliest raw stamp. Query count is unchanged. `degraded` still uses `price_at_signal`. The 6000 ms budget is unchanged.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `05`; claude_project `09`, `08`, `14`, `05`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no component, table, prompt, or standing rule.
+
 ## ✅ Client fetches stop after 20 seconds, `apps/web`, 2026-10-16
 
 - Dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms. A timeout or a failed fetch shows "This is taking longer than usual. The data service is slow right now." and Retry, in place of a skeleton or an empty "no signals" line. The event page uses the same limit and the same sentence.

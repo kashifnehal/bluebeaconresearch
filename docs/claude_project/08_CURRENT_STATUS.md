@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (client fetches stop after 20 seconds — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (event price quotes overlap the raw-event read — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (event price quotes, `apps/web` only) — three price queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (client fetches stop after 20 seconds, `apps/web` only) — dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms and show a retry line when it fails. `GET /api/signals` adds `degraded: true` when the handler errors and has no cached payload. See `docs/brain/LIVE_TODO.md`.
 

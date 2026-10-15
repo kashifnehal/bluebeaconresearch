@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (client fetches stop after 20 seconds)
+Last updated: 2026-10-16 (event price quotes overlap the raw-event read)
+
+> ⚠️ NEW 2026-10-16 (event price quotes, `apps/web` only) — three price queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (client fetches stop after 20 seconds, `apps/web` only) — dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms and show a retry line when it fails. `GET /api/signals` adds `degraded: true` when the handler errors and has no cached payload. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
