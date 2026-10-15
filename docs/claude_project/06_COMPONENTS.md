@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
-> **📍 Doc status — current as of 2026-09-26** for `Breadcrumbs.tsx` (new), CommandPalette (header-unified + last-resort fallback), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-15** for signal clocks (Clock group, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-15 — `FreshTag` takes optional `eventDate` and says "Reported" or "Flagged". Event detail shows a 2×2 Clock group (source, fetch, flag, delay) and counts distinct headlines. The price block is "Price timeline:". Full detail: `docs/brain/06_COMPONENTS.md`.
 
 **Framework:** Next.js 16 + React 18 + TypeScript
 **Component library:** Shadcn/ui (Radix UI primitives)

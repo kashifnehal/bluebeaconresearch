@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — React & React Native Component Inventory
 
-> **📍 Doc status — current as of 2026-09-26** for `Breadcrumbs.tsx` (new), CommandPalette (header-unified + last-resort fallback), Help, MARKET IMPACT ASSESSMENT, landing copy. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-15** for signal clocks (Clock group, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-15 — `FreshTag` takes optional `eventDate`. A valid `eventDate` renders "Reported {compact age}"; otherwise "Flagged {compact age}" from `createdAt`. The word "Fresh" is not in the label. Passed at every feed, dashboard, and map usage. Event detail replaces the single Published cell with a 2×2 Clock group: source time (label "Published", "First seen by GDELT", or "Reported"), "Fetched by BBR", "Flagged by BBR", and "Delay". Verification uses `describeReports` (distinct headlines and domains) instead of `sources_count`. `MarketImpactAssessment` labels the quote block "Price timeline:" via `formatPriceTimelineLines`.
 
 This document presents a complete inventory of all UI components in `apps/web/components` and `apps/mobile/components`, detailing component props, parent/child relationships, hooks, internal state, dependencies, and styling rules.
 

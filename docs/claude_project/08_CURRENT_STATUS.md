@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (GNEWS_PLAN off by default — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (signal clocks — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (signal clocks, `apps/web` only, this commit) — event detail shows source time, fetch time, flag time, and delay. The price line names the quote at the first linked report, at the flag, and now. Feed tags say "Reported" or "Flagged". See `docs/brain/LIVE_TODO.md`, PHASE 163.
 
 > ⚠️ NEW 2026-10-15 (GNews plan switch, `apps/backend` only, this commit) — `GNEWS_PLAN` is unset in production. Unset or `free` keeps one query at `max=10`. Exactly `essential` uses `max=25` and every query each cycle. Nothing changes until it is set. See `docs/brain/LIVE_TODO.md`, PHASE 162.
 

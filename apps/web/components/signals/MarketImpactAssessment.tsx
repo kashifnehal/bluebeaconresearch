@@ -24,14 +24,51 @@ import {
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
-import { formatPriceSinceFiredSubtext } from "@/lib/signal-display";
+import { formatPriceTimelineLines, type PriceQuote } from "@/lib/signal-display";
 
 export type MarketImpactPriceRow = {
   asset: string;
   priceAtSignal: number | null;
+  priceAtSignalDate?: string | null;
+  priceAtFlagged: number | null;
+  priceAtFlaggedDate?: string | null;
   currentPrice: number | null;
+  currentPriceDate?: string | null;
 };
 
+function quoteOrNull(
+  price: number | null | undefined,
+  at: string | null | undefined,
+): PriceQuote | null {
+  if (price == null || !at || !Number.isFinite(price)) return null;
+  return { price, at };
+}
+
+function PriceTimeline({
+  asset,
+  priceInfo,
+}: {
+  asset: string;
+  priceInfo?: MarketImpactPriceRow;
+}) {
+  const lines = formatPriceTimelineLines(
+    asset,
+    quoteOrNull(priceInfo?.priceAtSignal, priceInfo?.priceAtSignalDate),
+    quoteOrNull(priceInfo?.priceAtFlagged, priceInfo?.priceAtFlaggedDate),
+    quoteOrNull(priceInfo?.currentPrice, priceInfo?.currentPriceDate),
+  );
+  if (lines.length === 0) return null;
+  return (
+    <div className="pl-1 font-mono text-[12px] md:text-[9px] text-muted" data-testid="price-timeline">
+      <span className="font-black uppercase tracking-widest">Price timeline:</span>
+      {lines.map((line, index) => (
+        <span key={`${index}-${line}`} className="mt-1 block">
+          {line}
+        </span>
+      ))}
+    </div>
+  );
+}
 function Part({
   label,
   children,
@@ -174,17 +211,8 @@ export function MarketImpactAssessment({
                         size="md"
                         label="Predicted"
                       />
-                      {showPriceSubtext &&
-                      priceInfo?.priceAtSignal != null &&
-                      priceInfo?.currentPrice != null ? (
-                        <p className="pl-1 font-mono text-[12px] md:text-[9px] text-muted">
-                          <span className="font-black uppercase tracking-widest">Since signal:</span>{" "}
-                          {formatPriceSinceFiredSubtext(
-                            c.asset,
-                            priceInfo.priceAtSignal,
-                            priceInfo.currentPrice,
-                          )}
-                        </p>
+                      {showPriceSubtext ? (
+                        <PriceTimeline asset={c.asset} priceInfo={priceInfo} />
                       ) : null}
                       {magnitude ? (
                         <>

@@ -47,8 +47,11 @@ import { toast } from "sonner";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent } from "@/lib/funnel-events";
 import {
+  delayMinutes,
+  describeReports,
   emptyBriefingCopy,
   eventAlertCta,
+  formatDelay,
   shouldShowLastUpdated,
 } from "@/lib/signal-display";
 
@@ -58,6 +61,13 @@ function eventTypeLabel(eventType?: string | null): string {
     .split("_")
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
     .join(" ");
+}
+
+function formatClockValue(iso?: string | null): string {
+  if (!iso) return "n/a";
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return "n/a";
+  return d.toLocaleString();
 }
 
 export default function EventDetailPage() {
@@ -195,6 +205,13 @@ export default function EventDetailPage() {
     signal.createdAt,
     signal.updatedAt,
   );
+  const reportLabel =
+    data.firstReportKind === "publisher"
+      ? "Published"
+      : data.firstReportKind === "gdelt_seen"
+        ? "First seen by GDELT"
+        : "Reported";
+  const delayValue = delayMinutes(data.firstReportAt, signal.createdAt);
 
   const hasPreciseLocation =
     typeof signal.lat === "number" &&
@@ -315,18 +332,50 @@ export default function EventDetailPage() {
                 className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-6 rounded-lg bg-surface/30 border"
                 style={{ borderColor: "var(--border-subtle)" }}
               >
-                <div className="flex items-center gap-3">
-                  <Clock size={16} className="text-accent" />
-                  <div className="flex flex-col">
-                    <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
-                      Published
-                    </span>
-                    <span className="text-xs font-mono font-bold text-text-secondary">
-                      {new Date(
-                        signal.eventDate ?? signal.createdAt,
-                      ).toLocaleString()}
-                    </span>
+                <div className="min-w-0 sm:col-span-3" data-testid="signal-clock">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <Clock size={16} className="mt-0.5 shrink-0 text-accent" />
+                      <div className="flex min-w-0 flex-col">
+                        <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                          {reportLabel}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
+                          {formatClockValue(data.firstReportAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                        Fetched by BBR
+                      </span>
+                      <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
+                        {formatClockValue(data.firstFetchedAt)}
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                        Flagged by BBR
+                      </span>
+                      <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
+                        {formatClockValue(signal.createdAt)}
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 flex-col">
+                      <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                        Delay
+                      </span>
+                      <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
+                        {delayValue == null ? "n/a" : formatDelay(delayValue)}
+                      </span>
+                    </div>
                   </div>
+                  <p className="mt-3 text-[12px] md:text-[11px] leading-snug text-muted">
+                    Source time is the earliest time among the reports linked to this signal.
+                    {data.firstReportKind === "gdelt_seen"
+                      ? " GDELT time is when GDELT first saw the page."
+                      : ""}
+                  </p>
                 </div>
                 <div
                   className="flex items-center gap-3 sm:border-x px-0 sm:px-6"
@@ -337,9 +386,8 @@ export default function EventDetailPage() {
                     <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
                       Verification
                     </span>
-                    <span className="text-xs font-mono font-bold text-text-secondary">
-                      {signal.sourcesCount}{" "}
-                      {signal.sourcesCount === 1 ? "Report" : "Reports"}
+                    <span className="text-xs font-mono font-bold text-text-secondary break-words">
+                      {describeReports(sources)}
                     </span>
                     {showLastUpdated ? (
                       <span className="text-[12px] md:text-[9px] font-mono text-muted">

@@ -68,9 +68,13 @@ export type PriceAtSignal = {
   asset: string;
   priceAtSignal: number | null;
   priceAtSignalDate: string | null;
+  priceAtFlagged: number | null;
+  priceAtFlaggedDate: string | null;
   currentPrice: number | null;
   currentPriceDate: string | null;
 };
+
+export type FirstReportKind = "publisher" | "gdelt_seen";
 
 export type MarketImpactAssessmentEntry = {
   magnitude: MarketImpactMagnitude | null;
@@ -82,6 +86,9 @@ export type MarketImpactAssessmentEntry = {
 export type EventDetailResponse = {
   signal: Signal;
   sources: EventSource[];
+  firstReportAt: string | null;
+  firstReportKind: FirstReportKind | null;
+  firstFetchedAt: string | null;
   historicalComparisons: HistoricalComparison[];
   relatedEvents: RelatedEvent[];
   relatedEventsTotal: number;
@@ -94,6 +101,38 @@ export type EventDetailResponse = {
 // real traffic. See signal-merge.ts's SIMILARITY_THRESHOLD comment for the same
 // pattern applied to a value that *does* have real backtest evidence behind it.
 const RELATED_EVENTS_WINDOW_DAYS = 7;
+
+function validIso(value: unknown): string | null {
+  if (typeof value !== "string" || !value) return null;
+  const t = new Date(value).getTime();
+  return Number.isFinite(t) ? value : null;
+}
+
+function earliestRawStamp(
+  rows: Array<{ event_date?: unknown; created_at?: unknown; source?: unknown }>,
+  field: "event_date" | "created_at",
+): { at: string; source: string | null } | null {
+  let best: { at: string; t: number; source: string | null } | null = null;
+  for (const row of rows) {
+    const at = validIso(row[field]);
+    if (!at) continue;
+    const t = new Date(at).getTime();
+    if (!best || t < best.t) {
+      best = {
+        at,
+        t,
+        source: typeof row.source === "string" ? row.source : null,
+      };
+    }
+  }
+  return best ? { at: best.at, source: best.source } : null;
+}
+
+function kindForRawSource(source: string | null): FirstReportKind | null {
+  if (source === "rss" || source === "newsapi") return "publisher";
+  if (source === "gdelt") return "gdelt_seen";
+  return null;
+}
 
 type SignalDetailDeps = {
   getRouteSupabaseClients: typeof getRouteSupabaseClients;
@@ -222,7 +261,7 @@ export async function GET(
     rawEventIds.length > 0
       ? supabase
           .from("raw_events")
-          .select("id, title, event_date, created_at, raw_data")
+          .select("id, title, event_date, created_at, source, raw_data")
           .in("id", rawEventIds)
       : Promise.resolve({ data: [] as any[], error: null });
   const historicalPromise = supabase
@@ -294,6 +333,16 @@ export async function GET(
       const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : Infinity;
       return ta - tb;
     });
+
+  const rawRows = (rawEventsRes.data ?? []) as Array<{
+    event_date?: unknown;
+    created_at?: unknown;
+    source?: unknown;
+  }>;
+  const earliestReport = earliestRawStamp(rawRows, "event_date");
+  const firstReportAt = earliestReport?.at ?? validIso(row.event_date);
+  const firstReportKind = earliestReport ? kindForRawSource(earliestReport.source) : null;
+  const firstFetchedAt = earliestRawStamp(rawRows, "created_at")?.at ?? null;
 
   function matchLabelFor(direction: string, otherDirection: string): RelatedEventMatchLabel {
     if (direction === otherDirection && (direction === "up" || direction === "down")) return "reinforcing";
@@ -373,15 +422,24 @@ export async function GET(
     Signal["currencyPairImpacts"]
   >;
   const eventDate = row.event_date ?? row.created_at;
+  const priceAtReportAnchor = firstReportAt ?? eventDate;
 
   const pricesAtSignalPromise = Promise.all(
     commodityImpacts.map(async (impact) => {
-      const [historicalPriceRes, currentPriceRes] = await Promise.all([
+      const [historicalPriceRes, flaggedPriceRes, currentPriceRes] = await Promise.all([
         supabase
           .from("commodity_prices")
           .select("price, fetched_at")
           .eq("symbol", impact.asset)
-          .lte("fetched_at", eventDate)
+          .lte("fetched_at", priceAtReportAnchor)
+          .order("fetched_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("commodity_prices")
+          .select("price, fetched_at")
+          .eq("symbol", impact.asset)
+          .lte("fetched_at", row.created_at)
           .order("fetched_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
@@ -398,6 +456,8 @@ export async function GET(
         asset: impact.asset,
         priceAtSignal: historicalPriceRes.data?.price ?? null,
         priceAtSignalDate: historicalPriceRes.data?.fetched_at ?? null,
+        priceAtFlagged: flaggedPriceRes.data?.price ?? null,
+        priceAtFlaggedDate: flaggedPriceRes.data?.fetched_at ?? null,
         currentPrice: currentPriceRes.data?.price ?? null,
         currentPriceDate: currentPriceRes.data?.fetched_at ?? null,
       };
@@ -550,6 +610,9 @@ export async function GET(
   const payload: EventDetailResponse = {
     signal,
     sources,
+    firstReportAt,
+    firstReportKind,
+    firstFetchedAt,
     historicalComparisons,
     relatedEvents,
     relatedEventsTotal,

@@ -614,6 +614,7 @@ export default function DashboardPage() {
                       </span>
                       <FreshTag
                         createdAt={featured.createdAt}
+                        eventDate={featured.eventDate}
                         className="text-[12px] md:text-[10px]"
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
@@ -748,6 +749,7 @@ export default function DashboardPage() {
                           </span>
                           <FreshTag
                             createdAt={secondaryA.createdAt}
+                            eventDate={secondaryA.eventDate}
                             className="text-[12px] md:text-[10px]"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",
@@ -855,6 +857,7 @@ export default function DashboardPage() {
                           </span>
                           <FreshTag
                             createdAt={secondaryB.createdAt}
+                            eventDate={secondaryB.eventDate}
                             className="text-[12px] md:text-[10px]"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",
@@ -1055,6 +1058,7 @@ export default function DashboardPage() {
                           </div>
                           <FreshTag
                             createdAt={item.createdAt}
+                            eventDate={item.eventDate}
                             className="text-[12px] md:text-[11px] shrink-0"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",

@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — Signal clocks (`apps/web`, this commit, PHASE 163 / v0.186.0). Signal detail shows source time, fetch time, flag time, and delay. The price line is a timeline. Feed tags say "Reported" or "Flagged". No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — GNews plan switch (`apps/backend`, this commit, PHASE 162 / v0.185.0). `GNEWS_PLAN` is unset in production, so the collector still sends one query at `max=10`. Exactly `essential` sends every query at `max=25`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Read-only news-delay probe (`apps/backend`, `303bbd7`, PHASE 161 / v0.184.0). GNews and Marketaux can be polled into a local file and compared with rss rows. No database writes. Poll was not run. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

@@ -8,10 +8,13 @@ import {
   HIGH_SEVERITY_THRESHOLD,
   analysisVerificationCopy,
   commodityChipAriaLabel,
+  delayMinutes,
+  describeReports,
   emptyBriefingCopy,
   eventAlertCta,
   formatConfidencePercent,
-  formatPriceSinceFiredSubtext,
+  formatDelay,
+  formatPriceTimelineLines,
   historyErrorCodeFromResponse,
   shouldShowLastUpdated,
 } from "./signal-display";
@@ -65,25 +68,77 @@ runTest("CommodityChip aria-label names model classification confidence, not a p
   assert.equal(commodityChipAriaLabel("USOIL", "up", 0.88).includes("% confidence"), false);
 });
 
-runTest("exact-equal price shows the unchanged/closed-market copy, not +0.0%", () => {
-  const unchanged = formatPriceSinceFiredSubtext("USOIL", 100.05, 100.05);
-  assert.equal(
-    unchanged,
-    "Recorded price unchanged since this fired (closed market or unchanged quote)",
+runTest("delay from the first report to the flag rounds to minutes", () => {
+  const minutes = delayMinutes("2026-10-04T20:13:41Z", "2026-10-05T10:54:14Z");
+  assert.equal(minutes, 881);
+  assert.equal(formatDelay(881), "14 h 41 min");
+  assert.equal(formatDelay(0), "under 1 min");
+  assert.equal(formatDelay(1), "1 min");
+  assert.equal(formatDelay(59), "59 min");
+  assert.equal(formatDelay(60), "1 h");
+  assert.equal(formatDelay(120), "2 h");
+  assert.equal(delayMinutes(null, "2026-10-05T10:54:14Z"), null);
+  assert.equal(delayMinutes("not-a-date", "2026-10-05T10:54:14Z"), null);
+  assert.equal(delayMinutes("2026-10-05T10:54:14Z", "2026-10-04T20:13:41Z"), null);
+});
+
+runTest("price timeline names the first report, the flag, and now", () => {
+  const lines = formatPriceTimelineLines(
+    "USOIL",
+    { price: 100, at: "2026-10-14T12:31:00Z" },
+    { price: 102, at: "2026-10-14T14:00:00Z" },
+    { price: 101, at: "2026-10-15T08:05:00Z" },
   );
-  assert.equal(unchanged.includes("+0.0%"), false);
+  assert.deepEqual(lines, [
+    "USOIL was $100.00 at the first linked report (quote as of 14 Oct, 12:31 UTC).",
+    "$102.00 when BBR flagged it (quote as of 14 Oct, 14:00 UTC, +2.0%).",
+    "$101.00 now (quote as of 15 Oct, 08:05 UTC, -1.0% since BBR flagged it).",
+  ]);
+  const withoutFlag = formatPriceTimelineLines(
+    "USOIL",
+    { price: 100, at: "2026-10-14T12:31:00Z" },
+    null,
+    { price: 103, at: "2026-10-15T08:05:00Z" },
+  );
+  assert.equal(withoutFlag.length, 2);
+  assert.match(withoutFlag[1], /since the first linked report/);
+  assert.equal(withoutFlag[1].includes("flagged"), false);
+  const flat = formatPriceTimelineLines(
+    "USOIL",
+    { price: 100.05, at: "2026-10-14T12:31:00Z" },
+    { price: 100.05, at: "2026-10-14T14:00:00Z" },
+    { price: 100.05, at: "2026-10-15T08:05:00Z" },
+  );
+  assert.equal(flat[flat.length - 1], "Recorded price unchanged (closed market or unchanged quote)");
+  const joined = lines.join(" ");
+  for (const word of ["fast", "quickest", "real-time", "realtime", "instant", "bullish", "bearish"]) {
+    assert.equal(joined.toLowerCase().includes(word), false);
+  }
 });
 
-runTest("tiny non-zero price change does not render (+0.0%)", () => {
-  const tiny = formatPriceSinceFiredSubtext("USOIL", 100, 100.04);
-  assert.equal(tiny, "No price move recorded yet since this fired");
-  assert.equal(tiny.includes("+0.0%"), false);
-});
-
-runTest("real price move still shows fired / now / percent", () => {
-  const moved = formatPriceSinceFiredSubtext("USOIL", 100, 102);
-  assert.match(moved, /USOIL was \$100\.00 when this fired/);
-  assert.match(moved, /Now: \$102\.00 \(\+2\.0%\)/);
+runTest("headlines that differ only by case or punctuation count as one", () => {
+  assert.equal(describeReports([{ title: "One wire", domain: "reuters.com" }]), "1 report");
+  assert.equal(
+    describeReports([
+      { title: "Oil prices surge!", domain: "reuters.com" },
+      { title: "oil prices surge", domain: "bbc.com" },
+    ]),
+    "2 outlets, same headline",
+  );
+  assert.equal(
+    describeReports([
+      { title: "Oil prices surge!", url: "https://www.reuters.com/a" },
+      { title: "Oil prices surge.", url: "https://reuters.com/b" },
+    ]),
+    "1 outlet, same headline",
+  );
+  assert.equal(
+    describeReports([
+      { title: "Oil prices surge", domain: "reuters.com" },
+      { title: "Ports reopen after the strike", domain: "bbc.com" },
+    ]),
+    "2 outlets, 2 distinct headlines",
+  );
 });
 
 runTest("severe-alert CTA is relabeled for low-severity signals", () => {
@@ -104,6 +159,15 @@ runTest("ANALYSIS Verification box no longer restates a source count", () => {
     "utf8",
   );
   assert.equal(page.includes("Confirmed by"), false);
+  assert.equal(page.includes("when this fired"), false);
+  assert.equal(page.includes("Since signal"), false);
+  assert.equal(page.includes('"Reports"'), false);
+  assert.equal(page.includes('"Report"'), false);
+  const fresh = readFileSync(join(here, "../components/signals/FreshTag.tsx"), "utf8");
+  assert.equal(fresh.includes("Fresh "), false);
+  assert.equal(fresh.includes("Fresh recently"), false);
+  assert.match(fresh, /Reported/);
+  assert.match(fresh, /Flagged/);
 });
 
 runTest("empty briefing copy is severity-gated, not an outage story", () => {

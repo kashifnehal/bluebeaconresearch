@@ -50,23 +50,55 @@ const STEP_NAMES = [
   "response",
 ] as const;
 
-function makeSupabase(counter: { executions: number }) {
+function makeSupabase(
+  counter: { executions: number },
+  options?: {
+    signal?: typeof signalRow;
+    rawEvents?: Array<Record<string, unknown>>;
+    priceLte?: string[];
+    rawSelect?: { value: string };
+  },
+) {
+  const signal = options?.signal ?? signalRow;
+  const rawEvents = options?.rawEvents ?? [
+    {
+      id: "re-1",
+      title: "Wire copy",
+      event_date: "2026-10-01T00:00:00.000Z",
+      created_at: "2026-10-01T00:00:00.000Z",
+      raw_data: {
+        url: "https://example.com/story",
+        source: "Wire",
+        domain: "example.com",
+      },
+    },
+  ];
   return {
     from(table: string) {
       const builder: Record<string, unknown> = {};
       const self = () => builder;
-      builder.select = self;
+      builder.select = (cols?: string) => {
+        if (table === "raw_events" && typeof cols === "string" && options?.rawSelect) {
+          options.rawSelect.value = cols;
+        }
+        return builder;
+      };
       builder.eq = self;
       builder.neq = self;
       builder.or = self;
       builder.in = self;
       builder.gte = self;
-      builder.lte = self;
+      builder.lte = (column: string, value: string) => {
+        if (table === "commodity_prices" && column === "fetched_at" && options?.priceLte) {
+          options.priceLte.push(value);
+        }
+        return builder;
+      };
       builder.order = self;
       builder.limit = self;
       builder.maybeSingle = () => {
         counter.executions += 1;
-        if (table === "signals") return Promise.resolve({ data: signalRow, error: null });
+        if (table === "signals") return Promise.resolve({ data: signal, error: null });
         if (table === "commodity_prices") {
           return Promise.resolve({
             data: { price: 71.2, fetched_at: "2026-10-14T00:00:00.000Z" },
@@ -84,22 +116,7 @@ function makeSupabase(counter: { executions: number }) {
         onRejected?: (reason: unknown) => unknown,
       ) => {
         counter.executions += 1;
-        const data =
-          table === "raw_events"
-            ? [
-                {
-                  id: "re-1",
-                  title: "Wire copy",
-                  event_date: "2026-10-01T00:00:00.000Z",
-                  created_at: "2026-10-01T00:00:00.000Z",
-                  raw_data: {
-                    url: "https://example.com/story",
-                    source: "Wire",
-                    domain: "example.com",
-                  },
-                },
-              ]
-            : [];
+        const data = table === "raw_events" ? rawEvents : [];
         return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
       };
       return builder;
@@ -107,10 +124,13 @@ function makeSupabase(counter: { executions: number }) {
   };
 }
 
-function makeDeps(counter: { executions: number }) {
+function makeDeps(
+  counter: { executions: number },
+  options?: Parameters<typeof makeSupabase>[1],
+) {
   return {
     getRouteSupabaseClients: async () => ({
-      supabase: makeSupabase(counter),
+      supabase: makeSupabase(counter, options),
       supabaseAuth: {},
       user: { id: "user-1" },
     }),
@@ -170,6 +190,11 @@ async function main() {
         assert.equal(body.signal.id, SIGNAL_ID);
         assert.equal(body.pricesAtSignal[0].asset, "USOIL");
         assert.equal(body.pricesAtSignal[0].currentPrice, 71.2);
+        assert.equal(body.pricesAtSignal[0].priceAtSignal, 71.2);
+        assert.equal(body.pricesAtSignal[0].priceAtFlagged, 71.2);
+        assert.equal(body.firstReportAt, "2026-10-01T00:00:00.000Z");
+        assert.equal(body.firstReportKind, null);
+        assert.equal(body.firstFetchedAt, "2026-10-01T00:00:00.000Z");
       }
     } finally {
       if (previous === undefined) delete process.env.SERVER_TIMING;
@@ -209,6 +234,64 @@ async function main() {
       if (previous === undefined) delete process.env.SERVER_TIMING;
       else process.env.SERVER_TIMING = previous;
     }
+  });
+
+  await runTest("clock fields follow the earliest linked report, and quotes use that time and the flag time", async () => {
+    const priceLte: string[] = [];
+    const rawSelect = { value: "" };
+    const signal = {
+      ...signalRow,
+      event_date: "2026-10-05T12:00:00.000Z",
+      created_at: "2026-10-05T10:54:14.000Z",
+    };
+    const res = await callGet(
+      makeDeps(
+        { executions: 0 },
+        {
+          signal,
+          priceLte,
+          rawSelect,
+          rawEvents: [
+            {
+              id: "re-late",
+              title: "Later wire",
+              source: "newsapi",
+              event_date: "2026-10-05T09:00:00.000Z",
+              created_at: "2026-10-05T09:30:00.000Z",
+              raw_data: { url: "https://example.com/late" },
+            },
+            {
+              id: "re-early",
+              title: "Earlier wire",
+              source: "rss",
+              event_date: "2026-10-04T20:13:41.000Z",
+              created_at: "2026-10-05T01:00:00.000Z",
+              raw_data: { url: "https://example.com/early" },
+            },
+            {
+              id: "re-bad",
+              title: "Bad date",
+              source: "gdelt",
+              event_date: "not-a-date",
+              created_at: "not-a-date",
+              raw_data: {},
+            },
+          ],
+        },
+      ),
+    );
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(rawSelect.value.includes("source"), true);
+    assert.equal(body.firstReportAt, "2026-10-04T20:13:41.000Z");
+    assert.equal(body.firstReportKind, "publisher");
+    assert.equal(body.firstFetchedAt, "2026-10-05T01:00:00.000Z");
+    assert.equal(body.signal.eventDate, "2026-10-05T12:00:00.000Z");
+    assert.deepEqual(priceLte, [
+      "2026-10-04T20:13:41.000Z",
+      "2026-10-05T10:54:14.000Z",
+    ]);
+    assert.equal(body.pricesAtSignal[0].priceAtFlaggedDate, "2026-10-14T00:00:00.000Z");
   });
 }
 
