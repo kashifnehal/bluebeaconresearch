@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — P13 region backfill (this commit, PHASE 170 / v0.193.0). Migration `20261015150000_signals_region_raw.sql` is written, not applied. The backfill was not run with `--apply`. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — P12 region canon (`apps/backend` + `packages/shared`, this commit, PHASE 169 / v0.192.0). Eight canonical region ids. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Map locations (`apps/web`, this commit, PHASE 168 / v0.191.0). Country "Global" is not a place on the Locations list. "European Union" stays. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

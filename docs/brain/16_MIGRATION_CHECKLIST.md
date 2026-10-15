@@ -117,6 +117,8 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 - `20261015130000_feed_gap_p95.sql` — P18 feed-volume alarm. Read-only view `public.feed_gap_p95`. Written, not applied.
 - `20261015140000_service_health_raw_event_id.sql` — P21 gate-reason link. Nullable `service_health_events.raw_event_id` and a partial index. Written, not applied.
 
+- `20261015150000_signals_region_raw.sql` — P13. Nullable `public.signals.region_raw text`. Written, not applied.
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.

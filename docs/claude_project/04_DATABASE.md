@@ -58,7 +58,7 @@ Stores LLM-synthesized military/geopolitical intelligence and asset impact data.
 - `severity` (`int`, NOT NULL, check `1 <= severity <= 10`)
 - `confidence` (`double precision`, NOT NULL, check `0 <= confidence <= 1`)
 - `event_type` (`text`, nullable)
-- `country` / `region` (`text`, nullable)
+- `country` / `region` (`text`, nullable). `region_raw` (`text`, nullable) is added by `20261015150000_signals_region_raw.sql` — **written, not applied**. It keeps the original region string when the backfill runs. Full column note: `docs/brain/04_DATABASE.md`.
 - `lat` / `lng` (`double precision`, nullable)
 - `sources_count` (`int`, NOT NULL, default `1`)
 - `commodity_impacts` (`jsonb`, NOT NULL, default `'[]'::jsonb`)

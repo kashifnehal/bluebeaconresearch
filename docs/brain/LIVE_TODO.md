@@ -3,7 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ P12 region canon, `apps/backend` + `packages/shared`, 2026-10-15, this commit
+## ✅ P13 region backfill, `apps/backend` + one migration, 2026-10-15, this commit
+
+- Migration `20261015150000_signals_region_raw.sql` adds nullable `signals.region_raw`. Written, not applied.
+- `pnpm backfill:signal-region` is a dry run. `--apply` copies `region` into `region_raw` when that column is null, then sets `region` to `canonicalizeRegion` only when the value changes. Legacy `americas` changes only when the country maps to `north-america` or `south-america`. This commit did not run `--apply`.
+
+## ✅ P12 region canon, `apps/backend` + `packages/shared`, 2026-10-15, `fc9113c`
 
 - New Claude classifications store one of 8 region ids: `middle-east`, `eastern-europe`, `europe`, `north-america`, `south-america`, `asia-pacific`, `africa`, `global`. Legacy `americas` stays on the `Region` type and on old rows.
 - `canonicalizeRegion` matches an id or label, else the first segment before `/`, `,`, or ` - `, else a synonym seen at least 3 times in the last 90 days, else `COUNTRY_REGION`, else `global`.

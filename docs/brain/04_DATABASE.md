@@ -64,6 +64,7 @@ Stores LLM-synthesized geopolitical intelligence and asset impact data.
 - `confidence` (`double precision`, NOT NULL, check `0 <= confidence <= 1`)
 - `event_type` (`text`, nullable)
 - `country` / `region` (`text`, nullable)
+- `region_raw` (`text`, nullable) — P13, `20261015150000_signals_region_raw.sql`, **written, not applied**. Original `region` text, filled by the backfill script only when `--apply` runs.
 - `lat` / `lng` (`double precision`, nullable)
 - `sources_count` (`int`, NOT NULL, default `1`)
 - `commodity_impacts` (`jsonb`, NOT NULL, default `'[]'::jsonb`) — array of `{asset, ...}`; `asset` holds ticker symbols (`USOIL`, `UKOIL`, `XAUUSD`, `NGAS`, `WHEAT`, `CORN`, …), not display names
