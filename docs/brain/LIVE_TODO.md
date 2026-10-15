@@ -3,6 +3,10 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Event detail stops waiting on a slow read, `apps/web`, 2026-10-16, `426de2c` and `b2fe912`
+
+- Optional reads on `GET /api/signals/:id` stop after 6000 ms and list the skipped names in `degraded` (`426de2c`). The event page aborts its fetch at 20000 ms, shows a retry when that fetch times out or fails, and hides empty historical and related blocks named in `degraded` (`b2fe912`). No open priority-queue line. Nothing struck.
+
 ## ✅ What we build and how it helps users, docs only, 2026-10-16
 
 - Section added to both product files. Eight rows, labels kept as supplied (PROVEN, PROBABLE, INFERENCE, GAP). No row is labeled INFERENCE. No count was added beyond the supplied rows and the SEBI equity-derivatives range in the Users paragraph.

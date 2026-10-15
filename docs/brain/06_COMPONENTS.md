@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Event detail aborts its fetch at 20000 ms (`b2fe912`). Timeout and a failed fetch show "This is taking longer than usual. The data service is slow right now." and Retry. A `degraded` response adds "Some sections are still loading slowly: {names}." under the header and hides the empty historical and related blocks.
+
 > ⚠️ UPDATED 2026-10-15 — Accent, muted text, border, secondary text, primary surface, and container surface colours now use the matching CSS variables (`b00cfc0` and this commit). Props and layout are unchanged.
 
 > ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` and `FirstTouchLogger` (`9da1540`) keep campaign tags and an external referrer host in the browser for the visit and save them on email signup. No cookie.
