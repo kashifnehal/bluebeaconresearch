@@ -25,6 +25,7 @@ import {
 import { getLastKnownRedisUsage } from "./clients/redis.js";
 import { getSupabaseAdmin } from "./clients/supabase.js";
 import { checkMonthlySpend } from "./lib/monthly-spend-warning.js";
+import { checkFeedVolume } from "./lib/feed-volume-alarm.js";
 
 // Consecutive-failed-run thresholds before a collector going silent pages someone.
 // GDELT: 8 runs (~4h at */30). A single GDELT 429 is an expected IP-level block on
@@ -220,6 +221,12 @@ async function main() {
     try {
       const { collectors, writeVolume } = await runIngestionCycle(app);
       app.log.info({ collectors, writeVolume }, "ingestion-cycle complete");
+      try {
+        await checkFeedVolume(getSupabaseAdmin(), new Date());
+      } catch (e) {
+        app.log.error({ err: e }, "feed-volume-alarm failed");
+        Sentry.captureException(e);
+      }
     } catch (e) {
       app.log.error({ err: e }, "ingestion-cycle failed");
       Sentry.captureException(e);

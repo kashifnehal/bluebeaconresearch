@@ -114,6 +114,8 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 
 - **2026-10-14 apply (supersedes the two lines directly above):** `public.rss_drop_samples` and `public.gate_shadow_results` were applied on 2026-10-14. RLS is on, there is no policy, and access is service_role only. The applied tables are in `public`, not `internal_ops`. The `anthropic_daily_usage` bucket check now allows `'ingestion'`, `'chat'`, and `'shadow'`.
 
+- `20261015130000_feed_gap_p95.sql` — P18 feed-volume alarm. Read-only view `public.feed_gap_p95`. Written, not applied.
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.
