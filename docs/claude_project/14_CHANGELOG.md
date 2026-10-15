@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Feed quiet-gap alarm after a pause (`e572d62`)
+
+`apps/backend` only. Silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-16 — How-it-works signal counts (`d165222`)
 
 `apps/web` only. Both signal counts on the public how-it-works page use a head-only exact count. A total of 0 stays hidden. The last-7-days count still filters `created_at`. Full detail: `docs/brain/LIVE_TODO.md`.

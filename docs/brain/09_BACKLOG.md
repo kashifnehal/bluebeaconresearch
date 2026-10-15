@@ -2,6 +2,8 @@
 
 > **📍 Doc status — historical P0–P3 list.** Live tickets: `docs/claude_project/09_BACKLOG.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Feed quiet-gap alarm after a pause (`apps/backend`, `e572d62`). Silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks.
+
 > ⚠️ UPDATED 2026-10-15 — Eight region ids (`fc9113c`) and the region backfill script (`320453f`). `signals.region_raw` is written and not applied. `--apply` was not run.
 
 > ⚠️ UPDATED 2026-10-15 — Collection gaps. 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered. 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.

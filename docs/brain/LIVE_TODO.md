@@ -3,6 +3,10 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Feed quiet-gap alarm ignores a collection pause, `apps/backend`, 2026-10-16, `e572d62`
+
+- Silence starts at the later of last_seen and the check that first saw collection running again. A degraded row waits for two quiet checks (`FEED_VOLUME_CONSECUTIVE_CHECKS`, default 2, not set). A missing `feed_gap_p95` view still throws and writes no degraded row. No open priority-queue line. Nothing struck.
+
 ## ✅ How-it-works signal counts are head-only, `apps/web`, 2026-10-16, `d165222`
 
 - Both public signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days count still filters `created_at`. No open priority-queue line. Nothing struck.
