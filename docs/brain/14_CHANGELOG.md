@@ -1,6 +1,6 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-15 (v0.184.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-15 (v0.185.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
@@ -8,7 +8,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.184.0 — Read-only news-delay probe (2026-10-15, this commit)
+### v0.185.0 — GNews collector can use a paid plan's capacity, off by default (2026-10-15, this commit)
+
+`apps/backend` only. `GNEWS_PLAN` unset or `free` keeps one rotating query at `max=10`. Exactly `essential` requests `max=25` and runs every GNews query each cycle, 1.1 seconds apart. A later query's failure does not fail the cycle. `GNEWS_PLAN` is unset in production, so nothing changes until it is set. The ingestion cron is unchanged. Full detail: `LIVE_TODO.md`.
+
+### v0.184.0 — Read-only news-delay probe (2026-10-15, `303bbd7`)
 
 `apps/backend` only. `probe:news-delay` polls GNews (same search URL and parameters as the collector) and, when its key is set, Marketaux. New articles go to a gitignored jsonl file, keyed by canonical URL. Each vendor stops at 90 requests per UTC day. `report` prints lag stats and a read-only rss overlap from `raw_events` (`raw_data->>url` and `source` only). No database writes, no Redis, no model calls. Poll was not run. Full detail: `LIVE_TODO.md`.
 

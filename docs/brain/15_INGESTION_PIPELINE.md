@@ -13,7 +13,7 @@ This document describes **exactly** how Blue Beacon Research fetches news, filte
 ```
 Railway workers (startup + every 30 min)
   ├── RSS Collector      (28 feeds — world + finance)
-  ├── GNews Collector    (1 API query, free tier)
+  ├── GNews Collector    (1 API query on the free plan; all queries if GNEWS_PLAN=essential)
   ├── GDELT Collector    (1 API query, global news index)
   ├── Price Syncer       (Yahoo Finance — 8 commodities + 6 forex pairs)
   └── ACLED Collector    (optional — requires credentials)
@@ -90,9 +90,11 @@ Railway workers (startup + every 30 min)
 
 **Auth:** `GNEWS_API_KEY`  
 **API:** `https://gnews.io/api/v4/search`  
-**Free tier limit:** ~100 requests/day → **1 query per run** (~48/day at the current 30-min cadence)  
-**Max articles per run:** 10  
+**Free tier limit:** ~100 requests/day → **1 query per run** when `GNEWS_PLAN` is unset or `free` (~48/day at the current 30-min cadence)  
+**Max articles per run:** 10 on that default; 25 when `GNEWS_PLAN` is exactly `essential`  
 **Sort:** `publishedAt` (newest first)  
+
+**Plan (`GNEWS_PLAN`), 2026-10-15:** unset in production. Unset or `free` keeps one rotating query and `max=10`, with the same rate-limit handling. Exactly `essential` runs every collector query every cycle at `max=25`, waiting 1.1 seconds between requests. A failure of the second or third query is logged and ignored: it does not fail the cycle and does not count as a rate-limit failure for the first. The extra `GNEWS_T2_QUERY` request is unchanged. `INGESTION_INTERVAL_CRON` is unchanged. Nothing changes until `GNEWS_PLAN` is set to `essential`.  
 **Dedup key:** `gnews-{base64(url)[0:32]}`  
 **DB source value:** `newsapi` (check constraint — not `gnews`)
 
@@ -344,6 +346,7 @@ all.)
 | :----------------------------- | :--------------------------- | :------------------------------- |
 | `SUPABASE_SERVICE_ROLE_KEY`    | Railway workers + **Vercel** | Write/read signals               |
 | `GNEWS_API_KEY`                | Railway workers              | GNews collector                  |
+| `GNEWS_PLAN`                   | Railway workers              | Unset or `free`: one query, max 10. `essential`: all queries, max 25. Unset in production; nothing changes until it is set. |
 | `REDIS_URL`                    | Railway workers              | BullMQ + pipeline status         |
 | `UPSTASH_REDIS_REST_URL/TOKEN` | Vercel + Railway             | Banner reads `pipeline:last_run` |
 

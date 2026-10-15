@@ -23,14 +23,16 @@ import { T2_GNEWS_QUERIES } from "../lib/t2-terms.js";
 
 const claude = new ClaudeService();
 
-// Free plan: non-commercial (gnews.io/pricing, GNews dashboard quota page). Remove
-// or upgrade before the first paying customer (founder decision 2026-10-05: replace GNews with a paid news source before go-live).
-// Free plan caps: 100 req/day, 10 articles/req, ~12h publish delay. The ingestion
-// cycle runs every 30 min -> 24h / 0.5h = 48 cycles/day. One query per cycle (not
-// one request per query per cycle) keeps total GNews traffic at 48 req/day
-// regardless of GNEWS_QUERIES.length, comfortably under the 100 req/day cap,
-// with each topic getting its turn via W7-GNEWS-ROTATE below instead of one query
-// spending the whole daily budget on itself.
+// GNEWS_PLAN chooses the request pattern. Read from the environment, same as
+// GNEWS_T2_QUERY. Unset or "free": one rotating query per cycle, max=10.
+// Free-plan caps are 100 requests/day and 10 articles/request, and articles can
+// be hours old. A cycle every 30 minutes is 48 requests/day, so one query per
+// cycle stays under the cap and the topics take turns.
+// Exactly "essential": max=25, and every query in GNEWS_QUERIES runs every
+// cycle, one after another, waiting 1.1 seconds between requests. A failure of
+// the second or third query is logged and ignored. It does not fail the cycle
+// and it does not count as a rate-limit failure for the first query.
+// The extra commodity query below is separate and is unchanged on either plan.
 const GNEWS_QUERIES = [
   "conflict OR war OR sanctions OR trade OR stock market OR inflation OR fed OR earnings", // geopolitics and markets
   // Metals/energy terms from ALLOWED_COMMODITY_ASSETS + COMMODITY_ASSET_ALIASES in
@@ -77,10 +79,69 @@ export function gnewsT2Selection(cycleIndex: number): { query: string; index: nu
 // GNEWS_QUERIES.length topics multiple times even after a restart.
 let gnewsCycleCounter = 0;
 
-async function fetchGnewsArticles(query: string, token: string) {
-  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=10&sortby=publishedAt&token=${token}`;
+async function fetchGnewsArticles(query: string, token: string, max = 10) {
+  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=${max}&sortby=publishedAt&token=${token}`;
   const res = await axios.get(url, { timeout: 20_000 });
   return (res.data?.articles ?? []) as any[];
+}
+
+export function resolveGnewsPlan(raw: string | undefined = process.env.GNEWS_PLAN): "free" | "essential" {
+  return raw === "essential" ? "essential" : "free";
+}
+
+/** Same condition the cycle uses before it records a failed run. */
+export function gnewsFetchFailed(articleCount: number, fetchError: string | undefined): boolean {
+  return articleCount === 0 && Boolean(fetchError);
+}
+
+const GNEWS_REQUEST_GAP_MS = 1_100;
+
+function sleepMs(ms: number): Promise<void> {
+  return new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
+}
+
+export async function runPlannedGnewsFetches(options: {
+  plan: "free" | "essential";
+  cycleIndex: number;
+  token: string;
+  fetchArticles?: (query: string, token: string, max: number) => Promise<any[]>;
+  sleep?: (ms: number) => Promise<void>;
+}): Promise<{ articles: any[]; fetchError?: string; rateLimited: boolean }> {
+  const fetchArticles = options.fetchArticles ?? ((query, token, max) => fetchGnewsArticles(query, token, max));
+  const sleep = options.sleep ?? sleepMs;
+  const planned = options.plan === "essential"
+    ? GNEWS_QUERIES.map((query, index) => ({ query, index, max: 25 }))
+    : [{ ...selectGnewsQuery(options.cycleIndex), max: 10 }];
+  const articles: any[] = [];
+  let fetchError: string | undefined;
+  let rateLimited = false;
+  for (let i = 0; i < planned.length; i++) {
+    const item = planned[i]!;
+    if (i > 0) await sleep(GNEWS_REQUEST_GAP_MS);
+    try {
+      const batch = await fetchArticles(item.query, options.token, item.max);
+      articles.push(...batch);
+      console.log(`[GNews] query #${item.index} ("${item.query}") returned ${batch.length} article(s)`);
+    } catch (e: any) {
+      if (i > 0) {
+        const message = String(e?.message ?? e).split(options.token).join("[redacted]");
+        console.warn(`[GNews] query #${item.index} ("${item.query}") failed: ${message}`);
+        continue;
+      }
+      // Quota exhaustion (402/429) is expected on the free plan. Still record it so
+      // the health counter climbs; the worker uses a wider alert threshold for
+      // GNews so a normal quota gap does not page anyone.
+      if (e.response?.status === 402 || e.response?.status === 429) {
+        console.warn("[GNews] Rate limit hit");
+        fetchError = `quota/rate limit (HTTP ${e.response.status})`;
+        rateLimited = true;
+      } else {
+        console.warn(`[GNews] query #${item.index} ("${item.query}") failed:`, e.message);
+        fetchError = e.message;
+      }
+    }
+  }
+  return { articles, fetchError, rateLimited };
 }
 
 export async function runGnewsCollectorOnce() {
@@ -109,32 +170,16 @@ export async function runGnewsCollectorOnce() {
 
   const supabase = getSupabaseAdmin();
 
-  // W7-GNEWS-ROTATE: one query this cycle, picked in rotation (see selectGnewsQuery above).
   const cycleIndex = gnewsCycleCounter++;
-  const { query, index: queryIndex } = selectGnewsQuery(cycleIndex);
-
-  const allArticles: any[] = [];
-  let fetchError: string | undefined;
-  let rateLimited = false;
   const fetchStartedAt = Date.now();
-  try {
-    const articles = await fetchGnewsArticles(query, env.GNEWS_API_KEY);
-    allArticles.push(...articles);
-    console.log(`[GNews] query #${queryIndex} ("${query}") returned ${articles.length} article(s)`);
-  } catch (e: any) {
-    // Quota exhaustion (402/429) is expected on the free tier (#64) — still record
-    // it so the health counter climbs; workers.ts just uses a wider alert threshold
-    // for GNews so a normal quota gap doesn't page anyone.
-    if (e.response?.status === 402 || e.response?.status === 429) {
-      console.warn("[GNews] Rate limit hit");
-      fetchError = `quota/rate limit (HTTP ${e.response.status})`;
-      rateLimited = true;
-    } else {
-      console.warn(`[GNews] query #${queryIndex} ("${query}") failed:`, e.message);
-      fetchError = e.message;
-    }
-  }
-
+  const planned = await runPlannedGnewsFetches({
+    plan: resolveGnewsPlan(),
+    cycleIndex,
+    token: env.GNEWS_API_KEY,
+  });
+  const allArticles = planned.articles;
+  const fetchError = planned.fetchError;
+  const rateLimited = planned.rateLimited;
   const fetchLatencyMs = Date.now() - fetchStartedAt;
 
   const t2Selection = gnewsT2Selection(cycleIndex);
@@ -151,7 +196,7 @@ export async function runGnewsCollectorOnce() {
   }
 
   // A run that fetched nothing and hit an error is a failed run for health tracking.
-  if (allArticles.length === 0 && fetchError) {
+  if (gnewsFetchFailed(allArticles.length, fetchError) && fetchError) {
     await recordServiceHealth(
       "gnews",
       rateLimited ? "rate_limited" : "error",

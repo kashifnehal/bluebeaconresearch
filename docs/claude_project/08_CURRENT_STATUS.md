@@ -1,8 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (news-delay probe — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (GNEWS_PLAN off by default — see the banner immediately below).**
 
-> ⚠️ NEW 2026-10-15 (read-only news-delay probe, `apps/backend` only, this commit) — `probe:news-delay` stores first-seen articles locally and can compare them with rss urls. No writes. Poll was not run. See `docs/brain/LIVE_TODO.md`, PHASE 161.
+> ⚠️ NEW 2026-10-15 (GNews plan switch, `apps/backend` only, this commit) — `GNEWS_PLAN` is unset in production. Unset or `free` keeps one query at `max=10`. Exactly `essential` uses `max=25` and every query each cycle. Nothing changes until it is set. See `docs/brain/LIVE_TODO.md`, PHASE 162.
+
+> ⚠️ NEW 2026-10-15 (read-only news-delay probe, `apps/backend` only, `303bbd7`) — `probe:news-delay` stores first-seen articles locally and can compare them with rss urls. No writes. Poll was not run. See `docs/brain/LIVE_TODO.md`, PHASE 161.
 
 > ⚠️ NEW 2026-10-15 (breadth close, docs only) — `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, and `NICKEL` are event-only: no price feed or chart. Pages show "NEWS ONLY (NO PRICE FEED)". `DROP_SAMPLE_STORE` is on. `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `GATE_SHADOW_ENABLED` are off. Yahoo-sourced prices stay development and test only while there are no paying customers (2026-10-11). Still open: the classifier mapping test, a tier-2 reference set, and switching the retrieval flags on one at a time. See `docs/brain/LIVE_TODO.md`.
 

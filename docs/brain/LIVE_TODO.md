@@ -3,7 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ Read-only news-delay probe, `apps/backend` only, 2026-10-15, this commit
+## ✅ GNews collector can use a paid plan's capacity, off by default, `apps/backend` only, 2026-10-15, this commit
+
+- `GNEWS_PLAN` is read from the environment the same way as `GNEWS_T2_QUERY`. Unset or `free`: one rotating query per cycle, `max=10`, same rate-limit handling. Exactly `essential`: `max=25` and all three GNews queries every cycle, 1.1 seconds apart. A failure of the second or third query is logged and ignored. It does not fail the cycle and does not count as a rate-limit failure for the first. The extra T2 query is unchanged. `INGESTION_INTERVAL_CRON` is unchanged.
+- `GNEWS_PLAN` is unset in production. Nothing changes until it is set to `essential`.
+- No priority-queue line. Nothing struck.
+- Docs: this entry; brain `15_INGESTION_PIPELINE`, both `12_DEPLOYMENT`; brain `14` v0.185.0, `08`; claude_project `09`, `08`, `14` PHASE 162. Skipped both `05_API`, both `04_DATABASE`, both `06_COMPONENTS`, `18_AI_ENGINE`, both `10_DECISIONS`. `docs/claude_project/` has no ingestion-pipeline file (`15` there is competitor analysis).
+
+## ✅ Read-only news-delay probe, `apps/backend` only, 2026-10-15, `303bbd7`
 
 - `pnpm probe:news-delay` (`apps/backend/src/scripts/probe-news-delay.ts`). `poll` (default) calls GNews when `GNEWS_API_KEY` is set, with the same search URL and parameters as the GNews collector (`lang=en`, `max=10`, `sortby=publishedAt`), and Marketaux when `MARKETAUX_API_KEY` is set (`GET https://api.marketaux.com/v1/news/all`, `language=en`, `limit` from `MARKETAUX_LIMIT` default 3, `published_after` three hours before now in UTC as `YYYY-MM-DDTHH:mm`). Queries are `oil OR crude` and `Hormuz OR tanker`, one request per vendor per query. A new article is appended to `apps/backend/.probe-data/news-delay.jsonl` (gitignored via `.probe-data/`) only when its canonical URL is not already in the file. A per-vendor UTC-day counter in that folder refuses a request at 90. `report` prints, per vendor, articles first seen, distinct domains, median and 90th percentile of first-seen minus published in minutes, how many were older than 60 minutes, oldest and newest published time, and the number of polls that wrote a line. It then does one read-only paged select on `raw_events` (`source` and `raw_data->>url` only, `source = rss`, `event_date` on the UTC days in the file) and prints both overlap counts: vendor articles that also appear as rss, and rss urls that appear in that vendor's list. No database writes, no Redis, no model calls. Poll was not run for this commit.
 - No priority-queue line. Nothing struck.
