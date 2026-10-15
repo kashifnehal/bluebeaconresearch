@@ -6,15 +6,15 @@
 
 ---
 
-## PHASE 166 — Record the speed-claim rules and the timing findings (2026-10-15, this commit)
+## PHASE 166 — Record the speed-claim rules and the timing findings (2026-10-15, b9f7084)
 
 Docs only. Speed and timing claims are a standing rule. The tagline "Intelligence before markets move." is HOLD. Seven related queue lines are not started. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.189.0.
 
-## PHASE 165 — Show clock times in UTC and say when collection pauses (2026-10-15, this commit)
+## PHASE 165 — Show clock times in UTC and say when collection pauses (2026-10-15, 3071abb)
 
 `apps/web` only. Clock cells on a signal page show UTC. The homepage badge says collection runs while the daily budget is open. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.188.0.
 
-## PHASE 164 — Homepage and dashboard say where the clock and sources can be checked (2026-10-15, this commit)
+## PHASE 164 — Homepage and dashboard say where the clock and sources can be checked (2026-10-15, 847e9ac)
 
 `apps/web` only. Homepage and dashboard copy name the collection interval and where to check the clock, the sources, and the price baseline. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.187.0.
 
@@ -22,7 +22,7 @@ Docs only. Speed and timing claims are a standing rule. The tagline "Intelligenc
 
 `apps/web` only. Signal detail shows when the story was reported, when it was fetched, when it was flagged, and the delay. The price line names the quote at the first linked report, at the flag, and now. Feed tags say "Reported" or "Flagged". Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.186.0.
 
-## PHASE 162 — GNews collector can use a paid plan's capacity, off by default (2026-10-15, this commit)
+## PHASE 162 — GNews collector can use a paid plan's capacity, off by default (2026-10-15, b5b7be0)
 
 `apps/backend` only. `GNEWS_PLAN` is unset in production. Unset or `free` is unchanged. Exactly `essential` requests more articles and runs every query each cycle. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.185.0.
 
@@ -34,71 +34,71 @@ Docs only. Speed and timing claims are a standing rule. The tagline "Intelligenc
 
 Docs only. Seven tier-2 assets are event-only. `DROP_SAMPLE_STORE` is on; the other retrieval flags and `GATE_SHADOW_ENABLED` are off. Yahoo-sourced prices stay development and test only while there are no paying customers (2026-10-11). Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.183.0.
 
-## PHASE 159 — Intelligence Feed pause sentence has a period (2026-10-15, this commit)
+## PHASE 159 — Intelligence Feed pause sentence has a period (2026-10-15, 0b8d1f0)
 
 `apps/web` only. A closed daily classification budget puts a period on the Intelligence Feed detail before the pause sentence. An open budget is unchanged. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.182.0.
 
-## PHASE 158 — Underscore registry symbols on driver-breakdown (2026-10-15, this commit)
+## PHASE 158 — Underscore registry symbols on driver-breakdown (2026-10-15, 5345bdf)
 
 `apps/web` only. Driver-breakdown `symbol` may include `_` and still has to be a known commodity, news-only commodity, or forex pair. The signals feed filter uses the same charset. Attribution `asset` is unchanged. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.181.0.
 
-## PHASE 157 — News-only symbols on the driver-breakdown route (2026-10-15, this commit)
+## PHASE 157 — News-only symbols on the driver-breakdown route (2026-10-15, 95c13bd)
 
 `apps/web` only. The driver-breakdown route accepts priced commodities and the news-only commodity list. A news-only symbol still uses the commodity impact column only. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.180.0.
 
-## PHASE 156 — Signal detail step timings (2026-10-15, this commit)
+## PHASE 156 — Signal detail step timings (2026-10-15, 5879fc5)
 
 `apps/web` only. `GET /api/signals/:id` sends a `Server-Timing` header only when `SERVER_TIMING` is exactly `true`. The body, status codes, and queries are unchanged. This route does not call the rate limiter. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.179.0.
 
-## PHASE 155 — Ingestion banner when the daily classification budget is closed (2026-10-15, this commit)
+## PHASE 155 — Ingestion banner when the daily classification budget is closed (2026-10-15, fa40d4b)
 
 `apps/web` only. When every collector reports the daily classification budget closed, the live-ingestion box says collection is paused until the next UTC day, and hides the last-fetched, next-run, and cadence lines. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.178.0.
 
-## PHASE 154 — Map locations list (2026-10-14, this commit)
+## PHASE 154 — Map locations list (2026-10-14, cd1cf7f)
 
 `apps/web` only. The map groups the signals already on it by country and lists chokepoints with a 500 km count. A country row limits the markers and opens the existing signal popup. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.177.0.
 
-## PHASE 153 — News-only watchlist cards and detail pages (2026-10-14, this commit)
+## PHASE 153 — News-only watchlist cards and detail pages (2026-10-14, 5261650)
 
 `apps/web` only. Vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel can be added to the watchlist and followed. Their cards and detail pages show signals and "News only (no price feed)", and do not request a price. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.176.0.
 
-## PHASE 152 — Daily limit on pair-only keeps (2026-10-14, this commit)
+## PHASE 152 — Daily limit on pair-only keeps (2026-10-14, 53f2543)
 
 `apps/backend` only. Pair-only keeps are capped per UTC day by an in-memory counter (`T2_PAIR_DAILY_MAX`, default 20). The counter also resets on process restart. GNews, GDELT, and RSS consume a slot only when the pair rule is the only reason the item was kept. A closed slot records the same `nokeyword` drop as before, including t2 shadow groups. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.175.0.
 
-## PHASE 151 — Feed table hide-summaries and loaded-row count (2026-10-14, this commit)
+## PHASE 151 — Feed table hide-summaries and loaded-row count (2026-10-14, c206391)
 
 `apps/web` only. Table mode can hide the Summary column. A line next to the sorting note counts loaded rows, distinct UTC days, Up, Down, and Other (volatile, neutral, or no primary impact). Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.174.0.
 
-## PHASE 150 — Quick-view report count, unique sources, and headlines (2026-10-14, this commit)
+## PHASE 150 — Quick-view report count, unique sources, and headlines (2026-10-14, e20a43f)
 
 `apps/web` only. The signal drawer fetches the signal detail route while open and shows the report count, unique outlets, a last-updated time when a merged signal was updated later, and up to five headline links. `domain` falls back to the article URL hostname. A failed fetch leaves the rest of the drawer in place. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.173.0.
 
-## PHASE 149 — News-only commodity tags (2026-10-14, this commit)
+## PHASE 149 — News-only commodity tags (2026-10-14, e4a5409)
 
 `packages/shared` + `apps/backend` + `apps/web`. Vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel are classifier and feed-filter tags with no price series. Price sync and `GET /api/prices` stay on the existing 18 symbols. A news-only symbol on the 5-year history route is a 404. Full detail: `docs/brain/14_CHANGELOG.md` v0.172.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 148 — Faster USOIL market-impact reads (2026-10-14, this commit)
+## PHASE 148 — Faster USOIL market-impact reads (2026-10-14, ff8d968)
 
 `apps/web` only. `signal_outcomes` pages after the first are read together, and a successful read is cached 5 minutes per sorted asset list. A failed page is not cached. Both market-impact routes start the commodity-price read before waiting on outcome rows. Response shape, copy, and the 3000 ms baseline limit are unchanged. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.171.0.
 
-## PHASE 147 — Weekend-proof watchlist sparkline (2026-10-14, this commit)
+## PHASE 147 — Weekend-proof watchlist sparkline (2026-10-14, 874c216)
 
 `apps/web` only. The watchlist sparkline samples 7 days into 14 points and, when the price did not change, says so instead of drawing equal bars. `GET /api/prices/history` accepts `points` only with `days`. Full detail: `docs/brain/14_CHANGELOG.md` v0.170.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 146 — Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat` (2026-10-14, this commit)
+## PHASE 146 — Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat` (2026-10-14, ad6651a)
 
 `apps/backend` only. The replay script now includes the classifier article excerpt and the live materiality-gate instruction, prints a real publisher label (no `[object Object]`), and draws its 150 rows with a seed you can pass back via `--seed`. `--ids` and `--repeat` added. Flip JSON is written under `apps/backend/.tmp/`. No live Anthropic call. Full detail: `docs/brain/14_CHANGELOG.md` v0.169.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 145 — Reconciliation recovered-signal alerts honor the 24h intake window (2026-10-14, this commit)
+## PHASE 145 — Reconciliation recovered-signal alerts honor the 24h intake window (2026-10-14, 67d97ea)
 
 `apps/backend` only. Recovering an orphaned `raw_event` still creates a signal and still runs `generateSignalAnalysis`; `dispatchAlertsForSignal` now runs only when the article is within the 24h intake window (`event_date`, else `created_at`). `ORPHAN_MAX_AGE_HOURS` stays 36. Full detail: `docs/brain/14_CHANGELOG.md` v0.168.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 144 — Fix empty price charts for logged-in users (2026-10-11, this commit)
+## PHASE 144 — Fix empty price charts for logged-in users (2026-10-11, bff7471)
 
 `apps/web` only. `/api/prices/history` and `/api/prices` built a cookie client from the raw project URL, but login routes through the separate auth-proxy URL — the cookie names never matched, so logged-in users read as anonymous and got empty charts/sparklines site-wide. Both routes now resolve auth/data through `getRouteSupabaseClients()`; a real DB failure now returns `502`, not a silent empty `200`. The sparkline and drill-down chart show an honest "Price history unavailable right now" + Retry on failure instead of the old "not enough history" text. Fixed a `WatchlistClient` hydration mismatch (React error #418, 11 placeholder cards visible before the real list loaded). New "Price History" `/status` check. Full detail: `docs/brain/14_CHANGELOG.md` v0.167.0, ADR 042/D46, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 143 — Docs: ADR 041/D45 asset admission by coverage state + Permutable/RavenPack claims + Yahoo rights update (2026-10-10, this commit)
+## PHASE 143 — Docs: ADR 041/D45 asset admission by coverage state + Permutable/RavenPack claims + Yahoo rights update (2026-10-10, 1150128)
 
 Docs only. New `ADR 041`/`D45`: asset admission now goes by coverage state (event coverage → price coverage → historical validation), not a headline-count or numeric-breadth threshold; roadmap T1/T2/T3 recorded. Updated `docs/brain/00_CURRENT_BBR_CONTEXT.md`'s Permutable section with two more vendor-stated claims and its 28 Sep 2026 live-paper-evaluation page, plus a RavenPack vendor claim. Appended a 2026-10-10 update to the Yahoo Finance decision in `21_PROJECT_BRIEFING.md` (dev/test only pending a price-data-rights memo). Full detail: `docs/brain/LIVE_TODO.md`.
 
@@ -110,19 +110,19 @@ Docs only. New `ADR 041`/`D45`: asset admission now goes by coverage state (even
 
 `apps/backend`, `packages/shared`, docs. `probe-yahoo-tickers.ts` (`8187d26`) and `probe-futures-quote-fields.ts` (`d52611c`) used `YahooFinance` as a type instead of `InstanceType<typeof YahooFinance>`, breaking `pnpm run build`/`pnpm type-check` since `8187d26` — Railway skipped every backend/workers deploy since `f7847d0`, so PHASE 137–140 (W-REGISTRY, TTF_GAS, RBOB, HEATING_OIL below) never actually shipped to the running backend. Fixed both type errors. Reversed PHASE 137/D44/ADR 040: `apps/backend` no longer depends on `@blue-beacon-research/shared` at runtime — the compiled `dist/` output can't load shared's TypeScript source, and Railway builds with root directory `/apps/backend`, so `packages/shared` isn't present in that build. The registry is now duplicated in `apps/backend/src/lib/commodity-registry.ts`, kept in sync with `packages/shared` by a new parity test. Full detail: `docs/brain/14_CHANGELOG.md` v0.164.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 140 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, this commit) — ⚠️ merged, not deployed until PHASE 141 fix above
+## PHASE 140 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, 8eb6c17) — ⚠️ merged, not deployed until PHASE 141 fix above
 
 `packages/shared` + `apps/backend` + `apps/web`. Final of 3 new energy assets: `HEATING_OIL` (Heating Oil / ULSD, `HO=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias sourced only from words already in stored headlines ("diesel"). Real classification check: 15/15 correct this asset, 21/21 across the full batch. Full detail: `docs/brain/14_CHANGELOG.md` v0.163.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 139 — W-ASSETS-ENERGY-3 part 2/3: RBOB added (2026-10-10, this commit)
+## PHASE 139 — W-ASSETS-ENERGY-3 part 2/3: RBOB added (2026-10-10, 6bbada4)
 
 `packages/shared` + `apps/backend` + `apps/web`. Second of 3 new energy assets: `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias sourced only from words already in stored headlines ("gasoline"). Full detail: `docs/brain/14_CHANGELOG.md` v0.162.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 138 — W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added (2026-10-10, this commit)
+## PHASE 138 — W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added (2026-10-10, 70057a8)
 
 `packages/shared` + `apps/backend` + `apps/web`. First of 3 new energy assets, each its own commit: `TTF_GAS` (European Gas/TTF, `TTF=F`, EUR/MWh) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias sourced only from words already in stored headlines ("european gas"). Also derived 3 previously hand-listed commodity ticker prompt strings from the registry. Full detail: `docs/brain/14_CHANGELOG.md` v0.161.0, `docs/brain/LIVE_TODO.md`.
 
-## PHASE 137 — W-REGISTRY: single commodity-asset registry (2026-10-10, this commit)
+## PHASE 137 — W-REGISTRY: single commodity-asset registry (2026-10-10, 99964ff)
 
 `packages/shared` + 4 `apps/backend` files. Consolidated every per-commodity-asset fact (Yahoo ticker, Claude allowlist/aliases, RSS filter anchor words) hand-duplicated across 5 files into one `COMMODITY_REGISTRY` export; no asset or value changed, forex untouched. Required adding `@blue-beacon-research/shared` as an `apps/backend` dependency (see ADR 040/D44 in `10_DECISIONS.md`) — a reversal of a prior "duplicate rather than depend" pattern elsewhere in the backend, flagged explicitly rather than applied silently. Full detail: `docs/brain/14_CHANGELOG.md` v0.160.0, `docs/brain/LIVE_TODO.md`.
 
@@ -138,7 +138,7 @@ Docs only. New `ADR 041`/`D45`: asset admission now goes by coverage state (even
 
 `apps/web` only. The "01. Event Detection" step on `/about` named sources ("ACLED and GNews") that aren't real collectors in this codebase; it now says "Public sources, including GDELT, news APIs and RSS feeds, are scanned on a regular collector schedule and turned into structured events." No other line, file, or test touched. Full detail: `docs/brain/LIVE_TODO.md`.
 
-## PHASE 133 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, this commit)
+## PHASE 133 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, 45775e3)
 
 Favicon, apple-touch-icon (new), `Logo.tsx`, `PublicHeader`/homepage/auth-page/Sidebar/login/signup brand marks, and all 6 mobile icon/splash files replaced with the founder's real logo, derived from 3 clean source crops via Pillow color-keying (the other 4 supplied crops have baked-in shadows/rounded-tile mockup treatment and were not used as sources). Full technical detail: `docs/brain/14_CHANGELOG.md` v0.157.0, `docs/brain/LIVE_TODO.md`.
 
@@ -1077,7 +1077,7 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 > Narrative summary for this tree. Full technical record: `docs/brain/14_CHANGELOG.md` v0.38.0 and `docs/brain/LIVE_TODO.md`. Docs-only; no application code.
 
 - **D19 / ADR 015** — "Established research company" positioning: never state or imply how recently BBR's real data history began. Framing rule only; does not relax D16 or "build it before you claim it" (#128).
-- **LIVE_TODO** — #104–#128 recorded as plans/research only. None marked done. #129 left unmarked until a follow-up Closed, verified line can carry this commit's SHA.
+- **LIVE_TODO** — #104–#128 recorded as plans/research only. None marked done. #129 left unmarked until a follow-up Closed, verified line can carry c0b7c0b's SHA.
 - **Cursor Pro setup** — repo-root `AGENTS.md` and `.cursor/mcp.json`. Live Supabase project ref confirmed as `evavcgfmemwryggdkjmx`.
 - **Briefing** — standing decision #15 + matching "never do" line.
 
@@ -1091,7 +1091,7 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 
 ## PHASE 12 — 5-YEAR WATCHLIST CHART #106 (2026-09-11)
 
-- **#106 (`this commit`).** Watchlist symbol drill-down adds a "5-year history" panel below the 90-day chart. Fastify `GET /v1/prices/history-5y/:symbol` calls yahoo-finance2 `chart()` (weekly, 5-year `period1`), cached 15 minutes in memory. Not stored, not scheduled; `price-syncer.ts` untouched. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.44.0.
+- **#106 (`79c77b4`).** Watchlist symbol drill-down adds a "5-year history" panel below the 90-day chart. Fastify `GET /v1/prices/history-5y/:symbol` calls yahoo-finance2 `chart()` (weekly, 5-year `period1`), cached 15 minutes in memory. Not stored, not scheduled; `price-syncer.ts` untouched. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.44.0.
 
 ## PHASE 11 — TONIGHT'S SHIPPING BATCH #105–#127 (2026-09-11)
 
@@ -1134,7 +1134,7 @@ Stocknews.ai shows "signal fired at $84.20 | now: $87.31 +3.7%" on every card. T
 
 ## PHASE 14 — #53 COMMODITY_IMPACTS HISTORICAL BACKFILL (2026-09-11)
 
-> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.48.0. The production UPDATE already ran; this commit ships the one-time script for reproducibility.
+> Narrative summary for this tree. Per-commit evidence: `docs/brain/LIVE_TODO.md`. Technical record: `docs/brain/14_CHANGELOG.md` v0.48.0. The production UPDATE already ran; 8733677 ships the one-time script for reproducibility.
 
 - One-time `apps/backend/src/scripts/backfill-commodity-impacts.ts` (not a cron) reuses `ClaudeService.classifyEvent()` (Haiku) and writes only `commodity_impacts`.
 - Before: 767 filled / 2,057 empty. After: 1,634 filled / 1,195 empty. 201 remaining because Anthropic credit exhausted mid-run (not written; re-run after credit restore).
