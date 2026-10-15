@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import type { CommodityImpact } from "@blue-beacon-research/shared";
 import {
+  NON_PLACE_COUNTRIES,
   groupSignalsByLocation,
   primaryImpactDirection,
   type LocationGroupSignal,
@@ -138,6 +139,47 @@ assert.deepEqual(names("az", rows), ["Iran", "Iraq", "Yemen"]);
   assert.equal(other.groups[0]?.other, 2);
   assert.equal(other.up, 0);
   assert.equal(other.down, 0);
+}
+
+assert.deepEqual(NON_PLACE_COUNTRIES, ["global"]);
+
+{
+  const globalTitle = signal("Global", "2026-10-01T00:00:00.000Z", [impact("up", 0.9)]);
+  const globalLower = signal("global", "2026-10-02T00:00:00.000Z", [impact("down", 0.9)]);
+  const globalUpper = signal(" GLOBAL ", "2026-10-03T00:00:00.000Z", [impact("up", 0.2)]);
+  const eu = signal("European Union", "2026-10-04T00:00:00.000Z", [impact("up", 0.5)]);
+  const iranOnly = signal("Iran", "2026-10-05T00:00:00.000Z", [impact("down", 0.4)]);
+  const blankCountry = signal("", "2026-10-06T00:00:00.000Z", [impact("up", 0.1)]);
+  const grouped = groupSignalsByLocation(
+    [globalTitle, globalLower, globalUpper, eu, iranOnly, blankCountry],
+    "az",
+  );
+  assert.equal(grouped.noLocation, 4);
+  assert.equal(grouped.withLocation, 2);
+  assert.equal(grouped.total, 6);
+  assert.equal(grouped.uniqueLocations, 2);
+  assert.deepEqual(
+    grouped.groups.map((g) => g.country),
+    ["European Union", "Iran"],
+  );
+  assert.equal(grouped.groups.some((g) => g.country.toLowerCase() === "global"), false);
+  assert.equal(grouped.up, 1);
+  assert.equal(grouped.down, 1);
+}
+
+{
+  const orders: LocationOrder[] = ["recent", "count", "up", "down", "az"];
+  const withGlobal = signal("Global", "2026-10-20T00:00:00.000Z", [impact("up", 0.99)]);
+  for (const order of orders) {
+    const base = groupSignalsByLocation(rows, order);
+    const next = groupSignalsByLocation([...rows, withGlobal], order);
+    assert.deepEqual(
+      next.groups.map((g) => g.country),
+      base.groups.map((g) => g.country),
+      `${order} order ignores Global`,
+    );
+    assert.equal(next.noLocation, base.noLocation + 1);
+  }
 }
 
 console.log("location-groups.test.ts ok");

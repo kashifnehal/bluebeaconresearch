@@ -44,7 +44,13 @@ This repo is the only channel between this session and a separate Claude researc
 
 ## Task completion report
 
-When a task is done — shipped, closed, or blocked — the final message to the user is a detailed, standalone report, not a one-liner, a SHA-only note, or "docs were updated." Scale length to the task, but don't skip a section by assuming the user remembers the whole conversation. Required sections:
+When a task is done — shipped, closed, blocked, or a read-only check finished — the final message to the user is a detailed, standalone report, not a one-liner, a SHA-only note, a compact table by itself, or "docs were updated." Scale length to the task, but don't skip a section by assuming the user remembers the whole conversation.
+
+A prompt that asks for a short / max-N-lines / "compact" / table-only report **does not waive this.** Put any requested table or JSON **inside** the seven sections.
+
+Also update the live docs: `docs/brain/LIVE_TODO.md` plus the matching files in **both** `docs/brain/` and `docs/claude_project/`, same commit as the code, per the Live-status sync protocol above. A read-only / no-edit prompt is the only waiver — say so in the Docs section.
+
+Required sections:
 
 1. **Outcome** — shipped / blocked / partial. Ticket/backlog number if any. Commit SHA(s) if committed; say plainly if nothing was committed.
 2. **What changed** — each fix or feature in plain language: what was wrong, what it does now.
@@ -79,6 +85,7 @@ Example of too-thin (not acceptable) vs. the expected shape:
 - **Never fabricate data in the UI.** There's a known past incident of static/hardcoded content (fake "AI Prediction" quotes, decorative progress bars) shipped as if real — treat any such thing found in the codebase as a bug to remove, not a pattern to follow.
 - **Scope discipline.** A UI-only task previously scope-crept into adding unrelated Redis/Terraform/load-test infrastructure and had to be reverted (see `docs/brain/14_CHANGELOG.md` v0.13.0). Stay inside the files a task actually names; if something looks like it needs infra work outside that scope, stop and ask rather than building it.
 - **Never commit secrets.** `docs/brain/CLAUDE_CONTEXT.md` previously had live API keys (Anthropic, Supabase service role, Upstash) committed in plaintext — this has been cleaned up and pushed, but treat it as a hard rule going forward: credentials belong in `.env.local` / platform env vars only, never in a doc.
+- **Always update the live docs and both doc trees.** Status-changing work updates `docs/brain/LIVE_TODO.md` and the matching files in **both** `docs/brain/` and `docs/claude_project/` in the **same commit** as the code (or its own docs-only commit if there is no code). Follow the Live-status sync protocol above. A read-only / no-edit prompt is the only waiver — then say so in the report.
 
 ## Session efficiency (token discipline — do not re-litigate)
 

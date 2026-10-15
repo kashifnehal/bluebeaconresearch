@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ U2 map locations: "Global" is not a place, `apps/web` only, 2026-10-15, this commit
+
+- The Locations list treated the country value "Global" as a place. On 30 days of data as of 2026-10-15, "Global" was on 73 signals and "European Union" on 2. Production showed a Global row, and "Unique locations" included it.
+- `NON_PLACE_COUNTRIES` is `["global"]`. Comparison is lower-cased. A signal with that country is counted in `noLocation` and creates no group. "European Union" stays a place. Map pins, chokepoint code, and `LocationList.tsx` wording are unchanged, so the stats line's "Signals with a location" count drops by the Global rows.
+- No open priority-queue line for this. Nothing struck.
+- Verification: covered by the same `pnpm --filter web test`, `tsc --noEmit`, and `next build` as the pulse commit (exit 0). No browser run.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.186.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 163, `06_COMPONENTS.md`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or standing rule.
+
 ## ✅ P16 pulse tiles on the watchlist symbol page, `apps/web` only, 2026-10-15, this commit
 
 - The symbol page had no count of how many signals BBR published for that asset in the last 24 hours, or how that compared with the 24 hours before. Priced and news-only assets need the same count, and no documented threshold exists for a badge.

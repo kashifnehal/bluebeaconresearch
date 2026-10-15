@@ -1,6 +1,8 @@
 # 18_AI_ENGINE.md — AI Engine: Prompts, Models, Fallbacks
 
-> **📍 Doc status — current as of 2026-10-07** for the classifier defer and excerpt notes below; **2026-09-20** for classify (#141/#142), briefing (#120), chat (#111), and Cmd+K search assist (§3c, FAQ indexed as of #155). JSON blocks lower in the file are older intended spec — do not copy them over live `claude.service.ts`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-10-15** for the region-id schema line; **2026-10-07** for the classifier defer and excerpt notes below; **2026-09-20** for classify (#141/#142), briefing (#120), chat (#111), and Cmd+K search assist (§3c, FAQ indexed as of #155). JSON blocks lower in the file are older intended spec — do not copy them over live `claude.service.ts`. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-15 (P12) — the classify JSON schema's `region` field is one of exactly `middle-east` | `eastern-europe` | `europe` | `north-america` | `south-america` | `asia-pacific` | `africa` | `global`. After parse, `region` is `canonicalizeRegion(parsed.region, parsed.country)`. No other prompt text changed. The heuristic block is unchanged.
 
 **Classification: Internal — CTO Level**
 

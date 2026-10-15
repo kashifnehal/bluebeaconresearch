@@ -8,7 +8,8 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 
 **Read first, in order:**
 1. [`docs/claude_project/21_PROJECT_BRIEFING.md`](docs/claude_project/21_PROJECT_BRIEFING.md) — the *why*: vision, target users, positioning, competitors, pricing, standing product decisions. This is the canonical onboarding doc; it says so explicitly ("paste this file FIRST").
-2. [`docs/brain/08_CURRENT_STATUS.md`](docs/brain/08_CURRENT_STATUS.md) and [`docs/brain/14_CHANGELOG.md`](docs/brain/14_CHANGELOG.md) — the *current technical truth*: what's built, what's degraded, what's still open. These are kept live session-to-session.
+2. [`docs/brain/LIVE_TODO.md`](docs/brain/LIVE_TODO.md) — the live queue. Re-read it fresh; do not work from chat memory.
+3. [`docs/brain/08_CURRENT_STATUS.md`](docs/brain/08_CURRENT_STATUS.md) and [`docs/brain/14_CHANGELOG.md`](docs/brain/14_CHANGELOG.md) — the *current technical truth*: what's built, what's degraded, what's still open. These are kept live session-to-session.
 
 ## Doc-precedence rule (there are two doc trees — this matters)
 
@@ -56,7 +57,39 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 - **Never fabricate data in the UI.** There's a known past incident of static/hardcoded content (fake "AI Prediction" quotes, decorative progress bars) shipped as if real — treat any such thing found in the codebase as a bug to remove, not a pattern to follow.
 - **Scope discipline.** A UI-only task previously scope-crept into adding unrelated Redis/Terraform/load-test infrastructure and had to be reverted (see `docs/brain/14_CHANGELOG.md` v0.13.0). Stay inside the files a task actually names; if something looks like it needs infra work outside that scope, stop and ask rather than building it.
 - **Never commit secrets.** `docs/brain/CLAUDE_CONTEXT.md` previously had live API keys (Anthropic, Supabase service role, Upstash) committed in plaintext — this has been cleaned up and pushed, but treat it as a hard rule going forward: credentials belong in `.env.local` / platform env vars only, never in a doc.
-- **Always end a finished task with a detailed standalone report.** Outcome, what changed, files touched, diagnosis, every `docs/brain/` + `docs/claude_project/` file updated (and any topic file skipped, with why), verification that actually ran, and what was not shipped. Do not close on a one-liner or "docs were updated." Template: `.cursor/rules/task-completion-report.mdc`.
+- **Always update the live docs and both doc trees.** Status-changing work updates `docs/brain/LIVE_TODO.md` and the matching files in **both** `docs/brain/` and `docs/claude_project/` in the **same commit** as the code (or its own docs-only commit if there is no code). A `LIVE_TODO` line alone is not enough. Follow the Live-status sync protocol above. A read-only / no-edit prompt is the only waiver — then say so in the report, with why.
+
+## Task completion report (never skip, never waive)
+
+When a task is done — shipped, closed, blocked, or a read-only check finished — the **final user-facing message is a detailed standalone report**. This is a standing founder rule, not optional formatting.
+
+Do not end on a one-liner, a SHA-only note, a compact table by itself, or "docs were updated." Scale length to the task, but **never skip a section** by assuming the user remembers the chat.
+
+A prompt that asks for a short / max-N-lines / "compact" / table-only report **does not waive this.** Put any requested table or JSON **inside** the seven sections. The detailed report is still the final message.
+
+Required sections (template: [`.cursor/rules/task-completion-report.mdc`](.cursor/rules/task-completion-report.mdc)):
+
+1. **Outcome** — shipped / blocked / partial. Ticket/backlog number if any. Commit SHA(s) if committed; say plainly if nothing was committed.
+2. **What changed** — each fix or feature in plain language: what was wrong, what it does now.
+3. **Files touched** — code paths, grouped by `apps/web` vs `apps/backend` vs docs.
+4. **Diagnosis** — any "check before assuming" finding (e.g. a value that looked broken but was a real flat/zero, a stale doc claim that didn't match the code).
+5. **Docs** — list every `docs/brain/` and `docs/claude_project/` file updated (LIVE_TODO, the 09/08/14 trio, and any topic file from the map above), and any topic file skipped, with why (no new route / table / prompt / decision, or the prompt forbade edits).
+6. **Verification** — what actually ran (tests, grep, SQL, curl, browser, type-check) and its result. Honest gaps: "could not verify" plus the blocker.
+7. **What's next** — queued leftovers or follow-ups, and explicit non-goals/gaps/blockers for this ship.
+
+Example of too-thin (not acceptable) vs. the expected shape:
+
+```
+❌ Done. Commit abc123. Docs updated.
+
+✅ #137 shipped on main (`46264b2`).
+   Chat history: typed 401/403/5xx/network copy.
+   Price subtext: live latest-row fetch; USOIL +0.0% was a real flat.
+   Docs: brain LIVE_TODO / 08 / 14 / 06; claude_project 09 / 08 / 14 / 06.
+   Skipped 05_API / 04_DATABASE / 18_AI_ENGINE / 10_DECISIONS — no route, table, prompt, or standing rule.
+   Tests: 9/9 signal-display.test.ts; tsc clean. Not browser-walked.
+   What's next: #138 copy catalog and #139 pipeline audit are queued, not started this ship.
+```
 
 ## Session efficiency (token discipline — do not re-litigate)
 
