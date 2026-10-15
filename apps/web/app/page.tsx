@@ -9,6 +9,7 @@ import {
   HOMEPAGE_COLLECTION_BADGE,
   HOMEPAGE_LATEST_SIGNAL_SCHEDULE,
 } from "./../lib/ingestion-interval";
+import { cachedHomepageSignalCount, loadHomepageSignalCount } from "./../lib/homepage-stats";
 
 export const dynamic = "force-dynamic";
 
@@ -71,19 +72,10 @@ async function getLatestSignal(): Promise<LandingSignalPreview | null> {
 async function getHomepageStats(): Promise<{ totalSignals: number | null }> {
   try {
     const supabase = await getHomepageDataClient();
-    const { count, error } = await supabase
-      .from("signals")
-      .select("id", { count: "exact" });
-
-    // 0 from the anon fallback is RLS hiding every row, not an empty table.
-    if (error || count == null || count === 0) {
-      console.error("[getHomepageStats] count query returned no usable count:", { error, count });
-      return { totalSignals: null };
-    }
-    return { totalSignals: count };
+    return await loadHomepageSignalCount(supabase);
   } catch (err) {
     console.error("[getHomepageStats] count query threw:", err);
-    return { totalSignals: null };
+    return cachedHomepageSignalCount();
   }
 }
 

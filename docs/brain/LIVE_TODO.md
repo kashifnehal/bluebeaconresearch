@@ -3,12 +3,20 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ M2 share image, `apps/web` only, 2026-10-15, this commit
+## ✅ U1 status and homepage survive a slow database, `apps/web` only, 2026-10-15, this commit
+
+- A Supabase or Redis status check that times out or throws is tried once more before it stays Unknown. A returned result, including Degraded, is not tried again. The tile-server check is unchanged. Status labels and detail text are unchanged.
+- The homepage signal count uses `head: true`, so the count request does not fetch id rows. The last successful count is kept for 5 minutes and reused when a later read fails. A failure with nothing cached still returns null. The page stays force-dynamic.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0, `pnpm --filter web test` exit 0, `pnpm --filter web run build` exit 0. The build lists `○ /opengraph-image`. No browser run.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.197.0; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 174. Skipped both `06_COMPONENTS.md`, both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new component, route, table, prompt, or standing rule.
+
+## ✅ M2 share image, `apps/web` only, 2026-10-15, `709827a`
 
 - Shared links get a 1200×630 preview. Root metadata now has `metadataBase` `https://www.bluebeaconresearch.com` (the apex host redirects there), `openGraph`, and a large Twitter card. Existing title and description are unchanged.
 - The image is navy `#0A2643` with the product name, "AI-powered research platform", the open-graph description, and "Research, not investment advice." The white mark is drawn when `public/brand/mark-white.png` loads; otherwise the card is text only.
 - No open priority-queue line for this. Nothing struck.
-- Verification: `site-metadata` unit test in this commit. Whether the build lists `/opengraph-image` is reported after `next build`.
+- Verification: `site-metadata` unit test in this commit. `next build` later in this branch lists `○ /opengraph-image`.
 - Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.196.0; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 173. Skipped both `06_COMPONENTS.md` (no product-surface component), both `05_API.md` (generated metadata image, not an API route the app calls), both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md`.
 
 ## ✅ M1 first-touch attribution, `apps/web` only, 2026-10-15, `9da1540`

@@ -10,7 +10,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.196.0 — Share image (2026-10-15, this commit)
+### v0.197.0 — Status checks and homepage count survive a slow database (2026-10-15, this commit)
+
+`apps/web` only. A Supabase or Redis status check that times out or throws is tried once more before it stays Unknown. Degraded is not retried. The homepage count uses `head: true` and keeps the last successful count for 5 minutes. Full detail: `LIVE_TODO.md`.
+
+### v0.196.0 — Share image (2026-10-15, `709827a`)
 
 `apps/web` only. Root metadata adds `metadataBase` (`https://www.bluebeaconresearch.com`), Open Graph, and a large Twitter card. `/opengraph-image` is a 1200×630 navy card. Existing title and description are unchanged. Full detail: `LIVE_TODO.md`.
 

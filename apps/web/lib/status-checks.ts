@@ -7,6 +7,39 @@ export type SystemCheck = { name: string; status: CheckStatus; detail: string };
 
 const CHECK_TIMEOUT_MS = 3000;
 
+/** BBR working value. No published source. */
+export const STATUS_CHECK_RETRIES = 1;
+
+/**
+ * Runs a Supabase or Redis check again when it times out or throws.
+ * A returned result, including Degraded and Unknown, is not retried.
+ * `unknown` is what the caller already showed for a failed check, so the
+ * detail text stays the same after the retry is used up.
+ */
+export async function runStatusCheckWithRetry(
+  check: () => Promise<SystemCheck>,
+  unknown: SystemCheck = { name: "", status: "Unknown", detail: "" },
+): Promise<SystemCheck> {
+  const attempts = STATUS_CHECK_RETRIES + 1;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await check();
+    } catch {
+      if (attempt === attempts - 1) return unknown;
+    }
+  }
+  return unknown;
+}
+
+async function readWithRetry<T>(read: () => Promise<T>): Promise<T> {
+  try {
+    return await read();
+  } catch (err) {
+    if (STATUS_CHECK_RETRIES < 1) throw err;
+    return await read();
+  }
+}
+
 // Ingestion collectors that feed the Intelligence Feed (the `signals` table) via
 // raw_events — gdelt/gnews/rss run inside runIngestionCycle() and acled runs right
 // after it, all on the same INGESTION_INTERVAL_CRON tick (apps/backend/src/workers.ts).
@@ -207,10 +240,10 @@ async function checkIntelligenceFeed(intervalMinutes: number, budgetClosed = fal
   const unknownDetail = "At least one ingestion collector (gdelt/gnews/rss/acled) reported healthy recently";
   const unknown = (): SystemCheck =>
     withBudgetPausedNote({ name: "Intelligence Feed", status: "Unknown", detail: unknownDetail }, budgetClosed);
-  const supabase = getAdminSupabase();
-  if (!supabase) return unknown();
+  return runStatusCheckWithRetry(async () => {
+    const supabase = getAdminSupabase();
+    if (!supabase) return unknown();
 
-  try {
     const [healthResult, signalResult] = await Promise.all([
       withTimeout(
         supabase
@@ -229,7 +262,7 @@ async function checkIntelligenceFeed(intervalMinutes: number, budgetClosed = fal
       ),
     ]);
 
-    if (healthResult.error) return unknown();
+    if (healthResult.error) throw new Error("status check query failed");
 
     return evaluateIntelligenceFeedHealth(
       healthResult.data as { service: string; created_at: string } | null,
@@ -238,17 +271,16 @@ async function checkIntelligenceFeed(intervalMinutes: number, budgetClosed = fal
       Date.now(),
       budgetClosed,
     );
-  } catch {
-    return unknown();
-  }
+  }, unknown());
 }
 
 async function checkAlertDelivery(): Promise<SystemCheck> {
   const detail = "At least one user has a Telegram or Slack channel connected (config presence, not a live send)";
-  const supabase = getAdminSupabase();
-  if (!supabase) return { name: "Alert Delivery", status: "Unknown", detail };
+  const unknown = (): SystemCheck => ({ name: "Alert Delivery", status: "Unknown", detail });
+  return runStatusCheckWithRetry(async () => {
+    const supabase = getAdminSupabase();
+    if (!supabase) return unknown();
 
-  try {
     // Config-presence check, not a live send: at least one user has a delivery
     // channel actually connected (telegram_chat_id only lands here via the live
     // Telegram bot webhook completing a /connect flow, which can't happen unless
@@ -257,13 +289,11 @@ async function checkAlertDelivery(): Promise<SystemCheck> {
       supabase.from("user_channels").select("telegram_chat_id, slack_webhook_url").limit(20),
       CHECK_TIMEOUT_MS,
     );
-    if (error) return { name: "Alert Delivery", status: "Unknown", detail };
+    if (error) throw new Error("status check query failed");
 
     const hasConnectedChannel = (data ?? []).some((r) => r.telegram_chat_id || r.slack_webhook_url);
     return { name: "Alert Delivery", status: hasConnectedChannel ? "Operational" : "Degraded", detail };
-  } catch {
-    return { name: "Alert Delivery", status: "Unknown", detail };
-  }
+  }, unknown());
 }
 
 async function checkGlobalMap(): Promise<SystemCheck> {
@@ -306,7 +336,7 @@ async function getPipelineRunStatus(): Promise<{
   const redis = getUpstashRedis();
   if (redis) {
     try {
-      const raw = await withTimeout(redis.get<string>("pipeline:last_run"), CHECK_TIMEOUT_MS);
+      const raw = await readWithRetry(() => withTimeout(redis.get<string>("pipeline:last_run"), CHECK_TIMEOUT_MS));
       if (raw) {
         const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
         lastFetchedAt = parsed?.lastFetchedAt ?? null;
@@ -326,9 +356,11 @@ async function getPipelineRunStatus(): Promise<{
     const supabase = getAdminSupabase();
     if (supabase) {
       try {
-        const { data } = await withTimeout(
-          supabase.from("raw_events").select("created_at").order("created_at", { ascending: false }).limit(1).maybeSingle(),
-          CHECK_TIMEOUT_MS,
+        const { data } = await readWithRetry(() =>
+          withTimeout(
+            supabase.from("raw_events").select("created_at").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+            CHECK_TIMEOUT_MS,
+          ),
         );
         lastFetchedAt = (data?.created_at as string | undefined) ?? null;
       } catch {
@@ -341,10 +373,11 @@ async function getPipelineRunStatus(): Promise<{
 }
 
 async function checkClassifier(budgetClosed: boolean): Promise<SystemCheck> {
-  const supabase = getAdminSupabase();
-  if (!supabase) return evaluateClassifierHealth(null, budgetClosed);
+  const giveUp = () => evaluateClassifierHealth(null, budgetClosed);
+  return runStatusCheckWithRetry(async () => {
+    const supabase = getAdminSupabase();
+    if (!supabase) return giveUp();
 
-  try {
     // 6-hour lookback is a GAP-grade display choice (keeps the detail text's
     // sample size readable) — not a sourced health boundary.
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
@@ -352,18 +385,17 @@ async function checkClassifier(budgetClosed: boolean): Promise<SystemCheck> {
       supabase.from("signals").select("classification_method").gte("created_at", sixHoursAgo),
       CHECK_TIMEOUT_MS,
     );
-    if (error) return evaluateClassifierHealth(null, budgetClosed);
+    if (error) throw new Error("status check query failed");
     return evaluateClassifierHealth(data as Array<{ classification_method: string | null }>, budgetClosed);
-  } catch {
-    return evaluateClassifierHealth(null, budgetClosed);
-  }
+  }, giveUp());
 }
 
 async function checkPriceHistory(): Promise<SystemCheck> {
-  const supabase = getAdminSupabase();
-  if (!supabase) return evaluatePriceHistoryHealth(0, null);
+  const giveUp = () => evaluatePriceHistoryHealth(0, null);
+  return runStatusCheckWithRetry(async () => {
+    const supabase = getAdminSupabase();
+    if (!supabase) return giveUp();
 
-  try {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const [countResult, newestResult] = await Promise.all([
       withTimeout(
@@ -386,16 +418,14 @@ async function checkPriceHistory(): Promise<SystemCheck> {
       ),
     ]);
 
-    if (countResult.error || newestResult.error) return evaluatePriceHistoryHealth(0, null);
+    if (countResult.error || newestResult.error) throw new Error("status check query failed");
 
     const newestFetchedAt = newestResult.data?.fetched_at as string | undefined;
     if (!newestFetchedAt) return evaluatePriceHistoryHealth(0, null);
 
     const newestAgeMinutes = (Date.now() - new Date(newestFetchedAt).getTime()) / 60000;
     return evaluatePriceHistoryHealth(countResult.count ?? 0, newestAgeMinutes);
-  } catch {
-    return evaluatePriceHistoryHealth(0, null);
-  }
+  }, giveUp());
 }
 
 export async function getSystemChecks(): Promise<SystemCheck[]> {

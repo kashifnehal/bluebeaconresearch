@@ -8,7 +8,11 @@
 
 ---
 
-## PHASE 173 — Share image (2026-10-15, this commit)
+## PHASE 174 — Status checks and homepage count survive a slow database (2026-10-15, this commit)
+
+`apps/web` only. A Supabase or Redis status check that times out or throws is tried once more before Unknown. The homepage count uses `head: true` and reuses the last successful count for 5 minutes. Full detail: `docs/brain/LIVE_TODO.md`.
+
+## PHASE 173 — Share image (2026-10-15, `709827a`)
 
 `apps/web` only. Root metadata adds `metadataBase` (`https://www.bluebeaconresearch.com`), Open Graph, and a large Twitter card. The preview is generated at `/opengraph-image`. Existing title and description are unchanged. Full detail: `docs/brain/LIVE_TODO.md`.
 

@@ -1,8 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (share image — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (slow database — see the banner immediately below).**
 
-> ⚠️ NEW 2026-10-15 (share image, `apps/web` only, this commit) — shared links use a generated 1200×630 card. Root metadata sets the canonical host to `https://www.bluebeaconresearch.com`. See `docs/brain/LIVE_TODO.md`, PHASE 173.
+> ⚠️ NEW 2026-10-15 (slow database, `apps/web` only, this commit) — a timed-out Supabase or Redis status check is tried once more. The homepage count uses `head: true` and a 5-minute cache of the last successful count. See `docs/brain/LIVE_TODO.md`, PHASE 174.
+
+> ⚠️ NEW 2026-10-15 (share image, `apps/web` only, `709827a`) — shared links use a generated 1200×630 card. Root metadata sets the canonical host to `https://www.bluebeaconresearch.com`. See `docs/brain/LIVE_TODO.md`, PHASE 173.
 
 > ⚠️ NEW 2026-10-15 (first-touch attribution, `apps/web` only, `9da1540`) — campaign tags and an external referrer host are kept for the visit and saved on email signup. One funnel event records them after sign-in. No cookie. See `docs/brain/LIVE_TODO.md`, PHASE 172.
 

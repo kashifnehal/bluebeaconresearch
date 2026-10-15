@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
-> ⚠️ UPDATED 2026-10-15 — Share image (`apps/web`, this commit, PHASE 173 / v0.196.0). Root metadata adds an Open Graph card, a large Twitter card, and `metadataBase` `https://www.bluebeaconresearch.com`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Slow database (`apps/web`, this commit, PHASE 174 / v0.197.0). Status checks retry a timeout once. The homepage count does not fetch rows and reuses the last successful count for 5 minutes. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — Share image (`apps/web`, `709827a`, PHASE 173 / v0.196.0). Root metadata adds an Open Graph card, a large Twitter card, and `metadataBase` `https://www.bluebeaconresearch.com`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — First-touch attribution (`apps/web`, `9da1540`, PHASE 172 / v0.195.0). Campaign tags and an external referrer host are kept for the visit and saved on email signup. No cookie. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

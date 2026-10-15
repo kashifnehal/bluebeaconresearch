@@ -2,9 +2,11 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-15 (share image)
+Last updated: 2026-10-15 (status retry and homepage count cache)
 
-> ⚠️ NEW 2026-10-15 (share image, `apps/web` only, this commit) — root metadata sets `metadataBase` to `https://www.bluebeaconresearch.com` and adds an Open Graph card and a large Twitter card. The generated image is `/opengraph-image`. Existing title and description are unchanged. See `14_CHANGELOG.md` v0.196.0, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-15 (slow database, `apps/web` only, this commit) — a Supabase or Redis status check that times out or throws is tried once more before Unknown. The homepage count uses `head: true` and reuses the last successful count for 5 minutes when a later read fails. See `14_CHANGELOG.md` v0.197.0, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-15 (share image, `apps/web` only, `709827a`) — root metadata sets `metadataBase` to `https://www.bluebeaconresearch.com` and adds an Open Graph card and a large Twitter card. The generated image is `/opengraph-image`. Existing title and description are unchanged. See `14_CHANGELOG.md` v0.196.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (first-touch attribution, `apps/web` only, `9da1540`) — utm tags and an external referrer host are kept in sessionStorage for the visit and, on email signup, on the account. One `first_touch_recorded` event is sent after sign-in. No cookie. See `14_CHANGELOG.md` v0.195.0, `LIVE_TODO.md`.
 

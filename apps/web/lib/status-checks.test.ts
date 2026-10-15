@@ -5,6 +5,7 @@ import {
   evaluateClassifierHealth,
   evaluateDataPipelineFreshness,
   evaluatePriceHistoryHealth,
+  runStatusCheckWithRetry,
   BUDGET_CLOSED_DETAIL,
   DATA_PIPELINE_BUDGET_CLOSED_DETAIL,
   INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX,
@@ -237,3 +238,49 @@ runTest("Price History boundary: exactly 100 rows and exactly 45 minutes is stil
   const result = evaluatePriceHistoryHealth(100, 45);
   assert.equal(result.status, "Operational");
 });
+
+async function runAsync(name: string, fn: () => Promise<void>) {
+  try {
+    await fn();
+    console.log(`✔ ${name}`);
+  } catch (err) {
+    console.error(`✖ ${name}`);
+    console.error(err);
+    process.exitCode = 1;
+  }
+}
+
+void (async () => {
+  await runAsync("a check that fails once and then succeeds returns the result of the second attempt", async () => {
+    let calls = 0;
+    const result = await runStatusCheckWithRetry(async () => {
+      calls += 1;
+      if (calls === 1) throw new Error("status check timed out");
+      return { name: "Alert Delivery", status: "Operational", detail: "second attempt" };
+    });
+    assert.equal(calls, 2);
+    assert.equal(result.status, "Operational");
+    assert.equal(result.detail, "second attempt");
+  });
+
+  await runAsync("a check that fails twice returns Unknown", async () => {
+    let calls = 0;
+    const result = await runStatusCheckWithRetry(async () => {
+      calls += 1;
+      throw new Error("status check timed out");
+    });
+    assert.equal(calls, 2);
+    assert.equal(result.status, "Unknown");
+  });
+
+  await runAsync("a Degraded result is not retried", async () => {
+    let calls = 0;
+    const result = await runStatusCheckWithRetry(async () => {
+      calls += 1;
+      return { name: "Classifier", status: "Degraded", detail: "paused" };
+    });
+    assert.equal(calls, 1);
+    assert.equal(result.status, "Degraded");
+    assert.equal(result.detail, "paused");
+  });
+})();
