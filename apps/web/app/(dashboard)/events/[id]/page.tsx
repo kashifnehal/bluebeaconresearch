@@ -55,6 +55,7 @@ import {
   formatDelay,
   shouldShowLastUpdated,
 } from "@/lib/signal-display";
+import { EVENT_DETAIL_FETCH_TIMEOUT_MS, eventDetailNotice } from "@/lib/event-detail-fetch";
 
 function eventTypeLabel(eventType?: string | null): string {
   if (!eventType) return "this event";
@@ -74,22 +75,34 @@ export default function EventDetailPage() {
     incrementSignalsViewed();
   }, [id, incrementSignalsViewed]);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["signal", id],
     queryFn: async () => {
-      const res = await fetch(`/api/signals/${id}`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        // /api/signals/[id] standardized its error shape to { error: { code, message } }
-        // on 2026-08-18 — was a bare `body.error === "not_found"` string before.
-        throw new Error(body?.error?.code === "not_found" ? "not_found" : "fetch_failed");
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), EVENT_DETAIL_FETCH_TIMEOUT_MS);
+      try {
+        const res = await fetch(`/api/signals/${id}`, { signal: controller.signal });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          // /api/signals/[id] standardized its error shape to { error: { code, message } }
+          // on 2026-08-18 — was a bare `body.error === "not_found"` string before.
+          throw new Error(body?.error?.code === "not_found" ? "not_found" : "fetch_failed");
+        }
+        return (await res.json()) as EventDetailResponse;
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          throw new Error("timeout");
+        }
+        throw err;
+      } finally {
+        clearTimeout(timer);
       }
-      return (await res.json()) as EventDetailResponse;
     },
     retry: false,
   });
 
   const signal = data?.signal;
+  const notice = eventDetailNotice(error, data?.degraded ?? []);
 
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [modalRegion, setModalRegion] = useState<string>(signal?.region || "middle-east");
@@ -163,6 +176,21 @@ export default function EventDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (notice.message) {
+    return (
+      <div
+        className="h-full flex flex-col items-center justify-center gap-4 bg-app pt-16"
+        style={{ backgroundColor: "var(--bg-app)" }}
+        data-testid="event-detail-slow"
+      >
+        <p className="max-w-sm text-center text-sm text-text-secondary">{notice.message}</p>
+        <Button variant="outline" onClick={() => refetch()}>
+          Retry
+        </Button>
       </div>
     );
   }
@@ -482,6 +510,15 @@ export default function EventDetailPage() {
             </aside>
           </header>
 
+          {notice.degradedLine ? (
+            <p className="mb-6 text-sm text-muted" data-testid="event-detail-degraded">
+              {notice.degradedLine}{" "}
+              <button type="button" className="underline" onClick={() => refetch()}>
+                Retry
+              </button>
+            </p>
+          ) : null}
+
           {/* ── Deep Dive Analysis ─────────────────────────────────── */}
           <Tabs defaultValue="analysis" className="w-full">
             {/* overflow-x-auto + shrink-0 on each trigger: at 360px this row's
@@ -655,7 +692,7 @@ export default function EventDetailPage() {
                       </a>
                     ))}
                   </div>
-                ) : (
+                ) : notice.hideHistorical ? null : (
                   <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
                     <Database className="w-12 h-12 text-muted mb-6" />
                     <h3 className="text-sm font-black uppercase tracking-[0.3em] text-text-primary mb-2">
@@ -773,7 +810,7 @@ export default function EventDetailPage() {
                       endLabel="End of related events"
                     />
                   </div>
-                ) : (
+                ) : notice.hideRelated ? null : (
                   <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
                     <Database className="w-12 h-12 text-muted mb-6" />
                     <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
