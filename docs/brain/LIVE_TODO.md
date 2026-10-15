@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ P12 region canon, `apps/backend` + `packages/shared`, 2026-10-15, this commit
+
+- New Claude classifications store one of 8 region ids: `middle-east`, `eastern-europe`, `europe`, `north-america`, `south-america`, `asia-pacific`, `africa`, `global`. Legacy `americas` stays on the `Region` type and on old rows.
+- `canonicalizeRegion` matches an id or label, else the first segment before `/`, `,`, or ` - `, else a synonym seen at least 3 times in the last 90 days, else `COUNTRY_REGION`, else `global`.
+- Shared `REGIONS` is those 8, same order. Onboarding and backtesting render that list. FilterBar on the dashboard, map, and archive starts with those 8 and still appends raw extras. Alerts and event-detail region fields stay free text. `apps/web` source was not edited.
+- Classifier schema `region` line names the 8 ids. After parse, `region = canonicalizeRegion(parsed.region, parsed.country)`. The heuristic block still returns the ids it returned before, including `americas`.
+- Existing `signals.region` text is unchanged until the P13 backfill is applied. That script is the next commit and was not run with `--apply`.
+
 ## ✅ P16 pulse tiles on the watchlist symbol page, `apps/web` only, 2026-10-15, this commit
 
 - The symbol page had no count of how many signals BBR published for that asset in the last 24 hours, or how that compared with the 24 hours before. Priced and news-only assets need the same count, and no documented threshold exists for a badge.
@@ -11,7 +19,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Hand SQL `select count(*) from signals where created_at > now() - interval '24 hours' and commodity_impacts @> '[{"asset":"USOIL"}]'` returned 57. The route window (`created_at >= now() - 24 hours` and `<= now()`) also returned 57. Prior window returned 56. The tiles were not opened in a browser.
 - No open priority-queue line for this. Nothing struck.
 - Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0. `pnpm --filter web run build` exit 0. No browser run.
-- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.185.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 162, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.190.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 167, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
 
 ## ✅ 2026-10-15 breadth close, docs only
 

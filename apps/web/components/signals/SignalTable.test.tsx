@@ -62,6 +62,6 @@ runTest("hideSummaries removes the Summary column and keeps scroll rules", () =>
   assert.equal(/>\s*Summary\s*</.test(html), false);
   assert.match(html, /min-w-\[900px\]/);
   assert.match(html, /data-testid="signal-table-scroll"[^>]*overflow-x-auto/);
-  assert.match(visibleText(html), /1 signals loaded · 1 days · Up 1 · Down 0 · Other 0/);
+  assert.match(visibleText(html), /1 signal loaded · 1 day · Up 1 · Down 0 · Other 0/);
   assert.match(visibleText(html), /Sorting applies to loaded rows/);
 });

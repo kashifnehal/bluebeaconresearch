@@ -949,3 +949,21 @@ Turning every retrieval change on at once would make a yield drop impossible to 
 ### Cross-tree mapping
 
 Recorded as **D49** in `docs/claude_project/10_DECISIONS.md`.
+
+## 47. ADR 046: Eight canonical signal regions (2026-10-15)
+
+### Context
+
+`signals.region` was free text. In the 90 days before 2026-10-15, most rows already matched a short region list after case and hyphen folding, and the rest were multi-region strings or sub-regions. Alert matching already ignores case and hyphens.
+
+### Decision
+
+New classifications store one of `middle-east`, `eastern-europe`, `europe`, `north-america`, `south-america`, `asia-pacific`, `africa`, `global`. `americas` remains a legacy id for rows that have no country mapping to north-america or south-america. The first named segment of a multi-region string is the primary region. Country lookup uses the majority canonical label in stored signals when that label is a strict majority, otherwise UN M49.
+
+### Rationale
+
+The eight ids match the competitor region chips and BBR's own counts. Collapsing free text at write time keeps filters and alert rules on one list. Legacy `americas` stays until a backfill can split it with a country.
+
+### Cross-tree mapping
+
+Recorded as **D50** in `docs/claude_project/10_DECISIONS.md`.

@@ -2,6 +2,9 @@ import type { CommodityImpact } from "@blue-beacon-research/shared";
 
 export type LocationOrder = "recent" | "count" | "up" | "down" | "az";
 
+/** From 30-day data on 2026-10-15: "Global" 73 signals. "European Union" (2) is left as a place. Add a value only after checking the data. */
+export const NON_PLACE_COUNTRIES = ["global"];
+
 /** A signal is enough for grouping when it has a country and a timestamp. */
 export type LocationGroupSignal = {
   country?: string | null;
@@ -88,7 +91,7 @@ export function groupSignalsByLocation(
 
   for (const signal of signals) {
     const country = countryKey(signal.country);
-    if (!country) {
+    if (!country || NON_PLACE_COUNTRIES.includes(country.toLowerCase())) {
       noLocation += 1;
       continue;
     }

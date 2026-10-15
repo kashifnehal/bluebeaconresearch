@@ -893,3 +893,13 @@ The thresholds above are working rules from BBR's own data, not published standa
 **Rationale:** Turning every retrieval change on at once would make a yield drop impossible to attribute. The pair rule is written so it can only add a keep. The daily slot and the shadow budget cap the extra paid calls. The Oct 6–10 floor is taken from BBR's own counts.
 
 **Cross-tree mapping:** Recorded as **ADR 045** in `docs/brain/10_DECISIONS.md`.
+
+## D50 — Eight canonical signal regions (2026-10-15)
+
+**Context:** `signals.region` was free text. Most recent rows already matched a short list after case and hyphen folding. The rest were multi-region strings or sub-regions.
+
+**Decision:** New classifications store one of `middle-east`, `eastern-europe`, `europe`, `north-america`, `south-america`, `asia-pacific`, `africa`, `global`. `americas` remains a legacy id. The first named segment of a multi-region string is the primary region. A country's region is the strict majority of canonical labels already stored for that country, otherwise UN M49. The country value `Global` is `global`.
+
+**Rationale:** Those eight ids match the competitor region chips and BBR's own counts. Writing one id keeps filters and alert rules on one list.
+
+**Cross-tree mapping:** Recorded as **ADR 046** in `docs/brain/10_DECISIONS.md`.

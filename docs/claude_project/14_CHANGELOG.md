@@ -1,14 +1,18 @@
 # 14_CHANGELOG.md — Project Evolution & Chronological History
 
-> **📍 Doc status — live changelog as of 2026-10-15 (PHASE 162).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-15 (PHASE 168).** Full technical record: `docs/brain/14_CHANGELOG.md`. `claude/23_TODO.md` is not in this repo. PHASE 114–119 below are backfilled entries (W8-TEST-WIRING, 2026-10-05) for six commits that shipped between PHASE 112 and PHASE 113 but were never folded into either changelog tree. PHASE 120/121/122/123 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a PHASE 113 collision at merge time.
 
 **Classification: Internal — CTO Level**
 
 ---
 
-## PHASE 162 — Watchlist pulse tiles (2026-10-15, this commit)
+## PHASE 168 — "Global" is not a map location (2026-10-15, this commit)
 
-`apps/web` only. The watchlist symbol page shows how many signals BBR published for that asset in the last 24 hours, against the 24 hours before. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.185.0.
+`apps/web` only. The country value "Global" is not a Locations row. "European Union" stays a place. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.191.0.
+
+## PHASE 167 — Watchlist pulse tiles (2026-10-15, `f2bf0f1`)
+
+`apps/web` only. The watchlist symbol page shows how many signals BBR published for that asset in the last 24 hours, against the 24 hours before. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.190.0.
 
 ## PHASE 160 — Breadth close: price-source policy, event-only tier-2 assets, filter-expansion rules (2026-10-15, docs only)
 
