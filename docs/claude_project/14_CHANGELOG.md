@@ -8,27 +8,71 @@
 
 ---
 
-## PHASE 174 — Status checks and homepage count survive a slow database (2026-10-15, this commit)
+## 2026-10-15 — Collection gaps
 
-`apps/web` only. A Supabase or Redis status check that times out or throws is tried once more before Unknown. The homepage count uses `head: true` and reuses the last successful count for 5 minutes. Full detail: `docs/brain/LIVE_TODO.md`.
+2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered. 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.
 
-## PHASE 173 — Share image (2026-10-15, `709827a`)
+## 2026-10-15 — Status check retry and cached homepage count (`cdcccdd`)
 
-`apps/web` only. Root metadata adds `metadataBase` (`https://www.bluebeaconresearch.com`), Open Graph, and a large Twitter card. The preview is generated at `/opengraph-image`. Existing title and description are unchanged. Full detail: `docs/brain/LIVE_TODO.md`.
+A timed-out status check is retried. The homepage total is cached. Full detail: `docs/brain/14_CHANGELOG.md`.
 
-## PHASE 172 — First-touch attribution (2026-10-15, `9da1540`)
+## 2026-10-15 — Share card (`709827a`)
 
-`apps/web` only. Campaign tags and an external referrer host are stored for the visit. Email signup saves them on the account. A signed-in session records one `first_touch_recorded` event. The privacy page states that no cookie is set for this. Full detail: `docs/brain/LIVE_TODO.md`.
+Root metadata points at the www host for Open Graph and Twitter. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Signup source without a cookie (`9da1540`)
+
+Campaign tags and an external referrer host stay in the browser for the visit and are saved on email signup. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Singular count-line wording recorded (`04af752`)
+
+Docs only. The wording shipped in `2c977d8`. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Safety commits merged (`2c1406c`)
+
+Merge only. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Materiality-gate health row linked to the raw event (`3339434`)
+
+`service_health_events.raw_event_id` is written and not applied. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Guard for a Claude signal with no event category (`06d420d`)
+
+A missing category on a Claude-classified signal is guarded. A day with no Claude rows stays ok. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Weekly materiality-gate counts (`34a5ca2`)
+
+Sunday records judged, passed, rejected, and a sample of stored reasons. No pass-rate target. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — RSS feed quiet-gap alarm (`5a04fcb`)
+
+View `public.feed_gap_p95` is written and not applied. A paused budget or a provider limit does not alarm. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Digest deferred signals limited to 24 hours (`789d422`)
+
+Deferred digest rows require `signals.created_at` within 24 hours. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-15 — Monthly Anthropic spend warning (`24b92ce`)
+
+Warns at 50% and 90% of the monthly Console limit. Unset `ANTHROPIC_MONTHLY_LIMIT_USD` leaves the check idle. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-14 — Off-by-default retrieval terms (`32872dc`)
+
+`T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` default off. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-14 — Diagnostic tables in public, GNews and GDELT drop logging (`4cc10c2`)
+
+`public.rss_drop_samples` and `public.gate_shadow_results` applied 2026-10-14. Drop-sample rows are deleted after 14 days. Full detail: `docs/brain/14_CHANGELOG.md`.
 
 ## PHASE 171 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
 
 `apps/web` only. One signal and one day use the singular on the loaded-row count line. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.194.0.
 
-## PHASE 170 — Signal region backfill script (2026-10-15, this commit)
+## PHASE 170 — Signal region backfill script (2026-10-15, `320453f`)
 
 Migration `20261015150000_signals_region_raw.sql` adds nullable `signals.region_raw`. Written, not applied. The backfill script was not run with `--apply`. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.193.0.
 
-## PHASE 169 — Canonical signal regions (2026-10-15, this commit)
+## PHASE 169 — Canonical signal regions (2026-10-15, `fc9113c`)
 
 `apps/backend` and `packages/shared`. Eight region ids replace the six-entry `REGIONS` list. `americas` stays a legacy type member. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.192.0.
 

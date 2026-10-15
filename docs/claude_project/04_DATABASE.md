@@ -125,7 +125,9 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 
 > ⚠️ UPDATED 2026-09-12 (#111 governance) — new table `anthropic_daily_usage` (PK `usage_date` + `bucket`). Running UTC-day spend estimates. RLS on, no policies. As of 2026-10-14 the bucket check allows `ingestion`, `chat`, and `shadow`. Full columns: `docs/brain/04_DATABASE.md` Table 13c.
 
-> ⚠️ UPDATED 2026-10-14 — `public.rss_drop_samples` and `public.gate_shadow_results` applied. RLS on, no policy, service_role only. Full note: `docs/brain/04_DATABASE.md` Tables 13d and 13e; `docs/brain/16_MIGRATION_CHECKLIST.md`.
+> ⚠️ UPDATED 2026-10-14 — `public.rss_drop_samples` and `public.gate_shadow_results` applied. RLS on, no policy, service_role only. Drop-sample rows are deleted after 14 days. Full note: `docs/brain/04_DATABASE.md` Tables 13d and 13e; `docs/brain/16_MIGRATION_CHECKLIST.md`.
+
+> ⚠️ UPDATED 2026-10-15 — `public.feed_gap_p95` (`5a04fcb`) and `service_health_events.raw_event_id` (`3339434`) are written and not applied. `signals.region_raw` stays written and not applied. Checked against the applied migration list on 2026-10-15.
 
 > ⚠️ UPDATED 2026-09-11 (#121 backend half) — new table `signal_outcomes` (id, signal_id → signals, asset, predicted_direction, predicted_confidence, price_at_event, price_at_checkpoint, checkpoint_hours, actual_pct_change, actual_direction, is_directionally_correct, computed_at; unique `(signal_id, asset)`; index on `signal_id`; RLS public read, service-role write only). Applied live via `20260911190000_signal_outcomes.sql`. Full column list: `docs/brain/04_DATABASE.md` Table 18. Permanent because `commodity_prices` is 90-day retained (D22 / ADR 018, `17_SIGNAL_ENGINE.md` §7). Prerequisite #53; quality context #115.
 >

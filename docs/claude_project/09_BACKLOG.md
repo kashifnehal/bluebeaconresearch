@@ -2,19 +2,41 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
-> ⚠️ UPDATED 2026-10-15 — Slow database (`apps/web`, this commit, PHASE 174 / v0.197.0). Status checks retry a timeout once. The homepage count does not fetch rows and reuses the last successful count for 5 minutes. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Collection gaps. 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered. 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.
 
-> ⚠️ UPDATED 2026-10-15 — Share image (`apps/web`, `709827a`, PHASE 173 / v0.196.0). Root metadata adds an Open Graph card, a large Twitter card, and `metadataBase` `https://www.bluebeaconresearch.com`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Status check retry and cached homepage count (`apps/web`, `cdcccdd`). A slow database no longer drops the homepage total or leaves a timed-out check as Unknown without a retry.
 
-> ⚠️ UPDATED 2026-10-15 — First-touch attribution (`apps/web`, `9da1540`, PHASE 172 / v0.195.0). Campaign tags and an external referrer host are kept for the visit and saved on email signup. No cookie. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Share card (`apps/web`, `709827a`). Root metadata points at the www host for Open Graph and Twitter.
+
+> ⚠️ UPDATED 2026-10-15 — Signup source without a cookie (`apps/web`, `9da1540`). Campaign tags and an external referrer host are saved on email signup.
+
+> ⚠️ UPDATED 2026-10-15 — Singular count-line wording recorded (docs only, `04af752`). The wording shipped in `2c977d8`.
+
+> ⚠️ UPDATED 2026-10-15 — Safety commits merged (`2c1406c`). Merge only.
+
+> ⚠️ UPDATED 2026-10-15 — Materiality-gate health row (`apps/backend`, `3339434`). `service_health_events.raw_event_id` is written and not applied.
+
+> ⚠️ UPDATED 2026-10-15 — Claude signals with no event category (`apps/backend`, `06d420d`). A missing category is guarded. A day with no Claude rows stays ok.
+
+> ⚠️ UPDATED 2026-10-15 — Weekly materiality-gate counts (`apps/backend`, `34a5ca2`). No pass-rate target.
+
+> ⚠️ UPDATED 2026-10-15 — RSS quiet-gap alarm (`apps/backend`, `5a04fcb`). View `public.feed_gap_p95` is written and not applied.
+
+> ⚠️ UPDATED 2026-10-15 — Digest deferred window (`apps/backend`, `789d422`). Deferred digest signals must be created within 24 hours.
+
+> ⚠️ UPDATED 2026-10-15 — Monthly Anthropic spend warning (`apps/backend`, `24b92ce`). Idle unless `ANTHROPIC_MONTHLY_LIMIT_USD` is set.
+
+> ⚠️ UPDATED 2026-10-14 — Off-by-default retrieval terms (`apps/backend`, `32872dc`). `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` default off.
+
+> ⚠️ UPDATED 2026-10-14 — Diagnostic tables and drop logging (`apps/backend`, `4cc10c2`). The two public diagnostic tables were applied 2026-10-14. GNews and GDELT log relevance drops. `GATE_SHADOW_ENABLED` stays off.
 
 > ⚠️ UPDATED 2026-10-15 — Signal count line (`apps/web`, `2c977d8`, PHASE 171 / v0.194.0). "1 signal loaded" and "1 day" when the number is 1. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — P13 region backfill (`320453f`, PHASE 170 / v0.193.0). Migration `20261015150000_signals_region_raw.sql` is written, not applied. The backfill was not run with `--apply`. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-15 — P12 region canon (`apps/backend` + `packages/shared`, this commit, PHASE 169 / v0.192.0). Eight canonical region ids. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — P12 region canon (`apps/backend` + `packages/shared`, `fc9113c`, PHASE 169 / v0.192.0). Eight canonical region ids. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-15 — Map locations (`apps/web`, this commit, PHASE 168 / v0.191.0). Country "Global" is not a place on the Locations list. "European Union" stays. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Map locations (`apps/web`, `2c977d8`, PHASE 168 / v0.191.0). Country "Global" is not a place on the Locations list. "European Union" stays. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Watchlist pulse tiles (`apps/web`, `f2bf0f1`, PHASE 167 / v0.190.0). `/watchlist/[symbol]` counts signals published in the last 24 hours against the prior 24 hours, for priced and news-only assets. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

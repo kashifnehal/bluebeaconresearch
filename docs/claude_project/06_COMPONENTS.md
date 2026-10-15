@@ -2,6 +2,10 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` and `FirstTouchLogger` (`9da1540`) keep campaign tags and an external referrer host in the browser for the visit and save them on email signup. No cookie. Full detail: `docs/brain/06_COMPONENTS.md`.
+
+> ⚠️ UPDATED 2026-10-14 — the signal drawer shows the report count, unique outlets when a domain or source label exists, and up to five headlines. `sources[].domain` falls back to the article hostname. Full detail: `docs/brain/06_COMPONENTS.md` §3.4.
+
 > ⚠️ UPDATED 2026-10-15 — The three Clock values (source, fetch, flag) render in UTC as "14 Oct 2026, 12:30 UTC". A missing or invalid time is "n/a". Full detail: `docs/brain/06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-10-15 — `FreshTag` takes optional `eventDate` and says "Reported" or "Flagged". Event detail shows a 2×2 Clock group (source, fetch, flag, delay) and counts distinct headlines. The price block is "Price timeline:". Full detail: `docs/brain/06_COMPONENTS.md`.
@@ -12,8 +16,6 @@
 **Classification: Internal — CTO Level**
 
 ---
-
-> ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` (all pages, via providers) and `FirstTouchLogger` (signed-in dashboard layout) record campaign tags and an external referrer host. Full detail: `docs/brain/06_COMPONENTS.md`.
 
 ## 1. LAYOUT COMPONENTS
 

@@ -1,12 +1,36 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (slow database — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (singular signal count line — see the banner immediately below).**
 
-> ⚠️ NEW 2026-10-15 (slow database, `apps/web` only, this commit) — a timed-out Supabase or Redis status check is tried once more. The homepage count uses `head: true` and a 5-minute cache of the last successful count. See `docs/brain/LIVE_TODO.md`, PHASE 174.
+> ⚠️ NEW 2026-10-15 — 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered.
 
-> ⚠️ NEW 2026-10-15 (share image, `apps/web` only, `709827a`) — shared links use a generated 1200×630 card. Root metadata sets the canonical host to `https://www.bluebeaconresearch.com`. See `docs/brain/LIVE_TODO.md`, PHASE 173.
+> ⚠️ NEW 2026-10-14 — 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.
 
-> ⚠️ NEW 2026-10-15 (first-touch attribution, `apps/web` only, `9da1540`) — campaign tags and an external referrer host are kept for the visit and saved on email signup. One funnel event records them after sign-in. No cookie. See `docs/brain/LIVE_TODO.md`, PHASE 172.
+> ⚠️ NEW 2026-10-15 (status check retry and homepage count, `apps/web` only, `cdcccdd`) — a timed-out status check is retried. The homepage total is cached.
+
+> ⚠️ NEW 2026-10-15 (share card, `apps/web` only, `709827a`) — root metadata points at the www host for Open Graph and Twitter.
+
+> ⚠️ NEW 2026-10-15 (signup source, `apps/web` only, `9da1540`) — campaign tags and an external referrer host stay in the browser for the visit and are saved on email signup. No cookie.
+
+> ⚠️ NEW 2026-10-15 (singular count line recorded, docs only, `04af752`) — the wording shipped in `2c977d8`; this commit recorded it.
+
+> ⚠️ NEW 2026-10-15 (safety commits on main, `2c1406c`) — merge only. No separate product behavior.
+
+> ⚠️ NEW 2026-10-15 (gate health raw event id, `apps/backend` only, `3339434`) — `service_health_events.raw_event_id` is written and not applied. A missing column retries the insert without it.
+
+> ⚠️ NEW 2026-10-15 (Claude signals with no event category, `apps/backend` only, `06d420d`) — a missing category on a Claude-classified signal is guarded. A day with no Claude rows stays ok.
+
+> ⚠️ NEW 2026-10-15 (weekly gate counts, `apps/backend` only, `34a5ca2`) — Sunday records judged, passed, rejected, and a sample of stored reasons. No pass-rate target.
+
+> ⚠️ NEW 2026-10-15 (RSS quiet-gap alarm, `apps/backend` only, `5a04fcb`) — view `public.feed_gap_p95` is written and not applied. A paused budget or a provider limit does not alarm.
+
+> ⚠️ NEW 2026-10-15 (digest deferred window, `apps/backend` only, `789d422`) — deferred digest signals must have `signals.created_at` within 24 hours.
+
+> ⚠️ NEW 2026-10-15 (monthly spend warning, `apps/backend` only, `24b92ce`) — warns at 50% and 90% of the monthly Console limit. Unset `ANTHROPIC_MONTHLY_LIMIT_USD` leaves the check idle.
+
+> ⚠️ NEW 2026-10-14 (retrieval terms, `apps/backend` only, `32872dc`) — `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` default off. The extra GNews query runs every third cycle only when its flag is exactly `true`. The extra GDELT request runs only when its flag is exactly `true`. Anchors and the gate prompt are unchanged.
+
+> ⚠️ NEW 2026-10-14 (diagnostic tables and drop logging, `apps/backend` only, `4cc10c2`) — `public.rss_drop_samples` and `public.gate_shadow_results` are applied (2026-10-14), RLS on, service_role only. Drop-sample rows are deleted after 14 days. GNews and GDELT log the same relevance drops as RSS. `DROP_SAMPLE_STORE` is on. `GATE_SHADOW_ENABLED` stays off.
 
 > ⚠️ NEW 2026-10-15 (signal count line, `apps/web` only, `2c977d8`) — one loaded signal and one day use the singular. Other counts stay plural. See `docs/brain/LIVE_TODO.md`, PHASE 171.
 
@@ -14,7 +38,7 @@
 
 > ⚠️ NEW 2026-10-15 (P12 region canon, `apps/backend` + `packages/shared`, `fc9113c`) — new classifications use 8 region ids. Screens that render `REGIONS` show that list. Stored signal regions are unchanged until the backfill runs. See `docs/brain/LIVE_TODO.md`, PHASE 169.
 
-> ⚠️ NEW 2026-10-15 (map locations, `apps/web` only, this commit) — country "Global" is counted with signals that have no country. It is not a Locations row. "European Union" stays a place. See `docs/brain/LIVE_TODO.md`, PHASE 168.
+> ⚠️ NEW 2026-10-15 (map locations, `apps/web` only, `2c977d8`) — country "Global" is counted with signals that have no country. It is not a Locations row. "European Union" stays a place. See `docs/brain/LIVE_TODO.md`, PHASE 168.
 
 > ⚠️ NEW 2026-10-15 (watchlist pulse tiles, `apps/web` only, `f2bf0f1`) — the symbol page shows five publish-count tiles under the header. News-only assets get the same tiles. The tiles do not request a price. See `docs/brain/LIVE_TODO.md`, PHASE 162.
 

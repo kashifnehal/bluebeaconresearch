@@ -114,4 +114,4 @@ A usage review showed **93% of spend happened at >150k context** and **~11% came
 - Telegram alerts — intentionally deferred by founder decision, not a bug.
 - ACLED collector credentials.
 
-`SUPABASE_SECRET_KEY` is set in Vercel production since 2026-08-17, and the code accepts it.
+`SUPABASE_SECRET_KEY` has been set in Vercel production since 2026-08-17, and the code accepts either name. `/status` Price History showed Operational on 2026-10-14.

@@ -10,27 +10,72 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.197.0 — Status checks and homepage count survive a slow database (2026-10-15, this commit)
+### 2026-10-15 — Collection gaps
 
-`apps/web` only. A Supabase or Redis status check that times out or throws is tried once more before it stays Unknown. Degraded is not retried. The homepage count uses `head: true` and keeps the last successful count for 5 minutes. Full detail: `LIVE_TODO.md`.
+2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered.
+2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.
 
-### v0.196.0 — Share image (2026-10-15, `709827a`)
+### 2026-10-15 — Status check retry and cached homepage count (`cdcccdd`)
 
-`apps/web` only. Root metadata adds `metadataBase` (`https://www.bluebeaconresearch.com`), Open Graph, and a large Twitter card. `/opengraph-image` is a 1200×630 navy card. Existing title and description are unchanged. Full detail: `LIVE_TODO.md`.
+`apps/web` only. A timed-out status check is retried. The homepage total is cached so a slow read does not drop it.
 
-### v0.195.0 — First-touch attribution (2026-10-15, `9da1540`)
+### 2026-10-15 — Share card (`709827a`)
 
-`apps/web` only. Campaign tags (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`) and an external referrer host are stored for the browser tab and, on email signup, on the account. A signed-in session records `first_touch_recorded` once. The privacy page says no cookie is set for this. Full detail: `LIVE_TODO.md`.
+`apps/web` only. Root metadata points at the www host. Open Graph and Twitter use that card.
+
+### 2026-10-15 — Signup source without a cookie (`9da1540`)
+
+`apps/web` only. Campaign tags and an external referrer host stay in the browser for the visit and are saved on email signup.
+
+### 2026-10-15 — Singular count-line wording recorded (`04af752`)
+
+Docs only. The wording shipped in `2c977d8`.
+
+### 2026-10-15 — Safety commits merged (`2c1406c`)
+
+Merge of `origin/main` into the safety commits. No separate product behavior.
+
+### 2026-10-15 — Materiality-gate health row linked to the raw event (`3339434`)
+
+`apps/backend` only. Nullable `service_health_events.raw_event_id` is written and not applied. A missing column retries the insert without it.
+
+### 2026-10-15 — Guard for a Claude signal with no event category (`06d420d`)
+
+`apps/backend` only. A missing `event_category` on a Claude-classified signal is guarded. A day with no Claude rows stays ok.
+
+### 2026-10-15 — Weekly materiality-gate counts (`34a5ca2`)
+
+`apps/backend` only. The Sunday job records judged, passed, rejected, and a sample of stored reasons. There is no pass-rate target.
+
+### 2026-10-15 — RSS feed quiet-gap alarm (`5a04fcb`)
+
+`apps/backend` only. View `public.feed_gap_p95` is written and not applied. A paused budget or a provider limit does not alarm.
+
+### 2026-10-15 — Digest deferred signals limited to 24 hours (`789d422`)
+
+`apps/backend` only. Deferred digest rows require `signals.created_at` within 24 hours. The email footer states the newest included `created_at`.
+
+### 2026-10-15 — Monthly Anthropic spend warning (`24b92ce`)
+
+`apps/backend` only. Warns at 50% and 90% of the monthly Console limit. Unset `ANTHROPIC_MONTHLY_LIMIT_USD` leaves the check idle.
+
+### 2026-10-14 — Off-by-default retrieval terms (`32872dc`)
+
+`apps/backend` only. `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` default off. The extra GNews query runs every third cycle only when `GNEWS_T2_QUERY` is exactly `true`. The extra GDELT DOC request runs only when `GDELT_T2_QUERY` is exactly `true`. Anchors and the gate prompt are unchanged.
+
+### 2026-10-14 — Diagnostic tables in public, GNews and GDELT drop logging (`4cc10c2`)
+
+`apps/backend` only. `public.rss_drop_samples` and `public.gate_shadow_results` were applied 2026-10-14. RLS on, no policy, service_role only. Drop-sample rows are deleted after 14 days. GNews and GDELT record the same relevance drops as RSS. `DROP_SAMPLE_STORE` is on. `GATE_SHADOW_ENABLED` stays off.
 
 ### v0.194.0 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
 
 `apps/web` only. The loaded-row line says "1 signal loaded" and "1 day" when that number is 1. Every other count stays plural, including 0. The rest of the line is unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.193.0 — Signal region backfill script (2026-10-15, this commit)
+### v0.193.0 — Signal region backfill script (2026-10-15, `320453f`)
 
 `apps/backend` plus `supabase/migrations/20261015150000_signals_region_raw.sql`. The migration and the `--apply` path were not run. Dry run is the default. Full detail: `LIVE_TODO.md`.
 
-### v0.192.0 — Canonical signal regions (2026-10-15, this commit)
+### v0.192.0 — Canonical signal regions (2026-10-15, `fc9113c`)
 
 `apps/backend` and `packages/shared`. Eight region ids. Claude's region field is one of those ids, then `canonicalizeRegion`. Shared `REGIONS` matches. Legacy `americas` remains valid on old rows. The heuristic classifier is unchanged. Full detail: `LIVE_TODO.md`.
 
@@ -42,15 +87,15 @@ This document records historic development milestones, schema evolutions, featur
 
 `apps/web` only. `GET /api/signals/pulse` counts signals BBR published for one known symbol over the last 24 hours and the 24 hours before that. Five tiles render under the watchlist symbol header for priced and news-only assets. No alert badge. Full detail: `LIVE_TODO.md`.
 
-### v0.189.0 — Record the speed-claim rules and the timing findings (2026-10-15, this commit)
+### v0.189.0 — Record the speed-claim rules and the timing findings (2026-10-15, `b9f7084`)
 
 Docs only. Speed and timing claims are a standing rule. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started: paid feed choice, the schedule constant, a speed meter, a benchmark, opposing-side sources, an optional first-report column, and alert delivery. Full detail: `LIVE_TODO.md`, `10_DECISIONS.md`.
 
-### v0.188.0 — Show clock times in UTC and say when collection pauses (2026-10-15, this commit)
+### v0.188.0 — Show clock times in UTC and say when collection pauses (2026-10-15, `3071abb`)
 
 `apps/web` only. Event-page Clock cells show UTC as "14 Oct 2026, 12:30 UTC", or "n/a" when the time is missing or invalid. The homepage badge says collection runs about every 30 minutes while the daily budget is open. The latest-signal card still shows GMT times. Full detail: `LIVE_TODO.md`.
 
-### v0.187.0 — Homepage and dashboard say where the clock and sources can be checked (2026-10-15, this commit)
+### v0.187.0 — Homepage and dashboard say where the clock and sources can be checked (2026-10-15, `847e9ac`)
 
 `apps/web` only. The homepage badge, the latest-signal paragraph, and the dashboard header read `INGESTION_INTERVAL_MINUTES` (30). The latest-signal card shows when the story was reported and when it was flagged. A check-it block under the process steps points at the signal clock, the Sources tab, and the price timeline. Full detail: `LIVE_TODO.md`.
 
@@ -58,7 +103,7 @@ Docs only. Speed and timing claims are a standing rule. The tagline "Intelligenc
 
 `apps/web` only. `GET /api/signals/:id` adds `firstReportAt`, `firstReportKind`, `firstFetchedAt`, `priceAtFlagged`, and `priceAtFlaggedDate`. The event page Clock group shows those times and the delay. Verification counts distinct headlines and outlets. The price line is a timeline from the first linked report, to the flag, to now. Feed tags say "Reported" or "Flagged" instead of "Fresh". Full detail: `LIVE_TODO.md`.
 
-### v0.185.0 — GNews collector can use a paid plan's capacity, off by default (2026-10-15, this commit)
+### v0.185.0 — GNews collector can use a paid plan's capacity, off by default (2026-10-15, `b5b7be0`)
 
 `apps/backend` only. `GNEWS_PLAN` unset or `free` keeps one rotating query at `max=10`. Exactly `essential` requests `max=25` and runs every GNews query each cycle, 1.1 seconds apart. A later query's failure does not fail the cycle. `GNEWS_PLAN` is unset in production, so nothing changes until it is set. The ingestion cron is unchanged. Full detail: `LIVE_TODO.md`.
 
@@ -70,67 +115,67 @@ Docs only. Speed and timing claims are a standing rule. The tagline "Intelligenc
 
 Docs only. Yahoo-sourced prices stay development and test only while there are no paying customers (2026-10-11). `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, and `NICKEL` are event-only (2026-10-12). Retrieval flags `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` stay off and turn on one at a time. `DROP_SAMPLE_STORE` is on. `public.rss_drop_samples` and `public.gate_shadow_results` were applied 2026-10-14. Still open: the classifier mapping test, a tier-2 reference set, and switching the flags on one at a time. Full detail: `LIVE_TODO.md`, `10_DECISIONS.md`.
 
-### v0.182.0 — Intelligence Feed pause sentence has a period (2026-10-15, this commit)
+### v0.182.0 — Intelligence Feed pause sentence has a period (2026-10-15, `0b8d1f0`)
 
 `apps/web` only. When the daily classification budget is closed, the Intelligence Feed detail gets a period before " Collection is paused until the next UTC day." A detail that already ends with a period is left as-is. An open budget is unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.181.0 — Underscore registry symbols on driver-breakdown (2026-10-15, this commit)
+### v0.181.0 — Underscore registry symbols on driver-breakdown (2026-10-15, `5345bdf`)
 
 `apps/web` only. `GET /api/signals/driver-breakdown` accepts `_` in `symbol` and still returns `400` unless the symbol is in `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`. `GET /api/signals` uses the same charset for commodity, forex, and saved-preference symbols. Attribution `asset` stays `^[A-Z0-9]+$`. Full detail: `LIVE_TODO.md`.
 
-### v0.180.0 — News-only symbols on the driver-breakdown route (2026-10-15, this commit)
+### v0.180.0 — News-only symbols on the driver-breakdown route (2026-10-15, `95c13bd`)
 
 `apps/web` only. `GET /api/signals/driver-breakdown` accepts a symbol from `COMMODITIES` or `NEWS_ONLY_COMMODITIES`. A news-only symbol still queries `commodity_impacts` only. Forex pairing, paging, the rate limit, and the window limit are unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.179.0 — Signal detail step timings (2026-10-15, this commit)
+### v0.179.0 — Signal detail step timings (2026-10-15, `5879fc5`)
 
-`apps/web` only. `GET /api/signals/:id` sends a `Server-Timing` header only when `SERVER_TIMING` is exactly `true`. The body, status codes, and queries stay the same. This route does not call the rate limiter. The header names each step in milliseconds, including whether outcome rows came from the in-memory cache and whether the baseline read hit its 3000 ms limit. No ids or account data. The variable is not set on the host in this commit. Full detail: `LIVE_TODO.md`.
+`apps/web` only. `GET /api/signals/:id` sends a `Server-Timing` header only when `SERVER_TIMING` is exactly `true`. The body, status codes, and queries stay the same. This route does not call the rate limiter. The header names each step in milliseconds, including whether outcome rows came from the in-memory cache and whether the baseline read hit its 3000 ms limit. No ids or account data. The variable is not set on the host in `5879fc5`. Full detail: `LIVE_TODO.md`.
 
-### v0.178.0 — Ingestion banner when the daily classification budget is closed (2026-10-15, this commit)
+### v0.178.0 — Ingestion banner when the daily classification budget is closed (2026-10-15, `fa40d4b`)
 
 `apps/web` only. When every collector on the ingestion status response has `budgetClosed` true, the dashboard box says "Collection paused" and "Collection is paused until the next UTC day." It no longer shows "Last fetched", "Next run", or "Every 30 min" in that state. A missing `budgetClosed` field is not closed. "Last collected" appears only when the same response already includes `newestStoredArticleAt`. Full detail: `LIVE_TODO.md`.
 
-### v0.177.0 — Map locations list (2026-10-14, this commit)
+### v0.177.0 — Map locations list (2026-10-14, `cd1cf7f`)
 
 `apps/web` only. The map page groups the signals it already shows by country. Blank countries are a count, not a row. Desktop gets a Locations panel on the map; mobile gets a bottom sheet. A country row limits the markers to that country and opens the existing signal popup on the newest signal there. A Chokepoints section lists each chokepoint with the count inside 500 km and the direction tally. Marker drawing is unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.176.0 — News-only watchlist cards and detail pages (2026-10-14, this commit)
+### v0.176.0 — News-only watchlist cards and detail pages (2026-10-14, `5261650`)
 
 `apps/web` only. The seven news-only commodities can be added, followed, and opened on the watchlist. Cards show the 7-day signal count and latest headline, and do not show or request a price. The detail page skips every price, history, and 5-year request, and hides the price header and price chart. Feed filters, onboarding, and the Add menu label them "(news only)". The priced default watchlist is unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.175.0 — Daily limit on pair-only keeps (2026-10-14, this commit)
+### v0.175.0 — Daily limit on pair-only keeps (2026-10-14, `53f2543`)
 
 `apps/backend` only. `T2_PAIR_DAILY_MAX` defaults to 20 (integer, 0 or more). An in-memory UTC-day counter allows that many headlines kept only by the commodity-and-event pair rule. The counter also resets when the process restarts, so the real daily total can be higher after a restart; it is a safety brake, not an exact budget. GNews, GDELT, and RSS ask whether a slot is left before the relevance check. A closed slot drops the item the same way as before (`nokeyword`, with its t2 shadow groups). The flag off uses no slot. Finance and official tiers are unchanged. Dedupe, the materiality gate, the exclude lists, and the three existing GNews queries are unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.174.0 — Feed table hide-summaries and loaded-row count (2026-10-14, this commit)
+### v0.174.0 — Feed table hide-summaries and loaded-row count (2026-10-14, `c206391`)
 
 `apps/web` only. Table mode can hide the Summary column. The choice is stored under `bbr.feed.hideSummaries`. A count line next to "Sorting applies to loaded rows" reports loaded rows, distinct UTC days, Up, Down, and Other (volatile, neutral, or no primary impact). Horizontal scroll and `min-w-[900px]` stay. No sentiment number, bull-day count, or timezone chip. Full detail: `LIVE_TODO.md`.
 
-### v0.173.0 — Quick-view report count, unique sources, and headlines (2026-10-14, this commit)
+### v0.173.0 — Quick-view report count, unique sources, and headlines (2026-10-14, `e20a43f`)
 
 `apps/web` only. The signal drawer now fetches `GET /api/signals/:id` while it is open (abort on close). Under the summary: `{n} reports`, ` · {m} unique sources` when at least one source has a `domain` or `sourceLabel`, and "Last updated" only when `shouldShowLastUpdated` is true. Up to five headlines, title linked out when a URL exists. `sources[].domain` is `raw_data.domain`, otherwise the lowercased URL hostname with one leading `www.` removed. A failed fetch shows none of that and leaves the rest of the drawer working. Width unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.172.0 — News-only commodity tags (2026-10-14, this commit)
+### v0.172.0 — News-only commodity tags (2026-10-14, `e4a5409`)
 
 `packages/shared` + `apps/backend` + `apps/web`. Seven classifier and feed-filter tags with no price series: `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, `NICKEL`. `provider` may be `"yahoo"` or `"none"`. Price sync and `/api/prices` stay on the priced set. A news-only symbol on `GET /v1/prices/history-5y/:symbol` is a 404 and is not sent to Yahoo. Filter anchors for these seven are empty. The materiality-gate instruction text is unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.171.0 — Faster USOIL market-impact reads (2026-10-14, this commit)
+### v0.171.0 — Faster USOIL market-impact reads (2026-10-14, `ff8d968`)
 
 `apps/web` only. `fetchSignalOutcomeRows` still pages `signal_outcomes` at 1000 rows ordered by `id`. A full first page is followed by one exact count (same filters) and the remaining pages are read together. Successful results are cached 5 minutes (`OUTCOME_ROWS_CACHE_TTL_MS`, BBR working value, no published source), keyed by the sorted asset list, with one shared in-flight read per key. A failed page is logged, the rows already collected are returned, and that result is not cached. `prefetchAssetPricePoints` starts the per-asset `commodity_prices` read without awaiting and never throws. `GET /api/market-impact` and `GET /api/signals/:id` call it before awaiting outcome rows, then `fetchMatchedBaselinesWithTimeout` as before. Response shape, copy, and the 3000 ms baseline limit are unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.170.0 — Weekend-proof watchlist sparkline (2026-10-14, this commit)
+### v0.170.0 — Weekend-proof watchlist sparkline (2026-10-14, `874c216`)
 
 `apps/web` only. Closed-market snapshots made `PriceSparkline` draw 12 equal minimum-height bars (last 12 prices identical). The sparkline now fetches `days=7&points=14` (`queryKey` `spark7d`). `bucketLastPrice` keeps the last price in each equal time bucket and skips empty buckets; `points` is clamped 2..60 and ignored unless `days` is set. A flat series (at least 2 points, min === max) shows "No price change in the last 7 days" instead of bars. Bar formula unchanged. 401 / 502 / 429 and the 12-snapshot default unchanged. Full detail: `LIVE_TODO.md`.
 
-### v0.169.0 — Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat` (2026-10-14, this commit)
+### v0.169.0 — Replay gate uses the live excerpt, a seeded draw, and `--ids`/`--repeat` (2026-10-14, `ad6651a`)
 
 `apps/backend` only. Run F (2026-10-10) replayed the materiality gate without the article excerpt `classifyEvent` has sent via `buildClassifierSnippet` since `cf0711f`, and printed `[object Object]` for GNews rows (`raw_data.source` is `{ name, url }`) plus `unknown` where no publisher string existed. `replay-gate.ts` now imports `MATERIALITY_GATE_INSTRUCTION` (already exported; the hand copy was missing the "Clarification of (a)" sentence) and calls `buildClassifierSnippet`. `claude.service.ts` was not edited, and the script still does not call `classifyEvent()`. Feed label order: `source.name`, else a string `source`, else `domain` (GDELT), else `unknown-<source_type>`. The 150-row selector was an unseeded `Math.random` Fisher-Yates; it is now mulberry32 with the seed printed and `--seed <n>`. `--ids` keeps listed order (not a draw). `--repeat <n>` prints every verdict and whether that id is stable. Temperature `0.2` is recorded. JSON lists every flip (`id`, `title`, `feed`, `oldReason`, `newReason`) under `apps/backend/.tmp/` (gitignored). $1.50 hard stop, `--dry`, and `--count-prefix` unchanged. No live Anthropic call. New `replay-gate.test.ts` appended to the backend test chain. Full detail: `LIVE_TODO.md`.
 
-### v0.168.0 — Reconciliation recovered-signal alerts honor the 24h intake window (2026-10-14, this commit)
+### v0.168.0 — Reconciliation recovered-signal alerts honor the 24h intake window (2026-10-14, `67d97ea`)
 
 `apps/backend` only. `reconciliation.ts` can recover orphans up to 36h (`ORPHAN_MAX_AGE_HOURS`, unchanged). On recover it always inserted a signal with `created_at = now` and then called `dispatchAlertsForSignal`, so alert rules could fire on articles older than the 24h intake window (`DEFAULT_INTAKE_MAX_AGE_MS` / ADR 007). Dispatch is now gated by `shouldDispatchAlertsForRecovered` (`isWithinIntakeWindow` on `event_date`, else `raw_events.created_at`; invalid date → no alerts). `generateSignalAnalysis` unchanged. Cycle return and summary log include `alertsSkippedOld`. New `reconciliation-guard.test.ts` on the backend test chain. Full detail: `LIVE_TODO.md`.
 
-### v0.167.0 — Fix empty price charts for logged-in users (2026-10-11, this commit)
+### v0.167.0 — Fix empty price charts for logged-in users (2026-10-11, `bff7471`)
 
 `apps/web` only. Root cause: `/api/prices/history` and `/api/prices` (Tier 1) each built a cookie-scoped Supabase client from `NEXT_PUBLIC_SUPABASE_URL` + `cookies()`, but login runs through `NEXT_PUBLIC_SUPABASE_AUTH_URL` (the auth proxy added 2026-09-27) — the session cookie names never matched, so both routes saw no valid session and read as anonymous under RLS, returning empty price data for logged-in users site-wide. Both now resolve auth/data through `getRouteSupabaseClients()` (`lib/supabase-server.ts`), same client already used elsewhere. `/api/prices/history` 401s with no user in production and now returns `502 { error: { code: "db_error" } }` on an actual DB failure instead of a silent `200 { points: [] }`; refactored to an injectable-deps `handleHistoryGet(req, deps)` (same pattern as `lib/events-post-handler.ts`) for unit testing without a mocking framework. Checked every other cookie-session `createServerClient(` call against the raw URL — `api/ingestion/status/route.ts` and `api/auth/confirmation-status/route.ts` already use a service-role client, no change needed; `app/auth/callback/route.ts` already uses the auth-proxy address.
 
@@ -142,7 +187,7 @@ New `/status` "Price History" check: `evaluatePriceHistoryHealth` (pure) + `chec
 
 New tests: `app/api/prices/history/route.test.ts` (401/db-error/rate-limit/paging via the injected deps), `WatchlistClient.test.tsx` and `watchlist/[symbol]/page.test.tsx` (pure display-state/parsing logic plus source-level hydration-wiring assertions, since both components render inside `next/navigation` hooks this plain-node test runner can't mount), and new `evaluatePriceHistoryHealth` cases in `status-checks.test.ts`. `pnpm --filter web exec tsc --noEmit`, `pnpm --filter web test`, and a real `next build` (Turbopack) all exit 0. See ADR 042/D46 and `LIVE_TODO.md` for the full writeup, including Vercel-deploy and logged-in Playwright verification results.
 
-### v0.166.0 — Docs: ADR 041/D45 asset admission by coverage state + Permutable/RavenPack claims + Yahoo rights update (2026-10-10, this commit)
+### v0.166.0 — Docs: ADR 041/D45 asset admission by coverage state + Permutable/RavenPack claims + Yahoo rights update (2026-10-10, `1150128`)
 
 Docs only. New ADR 041 (`D45` in `claude_project/10_DECISIONS.md`): asset admission by coverage state (event coverage → price coverage → historical validation), not a headline-count or numeric-breadth threshold; records the T1 (TTF gas/RBOB/heating oil + shipping lens)/T2 (event-coverage-first)/T3 (catalogue-only) roadmap, and the sugar/cotton `yf.quote()` schema-validation failure on yahoo-finance2 4.0.0. `00_CURRENT_BBR_CONTEXT.md`'s Permutable section gained two more vendor-stated claims (30+ commodity assets; 70+ assets) and a note on its 28 Sep 2026 live-paper-evaluation page (6→19 assets, excludes costs/fees/slippage, trailed BCOM in 2026); RavenPack section gained a "100+ commodities mapped" vendor claim. `claude_project/21_PROJECT_BRIEFING.md`'s Yahoo Finance decision item got a 2026-10-10 update: dev/test only, ToS appears to restrict automated collection/database-building/commercial reuse, pending a price-data-rights memo. Full detail: `LIVE_TODO.md`.
 
@@ -158,19 +203,19 @@ Also reverses ADR 040/D44: `apps/backend` no longer depends on `@blue-beacon-res
 
 Verification: `pnpm install --frozen-lockfile`, `pnpm type-check`, `cd apps/backend && pnpm run build`, `node -e "import('./dist/lib/relevance-filter.js')..."`, and a timed `node dist/server.js` (no `ERR_MODULE_NOT_FOUND`) all passed; `pnpm --filter backend test` and `pnpm --filter web test` both green. Full detail: `LIVE_TODO.md`.
 
-### v0.163.0 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, this commit) — ⚠️ merged, not deployed until v0.164.0 fix above
+### v0.163.0 — W-ASSETS-ENERGY-3 part 3/3: HEATING_OIL added, batch complete (2026-10-10, `8eb6c17`) — ⚠️ merged, not deployed until v0.164.0 fix above
 
 `packages/shared` + `apps/backend` + `apps/web`. Final of 3 new energy assets: `HEATING_OIL` (Heating Oil / ULSD, `HO=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias/filter anchor ("diesel") sourced only from words already in stored `signals.title` — no literal "heating oil"/"ULSD" headline exists, diesel is the real-world term. Real Anthropic classification check against all 15 stored headlines: 15/15 correct; 21/21 across the full TTF_GAS/RBOB/HEATING_OIL batch. Full detail: `LIVE_TODO.md`.
 
-### v0.162.0 — W-ASSETS-ENERGY-3 part 2/3: RBOB added (2026-10-10, this commit)
+### v0.162.0 — W-ASSETS-ENERGY-3 part 2/3: RBOB added (2026-10-10, `6bbada4`)
 
 `packages/shared` + `apps/backend` + `apps/web`. Second of 3 new energy assets: `RBOB` (RBOB Gasoline, `RB=F`, USD/gal) added to `COMMODITY_REGISTRY` and the hand-kept catalog lists. Alias/filter anchor ("gasoline") sourced only from words already in stored `signals.title`. Real Anthropic classification check against 2 stored headlines: 2/2 correct. Full detail: `LIVE_TODO.md`.
 
-### v0.161.0 — W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added (2026-10-10, this commit)
+### v0.161.0 — W-ASSETS-ENERGY-3 part 1/3: TTF_GAS added (2026-10-10, `70057a8`)
 
 `packages/shared` + `apps/backend` + `apps/web`. First of 3 new energy assets added to `COMMODITY_REGISTRY`, each its own commit: `TTF_GAS` (European Gas/TTF, `TTF=F`, EUR/MWh). Yahoo ticker/currency verified via the 2026-10-10 probe; alias/filter anchor ("european gas") sourced only from words already in stored `signals.title`. Also fixed 3 files that hand-listed the commodity ticker union in a prompt string instead of deriving it from the registry (`claude.service.ts`, `replay-gate.ts`, `backfill-commodity-impacts.ts`) and `apps/web/app/api/prices/route.ts`'s hardcoded `SYMBOLS`. Real Anthropic classification check against 4 stored headlines: 4/4 correct. Full detail: `LIVE_TODO.md`.
 
-### v0.160.0 — W-REGISTRY: single commodity-asset registry (2026-10-10, this commit)
+### v0.160.0 — W-REGISTRY: single commodity-asset registry (2026-10-10, `99964ff`)
 
 `packages/shared` + 4 `apps/backend` files. New `COMMODITY_REGISTRY` export (`packages/shared/src/constants/commodities.ts`) consolidates every per-commodity-asset fact — Yahoo ticker, Claude classifier allowlist/aliases, RSS relevance-filter anchor words — that was hand-duplicated across `price-syncer.ts` (`COMMODITY_SYMBOLS`), `claude.service.ts` (`ALLOWED_COMMODITY_ASSETS`/`COMMODITY_ASSET_ALIASES`), `relevance-filter.ts` (`TRACKED_COMMODITY_NAMES`), and `price-history.ts` (`YAHOO_TICKERS`'s commodity half). All four now derive from the registry; no asset added, no ticker/alias/anchor value changed, forex logic (`FOREX_SYMBOLS`/`FOREX_PAIRS`) untouched. `COMMODITIES` itself stays a separate hand-kept literal (guards a literal-union type `chokepoints.ts` depends on), checked against the registry by a parity test. Required adding `@blue-beacon-research/shared` as an `apps/backend` dependency — see ADR 040 — and `"type": "module"` in `packages/shared/package.json` to fix `tsx`/Node ESM-CJS interop silently dropping the package's named exports. Full detail: `LIVE_TODO.md`.
 
@@ -182,7 +227,7 @@ Verification: `pnpm install --frozen-lockfile`, `pnpm type-check`, `cd apps/back
 
 `apps/backend` only. Official agency RSS feeds (EIA, Federal Reserve, ECB, Bank of England, USTR, Reserve Bank of India, Bank of Japan) get a 24h age window (world/finance stay at 4h) and skip the Step 3 keyword gate entirely. `EXCLUDE_KEYWORDS` split into `EXCLUDE_KEYWORDS_HARD` (always drops) and `EXCLUDE_KEYWORDS_AMBIGUOUS` (drops only when the title+summary has no geopolitical/commodity anchor). The 1970–2005 historical-year exclude is now log-only (`[RELEVANCE] exclude-year would-drop`), and no longer misfires on dollar amounts like "$2000". `[RSS-DROP]` reasons split into exclude-phrase/noise/nokeyword, with the matched phrase and its title/summary location logged for exclude-phrase. New per-feed `neverSeenOld` counter appended to `[RSS-DIAG]`. Price sync moved off the news ingestion cron onto its own `PRICE_SYNC_CRON` (default `*/15 * * * *`). Full detail: `LIVE_TODO.md`, `docs/brain/15_INGESTION_PIPELINE.md` §2.1/§3.
 
-### v0.157.0 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, this commit)
+### v0.157.0 — Real logo/favicon across web + mobile, replacing every placeholder (2026-10-09, `45775e3`)
 
 `apps/web` + `apps/mobile`. Favicon was Next's default scaffold black-circle/triangle; no apple-touch-icon existed; `login`/`signup` used a generic Lucide `Shield` icon as a stand-in mark; all mobile icon/splash files were still Expo's default scaffold. Production assets derived via Pillow color-keying from the 3 clean (non-shadowed, non-padded) source crops the founder supplied, out of 7 total — the other 4 are app-icon-tile mockups with baked-in shadows/rounding, deliberately not used as sources. New `app/icon.png` (256) + `app/apple-icon.png` (180); `app/favicon.ico` regenerated (hit and fixed a real Pillow RGB-vs-RGBA ICO bug that Next's image pipeline rejected outright). `Logo.tsx` rewritten from CSS/Tailwind text to the real image, new `variant: "icon" | "full"` prop so spots with adjacent brand-name text don't duplicate the wordmark. `Sidebar.tsx` gained a mark it never had. Mobile `app.json` adaptive-icon background color updated to brand navy (`#0A2643`). Verified live in-browser across desktop/375px widths and 4 page types (homepage, login, signup, PublicHeader); dashboard `Sidebar` not live-verified (auth-gated, no credentials in session). Full detail: `LIVE_TODO.md`.
 

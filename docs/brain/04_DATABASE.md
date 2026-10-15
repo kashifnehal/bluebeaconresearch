@@ -232,10 +232,16 @@ UTC-day running spend estimates. Service-role write only; RLS enabled, no polici
 - `warned_50` / `warned_90` / `chat_50pct_emailed_at` — so 50%/90% logs and the chat 50% email fire once per UTC day
 
 ### Table 13d: `rss_drop_samples` (applied 2026-10-14)
-Diagnostic store for relevance-filter drops. `public.rss_drop_samples`. RLS on, no policy, service_role only.
+Diagnostic store for relevance-filter drops, including GNews and GDELT (`4cc10c2`). `public.rss_drop_samples`. RLS on, no policy, service_role only. Rows are deleted after 14 days.
 
 ### Table 13e: `gate_shadow_results` (applied 2026-10-14)
-Shadow materiality-gate results. `public.gate_shadow_results`. RLS on, no policy, service_role only. Not read by the live classification path.
+Shadow materiality-gate results. `public.gate_shadow_results`. RLS on, no policy, service_role only. Not read by the live classification path. Applied migrations checked 2026-10-15: `rss_drop_samples_public` and `gate_shadow_results_public`.
+
+### View: `feed_gap_p95` (written, not applied, 2026-10-15)
+`20261015130000_feed_gap_p95.sql` (`5a04fcb`). Read-only view `public.feed_gap_p95`. Not in the applied migration list checked 2026-10-15.
+
+### `service_health_events.raw_event_id` (written, not applied, 2026-10-15)
+`20261015140000_service_health_raw_event_id.sql` (`3339434`). Nullable column. Not in the applied migration list checked 2026-10-15. The writer retries the insert without the column when it is missing.
 
 ### Table 14: `subscriptions`
 - `id` (`uuid`, PK) / `user_id` (`uuid`, NOT NULL)

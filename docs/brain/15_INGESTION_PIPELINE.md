@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-09 for the RSS official-tier age window/keyword bypass, hard/ambiguous exclude split, log-only year rule, and decoupled price-sync cron (`96ff0e7`); 2026-10-07 for the GDELT record cap, retry, and DOC-list freeze; 2026-09-28 for the RSS feed roster; 2026-09-20 for the materiality-gate path.**
 >
+> ⚠️ UPDATED 2026-10-14 — GNews and GDELT record relevance drops in `public.rss_drop_samples` (`4cc10c2`), the same store as RSS. Those rows are deleted after 14 days. `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, and `GDELT_T2_QUERY` default off (`32872dc`). With `GNEWS_T2_QUERY` exactly `true`, an extra GNews query runs every third cycle (`cycleIndex % 3 === 2`). With `GDELT_T2_QUERY` exactly `true`, one extra GDELT DOC request runs. `T2_PAIR_DAILY_MAX` defaults to 20 pair-only keeps per UTC day, counted in memory, and also resets on process restart (`53f2543`). With the pair flag off, no slot is used. Recovered-signal alerts use the 24-hour intake window (`67d97ea`): reconciliation can still recover an orphan up to 36 hours, and dispatch uses `isWithinIntakeWindow` on `event_date`, else `created_at`.
+
 > ⚠️ UPDATED 2026-10-07 — also on the ingestion path: a cleaned excerpt goes to the classifier when the feed stored one (`cf0711f`; a missing summary, including every GDELT item, leaves the prompt unchanged); one email when the daily ingestion classification budget closes (`41c19ce`); ACLED and the dormant classifier do not store a deferred result (`5707819`); read-only view `feed_yield_daily` (`b4b52f1`, migration written, not applied). This is the authoritative ingestion writeup. `claude/23_TODO.md` is not in this repo.
 
 This document describes **exactly** how Blue Beacon Research fetches news, filters it, stores it, and displays it on the dashboard. Read this before changing collectors or wondering why certain headlines appear (or don't).
@@ -15,7 +17,7 @@ Railway workers (startup + every 30 min)
   ├── RSS Collector      (28 feeds — world + finance)
   ├── GNews Collector    (1 API query on the free plan; all queries if GNEWS_PLAN=essential)
   ├── GDELT Collector    (1 API query, global news index)
-  ├── Price Syncer       (Yahoo Finance — 8 commodities + 6 forex pairs)
+  ├── Price Syncer       (Yahoo Finance — 18 priced symbols; seven event-only assets have no price feed)
   └── ACLED Collector    (optional — requires credentials)
         ↓
   relevance-filter.ts    (exclude spam → drop routine insider/analyst noise → match keywords OR finance-tier pass-through)
@@ -148,7 +150,7 @@ shipping OR tanker OR port OR canal OR sanctions OR embargo OR "export ban" OR t
 ### 2.5 Price Syncer (`price-syncer.ts`)
 
 **Source:** Yahoo Finance (`yahoo-finance2`)  
-**Symbols:** 8 commodities (WTI, Brent, Gold, NatGas, Wheat, Copper, Silver, Corn) + **6 forex pairs** (EURUSD, GBPUSD, USDJPY, USDCHF, USDRUB, USDCNY — Yahoo `<PAIR>=X` tickers) — the forex set added by #87 phase 1 (`a15e2fd`, 2026-09-09), synced in the same loop.  
+**Symbols:** 18 priced symbols as of 2026-10-14 (Yahoo). Seven event-only assets have no price feed. The 2026-09-09 forex addition (`a15e2fd`) is inside that priced set.
 **Interval:** Own schedule, `PRICE_SYNC_CRON` (default `*/15 * * * *`, every 15 min) — decoupled from the news ingestion cron since `96ff0e7` (2026-10-09); previously bundled into the 30-min ingestion cycle.  
 **Storage:** `commodity_prices` table (a generic symbol/price time-series despite the name) + Redis `prices:{SYMBOL}` (900s TTL)
 

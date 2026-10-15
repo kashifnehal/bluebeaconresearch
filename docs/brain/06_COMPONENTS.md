@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` and `FirstTouchLogger` (`9da1540`) keep campaign tags and an external referrer host in the browser for the visit and save them on email signup. No cookie.
+
 > ⚠️ UPDATED 2026-10-15 — The three Clock values (source, fetch, flag) render in UTC as "14 Oct 2026, 12:30 UTC". A missing or invalid time is "n/a". Delay is unchanged.
 
 > ⚠️ UPDATED 2026-10-15 — `FreshTag` takes optional `eventDate`. A valid `eventDate` renders "Reported {compact age}"; otherwise "Flagged {compact age}" from `createdAt`. The word "Fresh" is not in the label. Passed at every feed, dashboard, and map usage. Event detail replaces the single Published cell with a 2×2 Clock group: source time (label "Published", "First seen by GDELT", or "Reported"), "Fetched by BBR", "Flagged by BBR", and "Delay". Verification uses `describeReports` (distinct headlines and domains) instead of `sources_count`. `MarketImpactAssessment` labels the quote block "Price timeline:" via `formatPriceTimelineLines`.
@@ -9,8 +11,6 @@
 This document presents a complete inventory of all UI components in `apps/web/components` and `apps/mobile/components`, detailing component props, parent/child relationships, hooks, internal state, dependencies, and styling rules.
 
 ---
-
-> ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` mounts once in `app/providers.tsx` and writes `bbr.firstTouch` in sessionStorage. `FirstTouchLogger` mounts once in the signed-in dashboard layout and sends `first_touch_recorded` when account metadata or that stored value has a campaign tag or an external referrer host.
 
 ## 1. Top-Level Gate & Brand Components
 
