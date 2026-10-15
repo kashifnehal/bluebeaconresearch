@@ -3,6 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, getRouteSupabaseClients } from "./../lib/supabase-server";
 import { Logo } from "./../components/Logo";
+import {
+  CHECK_IT_ROWS,
+  CHECK_IT_TITLE,
+  HOMEPAGE_COLLECTION_BADGE,
+  HOMEPAGE_LATEST_SIGNAL_SCHEDULE,
+} from "./../lib/ingestion-interval";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +35,7 @@ type LandingSignalPreview = {
   sources_count: number | null;
   is_breaking: boolean | null;
   created_at: string;
+  event_date: string | null;
   commodity_impacts: Array<{ asset: string; direction: string; confidence: number }> | null;
 };
 
@@ -47,7 +54,7 @@ async function getLatestSignal(): Promise<LandingSignalPreview | null> {
     const { data, error } = await supabase
       .from("signals")
       .select(
-        "id,title,summary,severity,confidence,country,region,sources_count,is_breaking,created_at,commodity_impacts",
+        "id,title,summary,severity,confidence,country,region,sources_count,is_breaking,created_at,event_date,commodity_impacts",
       )
       .eq("is_active", true)
       .order("created_at", { ascending: false })
@@ -82,6 +89,13 @@ async function getHomepageStats(): Promise<{ totalSignals: number | null }> {
 
 function formatSignalsTracked(count: number): string {
   return `${count.toLocaleString("en-US")} signals tracked`;
+}
+
+function utcStamp(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toUTCString();
 }
 
 export default async function Home(props: {
@@ -144,9 +158,9 @@ export default async function Home(props: {
           </div>
 
           <div className="relative z-10 text-center max-w-5xl mx-auto">
-            <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-surface-container-high/60 rounded-full border border-primary/20 mb-6 md:mb-10 backdrop-blur-sm">
-              <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-              <span className="font-label text-[12px] md:text-[9px] font-black uppercase tracking-[0.2em] text-primary">Monitoring active global conflicts — updates roughly every 30 minutes</span>
+            <div className="inline-flex max-w-full items-center gap-3 px-4 py-1.5 bg-surface-container-high/60 rounded-full border border-primary/20 mb-6 md:mb-10 backdrop-blur-sm">
+              <span className="w-2 h-2 shrink-0 bg-primary rounded-full animate-pulse"></span>
+              <span className="min-w-0 font-label text-[12px] md:text-[9px] font-black uppercase tracking-[0.2em] text-primary">{HOMEPAGE_COLLECTION_BADGE}</span>
             </div>
             <h1 className="text-4xl leading-[1.05] mb-6 md:text-8xl md:leading-[0.85] md:mb-10 lg:text-[120px] font-extrabold tracking-tighter text-white animate-in fade-in slide-in-from-bottom-4 duration-700">
               Geopolitical intelligence for markets that matter.
@@ -177,7 +191,7 @@ export default async function Home(props: {
               <div>
                 <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Latest signal</p>
                 <h3 className="text-2xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-2">Recent research feed</h3>
-                <p className="text-on-surface-variant max-w-lg font-medium text-sm md:text-base">The most recent signal from the collector pipeline. New events are ingested on a regular schedule, typically every 30 minutes — not in real time.</p>
+                <p className="text-on-surface-variant max-w-lg font-medium text-sm md:text-base">{HOMEPAGE_LATEST_SIGNAL_SCHEDULE}</p>
                 <p className="text-on-surface-variant/70 max-w-lg font-medium text-sm md:text-base mt-2">Unlike a headline-only feed, each signal here comes with a written summary and lists the named sources it came from.</p>
               </div>
               {homepageStats.totalSignals != null ? (
@@ -198,7 +212,20 @@ export default async function Home(props: {
                         <span className={`px-4 py-1.5 font-label text-[12px] md:text-[9px] font-extrabold uppercase tracking-widest rounded-md ${latestSignal.severity >= 8 ? 'bg-error-container text-on-error-container' : 'bg-primary-container text-on-primary-container'}`}>
                           {latestSignal.severity >= 8 ? 'Critical Alert' : 'Active Signal'}
                         </span>
-                        <span className="font-mono text-[12px] md:text-[10px] text-on-surface-variant/40 font-medium uppercase tracking-widest">{new Date(latestSignal.created_at).toUTCString()}</span>
+                        {(() => {
+                          const reported = utcStamp(latestSignal.event_date);
+                          const flagged = utcStamp(latestSignal.created_at);
+                          return (
+                            <>
+                              {reported ? (
+                                <span className="font-mono text-[12px] md:text-[10px] text-on-surface-variant/40 font-medium uppercase tracking-widest">Reported {reported}</span>
+                              ) : null}
+                              {flagged ? (
+                                <span className="font-mono text-[12px] md:text-[10px] text-on-surface-variant/40 font-medium uppercase tracking-widest">Flagged {flagged}</span>
+                              ) : null}
+                            </>
+                          );
+                        })()}
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-16 items-center">
@@ -281,6 +308,28 @@ export default async function Home(props: {
                   <p className="text-on-surface/40 leading-relaxed font-bold text-xs uppercase tracking-widest">{f.desc}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-12 md:mt-20">
+              <h4 className="text-lg mb-6 md:text-xl font-headline font-extrabold text-white md:mb-8 tracking-tight uppercase">{CHECK_IT_TITLE}</h4>
+              <div className="overflow-hidden rounded-xl border border-outline-variant/10">
+                <div className="hidden md:grid md:grid-cols-2 bg-surface-container-high">
+                  <div className="px-6 py-4 font-label text-[10px] font-black uppercase tracking-widest text-on-surface/40">We say</div>
+                  <div className="px-6 py-4 font-label text-[10px] font-black uppercase tracking-widest text-on-surface/40">Check it</div>
+                </div>
+                {CHECK_IT_ROWS.map(([say, check]) => (
+                  <div key={say} className="grid grid-cols-1 border-t border-outline-variant/10 first:border-t-0 md:grid-cols-2 md:border-t md:first:border-t">
+                    <div className="px-6 py-4">
+                      <p className="mb-1 font-label text-[12px] font-black uppercase tracking-widest text-on-surface/40 md:hidden">We say</p>
+                      <p className="text-sm font-bold text-on-surface/80">{say}</p>
+                    </div>
+                    <div className="px-6 py-4 md:border-l md:border-outline-variant/10">
+                      <p className="mb-1 font-label text-[12px] font-black uppercase tracking-widest text-on-surface/40 md:hidden">Check it</p>
+                      <p className="text-sm font-medium text-on-surface/60">{check}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>

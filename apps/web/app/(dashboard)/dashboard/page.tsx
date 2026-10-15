@@ -31,6 +31,7 @@ import {
   type FilterBarValue,
 } from "@/lib/signal-filters";
 import type { Signal } from "@blue-beacon-research/shared";
+import { DASHBOARD_FEED_SUBHEAD } from "@/lib/ingestion-interval";
 
 // Same shape/lookup already used by PriceTicker and the watchlist pages — reusing
 // the existing /api/prices 24h-change calculation here rather than adding a new one.
@@ -345,7 +346,7 @@ export default function DashboardPage() {
             className="text-[14px] mt-1"
             style={{ color: "#acabaa", fontFamily: "'Inter', sans-serif" }}
           >
-            Global signal monitoring, updates roughly every 30 minutes
+            {DASHBOARD_FEED_SUBHEAD}
           </p>
           {formatDataAsOf(dataUpdatedAt) ? (
             <p

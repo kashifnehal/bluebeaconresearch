@@ -1,6 +1,6 @@
 # 14_CHANGELOG.md — System Evolution & Major Milestones
 
-> **📍 Doc status — live changelog as of 2026-10-15 (v0.186.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+> **📍 Doc status — live changelog as of 2026-10-15 (v0.187.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
@@ -8,7 +8,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.186.0 — Signal pages show source time, fetch time, flag time, and delay (2026-10-15, this commit)
+### v0.187.0 — Homepage and dashboard say where the clock and sources can be checked (2026-10-15, this commit)
+
+`apps/web` only. The homepage badge, the latest-signal paragraph, and the dashboard header read `INGESTION_INTERVAL_MINUTES` (30). The latest-signal card shows when the story was reported and when it was flagged. A check-it block under the process steps points at the signal clock, the Sources tab, and the price timeline. Full detail: `LIVE_TODO.md`.
+
+### v0.186.0 — Signal pages show source time, fetch time, flag time, and delay (2026-10-15, `379b782`)
 
 `apps/web` only. `GET /api/signals/:id` adds `firstReportAt`, `firstReportKind`, `firstFetchedAt`, `priceAtFlagged`, and `priceAtFlaggedDate`. The event page Clock group shows those times and the delay. Verification counts distinct headlines and outlets. The price line is a timeline from the first linked report, to the flag, to now. Feed tags say "Reported" or "Flagged" instead of "Fresh". Full detail: `LIVE_TODO.md`.
 
