@@ -3,7 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ P16 pulse tiles on the watchlist symbol page, `apps/web` only, 2026-10-15, this commit
+## ✅ U2 map locations: "Global" is not a place, `apps/web` only, 2026-10-15, this commit
+
+- The Locations list treated the country value "Global" as a place. On 30 days of data as of 2026-10-15, "Global" was on 73 signals and "European Union" on 2. Production showed a Global row, and "Unique locations" included it.
+- `NON_PLACE_COUNTRIES` is `["global"]`. Comparison is lower-cased. A signal with that country is counted in `noLocation` and creates no group. "European Union" stays a place. Map pins, chokepoint code, and `LocationList.tsx` wording are unchanged, so the stats line's "Signals with a location" count drops by the Global rows.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0, `pnpm --filter web test` exit 0, and `pnpm --filter web run build` exit 0, on the tree that includes this change. No browser run.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.191.0, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 168, `06_COMPONENTS.md`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or standing rule.
+
+## ✅ P16 pulse tiles on the watchlist symbol page, `apps/web` only, 2026-10-15, `f2bf0f1`
 
 - The symbol page had no count of how many signals BBR published for that asset in the last 24 hours, or how that compared with the 24 hours before. Priced and news-only assets need the same count, and no documented threshold exists for a badge.
 - `GET /api/signals/pulse?symbol=` returns `{ last24h, prior24h, changePct, peakHourUtc, peakHourCount, up, down, other }`. `changePct` is null when the prior window is 0. `peakHourUtc` is null when the last window is 0. Direction uses the impact for that symbol. Forex reads both impact columns and counts a signal once. Commodity and news-only symbols read `commodity_impacts` only. Unknown symbols are `400`.
@@ -11,7 +19,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Hand SQL `select count(*) from signals where created_at > now() - interval '24 hours' and commodity_impacts @> '[{"asset":"USOIL"}]'` returned 57. The route window (`created_at >= now() - 24 hours` and `<= now()`) also returned 57. Prior window returned 56. The tiles were not opened in a browser.
 - No open priority-queue line for this. Nothing struck.
 - Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0. `pnpm --filter web run build` exit 0. No browser run.
-- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.185.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 162, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.190.0, `05_API.md`, `06_COMPONENTS.md`; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 167, `05_API.md`, `06_COMPONENTS.md`. Skipped both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no table, prompt, or standing rule.
 
 ## ✅ Show clock times in UTC and say when collection pauses, `apps/web` only, 2026-10-15, 3071abb
 

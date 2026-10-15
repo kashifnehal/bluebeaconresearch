@@ -187,5 +187,32 @@ runTest("tableCountLine treats a row with no impacts as noImpact", () => {
     neutral: 0,
     noImpact: 1,
   });
-  assert.equal(formatTableCountLine(counts), "1 signals loaded · 1 days · Up 0 · Down 0 · Other 1");
+  assert.equal(formatTableCountLine(counts), "1 signal loaded · 1 day · Up 0 · Down 0 · Other 1");
+});
+
+runTest("formatTableCountLine uses the singular only when the number is 1", () => {
+  assert.equal(
+    formatTableCountLine({
+      loaded: 1,
+      days: 2,
+      up: 1,
+      down: 0,
+      volatile: 0,
+      neutral: 0,
+      noImpact: 0,
+    }),
+    "1 signal loaded · 2 days · Up 1 · Down 0 · Other 0",
+  );
+  assert.equal(
+    formatTableCountLine({
+      loaded: 2,
+      days: 1,
+      up: 0,
+      down: 1,
+      volatile: 0,
+      neutral: 0,
+      noImpact: 1,
+    }),
+    "2 signals loaded · 1 day · Up 0 · Down 1 · Other 1",
+  );
 });

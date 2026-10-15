@@ -1,8 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (watchlist pulse tiles — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (Global is not a map location — see the banner immediately below).**
 
-> ⚠️ NEW 2026-10-15 (watchlist pulse tiles, `apps/web` only, this commit) — the symbol page shows five publish-count tiles under the header. News-only assets get the same tiles. The tiles do not request a price. See `docs/brain/LIVE_TODO.md`, PHASE 162.
+> ⚠️ NEW 2026-10-15 (map locations, `apps/web` only, this commit) — country "Global" is counted with signals that have no country. It is not a Locations row. "European Union" stays a place. See `docs/brain/LIVE_TODO.md`, PHASE 168.
+
+> ⚠️ NEW 2026-10-15 (watchlist pulse tiles, `apps/web` only, `f2bf0f1`) — the symbol page shows five publish-count tiles under the header. News-only assets get the same tiles. The tiles do not request a price. See `docs/brain/LIVE_TODO.md`, PHASE 162.
 
 > **📍 Doc status — live status banners as of 2026-10-15 (speed and timing claims — see the banner immediately below).**
 

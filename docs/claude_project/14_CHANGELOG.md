@@ -8,7 +8,11 @@
 
 ---
 
-## PHASE 167 — Watchlist pulse tiles (2026-10-15, this commit)
+## PHASE 168 — "Global" is not a map location (2026-10-15, this commit)
+
+`apps/web` only. The country value "Global" is not a Locations row. "European Union" stays a place. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.191.0.
+
+## PHASE 167 — Watchlist pulse tiles (2026-10-15, `f2bf0f1`)
 
 `apps/web` only. The watchlist symbol page shows how many signals BBR published for that asset in the last 24 hours, against the 24 hours before. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.190.0.
 

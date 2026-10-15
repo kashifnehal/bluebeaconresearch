@@ -106,10 +106,14 @@ export function tableCountLine(signals: readonly TableCountSignal[]): TableCount
   return counts;
 }
 
+function countWord(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
 /** "Other" is volatile + neutral + no impact. "loaded" stays in the sentence. */
 export function formatTableCountLine(counts: TableCountLine): string {
   const other = counts.volatile + counts.neutral + counts.noImpact;
-  return `${counts.loaded} signals loaded · ${counts.days} days · Up ${counts.up} · Down ${counts.down} · Other ${other}`;
+  return `${countWord(counts.loaded, "signal", "signals")} loaded · ${countWord(counts.days, "day", "days")} · Up ${counts.up} · Down ${counts.down} · Other ${other}`;
 }
 
 export const SIGNAL_TABLE_SUMMARY_MAX_LENGTH = 120;

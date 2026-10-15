@@ -10,7 +10,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.190.0 — Watchlist pulse tiles (2026-10-15, this commit)
+### v0.191.0 — "Global" is not a map location (2026-10-15, this commit)
+
+`apps/web` only. Country "Global" (any case) adds to the no-location count and does not create a Locations row. "European Union" stays a place. Pins, chokepoints, and the Locations wording are unchanged. Full detail: `LIVE_TODO.md`.
+
+### v0.190.0 — Watchlist pulse tiles (2026-10-15, `f2bf0f1`)
 
 `apps/web` only. `GET /api/signals/pulse` counts signals BBR published for one known symbol over the last 24 hours and the 24 hours before that. Five tiles render under the watchlist symbol header for priced and news-only assets. No alert badge. Full detail: `LIVE_TODO.md`.
 

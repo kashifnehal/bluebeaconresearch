@@ -502,7 +502,7 @@ A toggleable "Chokepoints" button (top-right of the map, default off) shows/hide
 
 ### Locations list (`components/map/LocationList.tsx`) — added 2026-10-14
 
-Groups the signals already on the map by country. Blank countries are counted and not listed. Desktop shows a Locations panel on the map; mobile opens a bottom sheet the same way as the tension sheet. A country row limits markers to that country and opens the existing signal popup. The Chokepoints section lists every chokepoint with the count inside 500 km and the direction tally. Marker drawing is unchanged. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
+Groups the signals already on the map by country. Blank countries are counted and not listed. Country "Global" (any case) is counted the same way and is not a row (2026-10-15). "European Union" stays a row. Desktop shows a Locations panel on the map; mobile opens a bottom sheet the same way as the tension sheet. A country row limits markers to that country and opens the existing signal popup. The Chokepoints section lists every chokepoint with the count inside 500 km and the direction tally. Marker drawing is unchanged. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 ---
 
