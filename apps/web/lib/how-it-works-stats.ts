@@ -22,3 +22,61 @@ export const TOTAL_COLLECTOR_COUNT = CONFIGURED_RSS_FEED_COUNT + OTHER_COLLECTOR
 export function formatStatNumber(n: number): string {
   return n.toLocaleString("en-US");
 }
+
+type CountResult = { count: number | null; error: unknown };
+
+export type HowItWorksCountQuery = PromiseLike<CountResult> & {
+  gte: (column: string, value: string) => PromiseLike<CountResult>;
+};
+
+export type HowItWorksCountClient = {
+  from: (table: string) => {
+    select: (columns: string, options: { count: "exact"; head: true }) => HowItWorksCountQuery;
+  };
+};
+
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * Live signal counts for the public how-it-works page.
+ * `head: true` asks Postgres for the count only, so the response does not
+ * include one row per signal. A total of 0 is treated as the anon client
+ * hiding every row and is returned as null so the page can omit that stat.
+ */
+export async function loadHowItWorksSignalCounts(
+  getClient: () => Promise<HowItWorksCountClient>,
+  now: number = Date.now(),
+): Promise<{ total: number | null; last7Days: number | null }> {
+  let total: number | null = null;
+  let last7Days: number | null = null;
+
+  try {
+    const supabase = await getClient();
+    const { count, error } = await supabase.from("signals").select("id", { count: "exact", head: true });
+    if (!error && count != null && count > 0) {
+      total = count;
+    } else if (error) {
+      console.error("[how-it-works] total signals query failed:", error);
+    }
+  } catch (err) {
+    console.error("[how-it-works] total signals query threw:", err);
+  }
+
+  try {
+    const supabase = await getClient();
+    const sevenDaysAgo = new Date(now - SEVEN_DAYS_MS).toISOString();
+    const { count, error } = await supabase
+      .from("signals")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", sevenDaysAgo);
+    if (!error && count != null) {
+      last7Days = count;
+    } else if (error) {
+      console.error("[how-it-works] 7-day signals query failed:", error);
+    }
+  } catch (err) {
+    console.error("[how-it-works] 7-day signals query threw:", err);
+  }
+
+  return { total, last7Days };
+}

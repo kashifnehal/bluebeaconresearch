@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { createClient, getRouteSupabaseClients } from "@/lib/supabase-server";
-import { formatStatNumber, TOTAL_COLLECTOR_COUNT } from "@/lib/how-it-works-stats";
+import { formatStatNumber, loadHowItWorksSignalCounts, TOTAL_COLLECTOR_COUNT } from "@/lib/how-it-works-stats";
 
 // Research integrity is the point of this page: every number below is either
 // computed live from the database at request time, or a direct pointer into
@@ -30,43 +30,23 @@ type Stat = { value: string; label: string; caption: string };
 
 async function getStats(): Promise<Stat[]> {
   const stats: Stat[] = [];
+  // 0 from the anon fallback is RLS hiding every row, not an empty table —
+  // loadHowItWorksSignalCounts returns null for that total so we omit it.
+  const { total, last7Days } = await loadHowItWorksSignalCounts(getStatsClient);
 
-  try {
-    const supabase = await getStatsClient();
-    const { count, error } = await supabase.from("signals").select("id", { count: "exact" });
-    // 0 from the anon fallback is RLS hiding every row, not an empty table —
-    // hide the number rather than claim zero signals exist.
-    if (!error && count != null && count > 0) {
-      stats.push({
-        value: formatStatNumber(count),
-        label: "Signals tracked",
-        caption: "Every signal in the system, counted live from the database.",
-      });
-    } else if (error) {
-      console.error("[how-it-works] total signals query failed:", error);
-    }
-  } catch (err) {
-    console.error("[how-it-works] total signals query threw:", err);
+  if (total != null) {
+    stats.push({
+      value: formatStatNumber(total),
+      label: "Signals tracked",
+      caption: "Every signal in the system, counted live from the database.",
+    });
   }
-
-  try {
-    const supabase = await getStatsClient();
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count, error } = await supabase
-      .from("signals")
-      .select("id", { count: "exact" })
-      .gte("created_at", sevenDaysAgo);
-    if (!error && count != null) {
-      stats.push({
-        value: formatStatNumber(count),
-        label: "Signals, last 7 days",
-        caption: "Rolling count of signals created in the past week.",
-      });
-    } else if (error) {
-      console.error("[how-it-works] 7-day signals query failed:", error);
-    }
-  } catch (err) {
-    console.error("[how-it-works] 7-day signals query threw:", err);
+  if (last7Days != null) {
+    stats.push({
+      value: formatStatNumber(last7Days),
+      label: "Signals, last 7 days",
+      caption: "Rolling count of signals created in the past week.",
+    });
   }
 
   // Not a DB query — counted from ingestion code constants. See
