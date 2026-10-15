@@ -8,7 +8,11 @@
 
 ---
 
-## PHASE 172 — First-touch attribution (2026-10-15, this commit)
+## PHASE 173 — Share image (2026-10-15, this commit)
+
+`apps/web` only. Root metadata adds `metadataBase` (`https://www.bluebeaconresearch.com`), Open Graph, and a large Twitter card. The preview is generated at `/opengraph-image`. Existing title and description are unchanged. Full detail: `docs/brain/LIVE_TODO.md`.
+
+## PHASE 172 — First-touch attribution (2026-10-15, `9da1540`)
 
 `apps/web` only. Campaign tags and an external referrer host are stored for the visit. Email signup saves them on the account. A signed-in session records one `first_touch_recorded` event. The privacy page states that no cookie is set for this. Full detail: `docs/brain/LIVE_TODO.md`.
 

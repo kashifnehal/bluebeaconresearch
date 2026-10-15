@@ -3,7 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ M1 first-touch attribution, `apps/web` only, 2026-10-15, this commit
+## ✅ M2 share image, `apps/web` only, 2026-10-15, this commit
+
+- Shared links get a 1200×630 preview. Root metadata now has `metadataBase` `https://www.bluebeaconresearch.com` (the apex host redirects there), `openGraph`, and a large Twitter card. Existing title and description are unchanged.
+- The image is navy `#0A2643` with the product name, "AI-powered research platform", the open-graph description, and "Research, not investment advice." The white mark is drawn when `public/brand/mark-white.png` loads; otherwise the card is text only.
+- No open priority-queue line for this. Nothing struck.
+- Verification: `site-metadata` unit test in this commit. Whether the build lists `/opengraph-image` is reported after `next build`.
+- Docs: this entry; `docs/brain/08_CURRENT_STATUS.md`, `14_CHANGELOG.md` v0.196.0; `docs/claude_project/09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` PHASE 173. Skipped both `06_COMPONENTS.md` (no product-surface component), both `05_API.md` (generated metadata image, not an API route the app calls), both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md`.
+
+## ✅ M1 first-touch attribution, `apps/web` only, 2026-10-15, `9da1540`
 
 - A visit with a utm tag or an external referrer host is stored in sessionStorage under `bbr.firstTouch` for that tab. Values are trimmed, lowercased, and cut at 100 characters. The site's own host is not stored. Nothing is written when storage throws, and a stored value is not overwritten.
 - Email signup copies that object onto the auth user's `first_touch` metadata, next to `full_name` and `plan_tier`. The Google path is unchanged.

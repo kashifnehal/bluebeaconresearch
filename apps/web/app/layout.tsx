@@ -1,13 +1,10 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { isProjectReady } from "@/lib/flags";
 import AccessLimitedModalWrapper from "@/components/AccessLimitedModalWrapper";
+import { rootMetadata } from "@/lib/site-metadata";
 
-export const metadata: Metadata = {
-  title: "Blue Beacon Research",
-  description: "Geopolitical intelligence for markets that matter.",
-};
+export const metadata = rootMetadata;
 
 export default function RootLayout({
   children,

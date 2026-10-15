@@ -10,7 +10,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### v0.195.0 — First-touch attribution (2026-10-15, this commit)
+### v0.196.0 — Share image (2026-10-15, this commit)
+
+`apps/web` only. Root metadata adds `metadataBase` (`https://www.bluebeaconresearch.com`), Open Graph, and a large Twitter card. `/opengraph-image` is a 1200×630 navy card. Existing title and description are unchanged. Full detail: `LIVE_TODO.md`.
+
+### v0.195.0 — First-touch attribution (2026-10-15, `9da1540`)
 
 `apps/web` only. Campaign tags (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`) and an external referrer host are stored for the browser tab and, on email signup, on the account. A signed-in session records `first_touch_recorded` once. The privacy page says no cookie is set for this. Full detail: `LIVE_TODO.md`.
 
