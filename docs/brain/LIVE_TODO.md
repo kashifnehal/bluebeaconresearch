@@ -3,6 +3,11 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ What we build and how it helps users, docs only, 2026-10-16
+
+- Section added to both product files. Eight rows, labels kept as supplied (PROVEN, PROBABLE, INFERENCE, GAP). No row is labeled INFERENCE. No count was added beyond the supplied rows and the SEBI equity-derivatives range in the Users paragraph.
+- No open priority-queue line. Nothing struck.
+
 ## ✅ Stale pitch lines removed from the project docs, docs only, 2026-10-16, 254738c
 
 - Lines that claimed Bloomberg-level quality, an analyst team, the same caliber of intelligence, or a fixed ratio to Bloomberg's price now say what the platform does: it turns published news into structured, source-linked commodity signals, with the time reported and the time flagged. Wording kept: AI-powered research platform.

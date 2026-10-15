@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — What we build and how it helps users
+
+Docs only. The section is in both product files. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Stale pitch lines (254738c)
 
 Docs only. Replaced lines that claimed Bloomberg-level quality, an analyst team, the same caliber of intelligence, or a fixed ratio to Bloomberg's price. Full detail: `docs/brain/14_CHANGELOG.md`.

@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — What we build and how it helps users
+
+Docs only. Added that section to both product files. The eight rows keep the supplied evidence labels. No new count was added beyond those rows and the SEBI equity-derivatives range in the Users paragraph.
+
 ### 2026-10-16 — Stale pitch lines (254738c)
 
 Docs only. Replaced lines that claimed Bloomberg-level quality, an analyst team, the same caliber of intelligence, or a fixed ratio to Bloomberg's price. The replacement says the platform turns published news into structured, source-linked commodity signals, with the time reported and the time flagged. Bloomberg dollar figures were left as written, with a note that the two doc figures disagree and that neither figure is used on a public page as of 2026-10-16.

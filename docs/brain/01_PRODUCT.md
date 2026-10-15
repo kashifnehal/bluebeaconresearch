@@ -4,6 +4,23 @@
 
 This document defines every user-facing page and view across the Web Terminal (`apps/web`) and Mobile Application (`apps/mobile`), including routes, component hierarchies, state management, API endpoints, user journeys, and implementation status.
 
+## What we build and how it helps users
+
+Recorded 2026-10-16. Labels below are the ones supplied with each row: PROVEN, PROBABLE, INFERENCE, GAP. No row in this table is labeled INFERENCE.
+
+| What | Who and how | Evidence | Label |
+| --- | --- | --- | --- |
+| Event-to-commodity signals with source links and "Reported {time}" and "Flagged {time}" | Traders who learn of overnight events late | Telegram alert delay after signal creation: median 0.1 minutes, max 0.4, n=34, 30 days to 2026-10-15; user pain from forum research, qualitative | PROVEN (alert lag), PROBABLE (pain) |
+| Speed honesty | | Median minutes from first report to signal since 2026-10-06 (open hours): RSS-first 43 (247 signals), GNews-first 736 (180), GDELT-first 53 (17); free GNews plan has a 12 hour delay (vendor page) | PROVEN. No "fastest" or "we lead the move" claim is supported. |
+| Price context next to events | "already priced?" question | Competitive gap noted, user demand not measured | GAP (demand) |
+| Watchlist and Telegram alerts | Delivery where traders already are | Delivery confirmed live | PROVEN (delivery) |
+| AI-powered relevance gate | Fewer false alerts; 93 to 95% of collected items never become signals | Replay flipped 1 of 150 rejects; one AI labeler recall 0.67 to 0.91, no human labeler | PROBABLE; human check GAP |
+| Region and location grouping | Filter by where an event happened | Backfill dry run: 3,557 signals, 1,925 would change region, 172 stay on the legacy "americas" id | PROVEN (dry run, 2026-10-15) |
+| News-only pages for assets with no price feed | Events without prices the platform has no right to show | Price data used under a development and test policy until the first paying customer | PROVEN (policy); demand GAP |
+| Reliability guards (feed volume, category coverage, monthly spend, weekly gate report) | Silent failures caught early | Code and tests | PROVEN (built) |
+
+**Users.** Buyers are commodity and futures traders, import/export businesses and quant builders. Population counts are not sourced. The only regulator number is India's SEBI count of 8.8 to 10 million active retail equity-derivatives traders (equity derivatives, India only, not a commodities market size).
+
 ---
 
 ## 1. Landing Page (`/`)
