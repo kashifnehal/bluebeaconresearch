@@ -4,7 +4,7 @@ This file is auto-loaded at the start of every Cursor Pro Agent session in this 
 
 ## What this project is
 
-Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts global events (conflicts, sanctions, policy shifts) into structured market signals for commodity traders, import/export SMBs, and boutique fund analysts. Pitch: Bloomberg-grade geopolitical intelligence at 1/40th the price, delivered as alerts before markets open.
+Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts global events (conflicts, sanctions, policy shifts) into structured market signals for commodity traders, import/export SMBs, and boutique fund analysts. Pitch: an AI-powered research platform that turns geopolitical events into dated, sourced assessments of which commodity markets they may touch and why.
 
 **Read first, in order:**
 1. [`docs/claude_project/21_PROJECT_BRIEFING.md`](docs/claude_project/21_PROJECT_BRIEFING.md) — the *why*: vision, target users, positioning, competitors, pricing, standing product decisions. This is the canonical onboarding doc; it says so explicitly ("paste this file FIRST").
@@ -47,7 +47,7 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 
 ## Standing rules (do not re-litigate)
 
-- **Never call it "an AI tool."** Always "a research platform" / "analyst team." This is a deliberate positioning choice.
+- **Never call it "an AI tool."** Always "AI-powered research platform". Never write "analyst team", "our analysts", "our research team", "institutional-grade", "Bloomberg-grade", "real-time", "before markets open", "predicts", "accuracy" claims, "signals to trade", "edge" or "profit" in product copy, ads or posts. Each one conflicts with the public-claims rule or with a legal line (substantiation, no claim of human review, no trade timing). Say "research assessment", "brief" or "note" instead. Add a short footer where needed: "Research, not investment advice. Sources and timestamps on each item."
 - **Global positioning, not India-specific.**
 - **No buy/sell recommendations** in signal copy or UI — informational only, not financial advice.
 - **Never suggest rewriting the stack.** Tech stack (Turborepo/pnpm, Next.js 16, Fastify, Supabase, BullMQ+Upstash Redis, Yahoo Finance for prices) is settled; extend it, don't replace it.
