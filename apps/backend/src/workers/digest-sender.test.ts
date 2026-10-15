@@ -10,12 +10,29 @@ process.env.SUPABASE_SERVICE_ROLE_KEY =
 // getSupabaseAdmin() (unlike spend-limit-alert.ts), and ESM hoists static
 // imports ahead of this file's own statements — so the env vars above must be
 // set via a dynamic import, not a static one, or they'd be set too late.
-const { pickDiverse } = await import("./digest-sender.js");
+const {
+  pickDiverse,
+  selectDigestSignalsForUser,
+  renderDigestEmail,
+  runDigestOnce,
+  __setDigestSupabaseForTests,
+  __setDigestEmailForTests,
+} = await import("./digest-sender.js");
 type SignalRow = Parameters<typeof pickDiverse>[0][number];
 
-function runTest(name: string, fn: () => void) {
+function runTest(name: string, fn: () => void | Promise<void>) {
   try {
-    fn();
+    const result = fn();
+    if (result instanceof Promise) {
+      return result.then(
+        () => console.log(`✔ ${name}`),
+        (err) => {
+          console.error(`✖ ${name}`);
+          console.error(err);
+          process.exitCode = 1;
+        },
+      );
+    }
     console.log(`✔ ${name}`);
   } catch (err) {
     console.error(`✖ ${name}`);
@@ -38,6 +55,148 @@ function row(id: string, title: string, severity: number, createdAt: string): Si
     event_date: createdAt,
     created_at: createdAt,
   };
+}
+
+function digestClient(signals: SignalRow[], deferredIds: string[]) {
+  return {
+    from(table: string) {
+      if (table === "alerts_sent") {
+        const builder: Record<string, unknown> = {
+          select: () => builder,
+          eq: () => builder,
+          update: () => builder,
+          in: () => builder,
+          then: (resolve: (value: { data: Array<{ signal_id: string }>; error: null }) => unknown) =>
+            Promise.resolve({
+              data: deferredIds.map((id) => ({ signal_id: id })),
+              error: null,
+            }).then(resolve),
+        };
+        return builder;
+      }
+      if (table === "signals") {
+        let ids: string[] | null = null;
+        let since: string | null = null;
+        const builder: Record<string, unknown> = {
+          select: () => builder,
+          in: (_col: string, values: string[]) => {
+            ids = values;
+            return builder;
+          },
+          gte: (_col: string, value: string) => {
+            since = value;
+            return builder;
+          },
+          eq: () => builder,
+          or: () => builder,
+          order: () => builder,
+          limit: () => builder,
+          then: (resolve: (value: { data: SignalRow[]; error: null }) => unknown) => {
+            const data = signals.filter((s) => {
+              if (ids && !ids.includes(s.id)) return false;
+              if (since && s.created_at < since) return false;
+              return true;
+            });
+            return Promise.resolve({ data, error: null }).then(resolve);
+          },
+        };
+        return builder;
+      }
+      if (table === "user_preferences") {
+        const builder: Record<string, unknown> = {
+          select: () => builder,
+          not: () => builder,
+          eq: () => builder,
+          in: () => builder,
+          then: (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
+            Promise.resolve({
+              data: [
+                {
+                  user_id: "user-1",
+                  commodities: [],
+                  regions: [],
+                  forex_pairs: [],
+                  min_severity: null,
+                },
+              ],
+              error: null,
+            }).then(resolve),
+        };
+        return builder;
+      }
+      if (table === "profiles") {
+        const builder: Record<string, unknown> = {
+          select: () => builder,
+          eq: () => builder,
+          then: (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
+            Promise.resolve({ data: [], error: null }).then(resolve),
+        };
+        return builder;
+      }
+      throw new Error(`unexpected table ${table}`);
+    },
+    auth: {
+      admin: {
+        async listUsers() {
+          return { data: { users: [{ id: "user-1", email: "reader@example.com" }] } };
+        },
+      },
+    },
+  };
+}
+
+const emptyPref = {
+  user_id: "user-1",
+  commodities: [] as string[],
+  regions: [] as string[],
+  forex_pairs: [] as string[],
+  min_severity: null,
+};
+
+async function ageTests() {
+  const now = new Date("2026-10-14T06:00:00.000Z");
+  const old = row("old", "Deferred signal from before the window", 9, "2026-10-13T00:00:00.000Z");
+  const fresh = row("fresh", "Deferred signal inside the window", 7, "2026-10-14T01:00:00.000Z");
+
+  await runTest("a deferred signal 30h old is excluded and one 5h old is included", async () => {
+    __setDigestSupabaseForTests(digestClient([old, fresh], ["old", "fresh"]));
+    const picked = await selectDigestSignalsForUser(emptyPref, now);
+    assert.deepEqual(
+      picked.map((s) => s.id),
+      ["fresh"],
+    );
+  });
+
+  await runTest("the footer line shows the max created_at in html and text", async () => {
+    const earlier = row("early", "Earlier signal", 5, "2026-10-14T01:00:00.000Z");
+    const later = row("later", "Later signal", 8, "2026-10-14T05:00:00.000Z");
+    const rendered = renderDigestEmail(
+      [earlier, later],
+      emptyPref,
+      new Map(),
+      "https://bluebeaconresearch.com",
+    );
+    const line = "Newest signal in this email: 2026-10-14T05:00:00.000Z";
+    assert.ok(rendered.text.endsWith(line));
+    assert.match(rendered.html, /Newest signal in this email: 2026-10-14T05:00:00\.000Z/);
+  });
+
+  await runTest("zero signals left after filtering does not send", async () => {
+    const sends: unknown[] = [];
+    __setDigestSupabaseForTests(digestClient([old], ["old"]));
+    __setDigestEmailForTests({
+      enabled: true,
+      async send(opts: { to: string }) {
+        sends.push(opts);
+        return { sent: true as const, id: "fake" };
+      },
+    } as unknown as import("../services/email.service.js").EmailService);
+    const result = await runDigestOnce();
+    assert.equal(result.eligible, 1);
+    assert.equal(result.skippedNoSignals, 1);
+    assert.equal(result.sent, 0);
+    assert.equal(sends.length, 0);
+  });
 }
 
 function main() {
@@ -82,3 +241,4 @@ function main() {
 }
 
 main();
+void ageTests();

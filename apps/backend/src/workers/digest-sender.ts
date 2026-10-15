@@ -2,8 +2,18 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { EmailService } from "../services/email.service.js";
 import { tokenize, jaccardSimilarity } from "./signal-merge.js";
 
-const supabase = getSupabaseAdmin();
-const email = new EmailService();
+let supabase = getSupabaseAdmin();
+let email = new EmailService();
+
+/** Test-only. Production call sites keep the module clients. */
+export function __setDigestSupabaseForTests(client: unknown): void {
+  supabase = client as typeof supabase;
+}
+
+/** Test-only. Production call sites keep the Resend client. */
+export function __setDigestEmailForTests(next: EmailService): void {
+  email = next;
+}
 
 // Canonical region id → display label. signals.region is free text ("Middle East",
 // "Middle East / Global", "Eastern Europe/Russia"), never the canonical id, so digest
@@ -75,12 +85,12 @@ const SIGNAL_COLUMNS =
 /**
  * Signals the alert-dispatcher's per-user daily budget deferred (decided 2026-10-02)
  * for this user — `alerts_sent` rows with status "deferred" and
- * deferred_to_digest still true. These bypass the normal preference/time-window
- * filter below: the user already cleared an alert_rules match for them, so they
- * belong in the digest regardless of whether they also happen to fall in the last
- * 24h or match the OR-filter this function otherwise builds.
+ * deferred_to_digest still true. These still bypass the preference OR-filter
+ * and the MMR pick: the user already cleared an alert_rules match for them.
+ * They do not bypass the 24-hour window. A deferred signal whose
+ * signals.created_at is older than 24 hours is left out.
  */
-async function deferredSignalsForUser(userId: string): Promise<SignalRow[]> {
+async function deferredSignalsForUser(userId: string, now: Date): Promise<SignalRow[]> {
   const { data: deferredRows, error: deferredErr } = await supabase
     .from("alerts_sent")
     .select("signal_id")
@@ -90,7 +100,12 @@ async function deferredSignalsForUser(userId: string): Promise<SignalRow[]> {
   if (deferredErr || !deferredRows?.length) return [];
 
   const signalIds = [...new Set(deferredRows.map((r) => r.signal_id as string))];
-  const { data, error } = await supabase.from("signals").select(SIGNAL_COLUMNS).in("id", signalIds);
+  const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("signals")
+    .select(SIGNAL_COLUMNS)
+    .in("id", signalIds)
+    .gte("created_at", since);
   if (error) {
     console.error("[digest] deferred-signal select failed:", error.message);
     return [];
@@ -115,18 +130,19 @@ export async function clearDeferredDigestFlags(userId: string, signalIds: string
  * DIGEST_LIMIT of them via pickDiverse() rather than a flat top-N — a severity-only
  * cut previously let one heavily-covered story crowd out every other watchlist hit
  * (see LIVE_TODO #83 note on a CORN/WHEAT-only digest) — plus any signal the
- * alert-dispatcher budget deferred for this user (decided 2026-10-02), which
- * bypasses the diversity pick entirely since the user already cleared a real
- * alert_rules match for it. Returns [] when the user has no preferences and
- * nothing was deferred (the digest is genuinely personalized — no global top-5
- * fallback).
+ * alert-dispatcher budget deferred for this user (decided 2026-10-02) whose
+ * signals.created_at is within the last 24 hours. Deferred rows still bypass
+ * the diversity pick, since the user already cleared a real alert_rules match.
+ * Returns [] when the user has no preferences and nothing deferred remains
+ * inside the window (the digest is genuinely personalized — no global top-5
+ * fallback). An empty result is the existing skippedNoSignals path.
  */
-export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalRow[]> {
+export async function selectDigestSignalsForUser(pref: PrefRow, now = new Date()): Promise<SignalRow[]> {
   const regions = Array.isArray(pref.regions) ? pref.regions : [];
   const commodities = Array.isArray(pref.commodities) ? pref.commodities : [];
   const forexPairs = Array.isArray(pref.forex_pairs) ? pref.forex_pairs : [];
 
-  const deferred = await deferredSignalsForUser(pref.user_id);
+  const deferred = await deferredSignalsForUser(pref.user_id, now);
 
   if (regions.length === 0 && commodities.length === 0 && forexPairs.length === 0) {
     return deferred.slice(0, DIGEST_LIMIT);
@@ -152,7 +168,7 @@ export async function selectDigestSignalsForUser(pref: PrefRow): Promise<SignalR
 
   let regular: SignalRow[] = [];
   if (orParts.length > 0) {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const since = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
     let query = supabase
       .from("signals")
       .select(SIGNAL_COLUMNS)
@@ -258,6 +274,16 @@ async function sourceUrlsFor(signals: SignalRow[]): Promise<Map<string, string[]
   return out;
 }
 
+function newestIncludedLine(signals: SignalRow[]): string {
+  let maxMs = Number.NEGATIVE_INFINITY;
+  for (const s of signals) {
+    const ms = Date.parse(s.created_at);
+    if (ms > maxMs) maxMs = ms;
+  }
+  const stamp = Number.isFinite(maxMs) ? new Date(maxMs).toISOString() : "";
+  return `Newest signal in this email: ${stamp}`;
+}
+
 function renderText(signals: SignalRow[], pref: PrefRow, sources: Map<string, string[]>): string {
   const blocks = signals.map((s, i) => {
     const impacts = [
@@ -288,6 +314,7 @@ function renderText(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
     TRUST_LINE,
     ``,
     `Turn this digest off anytime in Settings → Notifications.`,
+    newestIncludedLine(signals),
   ].join("\n");
 }
 
@@ -345,6 +372,7 @@ function renderHtml(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
       You're receiving this because the daily digest is on for your account.
       <a href="${appUrl}/settings" style="color:#6b7280;">Turn it off in Settings → Notifications</a>.
     </div>
+    <div style="font:400 12px/1.5 -apple-system,sans-serif;color:#6b7280;margin-top:8px;">${esc(newestIncludedLine(signals))}</div>
   </div>`;
 }
 
