@@ -1,15 +1,30 @@
 import { recordServiceHealth, type RecordServiceHealthOptions } from "./service-health.js";
 
-// P19 — weekly counts for the materiality gate. No pass-rate target and no
-// alarm. A week with zero judged rows (a provider stop) still writes the row.
-// Judged rows are raw_events with materiality_checked_at in the window. Passed
-// rows are those whose id appears in signals.raw_event_ids. Rejections are the
-// rest. Stored reasons come from service_health_events written by
-// logMaterialityRejection (service "materiality_gate", status "rejected",
-// detail `title="..." reasoning="..."`).
+// Weekly counts for the materiality gate. No pass-rate target and no alarm.
+// A week with zero judged rows still writes the row.
+//
+// raw_events.materiality_checked_at is stamped on gate rejections and on
+// prefilter skips, not on passes. Passed is the number of signals created in
+// the window (signals.created_at) that were made from at least one raw event.
+// Rejected is raw events whose materiality_checked_at falls in the window and
+// that match a service_health_events row with service "materiality_gate" and
+// status "rejected". logMaterialityRejection writes that row and stamps the
+// column. A prefilter skip stamps the column and writes no health row, so it
+// is not a rejection. Each health row matches at most one raw event: by
+// raw_event_id when that column is present, otherwise by the title stored on
+// the row. Judged is passed plus rejected. Pass rate is passed / judged, and
+// is null when judged is 0.
+//
+// Own data, 2026-10-07 to 2026-10-10: signals divided by gate-checked rows ran
+// 13.7% to 21.6%. That span is a reference only, not a threshold. There is no
+// outside source for a pass-rate cutoff, so this report does not label any value.
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const SAMPLE_SIZE = 20;
 const TITLE_MAX = 120;
+const PAGE = 200;
+
+export const GATE_PASS_RATE_DEFINITION =
+  "Passed is the number of signals created in the window that were made from at least one raw event. Rejected is the number of raw events with materiality_checked_at in the window that match a materiality_gate rejected health row. A prefilter skip stamps that column and writes no health row, so it is not counted. Judged is passed plus rejected. Pass rate is passed divided by judged, or null when judged is 0.";
 
 export type GateDriftSupabase = {
   from: (table: string) => any;
@@ -24,6 +39,7 @@ export type GateWeekNumbers = {
 };
 
 export type GateWeeklyReport = {
+  definition: string;
   weekEnd: string;
   currentStart: string;
   previousStart: string;
@@ -40,7 +56,7 @@ export type GateWeeklyReport = {
 
 type JudgedRow = { id: string; title: string | null };
 type SignalRow = { raw_event_ids: string[] | null; event_category: string | null };
-type ReasonRow = { detail: string | null };
+type ReasonRow = { detail: string | null; raw_event_id?: string | null };
 
 function emptyWeek(): GateWeekNumbers {
   return { judged: 0, passed: 0, rejected: 0, passRate: null, passByCategory: {} };
@@ -65,7 +81,25 @@ function reasonForTitle(title: string, rows: ReasonRow[]): string {
   return match?.[1] ?? "";
 }
 
-async function judgedIn(supabase: GateDriftSupabase, start: Date, end: Date): Promise<JudgedRow[]> {
+function titleInDetail(detail: string | null | undefined): string | null {
+  if (!detail) return null;
+  const match = /title="([^"]*)"/.exec(detail);
+  return match?.[1] ?? null;
+}
+
+function missingRawEventIdColumn(error: { message?: string; code?: string }): boolean {
+  const message = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
+  return (
+    message.includes("raw_event_id") &&
+    (message.includes("column") || message.includes("schema cache") || message.includes("pgrst204"))
+  );
+}
+
+function hasRawEvents(ids: string[] | null | undefined): boolean {
+  return Array.isArray(ids) && ids.length > 0;
+}
+
+async function checkedIn(supabase: GateDriftSupabase, start: Date, end: Date): Promise<JudgedRow[]> {
   const { data, error } = await supabase
     .from("raw_events")
     .select("id, title")
@@ -75,63 +109,105 @@ async function judgedIn(supabase: GateDriftSupabase, start: Date, end: Date): Pr
   return (data ?? []) as JudgedRow[];
 }
 
-async function signalsCovering(supabase: GateDriftSupabase, ids: string[]): Promise<SignalRow[]> {
+async function signalsIn(supabase: GateDriftSupabase, start: Date, end: Date): Promise<SignalRow[]> {
   const out: SignalRow[] = [];
-  for (let i = 0; i < ids.length; i += 200) {
-    const slice = ids.slice(i, i + 200);
+  for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from("signals")
       .select("raw_event_ids, event_category")
-      .overlaps("raw_event_ids", slice);
+      .gte("created_at", start.toISOString())
+      .lt("created_at", end.toISOString())
+      .order("created_at", { ascending: true })
+      .range(from, from + PAGE - 1);
     if (error) throw new Error(error.message ?? "signals read failed");
-    out.push(...((data ?? []) as SignalRow[]));
+    const rows = (data ?? []) as SignalRow[];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
   }
   return out;
 }
 
-async function rejectionReasons(
+async function rejectionRows(
   supabase: GateDriftSupabase,
   start: Date,
   end: Date,
 ): Promise<ReasonRow[]> {
-  const { data, error } = await supabase
-    .from("service_health_events")
-    .select("detail")
-    .eq("service", "materiality_gate")
-    .eq("status", "rejected")
-    .gte("created_at", start.toISOString())
-    .lt("created_at", end.toISOString());
-  if (error) throw new Error(error.message ?? "materiality_gate health read failed");
-  return (data ?? []) as ReasonRow[];
+  const run = (columns: string) =>
+    supabase
+      .from("service_health_events")
+      .select(columns)
+      .eq("service", "materiality_gate")
+      .eq("status", "rejected")
+      .gte("created_at", start.toISOString())
+      .lt("created_at", end.toISOString());
+
+  const first = await run("detail, raw_event_id");
+  if (!first.error) return (first.data ?? []) as ReasonRow[];
+  if (!missingRawEventIdColumn(first.error)) {
+    throw new Error(first.error.message ?? "materiality_gate health read failed");
+  }
+  const second = await run("detail");
+  if (second.error) throw new Error(second.error.message ?? "materiality_gate health read failed");
+  return (second.data ?? []) as ReasonRow[];
 }
 
-function summarize(judged: JudgedRow[], signals: SignalRow[]): GateWeekNumbers & {
+function matchRejections(events: JudgedRow[], health: ReasonRow[]): JudgedRow[] {
+  const pool = health.map((row) => ({ row, used: false }));
+  const matched: JudgedRow[] = [];
+  for (const event of events) {
+    const title = (event.title ?? "").slice(0, 200);
+    const byId = pool.findIndex(
+      (item) => !item.used && item.row.raw_event_id != null && item.row.raw_event_id === event.id,
+    );
+    const byTitle = pool.findIndex((item) => {
+      if (item.used || item.row.raw_event_id) return false;
+      return titleInDetail(item.row.detail) === title;
+    });
+    const idx = byId >= 0 ? byId : byTitle;
+    if (idx < 0) continue;
+    const hit = pool[idx];
+    if (!hit) continue;
+    hit.used = true;
+    matched.push(event);
+  }
+  return matched;
+}
+
+function summarize(signals: SignalRow[], rejectedRows: JudgedRow[]): GateWeekNumbers & {
   rejectedRows: JudgedRow[];
 } {
-  if (judged.length === 0) return { ...emptyWeek(), rejectedRows: [] };
-  const judgedIds = new Set(judged.map((row) => row.id));
-  const categoryById = new Map<string, string | null>();
-  for (const signal of signals) {
-    for (const id of signal.raw_event_ids ?? []) {
-      if (!judgedIds.has(id) || categoryById.has(id)) continue;
-      categoryById.set(id, signal.event_category ?? null);
-    }
-  }
+  const passing = signals.filter((row) => hasRawEvents(row.raw_event_ids));
   const passByCategory: Record<string, number> = {};
-  for (const category of categoryById.values()) {
-    const key = category ?? "null";
+  for (const signal of passing) {
+    const key = signal.event_category ?? "null";
     passByCategory[key] = (passByCategory[key] ?? 0) + 1;
   }
-  const passed = categoryById.size;
-  const rejectedRows = judged.filter((row) => !categoryById.has(row.id));
+  const passed = passing.length;
+  const rejected = rejectedRows.length;
+  const judged = passed + rejected;
+  if (judged === 0) return { ...emptyWeek(), rejectedRows };
   return {
-    judged: judged.length,
+    judged,
     passed,
-    rejected: judged.length - passed,
-    passRate: passed / judged.length,
+    rejected,
+    passRate: passed / judged,
     passByCategory,
     rejectedRows,
   };
+}
+
+async function weekNumbers(
+  supabase: GateDriftSupabase,
+  start: Date,
+  end: Date,
+): Promise<GateWeekNumbers & { rejectedRows: JudgedRow[]; reasons: ReasonRow[] }> {
+  const [checked, signals, reasons] = await Promise.all([
+    checkedIn(supabase, start, end),
+    signalsIn(supabase, start, end),
+    rejectionRows(supabase, start, end),
+  ]);
+  const rejectedRows = matchRejections(checked, reasons);
+  return { ...summarize(signals, rejectedRows), reasons };
 }
 
 export async function buildGateWeeklyReport(
@@ -141,30 +217,18 @@ export async function buildGateWeeklyReport(
   const currentStart = new Date(weekEnd.getTime() - WEEK_MS);
   const previousStart = new Date(weekEnd.getTime() - 2 * WEEK_MS);
 
-  const [currentJudged, previousJudged] = await Promise.all([
-    judgedIn(supabase, currentStart, weekEnd),
-    judgedIn(supabase, previousStart, currentStart),
+  const [current, previous] = await Promise.all([
+    weekNumbers(supabase, currentStart, weekEnd),
+    weekNumbers(supabase, previousStart, currentStart),
   ]);
-  const [currentSignals, previousSignals] = await Promise.all([
-    currentJudged.length ? signalsCovering(supabase, currentJudged.map((row) => row.id)) : Promise.resolve([]),
-    previousJudged.length
-      ? signalsCovering(supabase, previousJudged.map((row) => row.id))
-      : Promise.resolve([]),
-  ]);
-
-  const current = summarize(currentJudged, currentSignals);
-  const previous = summarize(previousJudged, previousSignals);
-  const reasons =
-    current.rejectedRows.length > 0
-      ? await rejectionReasons(supabase, currentStart, weekEnd)
-      : [];
 
   const rejectedSample = sampleItems(current.rejectedRows, SAMPLE_SIZE).map((row) => {
     const title = (row.title ?? "").slice(0, TITLE_MAX);
-    return { title, reason: reasonForTitle(row.title ?? "", reasons) };
+    return { title, reason: reasonForTitle(row.title ?? "", current.reasons) };
   });
 
   return {
+    definition: GATE_PASS_RATE_DEFINITION,
     weekEnd: weekEnd.toISOString(),
     currentStart: currentStart.toISOString(),
     previousStart: previousStart.toISOString(),
