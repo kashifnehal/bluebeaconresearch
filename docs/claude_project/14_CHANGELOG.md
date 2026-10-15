@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Row-security initplan and foreign-key indexes
+
+Migration written, not applied. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Public pages and a closed daily cap
 
 `apps/web` only. A closed cap no longer changes the public status lines or the dashboard ingestion box into a pause. Full detail: `docs/brain/LIVE_TODO.md`.

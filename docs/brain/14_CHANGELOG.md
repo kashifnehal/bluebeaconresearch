@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Row-security initplan and foreign-key indexes
+
+Migration written, not applied. Eight policies wrap `auth.uid()` in `(select auth.uid())`. Six foreign-key indexes are added on tables that have under 200 rows. No other index is dropped.
+
 ### 2026-10-16 — Public pages and a closed daily cap
 
 `apps/web` only. A closed cap keeps Classifier, Data Pipeline, and Intelligence Feed Operational. The dashboard ingestion box keeps the live lines and the newest stored article time. The homepage badge and the how-it-works claim no longer mention the cap. Full detail: `LIVE_TODO.md`.

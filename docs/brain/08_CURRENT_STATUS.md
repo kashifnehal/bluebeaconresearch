@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (public pages and a closed daily cap)
+Last updated: 2026-10-16 (row-security initplan and foreign-key indexes, not applied)
+
+> ⚠️ NEW 2026-10-16 (row-security and foreign-key indexes, migration written, not applied) — eight policies wrap `auth.uid()` in `(select auth.uid())`. Six foreign-key indexes are added. No other index is dropped.
 
 > ⚠️ NEW 2026-10-16 (public pages and a closed daily cap, `apps/web` only) — a closed cap no longer marks Classifier, Data Pipeline, or Intelligence Feed down, and the dashboard ingestion box stays on the live lines plus the newest stored article time. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

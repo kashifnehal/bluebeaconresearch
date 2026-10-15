@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Row-security initplan and six foreign-key indexes, migration written not applied, 2026-10-16
+
+- Eight policies on `feedback_submissions`, `signal_chat_messages`, `user_sessions`, and `waitlist` wrap `auth.uid()` in `(select auth.uid())`. The comparisons are the ones read from production on 2026-10-16.
+- Indexes: `alerts_sent_rule_id_idx`, `alerts_sent_signal_id_idx`, `saved_signals_signal_id_idx`, `signal_chat_messages_user_id_idx`, `waitlist_user_id_idx`, `webhook_deliveries_signal_id_idx`. Those tables have under 200 rows. No other index is dropped.
+- Written, not applied. No open priority-queue line. Nothing struck.
+
 ## ✅ Public pages do not call a closed daily cap a pause, `apps/web`, 2026-10-16
 
 - On `/status`, a closed cap keeps Classifier and Data Pipeline Operational, with the same detail they show when the cap is open and healthy. Intelligence Feed stays Operational and says "Newest signal N min ago." An open cap still marks a stale collector Degraded. Database, price history, and alert delivery are unchanged.

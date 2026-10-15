@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (public pages and a closed daily cap — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (row-security initplan and foreign-key indexes, not applied).**
+
+> ⚠️ NEW 2026-10-16 (row-security and foreign-key indexes, migration written, not applied) — eight policies wrap `auth.uid()` in `(select auth.uid())`. Six foreign-key indexes are added. No other index is dropped. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (public pages and a closed daily cap, `apps/web` only) — a closed cap no longer marks Classifier, Data Pipeline, or Intelligence Feed down, and the dashboard ingestion box stays on the live lines plus the newest stored article time. See `docs/brain/LIVE_TODO.md`.
 

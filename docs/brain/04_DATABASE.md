@@ -138,6 +138,9 @@ Ingested news articles and incident logs before classification.
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
 - **RLS**: exactly one policy, `user_channels_all_own` (`ALL`) — consolidated from 4 overlapping policies by `20260817220713_consolidate_user_channels_rls.sql`; verified live 2026-08-27. Row-level (`user_id = auth.uid()`); new Discord columns are covered with no policy change.
 
+### Row-security initplan (written, not applied, 2026-10-16)
+`20261016040000_rls_auth_uid_select_and_fk_indexes.sql` wraps `auth.uid()` in `(select auth.uid())` on eight policies: `feedback_submissions` insert/select own, `signal_chat_messages` insert/select own, `user_sessions` delete/insert/select own, and `waitlist` select own. The comparisons match production as read on 2026-10-16. The same file adds `alerts_sent_rule_id_idx`, `alerts_sent_signal_id_idx`, `saved_signals_signal_id_idx`, `signal_chat_messages_user_id_idx`, `waitlist_user_id_idx`, and `webhook_deliveries_signal_id_idx`. Those tables have under 200 rows. No other index is dropped.
+
 ### Table 7: `alerts_sent`
 One row per alert actually dispatched. Written by `alert-dispatcher.ts`.
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)
