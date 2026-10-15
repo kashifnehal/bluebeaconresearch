@@ -19,13 +19,44 @@ export type ServiceHealthStatus = "ok" | "error" | "rate_limited" | "rejected" |
 
 type HealthInsertClient = {
   from: (table: string) => {
-    insert: (row: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }>;
+    insert: (row: Record<string, unknown>) => PromiseLike<{ error: HealthInsertError | null }>;
   };
 };
 
 export type RecordServiceHealthOptions = {
   supabase?: HealthInsertClient;
+  rawEventId?: string;
 };
+
+type HealthInsertError = { message: string; code?: string };
+
+let loggedMissingRawEventId = false;
+
+function missingRawEventIdColumn(error: HealthInsertError): boolean {
+  const message = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
+  return (
+    message.includes("raw_event_id") &&
+    (message.includes("column") || message.includes("schema cache") || message.includes("pgrst204"))
+  );
+}
+
+function healthRow(
+  service: string,
+  status: ServiceHealthStatus,
+  detail: string | undefined,
+  latencyMs: number | undefined,
+  rawEventId: string | undefined,
+): Record<string, unknown> {
+  const row: Record<string, unknown> = {
+    service,
+    status,
+    detail: detail ? detail.slice(0, 2000) : null,
+    latency_ms:
+      typeof latencyMs === "number" && Number.isFinite(latencyMs) ? Math.round(latencyMs) : null,
+  };
+  if (rawEventId) row.raw_event_id = rawEventId;
+  return row;
+}
 
 export async function recordServiceHealth(
   service: string,
@@ -36,21 +67,28 @@ export async function recordServiceHealth(
 ): Promise<void> {
   try {
     const supabase = (options?.supabase ?? getSupabaseAdmin()) as HealthInsertClient;
-    const { error } = await supabase.from("service_health_events").insert({
-      service,
-      status,
-      detail: detail ? detail.slice(0, 2000) : null,
-      latency_ms:
-        typeof latencyMs === "number" && Number.isFinite(latencyMs)
-          ? Math.round(latencyMs)
-          : null,
-    });
-    if (error) {
-      console.warn(
-        `[service-health] insert failed for ${service}/${status}:`,
-        error.message,
-      );
+    const insert = (row: Record<string, unknown>) => supabase.from("service_health_events").insert(row);
+    const payload = healthRow(service, status, detail, latencyMs, options?.rawEventId);
+    const { error } = await insert(payload);
+    if (!error) return;
+    if (payload.raw_event_id && missingRawEventIdColumn(error)) {
+      if (!loggedMissingRawEventId) {
+        loggedMissingRawEventId = true;
+        console.warn(
+          `[service-health] raw_event_id column is missing; retrying without it: ${error.message}`,
+        );
+      }
+      const { raw_event_id: _omit, ...withoutColumn } = payload;
+      const retry = await insert(withoutColumn);
+      if (retry.error) {
+        console.warn(
+          `[service-health] insert failed for ${service}/${status}:`,
+          retry.error.message,
+        );
+      }
+      return;
     }
+    console.warn(`[service-health] insert failed for ${service}/${status}:`, error.message);
   } catch (e) {
     console.warn(
       `[service-health] insert threw for ${service}/${status}:`,

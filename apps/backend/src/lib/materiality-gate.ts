@@ -48,6 +48,8 @@ export async function logMaterialityRejection(params: {
     "materiality_gate",
     "rejected",
     `title="${title.slice(0, 200)}" source=${source} method=${classification.classificationMethod} reasoning="${reasoning.slice(0, 300)}"`,
+    undefined,
+    { rawEventId },
   );
 
   const { error } = await supabase
