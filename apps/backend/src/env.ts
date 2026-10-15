@@ -35,6 +35,13 @@ const nonNegIntEnv = (fallback: number) =>
     return v;
   }, z.coerce.number().int().min(0));
 
+// Integer >= 1. Unset or blank uses the fallback; anything else must parse.
+const positiveIntEnv = (fallback: number) =>
+  z.preprocess((v) => {
+    if (v === undefined || v === null || String(v).trim() === "") return fallback;
+    return v;
+  }, z.coerce.number().int().min(1));
+
 // Positive number. Unset or blank stays unset. Anything else must parse as > 0.
 const optionalPositiveEnv = z.preprocess((v) => {
   if (v === undefined || v === null || String(v).trim() === "") return undefined;
@@ -77,6 +84,9 @@ const envSchema = z.object({
   // Optional. When unset, the monthly spend warning does nothing. A present value
   // must be a finite number greater than 0.
   ANTHROPIC_MONTHLY_LIMIT_USD: optionalPositiveEnv,
+  // How many checks in a row a feed must stay quiet before a degraded row.
+  // Default 2 is an engineering choice with no outside source. Not set in deploy config.
+  FEED_VOLUME_CONSECUTIVE_CHECKS: positiveIntEnv(2),
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
