@@ -13,7 +13,7 @@ import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
-import { runRetentionJobsOnce } from "./workers/retention.js";
+import { runRetentionJobsOnce, runServiceHealthRetentionOnce } from "./workers/retention.js";
 import { runDigestOnce } from "./workers/digest-sender.js";
 import { runOutcomeTrackerOnce } from "./workers/outcome-tracker.js";
 import {
@@ -291,12 +291,20 @@ async function main() {
   // #67 data retention — weekly, Sunday 03:00 UTC (ahead of the 04:00 sanctions
   // sync). commodity_prices >90d deleted outright; raw_events >180d deleted only
   // when a signal already references them. signals are never touched.
+  // service_health_events older than 45 days are deleted in the same window.
   cron.schedule("0 3 * * 0", async () => {
     try {
       const res = await runRetentionJobsOnce();
       app.log.info({ res }, "retention-jobs complete");
     } catch (e) {
       app.log.error({ err: e }, "retention-jobs failed");
+      Sentry.captureException(e);
+    }
+    try {
+      const res = await runServiceHealthRetentionOnce();
+      app.log.info({ res }, "service-health retention complete");
+    } catch (e) {
+      app.log.error({ err: e }, "service-health retention failed");
       Sentry.captureException(e);
     }
   });

@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Service health retention
+
+`apps/backend` only. Sunday 03:00 UTC deletes `service_health_events` older than 45 days, in batches of 5000, at most 20 batches. Every reader checked on 2026-10-16 looks back less than 45 days.
+
 ### 2026-10-16 — Sanctions sync writes only changed rows
 
 `apps/backend` and one migration, written not applied. The daily sync calls `upsert_sanctions_entities`, which skips a row whose `raw_data` and `source_url` are unchanged. Health detail is `fetched N, changed M`. A missing function falls back to the previous upsert for that run.

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (sanctions sync writes only changed rows; function not applied).**
+> **📍 Doc status — live status banners as of 2026-10-16 (service health rows older than 45 days).**
+
+> ⚠️ NEW 2026-10-16 (service health retention, `apps/backend` only) — Sunday 03:00 UTC deletes `service_health_events` older than 45 days. Readers checked the same day look back less than 45 days. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (sanctions sync, `apps/backend`, function written not applied) — the daily sync calls `upsert_sanctions_entities` and records `fetched N, changed M`. A missing function falls back to the previous upsert for that run. See `docs/brain/LIVE_TODO.md`.
 

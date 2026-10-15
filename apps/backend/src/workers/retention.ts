@@ -16,6 +16,10 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
  */
 const COMMODITY_PRICES_RETENTION_DAYS = 90;
 const RAW_EVENTS_RETENTION_DAYS = 180;
+export const SERVICE_HEALTH_RETENTION_DAYS = 45;
+// Engineering choice with no outside source. The longest reader is the month-to-date spend check (31 days) plus a weekly job gap (7 days); rounded up to 45.
+const SERVICE_HEALTH_BATCH = 5000;
+const SERVICE_HEALTH_MAX_BATCHES = 20;
 const RAW_EVENTS_CANDIDATE_BATCH = 500;
 const RAW_EVENTS_MAX_BATCHES_PER_RUN = 40; // safety cap: ≤20k rows/run
 
@@ -135,6 +139,52 @@ export async function runRawEventsRetentionOnce() {
     scanned,
     skippedNoSignal,
   };
+}
+
+type HealthRetentionClient = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      lt: (column: string, value: string) => {
+        limit: (n: number) => Promise<{ data: Array<{ id: string }> | null; error: { message: string } | null }>;
+      };
+    };
+    delete: () => {
+      in: (column: string, ids: string[]) => Promise<{ error: { message: string } | null }>;
+    };
+  };
+};
+
+export async function runServiceHealthRetentionOnce(supabase?: HealthRetentionClient) {
+  const client = supabase ?? getSupabaseAdmin();
+  const cutoff = daysAgoIso(SERVICE_HEALTH_RETENTION_DAYS);
+  let deleted = 0;
+
+  for (let batch = 0; batch < SERVICE_HEALTH_MAX_BATCHES; batch++) {
+    const { data, error } = await client
+      .from("service_health_events")
+      .select("id")
+      .lt("created_at", cutoff)
+      .limit(SERVICE_HEALTH_BATCH);
+    if (error) {
+      console.error("[retention] service_health_events select failed:", error.message);
+      return { ok: false as const, table: "service_health_events", deleted, error: error.message };
+    }
+    const ids = (data ?? []).map((row) => row.id);
+    if (ids.length === 0) break;
+
+    const { error: delErr } = await client.from("service_health_events").delete().in("id", ids);
+    if (delErr) {
+      console.error("[retention] service_health_events delete failed:", delErr.message);
+      return { ok: false as const, table: "service_health_events", deleted, error: delErr.message };
+    }
+    deleted += ids.length;
+    if (ids.length < SERVICE_HEALTH_BATCH) break;
+  }
+
+  console.log(
+    `[retention] service_health_events: deleted ${deleted} row(s) older than ${SERVICE_HEALTH_RETENTION_DAYS}d (cutoff ${cutoff})`,
+  );
+  return { ok: true as const, table: "service_health_events", deleted };
 }
 
 export async function runRetentionJobsOnce() {

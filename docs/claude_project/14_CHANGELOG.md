@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Service health retention
+
+`apps/backend` only. Sunday 03:00 UTC deletes rows older than 45 days. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Sanctions sync writes only changed rows
 
 `apps/backend` and one migration, written not applied. Full detail: `docs/brain/14_CHANGELOG.md`.

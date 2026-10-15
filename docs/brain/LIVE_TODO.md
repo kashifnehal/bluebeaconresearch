@@ -3,6 +3,11 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Service health rows older than 45 days are deleted weekly, `apps/backend`, 2026-10-16
+
+- Sunday 03:00 UTC deletes `service_health_events` with `created_at` older than 45 days, 5000 ids at a time, at most 20 batches. Readers checked the same day stay inside 45 days: month-spend health read is the current UTC day (the month sum is `anthropic_daily_usage`), gate counts are 14 days, category guard is the current UTC day, feed-volume reads the latest 200 rows, sanctions sync reads the latest ok row, admin counts 24 hours, the replay script reads 2026-10-04 through 2026-10-08, and the status page reads the latest ok ingestion row.
+- No open priority-queue line. Nothing struck.
+
 ## ✅ Sanctions sync writes only rows that changed, 2026-10-16
 
 - `public.upsert_sanctions_entities(jsonb)` inserts or updates a row only when `raw_data` or `source_url` differs, and returns how many rows changed. Written, not applied. Execute is granted to `service_role` only.

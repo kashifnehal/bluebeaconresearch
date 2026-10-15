@@ -241,6 +241,9 @@ Shadow materiality-gate results. `public.gate_shadow_results`. RLS on, no policy
 ### View: `feed_gap_p95` (written, not applied, 2026-10-15)
 `20261015130000_feed_gap_p95.sql` (`5a04fcb`). Read-only view `public.feed_gap_p95`. Not in the applied migration list checked 2026-10-15.
 
+### `service_health_events` retention (2026-10-16)
+Sunday 03:00 UTC deletes rows with `created_at` older than 45 days, 5000 ids at a time, at most 20 batches. Engineering choice: the longest described reader is the month-to-date spend check (31 days) plus a weekly job gap (7 days), rounded up to 45. Readers checked 2026-10-16 look back less than that.
+
 ### `service_health_events.raw_event_id` (written, not applied, 2026-10-15)
 `20261015140000_service_health_raw_event_id.sql` (`3339434`). Nullable column. Not in the applied migration list checked 2026-10-15. The writer retries the insert without the column when it is missing.
 
