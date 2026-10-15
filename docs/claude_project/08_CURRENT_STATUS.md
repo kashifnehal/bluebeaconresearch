@@ -8,7 +8,7 @@
 
 > ⚠️ NEW 2026-10-16 (how-it-works signal counts, `apps/web` only, `d165222`) — both signal counts use a head-only exact count. A total of 0 stays hidden. The last-7-days count still filters `created_at`. See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-15 (P24 colour tokens, `apps/web` only, `b00cfc0` and this commit) — six hex colours now read the existing CSS variables. Dark values are unchanged. The light theme was not checked. See `docs/brain/LIVE_TODO.md`, PHASE 172.
+> ⚠️ NEW 2026-10-15 (P24 colour tokens, `apps/web` only, `b00cfc0` and bb8e86d) — six hex colours now read the existing CSS variables. Dark values are unchanged. The light theme was not checked. See `docs/brain/LIVE_TODO.md`, PHASE 172.
 
 > ⚠️ NEW 2026-10-15 — 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered.
 
@@ -20,7 +20,7 @@
 
 > ⚠️ NEW 2026-10-15 (signup source, `apps/web` only, `9da1540`) — campaign tags and an external referrer host stay in the browser for the visit and are saved on email signup. No cookie.
 
-> ⚠️ NEW 2026-10-15 (singular count line recorded, docs only, `04af752`) — the wording shipped in `2c977d8`; this commit recorded it.
+> ⚠️ NEW 2026-10-15 (singular count line recorded, docs only, `04af752`) — the wording shipped in `2c977d8`; 37d0683 recorded it.
 
 > ⚠️ NEW 2026-10-15 (safety commits on main, `2c1406c`) — merge only. No separate product behavior.
 
