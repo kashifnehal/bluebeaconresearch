@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — P24 colour tokens (`apps/web`, `b00cfc0` and this commit, PHASE 172 / v0.195.0). Six hex colours now use existing CSS variables. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-15 — Collection gaps. 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered. 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.
 
 > ⚠️ UPDATED 2026-10-15 — Status check retry and cached homepage count (`apps/web`, `cdcccdd`). A slow database no longer drops the homepage total or leaves a timed-out check as Unknown without a retry.

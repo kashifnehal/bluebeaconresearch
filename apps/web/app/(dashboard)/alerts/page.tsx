@@ -453,7 +453,7 @@ export default function AlertsPage() {
         </span>
         <button
           onClick={() => openSetAlertModal()}
-          className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+          className="bg-[var(--accent)] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           + New Alert Rule
@@ -479,7 +479,7 @@ export default function AlertsPage() {
           </div>
           <button
             onClick={() => openSetAlertModal()}
-            className="bg-[#4edea3] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
+            className="bg-[var(--accent)] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Set Up Your First Rule
@@ -820,34 +820,34 @@ export default function AlertsPage() {
       {alertModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-xs" onClick={() => setAlertModalOpen(false)} />
-          <div className="relative bg-[#131313] border border-[#3c4a42] rounded-lg p-6 w-full max-w-md z-50 text-white space-y-4">
-            <h3 className="text-lg font-bold text-[#4edea3]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <div className="relative bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-6 w-full max-w-md z-50 text-white space-y-4">
+            <h3 className="text-lg font-bold text-[var(--accent)]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               Configure Alert Threshold
             </h3>
 
             <div>
-              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">Target Region</label>
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">Target Region</label>
               <input
                 value={modalRegion}
                 onChange={(e) => setModalRegion(e.target.value)}
-                className="w-full bg-[#0e0e0e] border border-[#3c4a42] p-2 text-xs text-white rounded font-mono"
+                className="w-full bg-[#0e0e0e] border border-[var(--border)] p-2 text-xs text-white rounded font-mono"
               />
             </div>
 
             <div>
-              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">Min Severity Threshold (1-10)</label>
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">Min Severity Threshold (1-10)</label>
               <input
                 type="number"
                 min={1}
                 max={10}
                 value={modalMinSeverity}
                 onChange={(e) => setModalMinSeverity(Number(e.target.value))}
-                className="w-full bg-[#0e0e0e] border border-[#3c4a42] p-2 text-xs text-white rounded font-mono"
+                className="w-full bg-[#0e0e0e] border border-[var(--border)] p-2 text-xs text-white rounded font-mono"
               />
             </div>
 
             <div data-testid="alert-channel-checkboxes">
-              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">
                 Delivery Channels
               </label>
               <p className="text-[12px] md:text-[10px] text-[#6b7674] mb-2">
@@ -871,7 +871,7 @@ export default function AlertsPage() {
                       <span>{ch.label}</span>
                       <span
                         className={`text-[12px] md:text-[9px] uppercase font-bold ${
-                          isConnected ? "text-[#4edea3]" : "text-[#86948a]"
+                          isConnected ? "text-[var(--accent)]" : "text-[var(--text-muted)]"
                         }`}
                       >
                         {isConnected ? "Connected" : "Not connected"}
@@ -883,7 +883,7 @@ export default function AlertsPage() {
             </div>
 
             <div>
-              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[#86948a] block mb-1">
+              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">
                 Forex Pairs (optional)
               </label>
               <p className="text-[12px] md:text-[10px] text-[#6b7674] mb-2">
@@ -906,8 +906,8 @@ export default function AlertsPage() {
                       }
                       className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
-                          ? "bg-[#4edea3] text-[#003824] border-[#4edea3]"
-                          : "bg-[#0e0e0e] text-[#86948a] border-[#3c4a42] hover:text-white"
+                          ? "bg-[var(--accent)] text-[#003824] border-[var(--accent)]"
+                          : "bg-[#0e0e0e] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                       }`}
                     >
                       {f.label}
@@ -920,14 +920,14 @@ export default function AlertsPage() {
             <div className="flex justify-end gap-3 pt-4 border-t border-[#2a2a2a]">
               <button
                 onClick={() => setAlertModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-[#86948a] hover:text-white uppercase"
+                className="px-4 py-2 text-xs font-bold text-[var(--text-muted)] hover:text-white uppercase"
               >
                 Cancel
               </button>
               <button
                 onClick={() => createAlertRule.mutate()}
                 disabled={createAlertRule.isPending}
-                className="px-6 py-2 bg-[#4edea3] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
+                className="px-6 py-2 bg-[var(--accent)] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
               >
                 {createAlertRule.isPending ? "Activating..." : "Save Rule"}
               </button>

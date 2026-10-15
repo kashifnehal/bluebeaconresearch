@@ -19,18 +19,18 @@ type FormValues = z.infer<typeof loginSchema>;
 // ── Exact Stitch colors ──────────────────────────
 const C = {
   bg: "#0e0e0e",
-  surface: "#131313",
+  surface: "var(--bg-primary)",
   surfaceLowest: "#0e0e0e",
   surfaceHigh: "#2a2a2a",
   surfaceBright: "#393939",
   primary: "#6ffbbe",
-  primaryContainer: "#4edea3",
+  primaryContainer: "var(--accent)",
   onPrimary: "#003824",
   onPrimaryContainer: "#005f40",
   onSurface: "#e5e2e1",
-  onSurfaceVariant: "#bbcac0",
-  outline: "#86948a",
-  outlineVariant: "#3c4a42",
+  onSurfaceVariant: "var(--text-secondary)",
+  outline: "var(--text-muted)",
+  outlineVariant: "var(--border)",
   error: "#ffb4ab",
 } as const;
 

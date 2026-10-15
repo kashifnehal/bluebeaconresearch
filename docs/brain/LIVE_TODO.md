@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ P24 design-token cleanup, dark theme only, `apps/web`, 2026-10-15, `b00cfc0` and this commit
+
+- Six hardcoded colours in `apps/web/app` and `apps/web/components` now use the existing `:root` variables. `#4edea3` → `--accent`. `#86948a` → `--text-muted`. `#3c4a42` → `--border`. `#bbcac0` → `--text-secondary`. `#131313` → `--bg-primary`. `#201f1f` → `--bg-container`. No new variable. The light block already defines the first five. It has no container role, so `--bg-container` was left out of `[data-theme="light"]`.
+- Before, case-insensitive grep of `apps/web/app` and `apps/web/components`: `#4edea3` 161, `#86948a` 126, `#3c4a42` 95, `#bbcac0` 56, `#131313` 57, `#201f1f` 14 (509). After: 9. Eight are the `:root` definitions, including `--success` and `--price-up`, which keep the same accent hex. One is the MapLibre cluster circle colour in `map/page.tsx`. MapLibre's paint spec does not resolve a CSS variable. CSS gradients and SVG fills use the variables.
+- Components and the six Stitch tokens in `tailwind.config.ts`: `b00cfc0`. Pages and the non-definition uses in `globals.css`: this commit. Dark hex values are unchanged. The app has no light-theme switch, so the light theme was not visually checked.
+- Verification: `pnpm --filter web test` exit 0 and `pnpm --filter web run build` exit 0 after the component commit, and again on this tree. No browser run.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14` v0.195.0, `06`; claude_project `09`, `08`, `14` PHASE 172, `06`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or standing rule.
+
 ## ✅ Diagnostic tables in public, GNews and GDELT drop logging, `apps/backend`, 2026-10-14, `4cc10c2`
 
 - `public.rss_drop_samples` and `public.gate_shadow_results` are in `public`, RLS on, no policy, grant to `service_role`. Applied 2026-10-14 (`rss_drop_samples_public`, `gate_shadow_results_public`). Drop-sample rows are deleted after 14 days. GNews and GDELT record the same relevance drops as RSS. `DROP_SAMPLE_STORE` is on. `GATE_SHADOW_ENABLED` stays off.

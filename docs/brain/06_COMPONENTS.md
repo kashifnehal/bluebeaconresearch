@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — Accent, muted text, border, secondary text, primary surface, and container surface colours now use the matching CSS variables (`b00cfc0` and this commit). Props and layout are unchanged.
+
 > ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` and `FirstTouchLogger` (`9da1540`) keep campaign tags and an external referrer host in the browser for the visit and save them on email signup. No cookie.
 
 > ⚠️ UPDATED 2026-10-15 — The three Clock values (source, fetch, flag) render in UTC as "14 Oct 2026, 12:30 UTC". A missing or invalid time is "n/a". Delay is unchanged.

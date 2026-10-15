@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (singular signal count line — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-15 (P24 colour tokens — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-15 (P24 colour tokens, `apps/web` only, `b00cfc0` and this commit) — six hex colours now read the existing CSS variables. Dark values are unchanged. The light theme was not checked. See `docs/brain/LIVE_TODO.md`, PHASE 172.
 
 > ⚠️ NEW 2026-10-15 — 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered.
 

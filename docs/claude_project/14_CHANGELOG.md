@@ -8,6 +8,10 @@
 
 ---
 
+## PHASE 172 — Dark-theme colour tokens (2026-10-15, `b00cfc0` and this commit)
+
+`apps/web` only. Six hex colours now use the existing dark-theme variables. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.195.0.
+
 ## 2026-10-15 — Collection gaps
 
 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered. 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.

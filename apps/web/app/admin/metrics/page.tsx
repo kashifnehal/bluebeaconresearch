@@ -50,7 +50,7 @@ async function loadMetrics(accessToken: string): Promise<Metrics | { error: stri
 
 function Stat({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
   return (
-    <Card className="bg-[#131313] ring-[#3c4a42]/60">
+    <Card className="bg-[var(--bg-primary)] ring-[var(--border)]/60">
       <CardHeader>
         <CardTitle className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#8a9a92]">
           {label}
@@ -116,10 +116,10 @@ export default async function AdminMetricsPage() {
               <h2 className="text-[12px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#8a9a92]">
                 Events by type · last 7 days
               </h2>
-              <div className="overflow-x-auto rounded-xl ring-1 ring-[#3c4a42]/60">
+              <div className="overflow-x-auto rounded-xl ring-1 ring-[var(--border)]/60">
                 <table className="w-full font-mono text-[12px]">
                   <thead>
-                    <tr className="bg-[#131313] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[#6b7a72]">
+                    <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[#6b7a72]">
                       <th className="px-4 py-2 font-medium">Event type</th>
                       <th className="px-4 py-2 text-right font-medium">Count</th>
                     </tr>

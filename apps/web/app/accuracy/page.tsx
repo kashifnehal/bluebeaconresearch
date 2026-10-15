@@ -75,8 +75,8 @@ function fmtMove(v: number | null): string {
 
 function HeadlineStat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-[#3c4a42] bg-[#131313] p-5">
-      <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a]">{label}</p>
+    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-5">
+      <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)]">{label}</p>
       <p className="mt-2 font-mono text-3xl font-semibold text-[#e5e2e1]">{value}</p>
       {hint ? <p className="mt-1 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">{hint}</p> : null}
     </div>
@@ -99,7 +99,7 @@ function AssetRow({
         {summary.sample_size_note}
       </td>
       {summary.not_enough_history ? (
-        <td colSpan={2} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-[#86948a]">
+        <td colSpan={2} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-[var(--text-muted)]">
           Not enough history yet (min {minSampleSize})
         </td>
       ) : (
@@ -133,7 +133,7 @@ function AssetCard({
     <div className="flex items-center justify-between gap-3 py-3">
       <span className="font-mono text-sm text-[#e5e2e1]">{asset}</span>
       {summary.not_enough_history ? (
-        <span className="font-mono text-[11px] uppercase tracking-wider text-[#86948a] text-right">
+        <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)] text-right">
           Not enough history yet (min {minSampleSize})
         </span>
       ) : (
@@ -162,12 +162,12 @@ export default async function AccuracyPage() {
         <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           Signal Accuracy
         </h1>
-        <p className="text-xs text-[#86948a] mb-8 font-mono">
+        <p className="text-xs text-[var(--text-muted)] mb-8 font-mono">
           Computed automatically from real commodity/forex price data, checked 48 hours after each signal.
         </p>
 
         {/* Permanent, non-dismissible past-performance disclaimer */}
-        <div className="p-5 bg-[#131313] border border-[#3c4a42] rounded-lg mb-10">
+        <div className="p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg mb-10">
           <p className="text-xs text-[#e5e2e1] leading-relaxed">
             Historical accuracy of BBR&apos;s signals, computed automatically from real price data.
             Past results do not predict future performance. This is not investment advice.
@@ -181,7 +181,7 @@ export default async function AccuracyPage() {
         ) : (
           <>
             {/* Date range — plainly stated */}
-            <p className="text-xs font-mono text-[#86948a] mb-6">
+            <p className="text-xs font-mono text-[var(--text-muted)] mb-6">
               {data.overall.date_range
                 ? `Based on ${data.overall.sample_size_note} signals scored between ${fmtDate(
                     data.overall.date_range.earliest,
@@ -214,8 +214,8 @@ export default async function AccuracyPage() {
 
             {/* Volatile/neutral — kept separate, never blended into hit rate */}
             {data.overall.volatile_neutral_summary ? (
-              <section className="mb-10 p-5 bg-[#131313] border border-[#3c4a42] rounded-lg">
-                <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a] mb-2">
+              <section className="mb-10 p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg">
+                <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">
                   Volatile / neutral predictions (not scored as correct/incorrect)
                 </p>
                 <p className="text-sm text-[#e5e2e1] font-mono">
@@ -230,18 +230,18 @@ export default async function AccuracyPage() {
 
             {/* Per-asset breakdown table */}
             <section className="space-y-3 mb-10">
-              <h2 className="text-xs font-bold text-[#86948a] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 By asset
               </h2>
-              <div className="md:hidden rounded-lg border border-[#3c4a42] divide-y divide-[#2a2a2a] px-4">
+              <div className="md:hidden rounded-lg border border-[var(--border)] divide-y divide-[#2a2a2a] px-4">
                 {Object.entries(data.by_asset).map(([asset, summary]) => (
                   <AssetCard key={asset} asset={asset} summary={summary} minSampleSize={data.min_sample_size} />
                 ))}
               </div>
-              <div className="hidden md:block overflow-x-auto rounded-lg border border-[#3c4a42]">
+              <div className="hidden md:block overflow-x-auto rounded-lg border border-[var(--border)]">
                 <table className="w-full min-w-[520px] font-mono text-[13px]">
                   <thead>
-                    <tr className="bg-[#131313] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[#86948a]">
+                    <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
                       <th className="px-4 py-2 font-medium">Asset</th>
                       <th className="px-4 py-2 text-right font-medium">Sample size</th>
                       <th className="px-4 py-2 text-right font-medium">Hit rate</th>
@@ -270,7 +270,7 @@ export default async function AccuracyPage() {
         )}
       </main>
 
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[#86948a] font-mono">
+      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
         Blue Beacon Research — Not investment advice.
       </footer>
       <LegalDisclaimerFooter />

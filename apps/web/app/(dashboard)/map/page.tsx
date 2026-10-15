@@ -56,7 +56,7 @@ class RecenterControl {
     button.style.display = "flex";
     button.style.alignItems = "center";
     button.style.justifyContent = "center";
-    button.style.color = "#bbcac0";
+    button.style.color = "var(--text-secondary)";
     button.innerHTML =
       '<span class="material-symbols-outlined" style="font-size:16px;line-height:1;">my_location</span>';
     button.addEventListener("click", () => {
@@ -1055,7 +1055,7 @@ export default function MapPage() {
             <div className="max-w-md">
               <p
                 className="text-sm font-semibold uppercase tracking-[0.3em] mb-3"
-                style={{ color: "#4edea3" }}
+                style={{ color: "var(--accent)" }}
               >
                 Map unavailable
               </p>

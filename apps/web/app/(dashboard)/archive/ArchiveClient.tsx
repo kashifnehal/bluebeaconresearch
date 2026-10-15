@@ -120,7 +120,7 @@ export function ArchiveClient() {
         {degraded && (
           <p
             className="mt-4 text-[12px] md:text-[11px]"
-            style={{ color: "#86948a", fontFamily: "'Inter', sans-serif" }}
+            style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
           >
             {degraded}
           </p>
@@ -152,9 +152,9 @@ export function ArchiveClient() {
                   className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                   style={{
                     fontFamily: "'Space Grotesk', sans-serif",
-                    backgroundColor: selected ? "#4edea3" : "#201f1f",
-                    color: selected ? "#005f40" : "#bbcac0",
-                    borderColor: selected ? "#4edea3" : "#3c4a42",
+                    backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+                    color: selected ? "#005f40" : "var(--text-secondary)",
+                    borderColor: selected ? "var(--accent)" : "var(--border)",
                   }}
                 >
                   {preset.label}
@@ -168,7 +168,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-from"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 From date
               </label>
@@ -185,7 +185,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-to"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 To date
               </label>
@@ -202,7 +202,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-commodity"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 Commodity
               </label>
@@ -232,7 +232,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-region"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
               >
                 Region
               </label>
@@ -259,7 +259,7 @@ export function ArchiveClient() {
             <label
               htmlFor="archive-keyword"
               className="text-[12px] md:text-[10px] uppercase tracking-wider"
-              style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               Keyword
             </label>
@@ -305,7 +305,7 @@ export function ArchiveClient() {
           {typeof total === "number" && !isLoading && (
             <span
               className="text-[12px] md:text-[11px] font-mono"
-              style={{ color: "#4edea3" }}
+              style={{ color: "var(--accent)" }}
               data-testid="archive-total"
             >
               {total} signal{total === 1 ? "" : "s"}
@@ -321,12 +321,12 @@ export function ArchiveClient() {
           </div>
         ) : liveSignals.length === 0 ? (
           <div className="py-20 text-center flex flex-col items-center gap-4">
-            <span className="material-symbols-outlined text-4xl text-[#3c4a42]">
+            <span className="material-symbols-outlined text-4xl text-[var(--border)]">
               search_off
             </span>
             <p
               className="text-xs font-bold uppercase tracking-[0.2em]"
-              style={{ color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               {filtersActive
                 ? "No signals matching these filters"

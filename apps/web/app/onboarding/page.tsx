@@ -141,8 +141,8 @@ export default function OnboardingPage() {
   ];
 
   const chipStyle = (active: boolean) => ({
-    border: `1px solid ${active ? "#4edea3" : "rgba(60,74,66,0.3)"}`,
-    backgroundColor: active ? "#4edea3" : "#1c1b1b",
+    border: `1px solid ${active ? "var(--accent)" : "rgba(60,74,66,0.3)"}`,
+    backgroundColor: active ? "var(--accent)" : "#1c1b1b",
     color: active ? "#005f40" : "#e5e2e1",
     padding: "10px 14px",
     borderRadius: "4px",
@@ -162,7 +162,7 @@ export default function OnboardingPage() {
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
-          backgroundImage: "radial-gradient(#4edea3 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(var(--accent) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
           opacity: 0.1,
         }}
@@ -186,7 +186,7 @@ export default function OnboardingPage() {
           style={{
             width: "100%",
             maxWidth: "480px",
-            backgroundColor: "#131313",
+            backgroundColor: "var(--bg-primary)",
             border: "1px solid rgba(60,74,66,0.3)",
             borderRadius: "8px",
             padding: "32px",
@@ -202,20 +202,20 @@ export default function OnboardingPage() {
               left: 0,
               width: "100%",
               height: "2px",
-              background: "linear-gradient(90deg, #4edea3, #6ffbbe)",
+              background: "linear-gradient(90deg, var(--accent), #6ffbbe)",
             }}
           />
 
           {/* Header */}
           <header style={{ marginBottom: "32px", textAlign: "center" }}>
             <div style={{ marginBottom: "24px", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-              <Terminal size={28} color="#4edea3" />
+              <Terminal size={28} color="var(--accent)" />
               <span
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  color: "#4edea3",
+                  color: "var(--accent)",
                   fontSize: "18px",
                   fontWeight: 700,
                 }}
@@ -235,7 +235,7 @@ export default function OnboardingPage() {
             >
               {step === 1 ? "Set up your profile" : "What should we keep an eye on for you?"}
             </h1>
-            <p style={{ color: "#bbcac0", fontFamily: "'Inter', sans-serif" }}>
+            <p style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}>
               {step === 1
                 ? "Tell us how you'll use Blue Beacon Research"
                 : "Pick the commodities, currency pairs, and regions you follow so we can show you what matters to you. You can change this anytime in Settings."}
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
                     width: "24px",
                     height: "3px",
                     borderRadius: "2px",
-                    backgroundColor: s <= step ? "#4edea3" : "#3c4a42",
+                    backgroundColor: s <= step ? "var(--accent)" : "var(--border)",
                   }}
                 />
               ))}
@@ -274,7 +274,7 @@ export default function OnboardingPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
-                    color: "#bbcac0",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   YOUR NAME
@@ -291,7 +291,7 @@ export default function OnboardingPage() {
                     width: "100%",
                     backgroundColor: "#0e0e0e",
                     border: "none",
-                    borderBottom: "1px solid #3c4a42",
+                    borderBottom: "1px solid var(--border)",
                     color: "#e5e2e1",
                     padding: "12px 0",
                     fontFamily: "'JetBrains Mono', monospace",
@@ -300,8 +300,8 @@ export default function OnboardingPage() {
                     boxSizing: "border-box",
                     transition: "border-color 0.2s",
                   }}
-                  onFocus={(e) => { e.target.style.borderBottomColor = "#4edea3"; }}
-                  onBlur={(e) => { e.target.style.borderBottomColor = "#3c4a42"; }}
+                  onFocus={(e) => { e.target.style.borderBottomColor = "var(--accent)"; }}
+                  onBlur={(e) => { e.target.style.borderBottomColor = "var(--border)"; }}
                 />
               </div>
 
@@ -313,7 +313,7 @@ export default function OnboardingPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
-                    color: "#bbcac0",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   USE CASE
@@ -325,8 +325,8 @@ export default function OnboardingPage() {
                       type="button"
                       onClick={() => setUseCase(option.value)}
                       style={{
-                        border: `1px solid ${useCase === option.value ? "#4edea3" : "rgba(60,74,66,0.3)"}`,
-                        backgroundColor: useCase === option.value ? "#4edea3" : "#1c1b1b",
+                        border: `1px solid ${useCase === option.value ? "var(--accent)" : "rgba(60,74,66,0.3)"}`,
+                        backgroundColor: useCase === option.value ? "var(--accent)" : "#1c1b1b",
                         color: useCase === option.value ? "#005f40" : "#e5e2e1",
                         padding: "12px 16px",
                         borderRadius: "4px",
@@ -354,7 +354,7 @@ export default function OnboardingPage() {
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
                   fontSize: "10px",
-                  color: "#86948a",
+                  color: "var(--text-muted)",
                   fontStyle: "italic",
                 }}
               >
@@ -367,7 +367,7 @@ export default function OnboardingPage() {
                   type="submit"
                   style={{
                     width: "100%",
-                    background: "linear-gradient(135deg, #6ffbbe, #4edea3)",
+                    background: "linear-gradient(135deg, #6ffbbe, var(--accent))",
                     color: "#003824",
                     padding: "16px",
                     borderRadius: "4px",
@@ -401,7 +401,7 @@ export default function OnboardingPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
-                    color: "#bbcac0",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   COMMODITIES YOU FOLLOW
@@ -428,7 +428,7 @@ export default function OnboardingPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
-                    color: "#bbcac0",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   CURRENCY PAIRS YOU FOLLOW
@@ -455,7 +455,7 @@ export default function OnboardingPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
-                    color: "#bbcac0",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Another market you follow (optional)
@@ -485,7 +485,7 @@ export default function OnboardingPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
-                    color: "#bbcac0",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   REGIONS YOU FOLLOW
@@ -512,7 +512,7 @@ export default function OnboardingPage() {
                   disabled={isSubmitting}
                   style={{
                     width: "100%",
-                    background: "linear-gradient(135deg, #6ffbbe, #4edea3)",
+                    background: "linear-gradient(135deg, #6ffbbe, var(--accent))",
                     color: "#003824",
                     padding: "16px",
                     borderRadius: "4px",
@@ -542,7 +542,7 @@ export default function OnboardingPage() {
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#86948a",
+                    color: "var(--text-muted)",
                     fontFamily: "'Space Grotesk', sans-serif",
                     fontSize: "11px",
                     fontWeight: 700,
@@ -576,7 +576,7 @@ export default function OnboardingPage() {
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                   fontSize: "10px",
-                  color: "#86948a",
+                  color: "var(--text-muted)",
                 }}
               >
                 NODE STATUS
@@ -585,7 +585,7 @@ export default function OnboardingPage() {
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
                   fontSize: "10px",
-                  color: "#4edea3",
+                  color: "var(--accent)",
                 }}
               >
                 BB-ALPHA-ONLINE
@@ -598,7 +598,7 @@ export default function OnboardingPage() {
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                   fontSize: "10px",
-                  color: "#86948a",
+                  color: "var(--text-muted)",
                 }}
               >
                 ENCRYPTION
@@ -632,7 +632,7 @@ export default function OnboardingPage() {
               style={{
                 height: "4px",
                 width: "4px",
-                backgroundColor: "#4edea3",
+                backgroundColor: "var(--accent)",
                 borderRadius: "50%",
                 display: "block",
               }}

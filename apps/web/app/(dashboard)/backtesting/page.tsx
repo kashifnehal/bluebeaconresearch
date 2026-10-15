@@ -164,7 +164,7 @@ export default function BacktestingPage() {
           {/* Left Column: Popular Backtests */}
           <section className="col-span-12 lg:col-span-5 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-label text-[#4EDEA3] text-[12px] md:text-[10px] font-black tracking-[0.2em] uppercase">
+              <h2 className="font-label text-[var(--accent)] text-[12px] md:text-[10px] font-black tracking-[0.2em] uppercase">
                 Popular Simulations
               </h2>
               <span className="font-label text-on-surface-variant/60 text-[12px] md:text-[9px] font-black tracking-[0.2em] uppercase md:hidden">

@@ -12,7 +12,7 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 function statusColor(status: CheckStatus) {
-  if (status === "Operational") return "#4edea3";
+  if (status === "Operational") return "var(--accent)";
   if (status === "Degraded") return "#f5a623";
   return "#8a8a8a";
 }
@@ -23,7 +23,7 @@ export default async function StatusPage() {
 
   const operationalCount = systems.filter((s) => s.status === "Operational").length;
   const allOperational = operationalCount === systems.length;
-  const bannerColor = allOperational ? "#4edea3" : "#f5a623";
+  const bannerColor = allOperational ? "var(--accent)" : "#f5a623";
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -32,14 +32,14 @@ export default async function StatusPage() {
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-8 py-16">
         {/* Banner */}
-        <div className="p-8 bg-[#131313] border border-[#3c4a42] rounded-lg mb-3 flex items-center justify-between">
+        <div className="p-8 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg mb-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: bannerColor }} />
             <div>
               <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 {allOperational ? "All Systems Operational" : "Partial System Disruption"}
               </h1>
-              <p className="text-xs text-[#86948a] mt-1 font-mono">
+              <p className="text-xs text-[var(--text-muted)] mt-1 font-mono">
                 {allOperational
                   ? "All live checks passed."
                   : "One or more subsystems are degraded or reporting an unknown state — see below."}
@@ -54,24 +54,24 @@ export default async function StatusPage() {
           </span>
         </div>
 
-        <p className="text-xs text-[#86948a] font-mono mb-12">
+        <p className="text-xs text-[var(--text-muted)] font-mono mb-12">
           Live checks run when this page loads. This is not a historical uptime figure.
         </p>
 
         {/* System List */}
         <section className="space-y-4 mb-12">
-          <h2 className="text-xs font-bold text-[#86948a] uppercase tracking-widest mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Subsystem Operational Metrics
           </h2>
 
-          <div className="divide-y divide-[#2a2a2a] border border-[#3c4a42] bg-[#131313] rounded-lg">
+          <div className="divide-y divide-[#2a2a2a] border border-[var(--border)] bg-[var(--bg-primary)] rounded-lg">
             {systems.map((sys) => (
               <div key={sys.name} className="p-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between hover:bg-[#1a1a1a] transition-colors">
                 <div>
                   <h3 className="font-bold text-sm text-[#e5e2e1]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                     {sys.name}
                   </h3>
-                  <p className="text-xs text-[#86948a] mt-0.5">{sys.detail}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{sys.detail}</p>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -89,13 +89,13 @@ export default async function StatusPage() {
         </section>
 
         {/* Timestamp */}
-        <div className="text-center text-xs font-mono text-[#86948a] pt-8 border-t border-[#2a2a2a]">
+        <div className="text-center text-xs font-mono text-[var(--text-muted)] pt-8 border-t border-[#2a2a2a]">
           Last updated: {currentTime}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[#86948a] font-mono">
+      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
         Blue Beacon Research Operational Dashboard • Automated Health Protocol
       </footer>
       <LegalDisclaimerFooter />

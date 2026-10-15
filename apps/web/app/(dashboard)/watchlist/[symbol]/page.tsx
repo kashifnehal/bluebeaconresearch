@@ -535,9 +535,9 @@ export default function WatchlistSymbolPage() {
               data-testid="watchlist-follow-toggle"
               className="inline-flex items-center gap-1.5 px-3 min-h-[44px] md:min-h-0 md:py-1.5 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
               style={{
-                backgroundColor: isWatchlisted ? "#4edea3" : "transparent",
-                color: isWatchlisted ? "#003824" : "#bbcac0",
-                borderColor: isWatchlisted ? "#4edea3" : "#3c4a42",
+                backgroundColor: isWatchlisted ? "var(--accent)" : "transparent",
+                color: isWatchlisted ? "#003824" : "var(--text-secondary)",
+                borderColor: isWatchlisted ? "var(--accent)" : "var(--border)",
               }}
             >
               <span
@@ -600,9 +600,9 @@ export default function WatchlistSymbolPage() {
                     onClick={() => setChartRange(range.id)}
                     className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                     style={{
-                      backgroundColor: selected ? "#4edea3" : "transparent",
-                      color: selected ? "#003824" : "#bbcac0",
-                      borderColor: selected ? "#4edea3" : "#3c4a42",
+                      backgroundColor: selected ? "var(--accent)" : "transparent",
+                      color: selected ? "#003824" : "var(--text-secondary)",
+                      borderColor: selected ? "var(--accent)" : "var(--border)",
                     }}
                   >
                     {range.label}
@@ -628,9 +628,9 @@ export default function WatchlistSymbolPage() {
                 onClick={() => setOverlaySymbol(null)}
                 className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
                 style={{
-                  backgroundColor: !overlaySymbol ? "#3c4a42" : "transparent",
-                  color: !overlaySymbol ? "#e8ece9" : "#bbcac0",
-                  borderColor: "#3c4a42",
+                  backgroundColor: !overlaySymbol ? "var(--border)" : "transparent",
+                  color: !overlaySymbol ? "#e8ece9" : "var(--text-secondary)",
+                  borderColor: "var(--border)",
                 }}
               >
                 None
@@ -647,8 +647,8 @@ export default function WatchlistSymbolPage() {
                     className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
                     style={{
                       backgroundColor: selected ? OVERLAY_LINE_COLOR : "transparent",
-                      color: selected ? "#04101f" : "#bbcac0",
-                      borderColor: selected ? OVERLAY_LINE_COLOR : "#3c4a42",
+                      color: selected ? "#04101f" : "var(--text-secondary)",
+                      borderColor: selected ? OVERLAY_LINE_COLOR : "var(--border)",
                     }}
                   >
                     {peer.label}

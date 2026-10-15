@@ -141,7 +141,7 @@ export default async function HowItWorksPage() {
         >
           How It Works
         </h1>
-        <p className="text-xs text-[#86948a] mb-8 font-mono leading-relaxed">
+        <p className="text-xs text-[var(--text-muted)] mb-8 font-mono leading-relaxed">
           Blue Beacon Research is a research platform, not a prediction machine. Research integrity is the
           whole point of this page — what we claim, and exactly how you can check it yourself.
         </p>
@@ -149,9 +149,9 @@ export default async function HowItWorksPage() {
         {stats.length > 0 ? (
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
             {stats.map((s) => (
-              <div key={s.label} className="rounded-lg border border-[#3c4a42] bg-[#131313] p-5">
+              <div key={s.label} className="rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-5">
                 <p className="font-mono text-3xl font-semibold text-[#e5e2e1]">{s.value}</p>
-                <p className="mt-2 text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a]">
+                <p className="mt-2 text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)]">
                   {s.label}
                 </p>
                 <p className="mt-1 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">{s.caption}</p>
@@ -162,25 +162,25 @@ export default async function HowItWorksPage() {
 
         <section className="space-y-3 mb-10">
           <h2
-            className="text-xs font-bold text-[#86948a] uppercase tracking-widest"
+            className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             What we claim, and how you can check it
           </h2>
-          <div className="divide-y divide-[#2a2a2a] rounded-lg border border-[#3c4a42]">
+          <div className="divide-y divide-[#2a2a2a] rounded-lg border border-[var(--border)]">
             {CLAIM_ROWS.map((row) => (
               <div key={row.claim} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 p-4 md:p-5">
                 <div>
-                  <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a] mb-1">
+                  <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">
                     Claim
                   </p>
                   <p className="text-sm text-[#e5e2e1] leading-relaxed">{row.claim}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[#86948a] mb-1">
+                  <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">
                     How you can check it
                   </p>
-                  <p className="text-sm text-[#bbcac0] leading-relaxed">{row.proof}</p>
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{row.proof}</p>
                 </div>
               </div>
             ))}
@@ -189,14 +189,14 @@ export default async function HowItWorksPage() {
 
         <section className="space-y-3 mb-10">
           <h2
-            className="text-xs font-bold text-[#86948a] uppercase tracking-widest"
+            className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Limits — what we don&apos;t do yet
           </h2>
-          <ul className="space-y-2 rounded-lg border border-[#3c4a42] bg-[#131313] p-5">
+          <ul className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-5">
             {LIMITS.map((item) => (
-              <li key={item} className="text-sm text-[#bbcac0] leading-relaxed flex gap-2">
+              <li key={item} className="text-sm text-[var(--text-secondary)] leading-relaxed flex gap-2">
                 <span className="text-[#6b7a72]" aria-hidden="true">
                   —
                 </span>
@@ -208,14 +208,14 @@ export default async function HowItWorksPage() {
 
         <p className="text-sm text-[#e5e2e1]">
           See the full history on the{" "}
-          <Link href="/accuracy" className="text-[#4edea3] hover:underline">
+          <Link href="/accuracy" className="text-[var(--accent)] hover:underline">
             Accuracy
           </Link>{" "}
           page.
         </p>
       </main>
 
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[#86948a] font-mono">
+      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
         Blue Beacon Research — Not investment advice.
       </footer>
       <LegalDisclaimerFooter />

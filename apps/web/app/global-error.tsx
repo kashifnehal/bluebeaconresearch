@@ -37,7 +37,7 @@ export default function GlobalError({
           <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
             Blue Beacon Research hit a critical error
           </h1>
-          <p style={{ fontSize: 14, color: "#bbcac0", marginBottom: 24 }}>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 24 }}>
             The application failed to load. It's been reported — try reloading.
           </p>
           <button
@@ -45,7 +45,7 @@ export default function GlobalError({
             style={{
               padding: "10px 20px",
               borderRadius: 8,
-              backgroundColor: "#4edea3",
+              backgroundColor: "var(--accent)",
               color: "#003824",
               border: "none",
               fontSize: 14,

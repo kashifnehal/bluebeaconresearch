@@ -415,7 +415,7 @@ function CalendarFilters({
 }) {
   const fieldClass = "flex items-center gap-2";
   const labelClass = "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
-  const labelStyle = { color: "#86948a", fontFamily: "'Space Grotesk', sans-serif" } as const;
+  const labelStyle = { color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" } as const;
   const patch = (partial: Partial<CalendarFilterValue>) => onChange({ ...filters, ...partial });
 
   return (
@@ -503,9 +503,9 @@ function CalendarFilters({
                 className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
-                  backgroundColor: selected ? "#4edea3" : "#201f1f",
-                  color: selected ? "#005f40" : "#bbcac0",
-                  borderColor: selected ? "#4edea3" : "#3c4a42",
+                  backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+                  color: selected ? "#005f40" : "var(--text-secondary)",
+                  borderColor: selected ? "var(--accent)" : "var(--border)",
                 }}
               >
                 {opt.label}
@@ -542,9 +542,9 @@ function DayStrip({
             className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 min-w-[56px] shrink-0 border rounded-md transition-colors cursor-pointer min-h-[44px]"
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
-              backgroundColor: selected ? "#4edea3" : "#201f1f",
-              color: selected ? "#005f40" : "#bbcac0",
-              borderColor: selected ? "#4edea3" : "#3c4a42",
+              backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+              color: selected ? "#005f40" : "var(--text-secondary)",
+              borderColor: selected ? "var(--accent)" : "var(--border)",
             }}
           >
             <span className="text-[10px] font-bold uppercase tracking-widest">{d.weekday}</span>
@@ -561,9 +561,9 @@ function DayStrip({
           className="ml-1 px-3 py-2 text-[12px] font-bold uppercase tracking-widest border rounded-md shrink-0 min-h-[44px] cursor-pointer transition-colors"
           style={{
             fontFamily: "'Space Grotesk', sans-serif",
-            backgroundColor: "#201f1f",
-            color: "#bbcac0",
-            borderColor: "#3c4a42",
+            backgroundColor: "var(--bg-container)",
+            color: "var(--text-secondary)",
+            borderColor: "var(--border)",
           }}
         >
           Show all
@@ -669,9 +669,9 @@ export default function CalendarPage() {
           className="shrink-0 px-4 py-2.5 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center gap-2"
           style={{
             fontFamily: "'Space Grotesk', sans-serif",
-            backgroundColor: "#201f1f",
-            color: "#4edea3",
-            borderColor: "#3c4a42",
+            backgroundColor: "var(--bg-container)",
+            color: "var(--accent)",
+            borderColor: "var(--border)",
           }}
         >
           <span className="material-symbols-outlined text-[16px]">download</span>

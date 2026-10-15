@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-15 — Those six colours use the CSS variables. Props and layout are unchanged. Full detail: `docs/brain/06_COMPONENTS.md`.
+
 > ⚠️ UPDATED 2026-10-15 — `FirstTouchCapture` and `FirstTouchLogger` (`9da1540`) keep campaign tags and an external referrer host in the browser for the visit and save them on email signup. No cookie. Full detail: `docs/brain/06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-10-14 — the signal drawer shows the report count, unique outlets when a domain or source label exists, and up to five headlines. `sources[].domain` falls back to the article hostname. Full detail: `docs/brain/06_COMPONENTS.md` §3.4.
