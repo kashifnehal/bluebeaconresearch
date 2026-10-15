@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (price and sanctions indexes recorded, not applied).**
+> **📍 Doc status — live status banners as of 2026-10-16 (sanctions sync writes only changed rows; function not applied).**
+
+> ⚠️ NEW 2026-10-16 (sanctions sync, `apps/backend`, function written not applied) — the daily sync calls `upsert_sanctions_entities` and records `fetched N, changed M`. A missing function falls back to the previous upsert for that run. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (price and sanctions indexes, migrations written, not applied) — `commodity_prices_fetched_at_idx` records an index already created in production on 2026-10-16. `idx_sanctions_entities_name` is dropped because the unique `(name, list)` index already serves name lookups. See `docs/brain/LIVE_TODO.md`.
 

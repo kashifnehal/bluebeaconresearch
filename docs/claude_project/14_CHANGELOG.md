@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Sanctions sync writes only changed rows
+
+`apps/backend` and one migration, written not applied. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Price and sanctions indexes recorded
 
 Migrations written, not applied. Full detail: `docs/brain/14_CHANGELOG.md`.

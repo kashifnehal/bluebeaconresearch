@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Sanctions sync writes only rows that changed, 2026-10-16
+
+- `public.upsert_sanctions_entities(jsonb)` inserts or updates a row only when `raw_data` or `source_url` differs, and returns how many rows changed. Written, not applied. Execute is granted to `service_role` only.
+- The 04:00 UTC sync still uses chunks of 500, the 20 hour guard, and a health row. The health detail is `fetched N, changed M`. If the function is missing (`PGRST202`), that run falls back to the previous upsert.
+- No open priority-queue line. Nothing struck.
+
 ## ✅ Price and sanctions indexes recorded, migrations written not applied, 2026-10-16
 
 - `commodity_prices_fetched_at_idx` on `(fetched_at desc)`. The latest-prices query orders by `fetched_at` alone and scanned the whole table. The index was already created on 2026-10-16 in production; this file records it and is safe to run again.

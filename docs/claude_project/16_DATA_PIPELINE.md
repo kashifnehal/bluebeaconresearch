@@ -408,7 +408,7 @@ The frontend NEVER receives null prices — there is always a value to display.
 **Flow:**
 1. Download and parse each XML source
 2. Extract: entity name, aliases, list type, date_added
-3. Upsert to sanctions_entities table
+3. Upsert to sanctions_entities table via `upsert_sanctions_entities`, which updates a row only when `raw_data` or `source_url` differs (written 2026-10-16, not applied; a missing function falls back to a full upsert for that run)
 4. GIN index on (name + aliases) enables fast full-text search during signal generation
 
 ---

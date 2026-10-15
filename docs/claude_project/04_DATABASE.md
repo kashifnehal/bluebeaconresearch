@@ -166,6 +166,7 @@ CREATE INDEX idx_commodity_prices_symbol ON public.commodity_prices (symbol, fet
 -- 2026-10-16, written not applied: commodity_prices_fetched_at_idx (fetched_at desc),
 -- already created in production that day. Drop idx_sanctions_entities_name;
 -- the unique (name, list) index already serves name lookups.
+-- upsert_sanctions_entities updates a row only when raw_data or source_url differs.
 -- Full note in docs/brain/04_DATABASE.md.
 CREATE INDEX idx_alerts_sent_user ON public.alerts_sent (user_id, created_at DESC);
 -- alerts_sent gained deferred_to_digest (boolean) + a 'deferred' status value,

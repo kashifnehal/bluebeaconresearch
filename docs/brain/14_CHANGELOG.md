@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Sanctions sync writes only changed rows
+
+`apps/backend` and one migration, written not applied. The daily sync calls `upsert_sanctions_entities`, which skips a row whose `raw_data` and `source_url` are unchanged. Health detail is `fetched N, changed M`. A missing function falls back to the previous upsert for that run.
+
 ### 2026-10-16 — Price and sanctions indexes recorded
 
 Migrations written, not applied. `commodity_prices (fetched_at desc)` records an index already created in production on 2026-10-16. `idx_sanctions_entities_name` is dropped because the unique `(name, list)` index already serves name lookups.

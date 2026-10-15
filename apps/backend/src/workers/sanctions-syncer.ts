@@ -72,7 +72,7 @@ export async function runSanctionsSyncOnce(deps: SanctionsSyncDeps = {}) {
     console.log(
       `[Sanctions] skipping run — last successful sync was ${Math.round((now() - lastSuccessAt) / 60_000)}min ago (< ${MIN_HOURS_BETWEEN_RUNS}h)`,
     );
-    return { ok: true as const, list: "OFAC SDN", upserted: 0, skipped: "recent_run" as const };
+    return { ok: true as const, list: "OFAC SDN", upserted: 0, changed: 0, skipped: "recent_run" as const };
   }
 
   const startedAt = now();
@@ -109,31 +109,53 @@ export async function runSanctionsSyncOnce(deps: SanctionsSyncDeps = {}) {
   }
   const rows = [...byKey.values()];
 
-  // Batched upsert (chunks of 500) instead of one round-trip per entry — the SDN
-  // list is ~15k rows.
-  let upserted = 0;
+  // Chunks of 500. upsert_sanctions_entities inserts new rows and updates a row
+  // only when raw_data or source_url differs, then returns how many changed.
+  let changed = 0;
+  let useRowUpsert = false;
   for (let i = 0; i < rows.length; i += UPSERT_CHUNK_SIZE) {
     const chunk = rows.slice(i, i + UPSERT_CHUNK_SIZE);
+    const chunkIndex = i / UPSERT_CHUNK_SIZE;
+    if (!useRowUpsert) {
+      const { data, error } = await supabase.rpc("upsert_sanctions_entities", { p_rows: chunk });
+      if (!error) {
+        const n = typeof data === "number" ? data : Number(data ?? 0);
+        changed += Number.isFinite(n) ? n : 0;
+        continue;
+      }
+      if (error.code === "PGRST202") {
+        console.error(
+          "[Sanctions] upsert_sanctions_entities is missing (PGRST202); using row upsert for this run",
+        );
+        useRowUpsert = true;
+      } else {
+        console.error(
+          `[Sanctions] upsert chunk ${chunkIndex} (${chunk.length} rows) failed:`,
+          error.message,
+        );
+        continue;
+      }
+    }
     const { error } = await supabase
       .from("sanctions_entities")
       .upsert(chunk, { onConflict: "name,list" });
     if (error) {
       console.error(
-        `[Sanctions] upsert chunk ${i / UPSERT_CHUNK_SIZE} (${chunk.length} rows) failed:`,
+        `[Sanctions] upsert chunk ${chunkIndex} (${chunk.length} rows) failed:`,
         error.message,
       );
       continue;
     }
-    upserted += chunk.length;
+    changed += chunk.length;
   }
 
   await recordHealth(
     SANCTIONS_SYNC_SERVICE,
     "ok",
-    `fetched ${arr.length}, upserted ${upserted} row(s)`,
+    `fetched ${arr.length}, changed ${changed}`,
     now() - startedAt,
   );
 
-  return { ok: true as const, list, upserted };
+  return { ok: true as const, list, upserted: changed, changed };
 }
 

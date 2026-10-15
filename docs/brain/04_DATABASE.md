@@ -265,6 +265,7 @@ Service-role only (RLS enabled, no policy — correct by design).
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
 - **Unique Constraint**: `UNIQUE(name, list)`
 - `idx_sanctions_entities_name` is dropped in a migration written 2026-10-16, not applied. The unique `(name, list)` index already serves lookups by name.
+- `upsert_sanctions_entities(jsonb)` returns how many rows were inserted or updated. An existing row is updated only when `raw_data` or `source_url` differs. Written 2026-10-16, not applied. Execute is granted to `service_role` only.
 
 ### Table 17: `backtest_cache`
 Service-role only (RLS enabled, no policy — correct by design).
