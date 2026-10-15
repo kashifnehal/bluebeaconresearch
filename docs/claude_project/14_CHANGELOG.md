@@ -8,7 +8,11 @@
 
 ---
 
-## PHASE 168 — "Global" is not a map location (2026-10-15, this commit)
+## PHASE 169 — Singular wording on the signal count line (2026-10-15, `2c977d8`)
+
+`apps/web` only. One signal and one day use the singular on the loaded-row count line. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.192.0.
+
+## PHASE 168 — "Global" is not a map location (2026-10-15, `2c977d8`)
 
 `apps/web` only. The country value "Global" is not a Locations row. "European Union" stays a place. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.191.0.
 
