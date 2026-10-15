@@ -3,6 +3,13 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Public pages do not call a closed daily cap a pause, `apps/web`, 2026-10-16
+
+- On `/status`, a closed cap keeps Classifier and Data Pipeline Operational, with the same detail they show when the cap is open and healthy. Intelligence Feed stays Operational and says "Newest signal N min ago." An open cap still marks a stale collector Degraded. Database, price history, and alert delivery are unchanged.
+- The dashboard ingestion box keeps the live lines and the newest stored article time when every collector is closed. `budgetClosed` stays on `GET /api/ingestion/status`. The homepage badge and the how-it-works claim no longer mention the cap. An inactive alert rule still says "Paused".
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `06`, `10`; claude_project `09`, `08`, `14`, `06`, `10`. Skipped both `05_API.md`, both `04_DATABASE.md`, and `18_AI_ENGINE.md` — no route, table, or prompt.
+
 ## ✅ Service health rows older than 45 days are deleted weekly, `apps/backend`, 2026-10-16
 
 - Sunday 03:00 UTC deletes `service_health_events` with `created_at` older than 45 days, 5000 ids at a time, at most 20 batches. Readers checked the same day stay inside 45 days: month-spend health read is the current UTC day (the month sum is `anthropic_daily_usage`), gate counts are 14 days, category guard is the current UTC day, feed-volume reads the latest 200 rows, sanctions sync reads the latest ok row, admin counts 24 hours, the replay script reads 2026-10-04 through 2026-10-08, and the status page reads the latest ok ingestion row.

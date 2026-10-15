@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   allCollectorsBudgetClosed,
-  COLLECTION_PAUSED_SENTENCE,
   newestStoredArticleIso,
   type CollectorBudgetSnapshot,
 } from "@/lib/ingestion-budget-banner";
@@ -51,17 +50,18 @@ export function IngestionStatusBannerView({ data }: { data: IngestionStatusRespo
   if (!status?.lastFetchedAt) return null;
 
   const degraded = data?.degraded ?? false;
-  const budgetPaused = allCollectorsBudgetClosed(status.collectors);
+  const allClosed = allCollectorsBudgetClosed(status.collectors);
   const articleIso = newestStoredArticleIso(status);
   const lastFetched = new Date(status.lastFetchedAt);
   const nextFetch = status.nextFetchEstimate ? new Date(status.nextFetchEstimate) : null;
   // Scales with the real cadence (cronIntervalMinutes) rather than a fixed 20 min —
   // a fixed threshold shorter than the actual interval flagged "delayed" for the
   // back half of every normal cycle. 1.5x gives one cycle's worth of slack before
-  // a real miss is flagged.
+  // a real miss is flagged. A closed cap is not that miss (2026-10-16).
   const cronIntervalMinutes = data?.cronIntervalMinutes ?? 15;
-  const isStale = Date.now() - lastFetched.getTime() > cronIntervalMinutes * 1.5 * 60 * 1000;
-  const notHealthy = isStale || degraded || budgetPaused;
+  const isStale =
+    !allClosed && Date.now() - lastFetched.getTime() > cronIntervalMinutes * 1.5 * 60 * 1000;
+  const notHealthy = isStale || degraded;
 
   return (
     <div
@@ -79,28 +79,18 @@ export function IngestionStatusBannerView({ data }: { data: IngestionStatusRespo
           style={{ backgroundColor: notHealthy ? "#ef4444" : "var(--accent)" }}
         />
         <span className="font-bold uppercase" style={{ color: notHealthy ? "#f0a0a0" : "var(--accent)" }}>
-          {budgetPaused
-            ? "Collection paused"
-            : degraded
-              ? "Ingestion status unavailable"
-              : isStale
-                ? "Ingestion delayed"
-                : "Live ingestion"}
+          {degraded ? "Ingestion status unavailable" : isStale ? "Ingestion delayed" : "Live ingestion"}
         </span>
       </span>
 
-      {budgetPaused ? (
-        <span>{COLLECTION_PAUSED_SENTENCE}</span>
-      ) : (
-        <span>
-          Last fetched{" "}
-          <strong style={{ color: "#e5e2e1" }}>
-            {safeFormatDistanceToNow(lastFetched, { addSuffix: true })}
-          </strong>
-        </span>
-      )}
+      <span>
+        Last fetched{" "}
+        <strong style={{ color: "#e5e2e1" }}>
+          {safeFormatDistanceToNow(lastFetched, { addSuffix: true })}
+        </strong>
+      </span>
 
-      {budgetPaused && articleIso && (
+      {allClosed && articleIso && (
         <span>
           Last collected:{" "}
           <strong style={{ color: "#e5e2e1" }}>
@@ -109,7 +99,7 @@ export function IngestionStatusBannerView({ data }: { data: IngestionStatusRespo
         </span>
       )}
 
-      {nextFetch && !degraded && !budgetPaused && (
+      {nextFetch && !degraded && (
         <span>
           {nextFetch.getTime() < Date.now() ? "Next run overdue by ~" : "Next run in ~"}
           <strong style={{ color: "#e5e2e1" }}>
@@ -139,9 +129,7 @@ export function IngestionStatusBannerView({ data }: { data: IngestionStatusRespo
         </span>
       )}
 
-      {!budgetPaused && (
-        <span className="opacity-70">Every {cronIntervalMinutes} min · RSS · GNews · GDELT</span>
-      )}
+      <span className="opacity-70">Every {cronIntervalMinutes} min · RSS · GNews · GDELT</span>
     </div>
   );
 }

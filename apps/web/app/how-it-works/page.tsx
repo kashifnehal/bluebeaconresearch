@@ -71,7 +71,7 @@ const CLAIM_ROWS: ClaimRow[] = [
     proof: "Open any signal and check its Sources tab.",
   },
   {
-    claim: "When the AI model is unavailable or the daily budget is reached, we pause classification instead of guessing. Older signals from the keyword period stay marked as auto-classified.",
+    claim: "When the AI model is unavailable, we wait for it instead of guessing. Older signals from the keyword period stay marked as auto-classified.",
     proof:
       "An auto-classified signal shows a note on its page: \"This signal was auto-classified — Claude analysis is temporarily unavailable.\"",
   },

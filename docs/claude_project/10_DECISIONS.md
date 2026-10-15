@@ -7,6 +7,22 @@
 
 ---
 
+## Public pages and a closed daily cap (2026-10-16)
+
+### Context
+
+A closed daily cap stopped new collection. The public status page then reported a partial disruption, and the dashboard said collection was paused until the next UTC day.
+
+### Decision
+
+Public pages do not describe a closed daily cap as a pause, a disruption, or a wait until the next UTC day. While the cap is open, a stale collector still shows as degraded.
+
+### Rationale
+
+The founder decided this on 2026-10-16. The cap is an internal limit. Readers should see the live checks and the newest stored article time.
+
+---
+
 ## D1: Monorepo vs Polyrepo
 
 **Decision:** Turborepo monorepo (pnpm workspaces)

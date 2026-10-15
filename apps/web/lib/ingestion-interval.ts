@@ -1,7 +1,7 @@
 /** Must match the backend ingestion schedule. */
 export const INGESTION_INTERVAL_MINUTES = 30;
 
-export const HOMEPAGE_COLLECTION_BADGE = `Monitoring active global conflicts — collection runs about every ${INGESTION_INTERVAL_MINUTES} minutes while the daily budget is open`;
+export const HOMEPAGE_COLLECTION_BADGE = `Monitoring active global conflicts — collection runs about every ${INGESTION_INTERVAL_MINUTES} minutes`;
 
 export const HOMEPAGE_LATEST_SIGNAL_SCHEDULE = `The most recent signal from the collector pipeline. New events are collected on a regular schedule, about every ${INGESTION_INTERVAL_MINUTES} minutes. Every signal shows when the story was reported and when we flagged it.`;
 

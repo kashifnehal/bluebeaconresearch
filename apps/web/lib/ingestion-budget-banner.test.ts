@@ -3,12 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { IngestionStatusBannerView } from "../components/IngestionStatusBanner";
-import {
-  allCollectorsBudgetClosed,
-  COLLECTION_PAUSED_SENTENCE,
-  newestStoredArticleIso,
-} from "./ingestion-budget-banner";
-import { INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX } from "./status-checks";
+import { allCollectorsBudgetClosed, newestStoredArticleIso } from "./ingestion-budget-banner";
 import { safeFormatDistanceToNow } from "./utils";
 
 function runTest(name: string, fn: () => void) {
@@ -47,11 +42,7 @@ function render(data: Parameters<typeof IngestionStatusBannerView>[0]["data"]): 
   return visibleText(renderToStaticMarkup(createElement(IngestionStatusBannerView, { data })));
 }
 
-runTest("paused sentence matches the status page collection line", () => {
-  assert.equal(COLLECTION_PAUSED_SENTENCE, INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX.trim());
-});
-
-runTest("all collectors budget-closed shows the paused sentence and hides the healthy lines", () => {
+runTest("all collectors closed shows the live state, the article time, and no paused text", () => {
   const collectors = {
     gdelt: { budgetClosed: true },
     gnews: { budgetClosed: true },
@@ -62,16 +53,37 @@ runTest("all collectors budget-closed shows the paused sentence and hides the he
 
   const text = render(status(collectors, ARTICLE_AT));
   const relative = safeFormatDistanceToNow(ARTICLE_AT, { addSuffix: true });
-  assert.match(text, /Collection paused/);
-  assert.ok(text.includes(COLLECTION_PAUSED_SENTENCE));
+  assert.doesNotMatch(text, /paused/i);
+  assert.ok(text.includes("Live ingestion"));
+  assert.ok(text.includes("Last fetched"));
   assert.ok(text.includes(`Last collected: ${relative}`));
-  assert.equal(text.includes("Last fetched"), false);
-  assert.equal(text.includes("Next run"), false);
-  assert.equal(text.includes("Every 30 min"), false);
-  assert.equal(text.includes("Live ingestion"), false);
+  assert.ok(text.includes("Next run"));
+  assert.ok(text.includes("Every 30 min"));
 });
 
-runTest("all collectors budget-closed omits Last collected when no article time is present", () => {
+runTest("all collectors closed still shows the live state when the last fetch is old", () => {
+  const now = Date.now();
+  const text = render({
+    status: {
+      lastFetchedAt: new Date(now - 6 * 60 * 60 * 1000).toISOString(),
+      nextFetchEstimate: new Date(now + 20 * 60 * 1000).toISOString(),
+      totals: { inserted: 0, signals: 0, fetched: 0 },
+      collectors: {
+        gdelt: { budgetClosed: true },
+        gnews: { budgetClosed: true },
+        rss: { budgetClosed: true },
+      },
+      newestStoredArticleAt: ARTICLE_AT,
+    },
+    cronIntervalMinutes: 30,
+    degraded: false,
+  });
+  assert.doesNotMatch(text, /paused/i);
+  assert.ok(text.includes("Live ingestion"));
+  assert.equal(text.includes("Ingestion delayed"), false);
+});
+
+runTest("all collectors closed omits Last collected when no article time is present", () => {
   const text = render(
     status({
       gdelt: { budgetClosed: true },
@@ -79,7 +91,9 @@ runTest("all collectors budget-closed omits Last collected when no article time 
       rss: { budgetClosed: true },
     }),
   );
-  assert.ok(text.includes(COLLECTION_PAUSED_SENTENCE));
+  assert.doesNotMatch(text, /paused/i);
+  assert.ok(text.includes("Live ingestion"));
+  assert.ok(text.includes("Last fetched"));
   assert.equal(text.includes("Last collected"), false);
   assert.equal(newestStoredArticleIso({}), null);
   assert.equal(newestStoredArticleIso({ newestStoredArticleAt: "not-a-date" }), null);
@@ -93,7 +107,7 @@ runTest("one collector not budget-closed leaves the healthy lines", () => {
   };
   assert.equal(allCollectorsBudgetClosed(collectors), false);
   const text = render(status(collectors, ARTICLE_AT));
-  assert.equal(text.includes(COLLECTION_PAUSED_SENTENCE), false);
+  assert.doesNotMatch(text, /paused/i);
   assert.equal(text.includes("Last collected"), false);
   assert.ok(text.includes("Last fetched"));
   assert.ok(text.includes("Next run"));
@@ -109,7 +123,7 @@ runTest("no collector budget-closed leaves the healthy lines", () => {
   };
   assert.equal(allCollectorsBudgetClosed(collectors), false);
   const text = render(status(collectors));
-  assert.equal(text.includes(COLLECTION_PAUSED_SENTENCE), false);
+  assert.doesNotMatch(text, /paused/i);
   assert.ok(text.includes("Last fetched"));
   assert.ok(text.includes("Next run in"));
   assert.ok(text.includes("Every 30 min"));
@@ -125,7 +139,7 @@ runTest("a missing budgetClosed field is not closed", () => {
   assert.equal(allCollectorsBudgetClosed({}), false);
   assert.equal(allCollectorsBudgetClosed(null), false);
   const text = render(status(collectors));
-  assert.equal(text.includes(COLLECTION_PAUSED_SENTENCE), false);
+  assert.doesNotMatch(text, /paused/i);
   assert.ok(text.includes("Last fetched"));
   assert.ok(text.includes("Next run"));
   assert.ok(text.includes("Every 30 min"));

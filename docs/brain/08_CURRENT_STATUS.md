@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (service health rows older than 45 days)
+Last updated: 2026-10-16 (public pages and a closed daily cap)
+
+> ⚠️ NEW 2026-10-16 (public pages and a closed daily cap, `apps/web` only) — a closed cap no longer marks Classifier, Data Pipeline, or Intelligence Feed down, and the dashboard ingestion box stays on the live lines plus the newest stored article time. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (service health retention, `apps/backend` only) — Sunday 03:00 UTC deletes `service_health_events` older than 45 days, 5000 rows at a time, at most 20 batches. Readers checked the same day look back less than 45 days.
 
@@ -20,7 +22,7 @@ Last updated: 2026-10-16 (service health rows older than 45 days)
 
 > ⚠️ NEW 2026-10-15 — 2026-10-11 08:00 UTC to 2026-10-14 07:30 UTC: no signals were created because the Anthropic Console monthly limit was reached; collection stored 96 rows a day; articles not stored in that window were not recovered.
 
-> ⚠️ NEW 2026-10-14 — 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC; the dashboard and status page say so.
+> ⚠️ NEW 2026-10-14 — 2026-10-14: the $2 daily ingestion cap was reached at 12:31 UTC; collection pauses until 00:00 UTC. Public pages described that until 2026-10-16.
 
 > ⚠️ NEW 2026-10-15 (status check retry and homepage count, `apps/web` only, `cdcccdd`) — a timed-out status check is retried. The homepage total is cached.
 

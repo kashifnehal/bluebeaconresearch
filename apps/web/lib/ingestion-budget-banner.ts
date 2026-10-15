@@ -1,11 +1,8 @@
 /**
- * Dashboard "Live ingestion" box when every collector in GET /api/ingestion/status
- * skipped the cycle because the daily classification budget is closed.
- * The sentence is the status page Intelligence Feed line, without the leading
- * space that line uses when it is appended to another sentence (2026-10-15).
+ * Helpers for the dashboard ingestion box. `budgetClosed` stays on each collector
+ * in GET /api/ingestion/status. When every collector is closed, the box still
+ * shows the live state and the newest stored article time (2026-10-16).
  */
-
-export const COLLECTION_PAUSED_SENTENCE = "Collection is paused until the next UTC day.";
 
 export type CollectorBudgetSnapshot = {
   budgetClosed?: boolean;

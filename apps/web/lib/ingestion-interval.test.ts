@@ -34,7 +34,7 @@ runTest("collection interval is 30 minutes", () => {
 runTest("homepage and dashboard copy name the interval and the check points", () => {
   assert.equal(
     HOMEPAGE_COLLECTION_BADGE,
-    "Monitoring active global conflicts — collection runs about every 30 minutes while the daily budget is open",
+    "Monitoring active global conflicts — collection runs about every 30 minutes",
   );
   assert.equal(
     HOMEPAGE_LATEST_SIGNAL_SCHEDULE,

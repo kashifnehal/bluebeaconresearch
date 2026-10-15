@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Public pages and a closed daily cap
+
+`apps/web` only. A closed cap keeps Classifier, Data Pipeline, and Intelligence Feed Operational. The dashboard ingestion box keeps the live lines and the newest stored article time. The homepage badge and the how-it-works claim no longer mention the cap. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Service health retention
 
 `apps/backend` only. Sunday 03:00 UTC deletes `service_health_events` older than 45 days, in batches of 5000, at most 20 batches. Every reader checked on 2026-10-16 looks back less than 45 days.

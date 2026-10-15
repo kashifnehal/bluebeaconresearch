@@ -68,9 +68,9 @@ function formatMinutesAgo(ms: number): string {
  * recent status:'ok' row across INGESTION_COLLECTOR_SERVICES (or null if none exist
  * within the lookback window the caller queried); `latestSignalCreatedAt` is used
  * only to add age-of-newest-signal as extra detail text, never as the pass/fail rule.
- * `budgetClosed` does not change the status. When true, a trailing period is
- * added if the detail does not already end with one, then
- * INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX is appended.
+ * When `budgetClosed` is true, an old collector run is not an outage: the check
+ * stays Operational and the detail is the newest-signal age only (2026-10-16).
+ * When false, a stale or missing collector run is still Degraded.
  */
 export function evaluateIntelligenceFeedHealth(
   latestOkHealthRow: { service: string; created_at: string } | null,
@@ -79,49 +79,35 @@ export function evaluateIntelligenceFeedHealth(
   now: number = Date.now(),
   budgetClosed = false,
 ): SystemCheck {
-  const signalDetail = latestSignalCreatedAt
-    ? `newest signal ${formatMinutesAgo(now - new Date(latestSignalCreatedAt).getTime())}`
-    : "no signals recorded yet";
+  const signalAge = latestSignalCreatedAt
+    ? formatMinutesAgo(now - new Date(latestSignalCreatedAt).getTime())
+    : null;
 
-  let result: SystemCheck;
+  if (budgetClosed) {
+    return {
+      name: "Intelligence Feed",
+      status: "Operational",
+      detail: signalAge ? `Newest signal ${signalAge}.` : "No signals recorded yet.",
+    };
+  }
+
+  const signalDetail = signalAge ? `newest signal ${signalAge}` : "no signals recorded yet";
+
   if (!latestOkHealthRow) {
-    result = {
+    return {
       name: "Intelligence Feed",
       status: "Degraded",
       detail: `No ingestion collector (gdelt/gnews/rss/acled) has reported healthy (${signalDetail})`,
     };
-  } else {
-    const ageMs = now - new Date(latestOkHealthRow.created_at).getTime();
-    const healthy = ageMs <= freshnessCutoffMs(intervalMinutes);
-    result = {
-      name: "Intelligence Feed",
-      status: healthy ? "Operational" : "Degraded",
-      detail: `${latestOkHealthRow.service} collector last reported healthy ${formatMinutesAgo(ageMs)} (${signalDetail})`,
-    };
   }
 
-  return withBudgetPausedNote(result, budgetClosed);
-}
-
-// When the daily ingestion budget is closed, collection pauses and no signal is
-// created from a keyword guess. Budget resets at UTC midnight — this repo never
-// guesses a reopen time, so the copy says "next UTC day", not a clock time.
-// The keyword fallback applies only when no Anthropic client is configured.
-export const BUDGET_CLOSED_DETAIL =
-  "Classification paused until the next UTC day (daily budget reached). New news is not being collected.";
-
-// Data Pipeline line when pipeline:last_run.budgetClosed is true. No dollar amount
-// and no clock-time reopen — the budget resets on the next UTC day.
-export const DATA_PIPELINE_BUDGET_CLOSED_DETAIL =
-  "Paused: the daily classification budget is reached. No new news is collected until the next UTC day.";
-
-// Leading space is part of the sentence so it joins the Intelligence Feed's existing detail.
-export const INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX = " Collection is paused until the next UTC day.";
-
-function withBudgetPausedNote(check: SystemCheck, budgetClosed: boolean): SystemCheck {
-  if (!budgetClosed) return check;
-  const detail = check.detail.endsWith(".") ? check.detail : `${check.detail}.`;
-  return { ...check, detail: `${detail}${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}` };
+  const ageMs = now - new Date(latestOkHealthRow.created_at).getTime();
+  const healthy = ageMs <= freshnessCutoffMs(intervalMinutes);
+  return {
+    name: "Intelligence Feed",
+    status: healthy ? "Operational" : "Degraded",
+    detail: `${latestOkHealthRow.service} collector last reported healthy ${formatMinutesAgo(ageMs)} (${signalDetail})`,
+  };
 }
 
 /**
@@ -129,10 +115,9 @@ function withBudgetPausedNote(check: SystemCheck, budgetClosed: boolean): System
  * `rows` is every `signals` row created in the lookback window (classification_method
  * only); `null` means the query itself failed/timed out (→ Unknown), as distinct from
  * an empty array, which means no signals were created (→ Operational, nothing to flag).
- * `budgetClosed` is today's `pipeline:last_run.budgetClosed` flag (set by the backend
- * ingestion-budget gate) — when true it overrides the row-derived detail with the one
- * honest line above. A closed cap pauses collection; it does not create a signal
- * from a keyword guess.
+ * `budgetClosed` is today's `pipeline:last_run.budgetClosed` flag. When true the
+ * check stays Operational and uses the same count line as a healthy open cap
+ * (2026-10-16). A closed cap does not create a signal from a keyword guess.
  */
 export function evaluateClassifierHealth(
   rows: Array<{ classification_method: string | null }> | null,
@@ -142,12 +127,13 @@ export function evaluateClassifierHealth(
   const unknownDetail =
     "At least one signal classified via Claude in the last 6 h (keyword fallback only when no research-model client is configured; collection pauses when the classifier cannot run)";
 
-  if (budgetClosed) return { name, status: "Degraded", detail: BUDGET_CLOSED_DETAIL };
-  if (rows === null) return { name, status: "Unknown", detail: unknownDetail };
-
-  const claudeCount = rows.filter((r) => r.classification_method === "claude").length;
-  const heuristicCount = rows.filter((r) => r.classification_method === "heuristic").length;
+  const counted = rows ?? [];
+  const claudeCount = counted.filter((r) => r.classification_method === "claude").length;
+  const heuristicCount = counted.filter((r) => r.classification_method === "heuristic").length;
   const detail = `last 6 h: ${claudeCount} Claude, ${heuristicCount} keyword fallback (only with no research-model client)`;
+
+  if (budgetClosed) return { name, status: "Operational", detail };
+  if (rows === null) return { name, status: "Unknown", detail: unknownDetail };
 
   if (rows.length === 0 || claudeCount > 0) return { name, status: "Operational", detail };
   return { name, status: "Degraded", detail };
@@ -159,7 +145,7 @@ export function evaluateClassifierHealth(
  * was inferred from the newest raw_events row instead — per-collector health is
  * unknowable in that case, so it's never reported as a clean "Operational".
  * `budgetClosed` is the same flag checkClassifier receives from getPipelineRunStatus().
- * When true, collectors are not fetching, so freshness is not the status.
+ * When true, the check stays Operational with the healthy open-cap detail (2026-10-16).
  */
 export function evaluateDataPipelineFreshness(
   lastFetchedAt: string | null,
@@ -169,9 +155,8 @@ export function evaluateDataPipelineFreshness(
   budgetClosed = false,
 ): SystemCheck {
   const name = "Data Pipeline";
-  if (budgetClosed) return { name, status: "Degraded", detail: DATA_PIPELINE_BUDGET_CLOSED_DETAIL };
-
   const detail = `Most recent ingested event, across all collectors combined, is less than ${intervalMinutes * 2} minutes old`;
+  if (budgetClosed) return { name, status: "Operational", detail };
 
   if (!lastFetchedAt) return { name, status: "Unknown", detail };
 
@@ -238,8 +223,7 @@ function getUpstashRedis() {
 
 async function checkIntelligenceFeed(intervalMinutes: number, budgetClosed = false): Promise<SystemCheck> {
   const unknownDetail = "At least one ingestion collector (gdelt/gnews/rss/acled) reported healthy recently";
-  const unknown = (): SystemCheck =>
-    withBudgetPausedNote({ name: "Intelligence Feed", status: "Unknown", detail: unknownDetail }, budgetClosed);
+  const unknown = (): SystemCheck => ({ name: "Intelligence Feed", status: "Unknown", detail: unknownDetail });
   return runStatusCheckWithRetry(async () => {
     const supabase = getAdminSupabase();
     if (!supabase) return unknown();

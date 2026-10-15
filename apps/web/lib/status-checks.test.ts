@@ -6,9 +6,6 @@ import {
   evaluateDataPipelineFreshness,
   evaluatePriceHistoryHealth,
   runStatusCheckWithRetry,
-  BUDGET_CLOSED_DETAIL,
-  DATA_PIPELINE_BUDGET_CLOSED_DETAIL,
-  INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX,
 } from "./status-checks";
 
 function runTest(name: string, fn: () => void) {
@@ -23,6 +20,11 @@ function runTest(name: string, fn: () => void) {
 }
 
 const NOW = new Date("2026-10-01T12:00:00.000Z").getTime();
+const CLOSED_CAP_COPY = /paused|budget|UTC day/i;
+
+function assertNoClosedCapCopy(detail: string) {
+  assert.doesNotMatch(detail, CLOSED_CAP_COPY);
+}
 
 runTest("healthy when an ingestion collector reported ok within the cutoff, even with no recent signal", () => {
   const result = evaluateIntelligenceFeedHealth(
@@ -136,44 +138,50 @@ runTest("Classifier is Unknown when the underlying query errors", () => {
   assert.doesNotMatch(result.detail, /keyword fallback otherwise/);
 });
 
-runTest("Classifier shows the budget-closed line, not row counts, when budgetClosed is true", () => {
-  const result = evaluateClassifierHealth(
+runTest("a closed cap keeps Classifier, Data Pipeline, and Intelligence Feed Operational", () => {
+  const signalAt = new Date(NOW - 5 * 60 * 1000).toISOString();
+  const classifier = evaluateClassifierHealth(
     [{ classification_method: "heuristic" }, { classification_method: "heuristic" }],
     true,
   );
-  assert.equal(result.status, "Degraded");
-  assert.equal(result.detail, BUDGET_CLOSED_DETAIL);
+  const pipeline = evaluateDataPipelineFreshness(new Date(NOW - 3 * 60 * 60 * 1000).toISOString(), 30, true, NOW, true);
+  const feed = evaluateIntelligenceFeedHealth(
+    { service: "rss", created_at: new Date(NOW - 3 * 60 * 60 * 1000).toISOString() },
+    signalAt,
+    30,
+    NOW,
+    true,
+  );
+  const openClassifier = evaluateClassifierHealth(
+    [{ classification_method: "heuristic" }, { classification_method: "heuristic" }],
+    false,
+  );
+
+  assert.equal(classifier.status, "Operational");
+  assert.equal(classifier.detail, openClassifier.detail);
+  assert.equal(pipeline.status, "Operational");
+  assert.equal(
+    pipeline.detail,
+    "Most recent ingested event, across all collectors combined, is less than 60 minutes old",
+  );
+  assert.equal(feed.status, "Operational");
+  assert.equal(feed.detail, "Newest signal 5 min ago.");
+  for (const check of [classifier, pipeline, feed]) assertNoClosedCapCopy(check.detail);
 });
 
-runTest("Classifier budget-closed line does not claim a reopen time or a dollar amount", () => {
-  const result = evaluateClassifierHealth([], true);
-  assert.match(result.detail, /next UTC day/);
-  assert.doesNotMatch(result.detail, /\$/);
-});
-
-runTest("Classifier budget-closed overrides even an Unknown (query-error) row state", () => {
+runTest("Classifier with a closed cap and a failed query uses the empty healthy count line", () => {
   const result = evaluateClassifierHealth(null, true);
-  assert.equal(result.status, "Degraded");
-  assert.equal(result.detail, BUDGET_CLOSED_DETAIL);
+  const healthyEmpty = evaluateClassifierHealth([], false);
+  assert.equal(result.status, "Operational");
+  assert.equal(result.detail, healthyEmpty.detail);
+  assertNoClosedCapCopy(result.detail);
 });
 
 runTest("Classifier ignores budgetClosed=false and falls back to normal row-derived detail", () => {
   const result = evaluateClassifierHealth([{ classification_method: "claude" }], false);
+  const baseline = evaluateClassifierHealth([{ classification_method: "claude" }]);
+  assert.deepEqual(result, baseline);
   assert.equal(result.status, "Operational");
-  assert.notEqual(result.detail, BUDGET_CLOSED_DETAIL);
-});
-
-runTest("Data Pipeline is Degraded with the paused line when budgetClosed is true", () => {
-  // Fresh enough to be Operational if the budget were open — the flag overrides freshness.
-  const result = evaluateDataPipelineFreshness(new Date(NOW - 5 * 60 * 1000).toISOString(), 30, false, NOW, true);
-  assert.equal(result.name, "Data Pipeline");
-  assert.equal(result.status, "Degraded");
-  assert.equal(result.detail, DATA_PIPELINE_BUDGET_CLOSED_DETAIL);
-  assert.equal(
-    result.detail,
-    "Paused: the daily classification budget is reached. No new news is collected until the next UTC day.",
-  );
-  assert.doesNotMatch(result.detail, /\$/);
 });
 
 runTest("Data Pipeline budgetClosed=false leaves the existing freshness result", () => {
@@ -186,30 +194,27 @@ runTest("Data Pipeline budgetClosed=false leaves the existing freshness result",
     withFlag.detail,
     "Most recent ingested event, across all collectors combined, is less than 60 minutes old",
   );
-  assert.doesNotMatch(withFlag.detail, /Collection is paused/);
-  assert.notEqual(withFlag.detail, DATA_PIPELINE_BUDGET_CLOSED_DETAIL);
+  assertNoClosedCapCopy(withFlag.detail);
 });
 
-runTest("Intelligence Feed appends the paused suffix only when budgetClosed is true", () => {
-  const row = { service: "gdelt", created_at: new Date(NOW - 10 * 60 * 1000).toISOString() };
-  const open = evaluateIntelligenceFeedHealth(row, null, 30, NOW, false);
-  const baseline = evaluateIntelligenceFeedHealth(row, null, 30, NOW);
-  const closed = evaluateIntelligenceFeedHealth(row, null, 30, NOW, true);
-  assert.deepEqual(open, baseline);
-  assert.equal(open.status, "Operational");
-  assert.doesNotMatch(open.detail, /Collection is paused/);
-  assert.equal(closed.status, open.status);
-  assert.equal(open.detail.endsWith("."), false);
-  assert.equal(closed.detail, `${open.detail}.${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
-  assert.equal(closed.detail.endsWith(" Collection is paused until the next UTC day."), true);
+runTest("Intelligence Feed stays Degraded for a stale collector when budgetClosed is false", () => {
+  const result = evaluateIntelligenceFeedHealth(
+    { service: "rss", created_at: new Date(NOW - 61 * 60 * 1000).toISOString() },
+    new Date(NOW - 5 * 60 * 1000).toISOString(),
+    30,
+    NOW,
+    false,
+  );
+  assert.equal(result.status, "Degraded");
+  assert.match(result.detail, /rss collector last reported healthy/);
+  assertNoClosedCapCopy(result.detail);
+});
 
-  const degradedOpen = evaluateIntelligenceFeedHealth(null, null, 30, NOW, false);
-  const degradedClosed = evaluateIntelligenceFeedHealth(null, null, 30, NOW, true);
-  assert.equal(degradedClosed.status, degradedOpen.status);
-  assert.equal(degradedClosed.status, "Degraded");
-  assert.equal(degradedOpen.detail.endsWith("."), false);
-  assert.equal(degradedClosed.detail, `${degradedOpen.detail}.${INTELLIGENCE_FEED_BUDGET_PAUSED_SUFFIX}`);
-  assert.doesNotMatch(degradedOpen.detail, /Collection is paused/);
+runTest("Intelligence Feed with a closed cap and no signal does not invent an age", () => {
+  const result = evaluateIntelligenceFeedHealth(null, null, 30, NOW, true);
+  assert.equal(result.status, "Operational");
+  assert.equal(result.detail, "No signals recorded yet.");
+  assertNoClosedCapCopy(result.detail);
 });
 
 runTest("Price History is Unknown when the freshness query could not run", () => {

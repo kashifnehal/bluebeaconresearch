@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Public pages and a closed daily cap (`apps/web`). A closed cap no longer marks the public status checks down or replaces the dashboard ingestion box with a pause. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Service health retention (`apps/backend`). Sunday 03:00 UTC deletes rows older than 45 days. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Sanctions sync writes only changed rows (`apps/backend`, function written, not applied). Health detail is `fetched N, changed M`. A missing function falls back to the previous upsert for that run. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

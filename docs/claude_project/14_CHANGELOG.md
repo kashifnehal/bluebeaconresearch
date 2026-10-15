@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Public pages and a closed daily cap
+
+`apps/web` only. A closed cap no longer changes the public status lines or the dashboard ingestion box into a pause. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-16 — Service health retention
 
 `apps/backend` only. Sunday 03:00 UTC deletes rows older than 45 days. Full detail: `docs/brain/14_CHANGELOG.md`.
