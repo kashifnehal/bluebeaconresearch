@@ -90,16 +90,6 @@ const REGION_MAP: Record<string, [number, number]> = {
   "africa": [16.4943, 1.6585],
   "americas": [-99.1332, 19.4326],
   "global": [10.0000, 25.0000],
-  // Mean of distinct COUNTRY_MAP coordinates for countries COUNTRY_REGION
-  // (country-region.ts) maps to this id. Alias keys that repeat a point
-  // (us/usa, uk) are counted once. Computed once on 2026-10-15.
-  // europe: belgium, bulgaria, france, germany, ireland, italy, netherlands,
-  // norway, romania, sweden, united kingdom.
-  "europe": [9.1708, 50.9064],
-  // north-america: canada, united states.
-  "north-america": [-101.0299, 46.6103],
-  // south-america: brazil, venezuela.
-  "south-america": [-59.2575, -3.9056],
 };
 
 // #188 — `classifierCountry` (Claude's own read of the article, from

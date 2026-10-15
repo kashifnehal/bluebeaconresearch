@@ -3,9 +3,6 @@ export type PlanTier = "free" | "analyst" | "pro" | "api";
 export type Region =
   | "middle-east"
   | "eastern-europe"
-  | "europe"
-  | "north-america"
-  | "south-america"
   | "africa"
   | "asia-pacific"
   | "americas"

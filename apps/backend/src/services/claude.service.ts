@@ -1,7 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk";
 import * as Sentry from "@sentry/node";
 import { COMMODITY_REGISTRY } from "../lib/commodity-registry.js";
-import { canonicalizeRegion } from "../lib/region-variants.js";
 import { getEnv } from "../env.js";
 import {
   assertAnthropicBudget,
@@ -528,7 +527,7 @@ export class ClaudeService {
           `  "isBreaking": boolean,\n` +
           `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n` +
           `  "summary": string (max 120 chars),\n` +
-          `  "region": one of exactly "middle-east"|"eastern-europe"|"europe"|"north-america"|"south-america"|"asia-pacific"|"africa"|"global",\n` +
+          `  "region": string,\n` +
           `  "country": the specific country where this event physically happened, based on reading the article — a real country name (e.g. "Iran", "Ukraine"), never a region bucket or the name of the outlet/publication reporting it. Return null if the article's own text genuinely doesn't make the location clear.,\n` +
           `  "relevance": a float 0.0-1.0 — how central is the named commodity/currency/entity/geography to what actually happened in this story (not just mentioned in passing)? A story about "World Trade Center" mentioning "trade" in the name only should score near 0; a story where a named commodity is the actual subject of the event should score high.,\n` +
           `  "novelty": a float 0.0-1.0 — does this story contain information a market participant would not already know? Score LOW (near 0) for a story that only reminds the reader of an already-public, previously-known schedule, date, or routine recurring event, with no new claim, statement, or data attached (e.g. "the Fed meets next Wednesday," "USDA releases its report on the 12th," with nothing else reported). Score HIGH for a story that reports a new fact, statement, data point, or claim — including an unconfirmed or rumored one — that a reader could not already have known. Do not score this based on whether the underlying event has already happened or is confirmed — an unconfirmed but newly-reported claim about a future event scores HIGH on novelty; a reminder about a known future event scores LOW, regardless of how big that event will be.,\n` +
@@ -611,7 +610,6 @@ export class ClaudeService {
         parsed.novelty = this.sanitizeUnitFloat(parsed.novelty);
         parsed.eventCategory = this.sanitizeEventCategory(parsed.eventCategory);
         parsed.country = this.sanitizeCountry(parsed.country);
-        parsed.region = canonicalizeRegion(parsed.region, parsed.country);
         parsed.marketMechanism = this.sanitizeMarketMechanism(parsed.marketMechanism);
         parsed.title = this.sanitizeTitle(parsed.title);
         parsed.isPreview = parsed.isPreview === true;
