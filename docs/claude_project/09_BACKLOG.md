@@ -2,15 +2,17 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Docs only. Sources monitored is 30 (28 RSS feeds plus GDELT and GNews). The homepage signal count uses a head request with an exact count. Web functions run in `iad1` and the database is in `ap-south-1` (Mumbai), measured 2026-10-16 from the `Server-Timing` header. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Event price quotes overlap the raw-event read (`apps/web`). Three queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Client fetches stop after 20 seconds (`apps/web`). Dashboard, map, watchlist, the symbol page, and alerts show a retry line when a fetch times out or fails. `GET /api/signals` adds `degraded: true` on an empty error body when there is no cached payload. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Row-security initplan and six foreign-key indexes (migration written, not applied). No other index is dropped. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-16 — Public pages and a closed daily cap (`apps/web`). A closed cap no longer marks the public status checks down or replaces the dashboard ingestion box with a pause. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-16 — Public pages and a closed daily cap (`apps/web`). When the daily budget is closed, the public status page and the dashboard show no pause wording. `budgetClosed` stays on the status API. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-16 — Service health retention (`apps/backend`). Sunday 03:00 UTC deletes rows older than 45 days. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-16 — Service health retention (`apps/backend`). Sunday 03:00 UTC deletes rows older than 45 days. The 45-day window is an engineering choice. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Sanctions sync writes only changed rows (`apps/backend`, function written, not applied). Health detail is `fetched N, changed M`. A missing function falls back to the previous upsert for that run. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

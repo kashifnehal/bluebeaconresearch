@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Docs catch-up for source count, head counts, database notes, regions, and closed-budget wording, docs only, 2026-10-16
+
+- Sources monitored is 30: 28 entries in `RSS_FEEDS` plus GDELT and GNews. ACLED is not included. Counted 2026-10-16.
+- The homepage signal count uses `select("id", { count: "exact", head: true })` in `apps/web/lib/homepage-stats.ts`. The how-it-works counts use the same head request.
+- Database notes match the merged migrations and worker: fetched_at index, sanctions write suppression with health detail `fetched N, changed M`, 45-day `service_health_events` retention (an engineering choice), row-security and foreign-key changes, dropped sanctions name index. Those migrations are written and not applied. The fetched_at index was already created in production on 2026-10-16.
+- Web functions run in `iad1`. The database is in `ap-south-1` (Mumbai). Measured on 2026-10-16 from the `Server-Timing` header. `SERVER_TIMING=true` is set on Vercel production for event-page step timings. Not re-measured in this docs pass.
+- When the daily budget is closed, the public status page and the dashboard show no pause wording. `budgetClosed` stays on the status API.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `06`, `04`, `12`; claude_project `09`, `08`, `14`, `06`, `04`, `12`. Skipped `05_API.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new route, prompt, or standing rule.
+
 ## ✅ Event price quotes overlap the raw-event read, `apps/web`, 2026-10-16
 
 - Three price queries run per commodity impact: report time, flag time, and latest. They already ran together, but only after raw events returned. Flag time and latest do not need that stamp, so they now start with the other optional reads. The report-time quote still waits for the earliest raw stamp. Query count is unchanged. `degraded` still uses `price_at_signal`. The 6000 ms budget is unchanged.

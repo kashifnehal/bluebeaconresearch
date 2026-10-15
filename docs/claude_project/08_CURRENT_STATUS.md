@@ -2,15 +2,17 @@
 
 > **📍 Doc status — live status banners as of 2026-10-16 (event price quotes overlap the raw-event read — see the banner immediately below).**
 
+> ⚠️ NEW 2026-10-16 (docs) — sources monitored is 30 (28 RSS feeds plus GDELT and GNews). The homepage signal count uses a head request with an exact count. Web functions run in `iad1` and the database is in `ap-south-1` (Mumbai). `SERVER_TIMING=true` is set on Vercel production. See `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ NEW 2026-10-16 (event price quotes, `apps/web` only) — three price queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (client fetches stop after 20 seconds, `apps/web` only) — dashboard, map, watchlist, the symbol page, and alerts abort a fetch at 20000 ms and show a retry line when it fails. `GET /api/signals` adds `degraded: true` when the handler errors and has no cached payload. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (row-security and foreign-key indexes, migration written, not applied) — eight policies wrap `auth.uid()` in `(select auth.uid())`. Six foreign-key indexes are added. No other index is dropped. See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-16 (public pages and a closed daily cap, `apps/web` only) — a closed cap no longer marks Classifier, Data Pipeline, or Intelligence Feed down, and the dashboard ingestion box stays on the live lines plus the newest stored article time. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-16 (public pages and a closed daily cap, `apps/web` only) — when the daily budget is closed, the public status page and the dashboard show no pause wording. Classifier, Data Pipeline, and Intelligence Feed stay on their open-budget lines, and the dashboard ingestion box stays on the live lines plus the newest stored article time. `budgetClosed` stays on the status API. See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-16 (service health retention, `apps/backend` only) — Sunday 03:00 UTC deletes `service_health_events` older than 45 days. Readers checked the same day look back less than 45 days. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-16 (service health retention, `apps/backend` only) — Sunday 03:00 UTC deletes `service_health_events` older than 45 days. The 45-day window is an engineering choice. Readers checked the same day look back less than 45 days. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (sanctions sync, `apps/backend`, function written not applied) — the daily sync calls `upsert_sanctions_entities` and records `fetched N, changed M`. A missing function falls back to the previous upsert for that run. See `docs/brain/LIVE_TODO.md`.
 

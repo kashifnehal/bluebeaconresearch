@@ -10,6 +10,26 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Sources monitored is 30
+
+Docs only. Counted 28 entries in `RSS_FEEDS` (`apps/backend/src/workers/rss-collector.ts`) plus `OTHER_COLLECTOR_COUNT` 2 (GDELT and GNews) in `apps/web/lib/how-it-works-stats.ts`. ACLED is not included.
+
+### 2026-10-16 — Homepage signal count uses a head request
+
+Docs only. `getHomepageStats()` counts with `select("id", { count: "exact", head: true })` in `apps/web/lib/homepage-stats.ts`. The how-it-works counts in `apps/web/lib/how-it-works-stats.ts` use the same head request.
+
+### 2026-10-16 — Database notes for indexes, sanctions writes, and retention
+
+Docs only. The merged files show `commodity_prices_fetched_at_idx` on `(fetched_at desc)`; `upsert_sanctions_entities` updates a row only when `raw_data` or `source_url` differs and the health detail is `fetched N, changed M`; Sunday 03:00 UTC deletes `service_health_events` older than 45 days, an engineering choice; eight policies wrap `auth.uid()` in `(select auth.uid())` and six foreign-key indexes are added; `idx_sanctions_entities_name` is dropped. Those migrations are written and not applied. The fetched_at index was already created in production on 2026-10-16.
+
+### 2026-10-16 — Web region and event-page timings
+
+Docs only. Web functions run in `iad1`. The database is in `ap-south-1` (Mumbai). Measured on 2026-10-16 from the `Server-Timing` header. `SERVER_TIMING=true` is set on Vercel production for event-page step timings.
+
+### 2026-10-16 — Closed daily budget shows no pause wording
+
+Docs only. When the daily budget is closed, the public status page and the dashboard show no pause wording. `budgetClosed` stays on the status API.
+
 ### 2026-10-16 — Event price quotes overlap the raw-event read
 
 `apps/web` only. Three price queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. Full detail: `LIVE_TODO.md`.

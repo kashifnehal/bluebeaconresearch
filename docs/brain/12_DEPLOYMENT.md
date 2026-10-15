@@ -25,6 +25,8 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
                                  └─────────────────────────┘
 ```
 
+Web functions run in `iad1`. The database is in `ap-south-1` (Mumbai). Measured on 2026-10-16 from the `Server-Timing` header. `SERVER_TIMING=true` is set on Vercel production so the event page sends step timings.
+
 ---
 
 ## 2. Environment Variables Audit (`.env.example`)
@@ -49,6 +51,7 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
 ### Session & Access Control
 
 - `DEVICE_LIMIT_ENABLED`: gates the 2-device concurrent-session cap (`apps/web/lib/session-tracking.ts`). Default is off (parked, founder decision 2026-09-28); set to exactly `true` in Vercel to enable eviction. Missing or any other value = disabled. `apps/web` only, not read by `apps/backend`.
+- `SERVER_TIMING`: set to `true` on Vercel production as of 2026-10-16. `GET /api/signals/:id` then sends event-page step timings. Any other value, including unset, sends no header.
 
 ### Alert Channels & Geospatial
 

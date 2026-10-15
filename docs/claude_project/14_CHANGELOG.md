@@ -8,6 +8,26 @@
 
 ---
 
+## 2026-10-16 — Sources monitored is 30
+
+Docs only. Counted 28 RSS feeds plus 2 collectors (GDELT and GNews). ACLED is not included. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-16 — Homepage signal count uses a head request
+
+Docs only. The homepage count uses a head request with an exact count. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-16 — Database notes for indexes, sanctions writes, and retention
+
+Docs only. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-16 — Web region and event-page timings
+
+Docs only. Web functions run in `iad1`. The database is in `ap-south-1` (Mumbai). `SERVER_TIMING=true` is set on Vercel production. Full detail: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-10-16 — Closed daily budget shows no pause wording
+
+Docs only. The public status page and the dashboard show no pause wording. `budgetClosed` stays on the status API. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Event price quotes overlap the raw-event read
 
 `apps/web` only. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. Full detail: `docs/brain/LIVE_TODO.md`.

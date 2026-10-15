@@ -112,7 +112,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - **Note**: replaced a single non-trail "Back to X" button on `events/[id]/page.tsx` and `watchlist/[symbol]/page.tsx`. Adding it to `events/[id]/page.tsx` exposed a pre-existing layout bug — that page's root wrapper had no top offset for the fixed 64px `TopBar`, so the old back-button (and initially the new breadcrumb) rendered hidden underneath it at all widths; fixed with `pt-16`, matching the convention every sibling `(dashboard)` page already used.
 
 ### 2.6 `IngestionStatusBanner.tsx` — closed cap keeps the live lines, 2026-10-16
-- **Purpose**: Dashboard, map, and alerts strip for `GET /api/ingestion/status`. When every collector has `budgetClosed === true`, the label stays "Live ingestion" (or the degraded health-feed label) and the last-fetched, next-run, and cadence lines stay. "Last collected:" is the relative time of `newestStoredArticleAt` when that field is already on the response. A missing `budgetClosed` field is not closed. An old last fetch does not flip the box to delayed while every collector is closed.
+- **Purpose**: Dashboard, map, and alerts strip for `GET /api/ingestion/status`. When every collector has `budgetClosed === true`, the label stays "Live ingestion" (or the degraded health-feed label) and the last-fetched, next-run, and cadence lines stay. The box shows no pause wording (2026-10-16). "Last collected:" is the relative time of `newestStoredArticleAt` when that field is already on the response. A missing `budgetClosed` field is not closed. An old last fetch does not flip the box to delayed while every collector is closed. `budgetClosed` stays on the status payload.
 - **Parent**: `(dashboard)/dashboard/page.tsx`, `(dashboard)/map/page.tsx`, `(dashboard)/alerts/page.tsx`.
 
 ---
@@ -199,7 +199,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 
 ### 3.5b Landing page (`apps/web/app/page.tsx`) (2026-09-20)
 
-- Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()` (`signals` exact count via `select("id", { count: "exact" })` — no `head: true`; RLS is authenticated-only, so reads go through `getRouteSupabaseClients()`).
+- Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()`. The signal count is `loadHomepageSignalCount` in `apps/web/lib/homepage-stats.ts`: `select("id", { count: "exact", head: true })`. RLS is authenticated-only, so reads go through `getRouteSupabaseClients()`.
 - Copy integrity: fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second lines removed; research-register CTAs.
 - Links to `/accuracy` without displaying a hit-rate percentage.
 - Hero `<p>` (#174): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.
@@ -268,12 +268,16 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 ### 3.6a `app/how-it-works/page.tsx` (W2-TRUST, 2026-10-01)
 - **Purpose**: public (no auth) research-integrity page — "what we claim, and how you can check it."
 - **How**: server component, direct Supabase queries (same `getRouteSupabaseClients()`/service-role fallback pattern as `getLatestSignal()`/`getHomepageStats()` in `app/page.tsx`), `dynamic = "force-dynamic"`. Dark-terminal styling reuses `/accuracy`'s exact tokens, `PublicHeader`/`LegalDisclaimerFooter`.
-- **Stats bar** (3 numbers, `apps/web/lib/how-it-works-stats.ts`): total signals + signals-in-last-7-days are live Supabase counts; "sources monitored" (31) is `CONFIGURED_RSS_FEED_COUNT` (28, `packages/shared`) + `OTHER_COLLECTOR_COUNT` (3 — `gdelt`/`gnews`/`acled`-collector.ts, named in a code comment), not a DB query. A failed query hides that stat instead of showing 0.
+- **Stats bar** (3 numbers, `apps/web/lib/how-it-works-stats.ts`): total signals + signals-in-last-7-days are live Supabase counts; "sources monitored" is 30, counted 2026-10-16 from code: 28 objects in `RSS_FEEDS` (`apps/backend/src/workers/rss-collector.ts`; `CONFIGURED_RSS_FEED_COUNT` in `packages/shared/src/constants/ingestion.ts` is 28) plus `OTHER_COLLECTOR_COUNT` 2 (GDELT and GNews). ACLED is not included. Not a DB query. A failed query hides that stat instead of showing 0.
 - **2026-10-16 (`d165222`):** both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
 - **Claim/proof table**: 7 claims. The original six were verified against code or live data in Step 0 before the page was written (full table: `LIVE_TODO.md`). The seventh (2026-10-09) states that Claude classifies market impact, including an up/down/volatile reading, and does not recommend a position, a size, or an entry or exit. Responsive CSS grid (not an HTML `<table>`), so no horizontal scroll at phone width.
 - **Limits list**: severity/confidence are model outputs not guarantees; some signals use the keyword fallback; merged "reports" can repeat an outlet; ACLED is configured but not currently ingesting — confirmed live against `service_health_events` (still failing auth as of ship date), not assumed.
 - **Hard rule**: no accuracy percentage anywhere on this page — links to `/accuracy` instead. No "novelty scoring"/"Confirmed by N sources"/"High-Integrity"/latency figures/buy-sell language/competitor names (grepped).
 - Full detail: `docs/claude_project/06_COMPONENTS.md` §7a, `14_CHANGELOG.md` v0.135.0.
+
+### 3.6b `app/status/page.tsx` (2026-10-16)
+- When the daily budget is closed, the public status page shows no pause wording. Classifier, Data Pipeline, and Intelligence Feed stay on their open-budget lines.
+- `budgetClosed` stays on the pipeline status payload (`pipeline:last_run`, returned by `GET /api/ingestion/status`).
 
 ### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19; picker collapsed + mobile FAB removed #186, 2026-09-25)
 - **List:** first paint with no selections shows `COMMODITIES` cards. Live `/api/prices` + history sparkline only.

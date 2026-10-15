@@ -130,7 +130,7 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 
 > ⚠️ UPDATED 2026-10-16 — eight policies wrap `auth.uid()` in `(select auth.uid())`, and six foreign-key indexes are added. Written, not applied. No other index is dropped. Full note: `docs/brain/04_DATABASE.md`.
 
-> ⚠️ UPDATED 2026-10-16 — `service_health_events` rows older than 45 days are deleted on Sunday 03:00 UTC. Full note: `docs/brain/04_DATABASE.md`.
+> ⚠️ UPDATED 2026-10-16 — `service_health_events` rows older than 45 days are deleted on Sunday 03:00 UTC. The 45-day window is an engineering choice. Full note: `docs/brain/04_DATABASE.md`.
 
 > ⚠️ UPDATED 2026-10-15 — `public.feed_gap_p95` (`5a04fcb`) and `service_health_events.raw_event_id` (`3339434`) are written and not applied. `signals.region_raw` stays written and not applied. Checked against the applied migration list on 2026-10-15.
 
@@ -171,7 +171,7 @@ CREATE INDEX idx_commodity_prices_symbol ON public.commodity_prices (symbol, fet
 -- already created in production that day. Drop idx_sanctions_entities_name;
 -- the unique (name, list) index already serves name lookups.
 -- upsert_sanctions_entities updates a row only when raw_data or source_url differs.
--- Full note in docs/brain/04_DATABASE.md.
+-- Health detail is fetched N, changed M. Full note in docs/brain/04_DATABASE.md.
 CREATE INDEX idx_alerts_sent_user ON public.alerts_sent (user_id, created_at DESC);
 -- alerts_sent gained deferred_to_digest (boolean) + a 'deferred' status value,
 -- 20261001200000_alerts_sent_deferred_to_digest.sql (doc 298 A2 alert budget).

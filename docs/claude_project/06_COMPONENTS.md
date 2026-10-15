@@ -207,7 +207,7 @@ On error: console.error only, never expose stack trace to user.
 
 ### IngestionStatusBanner (`components/IngestionStatusBanner.tsx`) — 2026-10-16
 
-Shown on the dashboard, map, and alerts. When every collector in the ingestion status response has `budgetClosed` true, the box keeps the live label, the last-fetched, next-run, and cadence lines, and adds "Last collected" from `newestStoredArticleAt` when that field is already on the response. A missing `budgetClosed` field is not closed.
+Shown on the dashboard, map, and alerts. When every collector in the ingestion status response has `budgetClosed` true, the box keeps the live label, the last-fetched, next-run, and cadence lines, and adds "Last collected" from `newestStoredArticleAt` when that field is already on the response. The box shows no pause wording (2026-10-16). A missing `budgetClosed` field is not closed. `budgetClosed` stays on the status payload.
 
 ---
 
@@ -430,7 +430,7 @@ Counter behavior:
 No separate `components/landing/*` files exist. The public homepage is this server component.
 
 - `dynamic = "force-dynamic"`. `getLatestSignal()` still reads the newest active `signals` row. Public reads use `getRouteSupabaseClients().supabase` (service role when the key is set). Live RLS is `signals_select_authenticated` only; the cookie/anon client returns 0 rows to a logged-out visitor.
-- `getHomepageStats()` runs an exact `signals` count (`select("id", { count: "exact" })`, no `head: true`) and renders "N signals tracked" — live, not hardcoded. Failures log the full Postgrest error.
+- `getHomepageStats()` counts signals with `select("id", { count: "exact", head: true })` in `apps/web/lib/homepage-stats.ts` (`loadHomepageSignalCount`) and renders "N signals tracked". Failures log the Postgrest error.
 - CTA overlay: "Sign up to read the full assessment" → `/signup`. Empty state is "Loading the latest signal…" (no Beacon-Alpha / hardcoded example card).
 - New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point).
 - Removed fabricated lines: 42ms, 100% Verified, 40yr Intel Archive, Encrypted Support, sub-second synthesis.
@@ -618,6 +618,10 @@ Lookup tool, not a priority feed. Filters: date range, `#125` Oil/Grain/Metals d
 
 ## 7a. PUBLIC PAGES (no auth — outside `(dashboard)`, not in `middleware.ts` `PROTECTED`)
 
+### StatusPage (`apps/web/app/status/page.tsx`) — 2026-10-16
+
+When the daily budget is closed, the public status page shows no pause wording. Classifier, Data Pipeline, and Intelligence Feed stay on their open-budget lines. `budgetClosed` stays on the pipeline status payload (`pipeline:last_run`, returned by `GET /api/ingestion/status`).
+
 ### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
 
 Reads stored `signal_outcomes` only — `GET /v1/accuracy` filters `checkpoint_hours = 48`. The worker also writes 1h/4h/24h rows (#144); this page does not select a horizon. Methodology (48h/`event_date`, volatile/neutral excluded from headline, 20-sample floor, 24h price-distance guard, why not live-recomputed): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115.
@@ -654,10 +658,10 @@ on the homepage, no new API route). Reuses `PublicHeader`/`LegalDisclaimerFooter
 
 **Stats bar** (`apps/web/lib/how-it-works-stats.ts`): total signals and signals in the
 last 7 days are live Supabase counts computed at request time; "sources monitored"
-(31) is counted from code constants, not a query — `CONFIGURED_RSS_FEED_COUNT` (28 RSS
-feeds, `packages/shared/src/constants/ingestion.ts`) plus `OTHER_COLLECTOR_COUNT` (3 —
-`gdelt-collector.ts`, `gnews-collector.ts`, `acled-collector.ts`, named in a code
-comment). A failed query hides that stat rather than rendering 0. As of 2026-10-16 (`d165222`), both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
+is 30, counted 2026-10-16 from code, not a query — 28 objects in `RSS_FEEDS`
+(`apps/backend/src/workers/rss-collector.ts`; `CONFIGURED_RSS_FEED_COUNT` in
+`packages/shared/src/constants/ingestion.ts` is 28) plus `OTHER_COLLECTOR_COUNT` 2
+(GDELT and GNews). ACLED is not included. A failed query hides that stat rather than rendering 0. As of 2026-10-16 (`d165222`), both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
 
 **Claim/proof table**: 7 claims (sources-tab links, pause-instead-of-guessing
 disclosure, zero headline-placement bonus, confidence-vs-report-count copy,

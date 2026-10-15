@@ -25,6 +25,8 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
                                  └─────────────────────────┘
 ```
 
+Web functions run in `iad1`. The database is in `ap-south-1` (Mumbai). Measured on 2026-10-16 from the `Server-Timing` header. `SERVER_TIMING=true` is set on Vercel production so the event page sends step timings.
+
 ---
 
 ## 2. Environment Variables Audit (`.env.example`)
@@ -44,6 +46,7 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
 - `ACLED_API_KEY` / `ACLED_API_EMAIL`: Verified military engagement data feed.
 
 ### Alert Channels & Geospatial
+- `SERVER_TIMING`: set to `true` on Vercel production as of 2026-10-16. `GET /api/signals/:id` then sends event-page step timings. Any other value, including unset, sends no header.
 - `TELEGRAM_BOT_TOKEN`: Bot token for instant Telegram alert dispatch.
 - `NEXT_PUBLIC_MAPBOX_TOKEN`: Mapbox GL JS map tile access token.
 
