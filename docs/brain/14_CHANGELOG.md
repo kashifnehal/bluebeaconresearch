@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Weekly gate pass rate (`d3aaa36`)
+
+`apps/backend` only. Passed counts signals created in the week that include a raw event. Rejected counts checked raw events that match a materiality_gate rejected health row. Prefilter skips are left out. No cutoff.
+
 ### 2026-10-16 — Feed quiet-gap alarm after a pause (`e572d62`)
 
 `apps/backend` only. Silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks. A missing view still throws and writes no degraded row.

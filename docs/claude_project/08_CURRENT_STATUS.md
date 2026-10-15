@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (feed quiet-gap after a pause — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (weekly gate pass rate — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (weekly gate pass rate, `apps/backend` only, `d3aaa36`) — passed counts signals created in the week that include a raw event. Rejected counts checked raw events that match a materiality_gate rejected health row. Prefilter skips are left out. No cutoff.
 
 > ⚠️ NEW 2026-10-16 (feed quiet-gap after a pause, `apps/backend` only, `e572d62`) — silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks. A missing view still throws and writes no degraded row.
 

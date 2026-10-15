@@ -3,6 +3,10 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Weekly gate pass rate counts signals, `apps/backend`, 2026-10-16, `d3aaa36`
+
+- Passed is signals created in the week that include at least one raw event. Rejected is a checked raw event that matches a materiality_gate rejected health row. A prefilter skip stamps `materiality_checked_at` and writes no health row, so it is not counted. Pass rate is passed divided by judged, and is null when judged is 0. No cutoff. No open priority-queue line. Nothing struck.
+
 ## ✅ Feed quiet-gap alarm ignores a collection pause, `apps/backend`, 2026-10-16, `e572d62`
 
 - Silence starts at the later of last_seen and the check that first saw collection running again. A degraded row waits for two quiet checks (`FEED_VOLUME_CONSECUTIVE_CHECKS`, default 2, not set). A missing `feed_gap_p95` view still throws and writes no degraded row. No open priority-queue line. Nothing struck.

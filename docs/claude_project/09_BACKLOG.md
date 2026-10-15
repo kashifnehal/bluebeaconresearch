@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Weekly gate pass rate (`apps/backend`, `d3aaa36`). Passed counts signals created in the week that include a raw event. Prefilter skips are left out. No cutoff. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Feed quiet-gap alarm after a pause (`apps/backend`, `e572d62`). Silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — How-it-works signal counts (`apps/web`, `d165222`). Both counts are head-only. A total of 0 stays hidden. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

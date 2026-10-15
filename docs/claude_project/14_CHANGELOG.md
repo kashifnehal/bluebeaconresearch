@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Weekly gate pass rate (`d3aaa36`)
+
+`apps/backend` only. Passed counts signals created in the week that include a raw event. Prefilter skips are left out. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-16 — Feed quiet-gap alarm after a pause (`e572d62`)
 
 `apps/backend` only. Silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks. Full detail: `docs/brain/LIVE_TODO.md`.

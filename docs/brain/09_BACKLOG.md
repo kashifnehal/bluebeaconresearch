@@ -2,6 +2,8 @@
 
 > **📍 Doc status — historical P0–P3 list.** Live tickets: `docs/claude_project/09_BACKLOG.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Weekly gate pass rate (`apps/backend`, `d3aaa36`). Passed counts signals created in the week that include a raw event. Prefilter skips are left out. No cutoff.
+
 > ⚠️ UPDATED 2026-10-16 — Feed quiet-gap alarm after a pause (`apps/backend`, `e572d62`). Silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks.
 
 > ⚠️ UPDATED 2026-10-15 — Eight region ids (`fc9113c`) and the region backfill script (`320453f`). `signals.region_raw` is written and not applied. `--apply` was not run.
