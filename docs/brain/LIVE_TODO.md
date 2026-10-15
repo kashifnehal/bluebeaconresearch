@@ -3,6 +3,10 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ How-it-works signal counts are head-only, `apps/web`, 2026-10-16, `d165222`
+
+- Both public signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days count still filters `created_at`. No open priority-queue line. Nothing struck.
+
 ## ✅ P24 design-token cleanup, dark theme only, `apps/web`, 2026-10-15, `b00cfc0` and this commit
 
 - Six hardcoded colours in `apps/web/app` and `apps/web/components` now use the existing `:root` variables. `#4edea3` → `--accent`. `#86948a` → `--text-muted`. `#3c4a42` → `--border`. `#bbcac0` → `--text-secondary`. `#131313` → `--bg-primary`. `#201f1f` → `--bg-container`. No new variable. The light block already defines the first five. It has no container role, so `--bg-container` was left out of `[data-theme="light"]`.

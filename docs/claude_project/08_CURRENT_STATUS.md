@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-15 (P24 colour tokens — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (how-it-works head-only counts — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (how-it-works signal counts, `apps/web` only, `d165222`) — both signal counts use a head-only exact count. A total of 0 stays hidden. The last-7-days count still filters `created_at`. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (P24 colour tokens, `apps/web` only, `b00cfc0` and this commit) — six hex colours now read the existing CSS variables. Dark values are unchanged. The light theme was not checked. See `docs/brain/LIVE_TODO.md`, PHASE 172.
 

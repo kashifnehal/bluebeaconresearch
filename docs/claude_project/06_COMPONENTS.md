@@ -653,7 +653,7 @@ last 7 days are live Supabase counts computed at request time; "sources monitore
 (31) is counted from code constants, not a query — `CONFIGURED_RSS_FEED_COUNT` (28 RSS
 feeds, `packages/shared/src/constants/ingestion.ts`) plus `OTHER_COLLECTOR_COUNT` (3 —
 `gdelt-collector.ts`, `gnews-collector.ts`, `acled-collector.ts`, named in a code
-comment). A failed query hides that stat rather than rendering 0.
+comment). A failed query hides that stat rather than rendering 0. As of 2026-10-16 (`d165222`), both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
 
 **Claim/proof table**: 7 claims (sources-tab links, pause-instead-of-guessing
 disclosure, zero headline-placement bonus, confidence-vs-report-count copy,

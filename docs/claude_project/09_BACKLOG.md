@@ -1,6 +1,8 @@
 # 09_BACKLOG.md — Complete Product Backlog
 
-> **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-10-16 — How-it-works signal counts (`apps/web`, `d165222`). Both counts are head-only. A total of 0 stays hidden. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — P24 colour tokens (`apps/web`, `b00cfc0` and this commit, PHASE 172 / v0.195.0). Six hex colours now use existing CSS variables. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

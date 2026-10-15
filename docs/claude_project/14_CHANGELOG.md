@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — How-it-works signal counts (`d165222`)
+
+`apps/web` only. Both signal counts on the public how-it-works page use a head-only exact count. A total of 0 stays hidden. The last-7-days count still filters `created_at`. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## PHASE 172 — Dark-theme colour tokens (2026-10-15, `b00cfc0` and this commit)
 
 `apps/web` only. Six hex colours now use the existing dark-theme variables. Full detail: `docs/brain/LIVE_TODO.md`, brain changelog v0.195.0.

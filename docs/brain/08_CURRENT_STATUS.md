@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-15 (P24 colour tokens)
+Last updated: 2026-10-16 (how-it-works head-only counts)
+
+> ⚠️ NEW 2026-10-16 (how-it-works signal counts, `apps/web` only, `d165222`) — both signal counts use a head-only exact count. A total of 0 stays hidden. The last-7-days count still filters `created_at`. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (P24 colour tokens, `apps/web` only, `b00cfc0` and this commit) — `#4edea3`, `#86948a`, `#3c4a42`, `#bbcac0`, `#131313`, and `#201f1f` read `--accent`, `--text-muted`, `--border`, `--text-secondary`, `--bg-primary`, and `--bg-container`. Dark hex values are unchanged. The light theme was not checked. See `14_CHANGELOG.md` v0.195.0, `LIVE_TODO.md`.
 
