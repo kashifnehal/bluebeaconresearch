@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-15 (breadth close: tier-2 event-only assets, retrieval flags, price-source policy)
+Last updated: 2026-10-15 (read-only news-delay probe)
+
+> ⚠️ NEW 2026-10-15 (read-only news-delay probe, `apps/backend` only, this commit) — `probe:news-delay` records when GNews and Marketaux first return two fixed queries, and `report` compares that file with rss `raw_events` urls. No writes. Poll was not run. See `14_CHANGELOG.md` v0.184.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (breadth close, docs only) — `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, and `NICKEL` are event-only (provider `"none"`, no price feed or chart, no ingestion filter anchors). Pages show "NEWS ONLY (NO PRICE FEED)". `DROP_SAMPLE_STORE` is on. `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `GATE_SHADOW_ENABLED` are off. Yahoo-sourced prices stay development and test only while there are no paying customers (2026-10-11). Still open: the classifier mapping test, a tier-2 reference set, and switching the retrieval flags on one at a time. `public.rss_drop_samples` and `public.gate_shadow_results` were applied 2026-10-14. See `LIVE_TODO.md`, `10_DECISIONS.md`.
 
