@@ -89,6 +89,7 @@ Ingested news articles and military incident logs before AI processing.
 - `price` / `change_24h` / `change_pct_24h` / `high_24h` / `low_24h` (`double precision`)
 - `fetched_at` (`timestamptz`, NOT NULL)
 - **Unique Constraint**: `UNIQUE(symbol, fetched_at)`
+- Index `commodity_prices_fetched_at_idx` on `(fetched_at desc)` is written 2026-10-16 and not applied. It was already created in production that day. Detail: `docs/brain/04_DATABASE.md`.
 
 ### Table 5: `alert_rules`
 - `id` (`uuid`, PK)
@@ -162,6 +163,10 @@ CREATE INDEX idx_signals_fulltext ON public.signals USING gin (
   to_tsvector('english', coalesce(title,'') || ' ' || coalesce(summary,''))
 );
 CREATE INDEX idx_commodity_prices_symbol ON public.commodity_prices (symbol, fetched_at DESC);
+-- 2026-10-16, written not applied: commodity_prices_fetched_at_idx (fetched_at desc),
+-- already created in production that day. Drop idx_sanctions_entities_name;
+-- the unique (name, list) index already serves name lookups.
+-- Full note in docs/brain/04_DATABASE.md.
 CREATE INDEX idx_alerts_sent_user ON public.alerts_sent (user_id, created_at DESC);
 -- alerts_sent gained deferred_to_digest (boolean) + a 'deferred' status value,
 -- 20261001200000_alerts_sent_deferred_to_digest.sql (doc 298 A2 alert budget).

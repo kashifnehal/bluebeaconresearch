@@ -121,6 +121,9 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 
 - `20261015150000_signals_region_raw.sql` — P13. Nullable `public.signals.region_raw text`. Written, not applied.
 
+- `20261016010000_commodity_prices_fetched_at_idx.sql` — index `commodity_prices_fetched_at_idx` on `(fetched_at desc)`. Already created in production on 2026-10-16. Written, not applied. Safe to run again.
+- `20261016020000_drop_redundant_sanctions_name_index.sql` — drops `public.idx_sanctions_entities_name`. Written, not applied.
+
 ## Cross-references
 
 - `12_DEPLOYMENT.md` — general deploy process, Railway/Vercel config.

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (weekly gate pass rate — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (price and sanctions indexes recorded, not applied).**
+
+> ⚠️ NEW 2026-10-16 (price and sanctions indexes, migrations written, not applied) — `commodity_prices_fetched_at_idx` records an index already created in production on 2026-10-16. `idx_sanctions_entities_name` is dropped because the unique `(name, list)` index already serves name lookups. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (weekly gate pass rate, `apps/backend` only, `d3aaa36`) — passed counts signals created in the week that include a raw event. Rejected counts checked raw events that match a materiality_gate rejected health row. Prefilter skips are left out. No cutoff.
 

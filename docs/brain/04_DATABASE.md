@@ -112,6 +112,7 @@ Ingested news articles and incident logs before classification.
 - `fetched_at` (`timestamptz`, NOT NULL, default `now()`)
 - `created_at` (`timestamptz`, NOT NULL, default `now()`)
 - **Unique Constraint**: `UNIQUE(symbol, fetched_at)`
+- **Index** `commodity_prices_fetched_at_idx` on `(fetched_at desc)`, written 2026-10-16, not applied. The same index was already created in production on 2026-10-16. The latest-prices query orders by `fetched_at` alone.
 
 ### Table 5: `alert_rules`
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)
@@ -263,6 +264,7 @@ Service-role only (RLS enabled, no policy — correct by design).
 - `raw_data` (`jsonb`, NOT NULL, default `'{}'::jsonb`)
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
 - **Unique Constraint**: `UNIQUE(name, list)`
+- `idx_sanctions_entities_name` is dropped in a migration written 2026-10-16, not applied. The unique `(name, list)` index already serves lookups by name.
 
 ### Table 17: `backtest_cache`
 Service-role only (RLS enabled, no policy — correct by design).

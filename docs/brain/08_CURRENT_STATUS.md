@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (weekly gate pass rate)
+Last updated: 2026-10-16 (price and sanctions indexes recorded, not applied)
+
+> ⚠️ NEW 2026-10-16 (price and sanctions indexes, migrations written, not applied) — `commodity_prices_fetched_at_idx` on `(fetched_at desc)` records an index already created in production on 2026-10-16. `idx_sanctions_entities_name` is dropped because the unique `(name, list)` index already serves name lookups.
 
 > ⚠️ NEW 2026-10-16 (weekly gate pass rate, `apps/backend` only, `d3aaa36`) — passed counts signals created in the week that include a raw event. Rejected counts checked raw events that match a materiality_gate rejected health row. Prefilter skips are left out. No cutoff.
 

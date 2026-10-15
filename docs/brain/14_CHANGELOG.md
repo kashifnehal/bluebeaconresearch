@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Price and sanctions indexes recorded
+
+Migrations written, not applied. `commodity_prices (fetched_at desc)` records an index already created in production on 2026-10-16. `idx_sanctions_entities_name` is dropped because the unique `(name, list)` index already serves name lookups.
+
 ### 2026-10-16 — What we build and how it helps users
 
 Docs only. Added that section to both product files. The eight rows keep the supplied evidence labels. No new count was added beyond those rows and the SEBI equity-derivatives range in the Users paragraph.

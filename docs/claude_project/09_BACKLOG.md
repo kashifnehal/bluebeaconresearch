@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Price and sanctions indexes (migrations written, not applied). `commodity_prices_fetched_at_idx` records an index already created in production on 2026-10-16. `idx_sanctions_entities_name` is dropped. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Weekly gate pass rate (`apps/backend`, `d3aaa36`). Passed counts signals created in the week that include a raw event. Prefilter skips are left out. No cutoff. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Feed quiet-gap alarm after a pause (`apps/backend`, `e572d62`). Silence starts at the later of last_seen and the resume check. A degraded row waits for two quiet checks. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

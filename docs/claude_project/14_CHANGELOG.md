@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Price and sanctions indexes recorded
+
+Migrations written, not applied. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — What we build and how it helps users
 
 Docs only. The section is in both product files. Full detail: `docs/brain/14_CHANGELOG.md`.

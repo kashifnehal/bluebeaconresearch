@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Price and sanctions indexes recorded, migrations written not applied, 2026-10-16
+
+- `commodity_prices_fetched_at_idx` on `(fetched_at desc)`. The latest-prices query orders by `fetched_at` alone and scanned the whole table. The index was already created on 2026-10-16 in production; this file records it and is safe to run again.
+- Drop `public.idx_sanctions_entities_name`. The unique index on `(name, list)` already serves lookups by name. The single-column index was never used and costs a write on every sanctions row change.
+- Written, not applied. No open priority-queue line. Nothing struck.
+
 ## ✅ Event detail stops waiting on a slow read, `apps/web`, 2026-10-16, `426de2c` and `b2fe912`
 
 - Optional reads on `GET /api/signals/:id` stop after 6000 ms and list the skipped names in `degraded` (`426de2c`). The event page aborts its fetch at 20000 ms, shows a retry when that fetch times out or fails, and hides empty historical and related blocks named in `degraded` (`b2fe912`). No open priority-queue line. Nothing struck.
