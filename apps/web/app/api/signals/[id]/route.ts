@@ -15,6 +15,7 @@ import {
   type PricePointsTiming,
 } from "@/lib/price-baseline-server";
 import { formatServerTiming, serverTimingEnabled, type ServerTimingStep } from "@/lib/server-timing";
+import { OPTIONAL_READ_BUDGET_MS, withBudget } from "@/lib/with-budget";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
 import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
@@ -94,6 +95,7 @@ export type EventDetailResponse = {
   relatedEventsTotal: number;
   pricesAtSignal: PriceAtSignal[];
   marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry>;
+  degraded: string[];
 };
 
 // Placeholder, not a tuned value — no usage data exists yet on how far back a
@@ -140,6 +142,7 @@ type SignalDetailDeps = {
   prefetchAssetPricePoints: typeof prefetchAssetPricePoints;
   fetchMatchedBaselinesWithTimeout: typeof fetchMatchedBaselinesWithTimeout;
   loadMediaImpactCaveats: typeof loadMediaImpactCaveats;
+  optionalReadBudgetMs?: number;
 };
 
 const defaultSignalDetailDeps: SignalDetailDeps = {
@@ -300,23 +303,116 @@ export async function GET(
             .range(from, to),
         )
       : Promise.resolve({ rows: [] as RelatedCandidateRow[], error: null });
-  const watchedRawEvents = timeAwait(rawEventsPromise, timingOn);
-  const watchedHistorical = timeAwait(historicalPromise, timingOn);
-  const watchedRelated = timeAwait(relatedPromise, timingOn);
 
-  const [rawEventsRes, historicalRes, relatedRes] = (await Promise.all([
+  const budgetMs = deps.optionalReadBudgetMs ?? OPTIONAL_READ_BUDGET_MS;
+  const rawFallback = { data: [] as any[], error: null as { message: string } | null };
+  const historicalFallback = {
+    data: [] as any[] | null,
+    error: null as { message: string } | null,
+  };
+  const relatedFallback = { rows: [] as RelatedCandidateRow[], error: null as string | null };
+  const pricesFallback: PriceAtSignal[] = [];
+  const degraded: string[] = [];
+  const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
+
+  const rawBudgeted = withBudget(rawEventsPromise, budgetMs, rawFallback);
+  const historicalBudgeted = withBudget(historicalPromise, budgetMs, historicalFallback);
+  const relatedBudgeted = withBudget(relatedPromise, budgetMs, relatedFallback);
+  const pricesBudgeted = withBudget(
+    rawBudgeted.then((rawRes) => {
+      const rawRows = (rawRes.data ?? []) as Array<{
+        event_date?: unknown;
+        created_at?: unknown;
+        source?: unknown;
+      }>;
+      const earliestReport = earliestRawStamp(rawRows, "event_date");
+      const reportAt = earliestReport?.at ?? validIso(row.event_date);
+      const priceAtReportAnchor = reportAt ?? row.event_date ?? row.created_at;
+      return Promise.all(
+        commodityImpacts.map(async (impact) => {
+          const [historicalPriceRes, flaggedPriceRes, currentPriceRes] = await Promise.all([
+            supabase
+              .from("commodity_prices")
+              .select("price, fetched_at")
+              .eq("symbol", impact.asset)
+              .lte("fetched_at", priceAtReportAnchor)
+              .order("fetched_at", { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            supabase
+              .from("commodity_prices")
+              .select("price, fetched_at")
+              .eq("symbol", impact.asset)
+              .lte("fetched_at", row.created_at)
+              .order("fetched_at", { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            supabase
+              .from("commodity_prices")
+              .select("price, fetched_at")
+              .eq("symbol", impact.asset)
+              .order("fetched_at", { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+          ]);
+
+          return {
+            asset: impact.asset,
+            priceAtSignal: historicalPriceRes.data?.price ?? null,
+            priceAtSignalDate: historicalPriceRes.data?.fetched_at ?? null,
+            priceAtFlagged: flaggedPriceRes.data?.price ?? null,
+            priceAtFlaggedDate: flaggedPriceRes.data?.fetched_at ?? null,
+            currentPrice: currentPriceRes.data?.price ?? null,
+            currentPriceDate: currentPriceRes.data?.fetched_at ?? null,
+          };
+        }),
+      );
+    }),
+    budgetMs,
+    pricesFallback,
+  );
+
+  const watchedRawEvents = timeAwait(rawBudgeted, timingOn);
+  const watchedHistorical = timeAwait(historicalBudgeted, timingOn);
+  const watchedRelated = timeAwait(relatedBudgeted, timingOn);
+  const watchedPricesAtSignal = timeAwait(pricesBudgeted, timingOn);
+
+  const [rawEventsRes, historicalRes, relatedRes, pricesAtSignal] = (await Promise.all([
     watchedRawEvents.promise,
     watchedHistorical.promise,
     watchedRelated.promise,
+    watchedPricesAtSignal.promise,
   ])) as [
     { data: any[] | null; error: { message: string } | null },
     { data: any[] | null; error: { message: string } | null },
     { rows: RelatedCandidateRow[]; error: string | null },
+    PriceAtSignal[],
   ];
+  if (rawEventsRes === rawFallback) degraded.push("raw_events");
+  if (historicalRes === historicalFallback) degraded.push("historical");
+  if (relatedRes === relatedFallback) degraded.push("related");
+  if (pricesAtSignal === pricesFallback) degraded.push("price_at_signal");
   if (steps) {
-    steps.push({ name: "raw_events", durMs: watchedRawEvents.ms() });
-    steps.push({ name: "historical", durMs: watchedHistorical.ms() });
-    steps.push({ name: "related", durMs: watchedRelated.ms() });
+    steps.push({
+      name: "raw_events",
+      durMs: watchedRawEvents.ms(),
+      ...(rawEventsRes === rawFallback ? { desc: "skipped" } : {}),
+    });
+    steps.push({
+      name: "historical",
+      durMs: watchedHistorical.ms(),
+      ...(historicalRes === historicalFallback ? { desc: "skipped" } : {}),
+    });
+    steps.push({
+      name: "related",
+      durMs: watchedRelated.ms(),
+      ...(relatedRes === relatedFallback ? { desc: "skipped" } : {}),
+    });
+    steps.push({
+      name: "price_at_signal",
+      durMs: watchedPricesAtSignal.ms(),
+      ...(pricesAtSignal === pricesFallback ? { desc: "skipped" } : {}),
+    });
   }
 
   const sources: EventSource[] = (rawEventsRes.data ?? [])
@@ -417,57 +513,10 @@ export async function GET(
     }),
   );
 
-  const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
   const currencyPairImpacts = (row.currency_pair_impacts ?? []) as NonNullable<
     Signal["currencyPairImpacts"]
   >;
   const eventDate = row.event_date ?? row.created_at;
-  const priceAtReportAnchor = firstReportAt ?? eventDate;
-
-  const pricesAtSignalPromise = Promise.all(
-    commodityImpacts.map(async (impact) => {
-      const [historicalPriceRes, flaggedPriceRes, currentPriceRes] = await Promise.all([
-        supabase
-          .from("commodity_prices")
-          .select("price, fetched_at")
-          .eq("symbol", impact.asset)
-          .lte("fetched_at", priceAtReportAnchor)
-          .order("fetched_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from("commodity_prices")
-          .select("price, fetched_at")
-          .eq("symbol", impact.asset)
-          .lte("fetched_at", row.created_at)
-          .order("fetched_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from("commodity_prices")
-          .select("price, fetched_at")
-          .eq("symbol", impact.asset)
-          .order("fetched_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-
-      return {
-        asset: impact.asset,
-        priceAtSignal: historicalPriceRes.data?.price ?? null,
-        priceAtSignalDate: historicalPriceRes.data?.fetched_at ?? null,
-        priceAtFlagged: flaggedPriceRes.data?.price ?? null,
-        priceAtFlaggedDate: flaggedPriceRes.data?.fetched_at ?? null,
-        currentPrice: currentPriceRes.data?.price ?? null,
-        currentPriceDate: currentPriceRes.data?.fetched_at ?? null,
-      };
-    }),
-  );
-  const watchedPricesAtSignal = timeAwait(pricesAtSignalPromise, timingOn);
-  const pricesAtSignal: PriceAtSignal[] = await watchedPricesAtSignal.promise;
-  if (steps) {
-    steps.push({ name: "price_at_signal", durMs: watchedPricesAtSignal.ms() });
-  }
 
   const magnitudeAssets = [
     ...new Set([
@@ -618,6 +667,7 @@ export async function GET(
     relatedEventsTotal,
     pricesAtSignal,
     marketImpactMagnitudes,
+    degraded,
   };
 
   const response = NextResponse.json(payload);

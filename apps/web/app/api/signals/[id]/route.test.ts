@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 
 import type { OutcomeRowsObservation } from "@/lib/signal-outcomes-server";
 import type { BaselineFetchTiming, PricePointsTiming } from "@/lib/price-baseline-server";
+import { withBudget } from "@/lib/with-budget";
 import { GET } from "./route";
 
 function runTest(name: string, fn: () => Promise<void> | void) {
@@ -57,6 +58,10 @@ function makeSupabase(
     rawEvents?: Array<Record<string, unknown>>;
     priceLte?: string[];
     rawSelect?: { value: string };
+    hangHistorical?: boolean;
+    signalDelayMs?: number;
+    signalError?: string;
+    optionalReadBudgetMs?: number;
   },
 ) {
   const signal = options?.signal ?? signalRow;
@@ -98,14 +103,28 @@ function makeSupabase(
       builder.limit = self;
       builder.maybeSingle = () => {
         counter.executions += 1;
-        if (table === "signals") return Promise.resolve({ data: signal, error: null });
-        if (table === "commodity_prices") {
-          return Promise.resolve({
-            data: { price: 71.2, fetched_at: "2026-10-14T00:00:00.000Z" },
-            error: null,
+        const finish = () => {
+          if (table === "signals") {
+            if (options?.signalError) {
+              return { data: null, error: { message: options.signalError } };
+            }
+            return { data: signal, error: null };
+          }
+          if (table === "commodity_prices") {
+            return {
+              data: { price: 71.2, fetched_at: "2026-10-14T00:00:00.000Z" },
+              error: null,
+            };
+          }
+          return { data: null, error: null };
+        };
+        const signalDelayMs = options?.signalDelayMs;
+        if (table === "signals" && signalDelayMs) {
+          return new Promise((resolve) => {
+            setTimeout(() => resolve(finish()), signalDelayMs);
           });
         }
-        return Promise.resolve({ data: null, error: null });
+        return Promise.resolve(finish());
       };
       builder.range = () => {
         counter.executions += 1;
@@ -116,6 +135,7 @@ function makeSupabase(
         onRejected?: (reason: unknown) => unknown,
       ) => {
         counter.executions += 1;
+        if (table === "signals" && options?.hangHistorical) return new Promise(() => {});
         const data = table === "raw_events" ? rawEvents : [];
         return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
       };
@@ -163,6 +183,7 @@ function makeDeps(
       return { USOIL: [] };
     },
     loadMediaImpactCaveats: async () => new Map<string, string>(),
+    optionalReadBudgetMs: options?.optionalReadBudgetMs,
   };
 }
 
@@ -292,6 +313,106 @@ async function main() {
       "2026-10-05T10:54:14.000Z",
     ]);
     assert.equal(body.pricesAtSignal[0].priceAtFlaggedDate, "2026-10-14T00:00:00.000Z");
+  });
+
+  await runTest("a slow optional read returns the signal with empty arrays and lists it in degraded", async () => {
+    const previous = process.env.SERVER_TIMING;
+    process.env.SERVER_TIMING = "true";
+    try {
+      const res = await callGet(
+        makeDeps(
+          { executions: 0 },
+          { hangHistorical: true, optionalReadBudgetMs: 30 },
+        ),
+      );
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.equal(body.signal.id, SIGNAL_ID);
+      assert.deepEqual(body.historicalComparisons, []);
+      assert.deepEqual(body.degraded, ["historical"]);
+      assert.equal(body.sources.length, 1);
+      assert.equal(body.pricesAtSignal[0].asset, "USOIL");
+      const header = res.headers.get("Server-Timing");
+      assert.ok(header);
+      assert.match(header, /historical;dur=\d+;desc="skipped"/);
+      assert.match(header, /(?:^|, )raw_events;dur=\d+/);
+      assert.equal(/raw_events;dur=\d+;desc="skipped"/.test(header), false);
+    } finally {
+      if (previous === undefined) delete process.env.SERVER_TIMING;
+      else process.env.SERVER_TIMING = previous;
+    }
+  });
+
+  await runTest("all fast optional reads return degraded []", async () => {
+    const res = await callGet(makeDeps({ executions: 0 }));
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.signal.id, SIGNAL_ID);
+    assert.deepEqual(body.degraded, []);
+    assert.ok(Array.isArray(body.historicalComparisons));
+    assert.ok(Array.isArray(body.relatedEvents));
+    assert.ok(Array.isArray(body.pricesAtSignal));
+    assert.ok(Array.isArray(body.sources));
+  });
+
+  await runTest("a slow signal row is not skipped", async () => {
+    const started = Date.now();
+    const res = await callGet(
+      makeDeps(
+        { executions: 0 },
+        { signalDelayMs: 80, optionalReadBudgetMs: 20 },
+      ),
+    );
+    assert.ok(Date.now() - started >= 70);
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.equal(body.signal.id, SIGNAL_ID);
+    assert.equal(body.signal.title, "Strait traffic");
+    assert.deepEqual(body.degraded, []);
+
+    const errorStarted = Date.now();
+    const realError = console.error;
+    console.error = () => {};
+    try {
+      const errorRes = await callGet(
+        makeDeps(
+          { executions: 0 },
+          { signalDelayMs: 80, signalError: "db down", optionalReadBudgetMs: 20 },
+        ),
+      );
+      assert.ok(Date.now() - errorStarted >= 70);
+      assert.equal(errorRes.status, 500);
+      const errorBody = await errorRes.json();
+      assert.equal(errorBody.error.code, "db_error");
+    } finally {
+      console.error = realError;
+    }
+  });
+
+  await runTest("withBudget clears its timer when the promise settles", async () => {
+    const tracked = new Set<unknown>();
+    const cleared = new Set<unknown>();
+    const realSet = globalThis.setTimeout;
+    const realClear = globalThis.clearTimeout;
+    globalThis.setTimeout = ((fn: TimerHandler, ms?: number, ...args: unknown[]) => {
+      const id = realSet(fn as never, ms, ...(args as []));
+      if (ms === 60_000) tracked.add(id);
+      return id;
+    }) as unknown as typeof setTimeout;
+    globalThis.clearTimeout = ((id?: Parameters<typeof clearTimeout>[0]) => {
+      if (id !== undefined && tracked.has(id)) cleared.add(id);
+      return realClear(id as never);
+    }) as typeof clearTimeout;
+    try {
+      const value = await withBudget(Promise.resolve("ok"), 60_000, "fallback");
+      assert.equal(value, "ok");
+      assert.equal(tracked.size, 1);
+      assert.equal(cleared.size, 1);
+    } finally {
+      globalThis.setTimeout = realSet;
+      globalThis.clearTimeout = realClear;
+      for (const id of tracked) realClear(id as never);
+    }
   });
 }
 
