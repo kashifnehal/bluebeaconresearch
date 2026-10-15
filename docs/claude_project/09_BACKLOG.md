@@ -2,39 +2,51 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-15.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
-> ⚠️ UPDATED 2026-10-15 — Watchlist pulse tiles (`apps/web`, this commit, PHASE 162 / v0.185.0). `/watchlist/[symbol]` counts signals published in the last 24 hours against the prior 24 hours, for priced and news-only assets. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Watchlist pulse tiles (`apps/web`, this commit, PHASE 167 / v0.190.0). `/watchlist/[symbol]` counts signals published in the last 24 hours against the prior 24 hours, for priced and news-only assets. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — Speed and timing claims (docs only, b9f7084, PHASE 166 / v0.189.0). A speed superlative stays off the site until a public benchmark exists. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — UTC clock and open-budget badge (`apps/web`, 3071abb, PHASE 165 / v0.188.0). Signal Clock cells show UTC. The homepage badge says collection runs while the daily budget is open. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — Homepage and dashboard check points (`apps/web`, 847e9ac, PHASE 164 / v0.187.0). Homepage and dashboard copy name the collection interval and where to check the clock, the sources, and the price baseline. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — Signal clocks (`apps/web`, `379b782`, PHASE 163 / v0.186.0). Signal detail shows source time, fetch time, flag time, and delay. The price line is a timeline. Feed tags say "Reported" or "Flagged". No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — GNews plan switch (`apps/backend`, b5b7be0, PHASE 162 / v0.185.0). `GNEWS_PLAN` is unset in production, so the collector still sends one query at `max=10`. Exactly `essential` sends every query at `max=25`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ UPDATED 2026-10-15 — Read-only news-delay probe (`apps/backend`, `303bbd7`, PHASE 161 / v0.184.0). GNews and Marketaux can be polled into a local file and compared with rss rows. No database writes. Poll was not run. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-15 — Breadth close (docs only, PHASE 160 / v0.183.0). Seven tier-2 assets are event-only. `DROP_SAMPLE_STORE` is on; `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `GATE_SHADOW_ENABLED` are off. Still open: the classifier mapping test, a tier-2 reference set, and switching the retrieval flags on one at a time. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-15 — Intelligence Feed pause sentence (`apps/web`, this commit, PHASE 159 / v0.182.0). A closed daily classification budget puts a period before the pause sentence on the `/status` Intelligence Feed detail. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Intelligence Feed pause sentence (`apps/web`, 0b8d1f0, PHASE 159 / v0.182.0). A closed daily classification budget puts a period before the pause sentence on the `/status` Intelligence Feed detail. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-15 — Underscore registry symbols (`apps/web`, this commit, PHASE 158 / v0.181.0). `VEG_OILS`, `TTF_GAS`, and `HEATING_OIL` pass the driver-breakdown charset and still have to be a known symbol. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Underscore registry symbols (`apps/web`, 5345bdf, PHASE 158 / v0.181.0). `VEG_OILS`, `TTF_GAS`, and `HEATING_OIL` pass the driver-breakdown charset and still have to be a known symbol. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-15 — News-only symbols on the driver-breakdown route (`apps/web`, this commit, PHASE 157 / v0.180.0). `COFFEE` and the other news-only symbols that pass the existing symbol pattern are no longer `400 unknown symbol`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — News-only symbols on the driver-breakdown route (`apps/web`, 95c13bd, PHASE 157 / v0.180.0). `COFFEE` and the other news-only symbols that pass the existing symbol pattern are no longer `400 unknown symbol`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-15 — Signal detail step timings (`apps/web`, this commit, PHASE 156 / v0.179.0). `GET /api/signals/:id` sends `Server-Timing` only when `SERVER_TIMING` is exactly `true`. Body, status codes, and queries are unchanged. This route does not call the rate limiter. The host variable is not set in this commit. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Signal detail step timings (`apps/web`, 5879fc5, PHASE 156 / v0.179.0). `GET /api/signals/:id` sends `Server-Timing` only when `SERVER_TIMING` is exactly `true`. Body, status codes, and queries are unchanged. This route does not call the rate limiter. The host variable is not set in 5879fc5. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-15 — Ingestion banner when the daily classification budget is closed (`apps/web`, this commit, PHASE 155 / v0.178.0). The live-ingestion box no longer reads as a healthy cycle when every collector is budget-closed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-15 — Ingestion banner when the daily classification budget is closed (`apps/web`, fa40d4b, PHASE 155 / v0.178.0). The live-ingestion box no longer reads as a healthy cycle when every collector is budget-closed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Map locations list (`apps/web`, this commit, PHASE 154 / v0.177.0). The map groups its current signals by country and lists each chokepoint with a count inside 500 km. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Map locations list (`apps/web`, cd1cf7f, PHASE 154 / v0.177.0). The map groups its current signals by country and lists each chokepoint with a count inside 500 km. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — News-only watchlist cards and detail pages (`apps/web`, this commit, PHASE 153 / v0.176.0). The seven news-only commodities can be added, followed, and opened without a price. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — News-only watchlist cards and detail pages (`apps/web`, 5261650, PHASE 153 / v0.176.0). The seven news-only commodities can be added, followed, and opened without a price. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Daily limit on pair-only keeps (`apps/backend`, this commit, PHASE 152 / v0.175.0). At most 20 headlines a UTC day are kept only by the commodity-and-event pair rule, counted in memory, and the count also resets on process restart. No prior numbered backlog line — nothing struck. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Daily limit on pair-only keeps (`apps/backend`, 53f2543, PHASE 152 / v0.175.0). At most 20 headlines a UTC day are kept only by the commodity-and-event pair rule, counted in memory, and the count also resets on process restart. No prior numbered backlog line — nothing struck. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Feed table hide-summaries and loaded-row count (`apps/web`, this commit, PHASE 151 / v0.174.0). Table mode can hide Summary. A line above the table counts loaded rows, UTC days, Up, Down, and Other. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Feed table hide-summaries and loaded-row count (`apps/web`, c206391, PHASE 151 / v0.174.0). Table mode can hide Summary. A line above the table counts loaded rows, UTC days, Up, Down, and Other. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Quick-view report count, unique sources, and headlines (`apps/web`, this commit, PHASE 150 / v0.173.0). The drawer fetches the signal detail route while open. `sources[].domain` falls back to the article URL hostname. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Quick-view report count, unique sources, and headlines (`apps/web`, e20a43f, PHASE 150 / v0.173.0). The drawer fetches the signal detail route while open. `sources[].domain` falls back to the article URL hostname. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — News-only commodity tags (`packages/shared` + `apps/backend` + `apps/web`, this commit, PHASE 149 / v0.172.0). Vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel can be classified and filtered in the feed. They have no price. No prior numbered backlog line — nothing struck. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — News-only commodity tags (`packages/shared` + `apps/backend` + `apps/web`, e4a5409, PHASE 149 / v0.172.0). Vegetable oils, soybeans and soy oil, sugar, coffee, cocoa, aluminium, and nickel can be classified and filtered in the feed. They have no price. No prior numbered backlog line — nothing struck. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Faster USOIL market-impact reads (`apps/web`, this commit, PHASE 148 / v0.171.0). Outcome pages after the first are read together and a successful read is cached 5 minutes. No prior numbered backlog line — ad-hoc production latency, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Faster USOIL market-impact reads (`apps/web`, ff8d968, PHASE 148 / v0.171.0). Outcome pages after the first are read together and a successful read is cached 5 minutes. No prior numbered backlog line — ad-hoc production latency, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Weekend-proof watchlist sparkline (`apps/web`, this commit, PHASE 147 / v0.170.0). The list sparkline uses a 7-day, 14-point sample and states when the price did not change, instead of drawing equal bars from the last 12 identical snapshots. No prior numbered backlog line — ad-hoc closed-market display fix, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Weekend-proof watchlist sparkline (`apps/web`, 874c216, PHASE 147 / v0.170.0). The list sparkline uses a 7-day, 14-point sample and states when the price did not change, instead of drawing equal bars from the last 12 identical snapshots. No prior numbered backlog line — ad-hoc closed-market display fix, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Replay gate (`apps/backend`, this commit, PHASE 146 / v0.169.0) now sends the live article excerpt, labels GNews publishers by `source.name`, draws its 150 rows with a printed seed, and accepts `--ids` / `--repeat`. No prior numbered backlog line — Run F follow-up, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Replay gate (`apps/backend`, ad6651a, PHASE 146 / v0.169.0) now sends the live article excerpt, labels GNews publishers by `source.name`, draws its 150 rows with a printed seed, and accepts `--ids` / `--repeat`. No prior numbered backlog line — Run F follow-up, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-14 — Reconciliation recovered-signal alerts now honor the 24h intake window (`apps/backend`, this commit, PHASE 145 / v0.168.0). No prior numbered backlog line — ad-hoc intake-policy gap on the 36h orphan recovery path, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-14 — Reconciliation recovered-signal alerts now honor the 24h intake window (`apps/backend`, 67d97ea, PHASE 145 / v0.168.0). No prior numbered backlog line — ad-hoc intake-policy gap on the 36h orphan recovery path, not a queued ticket. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-10 — Backend build fix (`244dd75`) + onboarding "request a market" field (`cfa4e54`) + ADR 041/D45 asset-admission-by-coverage-state docs. No prior numbered backlog line for any of the three — the build fix and onboarding field were ad-hoc, not queued tickets, and the ADR is a docs-only decision. Full detail: `docs/brain/LIVE_TODO.md`.
 

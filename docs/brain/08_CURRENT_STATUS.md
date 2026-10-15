@@ -6,6 +6,20 @@ Last updated: 2026-10-15 (watchlist pulse tiles)
 
 > ⚠️ NEW 2026-10-15 (watchlist pulse tiles, `apps/web` only, this commit) — `/watchlist/[symbol]` shows five tiles under the header: signals BBR published in the last 24 hours, the prior 24 hours, the change, the peak hour in local time, and up / down. News-only assets get the same tiles. No price request. See `14_CHANGELOG.md` v0.185.0, `LIVE_TODO.md`.
 
+Last updated: 2026-10-15 (speed and timing claims recorded; seven queue lines not started)
+
+> ⚠️ NEW 2026-10-15 (speed and timing claims, docs only, this commit) — site and ad copy do not use a speed superlative until a public benchmark exists. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started. See `14_CHANGELOG.md` v0.189.0, `10_DECISIONS.md`, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-15 (UTC clock and open-budget badge, `apps/web` only, this commit) — event-page Clock cells show "14 Oct 2026, 12:30 UTC", or "n/a" when the time is missing or invalid. The homepage badge says collection runs about every 30 minutes while the daily budget is open. See `14_CHANGELOG.md` v0.188.0, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-15 (homepage and dashboard check points, `apps/web` only, this commit) — the homepage badge, the latest-signal paragraph, and the dashboard header read a shared 30-minute collection interval. The latest-signal card shows reported time and flag time. A block under the process steps says where to check the clock, the sources, and the price baseline. See `14_CHANGELOG.md` v0.187.0, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-15 (signal clocks, `apps/web` only, `379b782`) — event detail shows the earliest linked report time, when BBR fetched it, when BBR flagged it, and the delay. `GET /api/signals/:id` adds `firstReportAt`, `firstReportKind`, `firstFetchedAt`, `priceAtFlagged`, and `priceAtFlaggedDate`. The price line is a timeline. Feed tags say "Reported" or "Flagged". See `14_CHANGELOG.md` v0.186.0, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-15 (GNews plan switch, `apps/backend` only, this commit) — `GNEWS_PLAN` unset or `free` keeps one rotating query at `max=10`. Exactly `essential` uses `max=25` and every query each cycle, 1.1 seconds apart. A second or third query failure does not fail the cycle. The variable is unset in production, so nothing changes until it is set. See `14_CHANGELOG.md` v0.185.0, `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-10-15 (read-only news-delay probe, `apps/backend` only, `303bbd7`) — `probe:news-delay` records when GNews and Marketaux first return two fixed queries, and `report` compares that file with rss `raw_events` urls. No writes. Poll was not run. See `14_CHANGELOG.md` v0.184.0, `LIVE_TODO.md`.
+
 > ⚠️ NEW 2026-10-15 (breadth close, docs only) — `VEG_OILS`, `SOYBEANS`, `SUGAR`, `COFFEE`, `COCOA`, `ALUMINIUM`, and `NICKEL` are event-only (provider `"none"`, no price feed or chart, no ingestion filter anchors). Pages show "NEWS ONLY (NO PRICE FEED)". `DROP_SAMPLE_STORE` is on. `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `GATE_SHADOW_ENABLED` are off. Yahoo-sourced prices stay development and test only while there are no paying customers (2026-10-11). Still open: the classifier mapping test, a tier-2 reference set, and switching the retrieval flags on one at a time. `public.rss_drop_samples` and `public.gate_shadow_results` were applied 2026-10-14. See `LIVE_TODO.md`, `10_DECISIONS.md`.
 
 > ⚠️ NEW 2026-10-15 (Intelligence Feed pause sentence, `apps/web` only, this commit) — a closed daily classification budget puts a period before " Collection is paused until the next UTC day." on the Intelligence Feed detail. An open budget is unchanged. See `14_CHANGELOG.md` v0.182.0, `LIVE_TODO.md`.

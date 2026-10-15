@@ -1267,6 +1267,7 @@ export default function MapPage() {
                     </span>
                     <FreshTag
                       createdAt={signal.createdAt}
+                      eventDate={signal.eventDate}
                       className="font-mono text-[12px] md:text-[9px] text-primary"
                     />
                   </div>

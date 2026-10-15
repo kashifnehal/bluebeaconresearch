@@ -3,18 +3,27 @@
 import type { CSSProperties } from "react";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 
-/** Recency from `signals.created_at` (ingest time), not article `eventDate`. */
+function isValidTimestamp(value?: string | null): boolean {
+  if (!value) return false;
+  return Number.isFinite(new Date(value).getTime());
+}
+
+/** Reported age when eventDate is a real time; otherwise flagged age from createdAt. */
 export function FreshTag({
   createdAt,
+  eventDate,
   className,
   style,
 }: {
   createdAt?: string | null;
+  eventDate?: string | null;
   className?: string;
   style?: CSSProperties;
 }) {
-  const compact = safeFormatDistanceToNow(createdAt, { compact: true });
-  const label = compact === "recently" ? "Fresh recently" : `Fresh ${compact}`;
+  const reported = isValidTimestamp(eventDate);
+  const compact = safeFormatDistanceToNow(reported ? eventDate : createdAt, { compact: true });
+  const prefix = reported ? "Reported" : "Flagged";
+  const label = compact === "recently" ? `${prefix} recently` : `${prefix} ${compact}`;
   return (
     <span data-testid="fresh-tag" className={className} style={style}>
       {label}

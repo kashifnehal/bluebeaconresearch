@@ -8,12 +8,31 @@ process.env.SUPABASE_SERVICE_ROLE_KEY =
 
 // selectGnewsQuery is pure (cycleIndex in, {query, index} out) — no network/Supabase
 // involved, so this only exercises the rotation math introduced by W7-GNEWS-ROTATE.
-const { selectGnewsQuery, selectGnewsT2Query, gnewsT2Selection, GNEWS_QUERY_COUNT } = await import("./gnews-collector.js");
+const {
+  selectGnewsQuery,
+  selectGnewsT2Query,
+  gnewsT2Selection,
+  GNEWS_QUERY_COUNT,
+  resolveGnewsPlan,
+  gnewsFetchFailed,
+  runPlannedGnewsFetches,
+} = await import("./gnews-collector.js");
 
 let failed = false;
 function runTest(name: string, fn: () => void) {
   try {
     fn();
+    console.log(`✔ ${name}`);
+  } catch (err) {
+    failed = true;
+    console.error(`✖ ${name}`);
+    console.error(err);
+  }
+}
+
+async function runTestAsync(name: string, fn: () => Promise<void>) {
+  try {
+    await fn();
     console.log(`✔ ${name}`);
   } catch (err) {
     failed = true;
@@ -81,6 +100,75 @@ runTest("GNEWS_T2_QUERY off selects nothing even on a T2 cycle", () => {
     if (previous === undefined) delete process.env.GNEWS_T2_QUERY;
     else process.env.GNEWS_T2_QUERY = previous;
   }
+});
+
+await runTestAsync("free plan sends one request with max=10", async () => {
+  const previous = process.env.GNEWS_PLAN;
+  try {
+    delete process.env.GNEWS_PLAN;
+    assert.equal(resolveGnewsPlan(), "free");
+    assert.equal(resolveGnewsPlan("free"), "free");
+    assert.equal(resolveGnewsPlan("paid"), "free");
+    const calls: Array<{ query: string; max: number }> = [];
+    const sleeps: number[] = [];
+    const result = await runPlannedGnewsFetches({
+      plan: resolveGnewsPlan(),
+      cycleIndex: 1,
+      token: "test-token",
+      fetchArticles: async (query, _token, max) => {
+        calls.push({ query, max });
+        return [{ url: "https://example.com/a" }];
+      },
+      sleep: async (ms) => {
+        sleeps.push(ms);
+      },
+    });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0]?.max, 10);
+    assert.equal(calls[0]?.query, selectGnewsQuery(1).query);
+    assert.deepEqual(sleeps, []);
+    assert.equal(result.rateLimited, false);
+    assert.equal(gnewsFetchFailed(result.articles.length, result.fetchError), false);
+  } finally {
+    if (previous === undefined) delete process.env.GNEWS_PLAN;
+    else process.env.GNEWS_PLAN = previous;
+  }
+});
+
+await runTestAsync("essential plan sends three max=25 requests and a second failure does not fail the cycle", async () => {
+  assert.equal(resolveGnewsPlan("essential"), "essential");
+  assert.equal(GNEWS_QUERY_COUNT, 3);
+  const timeline: string[] = [];
+  let n = 0;
+  const result = await runPlannedGnewsFetches({
+    plan: "essential",
+    cycleIndex: 4,
+    token: "test-token",
+    fetchArticles: async (query, _token, max) => {
+      timeline.push(`fetch:${max}:${query}`);
+      n += 1;
+      if (n === 2) {
+        const err: any = new Error("quota");
+        err.response = { status: 429 };
+        throw err;
+      }
+      return [{ url: `https://example.com/${n}` }];
+    },
+    sleep: async (ms) => {
+      timeline.push(`sleep:${ms}`);
+    },
+  });
+  assert.deepEqual(timeline, [
+    `fetch:25:${selectGnewsQuery(0).query}`,
+    "sleep:1100",
+    `fetch:25:${selectGnewsQuery(1).query}`,
+    "sleep:1100",
+    `fetch:25:${selectGnewsQuery(2).query}`,
+  ]);
+  assert.equal(result.articles.length, 2);
+  assert.equal(result.rateLimited, false);
+  assert.equal(result.fetchError, undefined);
+  assert.equal(gnewsFetchFailed(result.articles.length, result.fetchError), false);
 });
 
 if (failed) process.exitCode = 1;

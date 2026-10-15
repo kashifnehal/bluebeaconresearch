@@ -143,7 +143,7 @@ export function MobileTensionSheet({
                       <span className="font-mono text-[10px] text-on-surface-variant">
                         {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)} ago
                       </span>
-                      <FreshTag createdAt={signal.createdAt} className="font-mono text-[10px] text-primary" />
+                      <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="font-mono text-[10px] text-primary" />
                     </div>
                     <p className="text-[13px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2">
                       {signal.title}

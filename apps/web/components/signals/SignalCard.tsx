@@ -58,7 +58,7 @@ export function SignalCard({
           />
         </div>
         <div className="flex items-center gap-2 text-outline text-xs">
-          <FreshTag createdAt={signal.createdAt} className="text-primary font-mono" />
+          <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="text-primary font-mono" />
           <span>{timeAgo}</span>
           {lastUpdatedAgo ? <span>Last updated {lastUpdatedAgo}</span> : null}
           <span>{signal.sourcesCount} reports</span>

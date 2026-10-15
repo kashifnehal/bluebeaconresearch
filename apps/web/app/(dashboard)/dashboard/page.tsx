@@ -31,6 +31,7 @@ import {
   type FilterBarValue,
 } from "@/lib/signal-filters";
 import type { Signal } from "@blue-beacon-research/shared";
+import { DASHBOARD_FEED_SUBHEAD } from "@/lib/ingestion-interval";
 
 // Same shape/lookup already used by PriceTicker and the watchlist pages — reusing
 // the existing /api/prices 24h-change calculation here rather than adding a new one.
@@ -345,7 +346,7 @@ export default function DashboardPage() {
             className="text-[14px] mt-1"
             style={{ color: "#acabaa", fontFamily: "'Inter', sans-serif" }}
           >
-            Global signal monitoring, updates roughly every 30 minutes
+            {DASHBOARD_FEED_SUBHEAD}
           </p>
           {formatDataAsOf(dataUpdatedAt) ? (
             <p
@@ -614,6 +615,7 @@ export default function DashboardPage() {
                       </span>
                       <FreshTag
                         createdAt={featured.createdAt}
+                        eventDate={featured.eventDate}
                         className="text-[12px] md:text-[10px]"
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
@@ -748,6 +750,7 @@ export default function DashboardPage() {
                           </span>
                           <FreshTag
                             createdAt={secondaryA.createdAt}
+                            eventDate={secondaryA.eventDate}
                             className="text-[12px] md:text-[10px]"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",
@@ -855,6 +858,7 @@ export default function DashboardPage() {
                           </span>
                           <FreshTag
                             createdAt={secondaryB.createdAt}
+                            eventDate={secondaryB.eventDate}
                             className="text-[12px] md:text-[10px]"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",
@@ -1055,6 +1059,7 @@ export default function DashboardPage() {
                           </div>
                           <FreshTag
                             createdAt={item.createdAt}
+                            eventDate={item.eventDate}
                             className="text-[12px] md:text-[11px] shrink-0"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",

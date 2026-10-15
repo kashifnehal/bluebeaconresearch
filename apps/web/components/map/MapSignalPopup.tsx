@@ -78,7 +78,7 @@ export function MapSignalPopup({
         ) : null}
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 font-mono text-[12px] md:text-[10px] text-on-surface-variant uppercase tracking-wider">
-          <FreshTag createdAt={signal.createdAt} className="text-primary normal-case tracking-normal" />
+          <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="text-primary normal-case tracking-normal" />
           <span>{timeAgo} ago</span>
           <span>
             {signal.sourcesCount ?? 1} report

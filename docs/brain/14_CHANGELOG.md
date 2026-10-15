@@ -2,15 +2,41 @@
 
 > **📍 Doc status — live changelog as of 2026-10-15 (v0.185.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
 
+> **📍 Doc status — live changelog as of 2026-10-15 (v0.189.0).** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Note: `v0.84.0`/`v0.85.0` (PHASE 51 #186 responsive foundations, PHASE 52 proxy.ts rename) are referenced by name in `docs/claude_project/14_CHANGELOG.md` but were never actually written here — flagged, not backfilled, in the v0.86.0 entry below. Also note: W6-ACLED, W5-PAGE-WEB, W7-DEDUPE-KEY, W7-STATUS-FIX, W7-UI-FIXES, and W7-AUTH-RESILIENCE were backfilled 2026-10-05 as v0.137.0–v0.142.0 (see that section); W7-ASSETS-COPPER-SILVER (2026-10-04) remains un-backfilled — no commit SHA was supplied for it, so no entry was written (not guessed). v0.143.0/v0.144.0/v0.145.0/v0.146.0 are four branches merged into `main` 2026-10-06 per W7-MERGE, each renumbered from a v0.136.0 collision at merge time.
+
 This document records historic development milestones, schema evolutions, feature additions, and architectural refactoring for Blue Beacon Research.
 
 ---
 
 ## Milestone Evolution & Historical Log
 
-### v0.185.0 — Watchlist pulse tiles (2026-10-15, this commit)
+### v0.190.0 — Watchlist pulse tiles (2026-10-15, this commit)
 
 `apps/web` only. `GET /api/signals/pulse` counts signals BBR published for one known symbol over the last 24 hours and the 24 hours before that. Five tiles render under the watchlist symbol header for priced and news-only assets. No alert badge. Full detail: `LIVE_TODO.md`.
+
+### v0.189.0 — Record the speed-claim rules and the timing findings (2026-10-15, this commit)
+
+Docs only. Speed and timing claims are a standing rule. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started: paid feed choice, the schedule constant, a speed meter, a benchmark, opposing-side sources, an optional first-report column, and alert delivery. Full detail: `LIVE_TODO.md`, `10_DECISIONS.md`.
+
+### v0.188.0 — Show clock times in UTC and say when collection pauses (2026-10-15, this commit)
+
+`apps/web` only. Event-page Clock cells show UTC as "14 Oct 2026, 12:30 UTC", or "n/a" when the time is missing or invalid. The homepage badge says collection runs about every 30 minutes while the daily budget is open. The latest-signal card still shows GMT times. Full detail: `LIVE_TODO.md`.
+
+### v0.187.0 — Homepage and dashboard say where the clock and sources can be checked (2026-10-15, this commit)
+
+`apps/web` only. The homepage badge, the latest-signal paragraph, and the dashboard header read `INGESTION_INTERVAL_MINUTES` (30). The latest-signal card shows when the story was reported and when it was flagged. A check-it block under the process steps points at the signal clock, the Sources tab, and the price timeline. Full detail: `LIVE_TODO.md`.
+
+### v0.186.0 — Signal pages show source time, fetch time, flag time, and delay (2026-10-15, `379b782`)
+
+`apps/web` only. `GET /api/signals/:id` adds `firstReportAt`, `firstReportKind`, `firstFetchedAt`, `priceAtFlagged`, and `priceAtFlaggedDate`. The event page Clock group shows those times and the delay. Verification counts distinct headlines and outlets. The price line is a timeline from the first linked report, to the flag, to now. Feed tags say "Reported" or "Flagged" instead of "Fresh". Full detail: `LIVE_TODO.md`.
+
+### v0.185.0 — GNews collector can use a paid plan's capacity, off by default (2026-10-15, this commit)
+
+`apps/backend` only. `GNEWS_PLAN` unset or `free` keeps one rotating query at `max=10`. Exactly `essential` requests `max=25` and runs every GNews query each cycle, 1.1 seconds apart. A later query's failure does not fail the cycle. `GNEWS_PLAN` is unset in production, so nothing changes until it is set. The ingestion cron is unchanged. Full detail: `LIVE_TODO.md`.
+
+### v0.184.0 — Read-only news-delay probe (2026-10-15, `303bbd7`)
+
+`apps/backend` only. `probe:news-delay` polls GNews (same search URL and parameters as the collector) and, when its key is set, Marketaux. New articles go to a gitignored jsonl file, keyed by canonical URL. Each vendor stops at 90 requests per UTC day. `report` prints lag stats and a read-only rss overlap from `raw_events` (`raw_data->>url` and `source` only). No database writes, no Redis, no model calls. Poll was not run. Full detail: `LIVE_TODO.md`.
 
 ### v0.183.0 — Breadth close: price-source policy, event-only tier-2 assets, filter-expansion rules (2026-10-15, docs only)
 

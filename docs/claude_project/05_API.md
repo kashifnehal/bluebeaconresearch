@@ -3,6 +3,8 @@
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
 > ⚠️ UPDATED 2026-10-15 — `GET /api/signals/pulse?symbol=` counts signals published in the last 24 hours and the 24 hours before, for a known commodity, news-only commodity, or forex pair. Full detail: `docs/brain/05_API.md`.
+
+> ⚠️ UPDATED 2026-10-15 — `GET /api/signals/:id` adds `firstReportAt`, `firstReportKind`, `firstFetchedAt`, `priceAtFlagged`, and `priceAtFlaggedDate`. The at-report quote uses the earliest linked report time. Full field detail: `docs/brain/05_API.md`.
 >
 > ⚠️ UPDATED 2026-10-15 — `GET /api/signals/driver-breakdown` allows `_` in `symbol` and still `400`s an unknown symbol. `GET /api/signals` uses the same charset on commodity, forex, and saved-preference symbols. Attribution `asset` is unchanged (`^[A-Z0-9]+$`). Full detail: `docs/brain/05_API.md`.
 >

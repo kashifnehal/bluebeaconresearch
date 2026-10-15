@@ -40,6 +40,7 @@ This document provides a guide to infrastructure hosting, CI/CD deployment pipel
 ### External Ingestion APIs
 - `ALPHA_VANTAGE_API_KEY`: Financial commodity market data provider.
 - `GNEWS_API_KEY`: Global news article collector.
+- `GNEWS_PLAN`: GNews request pattern. Unset or `free` (production is unset): one rotating query per cycle, `max=10`. Exactly `essential`: `max=25` and every GNews query each cycle, 1.1 seconds apart. Nothing changes until this is set.
 - `ACLED_API_KEY` / `ACLED_API_EMAIL`: Verified military engagement data feed.
 
 ### Alert Channels & Geospatial

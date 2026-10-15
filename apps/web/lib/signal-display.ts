@@ -5,8 +5,6 @@
  */
 
 export const HIGH_SEVERITY_THRESHOLD = 7;
-// BBR working value. No published source.
-export const FLAT_PRICE_CHANGE_THRESHOLD_PCT = 0.05;
 
 export type HistoryErrorCode =
   | "unauthorized"
@@ -53,20 +51,142 @@ export function priceChangePercent(priceAtSignal: number, currentPrice: number):
   return ((currentPrice - priceAtSignal) / priceAtSignal) * 100;
 }
 
-export function formatPriceSinceFiredSubtext(
+/** Signed percent from `from` to `to`, using `priceChangePercent`. */
+export function formatSignedPriceChange(from: number, to: number): string {
+  const pct = priceChangePercent(from, to);
+  if (pct > 0) return `+${pct.toFixed(1)}%`;
+  if (pct < 0) return `${pct.toFixed(1)}%`;
+  return "+0.0%";
+}
+
+export function delayMinutes(from?: string | null, to?: string | null): number | null {
+  if (!from || !to) return null;
+  const start = new Date(from).getTime();
+  const end = new Date(to).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+  if (start > end) return null;
+  return Math.round((end - start) / 60_000);
+}
+
+export function formatDelay(minutes: number): string {
+  if (minutes <= 0) return "under 1 min";
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (rest === 0) return `${hours} h`;
+  return `${hours} h ${rest} min`;
+}
+
+const QUOTE_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatQuoteAsOf(iso: string): string | null {
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return null;
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${d.getUTCDate()} ${QUOTE_MONTHS[d.getUTCMonth()]}, ${hh}:${mm} UTC`;
+}
+
+export function formatClockUtc(iso?: string | null): string {
+  if (!iso) return "n/a";
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return "n/a";
+  const hh = String(d.getUTCHours()).padStart(2, "0");
+  const mm = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${d.getUTCDate()} ${QUOTE_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}, ${hh}:${mm} UTC`;
+}
+
+export type PriceQuote = { price: number; at: string };
+
+function money(price: number): string {
+  return `$${price.toFixed(2)}`;
+}
+
+export function formatPriceTimelineLines(
   asset: string,
-  priceAtSignal: number,
-  currentPrice: number,
-): string {
-  if (currentPrice === priceAtSignal) {
-    return "Recorded price unchanged since this fired (closed market or unchanged quote)";
+  first: PriceQuote | null,
+  flagged: PriceQuote | null,
+  now: PriceQuote | null,
+): string[] {
+  const lines: string[] = [];
+  const firstTime = first ? formatQuoteAsOf(first.at) : null;
+  const flaggedTime = flagged ? formatQuoteAsOf(flagged.at) : null;
+  const nowTime = now ? formatQuoteAsOf(now.at) : null;
+
+  if (first && firstTime) {
+    lines.push(
+      `${asset} was ${money(first.price)} at the first linked report (quote as of ${firstTime}).`,
+    );
   }
-  const pct = priceChangePercent(priceAtSignal, currentPrice);
-  if (Math.abs(pct) < FLAT_PRICE_CHANGE_THRESHOLD_PCT) {
-    return "No price move recorded yet since this fired";
+  if (flagged && flaggedTime && first) {
+    lines.push(
+      `${money(flagged.price)} when BBR flagged it (quote as of ${flaggedTime}, ${formatSignedPriceChange(first.price, flagged.price)}).`,
+    );
   }
-  const sign = currentPrice >= priceAtSignal ? "+" : "";
-  return `${asset} was $${priceAtSignal.toFixed(2)} when this fired. Now: $${currentPrice.toFixed(2)} (${sign}${pct.toFixed(1)}%)`;
+  if (!flagged) {
+    if (first && now && nowTime) {
+      lines.push(
+        `${money(now.price)} now (quote as of ${nowTime}, ${formatSignedPriceChange(first.price, now.price)} since the first linked report).`,
+      );
+    }
+  } else if (now && nowTime) {
+    lines.push(
+      `${money(now.price)} now (quote as of ${nowTime}, ${formatSignedPriceChange(flagged.price, now.price)} since BBR flagged it).`,
+    );
+  }
+
+  if (
+    first &&
+    flagged &&
+    now &&
+    first.price === flagged.price &&
+    flagged.price === now.price
+  ) {
+    lines.push("Recorded price unchanged (closed market or unchanged quote)");
+  }
+  return lines;
+}
+
+export type ReportForCount = {
+  title?: string | null;
+  domain?: string | null;
+  url?: string | null;
+};
+
+function normalizeHeadline(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/ +/g, " ")
+    .trim();
+}
+
+function reportDomain(source: ReportForCount): string | null {
+  const domain = source.domain?.trim();
+  if (domain) return domain.toLowerCase();
+  if (!source.url) return null;
+  try {
+    const host = new URL(source.url).hostname.toLowerCase().replace(/^www\./, "");
+    return host.length > 0 ? host : null;
+  } catch {
+    return null;
+  }
+}
+
+export function describeReports(sources: ReportForCount[]): string {
+  if (sources.length === 1) return "1 report";
+  const titles = new Set(sources.map((s) => normalizeHeadline(s.title ?? "")));
+  const domains = new Set<string>();
+  for (const source of sources) {
+    const domain = reportDomain(source);
+    if (domain) domains.add(domain);
+  }
+  const distinctTitles = titles.size;
+  const outletCount = domains.size;
+  if (distinctTitles === 1) {
+    return outletCount === 1 ? "1 outlet, same headline" : `${outletCount} outlets, same headline`;
+  }
+  return `${outletCount} outlets, ${distinctTitles} distinct headlines`;
 }
 
 export function eventAlertCta(severity: number): {
