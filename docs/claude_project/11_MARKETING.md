@@ -11,7 +11,7 @@
 **Name:** Blue Beacon Research
 **Tagline:** "Geopolitical intelligence for markets that matter." (updated 2026-09-25, was "High-fidelity geopolitical intelligence → actionable trading signals.")
 **Subheadline (landing hero `<p>`, 2026-09-20 / #174):** "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders"
-**Elevator pitch:** "We convert global conflicts, sanctions, and policy shifts into structured market signals — delivered to your Telegram before markets open, for 1/40th the cost of Bloomberg."
+**Elevator pitch:** "Blue Beacon Research is an AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
 
 **Tone of voice:**
 - Direct, confident, institutional — never hype-driven
@@ -94,7 +94,8 @@
 **Key hook posts (write these first):**
 1. Iran crisis retrospective: "On Feb 28, 2026, BBR would have fired this alert at 03:42 UTC — 6 hours before markets opened. Here's the signal card."
 2. Accuracy post: "BBR issued 312 signals in 90 days. Our accuracy report — unfiltered."
-3. Price comparison: "Bloomberg: $24K/yr. Palantir: enterprise. BBR: $49/mo. Same intelligence layer."
+3. Price comparison: "Bloomberg: $24K/yr. Palantir: enterprise. BBR: $49/mo."
+   Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 4. Build in public: "3 months ago I started building a geopolitical intelligence platform. Today: 23 signals in 7 days, 71% directional accuracy."
 
 ### LinkedIn (Company page + personal founder)
@@ -158,7 +159,7 @@ Real-time alerts → bluebeaconresearch.com
 ### Phase 2: Community Launch (Week 2-4)
 - Product Hunt: Tuesday 12:01am PST
   - Title: "Blue Beacon Research — Geopolitical alerts before markets move"
-  - Tagline: "Bloomberg-level intelligence. 1/40th the price. Trader-first."
+  - Tagline: "An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
   - Screenshots: 5 real signal cards, map view, backtesting results
   - Video: 60-second Loom walkthrough
   - First-day goal: 300+ upvotes → #1 or #2 Product of the Day
@@ -250,7 +251,7 @@ Earthian AI: enterprise contract
 
 Blue Beacon Research: $49/month
 
-Same intelligence layer.
+An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
 No sales call. No annual contract.
 
 Self-serve. Live in 5 minutes.
@@ -258,6 +259,7 @@ Founding member pricing locked for first 500.
 
 → bluebeaconresearch.com
 ```
+Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 
 ### LinkedIn Post — Founder Authority
 ```

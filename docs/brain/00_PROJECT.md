@@ -17,7 +17,7 @@ Blue Beacon Research is an automated, real-time geopolitical intelligence monore
 
 ### Problem Solved
 
-1. **News Latency & Signal Noise**: Geopolitical crises (e.g., Strait of Hormuz blockades, Red Sea missile attacks, pipeline sabotage) move financial markets in seconds. Human analyst teams take 30–60 minutes to vet, write, and publish intel reports.
+1. **News Latency & Signal Noise**: Geopolitical crises (e.g., Strait of Hormuz blockades, Red Sea missile attacks, pipeline sabotage) are published as news. Blue Beacon Research is an AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
 2. **Unstructured Data Volume**: Over 350+ conflict news items are published every 15 minutes globally. Manual monitoring leads to analytical overload, missing black-swan events, or acting on unverified rumours.
 3. **Lack of Quantitative Asset Coupling**: Traditional news platforms (Bloomberg, Reuters) report events without structured market mapping (e.g., specifying whether an event is bullish for `USOIL` with explicit severity and geographic coordinates).
 

@@ -13,6 +13,7 @@
 Blue Beacon Research is a **geopolitical intelligence platform** that converts global events — conflicts, sanctions, policy shifts, central bank decisions, supply chain disruptions — into structured, actionable market signals delivered in real time to traders, analysts, and businesses with commodity or financial market exposure.
 
 The core bet: there is a massive, underserved gap between expensive institutional intelligence (Bloomberg at $24K/year, Stratfor at $40K/year, Palantir at enterprise pricing) and the free-but-noisy tools that retail traders and SMB operators currently use. Blue Beacon Research fills that gap at $49–$499/month with self-serve access, no sales call, and no annual contract.
+Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 
 ---
 
@@ -35,7 +36,7 @@ The platform deliberately avoids showing everything. At peak, GDELT processes 50
 BBR is legally and philosophically positioned as an **intelligence layer**, not a trading advisory. Every signal says "here is what happened, here is what it historically means for markets, here is the confidence level." It never says "buy" or "sell." This is both a legal protection and a product philosophy — users are professionals who can draw their own conclusions.
 
 ### 3.3 Research Firm Framing
-BBR presents itself as a **research firm with AI capabilities**, not an "AI tool." The language throughout the product uses: "our research team," "intelligence analysts," "synthesis," "briefing." This is deliberate. Users distrust "AI wrappers." They trust research firms. The framing must never break — never say "our AI" in the UI, always say "our analysts" or "our intelligence engine."
+BBR presents itself as an AI-powered research platform, not an "AI tool." Say "research assessment", "brief", or "note". Do not write "analyst team", "our analysts", or "our research team".
 
 ### 3.4 Speed Over Completeness
 A signal card that arrives in 2 minutes with 80% accuracy is worth more than a 20-minute deep report. The platform optimizes for first-mover advantage: users need to know about the Houthi strike before markets open, not after CNBC covers it.
@@ -93,6 +94,7 @@ These were explicitly discussed and rejected or deferred:
 - Trades crude oil, gold, wheat, natural gas futures on exchanges (MCX, CME, ICE, NYMEX)
 - Retail or semi-professional
 - Does not have access to Bloomberg Terminal ($24K/year)
+- Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 - Currently cobbling together information from Twitter, CNBC, WhatsApp groups
 - Pain point: finds out about overnight geopolitical events AFTER markets have already moved
 - Willingness to pay: $49–$199/month (not independently sourced as of 2026-10-10)
@@ -146,7 +148,7 @@ These were explicitly discussed and rejected or deferred:
 ## 7. PRODUCT POSITIONING
 
 **Against Bloomberg/Stratfor/Palantir:**
-"Same caliber of intelligence, 1/40th the price, self-serve in 5 minutes."
+"An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
 
 **Against WorldMonitor (closest free competitor):**
 "WorldMonitor shows you the world. Blue Beacon Research tells your specific position what to expect next."
@@ -167,7 +169,7 @@ They give you headlines in seconds. BBR gives you analysis in 2 minutes. We are 
 
 ## 8. ONE-SENTENCE ELEVATOR PITCH
 
-**"Blue Beacon Research converts global conflicts, sanctions, and policy shifts into structured market signals — delivered to your Telegram before markets open, for 1/40th the cost of Bloomberg."**
+**"Blue Beacon Research is an AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."**
 
 ---
 
@@ -205,7 +207,7 @@ They give you headlines in seconds. BBR gives you analysis in 2 minutes. We are 
 These guardrails were established and must be maintained by any future CTO:
 
 1. Must never make buy/sell recommendations
-2. Must never position as "an AI tool" — always "AI-powered research platform with analyst team"
+2. Must never position as "an AI tool" — always "AI-powered research platform"
 3. Must never focus only on India — global positioning is non-negotiable
 4. Must never clutter the UI with data layers — simplicity is the product
 5. Must never compete on breadth against WorldMonitor — compete on depth and personalization. This bans a race for the longest asset list. It does not ban adding assets inside our domain when users need them and coverage-state evidence exists.

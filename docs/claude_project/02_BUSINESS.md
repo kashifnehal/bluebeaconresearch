@@ -179,6 +179,7 @@ Population size for these segments is not independently sourced as of 2026-08-30
 
 ### 6.1 Bloomberg Terminal
 - Price: $24,000/year ($2,000/month)
+- Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 - Requires: corporate account, annual contract, sales negotiation
 - Target: Institutional professionals
 - BBR position: "Self-serve geopolitical intelligence at a fraction of the price. No claim of equal quality."

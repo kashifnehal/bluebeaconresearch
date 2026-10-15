@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Stale pitch lines (this commit)
+
+Docs only. Replaced lines that claimed Bloomberg-level quality, an analyst team, the same caliber of intelligence, or a fixed ratio to Bloomberg's price. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Weekly gate pass rate (`d3aaa36`)
 
 `apps/backend` only. Passed counts signals created in the week that include a raw event. Prefilter skips are left out. Full detail: `docs/brain/LIVE_TODO.md`.

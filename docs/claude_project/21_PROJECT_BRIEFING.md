@@ -122,14 +122,14 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 11. **Google OAuth fully implemented** — PKCE flow in `/auth/callback/route.ts`, `handle_new_user()` trigger captures Google display name from `raw_user_meta_data`
 12. **Stripe fully stubbed** — All users = 'pro'. Implement only when first person asks to pay.
 13. **Global positioning, not India-specific** — Bigger TAM, better brand
-14. **"Research firm", not "AI tool"** — Never call it "an AI tool." Always "AI-powered research platform with analyst team"
+14. **"Research firm", not "AI tool"** — Never call it "an AI tool." Always "AI-powered research platform"
 15. **"Established research company" — never reveal data-history recency** — Product copy, UI, and methodology/about pages must never state or imply how recently BBR's real data history began (D19 / ADR 015). Framing rule only — does not relax "no unsourced precision" or "build it before you claim it."
 
 ---
 
 ## PRODUCT POSITIONING (MEMORISE)
 
-**What it is:** Geopolitical intelligence → structured market signals → Telegram alerts before markets open. 1/40th the cost of Bloomberg.
+**What it is:** An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
 
 **Domain (2026-10-09):** BBR is an AI-powered research platform that turns geopolitical and economic events into commodity- and currency-relevant signals. Breadth means more markets and event channels within that domain; it does not mean general news, equities research or crypto. Domain unchanged: geopolitical and economic events turned into commodity and currency signals.
 
@@ -297,11 +297,13 @@ slack_connected_at   TIMESTAMPTZ
 | Competitor | Threat | Key gap vs BBR |
 |-----------|--------|----------------|
 | WorldMonitor | HIGHEST | 59K stars, free+Pro, AI chat — but no personalized alerts per user, no backtesting |
-| Bloomberg | Benchmark | $24K/year — BBR is 1/40th the price |
+| Bloomberg | Benchmark | $24K/year. BBR turns published news into structured, source-linked commodity signals, with the time reported and the time flagged. |
 | Stocknews.ai | Conceptual | Stocks not commodities — borrow: price-at-signal display |
 | ForexFactory | Daily habit | Economic calendar — BBR's biggest missing feature |
 | FinancialJuice | Partial | Audio squawk — borrow: browser alert sound for severity 9+ |
 | Glint.trade | None | Prediction markets, different customer |
+
+Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 
 **Economic Calendar:** shipped 2026-09-07 (#86) as `/calendar` on a static curated file (deliberate v1). Not a live paid calendar API. Map chokepoint/pipeline layers (#127 leftover) are still gated.
 

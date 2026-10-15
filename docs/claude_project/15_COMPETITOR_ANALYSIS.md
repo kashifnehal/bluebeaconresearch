@@ -72,6 +72,7 @@ Do not compete on data breadth. Compete on:
 
 **Type:** Professional financial data and intelligence platform
 **Pricing:** ~$24,000/year per seat ($2,000/month)
+Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 **Requires:** Corporate account, annual contract, Bloomberg hardware/software
 **Target:** Institutional professionals (fund managers, analysts, traders at major firms)
 **Threat level:** NOT A DIRECT COMPETITOR — aspirational benchmark
@@ -86,9 +87,10 @@ Do not compete on data breadth. Compete on:
 - Compliance and audit trail features
 
 ### Why BBR references Bloomberg in marketing:
-- "Bloomberg-level intelligence at 1/40th the price" is a powerful positioning statement
+- Blue Beacon Research is an AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
 - BBR users are specifically those who can't access Bloomberg
 - Bloomberg's $24K price creates a massive gap in the market that BBR fills
+- Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.
 - Never compete with Bloomberg features — compete with Bloomberg price and accessibility
 
 ---

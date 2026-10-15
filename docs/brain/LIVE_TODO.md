@@ -3,6 +3,13 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Stale pitch lines removed from the project docs, docs only, 2026-10-16, this commit
+
+- Lines that claimed Bloomberg-level quality, an analyst team, the same caliber of intelligence, or a fixed ratio to Bloomberg's price now say what the platform does: it turns published news into structured, source-linked commodity signals, with the time reported and the time flagged. Wording kept: AI-powered research platform.
+- Bloomberg dollar figures were left as written. Each place that states one now notes that the price is stated differently in two places in our docs, to re-read Bloomberg's published page before any public use, and that it is not used on any public page as of 2026-10-16.
+- The buyer counts 2.5M, 800K, and 50K appear only inside existing notes that they are not independently sourced. No remaining line stated them without that note.
+- No open priority-queue line. Nothing struck.
+
 ## ✅ Weekly gate pass rate counts signals, `apps/backend`, 2026-10-16, `d3aaa36`
 
 - Passed is signals created in the week that include at least one raw event. Rejected is a checked raw event that matches a materiality_gate rejected health row. A prefilter skip stamps `materiality_checked_at` and writes no health row, so it is not counted. Pass rate is passed divided by judged, and is null when judged is 0. No cutoff. No open priority-queue line. Nothing struck.

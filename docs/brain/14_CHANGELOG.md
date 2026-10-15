@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Stale pitch lines (this commit)
+
+Docs only. Replaced lines that claimed Bloomberg-level quality, an analyst team, the same caliber of intelligence, or a fixed ratio to Bloomberg's price. The replacement says the platform turns published news into structured, source-linked commodity signals, with the time reported and the time flagged. Bloomberg dollar figures were left as written, with a note that the two doc figures disagree and that neither figure is used on a public page as of 2026-10-16.
+
 ### 2026-10-16 — Weekly gate pass rate (`d3aaa36`)
 
 `apps/backend` only. Passed counts signals created in the week that include a raw event. Rejected counts checked raw events that match a materiality_gate rejected health row. Prefilter skips are left out. No cutoff.
