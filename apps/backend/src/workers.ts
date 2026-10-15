@@ -23,6 +23,8 @@ import {
   type PipelineRunStatus,
 } from "./lib/pipeline-status.js";
 import { getLastKnownRedisUsage } from "./clients/redis.js";
+import { getSupabaseAdmin } from "./clients/supabase.js";
+import { checkMonthlySpend } from "./lib/monthly-spend-warning.js";
 
 // Consecutive-failed-run thresholds before a collector going silent pages someone.
 // GDELT: 8 runs (~4h at */30). A single GDELT 429 is an expected IP-level block on
@@ -295,6 +297,18 @@ async function main() {
       app.log.info({ res }, "outcome-tracker complete");
     } catch (e) {
       app.log.error({ err: e }, "outcome-tracker failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // P10 — hourly monthly Anthropic spend warning. A failure here must not affect
+  // the other jobs. Unset ANTHROPIC_MONTHLY_LIMIT_USD makes the check a no-op.
+  cron.schedule("10 * * * *", async () => {
+    try {
+      const res = await checkMonthlySpend(getSupabaseAdmin(), new Date());
+      app.log.info({ res }, "monthly-spend-warning complete");
+    } catch (e) {
+      app.log.error({ err: e }, "monthly-spend-warning failed");
       Sentry.captureException(e);
     }
   });

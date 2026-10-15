@@ -34,6 +34,12 @@ const nonNegIntEnv = (fallback: number) =>
     if (v === undefined || v === null || String(v).trim() === "") return fallback;
     return v;
   }, z.coerce.number().int().min(0));
+
+// Positive number. Unset or blank stays unset. Anything else must parse as > 0.
+const optionalPositiveEnv = z.preprocess((v) => {
+  if (v === undefined || v === null || String(v).trim() === "") return undefined;
+  return v;
+}, z.coerce.number().positive().optional());
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
   PORT: z.coerce.number().int().positive().default(3001),
@@ -68,6 +74,9 @@ const envSchema = z.object({
   DROP_SAMPLE_BACKGROUND_RATE: rateEnv(0.1),
   // BBR working value. 20 gate calls x $0.0049 = about $0.10 a day, about 5% of the $2 cap. No published source.
   T2_PAIR_DAILY_MAX: nonNegIntEnv(20),
+  // Optional. When unset, the monthly spend warning does nothing. A present value
+  // must be a finite number greater than 0.
+  ANTHROPIC_MONTHLY_LIMIT_USD: optionalPositiveEnv,
 
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),

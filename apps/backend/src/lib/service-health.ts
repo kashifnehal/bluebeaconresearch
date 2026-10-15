@@ -15,16 +15,27 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 // — reusing this existing append-only health log for the reject audit trail
 // instead of inventing a new table, per the task's explicit instruction to check
 // here first.
-export type ServiceHealthStatus = "ok" | "error" | "rate_limited" | "rejected";
+export type ServiceHealthStatus = "ok" | "error" | "rate_limited" | "rejected" | "degraded";
+
+type HealthInsertClient = {
+  from: (table: string) => {
+    insert: (row: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }>;
+  };
+};
+
+export type RecordServiceHealthOptions = {
+  supabase?: HealthInsertClient;
+};
 
 export async function recordServiceHealth(
   service: string,
   status: ServiceHealthStatus,
   detail?: string,
   latencyMs?: number,
+  options?: RecordServiceHealthOptions,
 ): Promise<void> {
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = (options?.supabase ?? getSupabaseAdmin()) as HealthInsertClient;
     const { error } = await supabase.from("service_health_events").insert({
       service,
       status,
