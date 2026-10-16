@@ -7,6 +7,22 @@
 
 ---
 
+## Outages reach the founder by email, not readers by banner (2026-10-16)
+
+### Context
+
+Collection can stall while the daily cap is still open, and spend can approach that cap, without a founder email. Public pages had previously described a closed cap as a pause.
+
+### Decision
+
+Outages and budget warnings go to the founder by email. Readers are not shown a banner for them. Collection silent for 90 minutes while the cap is open, and spend at or above 80% of the daily cap while it is still open, each send one email per UTC day. 90 minutes and 80% are engineering choices with no source.
+
+### Rationale
+
+The founder decided this on 2026-10-16. Collection health and the daily cap are internal. Readers are not shown a banner for them.
+
+---
+
 ## Public pages do not show the collection schedule (2026-10-16)
 
 ### Context

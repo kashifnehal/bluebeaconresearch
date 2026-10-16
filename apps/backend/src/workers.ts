@@ -25,6 +25,8 @@ import {
 import { getLastKnownRedisUsage } from "./clients/redis.js";
 import { getSupabaseAdmin } from "./clients/supabase.js";
 import { checkMonthlySpend } from "./lib/monthly-spend-warning.js";
+import { checkCollectionStalled } from "./lib/collection-stalled-alert.js";
+import { checkBudgetNearCap } from "./lib/budget-warning-alert.js";
 import { checkFeedVolume } from "./lib/feed-volume-alarm.js";
 import { runGateDriftOnce } from "./lib/gate-drift.js";
 import { checkCategoryCoverage } from "./lib/category-guard.js";
@@ -124,6 +126,19 @@ const PRICE_SYNC_CRON =
 if (process.env.PRICE_SYNC_CRON && PRICE_SYNC_CRON !== process.env.PRICE_SYNC_CRON) {
   console.warn(
     `[workers] PRICE_SYNC_CRON="${process.env.PRICE_SYNC_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_PRICE_SYNC_CRON}"`,
+  );
+}
+
+// Collection-stalled and 80% daily-cap warning. Default every 15 minutes.
+const DEFAULT_OPS_ALERT_CRON = "*/15 * * * *";
+const OPS_ALERT_CRON =
+  process.env.OPS_ALERT_CRON && cron.validate(process.env.OPS_ALERT_CRON)
+    ? process.env.OPS_ALERT_CRON
+    : DEFAULT_OPS_ALERT_CRON;
+
+if (process.env.OPS_ALERT_CRON && OPS_ALERT_CRON !== process.env.OPS_ALERT_CRON) {
+  console.warn(
+    `[workers] OPS_ALERT_CRON="${process.env.OPS_ALERT_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_OPS_ALERT_CRON}"`,
   );
 }
 
@@ -347,6 +362,27 @@ async function main() {
       app.log.info({ res }, "monthly-spend-warning complete");
     } catch (e) {
       app.log.error({ err: e }, "monthly-spend-warning failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // Founder ops emails: collection stall while the daily cap is still open,
+  // and 80% of that cap used. Missing Redis or ADMIN_EMAILS is a no-op
+  // (each check logs once and returns).
+  app.log.info({ schedule: OPS_ALERT_CRON }, "workers: ops-alert cron schedule");
+  cron.schedule(OPS_ALERT_CRON, async () => {
+    try {
+      const stalled = await checkCollectionStalled();
+      app.log.info({ stalled }, "collection-stalled-alert complete");
+    } catch (e) {
+      app.log.error({ err: e }, "collection-stalled-alert failed");
+      Sentry.captureException(e);
+    }
+    try {
+      const nearCap = await checkBudgetNearCap();
+      app.log.info({ nearCap }, "budget-warning-alert complete");
+    } catch (e) {
+      app.log.error({ err: e }, "budget-warning-alert failed");
       Sentry.captureException(e);
     }
   });

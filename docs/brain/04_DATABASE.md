@@ -104,6 +104,7 @@ Ingested news articles and incident logs before classification.
 - `raw_data` (`jsonb`, NOT NULL, default `'{}'::jsonb`)
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
 - **Unique Constraint**: `UNIQUE(source, external_id)` — the dedup key every collector checks
+- **Index note (2026-10-16):** no index on `created_at`. Live indexes are pkey, unique `(source, external_id)`, `idx_raw_events_dedup`, and a partial `idx_raw_events_materiality_checked_at`. The collection-stalled check reads the newest row by `created_at`. No migration added.
 
 ### Table 4: `commodity_prices`
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)

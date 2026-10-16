@@ -82,6 +82,7 @@ Ingested news articles and military incident logs before AI processing.
 - `event_type` / `event_date` (`timestamptz`)
 - `raw_data` (`jsonb`, default `'{}'::jsonb`)
 - **Unique Constraint**: `UNIQUE(source, external_id)`
+- No index on `created_at` (checked live 2026-10-16). The collection-stalled check reads the newest row by that column. No migration added. Detail: `docs/brain/04_DATABASE.md` Table 3.
 
 ### Table 4: `commodity_prices`
 - `id` (`uuid`, PK)

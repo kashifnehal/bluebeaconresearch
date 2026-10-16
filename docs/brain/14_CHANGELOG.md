@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Collection-stalled and 80% daily-cap emails
+
+`apps/backend` only. Two founder emails, same Redis NX pattern as the daily-cap-closed mail. Collection silent for 90 minutes while the cap is still open (engineering choice: three missed 30-minute cycles). Spend at or above 80% of the daily cap while it is still open (engineering choice, no source). Once per UTC day each. Cron default `*/15 * * * *`. Missing Redis or `ADMIN_EMAILS` sends nothing. `raw_events` has no `created_at` index (checked live 2026-10-16); no migration added. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Public status rows are a name and a state
 
 `apps/web` only. `/status` no longer prints check detail (times, collector names, row counts). Alert Delivery is labeled Alerts and Price History is labeled Prices. The pass/fail rules are unchanged. Full detail: `LIVE_TODO.md`.

@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Collection-stalled and 80% daily-cap emails, `apps/backend`, 2026-10-16
+
+- Outages go to the founder by email, not to readers by banner (founder decision 2026-10-16).
+- `checkCollectionStalled`: if today's ingestion budget is still open and the newest `raw_events.created_at` is older than 90 minutes (engineering choice: three missed 30-minute cycles), one email `BBR: Collection looks stalled` with age in minutes and daily spend so far. Redis key `alert:collection-stalled:<UTC date>`, `SET 1 EX 129600 NX`. Live check 2026-10-16: `raw_events` has no index on `created_at`. No migration added.
+- `checkBudgetNearCap`: if today's ingestion spend is at or above 80% of the daily cap (engineering choice, no source) and the cap is not closed, one email `BBR: Daily AI budget is 80% used` with spend, cap, and UTC time. Redis key `alert:budget-warning:<UTC date>`, same NX TTL.
+- Both run on `OPS_ALERT_CRON` (default `*/15 * * * *`) next to the hourly monthly-spend check. Missing Redis or `ADMIN_EMAILS` logs once and sends nothing. Recipients are `ADMIN_EMAILS`. Tests use fakes; no real email was sent.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `04`, `10`, `15`; claude_project `09`, `08`, `14`, `04`, `10`. Skipped `05_API.md`, both `06_COMPONENTS.md`, and `18_AI_ENGINE.md` — no route, component, or prompt.
+
 ## ✅ Public status rows are a name and a state, `apps/web`, 2026-10-16
 
 - `/status` no longer renders the check detail string. Each row is a name and Operational, Degraded, or Unknown. Alert Delivery shows as Alerts. Price History shows as Prices. Intelligence Feed, Global Map, Data Pipeline, and Classifier keep their names. No Website or Sign-in check was added.

@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Collection-stalled and 80% daily-cap emails
+
+`apps/backend` only. Two founder emails. Collection silent for 90 minutes while the daily cap is still open (engineering choice: three missed 30-minute cycles). Spend at or above 80% of that cap while it is still open (engineering choice, no source). Once per UTC day each. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-16 — Public status rows are a name and a state
 
 `apps/web` only. `/status` prints a name and a state. Check detail stays off the page. Full detail: `docs/brain/14_CHANGELOG.md`.
