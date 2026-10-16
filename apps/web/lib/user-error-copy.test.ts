@@ -153,13 +153,6 @@ runTest("accuracy and metrics pages do not interpolate raw error.message", () =>
   assert.match(metrics, /METRICS_LOAD_ERROR/);
 });
 
-runTest("IngestionStatusBanner does not render the internal reason string", () => {
-  const src = readFileSync(join(webRoot, "components/IngestionStatusBanner.tsx"), "utf8");
-  assert.equal(src.includes("{data?.reason"), false);
-  assert.match(src, /COLLECTOR_HEALTH_UNAVAILABLE/);
-  assert.match(src, /console\.error/);
-});
-
 runTest("settings / feed / auth no longer show raw internals", () => {
   const settings = readFileSync(join(webRoot, "app/(dashboard)/settings/page.tsx"), "utf8");
   const dashboard = readFileSync(join(webRoot, "app/(dashboard)/dashboard/page.tsx"), "utf8");

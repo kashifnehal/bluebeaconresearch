@@ -8,7 +8,6 @@ import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { MapSignalPopup } from "@/components/map/MapSignalPopup";
 import { LocationList } from "@/components/map/LocationList";
 import { MobileTensionSheet } from "@/components/map/MobileTensionSheet";
@@ -1238,7 +1237,6 @@ export default function MapPage() {
               </button>
             </div>
           )}
-          <IngestionStatusBanner />
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">

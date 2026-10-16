@@ -111,9 +111,8 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - **Parent**: near the top of all 11 pages under `apps/web/app/(dashboard)` (dashboard, map, watchlist, watchlist/[symbol], alerts, backtesting, calendar, archive, events/[id], settings, help). On `/map` it's an absolutely-positioned overlay (`top-3 left-3`, backdrop pill) since the page is a full-bleed canvas with no chrome header; every other page sits inline near the top of normal content flow.
 - **Note**: replaced a single non-trail "Back to X" button on `events/[id]/page.tsx` and `watchlist/[symbol]/page.tsx`. Adding it to `events/[id]/page.tsx` exposed a pre-existing layout bug — that page's root wrapper had no top offset for the fixed 64px `TopBar`, so the old back-button (and initially the new breadcrumb) rendered hidden underneath it at all widths; fixed with `pt-16`, matching the convention every sibling `(dashboard)` page already used.
 
-### 2.6 `IngestionStatusBanner.tsx` — closed cap keeps the live lines, 2026-10-16
-- **Purpose**: Dashboard, map, and alerts strip for `GET /api/ingestion/status`. When every collector has `budgetClosed === true`, the label stays "Live ingestion" (or the degraded health-feed label) and the last-fetched, next-run, and cadence lines stay. The box shows no pause wording (2026-10-16). "Last collected:" is the relative time of `newestStoredArticleAt` when that field is already on the response. A missing `budgetClosed` field is not closed. An old last fetch does not flip the box to delayed while every collector is closed. `budgetClosed` stays on the status payload.
-- **Parent**: `(dashboard)/dashboard/page.tsx`, `(dashboard)/map/page.tsx`, `(dashboard)/alerts/page.tsx`.
+### 2.6 `IngestionStatusBanner.tsx` — removed from public pages, 2026-10-16
+- Removed from dashboard, map, and alerts. The component file and `lib/ingestion-budget-banner.ts` are deleted. Public pages do not show a collection schedule, a last-fetched time, or a paused notice. The event-page fetch timeline stays.
 
 ---
 

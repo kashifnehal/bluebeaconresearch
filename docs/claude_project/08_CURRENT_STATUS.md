@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (event price quotes overlap the raw-event read — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (public pages hide the collection schedule — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (public collection schedule, `apps/web` only) — dashboard, map, and alerts no longer show the ingestion status box. Homepage, about, and the feed header do not name a collector interval. The event-page fetch timeline stays. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (docs) — sources monitored is 30 (28 RSS feeds plus GDELT and GNews). The homepage signal count uses a head request with an exact count. Web functions run in `iad1` and the database is in `ap-south-1` (Mumbai). `SERVER_TIMING=true` is set on Vercel production. See `docs/brain/LIVE_TODO.md`.
 

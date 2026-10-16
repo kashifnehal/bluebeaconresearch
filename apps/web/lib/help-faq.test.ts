@@ -12,6 +12,15 @@ function runTest(name: string, fn: () => void) {
   }
 }
 
+runTest("feed cadence answer names report time and flag time only", () => {
+  const item = HELP_FAQ_ITEMS.find((entry) => entry.id === "live");
+  assert.equal(item?.question, "How current is the feed?");
+  assert.equal(
+    item?.answer,
+    "New stories appear as our sources publish them. Every signal shows when the story was reported and when we flagged it.",
+  );
+});
+
 runTest("FAQ has 10 honest product questions", () => {
   assert.equal(HELP_FAQ_ITEMS.length, 10);
   const ids = HELP_FAQ_ITEMS.map((i) => i.id);

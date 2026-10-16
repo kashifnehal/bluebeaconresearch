@@ -27,9 +27,9 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
   },
   {
     id: "live",
-    question: "What does “LIVE” mean?",
+    question: "How current is the feed?",
     answer:
-      "The Intelligence Feed list header shows “UPDATES ROUGHLY EVERY 30 MIN” — that's the collector cadence, not a live push feed. The real health line is the status banner: “Live ingestion” means the last collector run was within about 20 minutes and the pipeline health feed is available. If that health feed is missing it says “Ingestion status unavailable”; if the last fetch is older than 20 minutes it says “Ingestion delayed.”",
+      "New stories appear as our sources publish them. Every signal shows when the story was reported and when we flagged it.",
   },
   {
     id: "materiality",

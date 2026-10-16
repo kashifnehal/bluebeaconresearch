@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { useUIStore } from "@/store/useUIStore";
@@ -176,13 +175,11 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
     setCoverageFailed(false);
-    fetchJsonWithTimeout<{ sourcesLast24h?: number; rssFeedCount?: number }>("/api/signals/source-stats")
+    fetchJsonWithTimeout<{ sourcesLast24h?: number }>("/api/signals/source-stats")
       .then((d) => {
         if (cancelled || !d) return;
-        if (typeof d.sourcesLast24h !== "number" || typeof d.rssFeedCount !== "number") return;
-        setCoverageLine(
-          `Last 24h: signals from ${d.sourcesLast24h} sources across ${d.rssFeedCount} RSS feeds + GNews + GDELT. ACLED is configured but returning no data (access pending).`,
-        );
+        if (typeof d.sourcesLast24h !== "number") return;
+        setCoverageLine(`Last 24h: signals from ${d.sourcesLast24h} sources.`);
       })
       .catch(() => {
         if (!cancelled) setCoverageFailed(true);
@@ -384,8 +381,6 @@ export default function DashboardPage() {
             </p>
           ) : null}
         </div>
-
-        <IngestionStatusBanner />
 
         {fallback && (
           <div
@@ -998,15 +993,6 @@ export default function DashboardPage() {
                       Hide summaries
                     </button>
                   ) : null}
-                  <span
-                    className="text-[12px] md:text-[10px]"
-                    style={{
-                      color: "var(--accent)",
-                      fontFamily: "'JetBrains Mono', monospace",
-                    }}
-                  >
-                    UPDATES ROUGHLY EVERY 30 MIN
-                  </span>
                 </div>
               </div>
               {feedViewMode === "table" ? (
@@ -1181,15 +1167,6 @@ export default function DashboardPage() {
               }}
             >
               MARKET & INTELLIGENCE
-            </div>
-            <div
-              className="text-[12px] md:text-[10px] tracking-widest mt-1"
-              style={{
-                color: "var(--text-secondary)",
-                fontFamily: "'Space Grotesk', sans-serif",
-              }}
-            >
-              SYNTHESIS — UPDATES ~30 MIN
             </div>
           </div>
 

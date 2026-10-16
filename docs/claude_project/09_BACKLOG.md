@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Public pages hide the collection schedule (`apps/web`). Dashboard, map, and alerts no longer show the ingestion status box. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Docs only. Sources monitored is 30 (28 RSS feeds plus GDELT and GNews). The homepage signal count uses a head request with an exact count. Web functions run in `iad1` and the database is in `ap-south-1` (Mumbai), measured 2026-10-16 from the `Server-Timing` header. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Event price quotes overlap the raw-event read (`apps/web`). Three queries per commodity impact. Flag time and latest start with the other optional reads. The report-time quote still waits for the earliest raw stamp. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

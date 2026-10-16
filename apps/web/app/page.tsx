@@ -288,7 +288,7 @@ export default async function Home(props: {
           <div className="max-w-[1440px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">
               {[
-                { icon: "radar", title: "01. Event Detection", desc: "Public news sources (publisher RSS feeds, GNews and GDELT) are scanned on a regular collector schedule and turned into structured events." },
+                { icon: "radar", title: "01. Event Detection", desc: "Public news sources (publisher RSS feeds, GNews and GDELT) are scanned and turned into structured events." },
                 { icon: "psychology", title: "02. Research Assessment", desc: "Each event is classified for market relevance and mapped to the commodities and currency pairs it may affect — with uncertainty stated. On this AI-powered research platform, classification is done with Anthropic's Claude models, and a basic keyword fallback runs only when no Claude client is configured — if Claude is unavailable, classification waits." },
                 { icon: "notifications_active", title: "03. Alerts", desc: "Optional notifications when a new signal matches the markets and regions you follow." }
               ].map((f, i) => (

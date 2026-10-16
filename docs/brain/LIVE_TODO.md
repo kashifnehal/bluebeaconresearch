@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Public pages hide the collection schedule, `apps/web`, 2026-10-16
+
+- Dashboard, map, and alerts no longer render the ingestion status box. Homepage, about, and the feed header no longer name a collector interval. The dashboard coverage line is `Last 24h: signals from N sources.` The help answer for "How current is the feed?" names report time and flag time only.
+- Deleted `components/IngestionStatusBanner.tsx`, `lib/ingestion-budget-banner.ts`, and `lib/ingestion-budget-banner.test.ts`. Nothing under `/admin` imported them. `INGESTION_INTERVAL_MINUTES` is gone from `lib/ingestion-interval.ts`; nothing else in `apps/web` read it.
+- Left in place: the event-page Published / Fetched / Flagged / Delay timeline, every `/admin` page, and the how-it-works line "ACLED conflict data: ACLED is configured but returning no data (access pending), so no ACLED events are ingested yet."
+- Struck the open queue line that said a schedule change must edit `apps/web/lib/ingestion-interval.ts`. Public copy no longer names the interval.
+- Docs: this entry; brain `08`, `14`, `06`, `10`, `15`; claude_project `09`, `08`, `14`, `06`, `10`, and the speed-and-timing claims register. Skipped both `05_API.md`, both `04_DATABASE.md`, and `18_AI_ENGINE.md` — no route, table, or prompt.
+
 ## ✅ Docs catch-up for source count, head counts, database notes, regions, and closed-budget wording, docs only, 2026-10-16
 
 - Sources monitored is 30: 28 entries in `RSS_FEEDS` plus GDELT and GNews. ACLED is not included. Counted 2026-10-16.
@@ -1297,7 +1305,7 @@ Independent Playwright audit against local dev (`acac825`), all 24 `apps/web/app
 ## Priority queue — 2026-10-15, speed and timing (not started)
 
 - ⚪ Paid news feed choice before go-live. Set `GNEWS_PLAN` and `INGESTION_INTERVAL_CRON` on that day.
-- ⚪ When the ingestion schedule changes, change `apps/web/lib/ingestion-interval.ts` in the same release.
+- ~~When the ingestion schedule changes, change `apps/web/lib/ingestion-interval.ts` in the same release.~~ Public pages no longer name the collection interval (2026-10-16).
 - ⚪ Speed meter and public method page (flag off) after 14 days on the new feed.
 - ⚪ A benchmark before any "fastest" claim.
 - ⚪ Add opposing-side news sources (state and domestic outlets from Iran, Russia, China) with a state-affiliated label, after a feed-terms check.

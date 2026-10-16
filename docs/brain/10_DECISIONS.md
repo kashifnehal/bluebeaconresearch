@@ -6,6 +6,22 @@ This document records the foundational architectural decisions, framework select
 
 ---
 
+## Public pages do not show the collection schedule (2026-10-16)
+
+### Context
+
+Homepage, about, dashboard, map, alerts, and help named a collector interval, a last fetch, or a pause. Readers far from the product read that as the platform being off.
+
+### Decision
+
+Public pages do not show the collection schedule, a last-fetched time, or a paused notice. Outages and budget pauses are handled by monitoring and email. The event page still shows when the story was reported, when it was fetched, when it was flagged, and the delay.
+
+### Rationale
+
+The founder decided this on 2026-10-16. A reader should see a platform that is on and fetching. The earlier same-day note that the dashboard should show the newest stored article time is replaced by this rule.
+
+---
+
 ## Public pages and a closed daily cap (2026-10-16)
 
 ### Context

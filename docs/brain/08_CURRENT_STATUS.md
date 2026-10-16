@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (docs: source count, head counts, regions, closed-budget wording)
+Last updated: 2026-10-16 (public pages hide the collection schedule)
+
+> ⚠️ NEW 2026-10-16 (public collection schedule, `apps/web` only) — dashboard, map, and alerts no longer show the ingestion status box. Homepage, about, and the feed header do not name a collector interval. The event-page fetch timeline stays. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (docs) — sources monitored is 30 (28 RSS feeds plus GDELT and GNews). The homepage signal count uses a head request with an exact count. Web functions run in `iad1` and the database is in `ap-south-1` (Mumbai), measured from the `Server-Timing` header. `SERVER_TIMING=true` is set on Vercel production. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

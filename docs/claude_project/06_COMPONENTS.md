@@ -205,9 +205,9 @@ On error: console.error only, never expose stack trace to user.
 
 ---
 
-### IngestionStatusBanner (`components/IngestionStatusBanner.tsx`) — 2026-10-16
+### IngestionStatusBanner — removed from public pages, 2026-10-16
 
-Shown on the dashboard, map, and alerts. When every collector in the ingestion status response has `budgetClosed` true, the box keeps the live label, the last-fetched, next-run, and cadence lines, and adds "Last collected" from `newestStoredArticleAt` when that field is already on the response. The box shows no pause wording (2026-10-16). A missing `budgetClosed` field is not closed. `budgetClosed` stays on the status payload.
+The component is deleted. Dashboard, map, and alerts do not show a collection schedule, a last-fetched time, or a paused notice. The event-page fetch timeline stays.
 
 ---
 

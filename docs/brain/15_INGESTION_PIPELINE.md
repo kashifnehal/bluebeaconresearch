@@ -291,18 +291,13 @@ that just want the one flat, no-duplicate list.
 | Field        | Meaning                                   | Shown in UI?                 |
 | :----------- | :---------------------------------------- | :--------------------------- |
 | `event_date` | When the **source article was published** | ✅ `"12 hours ago"` on cards |
-| `created_at` | When **we ingested** the signal           | ❌ (except ingestion banner) |
+| `created_at` | When **we ingested** the signal           | event page fetch time only |
 
 **This is intentional.** A story published 4 hours ago displays "4 hours ago" even if we fetched it 2 minutes ago.
 
-### 5.3 Ingestion status banner (`IngestionStatusBanner`)
+### 5.3 Ingestion status banner — removed from public pages, 2026-10-16
 
-| Field         | Source                                                                    |
-| :------------ | :------------------------------------------------------------------------ |
-| Last fetched  | `pipeline:last_run.lastFetchedAt` (Redis) or `max(raw_events.created_at)` |
-| Next run ~    | lastFetched + `cronIntervalMinutes` (self-reported, see §1)              |
-| +N signals    | Last run `totals.signals`                                                 |
-| Stale warning | Red if last fetch > 1.5× `cronIntervalMinutes` ago (was a hardcoded 20 min, which false-alarmed for the back half of every real 30-min cycle — fixed 2026-09-26) |
+Dashboard, map, and alerts no longer show last-fetched, next-run, or cadence lines. `GET /api/ingestion/status` still exists for operators. The event page still shows when the story was reported and when it was flagged.
 
 ### 5.4 Featured card selection (`/dashboard`)
 

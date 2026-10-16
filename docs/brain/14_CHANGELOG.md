@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Public pages hide the collection schedule
+
+`apps/web` only. Dashboard, map, and alerts no longer render the ingestion status box. Homepage, about, the feed header, and the help cadence answer do not name a collector interval or a last fetch. The event-page Published / Fetched / Flagged / Delay timeline stays. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Sources monitored is 30
 
 Docs only. Counted 28 entries in `RSS_FEEDS` (`apps/backend/src/workers/rss-collector.ts`) plus `OTHER_COLLECTOR_COUNT` 2 (GDELT and GNews) in `apps/web/lib/how-it-works-stats.ts`. ACLED is not included.

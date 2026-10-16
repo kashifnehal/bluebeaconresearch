@@ -10,7 +10,6 @@ import { safeFormatDistanceToNow, generateAlertRuleName } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { toast } from "sonner";
-import { IngestionStatusBanner } from "@/components/IngestionStatusBanner";
 import { Pagination } from "@/components/ui/Pagination";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -448,8 +447,6 @@ export default function AlertsPage() {
           <button onClick={() => router.push("/backtesting")} className="text-on-surface/60 hover:text-on-surface hover:underline transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Lab</button>
         </nav>
       </section>
-
-      <IngestionStatusBanner />
 
       {/* Rules Header + New Rule Action */}
       <section className="flex justify-between items-center py-4 border-y border-outline-variant/20 mb-8">

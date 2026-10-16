@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Public pages hide the collection schedule
+
+`apps/web` only. The ingestion status box is gone from dashboard, map, and alerts. Public copy does not name a collector interval. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Sources monitored is 30
 
 Docs only. Counted 28 RSS feeds plus 2 collectors (GDELT and GNews). ACLED is not included. Full detail: `docs/brain/14_CHANGELOG.md`.

@@ -9,7 +9,6 @@ import {
   DASHBOARD_FEED_SUBHEAD,
   HOMEPAGE_COLLECTION_BADGE,
   HOMEPAGE_LATEST_SIGNAL_SCHEDULE,
-  INGESTION_INTERVAL_MINUTES,
 } from "./ingestion-interval";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -27,22 +26,15 @@ function runTest(name: string, fn: () => void) {
 
 const FORBIDDEN = /\b(fast|faster|fastest|quickest|real-time|realtime|instant)\b|first to|before markets|\b(buy|sell|bullish|bearish)\b/i;
 
-runTest("collection interval is 30 minutes", () => {
-  assert.equal(INGESTION_INTERVAL_MINUTES, 30);
-});
-
-runTest("homepage and dashboard copy name the interval and the check points", () => {
-  assert.equal(
-    HOMEPAGE_COLLECTION_BADGE,
-    "Monitoring active global conflicts — collection runs about every 30 minutes",
-  );
+runTest("homepage and dashboard copy name the check points and no collection schedule", () => {
+  assert.equal(HOMEPAGE_COLLECTION_BADGE, "Monitoring active global conflicts");
   assert.equal(
     HOMEPAGE_LATEST_SIGNAL_SCHEDULE,
-    "The most recent signal from the collector pipeline. New events are collected on a regular schedule, about every 30 minutes. Every signal shows when the story was reported and when we flagged it.",
+    "The most recent signal. Every signal shows when the story was reported and when we flagged it.",
   );
   assert.equal(
     DASHBOARD_FEED_SUBHEAD,
-    "Global signal monitoring. Collection runs about every 30 minutes. Each card shows when the story was reported.",
+    "Global signal monitoring. Each card shows when the story was reported.",
   );
   assert.equal(CHECK_IT_TITLE, "What we say, and where you can check it");
   assert.deepEqual(CHECK_IT_ROWS, [
