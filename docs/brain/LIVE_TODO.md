@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Short edge cache on public prices, and earlier event-page reads, `apps/web`, 2026-10-16
+
+- `GET /api/prices` 200 responses send `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` (engineering choice, 2026-10-16, no published source). 4xx and 5xx do not. The JSON does not depend on the signed-in user.
+- `GET /api/signals` is not edge-cached. With `personalized=true`, `signals` and `personalized` come from that user's `user_preferences` (`commodities`, `regions`, `forex_pairs`). In production the same URL with no user returns an empty list.
+- `GET /api/alerts/recent` is not edge-cached. Rows are `alerts_sent` filtered by `user_id`.
+- `GET /api/signals/:id` starts `loadMediaImpactCaveats` as soon as the client exists, and starts `fetchSignalOutcomeRows` as soon as the asset list is known, overlapping the raw-event, history, related, and quote reads. Baselines still wait for the outcome rows. Server-Timing step names are unchanged. No speed claim.
+- Docs: this entry; brain `08`, `14`, `05`; claude_project `09`, `08`, `14`, `05`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no component, table, prompt, or new standing rule.
+
 ## ✅ Read-only requests verify the access token locally, `apps/web`, 2026-10-16
 
 - `getRouteSupabaseClients({ verify: "claims" })` calls `getClaims()` and builds `{ id, email }`. The default stays `getUser()`. A banned or deleted user keeps read access until their access token expires (the token lifetime set in Supabase Auth). `getUser()` checks the Auth server on every call.

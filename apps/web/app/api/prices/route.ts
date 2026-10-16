@@ -28,6 +28,19 @@ export const SYMBOLS = [
 let _cachedPrices: { payload: { prices: CommodityPriceRow[] }; timestamp: number } | null = null;
 const CACHE_TTL_MS = 60_000; // 60s in-memory cache
 
+// Edge cache window. Engineering choice, 2026-10-16, no published source. Kept short.
+export const PRICES_CACHE_CONTROL = "public, s-maxage=30, stale-while-revalidate=60";
+
+function jsonPrices(
+  payload: { prices: CommodityPriceRow[]; error?: { code: string; message: string } },
+  status = 200,
+  extra?: Record<string, string>,
+) {
+  const headers: Record<string, string> = { ...extra };
+  if (status === 200) headers["Cache-Control"] = PRICES_CACHE_CONTROL;
+  return NextResponse.json(payload, { status, headers });
+}
+
 function getUpstashRedis() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -40,9 +53,7 @@ export async function GET(req: NextRequest) {
 
   // Short-circuit: return in-memory cached prices if fresh (under 60s old)
   if (_cachedPrices && now - _cachedPrices.timestamp <= CACHE_TTL_MS) {
-    return NextResponse.json(_cachedPrices.payload, {
-      headers: { "x-prices-cache-status": "hit" },
-    });
+    return jsonPrices(_cachedPrices.payload, 200, { "x-prices-cache-status": "hit" });
   }
 
   // This route intentionally has no auth check — prices are public market data — but it
@@ -55,9 +66,8 @@ export async function GET(req: NextRequest) {
     const rl = await rateLimitOrPass(`prices:${ip}`);
     if (!rl.success) {
       if (_cachedPrices) {
-        return NextResponse.json(_cachedPrices.payload, {
-          status: 200,
-          headers: { "x-prices-cache-status": "stale-rate-limited" },
+        return jsonPrices(_cachedPrices.payload, 200, {
+          "x-prices-cache-status": "stale-rate-limited",
         });
       }
       // Rate-limited with no cached payload to serve. This deliberately keeps the
@@ -66,9 +76,9 @@ export async function GET(req: NextRequest) {
       // Dropping `prices` would crash watchlist/[symbol]/page.tsx, which reads
       // `pricesData?.prices.find(...)` with a non-optional `.prices`. Before this,
       // a 429 was indistinguishable from a genuine "no prices available" response.
-      return NextResponse.json(
+      return jsonPrices(
         { prices: [], error: { code: "rate_limited", message: "rate_limited" } },
-        { status: 429 },
+        429,
       );
     }
   } catch (err) {
@@ -146,10 +156,8 @@ export async function GET(req: NextRequest) {
     _cachedPrices = { payload, timestamp: now };
   } else if (_cachedPrices) {
     console.warn("⚠️ [API Prices] Empty fetch — serving stale cached prices");
-    return NextResponse.json(_cachedPrices.payload, {
-      headers: { "x-prices-cache-status": "stale-fallback" },
-    });
+    return jsonPrices(_cachedPrices.payload, 200, { "x-prices-cache-status": "stale-fallback" });
   }
 
-  return NextResponse.json(payload);
+  return jsonPrices(payload);
 }

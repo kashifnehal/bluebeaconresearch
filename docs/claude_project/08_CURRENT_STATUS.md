@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (read-only requests verify the access token locally — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (short edge cache on public prices — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (public price cache and earlier event reads, `apps/web` only) — price 200s are edge-cached for 30 seconds. The signal list and recent alerts stay uncached. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (local token check, `apps/web` only) — read-only GETs and protected pages use `getClaims()`. Writes and account routes stay on `getUser()`. See `docs/brain/LIVE_TODO.md`.
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
-import { SYMBOLS, GET } from "./route";
+import { SYMBOLS, GET, PRICES_CACHE_CONTROL } from "./route";
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   return Promise.resolve()
@@ -41,4 +41,8 @@ void runTest("GET does not throw with no Supabase/Redis configured", async () =>
   assert.equal(res.status, 200);
   const json = await res.json();
   assert.deepEqual(json.prices, []);
+  assert.equal(res.headers.get("cache-control"), PRICES_CACHE_CONTROL);
+  assert.equal(res.headers.get("set-cookie"), null);
+  const vary = res.headers.get("vary");
+  assert.equal(vary == null || !vary.toLowerCase().includes("cookie"), true);
 });

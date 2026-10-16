@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Short edge cache on public prices, earlier event-page reads
+
+`apps/web` only. Price 200s send a 30-second public edge cache. The signal list and recent alerts stay private because they depend on the signed-in user. Event detail overlaps the media-caveat read and the outcome read with the earlier queries. Baselines still wait for outcome rows. Server-Timing names are unchanged. No speed claim. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Read-only requests verify the access token locally
 
 `apps/web` only. Read-only GETs and the protected-page gate use `getClaims()`. Writes, admin pages, settings, and account routes stay on `getUser()`. A banned or deleted user keeps read access until the access token expires. Full detail: `LIVE_TODO.md`.

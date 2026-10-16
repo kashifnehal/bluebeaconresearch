@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (read-only requests verify the access token locally)
+Last updated: 2026-10-16 (short edge cache on public prices)
+
+> ⚠️ NEW 2026-10-16 (public price cache and earlier event reads, `apps/web` only) — `GET /api/prices` 200s are edge-cached for 30 seconds. The signal list and recent alerts stay uncached because they depend on the signed-in user. Event detail starts the media-caveat and outcome reads earlier. No speed claim. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (local token check, `apps/web` only) — read-only GETs and protected pages use `getClaims()`. Writes, admin, settings, and account routes stay on `getUser()`. A banned or deleted user keeps read access until the access token expires. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

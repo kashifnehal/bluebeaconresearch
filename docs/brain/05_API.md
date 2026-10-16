@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-16 — `GET /api/prices` (`apps/web`) 200 responses send `Cache-Control: public, s-maxage=30, stale-while-revalidate=60`. 4xx and 5xx do not. `GET /api/signals` is not edge-cached (`personalized=true` filters by that user's `user_preferences`). `GET /api/alerts/recent` is not edge-cached (rows are filtered by `user_id`). `GET /api/signals/:id` starts the media-caveat read when the client exists and the outcome-row read when the asset list is known, overlapping the raw-event, history, related, and quote reads. Baselines still wait for the outcome rows. Server-Timing step names are unchanged.
+
 > ⚠️ UPDATED 2026-10-16 — Read-only `apps/web` GETs verify the access token locally with `getClaims()`. A banned or deleted user keeps read access until their access token expires (the token lifetime set in Supabase Auth). `getUser()` checks the Auth server on every call and stays on writes, admin routes, settings, billing, telegram linking, and account routes.
 
 > ⚠️ UPDATED 2026-10-16 — `GET /api/ingestion/status` (`apps/web`) requires the same admin email allowlist as the admin pages (`isAdminEmail`). A missing session or a non-admin user gets 404. The JSON body is unchanged for an admin. The route is no longer listed as a public endpoint in `apps/web/proxy.ts`.

@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-16 — Public price 200s use a 30-second edge cache. The signal list and recent alerts stay uncached. Event detail overlaps two independent reads. Full detail: `docs/brain/05_API.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Read-only web GETs verify the access token locally. A banned or deleted user keeps read access until the access token expires. `getUser()` stays on writes and account routes. Full detail: `docs/brain/05_API.md`.
 
 > ⚠️ UPDATED 2026-10-16 — `GET /api/ingestion/status` is admin-only. A missing session or a non-admin user gets 404. Full detail: `docs/brain/05_API.md`.

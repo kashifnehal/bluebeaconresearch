@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Short edge cache on public prices, earlier event-page reads
+
+`apps/web` only. Price 200s use a short public edge cache. The signal list and recent alerts stay uncached. Event detail overlaps two reads that do not need each other. No speed claim. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Read-only requests verify the access token locally
 
 `apps/web` only. Read-only GETs use a local token check. Writes stay on the Auth server. Full detail: `docs/brain/14_CHANGELOG.md`.

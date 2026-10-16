@@ -228,6 +228,11 @@ export async function GET(
   }
   note("auth", authStarted);
 
+  // Needs the client only, not the signal row. Awaited with the other late reads.
+  const mediaStarted = started();
+  const mediaCaveatsPromise = deps.loadMediaImpactCaveats(supabase);
+  void mediaCaveatsPromise.catch(() => {});
+
   const signalStarted = started();
   const { data: row, error } = await supabase
     .from("signals")
@@ -314,6 +319,38 @@ export async function GET(
   const pricesFallback: PriceAtSignal[] = [];
   const degraded: string[] = [];
   const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
+  const currencyPairImpacts = (row.currency_pair_impacts ?? []) as NonNullable<
+    Signal["currencyPairImpacts"]
+  >;
+  const magnitudeAssets = [
+    ...new Set([
+      ...commodityImpacts.map((c) => c.asset),
+      ...currencyPairImpacts.map((c) => c.asset),
+    ]),
+  ];
+
+  const pricePoints: PricePointsTiming | undefined =
+    magnitudeAssets.length > 0 && timingOn
+      ? { ms: 0, pending: 0, startedAt: null, cacheStatus: "hit" }
+      : undefined;
+  const outcomeWatch: OutcomeRowsObservation | undefined =
+    magnitudeAssets.length > 0 && timingOn ? { cacheStatus: "miss" } : undefined;
+  const baselineTiming: BaselineFetchTiming | undefined =
+    magnitudeAssets.length > 0 && timingOn ? { timedOut: false, pricePoints } : undefined;
+
+  if (magnitudeAssets.length > 0) {
+    if (pricePoints) deps.prefetchAssetPricePoints(supabase, magnitudeAssets, pricePoints);
+    else deps.prefetchAssetPricePoints(supabase, magnitudeAssets);
+  }
+
+  const outcomesStarted = magnitudeAssets.length > 0 ? started() : 0;
+  const outcomeRowsPromise =
+    magnitudeAssets.length > 0
+      ? outcomeWatch
+        ? deps.fetchSignalOutcomeRows(supabase, magnitudeAssets, outcomeWatch)
+        : deps.fetchSignalOutcomeRows(supabase, magnitudeAssets)
+      : null;
+  if (outcomeRowsPromise) void outcomeRowsPromise.catch(() => {});
 
   const rawBudgeted = withBudget(rawEventsPromise, budgetMs, rawFallback);
   const historicalBudgeted = withBudget(historicalPromise, budgetMs, historicalFallback);
@@ -511,38 +548,12 @@ export async function GET(
     }),
   );
 
-  const currencyPairImpacts = (row.currency_pair_impacts ?? []) as NonNullable<
-    Signal["currencyPairImpacts"]
-  >;
   const eventDate = row.event_date ?? row.created_at;
-
-  const magnitudeAssets = [
-    ...new Set([
-      ...commodityImpacts.map((c) => c.asset),
-      ...currencyPairImpacts.map((c) => c.asset),
-    ]),
-  ];
 
   let marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry> = {};
   let responseMs = 0;
-  if (magnitudeAssets.length > 0) {
-    const pricePoints: PricePointsTiming | undefined = timingOn
-      ? { ms: 0, pending: 0, startedAt: null, cacheStatus: "hit" }
-      : undefined;
-    const outcomeWatch: OutcomeRowsObservation | undefined = timingOn
-      ? { cacheStatus: "miss" }
-      : undefined;
-    const baselineTiming: BaselineFetchTiming | undefined = timingOn
-      ? { timedOut: false, pricePoints }
-      : undefined;
-
-    if (pricePoints) deps.prefetchAssetPricePoints(supabase, magnitudeAssets, pricePoints);
-    else deps.prefetchAssetPricePoints(supabase, magnitudeAssets);
-
-    const outcomesStarted = started();
-    const rows = outcomeWatch
-      ? await deps.fetchSignalOutcomeRows(supabase, magnitudeAssets, outcomeWatch)
-      : await deps.fetchSignalOutcomeRows(supabase, magnitudeAssets);
+  if (outcomeRowsPromise) {
+    const rows = await outcomeRowsPromise;
     const outcomesMs = timingOn ? performance.now() - outcomesStarted : 0;
 
     const baselinesStarted = started();
@@ -599,8 +610,7 @@ export async function GET(
     steps.push({ name: "baselines", durMs: 0, desc: "skip" });
   }
 
-  const mediaStarted = started();
-  const mediaImpactCaveats = await deps.loadMediaImpactCaveats(supabase);
+  const mediaImpactCaveats = await mediaCaveatsPromise;
   note("media", mediaStarted);
   const assembleStarted = started();
   const mediaImpactEntity =
