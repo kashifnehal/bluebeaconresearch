@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Public status rows label Classifier as Analysis and Data Pipeline as Data Sources (`apps/web`). The how-it-works sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Event quotes can come from `get_event_price_bundle` (`apps/web`). The migration is written, not applied. A missing function keeps the three price reads per commodity impact. No speed claim. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Search catalog feed freshness (`apps/backend`). `faq:live` matches the help answer and no longer describes a public ingestion banner. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

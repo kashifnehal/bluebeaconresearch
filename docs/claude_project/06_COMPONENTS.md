@@ -620,7 +620,7 @@ Lookup tool, not a priority feed. Filters: date range, `#125` Oil/Grain/Metals d
 
 ### StatusPage (`apps/web/app/status/page.tsx`) — 2026-10-16
 
-Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices. A closed daily budget does not by itself mark Classifier, Data Pipeline, or Intelligence Feed Degraded.
+Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices. Classifier is labeled Analysis. Data Pipeline is labeled Data Sources. A closed daily budget does not by itself mark Classifier, Data Pipeline, or Intelligence Feed Degraded.
 
 ### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
 
@@ -661,7 +661,7 @@ last 7 days are live Supabase counts computed at request time; "sources monitore
 is 30, counted 2026-10-16 from code, not a query — 28 objects in `RSS_FEEDS`
 (`apps/backend/src/workers/rss-collector.ts`; `CONFIGURED_RSS_FEED_COUNT` in
 `packages/shared/src/constants/ingestion.ts` is 28) plus `OTHER_COLLECTOR_COUNT` 2
-(GDELT and GNews). ACLED is not included. A failed query hides that stat rather than rendering 0. As of 2026-10-16 (`d165222`), both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
+(GDELT and GNews). ACLED is not included. A failed query hides that stat rather than rendering 0. The sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. As of 2026-10-16 (`d165222`), both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
 
 **Claim/proof table**: 7 claims (sources-tab links, pause-instead-of-guessing
 disclosure, zero headline-placement bonus, confidence-vs-report-count copy,

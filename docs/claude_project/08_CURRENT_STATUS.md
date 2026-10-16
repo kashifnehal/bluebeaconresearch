@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (event price bundle — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (public status and how-it-works names — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (public names, `apps/web` only) — `/status` shows Analysis and Data Sources. The how-it-works sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (event price bundle, `apps/web`, migration written not applied) — the event page calls `get_event_price_bundle` for its quotes. The function is not applied yet, so the three price reads stay until then. See `docs/brain/LIVE_TODO.md`.
 

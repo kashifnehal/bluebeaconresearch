@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Public status and how-it-works names
+
+`apps/web` only. `/status` shows Analysis and Data Sources. The how-it-works sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — One database call for event prices
 
 `apps/web` only, plus one SQL file. `get_event_price_bundle` is written, not applied. Until then the event page keeps the three price reads per commodity impact. No speed claim. Full detail: `docs/brain/14_CHANGELOG.md`.

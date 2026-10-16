@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   formatStatNumber,
@@ -23,6 +26,21 @@ runTest("formatStatNumber adds thousands separators", () => {
   assert.equal(formatStatNumber(2996), "2,996");
   assert.equal(formatStatNumber(44), "44");
   assert.equal(formatStatNumber(0), "0");
+});
+
+runTest("how-it-works sources caption names sources, and the ACLED line stays", () => {
+  const page = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "../app/how-it-works/page.tsx"),
+    "utf8",
+  );
+  assert.equal(page.includes("RSS feeds plus other data sources."), true);
+  assert.equal(page.includes("data collectors configured in the ingestion pipeline"), false);
+  assert.equal(
+    page.includes(
+      "ACLED conflict data: ACLED is configured but returning no data (access pending), so no ACLED events are ingested yet.",
+    ),
+    true,
+  );
 });
 
 runTest("TOTAL_COLLECTOR_COUNT is RSS feeds plus the collectors that actually ingest", () => {

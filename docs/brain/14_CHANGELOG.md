@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Public status and how-it-works names
+
+`apps/web` only. `/status` shows Analysis and Data Sources. The check names stay Classifier and Data Pipeline. Each row is still a name and a state. `/how-it-works` sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — One database call for event prices
 
 `apps/web` plus `supabase/migrations/20261016180000_get_event_price_bundle.sql`. The function is written, not applied. `GET /api/signals/:id` calls it as soon as the signal row is read. A missing function keeps the three `commodity_prices` reads per commodity impact. Any other function error returns no quotes and names `price_at_signal` in `degraded`. No speed claim. Full detail: `LIVE_TODO.md`.

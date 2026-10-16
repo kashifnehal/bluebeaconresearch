@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Public status and how-it-works names, `apps/web`, 2026-10-16
+
+- `/status` shows Classifier as Analysis and Data Pipeline as Data Sources. The check names stay Classifier and Data Pipeline. Each row is still a name and a state, with no detail text.
+- `/how-it-works` sources caption is "RSS feeds plus other data sources." The ACLED line stays: "ACLED conflict data: ACLED is configured but returning no data (access pending), so no ACLED events are ingested yet."
+- Docs: this entry; brain `08`, `14`, `06`; claude_project `09`, `08`, `14`, `06`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or new standing rule.
+
 ## ✅ One database call for event prices, migration written not applied, `apps/web`, 2026-10-16
 
 - `public.get_event_price_bundle(text[], timestamptz, uuid[], timestamptz)` returns one jsonb object per symbol: the latest `commodity_prices` row at or before the earliest linked `raw_events.event_date` (otherwise the fallback time the route already used), the latest row at or before `signals.created_at`, and the latest row overall. `security invoker`. Execute granted to `authenticated` and `service_role`. Migration `20261016180000_get_event_price_bundle.sql` is written, not applied.

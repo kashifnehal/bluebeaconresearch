@@ -7,6 +7,8 @@ export function formatOperationalSummary(operationalCount: number, total: number
 const PUBLIC_STATUS_NAMES: Record<string, string> = {
   "Alert Delivery": "Alerts",
   "Price History": "Prices",
+  Classifier: "Analysis",
+  "Data Pipeline": "Data Sources",
 };
 
 export function publicStatusName(internalName: string): string {

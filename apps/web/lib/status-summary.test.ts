@@ -35,8 +35,8 @@ runTest("public status names stay the existing checks", () => {
   assert.equal(publicStatusName("Price History"), "Prices");
   assert.equal(publicStatusName("Intelligence Feed"), "Intelligence Feed");
   assert.equal(publicStatusName("Global Map"), "Global Map");
-  assert.equal(publicStatusName("Data Pipeline"), "Data Pipeline");
-  assert.equal(publicStatusName("Classifier"), "Classifier");
+  assert.equal(publicStatusName("Data Pipeline"), "Data Sources");
+  assert.equal(publicStatusName("Classifier"), "Analysis");
 });
 
 runTest("public status page renders a name and a state, not the detail string", () => {

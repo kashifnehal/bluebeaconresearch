@@ -54,7 +54,7 @@ async function getStats(): Promise<Stat[]> {
   stats.push({
     value: formatStatNumber(TOTAL_COLLECTOR_COUNT),
     label: "Sources monitored",
-    caption: "RSS feeds plus other data collectors configured in the ingestion pipeline.",
+    caption: "RSS feeds plus other data sources.",
   });
 
   return stats;

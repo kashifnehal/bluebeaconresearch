@@ -267,7 +267,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 ### 3.6a `app/how-it-works/page.tsx` (W2-TRUST, 2026-10-01)
 - **Purpose**: public (no auth) research-integrity page — "what we claim, and how you can check it."
 - **How**: server component, direct Supabase queries (same `getRouteSupabaseClients()`/service-role fallback pattern as `getLatestSignal()`/`getHomepageStats()` in `app/page.tsx`), `dynamic = "force-dynamic"`. Dark-terminal styling reuses `/accuracy`'s exact tokens, `PublicHeader`/`LegalDisclaimerFooter`.
-- **Stats bar** (3 numbers, `apps/web/lib/how-it-works-stats.ts`): total signals + signals-in-last-7-days are live Supabase counts; "sources monitored" is 30, counted 2026-10-16 from code: 28 objects in `RSS_FEEDS` (`apps/backend/src/workers/rss-collector.ts`; `CONFIGURED_RSS_FEED_COUNT` in `packages/shared/src/constants/ingestion.ts` is 28) plus `OTHER_COLLECTOR_COUNT` 2 (GDELT and GNews). ACLED is not included. Not a DB query. A failed query hides that stat instead of showing 0.
+- **Stats bar** (3 numbers, `apps/web/lib/how-it-works-stats.ts`): total signals + signals-in-last-7-days are live Supabase counts; "sources monitored" is 30, counted 2026-10-16 from code: 28 objects in `RSS_FEEDS` (`apps/backend/src/workers/rss-collector.ts`; `CONFIGURED_RSS_FEED_COUNT` in `packages/shared/src/constants/ingestion.ts` is 28) plus `OTHER_COLLECTOR_COUNT` 2 (GDELT and GNews). ACLED is not included. Not a DB query. A failed query hides that stat instead of showing 0. The sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged.
 - **2026-10-16 (`d165222`):** both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
 - **Claim/proof table**: 7 claims. The original six were verified against code or live data in Step 0 before the page was written (full table: `LIVE_TODO.md`). The seventh (2026-10-09) states that Claude classifies market impact, including an up/down/volatile reading, and does not recommend a position, a size, or an entry or exit. Responsive CSS grid (not an HTML `<table>`), so no horizontal scroll at phone width.
 - **Limits list**: severity/confidence are model outputs not guarantees; some signals use the keyword fallback; merged "reports" can repeat an outlet; ACLED is configured but not currently ingesting — confirmed live against `service_health_events` (still failing auth as of ship date), not assumed.
@@ -275,7 +275,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - Full detail: `docs/claude_project/06_COMPONENTS.md` §7a, `14_CHANGELOG.md` v0.135.0.
 
 ### 3.6b `app/status/page.tsx` (2026-10-16)
-- Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices.
+- Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices. Classifier is labeled Analysis. Data Pipeline is labeled Data Sources.
 - When the daily budget is closed, Classifier, Data Pipeline, and Intelligence Feed stay Operational. `budgetClosed` stays on the pipeline status payload.
 
 ### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19; picker collapsed + mobile FAB removed #186, 2026-09-25)
