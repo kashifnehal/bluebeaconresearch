@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-17 — Newest stored article time on the admin ingestion status route
+
+`apps/web` only. An admin `GET /api/ingestion/status` includes `newestStoredArticleAt`. The public ingestion box stays off dashboard, map, and alerts. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Public status and how-it-works names
 
 `apps/web` only. `/status` shows Analysis and Data Sources. The check names stay Classifier and Data Pipeline. Each row is still a name and a state. `/how-it-works` sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. Full detail: `LIVE_TODO.md`.

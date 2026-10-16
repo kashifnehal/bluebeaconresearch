@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-17 — `GET /api/ingestion/status` adds `newestStoredArticleAt` for an admin. Full detail: `docs/brain/05_API.md`.
+
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` calls `get_event_price_bundle` for the event quotes. The migration is written, not applied. Until then the route keeps the three price reads per commodity impact. Any other function error leaves the quotes empty. Full detail: `docs/brain/05_API.md`.
 >
 > ⚠️ UPDATED 2026-10-16 — Public price 200s use a 30-second edge cache. The signal list and recent alerts stay uncached. Event detail overlaps two independent reads. Full detail: `docs/brain/05_API.md`.

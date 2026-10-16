@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Newest stored article time on the admin ingestion status route, `apps/web`, 2026-10-17
+
+- `GET /api/ingestion/status` adds `newestStoredArticleAt` next to `status`, `cronIntervalMinutes`, `degraded`, and `reason`. For an admin it is the newest `raw_events.created_at` as an ISO string, or null. The service-role client (`NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`) is built once and reused by the Redis-missing fallback. The article read runs in parallel with the Redis `pipeline:last_run` read. If that read throws or is still running after 5000 ms, the field is null and the rest of the JSON stays as it was. 5000 ms is an engineering choice with no outside source.
+- The public ingestion box stays off dashboard, map, and alerts. On 2026-10-16 that box was removed, and the same-day note that the dashboard should show the newest stored article time was replaced. This route is admin-only, so readers do not see the new field. The words paused, budget, and next UTC day were not added.
+- Banner checks were not added. `IngestionStatusBanner` and `newestStoredArticleIso` are not in the tree. Restoring them on the dashboard would show a last-collected time on a public page, which the 2026-10-16 rule replaced.
+- No open priority-queue line for this. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `05`; claude_project `09`, `08`, `14`, `05`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new component, table, prompt, or standing rule.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0 (58 files, 388 passing cases, 0 failing, including 6 in `app/api/ingestion/status/route.test.ts`). `pnpm --filter web run build` (`next build`) exit 0. No browser run. Banner cases were not run because that component is not in the tree.
+
 ## ✅ Public status and how-it-works names, `apps/web`, 2026-10-16
 
 - `/status` shows Classifier as Analysis and Data Pipeline as Data Sources. The check names stay Classifier and Data Pipeline. Each row is still a name and a state, with no detail text.

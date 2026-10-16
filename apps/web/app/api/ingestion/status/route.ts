@@ -33,8 +33,93 @@ function getUpstashRedis() {
   return new Redis({ url, token });
 }
 
+type ArticleRowClient = {
+  from(table: string): {
+    select(columns: string): {
+      order(column: string, options: { ascending: boolean }): {
+        limit(count: number): {
+          maybeSingle(): PromiseLike<{
+            data: { created_at?: string | null } | null;
+            error: unknown;
+          }>;
+        };
+      };
+    };
+  };
+};
+
+type RedisRead = { status: PipelineRunStatus | null; source: "redis" | "none" };
+
+function createServiceClient(): ArticleRowClient | null {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Accept either key name — see lib/supabase-server.ts for why.
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  if (!supabaseUrl || !serviceKey) return null;
+  return createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
+}
+
+async function queryNewestCreatedAt(supabase: ArticleRowClient): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("raw_events")
+    .select("created_at")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (typeof data?.created_at !== "string" || data.created_at.length === 0) return null;
+  return data.created_at;
+}
+
+// 5000 ms is an engineering choice with no outside source
+const NEWEST_STORED_ARTICLE_TIMEOUT_MS = 5000;
+
+function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
+async function readNewestStoredArticleAt(
+  supabase: ArticleRowClient | null,
+): Promise<{ createdAt: string | null; failed: boolean }> {
+  if (!supabase) return { createdAt: null, failed: false };
+  try {
+    const createdAt = await withTimeout(queryNewestCreatedAt(supabase), NEWEST_STORED_ARTICLE_TIMEOUT_MS);
+    return { createdAt, failed: false };
+  } catch {
+    return { createdAt: null, failed: true };
+  }
+}
+
+async function readRedisPipeline(): Promise<RedisRead> {
+  const redis = getUpstashRedis();
+  if (!redis) return { status: null, source: "none" };
+  try {
+    const raw = await redis.get<string>("pipeline:last_run");
+    if (raw) {
+      const status = typeof raw === "string" ? JSON.parse(raw) : (raw as PipelineRunStatus);
+      return { status, source: "redis" };
+    }
+  } catch {
+    // fall through to Supabase fallback
+  }
+  return { status: null, source: "none" };
+}
+
 type IngestionStatusDeps = {
   getRouteSupabaseClients: () => Promise<RouteSupabaseClients | null>;
+  createServiceClient?: () => ArticleRowClient | null;
+  readRedisPipeline?: () => Promise<RedisRead>;
 };
 
 const defaultDeps: IngestionStatusDeps = { getRouteSupabaseClients };
@@ -45,54 +130,34 @@ export async function handleIngestionStatus(deps: IngestionStatusDeps = defaultD
     return apiError(404, "not_found");
   }
 
-  let status: PipelineRunStatus | null = null;
+  const supabase = (deps.createServiceClient ?? createServiceClient)();
+  const [redisOutcome, newest] = await Promise.all([
+    (deps.readRedisPipeline ?? readRedisPipeline)(),
+    readNewestStoredArticleAt(supabase),
+  ]);
+
+  let status = redisOutcome.status;
   // "redis"  = real pipeline:last_run, per-collector health is trustworthy
   // "fallback" = Redis empty/unreachable, inferred lastFetchedAt from raw_events only
   // "none"   = nothing available at all
-  let source: "redis" | "fallback" | "none" = "none";
-
-  const redis = getUpstashRedis();
-  if (redis) {
-    try {
-      const raw = await redis.get<string>("pipeline:last_run");
-      if (raw) {
-        status = typeof raw === "string" ? JSON.parse(raw) : (raw as PipelineRunStatus);
-        source = "redis";
-      }
-    } catch {
-      // fall through to Supabase fallback
-    }
-  }
+  let source: "redis" | "fallback" | "none" = redisOutcome.source;
 
   // Fallback: infer last fetch from newest raw_event ingestion time. Reaching here
   // means the backend never wrote pipeline:last_run — almost always Upstash being
   // unreachable / quota-exhausted on the writer side (see recordPipelineRun in
   // apps/backend/src/lib/pipeline-status.ts). Per-collector health is unknowable.
-  if (!status) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    // Accept either key name — see lib/supabase-server.ts for why.
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-    if (supabaseUrl && serviceKey) {
-      const supabase = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
-      const { data } = await supabase
-        .from("raw_events")
-        .select("created_at")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (data?.created_at) {
-        const lastFetchedAt = data.created_at as string;
-        status = {
-          lastFetchedAt,
-          nextFetchEstimate: new Date(
-            new Date(lastFetchedAt).getTime() + FALLBACK_INTERVAL_MINUTES * 60 * 1000,
-          ).toISOString(),
-          collectors: {},
-          totals: { inserted: 0, signals: 0, fetched: 0 },
-        };
-        source = "fallback";
-      }
+  if (!status && supabase) {
+    const createdAt = newest.failed ? await queryNewestCreatedAt(supabase) : newest.createdAt;
+    if (createdAt) {
+      status = {
+        lastFetchedAt: createdAt,
+        nextFetchEstimate: new Date(
+          new Date(createdAt).getTime() + FALLBACK_INTERVAL_MINUTES * 60 * 1000,
+        ).toISOString(),
+        collectors: {},
+        totals: { inserted: 0, signals: 0, fetched: 0 },
+      };
+      source = "fallback";
     }
   }
 
@@ -109,6 +174,7 @@ export async function handleIngestionStatus(deps: IngestionStatusDeps = defaultD
     cronIntervalMinutes: status?.intervalMinutes ?? FALLBACK_INTERVAL_MINUTES,
     degraded,
     reason,
+    newestStoredArticleAt: newest.createdAt,
   });
 }
 
