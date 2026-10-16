@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Search catalog feed freshness (`apps/backend`). `faq:live` matches the help answer and no longer describes a public ingestion banner. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Public price responses use a 30-second edge cache (`apps/web`). The signal list and recent alerts are not cached: they depend on the signed-in user. Event detail starts two independent reads earlier. No speed claim. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Read-only requests verify the access token locally (`apps/web`). Writes, admin, and account routes stay on the Auth server. A banned or deleted user keeps read access until the access token expires. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

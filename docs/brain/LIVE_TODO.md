@@ -3,6 +3,10 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Search catalog matches the help answer on feed freshness, `apps/backend`, 2026-10-16
+
+- `faq:live` is titled "How current is the feed?" and uses the help answer: new stories appear as sources publish them, and every signal shows report time and flag time. URL stays `/help#live`. The catalog hash changes with that text and refreshes on the next search-assist request, not on deploy.
+
 ## ✅ Short edge cache on public prices, and earlier event-page reads, `apps/web`, 2026-10-16
 
 - `GET /api/prices` 200 responses send `Cache-Control: public, s-maxage=30, stale-while-revalidate=60` (engineering choice, 2026-10-16, no published source). 4xx and 5xx do not. The JSON does not depend on the signed-in user.

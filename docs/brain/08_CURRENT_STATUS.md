@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (short edge cache on public prices)
+Last updated: 2026-10-16 (search catalog feed-freshness answer)
+
+> ⚠️ NEW 2026-10-16 (search catalog, `apps/backend` only) — `faq:live` matches the help answer: new stories appear as sources publish them, and every signal shows report time and flag time. It no longer describes a public ingestion banner. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (public price cache and earlier event reads, `apps/web` only) — `GET /api/prices` 200s are edge-cached for 30 seconds. The signal list and recent alerts stay uncached because they depend on the signed-in user. Event detail starts the media-caveat and outcome reads earlier. No speed claim. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

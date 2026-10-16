@@ -30,6 +30,17 @@ function runTest(name: string, fn: () => void) {
   }
 }
 
+runTest("faq:live matches the help answer for how current the feed is", () => {
+  const live = SEARCH_FAQ_ENTRIES.find((e) => e.contentKey === "faq:live");
+  assert.ok(live);
+  assert.equal(live.title, "How current is the feed?");
+  assert.equal(live.url, "/help#live");
+  assert.equal(
+    live.content,
+    "New stories appear as our sources publish them. Every signal shows when the story was reported and when we flagged it.",
+  );
+});
+
 runTest("catalog includes #155 FAQ copy plus the Help page", () => {
   assert.equal(SEARCH_FAQ_ENTRIES.length, 10);
   assert.equal(

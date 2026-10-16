@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Search catalog matches the help answer on feed freshness
+
+`apps/backend` only. The `faq:live` search entry no longer describes a public ingestion banner or a collector interval. It matches the help answer: new stories appear as sources publish them, and every signal shows report time and flag time. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Short edge cache on public prices, earlier event-page reads
 
 `apps/web` only. Price 200s send a 30-second public edge cache. The signal list and recent alerts stay private because they depend on the signed-in user. Event detail overlaps the media-caveat read and the outcome read with the earlier queries. Baselines still wait for outcome rows. Server-Timing names are unchanged. No speed claim. Full detail: `LIVE_TODO.md`.

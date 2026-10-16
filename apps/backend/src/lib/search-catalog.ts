@@ -35,10 +35,10 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
   },
   {
     contentKey: "faq:live",
-    title: "What does LIVE mean?",
+    title: "How current is the feed?",
     url: "/help#live",
     content:
-      "There are two different labels. LIVE DATA FEED ON on the Intelligence Feed list header is a static label — it does not check whether collectors last succeeded. The real health line is the status banner: Live ingestion means the last collector run was within about 20 minutes and the pipeline health feed is available. If that health feed is missing it says Ingestion status unavailable; if the last fetch is older than 20 minutes it says Ingestion delayed.",
+      "New stories appear as our sources publish them. Every signal shows when the story was reported and when we flagged it.",
     sourceKind: "faq",
   },
   {
