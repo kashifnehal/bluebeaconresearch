@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Ingestion status route is admin-only
+
+`apps/web` only. Missing session and a normal user get 404. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Collection-stalled and 80% daily-cap emails
 
 `apps/backend` only. Two founder emails. Collection silent for 90 minutes while the daily cap is still open (engineering choice: three missed 30-minute cycles). Spend at or above 80% of that cap while it is still open (engineering choice, no source). Once per UTC day each. Full detail: `docs/brain/LIVE_TODO.md`.

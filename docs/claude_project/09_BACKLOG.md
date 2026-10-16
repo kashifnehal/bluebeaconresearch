@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Ingestion status route is admin-only (`apps/web`). Missing session and a normal user get 404. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Collection-stalled and 80% daily-cap emails (`apps/backend`). 90-minute stall while the cap is open (engineering choice: three missed 30-minute cycles). 80% of the daily cap (engineering choice, no source). Once per UTC day each. Recipients are `ADMIN_EMAILS`. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Public status rows (`apps/web`). `/status` shows a name and a state. Detail text stays off the page. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

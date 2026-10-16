@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-16 — `GET /api/ingestion/status` (`apps/web`) requires the same admin email allowlist as the admin pages (`isAdminEmail`). A missing session or a non-admin user gets 404. The JSON body is unchanged for an admin. The route is no longer listed as a public endpoint in `apps/web/proxy.ts`.
+
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` runs three `commodity_prices` reads per commodity impact. Flag time and latest start with the other optional reads. The report-time quote starts once the earliest raw-event stamp is known. The 6000 ms budget and the `price_at_signal` degraded name are unchanged. The query count is unchanged.
 
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals`, when the handler throws and there is no cached payload, still returns 200 and the body `{ signals: [], nextCursor: null, total: 0, degraded: true }`. The cached handler-exception path is unchanged (`fallback: true`, `fallbackReason: "handler-exception"`).

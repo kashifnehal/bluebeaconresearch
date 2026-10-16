@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Ingestion status route is admin-only, `apps/web`, 2026-10-16
+
+- `GET /api/ingestion/status` uses `isAdminEmail`, the same allowlist as the admin pages. No session and a normal user both get 404. An admin still gets the previous JSON. No admin page calls this route; service status still uses the backend health route.
+- Removed from the public-route comment in `apps/web/proxy.ts`. Callers after the banner removal: none in `apps/web` outside the route and its test.
+- Docs: this entry; brain `08`, `14`, `05`; claude_project `09`, `08`, `14`, `05`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no component, table, prompt, or new standing rule.
+
 ## ✅ Collection-stalled and 80% daily-cap emails, `apps/backend`, 2026-10-16
 
 - Outages go to the founder by email, not to readers by banner (founder decision 2026-10-16).

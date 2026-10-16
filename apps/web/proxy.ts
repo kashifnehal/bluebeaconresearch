@@ -27,8 +27,10 @@ const GATED_ALLOWED = [
 // NOTE: /api/* is deliberately NOT listed here. Every API route authenticates
 // independently — user-scoped routes via getRouteSupabaseClients() (lib/
 // supabase-server.ts), and the handful of public ones (/api/prices,
-// /api/prices/history, /api/prices/history-5y, /api/backtesting, /api/ingestion/status) are explicit
-// public-data endpoints that are still rate-limited. Middleware must not run an
+// /api/prices/history, /api/prices/history-5y, /api/backtesting) are explicit
+// public-data endpoints that are still rate-limited. GET /api/ingestion/status
+// is admin-only (same email allowlist as the admin pages) and returns 404
+// otherwise. Middleware must not run an
 // auth check for them: doing so put the entire API surface behind the auth
 // backend's latency (see incident note below).
 const PROTECTED = [

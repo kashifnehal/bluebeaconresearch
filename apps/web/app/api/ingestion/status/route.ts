@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Redis } from "@upstash/redis";
+import { isAdminEmail } from "@/lib/admin";
+import { apiError } from "@/lib/api-response";
+import { getRouteSupabaseClients, type RouteSupabaseClients } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -30,7 +33,18 @@ function getUpstashRedis() {
   return new Redis({ url, token });
 }
 
-export async function GET() {
+type IngestionStatusDeps = {
+  getRouteSupabaseClients: () => Promise<RouteSupabaseClients | null>;
+};
+
+const defaultDeps: IngestionStatusDeps = { getRouteSupabaseClients };
+
+export async function handleIngestionStatus(deps: IngestionStatusDeps = defaultDeps) {
+  const clients = await deps.getRouteSupabaseClients();
+  if (!clients?.user || !isAdminEmail(clients.user.email)) {
+    return apiError(404, "not_found");
+  }
+
   let status: PipelineRunStatus | null = null;
   // "redis"  = real pipeline:last_run, per-collector health is trustworthy
   // "fallback" = Redis empty/unreachable, inferred lastFetchedAt from raw_events only
@@ -96,4 +110,8 @@ export async function GET() {
     degraded,
     reason,
   });
+}
+
+export async function GET() {
+  return handleIngestionStatus();
 }
