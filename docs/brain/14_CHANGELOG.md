@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Public status rows are a name and a state
+
+`apps/web` only. `/status` no longer prints check detail (times, collector names, row counts). Alert Delivery is labeled Alerts and Price History is labeled Prices. The pass/fail rules are unchanged. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Public pages hide the collection schedule
 
 `apps/web` only. Dashboard, map, and alerts no longer render the ingestion status box. Homepage, about, the feed header, and the help cadence answer do not name a collector interval or a last fetch. The event-page Published / Fetched / Flagged / Delay timeline stays. Full detail: `LIVE_TODO.md`.

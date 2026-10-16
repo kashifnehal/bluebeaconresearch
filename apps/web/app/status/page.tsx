@@ -1,11 +1,11 @@
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { getSystemChecks, type CheckStatus } from "@/lib/status-checks";
-import { formatOperationalSummary } from "@/lib/status-summary";
+import { formatOperationalSummary, publicStatusName } from "@/lib/status-summary";
 
 export const metadata = {
   title: "System Status | Blue Beacon Research",
-  description: "Real-time infrastructure operational status for Blue Beacon Research.",
+  description: "Operational status for Blue Beacon Research.",
 };
 
 // Real checks run per request (not a cached/prerendered page) — see lib/status-checks.ts.
@@ -69,9 +69,8 @@ export default async function StatusPage() {
               <div key={sys.name} className="p-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between hover:bg-[#1a1a1a] transition-colors">
                 <div>
                   <h3 className="font-bold text-sm text-[#e5e2e1]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                    {sys.name}
+                    {publicStatusName(sys.name)}
                   </h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{sys.detail}</p>
                 </div>
 
                 <div className="flex items-center gap-2">

@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Public status rows are a name and a state, `apps/web`, 2026-10-16
+
+- `/status` no longer renders the check detail string. Each row is a name and Operational, Degraded, or Unknown. Alert Delivery shows as Alerts. Price History shows as Prices. Intelligence Feed, Global Map, Data Pipeline, and Classifier keep their names. No Website or Sign-in check was added.
+- Failure detection is unchanged. A closed daily budget alone is still not Degraded. `detail` stays on the check object for the existing tests. Admin service status reads `service_health_events.detail`, not this field.
+- Docs: this entry; brain `08`, `14`, `06`; claude_project `09`, `08`, `14`, `06`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or new standing rule.
+
 ## ✅ Public pages hide the collection schedule, `apps/web`, 2026-10-16
 
 - Dashboard, map, and alerts no longer render the ingestion status box. Homepage, about, and the feed header no longer name a collector interval. The dashboard coverage line is `Last 24h: signals from N sources.` The help answer for "How current is the feed?" names report time and flag time only.

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (public pages hide the collection schedule — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (public status rows are a name and a state — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (public status page, `apps/web` only) — `/status` shows a name and Operational, Degraded, or Unknown. Detail text stays off the page. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (public collection schedule, `apps/web` only) — dashboard, map, and alerts no longer show the ingestion status box. Homepage, about, and the feed header do not name a collector interval. The event-page fetch timeline stays. See `docs/brain/LIVE_TODO.md`.
 

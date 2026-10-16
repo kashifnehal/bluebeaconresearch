@@ -620,7 +620,7 @@ Lookup tool, not a priority feed. Filters: date range, `#125` Oil/Grain/Metals d
 
 ### StatusPage (`apps/web/app/status/page.tsx`) — 2026-10-16
 
-When the daily budget is closed, the public status page shows no pause wording. Classifier, Data Pipeline, and Intelligence Feed stay on their open-budget lines. `budgetClosed` stays on the pipeline status payload (`pipeline:last_run`, returned by `GET /api/ingestion/status`).
+Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices. A closed daily budget does not by itself mark Classifier, Data Pipeline, or Intelligence Feed Degraded.
 
 ### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
 

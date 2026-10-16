@@ -275,8 +275,8 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - Full detail: `docs/claude_project/06_COMPONENTS.md` §7a, `14_CHANGELOG.md` v0.135.0.
 
 ### 3.6b `app/status/page.tsx` (2026-10-16)
-- When the daily budget is closed, the public status page shows no pause wording. Classifier, Data Pipeline, and Intelligence Feed stay on their open-budget lines.
-- `budgetClosed` stays on the pipeline status payload (`pipeline:last_run`, returned by `GET /api/ingestion/status`).
+- Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices.
+- When the daily budget is closed, Classifier, Data Pipeline, and Intelligence Feed stay Operational. `budgetClosed` stays on the pipeline status payload.
 
 ### 3.7 Watchlist (`WatchlistClient.tsx` + `[symbol]/page.tsx`) (#145, 2026-09-19; picker collapsed + mobile FAB removed #186, 2026-09-25)
 - **List:** first paint with no selections shows `COMMODITIES` cards. Live `/api/prices` + history sparkline only.

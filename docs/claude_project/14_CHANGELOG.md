@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Public status rows are a name and a state
+
+`apps/web` only. `/status` prints a name and a state. Check detail stays off the page. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Public pages hide the collection schedule
 
 `apps/web` only. The ingestion status box is gone from dashboard, map, and alerts. Public copy does not name a collector interval. Full detail: `docs/brain/14_CHANGELOG.md`.
