@@ -136,6 +136,102 @@ function kindForRawSource(source: string | null): FirstReportKind | null {
   return null;
 }
 
+type PriceBundleError = { code?: string; message?: string };
+
+type PriceBundleResult =
+  | { kind: "ok"; prices: PriceAtSignal[] }
+  | { kind: "missing" }
+  | { kind: "error" };
+
+function priceOrNull(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function dateOrNull(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+
+function mapPriceBundleRow(value: unknown, fallbackAsset: string): PriceAtSignal {
+  const row =
+    value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const asset = typeof row.asset === "string" && row.asset ? row.asset : fallbackAsset;
+  return {
+    asset,
+    priceAtSignal: priceOrNull(row.priceAtSignal),
+    priceAtSignalDate: dateOrNull(row.priceAtSignalDate),
+    priceAtFlagged: priceOrNull(row.priceAtFlagged),
+    priceAtFlaggedDate: dateOrNull(row.priceAtFlaggedDate),
+    currentPrice: priceOrNull(row.currentPrice),
+    currentPriceDate: dateOrNull(row.currentPriceDate),
+  };
+}
+
+function missingPriceBundle(error: PriceBundleError): boolean {
+  if (error.code === "PGRST202") return true;
+  return (
+    typeof error.message === "string" &&
+    error.message.includes("Could not find the function")
+  );
+}
+
+// One commodity_prices round trip for every impact. The signed-in client calls
+// it, so row security stays the caller's. 2026-10-16.
+export async function fetchPriceBundle(
+  supabase: {
+    rpc: (
+      fn: string,
+      args: Record<string, unknown>,
+    ) => PromiseLike<{ data: unknown; error: PriceBundleError | null }>;
+  },
+  symbols: string[],
+  flaggedAt: string,
+  rawEventIds: string[],
+  fallbackReportAt: string,
+): Promise<PriceBundleResult> {
+  if (symbols.length === 0) return { kind: "ok", prices: [] };
+  try {
+    const { data, error } = await supabase.rpc("get_event_price_bundle", {
+      p_symbols: symbols,
+      p_flagged_at: flaggedAt,
+      p_raw_event_ids: rawEventIds,
+      p_fallback_report_at: fallbackReportAt,
+    });
+    if (error) {
+      if (missingPriceBundle(error)) return { kind: "missing" };
+      console.error(
+        "[signals/:id] price bundle:",
+        error.code ?? "",
+        error.message ?? "",
+      );
+      return { kind: "error" };
+    }
+    let parsed: unknown = data;
+    if (typeof data === "string") {
+      try {
+        parsed = JSON.parse(data);
+      } catch {
+        return { kind: "error" };
+      }
+    }
+    if (!Array.isArray(parsed)) return { kind: "error" };
+    return {
+      kind: "ok",
+      prices: parsed.map((item, index) => mapPriceBundleRow(item, symbols[index] ?? "")),
+    };
+  } catch (err) {
+    console.error(
+      "[signals/:id] price bundle:",
+      err instanceof Error ? err.message : "",
+    );
+    return { kind: "error" };
+  }
+}
+
 type SignalDetailDeps = {
   getRouteSupabaseClients: typeof getRouteSupabaseClients;
   fetchSignalOutcomeRows: typeof fetchSignalOutcomeRows;
@@ -253,8 +349,17 @@ export async function GET(
   note("signal", signalStarted);
 
   const rawEventIds: string[] = row.raw_event_ids ?? [];
-  const ownCommodityAssets: string[] = ((row.commodity_impacts ?? []) as Signal["commodityImpacts"]).map(
-    (c) => c.asset,
+  const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
+  const ownCommodityAssets: string[] = commodityImpacts.map((c) => c.asset);
+  // Same anchor the per-row reads use when no linked raw event has a valid
+  // event_date. The function applies it only in that case. 2026-10-16.
+  const fallbackReportAt = validIso(row.event_date) ?? row.event_date ?? row.created_at;
+  const priceBundlePromise = fetchPriceBundle(
+    supabase,
+    ownCommodityAssets,
+    row.created_at,
+    rawEventIds,
+    fallbackReportAt,
   );
   // Anchored to this event's own event_date, not wall-clock "now" — otherwise an
   // event from weeks ago would never show anything as related. Same pattern
@@ -318,7 +423,6 @@ export async function GET(
   const relatedFallback = { rows: [] as RelatedCandidateRow[], error: null as string | null };
   const pricesFallback: PriceAtSignal[] = [];
   const degraded: string[] = [];
-  const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
   const currencyPairImpacts = (row.currency_pair_impacts ?? []) as NonNullable<
     Signal["currencyPairImpacts"]
   >;
@@ -376,36 +480,47 @@ export async function GET(
       .maybeSingle();
   }
 
-  // Three quotes per commodity impact. Flag-time and latest do not need the
-  // raw-event stamp, so they start with the other optional reads. The
-  // report-time quote waits for that stamp. 2026-10-16.
-  const priceReads = commodityImpacts.map((impact) => {
-    const flaggedPriceRes = priceAtOrBefore(impact.asset, row.created_at);
-    const currentPriceRes = latestPrice(impact.asset);
-    const historicalPriceRes = rawBudgeted.then((rawRes) => {
-      const rawRows = (rawRes.data ?? []) as Array<{
-        event_date?: unknown;
-        created_at?: unknown;
-        source?: unknown;
-      }>;
-      const earliestReport = earliestRawStamp(rawRows, "event_date");
-      const reportAt = earliestReport?.at ?? validIso(row.event_date);
-      const priceAtReportAnchor = reportAt ?? row.event_date ?? row.created_at;
-      return priceAtOrBefore(impact.asset, priceAtReportAnchor);
+  // Prefer one function call. Until that function is in the database, keep the
+  // three commodity_prices reads per impact. Flag-time and latest do not need
+  // the raw-event stamp. The report-time quote waits for that stamp. 2026-10-16.
+  const pricesFromReads = () => {
+    const priceReads = commodityImpacts.map((impact) => {
+      const flaggedPriceRes = priceAtOrBefore(impact.asset, row.created_at);
+      const currentPriceRes = latestPrice(impact.asset);
+      const historicalPriceRes = rawBudgeted.then((rawRes) => {
+        const rawRows = (rawRes.data ?? []) as Array<{
+          event_date?: unknown;
+          created_at?: unknown;
+          source?: unknown;
+        }>;
+        const earliestReport = earliestRawStamp(rawRows, "event_date");
+        const reportAt = earliestReport?.at ?? validIso(row.event_date);
+        const priceAtReportAnchor = reportAt ?? row.event_date ?? row.created_at;
+        return priceAtOrBefore(impact.asset, priceAtReportAnchor);
+      });
+      return Promise.all([historicalPriceRes, flaggedPriceRes, currentPriceRes]).then(
+        ([historicalPriceRes, flaggedPriceRes, currentPriceRes]) => ({
+          asset: impact.asset,
+          priceAtSignal: historicalPriceRes.data?.price ?? null,
+          priceAtSignalDate: historicalPriceRes.data?.fetched_at ?? null,
+          priceAtFlagged: flaggedPriceRes.data?.price ?? null,
+          priceAtFlaggedDate: flaggedPriceRes.data?.fetched_at ?? null,
+          currentPrice: currentPriceRes.data?.price ?? null,
+          currentPriceDate: currentPriceRes.data?.fetched_at ?? null,
+        }),
+      );
     });
-    return Promise.all([historicalPriceRes, flaggedPriceRes, currentPriceRes]).then(
-      ([historicalPriceRes, flaggedPriceRes, currentPriceRes]) => ({
-        asset: impact.asset,
-        priceAtSignal: historicalPriceRes.data?.price ?? null,
-        priceAtSignalDate: historicalPriceRes.data?.fetched_at ?? null,
-        priceAtFlagged: flaggedPriceRes.data?.price ?? null,
-        priceAtFlaggedDate: flaggedPriceRes.data?.fetched_at ?? null,
-        currentPrice: currentPriceRes.data?.price ?? null,
-        currentPriceDate: currentPriceRes.data?.fetched_at ?? null,
-      }),
-    );
-  });
-  const pricesBudgeted = withBudget(Promise.all(priceReads), budgetMs, pricesFallback);
+    return Promise.all(priceReads);
+  };
+  const pricesBudgeted = withBudget(
+    priceBundlePromise.then((bundle) => {
+      if (bundle.kind === "ok") return bundle.prices;
+      if (bundle.kind === "error") return pricesFallback;
+      return pricesFromReads();
+    }),
+    budgetMs,
+    pricesFallback,
+  );
 
   const watchedRawEvents = timeAwait(rawBudgeted, timingOn);
   const watchedHistorical = timeAwait(historicalBudgeted, timingOn);

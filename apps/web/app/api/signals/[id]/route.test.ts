@@ -41,6 +41,72 @@ const signalRow = {
   is_active: true,
 };
 
+type PriceRow = { symbol: string; price: number | null; fetched_at: string };
+
+function priceAtOrBeforeRow(rows: PriceRow[], symbol: string, at: string): PriceRow | null {
+  const t = new Date(at).getTime();
+  if (!Number.isFinite(t)) return null;
+  let best: PriceRow | null = null;
+  for (const row of rows) {
+    if (row.symbol !== symbol) continue;
+    const rt = new Date(row.fetched_at).getTime();
+    if (!Number.isFinite(rt) || rt > t) continue;
+    if (!best || rt > new Date(best.fetched_at).getTime()) best = row;
+  }
+  return best;
+}
+
+function latestPriceRow(rows: PriceRow[], symbol: string): PriceRow | null {
+  let best: PriceRow | null = null;
+  for (const row of rows) {
+    if (row.symbol !== symbol) continue;
+    const rt = new Date(row.fetched_at).getTime();
+    if (!best || rt > new Date(best.fetched_at).getTime()) best = row;
+  }
+  return best;
+}
+
+function earliestRawEventDate(
+  rawEvents: Array<Record<string, unknown>>,
+  ids: string[],
+): string | null {
+  let best: { at: string; t: number } | null = null;
+  for (const row of rawEvents) {
+    if (typeof row.id !== "string" || !ids.includes(row.id)) continue;
+    const at = row.event_date;
+    if (typeof at !== "string" || !at) continue;
+    const t = new Date(at).getTime();
+    if (!Number.isFinite(t)) continue;
+    if (!best || t < best.t) best = { at, t };
+  }
+  return best?.at ?? null;
+}
+
+function quotesFor(input: {
+  symbols: string[];
+  flaggedAt: string;
+  rawIds: string[];
+  fallback: string;
+  rawEvents: Array<Record<string, unknown>>;
+  priceRows: PriceRow[];
+}) {
+  const reportAt = earliestRawEventDate(input.rawEvents, input.rawIds) ?? input.fallback;
+  return input.symbols.map((asset) => {
+    const atReport = priceAtOrBeforeRow(input.priceRows, asset, reportAt);
+    const atFlag = priceAtOrBeforeRow(input.priceRows, asset, input.flaggedAt);
+    const current = latestPriceRow(input.priceRows, asset);
+    return {
+      asset,
+      priceAtSignal: atReport?.price ?? null,
+      priceAtSignalDate: atReport?.fetched_at ?? null,
+      priceAtFlagged: atFlag?.price ?? null,
+      priceAtFlaggedDate: atFlag?.fetched_at ?? null,
+      currentPrice: current?.price ?? null,
+      currentPriceDate: current?.fetched_at ?? null,
+    };
+  });
+}
+
 const STEP_NAMES = [
   "auth",
   "signal",
@@ -66,6 +132,10 @@ function makeSupabase(
     signalDelayMs?: number;
     signalError?: string;
     optionalReadBudgetMs?: number;
+    priceRows?: PriceRow[];
+    rpcMode?: "missing" | "missing-message" | "error" | "ok";
+    rpcPayload?: unknown;
+    rpcCalls?: Array<{ fn: string; args: Record<string, unknown> }>;
   },
 ) {
   const signal = options?.signal ?? signalRow;
@@ -87,13 +157,17 @@ function makeSupabase(
       const builder: Record<string, unknown> = {};
       const self = () => builder;
       let lteValue: string | undefined;
+      let symbol: string | undefined;
       builder.select = (cols?: string) => {
         if (table === "raw_events" && typeof cols === "string" && options?.rawSelect) {
           options.rawSelect.value = cols;
         }
         return builder;
       };
-      builder.eq = self;
+      builder.eq = (column: string, value: string) => {
+        if (table === "commodity_prices" && column === "symbol") symbol = value;
+        return builder;
+      };
       builder.neq = self;
       builder.or = self;
       builder.in = self;
@@ -126,6 +200,16 @@ function makeSupabase(
             return { data: signal, error: null };
           }
           if (table === "commodity_prices") {
+            if (options?.priceRows) {
+              const match =
+                lteValue === undefined
+                  ? latestPriceRow(options.priceRows, symbol ?? "")
+                  : priceAtOrBeforeRow(options.priceRows, symbol ?? "", lteValue);
+              return {
+                data: match ? { price: match.price, fetched_at: match.fetched_at } : null,
+                error: null,
+              };
+            }
             return {
               data: { price: 71.2, fetched_at: "2026-10-14T00:00:00.000Z" },
               error: null,
@@ -164,6 +248,46 @@ function makeSupabase(
         return Promise.resolve({ data, error: null }).then(onFulfilled, onRejected);
       };
       return builder;
+    },
+    rpc(fn: string, args: Record<string, unknown>) {
+      options?.rpcCalls?.push({ fn, args });
+      if (options?.rpcMode === "error") {
+        return Promise.resolve({
+          data: null,
+          error: { code: "57014", message: "canceling statement due to statement timeout" },
+        });
+      }
+      if (options?.rpcMode === "missing-message") {
+        return Promise.resolve({
+          data: null,
+          error: { message: "Could not find the function public.get_event_price_bundle" },
+        });
+      }
+      if (options?.rpcMode === "ok") {
+        const symbols = Array.isArray(args.p_symbols) ? (args.p_symbols as string[]) : [];
+        const data =
+          options.rpcPayload !== undefined
+            ? options.rpcPayload
+            : quotesFor({
+                symbols,
+                flaggedAt: String(args.p_flagged_at ?? ""),
+                rawIds: Array.isArray(args.p_raw_event_ids)
+                  ? (args.p_raw_event_ids as string[])
+                  : [],
+                fallback: String(args.p_fallback_report_at ?? ""),
+                rawEvents,
+                priceRows: options.priceRows ?? [],
+              });
+        return Promise.resolve({ data, error: null });
+      }
+      return Promise.resolve({
+        data: null,
+        error: {
+          code: "PGRST202",
+          message:
+            "Could not find the function public.get_event_price_bundle(text[], timestamptz, uuid[], timestamptz) in the schema cache",
+        },
+      });
     },
   };
 }
@@ -470,6 +594,246 @@ async function main() {
       globalThis.clearTimeout = realClear;
       for (const id of tracked) realClear(id as never);
     }
+  });
+
+  const sharedRawEvents = [
+    {
+      id: "re-late",
+      title: "Later wire",
+      source: "newsapi",
+      event_date: "2026-10-05T09:00:00.000Z",
+      created_at: "2026-10-05T09:30:00.000Z",
+      raw_data: { url: "https://example.com/late" },
+    },
+    {
+      id: "re-early",
+      title: "Earlier wire",
+      source: "rss",
+      event_date: "2026-10-04T20:13:41.000Z",
+      created_at: "2026-10-05T01:00:00.000Z",
+      raw_data: { url: "https://example.com/early" },
+    },
+    {
+      id: "re-bad",
+      title: "Bad date",
+      source: "gdelt",
+      event_date: "not-a-date",
+      created_at: "2026-10-04T00:00:00.000Z",
+      raw_data: {},
+    },
+  ];
+  const sharedPriceRows: PriceRow[] = [
+    { symbol: "USOIL", price: 70, fetched_at: "2026-10-01T00:00:00.000Z" },
+    { symbol: "USOIL", price: 72, fetched_at: "2026-10-04T20:13:41.000Z" },
+    { symbol: "USOIL", price: 74, fetched_at: "2026-10-05T10:54:14.000Z" },
+    { symbol: "USOIL", price: 80, fetched_at: "2026-10-14T00:00:00.000Z" },
+    { symbol: "BRENT", price: 81, fetched_at: "2026-10-02T00:00:00.000Z" },
+  ];
+  const sharedSignal = {
+    ...signalRow,
+    raw_event_ids: ["re-late", "re-early", "re-bad"],
+    event_date: "2026-10-05T12:00:00.000Z",
+    created_at: "2026-10-05T10:54:14.000Z",
+    commodity_impacts: [
+      { asset: "USOIL", direction: "up" },
+      { asset: "BRENT", direction: "up" },
+    ],
+  };
+  const sharedExpected = quotesFor({
+    symbols: ["USOIL", "BRENT"],
+    flaggedAt: sharedSignal.created_at,
+    rawIds: sharedSignal.raw_event_ids,
+    fallback: sharedSignal.event_date,
+    rawEvents: sharedRawEvents,
+    priceRows: sharedPriceRows,
+  });
+
+  await runTest("the function path returns the same price objects as the row reads", async () => {
+    const oldLte: string[] = [];
+    const oldRes = await callGet(
+      makeDeps(
+        { executions: 0 },
+        {
+          signal: sharedSignal,
+          rawEvents: sharedRawEvents,
+          priceRows: sharedPriceRows,
+          priceLte: oldLte,
+        },
+      ),
+    );
+    const rpcLte: string[] = [];
+    const rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = [];
+    const rpcRes = await callGet(
+      makeDeps(
+        { executions: 0 },
+        {
+          signal: sharedSignal,
+          rawEvents: sharedRawEvents,
+          priceRows: sharedPriceRows,
+          priceLte: rpcLte,
+          rpcMode: "ok",
+          rpcCalls,
+        },
+      ),
+    );
+    assert.equal(oldRes.status, 200);
+    assert.equal(rpcRes.status, 200);
+    const oldBody = await oldRes.json();
+    const rpcBody = await rpcRes.json();
+    assert.deepEqual(oldBody.pricesAtSignal, sharedExpected);
+    assert.deepEqual(rpcBody.pricesAtSignal, oldBody.pricesAtSignal);
+    assert.deepEqual(rpcBody.degraded, []);
+    assert.equal(rpcCalls.length, 1);
+    assert.equal(rpcCalls[0].fn, "get_event_price_bundle");
+    assert.ok(oldLte.length > 0);
+    assert.deepEqual(rpcLte, []);
+  });
+
+  await runTest("a missing function keeps the row reads and the same prices", async () => {
+    const codes = ["PGRST202", "message"] as const;
+    for (const code of codes) {
+      const lte: string[] = [];
+      const res = await callGet(
+        makeDeps(
+          { executions: 0 },
+          {
+            signal: sharedSignal,
+            rawEvents: sharedRawEvents,
+            priceRows: sharedPriceRows,
+            priceLte: lte,
+            rpcMode: code === "PGRST202" ? "missing" : "missing-message",
+          },
+        ),
+      );
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.deepEqual(body.pricesAtSignal, sharedExpected);
+      assert.deepEqual(body.degraded, []);
+      assert.ok(lte.length > 0);
+    }
+
+    const realError = console.error;
+    console.error = () => {};
+    try {
+      const failed = await callGet(
+        makeDeps(
+          { executions: 0 },
+          {
+            signal: sharedSignal,
+            rawEvents: sharedRawEvents,
+            priceRows: sharedPriceRows,
+            rpcMode: "error",
+          },
+        ),
+      );
+      assert.equal(failed.status, 200);
+      const failedBody = await failed.json();
+      assert.deepEqual(failedBody.pricesAtSignal, []);
+      assert.deepEqual(failedBody.degraded, ["price_at_signal"]);
+      assert.equal(failedBody.signal.id, sharedSignal.id);
+    } finally {
+      console.error = realError;
+    }
+  });
+
+  await runTest("a symbol with no price row stays null", async () => {
+    const signal = {
+      ...signalRow,
+      commodity_impacts: [{ asset: "UNKNOWN", direction: "up" }],
+    };
+    const res = await callGet(
+      makeDeps(
+        { executions: 0 },
+        {
+          signal,
+          rpcMode: "ok",
+          rpcPayload: [
+            {
+              asset: "UNKNOWN",
+              priceAtSignal: null,
+              priceAtSignalDate: null,
+              priceAtFlagged: null,
+              priceAtFlaggedDate: null,
+              currentPrice: null,
+              currentPriceDate: null,
+            },
+          ],
+        },
+      ),
+    );
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.deepEqual(body.pricesAtSignal, [
+      {
+        asset: "UNKNOWN",
+        priceAtSignal: null,
+        priceAtSignalDate: null,
+        priceAtFlagged: null,
+        priceAtFlaggedDate: null,
+        currentPrice: null,
+        currentPriceDate: null,
+      },
+    ]);
+  });
+
+  await runTest("no linked raw events pass the signal fallback time", async () => {
+    const signal = {
+      ...signalRow,
+      raw_event_ids: [] as string[],
+      event_date: "2026-10-01T00:00:00.000Z",
+      created_at: "2026-10-05T10:54:14.000Z",
+    };
+    const priceRows: PriceRow[] = [
+      { symbol: "USOIL", price: 70, fetched_at: "2026-10-01T00:00:00.000Z" },
+      { symbol: "USOIL", price: 76, fetched_at: "2026-10-03T00:00:00.000Z" },
+      { symbol: "USOIL", price: 80, fetched_at: "2026-10-14T00:00:00.000Z" },
+    ];
+    const rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = [];
+    const res = await callGet(
+      makeDeps(
+        { executions: 0 },
+        {
+          signal,
+          rawEvents: [],
+          priceRows,
+          rpcMode: "ok",
+          rpcCalls,
+        },
+      ),
+    );
+    assert.equal(res.status, 200);
+    const args = rpcCalls[0].args;
+    assert.deepEqual(args.p_raw_event_ids, []);
+    assert.equal(args.p_fallback_report_at, "2026-10-01T00:00:00.000Z");
+    assert.equal(args.p_flagged_at, "2026-10-05T10:54:14.000Z");
+    const body = await res.json();
+    assert.equal(body.pricesAtSignal[0].priceAtSignal, 70);
+    assert.equal(body.pricesAtSignal[0].priceAtSignalDate, "2026-10-01T00:00:00.000Z");
+    assert.equal(body.pricesAtSignal[0].priceAtFlagged, 76);
+  });
+
+  await runTest("an earlier raw event date is the report time", async () => {
+    const rpcCalls: Array<{ fn: string; args: Record<string, unknown> }> = [];
+    const res = await callGet(
+      makeDeps(
+        { executions: 0 },
+        {
+          signal: sharedSignal,
+          rawEvents: sharedRawEvents,
+          priceRows: sharedPriceRows,
+          rpcMode: "ok",
+          rpcCalls,
+        },
+      ),
+    );
+    assert.equal(res.status, 200);
+    const args = rpcCalls[0].args;
+    assert.deepEqual(args.p_raw_event_ids, ["re-late", "re-early", "re-bad"]);
+    assert.equal(args.p_fallback_report_at, "2026-10-05T12:00:00.000Z");
+    const body = await res.json();
+    assert.equal(body.pricesAtSignal[0].priceAtSignal, 72);
+    assert.equal(body.pricesAtSignal[0].priceAtSignalDate, "2026-10-04T20:13:41.000Z");
+    assert.notEqual(body.pricesAtSignal[0].priceAtSignal, 74);
   });
 }
 

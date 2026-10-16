@@ -114,6 +114,7 @@ Ingested news articles and incident logs before classification.
 - `created_at` (`timestamptz`, NOT NULL, default `now()`)
 - **Unique Constraint**: `UNIQUE(symbol, fetched_at)`
 - **Index** `commodity_prices_fetched_at_idx` on `(fetched_at desc)`, written 2026-10-16, not applied. The same index was already created in production on 2026-10-16. The latest-prices query orders by `fetched_at` alone.
+- **Function** `public.get_event_price_bundle(text[], timestamptz, uuid[], timestamptz)` returns `jsonb`, written 2026-10-16 in `20261016180000_get_event_price_bundle.sql`, not applied. One object per symbol, same order as the symbol list: latest `commodity_prices` row at or before the earliest linked `raw_events.event_date`, else `p_fallback_report_at`; latest row at or before `p_flagged_at`; latest row overall. A symbol with no row is nulls. `language sql`, `stable`, `security invoker`. Execute granted to `authenticated` and `service_role`. No new index. `GET /api/signals/:id` falls back to the three per-impact reads when the function is missing.
 
 ### Table 5: `alert_rules`
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)

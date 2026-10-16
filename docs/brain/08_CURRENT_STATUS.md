@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-16 (search catalog feed-freshness answer)
+Last updated: 2026-10-16 (event price bundle, migration written not applied)
+
+> ⚠️ NEW 2026-10-16 (event price bundle, `apps/web`, migration written not applied) — `GET /api/signals/:id` calls `get_event_price_bundle` for the at-report, at-flag, and latest quotes. Until that function is applied, a missing-function error keeps the three `commodity_prices` reads per commodity impact. Any other function error leaves the quotes empty. No speed claim. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (search catalog, `apps/backend` only) — `faq:live` matches the help answer: new stories appear as sources publish them, and every signal shows report time and flag time. It no longer describes a public ingestion banner. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

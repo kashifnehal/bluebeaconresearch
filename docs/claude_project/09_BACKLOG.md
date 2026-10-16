@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-16.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-16 — Event quotes can come from `get_event_price_bundle` (`apps/web`). The migration is written, not applied. A missing function keeps the three price reads per commodity impact. No speed claim. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Search catalog feed freshness (`apps/backend`). `faq:live` matches the help answer and no longer describes a public ingestion banner. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Public price responses use a 30-second edge cache (`apps/web`). The signal list and recent alerts are not cached: they depend on the signed-in user. Event detail starts two independent reads earlier. No speed claim. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

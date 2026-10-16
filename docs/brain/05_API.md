@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` calls `public.get_event_price_bundle` as soon as the signal row is read. The function is written in `20261016180000_get_event_price_bundle.sql` and is not applied. A missing function (`PGRST202` or "Could not find the function") keeps the three `commodity_prices` reads per commodity impact. Any other function error returns no quotes and adds `price_at_signal` to `degraded`. The `price_at_signal` Server-Timing name is unchanged. No speed claim.
+>
 > ⚠️ UPDATED 2026-10-16 — `GET /api/prices` (`apps/web`) 200 responses send `Cache-Control: public, s-maxage=30, stale-while-revalidate=60`. 4xx and 5xx do not. `GET /api/signals` is not edge-cached (`personalized=true` filters by that user's `user_preferences`). `GET /api/alerts/recent` is not edge-cached (rows are filtered by `user_id`). `GET /api/signals/:id` starts the media-caveat read when the client exists and the outcome-row read when the asset list is known, overlapping the raw-event, history, related, and quote reads. Baselines still wait for the outcome rows. Server-Timing step names are unchanged.
 
 > ⚠️ UPDATED 2026-10-16 — Read-only `apps/web` GETs verify the access token locally with `getClaims()`. A banned or deleted user keeps read access until their access token expires (the token lifetime set in Supabase Auth). `getUser()` checks the Auth server on every call and stays on writes, admin routes, settings, billing, telegram linking, and account routes.

@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ One database call for event prices, migration written not applied, `apps/web`, 2026-10-16
+
+- `public.get_event_price_bundle(text[], timestamptz, uuid[], timestamptz)` returns one jsonb object per symbol: the latest `commodity_prices` row at or before the earliest linked `raw_events.event_date` (otherwise the fallback time the route already used), the latest row at or before `signals.created_at`, and the latest row overall. `security invoker`. Execute granted to `authenticated` and `service_role`. Migration `20261016180000_get_event_price_bundle.sql` is written, not applied.
+- `GET /api/signals/:id` calls that function as soon as the signal row is read. `PGRST202` or "Could not find the function" keeps the three `commodity_prices` reads per commodity impact. Any other function error returns no quotes and names `price_at_signal` in `degraded`. The Server-Timing step name stays `price_at_signal`. No speed claim.
+- Docs: this entry; brain `08`, `14`, `05`, `04`, `16`; claude_project `09`, `08`, `14`, `05`, `04`. Skipped both `06_COMPONENTS.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no component, prompt, or new standing rule.
+
 ## ✅ Search catalog matches the help answer on feed freshness, `apps/backend`, 2026-10-16
 
 - `faq:live` is titled "How current is the feed?" and uses the help answer: new stories appear as sources publish them, and every signal shows report time and flag time. URL stays `/help#live`. The catalog hash changes with that text and refreshes on the next search-assist request, not on deploy.

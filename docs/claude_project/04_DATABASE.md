@@ -91,6 +91,7 @@ Ingested news articles and military incident logs before AI processing.
 - `fetched_at` (`timestamptz`, NOT NULL)
 - **Unique Constraint**: `UNIQUE(symbol, fetched_at)`
 - Index `commodity_prices_fetched_at_idx` on `(fetched_at desc)` is written 2026-10-16 and not applied. It was already created in production that day. Detail: `docs/brain/04_DATABASE.md`.
+- Function `public.get_event_price_bundle` is written 2026-10-16 and not applied. The event route uses it for the three quotes and keeps the per-row reads when the function is missing. Detail: `docs/brain/04_DATABASE.md`.
 
 ### Table 5: `alert_rules`
 - `id` (`uuid`, PK)

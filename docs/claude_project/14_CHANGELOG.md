@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — One database call for event prices
+
+`apps/web` only, plus one SQL file. `get_event_price_bundle` is written, not applied. Until then the event page keeps the three price reads per commodity impact. No speed claim. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Search catalog matches the help answer on feed freshness
 
 `apps/backend` only. The search entry for feed freshness matches the help answer and no longer describes a public ingestion banner. Full detail: `docs/brain/14_CHANGELOG.md`.

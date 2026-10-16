@@ -125,6 +125,7 @@ This is the step that was missing and caused the 008 incident. Do not skip it, e
 - `20261016020000_drop_redundant_sanctions_name_index.sql` — drops `public.idx_sanctions_entities_name`. Written, not applied.
 - `20261016030000_upsert_sanctions_entities.sql` — `public.upsert_sanctions_entities(jsonb)` returns the count of inserted or changed rows. Written, not applied. Execute granted to `service_role` only.
 - `20261016040000_rls_auth_uid_select_and_fk_indexes.sql` — eight policies wrap `auth.uid()` in `(select auth.uid())`, and six foreign-key indexes are added. Written, not applied. No index is dropped.
+- `20261016180000_get_event_price_bundle.sql` — `public.get_event_price_bundle(text[], timestamptz, uuid[], timestamptz)` returns the at-report, at-flag, and latest quote for each symbol. `security invoker`. Execute granted to `authenticated` and `service_role`. Written, not applied. Safe to run again.
 
 ## Cross-references
 
