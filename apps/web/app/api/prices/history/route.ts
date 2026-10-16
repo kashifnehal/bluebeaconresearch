@@ -61,7 +61,10 @@ export type PricesHistoryDeps = {
   getRouteSupabaseClients: () => Promise<RouteSupabaseClients | null>;
 };
 
-const defaultDeps: PricesHistoryDeps = { rateLimitOrPass, getRouteSupabaseClients };
+const defaultDeps: PricesHistoryDeps = {
+  rateLimitOrPass,
+  getRouteSupabaseClients: () => getRouteSupabaseClients({ verify: "claims" }),
+};
 
 export async function handleHistoryGet(req: NextRequest, deps: PricesHistoryDeps = defaultDeps) {
   const url = new URL(req.url);

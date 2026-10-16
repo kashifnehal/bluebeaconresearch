@@ -44,7 +44,7 @@ type LandingSignalPreview = {
 // returns 0 rows for a logged-out visitor. Prefer the service-role client from
 // getRouteSupabaseClients() (same helper API routes already use).
 async function getHomepageDataClient() {
-  const clients = await getRouteSupabaseClients();
+  const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (clients?.supabase) return clients.supabase;
   return createClient();
 }
@@ -100,9 +100,8 @@ export default async function Home(props: {
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  const signedIn = !claimsError && Boolean(claimsData?.claims?.sub);
 
   const [latestSignal, homepageStats] = await Promise.all([getLatestSignal(), getHomepageStats()]);
 
@@ -119,7 +118,7 @@ export default async function Home(props: {
           <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="/accuracy">Accuracy</Link>
         </nav>
         <div className="flex items-center gap-8">
-          {user ? (
+          {signedIn ? (
             <Link
               href="/dashboard"
               className="bg-primary hover:bg-primary-container text-black px-6 py-2 rounded-lg font-label text-[12px] md:text-[10px] font-extrabold uppercase tracking-widest transition-all active:scale-95"

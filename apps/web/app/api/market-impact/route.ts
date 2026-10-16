@@ -36,7 +36,7 @@ export type MarketImpactAssessmentEntry = {
  * shared fetchSignalOutcomeRows paging query — no separate query logic.
  */
 export async function GET(req: NextRequest) {
-  const clients = await getRouteSupabaseClients();
+  const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (!clients) {
     return apiError(500, "config_error");
   }

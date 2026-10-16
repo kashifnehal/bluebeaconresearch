@@ -205,10 +205,8 @@ export default function WatchlistSymbolPage() {
     if (followPending || !prefsFetched) return;
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+    if (claimsError || !claimsData?.claims?.sub) {
       window.location.href = `/login?redirectedFrom=${encodeURIComponent(window.location.pathname)}`;
       return;
     }

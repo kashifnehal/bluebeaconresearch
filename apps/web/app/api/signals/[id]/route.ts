@@ -215,7 +215,7 @@ export async function GET(
   };
 
   const authStarted = started();
-  const clients = await deps.getRouteSupabaseClients();
+  const clients = await deps.getRouteSupabaseClients({ verify: "claims" });
   if (!clients) {
     note("auth", authStarted);
     return withTiming(apiError(500, "config_error"));

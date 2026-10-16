@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
 
   // Tier 1: Try querying Supabase commodity_prices table first
   try {
-    const clients = await getRouteSupabaseClients();
+    const clients = await getRouteSupabaseClients({ verify: "claims" });
 
     if (clients) {
       const { supabase } = clients;

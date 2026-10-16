@@ -3,7 +3,7 @@ import { getRouteSupabaseClients } from "@/lib/supabase-server";
 import { apiError, apiErrorLogged } from "@/lib/api-response";
 
 export async function GET(_req: NextRequest) {
-  const clients = await getRouteSupabaseClients();
+  const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (!clients) {
     return apiError(500, "config_error");
   }

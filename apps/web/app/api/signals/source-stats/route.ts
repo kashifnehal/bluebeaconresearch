@@ -11,7 +11,7 @@ const PAGE = 1000;
 const IN_CHUNK = 100;
 
 export async function GET() {
-  const clients = await getRouteSupabaseClients();
+  const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (!clients) {
     return apiError(500, "supabase-unconfigured");
   }

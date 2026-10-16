@@ -125,6 +125,22 @@ async function main() {
 
   // ── runAuthCheck: the three classes ──────────────────────────────────────
 
+  await runTest("runAuthCheck accepts a getClaims result and treats a missing claim as signed out", async () => {
+    const ok = await runAuthCheck(
+      Promise.resolve({
+        data: { claims: { sub: "user-1", email: "a@example.com" } },
+        error: null,
+      }),
+    );
+    assert.equal(ok.outcome, "ok");
+    assert.equal(ok.user?.id, "user-1");
+    assert.equal(ok.user?.email, "a@example.com");
+
+    const missing = await runAuthCheck(Promise.resolve({ data: null, error: null }));
+    assert.equal(missing.outcome, "no-session");
+    assert.equal(missing.user, null);
+  });
+
   await runTest("runAuthCheck resolves ok when getUser() succeeds with a user", async () => {
     const { outcome, user } = await runAuthCheck(
       Promise.resolve({ data: { user: fakeUser }, error: null } as any),

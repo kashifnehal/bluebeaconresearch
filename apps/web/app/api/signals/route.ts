@@ -205,7 +205,7 @@ export async function GET(req: NextRequest) {
       // otherwise continue and try to query DB — we prefer to keep the API available
     }
 
-    const clients = await getRouteSupabaseClients();
+    const clients = await getRouteSupabaseClients({ verify: "claims" });
     if (!clients) {
       return NextResponse.json({ signals: [], nextCursor: null, total: 0 });
     }

@@ -4,6 +4,41 @@ import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseAuthUrl } from "./supabase-auth-url";
 
+export type RouteVerifyMode = "claims" | "server";
+
+type ClaimsAuth = {
+  getClaims: () => Promise<{
+    data: { claims?: { sub?: string; email?: string } } | null;
+    error: unknown;
+  }>;
+};
+
+type ServerAuth = {
+  getUser: () => Promise<{ data: { user: User | null } }>;
+};
+
+/**
+ * "claims" verifies the access token locally (asymmetric key, cached public
+ * keys). A banned or deleted user keeps read access until their access token
+ * expires (the token lifetime set in Supabase Auth). "server" calls getUser(),
+ * which checks the Auth server on every call.
+ */
+export async function resolveRouteUser(
+  auth: ClaimsAuth & ServerAuth,
+  verify: RouteVerifyMode = "server",
+): Promise<User | null> {
+  if (verify === "claims") {
+    const { data, error } = await auth.getClaims();
+    const sub = data?.claims?.sub;
+    if (error || !sub) return null;
+    return { id: sub, email: data?.claims?.email } as User;
+  }
+  const {
+    data: { user },
+  } = await auth.getUser();
+  return user;
+}
+
 export type RouteSupabaseClients = {
   /** Cookie-scoped client bound to the request's own session — the only client that
    *  should ever be used to decide whether a request is authorized. */
@@ -28,7 +63,9 @@ export type RouteSupabaseClients = {
  * fallback vs RLS-scoped-only reads) exactly as before — that policy differs
  * legitimately per route and is not something to collapse into one shared behavior.
  */
-export async function getRouteSupabaseClients(): Promise<RouteSupabaseClients | null> {
+export async function getRouteSupabaseClients(options?: {
+  verify?: RouteVerifyMode;
+}): Promise<RouteSupabaseClients | null> {
   // REST/DB reads (the `supabase` client below) always use the raw project
   // URL — only the auth-decision client (`supabaseAuth`) can be routed
   // through the auth.bluebeaconresearch.com proxy. See lib/supabase-auth-url.ts.
@@ -45,9 +82,7 @@ export async function getRouteSupabaseClients(): Promise<RouteSupabaseClients | 
     },
   });
 
-  const {
-    data: { user },
-  } = await supabaseAuth.auth.getUser();
+  const user = await resolveRouteUser(supabaseAuth.auth, options?.verify ?? "server");
 
   // SUPABASE_SECRET_KEY is Supabase's newer key-naming scheme; Vercel has
   // been migrated to it while Railway still uses the legacy name. Accept

@@ -18,7 +18,7 @@ function dayKey(iso: string): string {
 }
 
 export async function GET(_req: NextRequest) {
-  const clients = await getRouteSupabaseClients();
+  const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (!clients) {
     return apiError(500, "config_error");
   }

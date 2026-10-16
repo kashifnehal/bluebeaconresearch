@@ -116,7 +116,7 @@ The worker processes run independently in `apps/backend/src/workers.ts` managed 
 
 ## 4. Authentication & Security Architecture
 
-- **Supabase SSR Auth (`@supabase/ssr`)**: Manages session cookies in Next.js middleware (`apps/web/middleware.ts`) and Server Actions.
+- **Supabase SSR Auth (`@supabase/ssr`)**: Manages session cookies in Next.js proxy (`apps/web/proxy.ts`) and Server Actions. Read-only web requests verify the access token locally with `getClaims()`. A banned or deleted user keeps read access until their access token expires (the token lifetime set in Supabase Auth). `getUser()` checks the Auth server on every call and stays on writes, admin pages, settings, billing, telegram linking, and account routes.
 - **Fastify Bearer Auth**: `apps/backend/src/middleware/auth.ts` validates incoming Supabase JWT tokens via `supabase.auth.getUser(token)` or custom enterprise API keys (`api_keys` table lookup).
 - **Row Level Security (RLS)**: Enforced directly at the PostgreSQL layer. Tables (`profiles`, `alert_rules`, `webhook_endpoints`, `user_channels`) restrict read/write access strictly to `auth.uid() = user_id`.
 

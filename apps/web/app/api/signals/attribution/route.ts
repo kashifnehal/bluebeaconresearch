@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "direction must be up, down, or volatile" }, { status: 400 });
     }
 
-    const clients = await getRouteSupabaseClients();
+    const clients = await getRouteSupabaseClients({ verify: "claims" });
     if (!clients) return NextResponse.json({ results: [] });
     const { supabase, user } = clients;
     if (!user && process.env.NODE_ENV === "production") {

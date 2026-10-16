@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Read-only requests verify the access token locally, `apps/web`, 2026-10-16
+
+- `getRouteSupabaseClients({ verify: "claims" })` calls `getClaims()` and builds `{ id, email }`. The default stays `getUser()`. A banned or deleted user keeps read access until their access token expires (the token lifetime set in Supabase Auth). `getUser()` checks the Auth server on every call.
+- Claims on read-only GETs: signals list, signal detail, pulse, source-stats, attribution, driver-breakdown, alerts recent, alert rules, alert rule stats, prices, price history, market impact. Also the homepage signed-in flag, the homepage and how-it-works data clients, the watchlist follow signed-in check, and the proxy gate for protected pages. Admin pages, ingestion status, settings, onboarding, auth callback, profile, telegram, and every write stay on `getUser()`. The event-page alert insert stays on `getUser()` because it writes.
+- Docs: this entry; brain `08`, `14`, `05`, `03`; claude_project `09`, `08`, `14`, `05`, `03`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no component, table, prompt, or new standing rule.
+
 ## ✅ Ingestion status route is admin-only, `apps/web`, 2026-10-16
 
 - `GET /api/ingestion/status` uses `isAdminEmail`, the same allowlist as the admin pages. No session and a normal user both get 404. An admin still gets the previous JSON. No admin page calls this route; service status still uses the backend health route.

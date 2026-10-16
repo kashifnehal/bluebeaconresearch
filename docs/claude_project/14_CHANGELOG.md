@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-16 — Read-only requests verify the access token locally
+
+`apps/web` only. Read-only GETs use a local token check. Writes stay on the Auth server. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-16 — Ingestion status route is admin-only
 
 `apps/web` only. Missing session and a normal user get 404. Full detail: `docs/brain/14_CHANGELOG.md`.

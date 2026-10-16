@@ -128,18 +128,33 @@ function logAuthCheckError(err: unknown, phase: "failed" | "background") {
   );
 }
 
-// Races a live getUser() call against a timer and classifies the result.
+type ClaimsCheckResponse = {
+  data: { claims?: { sub?: string; email?: string } } | null;
+  error: { name?: string; message?: string; code?: string } | null;
+};
+
+export type AuthCheckResult = UserResponse | ClaimsCheckResponse;
+
+function userFromAuthResult(result: UserResponse | ClaimsCheckResponse): User | null {
+  if (!result.data) return null;
+  if ("user" in result.data) return result.data.user ?? null;
+  const sub = result.data.claims?.sub;
+  if (!sub) return null;
+  return { id: sub, email: result.data.claims?.email } as User;
+}
+
+// Races getUser() or getClaims() against a timer and classifies the result.
 // Takes the promise itself (rather than a Supabase client) so tests can pass
 // a controlled promise instead of hitting a real auth backend.
 export async function runAuthCheck(
-  getUserPromise: Promise<UserResponse>,
+  authPromise: Promise<AuthCheckResult>,
   timeoutMs: number = AUTH_CHECK_TIMEOUT_MS,
 ): Promise<{ outcome: AuthCheckOutcome; user: User | null }> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const authCheckStartedAt = Date.now();
   try {
     const result = await Promise.race([
-      getUserPromise,
+      authPromise,
       new Promise<typeof AUTH_CHECK_TIMEOUT>((resolve) => {
         timer = setTimeout(() => resolve(AUTH_CHECK_TIMEOUT), timeoutMs);
       }),
@@ -148,16 +163,17 @@ export async function runAuthCheck(
       console.warn("Middleware auth check timed out:", {
         elapsedMs: Date.now() - authCheckStartedAt,
       });
-      // Let getUser() finish in the background; swallow a later rejection so
+      // Let the auth call finish in the background; swallow a later rejection so
       // it does not become an unhandled promise.
-      void getUserPromise.catch((err: unknown) => {
+      void authPromise.catch((err: unknown) => {
         logAuthCheckError(err, "background");
       });
       return { outcome: "retryable", user: null };
     }
     if (result.error) throw result.error;
-    if (!result.data.user) return { outcome: "no-session", user: null };
-    return { outcome: "ok", user: result.data.user };
+    const user = userFromAuthResult(result);
+    if (!user) return { outcome: "no-session", user: null };
+    return { outcome: "ok", user };
   } catch (err: unknown) {
     logAuthCheckError(err, "failed");
     return { outcome: classifyAuthFailure(err), user: null };
@@ -241,10 +257,16 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // getUser() validates the JWT server-side against Supabase, so expired or
-  // revoked tokens are rejected in production. Race against a timer rather
-  // than aborting fetch: the request may still complete in the background.
-  const { outcome } = await runAuthCheck(supabase.auth.getUser());
+  // Protected pages verify the access token locally with getClaims() (asymmetric
+  // key, cached public keys). A banned or deleted user keeps read access until
+  // their access token expires (the token lifetime set in Supabase Auth).
+  // getUser() checks the Auth server on every call; admin pages stay on that
+  // path. Race against a timer rather than aborting fetch: the request may
+  // still complete in the background.
+  const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
+  const { outcome } = await runAuthCheck(
+    isAdminPage ? supabase.auth.getUser() : supabase.auth.getClaims(),
+  );
   const action = decideAuthAction(outcome, hasSupabaseAuthCookie(request));
 
   if (action === "allow") {

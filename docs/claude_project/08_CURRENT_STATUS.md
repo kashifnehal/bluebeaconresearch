@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-16 (ingestion status route is admin-only — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-16 (read-only requests verify the access token locally — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-16 (local token check, `apps/web` only) — read-only GETs and protected pages use `getClaims()`. Writes and account routes stay on `getUser()`. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-16 (ingestion status route, `apps/web` only) — `GET /api/ingestion/status` returns 404 unless the caller is on the admin email allowlist. See `docs/brain/LIVE_TODO.md`.
 

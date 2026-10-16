@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "unknown symbol" }, { status: 400 });
     }
 
-    const clients = await getRouteSupabaseClients();
+    const clients = await getRouteSupabaseClients({ verify: "claims" });
     if (!clients) return NextResponse.json({ error: "unavailable" }, { status: 200 });
     const { supabase, user } = clients;
     if (!user && process.env.NODE_ENV === "production") {

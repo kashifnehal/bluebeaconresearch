@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-16 — Read-only requests verify the access token locally
+
+`apps/web` only. Read-only GETs and the protected-page gate use `getClaims()`. Writes, admin pages, settings, and account routes stay on `getUser()`. A banned or deleted user keeps read access until the access token expires. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-16 — Ingestion status route is admin-only
 
 `apps/web` only. `GET /api/ingestion/status` uses the admin email allowlist. Everyone else gets 404. The JSON for an admin is unchanged. Full detail: `LIVE_TODO.md`.

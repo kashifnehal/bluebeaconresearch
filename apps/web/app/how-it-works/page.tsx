@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 // returns 0 rows for a logged-out visitor. Prefer the service-role client
 // (same pattern as getHomepageStats() in app/page.tsx).
 async function getStatsClient() {
-  const clients = await getRouteSupabaseClients();
+  const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (clients?.supabase) return clients.supabase;
   return createClient();
 }
