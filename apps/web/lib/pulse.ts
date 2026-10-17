@@ -34,8 +34,11 @@ export type PulseCounts = {
  * Up / down / other use the impact whose asset is this symbol, over `last24h` only.
  * In all-assets mode, every distinct asset named on a signal (across both
  * impact columns, de-duplicated per signal) counts as one up/down/other vote
- * — DESIGN CHOICE, not measured.
+ * — DESIGN CHOICE, not measured. The home tile calls that "Asset direction votes".
  */
+export const ALL_ASSETS_DIRECTION_LABEL = "Asset direction votes";
+export const ALL_ASSETS_DIRECTION_CAPTION =
+  "One vote per asset per signal, so one signal can add several.";
 export function computePulse(
   rows: readonly PulseSignalRow[],
   symbol: string | null,

@@ -1,7 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { PulseCounts } from "@/lib/pulse";
+import {
+  ALL_ASSETS_DIRECTION_CAPTION,
+  ALL_ASSETS_DIRECTION_LABEL,
+  type PulseCounts,
+} from "@/lib/pulse";
 import { formatDataAsOf } from "@/lib/utils";
 
 type PulseResponse = PulseCounts & { error?: string };
@@ -38,9 +42,9 @@ function tileValue(pulse: PulseCounts | null, key: (typeof TILES)[number]["key"]
 }
 
 /**
- * Signal pulse for one asset, or (when `symbol` is omitted) for every asset
- * — the dashboard's top-of-page tiles use the same route without a symbol
- * filter, same labels and styling as the per-asset version.
+ * Signal pulse for one asset, or (when `symbol` is omitted) for every asset.
+ * All-assets mode renames the direction tile, because that count is one vote
+ * per asset per signal. Single-asset labels stay as they are.
  */
 export function PulseTiles({ symbol }: { symbol?: string }) {
   const { data, isSuccess, isError, dataUpdatedAt } = useQuery({
@@ -57,23 +61,35 @@ export function PulseTiles({ symbol }: { symbol?: string }) {
 
   const pulse = isSuccess ? data : null;
   const asOf = isSuccess ? formatDataAsOf(dataUpdatedAt) : null;
+  const allAssets = !symbol;
 
   return (
     <section className="mb-8" aria-label="Signal pulse" data-testid="pulse-tiles">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {TILES.map((tile) => (
-          <div
-            key={tile.key}
-            data-testid={tile.testId}
-            title={tile.key === "last24h" ? "Counts signals BBR published in the last 24 hours." : undefined}
-            className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-4"
-          >
-            <p className="font-label text-[11px] md:text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
-              {tile.label}
-            </p>
-            <p className="font-mono text-2xl font-bold text-on-surface mt-2">{tileValue(pulse, tile.key)}</p>
-          </div>
-        ))}
+        {TILES.map((tile) => {
+          const label = tile.key === "direction" && allAssets ? ALL_ASSETS_DIRECTION_LABEL : tile.label;
+          return (
+            <div
+              key={tile.key}
+              data-testid={tile.testId}
+              title={tile.key === "last24h" ? "Counts signals BBR published in the last 24 hours." : undefined}
+              className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-4"
+            >
+              <p className="font-label text-[11px] md:text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
+                {label}
+              </p>
+              <p className="font-mono text-2xl font-bold text-on-surface mt-2">{tileValue(pulse, tile.key)}</p>
+              {tile.key === "direction" && allAssets ? (
+                <p
+                  data-testid="pulse-direction-caption"
+                  className="mt-2 text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 leading-snug"
+                >
+                  {ALL_ASSETS_DIRECTION_CAPTION}
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
       </div>
       {isError ? (
         <p className="mt-3 text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest">

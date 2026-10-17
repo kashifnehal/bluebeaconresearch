@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-18 — Home pulse direction tile explains asset votes
+
+`apps/web` only. On the dashboard home, the direction tile is labelled "Asset direction votes" with the line "One vote per asset per signal, so one signal can add several." A single asset still shows "Up / Down" with no caption. Not browser-checked.
+
 ### 2026-10-18 — Same-title merge measurement
 
 `apps/backend` only. Read-only `measure:duplicate-titles` counts unmerged same-title pairs among signals created in the last 30 days. 769 signals, 3 pairs, 6 signals (0.8%). The three first-reasons were one each: region differs, event date outside the 8-hour window, summary Jaccard below 0.33. No reason reached half the pairs, so the merge rule was not changed. The 0.33 threshold was left as it is. The report file under `apps/backend/scripts/out/` is git-ignored.

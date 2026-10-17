@@ -3,6 +3,11 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Home pulse direction tile explains asset votes, `apps/web`, 2026-10-18
+
+- All-assets mode (dashboard home) labels the direction tile "Asset direction votes" and adds "One vote per asset per signal, so one signal can add several." Single-asset labels are unchanged. The count is still one vote per distinct asset per signal.
+- Render test covers both modes. Not browser-checked.
+
 ## ✅ Trust page ACLED line uses fixed sentences, `apps/web`, 2026-10-18
 
 - `/how-it-works` still reads the latest service_health_events row for ACLED. Connected prints "ACLED conflict data: connected." Any other stored state prints "ACLED conflict data: not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed.

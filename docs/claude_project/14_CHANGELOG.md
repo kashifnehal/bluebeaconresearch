@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-18 — Home pulse direction tile explains asset votes
+
+`apps/web` only. The dashboard home direction tile is labelled "Asset direction votes" and says one signal can add several votes. A single asset still shows "Up / Down". Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-18 — Same-title merge measurement
 
 `apps/backend` only. Read-only script over signals created in the last 30 days: 769 signals, 3 unmerged same-title pairs, 6 signals (0.8%). Reasons split one each across region differs, event date outside the 8-hour window, and summary Jaccard below 0.33. No merge-path change. Full detail: `docs/brain/LIVE_TODO.md`.
