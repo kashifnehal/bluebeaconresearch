@@ -3,6 +3,11 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Trust page ACLED line uses fixed sentences, `apps/web`, 2026-10-18
+
+- `/how-it-works` still reads the latest service_health_events row for ACLED. Connected prints "ACLED conflict data: connected." Any other stored state prints "ACLED conflict data: not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed.
+- Test covers a connected row, the access-denied detail, and no row. Not browser-checked.
+
 ## ✅ Marker citation popovers use plain language and stay open on an inside press, `apps/web`, 2026-10-18
 
 - "Since then" and "Reports" explanations no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover.

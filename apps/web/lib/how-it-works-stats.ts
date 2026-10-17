@@ -145,15 +145,17 @@ export type HowItWorksAcledClient = {
   };
 };
 
+const ACLED_CONNECTED = "ACLED conflict data: connected.";
+const ACLED_NOT_CONNECTED =
+  "ACLED conflict data: not connected. Conflict signals use news sources only.";
+
 /**
- * Current ACLED collector state, read live from the most recent
- * `service_health_events` row for `service = 'acled'` (written by
- * apps/backend/src/workers/acled-collector.ts). Always returns a sentence —
- * there is nothing to hide here, only an honest "we don't know" when the
- * query itself fails.
+ * Current ACLED collector state from the latest service_health_events row
+ * for service "acled". A connected row becomes a fixed sentence. Any other
+ * stored state, including an error detail, becomes a different fixed
+ * sentence. No row hides the line. Stored detail text is never printed.
  */
-export async function loadAcledState(getClient: () => Promise<HowItWorksAcledClient>): Promise<string> {
-  const unavailable = "ACLED conflict data: live state unavailable right now.";
+export async function loadAcledState(getClient: () => Promise<HowItWorksAcledClient>): Promise<string | null> {
   try {
     const supabase = await getClient();
     const { data, error } = await supabase
@@ -165,16 +167,13 @@ export async function loadAcledState(getClient: () => Promise<HowItWorksAcledCli
       .maybeSingle();
     if (error) {
       console.error("[how-it-works] ACLED health query failed:", error);
-      return unavailable;
+      return ACLED_NOT_CONNECTED;
     }
-    if (!data) return "ACLED conflict data: no health events recorded yet.";
-    if (data.status === "ok") {
-      return `ACLED conflict data: last reported healthy (${data.detail ?? "ok"}).`;
-    }
-    const detail = data.detail ?? "not currently healthy";
-    return `ACLED conflict data: ${detail}${detail.endsWith(".") ? "" : "."}`;
+    if (!data) return null;
+    if (data.status === "ok") return ACLED_CONNECTED;
+    return ACLED_NOT_CONNECTED;
   } catch (err) {
     console.error("[how-it-works] ACLED health query threw:", err);
-    return unavailable;
+    return ACLED_NOT_CONNECTED;
   }
 }

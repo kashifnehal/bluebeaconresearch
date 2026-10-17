@@ -686,6 +686,8 @@ the seventh is backed by `classifyEvent()` and the briefing/chat instructions
 Laid out as a responsive CSS grid, not an HTML `<table>`, so it never needs horizontal
 scroll at phone width. A short **Limits** list follows.
 
+> ⚠️ UPDATED 2026-10-18 — the ACLED limit line still reads the latest service_health_events row, and now prints a fixed sentence: "connected." or "not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed.
+
 > ⚠️ UPDATED 2026-10-17 (WEB-FINISH task 4) — correction: the Limits list's ACLED
 > line and keyword-fallback line were static hardcoded text as of ship time, not
 > actually checked live against `service_health_events` as the paragraph above used

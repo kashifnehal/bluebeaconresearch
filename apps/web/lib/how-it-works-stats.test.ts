@@ -201,29 +201,34 @@ async function main() {
     return client;
   }
 
-  await runAsync("loadAcledState reports a healthy row's own detail text", async () => {
-    const client = fakeAcledClient({ data: { status: "ok", detail: "fetched 12 event(s)" }, error: null });
-    const state = await loadAcledState(async () => client);
-    assert.equal(state, "ACLED conflict data: last reported healthy (fetched 12 event(s)).");
-  });
-
-  await runAsync("loadAcledState reports an error row's own detail text, not a guess", async () => {
-    const client = fakeAcledClient({
-      data: { status: "error", detail: "ACLED data access denied (HTTP 403). Awaiting licence or tier upgrade. Login works." },
-      error: null,
-    });
-    const state = await loadAcledState(async () => client);
-    assert.equal(
-      state,
-      "ACLED conflict data: ACLED data access denied (HTTP 403). Awaiting licence or tier upgrade. Login works.",
-    );
-  });
-
-  await runAsync("loadAcledState handles no row and a query error without fabricating a status", async () => {
-    const noRowClient = fakeAcledClient({ data: null, error: null });
-    assert.equal(await loadAcledState(async () => noRowClient), "ACLED conflict data: no health events recorded yet.");
-    const erroredClient = fakeAcledClient({ data: null, error: new Error("boom") });
-    assert.equal(await loadAcledState(async () => erroredClient), "ACLED conflict data: live state unavailable right now.");
+  await runAsync("loadAcledState maps three stored inputs to fixed lines and never prints the error text", async () => {
+    const inputs: Array<{
+      result: { data: { status: string; detail: string } | null; error: unknown };
+      expected: string | null;
+    }> = [
+      { result: { data: { status: "ok", detail: "fetched 12 event(s)" }, error: null }, expected: "ACLED conflict data: connected." },
+      {
+        result: {
+          data: {
+            status: "error",
+            detail: "ACLED data access denied (HTTP 403). Awaiting licence or tier upgrade. Login works.",
+          },
+          error: null,
+        },
+        expected: "ACLED conflict data: not connected. Conflict signals use news sources only.",
+      },
+      { result: { data: null, error: null }, expected: null },
+    ];
+    const shown: string[] = [];
+    for (const input of inputs) {
+      const state = await loadAcledState(async () => fakeAcledClient(input.result));
+      assert.equal(state, input.expected);
+      if (state) shown.push(state);
+    }
+    const text = shown.join("\n");
+    for (const word of ["HTTP", "403", "licence", "Login"]) {
+      assert.equal(text.includes(word), false, word);
+    }
   });
 }
 

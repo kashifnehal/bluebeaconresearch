@@ -122,7 +122,7 @@ async function getLimits(): Promise<string[]> {
       : "No signals in the last 7 days to compute a keyword-fallback share from.",
   );
 
-  limits.push(acledState);
+  if (acledState) limits.push(acledState);
 
   limits.push(
     "A merged \"reports\" count can include more than one article from the same outlet — it is not a count of distinct sources.",

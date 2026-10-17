@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-18.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-18 — Trust page ACLED line (`apps/web`) prints a fixed connected or not-connected sentence. No row hides the line. Stored error text is not printed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-18 — Marker "Since then" and "Reports" popovers use plain language (`apps/web`). A press inside the popover does not close the hover card. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-18 — Chart markers drawn closer than 24px now merge until every neighbouring pair is at least 24px apart (`apps/web`). The marker label uses the same local date and time as the list under the chart. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-18 — Trust page ACLED line uses fixed sentences
+
+`apps/web` only. `/how-it-works` still reads the latest service_health_events row for ACLED. A connected row prints "ACLED conflict data: connected." Any other stored state prints "ACLED conflict data: not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed. Not browser-checked.
+
 ### 2026-10-18 — Marker citation popovers use plain language
 
 `apps/web` only. The "Since then" and "Reports" popovers no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover. Not browser-checked.
