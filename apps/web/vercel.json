@@ -1,5 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "npx turbo-ignore --fallback=HEAD^1",
-  "regions": ["hnd1"]
+  "ignoreCommand": "npx turbo-ignore --fallback=HEAD^1"
 }
