@@ -3,7 +3,12 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { ChartEventMarker, ChartMarkerLabel } from "./ChartEventMarker";
-import { ChartMarkerCard, PRICE_CONTEXT_NOTE } from "./ChartMarkerCard";
+import {
+  ChartMarkerCard,
+  PRICE_CONTEXT_NOTE,
+  REPORTS_CITATION,
+  SINCE_THEN_CITATION,
+} from "./ChartMarkerCard";
 import { moveSinceEvent } from "@/lib/move-since-event";
 import type { ChartMarker } from "@/lib/chart-markers";
 
@@ -140,6 +145,14 @@ runTest("card for one signal shows title, time, severity, direction for this ass
   assert.match(html, />Reports</);
   assert.match(html, />4</);
   assert.doesNotMatch(html, /\b(buy|sell|caused)\b/i);
+  // Reports has an info-citation trigger; its popover only mounts on click,
+  // so SSR markup carries the accessible trigger — the citation text itself
+  // is checked directly below against the real merge code's behavior.
+  assert.match(html, /data-testid="info-citation-trigger"/);
+  assert.match(html, /How &quot;Reports&quot; is calculated/);
+  assert.match(REPORTS_CITATION, /sources_count/);
+  assert.match(REPORTS_CITATION, /apps\/backend\/src\/workers\/signal-merge\.ts/);
+  assert.match(REPORTS_CITATION, /not\s+distinct news outlets/);
 });
 
 runTest("card for a merged marker lists up to three titles and a remainder", () => {
@@ -181,6 +194,11 @@ runTest("card shows Price at the event, Since then, horizons and the descriptive
   assert.match(html, /\+1\.00% \/ — \/ —/);
   assert.ok(html.includes(PRICE_CONTEXT_NOTE));
   assert.doesNotMatch(html, /\b(buy|sell|caused|because)\b/i);
+  // Since then has an info-citation trigger; its popover text is checked
+  // directly against the real table and code file below.
+  assert.match(html, /How &quot;Since then&quot; is calculated/);
+  assert.match(SINCE_THEN_CITATION, /commodity_prices/);
+  assert.match(SINCE_THEN_CITATION, /apps\/web\/lib\/move-since-event\.ts/);
 });
 
 runTest("card says Not available when the series has no point for the event", () => {

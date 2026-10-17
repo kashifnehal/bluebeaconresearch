@@ -1,4 +1,6 @@
+import type { FocusEvent } from "react";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
+import { InfoCitation } from "@/components/ui/InfoCitation";
 import { directionLabel, type ChartMarker } from "@/lib/chart-markers";
 import type { MoveSinceEvent } from "@/lib/move-since-event";
 
@@ -9,6 +11,17 @@ export type MarkerPriceContext =
 export const PRICE_CONTEXT_NOTE =
   "Descriptive only. Other news and market moves also affect price.";
 export const WEEKLY_UNAVAILABLE = "Not available on weekly data";
+
+// Info-citation popover text, as plain exported strings so a test can check
+// the claim against the real source without needing the popover open.
+export const SINCE_THEN_CITATION =
+  "Percent change from the price at or just after this signal's event time " +
+  "to the latest stored price, both from the commodity_prices table " +
+  "(90-day series). Computed in apps/web/lib/move-since-event.ts.";
+export const REPORTS_CITATION =
+  "Counts merged reports folded into this signal as it was tracked, not " +
+  "distinct news outlets — each time a new raw event matches, " +
+  "sources_count increments by 1. See apps/backend/src/workers/signal-merge.ts.";
 
 function formatPrice(price: number): string {
   return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -48,7 +61,10 @@ function PriceContext({ context }: { context: MarkerPriceContext }) {
           </dd>
         </div>
         <div className="flex justify-between gap-3">
-          <dt>Since then</dt>
+          <dt className="flex items-center">
+            Since then
+            <InfoCitation label="Since then">{SINCE_THEN_CITATION}</InfoCitation>
+          </dt>
           <dd className="text-right" title={move.latest ? `Latest point: ${formatPointTime(move.latest.t)}` : undefined}>
             {move.latest && move.sincePct != null
               ? `${formatPct(move.sincePct)} (${formatPrice(move.latest.price)})`
@@ -89,6 +105,10 @@ export function ChartMarkerCard({
   x,
   boxWidth,
   priceContext,
+  onMouseEnter,
+  onMouseLeave,
+  onFocus,
+  onBlur,
 }: {
   id: string;
   marker: ChartMarker;
@@ -98,6 +118,15 @@ export function ChartMarkerCard({
   boxWidth: number;
   /** Shown for a single signal only; omitted for merged markers. */
   priceContext?: MarkerPriceContext;
+  /**
+   * The card itself is interactive (the info-citation "i" buttons), so
+   * unlike a plain tooltip it must stay open while the pointer or keyboard
+   * focus is inside it, not only while it's on the marker that opened it.
+   */
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  onFocus?: () => void;
+  onBlur?: (e: FocusEvent<HTMLDivElement>) => void;
 }) {
   const half = CARD_WIDTH / 2;
   const left = Math.min(Math.max(x, half), Math.max(half, boxWidth - half));
@@ -111,8 +140,12 @@ export function ChartMarkerCard({
       id={id}
       role="tooltip"
       data-testid="chart-marker-card"
-      className="pointer-events-none absolute top-6 z-10 rounded-lg border border-outline-variant/40 bg-[#141414] p-3 text-left shadow-lg"
+      className="absolute top-6 z-10 rounded-lg border border-outline-variant/40 bg-[#141414] p-3 text-left shadow-lg"
       style={{ left, width: CARD_WIDTH, transform: "translateX(-50%)" }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onFocus={onFocus}
+      onBlur={onBlur}
     >
       {marker.count > 1 ? (
         <>
@@ -162,7 +195,10 @@ export function ChartMarkerCard({
               <dd>{directionLabel(first.direction)}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt>Reports</dt>
+              <dt className="flex items-center">
+                Reports
+                <InfoCitation label="Reports">{REPORTS_CITATION}</InfoCitation>
+              </dt>
               <dd>{first.sourcesCount}</dd>
             </div>
           </dl>

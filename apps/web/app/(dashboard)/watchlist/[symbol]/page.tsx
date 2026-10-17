@@ -481,6 +481,22 @@ export default function WatchlistSymbolPage() {
     return buildMarkers(inputs, domain, chartBoxWidth);
   }, [chartData, markerSignals, symbol, isForex, activeRange.source, chartBoxWidth]);
   const [activeMarker, setActiveMarker] = useState<{ marker: ChartMarker; x: number } | null>(null);
+  // The marker card now holds interactive info-citation buttons, so closing
+  // it can't happen the instant the pointer/focus leaves the marker itself —
+  // there has to be a short grace window to let it land on the card. Any
+  // enter/focus on either the marker or the card cancels a pending close.
+  const activeMarkerCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function clearActiveMarkerCloseTimer() {
+    if (activeMarkerCloseTimer.current) {
+      clearTimeout(activeMarkerCloseTimer.current);
+      activeMarkerCloseTimer.current = null;
+    }
+  }
+  function scheduleActiveMarkerClose() {
+    clearActiveMarkerCloseTimer();
+    activeMarkerCloseTimer.current = setTimeout(() => setActiveMarker(null), 150);
+  }
+  useEffect(() => clearActiveMarkerCloseTimer, []);
 
   // Price context for a single-signal marker card. Weekly (Yahoo) ranges have
   // one point a week, so a move since the event would not be a real
@@ -954,8 +970,11 @@ export default function WatchlistSymbolPage() {
                               marker={m}
                               active={activeMarker?.marker.key === m.key}
                               describedBy="chart-marker-card"
-                              onActivate={(mk, x) => setActiveMarker({ marker: mk, x })}
-                              onDeactivate={() => setActiveMarker(null)}
+                              onActivate={(mk, x) => {
+                                clearActiveMarkerCloseTimer();
+                                setActiveMarker({ marker: mk, x });
+                              }}
+                              onDeactivate={scheduleActiveMarkerClose}
                               onSelect={handleMarkerSelect}
                             />
                           ),
@@ -972,6 +991,14 @@ export default function WatchlistSymbolPage() {
                   x={activeMarker.x}
                   boxWidth={chartBoxRef.current?.clientWidth ?? 0}
                   priceContext={markerPriceContext}
+                  onMouseEnter={clearActiveMarkerCloseTimer}
+                  onMouseLeave={scheduleActiveMarkerClose}
+                  onFocus={clearActiveMarkerCloseTimer}
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                      scheduleActiveMarkerClose();
+                    }
+                  }}
                 />
               )}
               {markerList && !isOverlayActive && (
