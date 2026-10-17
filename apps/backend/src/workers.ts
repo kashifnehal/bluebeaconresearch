@@ -28,6 +28,7 @@ import { getSupabaseAdmin } from "./clients/supabase.js";
 import { checkMonthlySpend } from "./lib/monthly-spend-warning.js";
 import { checkCollectionStalled } from "./lib/collection-stalled-alert.js";
 import { checkBudgetNearCap } from "./lib/budget-warning-alert.js";
+import { checkCategoryGuard } from "./lib/category-guard-alert.js";
 import { checkFeedVolume } from "./lib/feed-volume-alarm.js";
 import { runGateDriftOnce } from "./lib/gate-drift.js";
 import { checkCategoryCoverage } from "./lib/category-guard.js";
@@ -394,6 +395,13 @@ async function main() {
       app.log.info({ nearCap }, "budget-warning-alert complete");
     } catch (e) {
       app.log.error({ err: e }, "budget-warning-alert failed");
+      Sentry.captureException(e);
+    }
+    try {
+      const categoryGuard = await checkCategoryGuard();
+      app.log.info({ categoryGuard }, "category-guard-alert complete");
+    } catch (e) {
+      app.log.error({ err: e }, "category-guard-alert failed");
       Sentry.captureException(e);
     }
   });
