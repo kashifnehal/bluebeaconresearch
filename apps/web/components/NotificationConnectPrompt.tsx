@@ -103,7 +103,7 @@ export function NotificationConnectPrompt() {
         className="font-bold text-sm mb-1"
         style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
       >
-        Get alerted the moment this happens again
+        Get alerted when a similar event is reported again
       </p>
       <p className="text-xs text-[var(--text-muted)] mb-4">
         Connect Telegram to receive this kind of signal. Settings

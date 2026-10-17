@@ -28,7 +28,7 @@ export function NotificationConnectModal() {
             </div>
             <div>
               <h2 className="font-bold text-lg" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-                Get alerted the moment this happens again
+                Get alerted when a similar event is reported again
               </h2>
               <p className="text-xs text-[var(--text-muted)] font-mono">
                 Connect Telegram to receive signal alerts
