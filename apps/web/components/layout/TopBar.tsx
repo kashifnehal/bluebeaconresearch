@@ -83,8 +83,8 @@ export function TopBar() {
         className="fixed top-0 right-0 left-0 md:left-[256px] z-40 flex items-center justify-between px-6"
         style={{
           height: "64px",
-          backgroundColor: "#000000",
-          borderBottom: "1px solid #2a2a2a",
+          backgroundColor: "var(--bg-app)",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         {/* Search Bar. Mobile nav is MobileTabBar's "More" tab now (below
@@ -103,10 +103,10 @@ export function TopBar() {
               onClick={() => setCommandPaletteOpen(true)}
               className="w-full border-none border-b focus:ring-0 text-xs py-2 pl-10 pr-8 text-left"
               style={{
-                backgroundColor: "#0e0e0e",
+                backgroundColor: "var(--bg-app)",
                 borderBottom: "1px solid var(--border)",
                 color: "var(--text-muted)",
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: "'IBM Plex Sans', sans-serif",
                 outline: "none",
                 cursor: "pointer",
               }}
@@ -133,7 +133,7 @@ export function TopBar() {
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--interactive)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
@@ -160,7 +160,7 @@ export function TopBar() {
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--interactive)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
@@ -175,7 +175,7 @@ export function TopBar() {
                   notifications
                 </span>
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ee7d77] animate-pulse" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[var(--price-down)] animate-pulse" />
                 )}
               </span>
             </button>
@@ -193,7 +193,7 @@ export function TopBar() {
                 cursor: "pointer",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--accent)";
+                (e.currentTarget as HTMLButtonElement).style.color = "var(--interactive)";
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
@@ -221,9 +221,9 @@ export function TopBar() {
                 <div
                   style={{
                     fontSize: "12px",
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    color: "var(--accent)",
-                    letterSpacing: "0.05em",
+                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    color: "var(--interactive)",
+                    
                   }}
                 >
                   {user?.name || "Account"}
@@ -231,7 +231,7 @@ export function TopBar() {
                 <div
                   style={{
                     fontSize: "10px",
-                    fontFamily: "'JetBrains Mono', monospace",
+                    fontFamily: "'IBM Plex Sans', sans-serif",
                     color: "var(--text-muted)",
                   }}
                 >
@@ -256,10 +256,10 @@ export function TopBar() {
                     width: "32px",
                     height: "32px",
                     fontSize: "10px",
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    backgroundColor: avatarOpen ? "var(--accent)" : "#2a2a2a",
+                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    backgroundColor: avatarOpen ? "var(--interactive)" : "var(--bg-elevated)",
                     borderColor: "var(--border)",
-                    color: avatarOpen ? "#003824" : "var(--accent)",
+                    color: avatarOpen ? "var(--on-interactive-bg)" : "var(--interactive)",
                   }}
                 >
                   {user?.initials || "GS"}
@@ -270,11 +270,11 @@ export function TopBar() {
             {/* Dropdown Menu */}
             {avatarOpen && (
               <div
-                className="absolute right-0 mt-2 w-56 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md shadow-2xl z-50 py-2 text-xs text-[#e5e2e1] animate-in fade-in slide-in-from-top-2 duration-150"
-                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                className="absolute right-0 mt-2 w-56 bg-[var(--bg-primary)] border border-[var(--border)] rounded-md shadow-2xl z-50 py-2 text-xs text-[var(--text-primary)] animate-in fade-in slide-in-from-top-2 duration-150"
+                style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
               >
-                <div className="px-4 py-2 border-b border-[#2a2a2a]">
-                  <p className="font-bold text-[#e5e2e1] truncate">
+                <div className="px-4 py-2 border-b border-[var(--border)]">
+                  <p className="font-bold text-[var(--text-primary)] truncate">
                     {user?.name || "Terminal User"}
                   </p>
                   <p className="text-[12px] md:text-[10px] text-[var(--text-muted)] font-mono truncate">
@@ -288,7 +288,7 @@ export function TopBar() {
                       setAvatarOpen(false);
                       router.push("/help");
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--accent)] flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--interactive)] flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="material-symbols-outlined"
@@ -304,7 +304,7 @@ export function TopBar() {
                       setAvatarOpen(false);
                       router.push("/settings");
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--accent)] flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--interactive)] flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="material-symbols-outlined"
@@ -320,7 +320,7 @@ export function TopBar() {
                       setAvatarOpen(false);
                       router.push("/alerts");
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--accent)] flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-[var(--bg-container)] hover:text-[var(--interactive)] flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="material-symbols-outlined"
@@ -332,10 +332,10 @@ export function TopBar() {
                   </button>
                 </div>
 
-                <div className="border-t border-[#2a2a2a] pt-1">
+                <div className="border-t border-[var(--border)] pt-1">
                   <button
                     onClick={handleSignOut}
-                    className="w-full text-left px-4 py-2 hover:bg-[#7f2927]/20 text-[#ff9993] flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-[var(--danger-subtle)]/20 text-[var(--on-danger-subtle)] flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="material-symbols-outlined"

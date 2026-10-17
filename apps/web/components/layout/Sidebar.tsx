@@ -10,14 +10,14 @@ import { Logo } from "@/components/Logo";
 type NavItem = { href: string; label: string; icon: string; showBadge?: boolean };
 
 const NAV: NavItem[] = [
-  { href: "/dashboard", label: "INTELLIGENCE FEED", icon: "rss_feed" },
-  { href: "/map", label: "GLOBAL MAP", icon: "public" },
-  { href: "/alerts", label: "ALERTS", icon: "notifications_active", showBadge: true },
-  { href: "/calendar", label: "CALENDAR", icon: "calendar_month" },
-  { href: "/archive", label: "ARCHIVE", icon: "archive" },
-  { href: "/watchlist", label: "WATCHLIST", icon: "visibility" },
-  { href: "/backtesting", label: "BACKTESTING", icon: "history" },
-  { href: "/settings", label: "SETTINGS", icon: "settings" },
+  { href: "/dashboard", label: "Intelligence feed", icon: "rss_feed" },
+  { href: "/map", label: "Global map", icon: "public" },
+  { href: "/alerts", label: "Alerts", icon: "notifications_active", showBadge: true },
+  { href: "/calendar", label: "Calendar", icon: "calendar_month" },
+  { href: "/archive", label: "Archive", icon: "archive" },
+  { href: "/watchlist", label: "Watchlist", icon: "visibility" },
+  { href: "/backtesting", label: "Backtesting", icon: "history" },
+  { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
 export function Sidebar() {
@@ -65,7 +65,7 @@ export function Sidebar() {
       } md:translate-x-0`}
       style={{
         width: "256px",
-        backgroundColor: "#000000",
+        backgroundColor: "var(--bg-secondary)",
         borderRight: "1px solid var(--border)",
       }}
     >
@@ -74,7 +74,7 @@ export function Sidebar() {
         <div className="flex items-center gap-3 mb-8">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Logo variant="icon" className="h-5 shrink-0" />
-            <span className="font-headline font-bold text-sm tracking-tighter text-white">
+            <span className="font-headline font-semibold text-sm text-[var(--text-primary)]">
               Blue Beacon Research
             </span>
           </Link>
@@ -90,22 +90,21 @@ export function Sidebar() {
                 href={item.href}
                 className="flex items-center gap-3 px-3 py-2 transition-colors duration-150 relative"
                 style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: "12px",
-                  letterSpacing: "0.05em",
-                  color: active ? "var(--accent)" : "rgba(229,226,225,0.6)",
-                  borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
+                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontSize: "13px",
+                  color: active ? "var(--interactive)" : "var(--text-secondary)",
+                  borderLeft: active ? "2px solid var(--interactive)" : "2px solid transparent",
                   backgroundColor: active ? "var(--bg-primary)" : "transparent",
                 }}
                 onMouseEnter={(e) => {
                   if (!active) {
-                    (e.currentTarget as HTMLElement).style.color = "#e5e2e1";
+                    (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
                     (e.currentTarget as HTMLElement).style.backgroundColor = "var(--bg-primary)";
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!active) {
-                    (e.currentTarget as HTMLElement).style.color = "rgba(229,226,225,0.6)";
+                    (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
                     (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
                   }
                 }}
@@ -121,8 +120,8 @@ export function Sidebar() {
                   <span
                     className="ml-auto text-[12px] md:text-[8px] font-bold px-1.5 py-0.5"
                     style={{
-                      backgroundColor: "#7f2927",
-                      color: "#ff9993",
+                      backgroundColor: "var(--danger-subtle)",
+                      color: "var(--on-danger-subtle)",
                       borderRadius: "9999px",
                     }}
                     aria-label="unread alerts"
@@ -140,19 +139,19 @@ export function Sidebar() {
       {/* Footer */}
       <div
         className="mt-auto p-6 border-t space-y-2"
-        style={{ borderColor: "var(--border)", backgroundColor: "#0e0e0e" }}
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--bg-app)" }}
       >
-        <div className="text-[12px] md:text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--accent)" }}>
+        <div className="text-[12px] md:text-[10px] mb-4" style={{ fontFamily: "'IBM Plex Sans', sans-serif", color: "var(--interactive)" }}>
           Node: BB-ALPHA-09
         </div>
         <Link
           href="/help"
           className="flex items-center gap-2 w-full text-left transition-colors"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: pathname === "/help" || pathname.startsWith("/help/") ? "var(--accent)" : "rgba(229,226,225,0.6)", padding: 0 }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#e5e2e1"; }}
+          style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "12px", color: pathname === "/help" || pathname.startsWith("/help/") ? "var(--interactive)" : "var(--text-secondary)", padding: 0 }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.color =
-              pathname === "/help" || pathname.startsWith("/help/") ? "var(--accent)" : "rgba(229,226,225,0.6)";
+              pathname === "/help" || pathname.startsWith("/help/") ? "var(--interactive)" : "var(--text-secondary)";
           }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>help</span>
@@ -161,9 +160,9 @@ export function Sidebar() {
         <button
           onClick={handleReplayTour}
           className="md:hidden flex items-center gap-2 w-full text-left transition-colors"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: "rgba(229,226,225,0.6)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#e5e2e1"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(229,226,225,0.6)"; }}
+          style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "12px", color: "var(--text-secondary)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>replay</span>
           Replay Tour
@@ -171,9 +170,9 @@ export function Sidebar() {
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 w-full text-left transition-colors"
-          style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: "rgba(229,226,225,0.6)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ffb4ab"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(229,226,225,0.6)"; }}
+          style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "12px", color: "var(--text-secondary)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--danger)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>logout</span>
           Logout
