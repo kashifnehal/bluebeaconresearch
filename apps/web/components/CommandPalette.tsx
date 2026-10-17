@@ -22,7 +22,13 @@ type PaletteGroup = ResultGroup | "Suggested" | "Not sure? Try";
 
 type AssistResponse =
   | { status: "ok"; answer: string; title: string; url: string }
-  | { status: "no_confident_answer" };
+  | { status: "no_confident_answer" }
+  // The backend's /v1/search/assist returns 503 + "ai_temporarily_unavailable"
+  // specifically when today's Anthropic budget is closed (see
+  // apps/backend/src/routes/search.routes.ts, CHAT_BUDGET_EXCEEDED_MESSAGE).
+  // Kept distinct from "no_confident_answer" so the UI can say the AI
+  // feature itself is down, not "nothing matched".
+  | { status: "unavailable" };
 
 type ResultItem = {
   key: string;
@@ -174,6 +180,7 @@ export function CommandPalette() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: debouncedQuery }),
       });
+      if (res.status === 503) return { status: "unavailable" };
       if (!res.ok) return { status: "no_confident_answer" };
       const json = (await res.json()) as AssistResponse;
       if (json?.status === "ok" && json.answer && json.url) return json;
@@ -266,6 +273,12 @@ export function CommandPalette() {
     suggested.length === 0 &&
     fallback.length === 0 &&
     !assistFetching;
+
+  // 503 is a known, expected state (today's AI budget is closed) — never
+  // mention the budget or a schedule to the user, just that the AI feature
+  // specifically is down while plain search keeps working.
+  const assistUnavailable =
+    assistEnabled && !assistFetching && assistData?.status === "unavailable";
 
   const showAssistPending =
     hasQuery &&
@@ -417,6 +430,14 @@ export function CommandPalette() {
                       </button>
                     );
                   })}
+                </div>
+              )}
+              {assistUnavailable && suggested.length === 0 && (
+                <div
+                  data-testid="command-palette-assist-unavailable"
+                  className="mb-2 px-2 py-2 text-[12px] md:text-[10px] text-[var(--text-muted)] border-t border-[#2a2a2a] pt-2 last:mb-0"
+                >
+                  AI answers are unavailable right now. Page and signal search still work.
                 </div>
               )}
               {fallback.length > 0 && (
