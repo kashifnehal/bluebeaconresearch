@@ -219,6 +219,17 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Rate limit**: `rateLimitOrPass('signals-pulse:<ip>')`.
 - **Not a Fastify route.** `apps/web` only.
 
+
+#### `GET /api/cot` (Next.js route, 2026-10-17)
+
+- **Description**: Last 52 weeks of CFTC managed-money positions for one symbol, from `public.cot_positions`. Query: `symbol`. Reads `select *` for `symbol`, ordered by `report_date` descending, limit 52, and returns the rows oldest first. Uses `getRouteSupabaseClients` (the service client when the key is set, as in the pulse route). Public weekly data, so there is no session check.
+- **Symbol check**: same as the pulse route (`^[A-Z0-9_]+$`, then `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`). Otherwise `400`.
+- **Response `200 OK`**: `{ available: true, symbol, rows: [{ reportDate, long, short, net, spread }] }`. `net` is `mm_long − mm_short`; `spread` is `mm_spread` or null. Zero rows is still `available: true` and the panel shows nothing.
+- **Table missing or no `report_date` column** (`42P01`, `PGRST205`, `42703`): `{ available: false }` with `200`.
+- **Other database error**: `500 { error: "db_error" }`, `Cache-Control: no-store`.
+- **Cache-Control**: `public, s-maxage=3600, stale-while-revalidate=86400` on rows (data changes weekly). `{ available: false }` uses `public, s-maxage=300` so a table created later appears soon. Rate-limited, unavailable-client and error responses use `no-store`.
+- **Rate limit**: `rateLimitOrPass('cot:<ip>')`; over the limit returns `{ available: false, error: "rate_limited" }` with `200`.
+- **Not a Fastify route.** `apps/web` only. Table `public.cot_positions` is filled by the weekly collector; its migration was written, not applied, as of 2026-10-17.
 ---
 
 ### 2.2 Alert Rules & Dispatch Endpoints

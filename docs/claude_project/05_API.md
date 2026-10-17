@@ -313,6 +313,9 @@ A backfilled signal deliberately never triggers `dispatchAlertsForSignal` (see D
 #### GET /api/signals/pulse (Next.js BFF, 2026-10-15)
 Powers the watchlist symbol page's pulse tiles. Query: `symbol`. Counts signals by `created_at` over the last 24 hours and the prior 24 hours. Forex reads both impact columns and de-dupes by id. Unknown symbol is `400`. Failure responses carry `error` and no counts. Full detail: `docs/brain/05_API.md`.
 
+
+#### GET /api/cot (Next.js BFF, 2026-10-17)
+Last 52 weeks of CFTC managed-money positions for one symbol from `public.cot_positions`. Query: `symbol` (same validation as the pulse route; unknown is `400`). Returns `{ available: true, symbol, rows: [{ reportDate, long, short, net, spread }] }`, oldest first. A missing table or column (`42P01`, `PGRST205`, `42703`) returns `{ available: false }` with `200`. Other database errors are `500` with `no-store`. Rows carry `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`. Public data, no session check, rate-limited with `rateLimitOrPass('cot:<ip>')`. Full detail: `docs/brain/05_API.md`.
 ---
 
 #### GET /api/signals/driver-breakdown (Next.js BFF, doc 278 Part A, 2026-10-01; forex fix 2026-10-01; error-flag fix 2026-10-02)

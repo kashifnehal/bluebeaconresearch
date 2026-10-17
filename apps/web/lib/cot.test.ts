@@ -36,11 +36,12 @@ runTest("rows are normalised, sorted ascending, and net is long minus short", ()
   assert.equal(rows[1].spread, 10);
 });
 
-runTest("alternate column names are read and unusable rows are dropped", () => {
+runTest("rows missing a date, long or short are dropped", () => {
   const rows = normalizeCotRows([
-    { as_of_date: "2026-10-06", managed_money_long: 5, managed_money_short: 2 },
+    { report_date: "2026-10-06", mm_long: 5, mm_short: 2 },
     { report_date: "2026-10-13", mm_long: 5 },
     { report_date: "bad", mm_long: 1, mm_short: 1 },
+    { mm_long: 1, mm_short: 1 },
     null,
   ]);
   assert.equal(rows.length, 1);

@@ -8,6 +8,8 @@
 
 > ⚠️ NEW 2026-10-17 (story-thread measurement, `apps/backend` only) — read-only `measure:story-threads` groups the last 48 hours of signals. See `docs/brain/LIVE_TODO.md`.
 
+> ⚠️ NEW 2026-10-17 (asset chart markers, price context, positioning panel, copy; `apps/web` only) — labelled event markers on the asset price chart (also on weekly ranges), "price at the event" and "since then" in the marker card from existing points only, a CFTC managed-money panel below the chart that shows only when `/api/cot` has rows, and plainer alert and Monitor-plan copy. Function region `hnd1` was tried and reverted by the 15% rule. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+
 > ⚠️ NEW 2026-10-17 (CFTC COT collector, `apps/backend` plus one migration) — weekly Disaggregated Futures Only positioning into `public.cot_positions`. Migration written, not applied. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (digest send log, `apps/backend` plus one migration, `f6c693d`) — each digest run writes counters to `public.digest_send_log`. The migration is written and not applied. See `docs/brain/LIVE_TODO.md`.

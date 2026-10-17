@@ -23,18 +23,9 @@ export type CotPayload =
   | { available: false; error?: string }
   | { available: true; symbol: string; rows: CotRow[] };
 
-// The table is created by a separate change, so the column names are read
-// tolerantly: the first alias present wins. Rows without a date, long and
-// short are dropped.
-const DATE_KEYS = ["report_date", "as_of_date", "date"];
-const LONG_KEYS = ["mm_long", "managed_money_long", "m_money_positions_long_all"];
-const SHORT_KEYS = ["mm_short", "managed_money_short", "m_money_positions_short_all"];
-const SPREAD_KEYS = ["mm_spread", "managed_money_spread", "m_money_positions_spread_all"];
-
-function pick(row: Record<string, unknown>, keys: string[]): unknown {
-  for (const k of keys) if (row[k] != null) return row[k];
-  return undefined;
-}
+// Column names of public.cot_positions (migration 20261017180000, written and
+// not applied as of 2026-10-17): report_date, symbol, mm_long, mm_short,
+// mm_spread. Rows without a date, long and short are dropped.
 
 function toNumber(v: unknown): number | null {
   if (v == null || v === "") return null;
@@ -47,17 +38,17 @@ export function normalizeCotRows(raw: unknown[]): CotRow[] {
   for (const item of raw) {
     if (item == null || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
-    const dateRaw = pick(row, DATE_KEYS);
+    const dateRaw = row.report_date;
     const date = typeof dateRaw === "string" ? dateRaw.slice(0, 10) : null;
-    const long = toNumber(pick(row, LONG_KEYS));
-    const short = toNumber(pick(row, SHORT_KEYS));
+    const long = toNumber(row.mm_long);
+    const short = toNumber(row.mm_short);
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || long == null || short == null) continue;
     rows.push({
       reportDate: date,
       long,
       short,
       net: long - short,
-      spread: toNumber(pick(row, SPREAD_KEYS)),
+      spread: toNumber(row.mm_spread),
     });
   }
   return rows.sort((a, b) => a.reportDate.localeCompare(b.reportDate));

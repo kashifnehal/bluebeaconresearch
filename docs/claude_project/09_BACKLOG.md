@@ -8,6 +8,8 @@
 
 > ⚠️ UPDATED 2026-10-17 — Story-thread measurement script (`apps/backend`). Read-only `measure:story-threads` on the last 48 hours of signals. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
+> ⚠️ UPDATED 2026-10-17 — Asset chart markers, price context, weekly-range markers, CFTC positioning panel, alert and Monitor-plan copy shipped in `apps/web` (`8462405`, `9343849`, `591fd74`, `1d06214`, `3726098`). Function region `hnd1` tried and reverted (`cd12abb`, `171f178`); a signed-in re-test is queued. `/api/cot` returns `{ available: false }` until the `cot_positions` migration is applied. See `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-17 — Weekly CFTC positioning collector (`apps/backend` plus one migration). `public.cot_positions` is written, not applied. Eight mapped futures. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — Digest send log (`apps/backend` plus one migration, `f6c693d`). Each digest run writes counters to `public.digest_send_log`. The migration is written, not applied. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
