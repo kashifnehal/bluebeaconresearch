@@ -3,7 +3,7 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ Alerts badge sync is a rendered hook, `apps/web`, 2026-10-18
+## ✅ Alerts badge sync is a rendered hook, `apps/web`, 2026-10-18, `61773da`
 
 - `useSyncUnreadBadge` holds the same badge write as before: it waits for a settled alerts response, and an empty list still clears a leftover count. A small rendered probe feeds an empty list, no data, and three unread alerts, and fails if that probe renders more than 4 times.
 - Not browser-checked.
@@ -17,29 +17,29 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - No open priority-queue line. Nothing struck.
 - Docs: this entry; brain `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`; claude_project `09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`. Skipped both API docs, both database docs, both component docs, the AI-engine doc, the ingestion-pipeline doc, the migration checklist, and both decision docs — no route, table, component, prompt, collector change, migration, or standing rule.
 
-## ✅ Home pulse direction tile explains asset votes, `apps/web`, 2026-10-18
+## ✅ Home pulse direction tile explains asset votes, `apps/web`, 2026-10-18, `125bb0a`
 
 - All-assets mode (dashboard home) labels the direction tile "Asset direction votes" and adds "One vote per asset per signal, so one signal can add several." Single-asset labels are unchanged. The count is still one vote per distinct asset per signal.
 - Render test covers both modes. Not browser-checked.
 
 
-## ✅ Trust page ACLED line uses fixed sentences, `apps/web`, 2026-10-18
+## ✅ Trust page ACLED line uses fixed sentences, `apps/web`, 2026-10-18, `c7c0185`
 
 - `/how-it-works` still reads the latest service_health_events row for ACLED. Connected prints "ACLED conflict data: connected." Any other stored state prints "ACLED conflict data: not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed.
 - Test covers a connected row, the access-denied detail, and no row. Not browser-checked.
 
-## ✅ Marker citation popovers use plain language and stay open on an inside press, `apps/web`, 2026-10-18
+## ✅ Marker citation popovers use plain language and stay open on an inside press, `apps/web`, 2026-10-18, `169cfd7`
 
 - "Since then" and "Reports" explanations no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover.
 - Render test mounts the card, opens both popovers, and checks the card is still mounted after a press inside. Not browser-checked.
 
-## ✅ Chart markers no longer draw closer than 24px; label date matches the list, `apps/web`, 2026-10-18
+## ✅ Chart markers no longer draw closer than 24px; label date matches the list, `apps/web`, 2026-10-18, `83b6f04`
 
 - Groups were formed from the leftmost point, then drawn at the highest-severity member, so two neighbours could paint closer than 24px (USOIL 1M drew at 694, 730 and 736). A second pass merges adjacent groups until every neighbouring drawn pair is at least 24px apart. The merged marker stays on its highest-severity member and keeps every member. `MARKER_MERGE_PX` stays 24.
 - The marker label uses the same local date and time as the list under the chart, not a UTC calendar day.
 - Tests: `lib/chart-markers.test.ts` (the 694/730/736 gap, members kept once, a far marker unchanged, local label date). Not browser-checked.
 
-## ✅ Same-title merge measurement, `apps/backend`, 2026-10-18, this commit
+## ✅ Same-title merge measurement, `apps/backend`, 2026-10-18, `9d76402`
 
 - Read-only `measure:duplicate-titles` (`apps/backend/scripts/measure-duplicate-titles.ts`) over signals created in the last 30 days. A pair is two rows with the same normalized title (lower case, trimmed, collapsed spaces) whose `created_at` values are within 8 hours. Separate rows were not merged. Blank titles excluded: 0.
 - 769 signals in the window. 3 unmerged pairs, covering 6 signals (0.8%).

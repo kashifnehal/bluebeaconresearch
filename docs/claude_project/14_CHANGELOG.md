@@ -8,7 +8,7 @@
 
 ---
 
-## 2026-10-18 — Alerts badge sync is covered by a render test
+## 2026-10-18 — Alerts badge sync is covered by a render test (`61773da`)
 
 `apps/web` only. The badge write lives in `useSyncUnreadBadge` with the same behaviour: no data leaves the badge alone, and an empty list still clears it. A rendered probe fails above 4 renders. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
 
@@ -16,25 +16,25 @@
 
 `apps/backend` only. Re-ran the 7-day three-rule script. Rules unchanged. No winner chosen. Rule B: 322 groups, sizes 1=307, 2=14, 4=1. Full detail: `docs/brain/LIVE_TODO.md`.
 
-## 2026-10-18 — Home pulse direction tile explains asset votes
+## 2026-10-18 — Home pulse direction tile explains asset votes (`125bb0a`)
 
 `apps/web` only. The dashboard home direction tile is labelled "Asset direction votes" and says one signal can add several votes. A single asset still shows "Up / Down". Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
 
 
-## 2026-10-18 — Same-title merge measurement
+## 2026-10-18 — Same-title merge measurement (`9d76402`)
 
 `apps/backend` only. Read-only script over signals created in the last 30 days: 769 signals, 3 unmerged same-title pairs, 6 signals (0.8%). Reasons split one each across region differs, event date outside the 8-hour window, and summary Jaccard below 0.33. No merge-path change. Full detail: `docs/brain/LIVE_TODO.md`.
 
-## 2026-10-18 — Trust page ACLED line uses fixed sentences
+## 2026-10-18 — Trust page ACLED line uses fixed sentences (`c7c0185`)
 
 `apps/web` only. `/how-it-works` still reads the latest service_health_events row for ACLED and prints a fixed sentence: connected, or not connected with conflict signals using news sources only. No row hides the line. Stored error text is not printed. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
 
 
-## 2026-10-18 — Marker citation popovers use plain language
+## 2026-10-18 — Marker citation popovers use plain language (`169cfd7`)
 
 `apps/web` only. The "Since then" and "Reports" popovers no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
 
-## 2026-10-18 — Chart markers merge on drawn position; label uses the list date
+## 2026-10-18 — Chart markers merge on drawn position; label uses the list date (`83b6f04`)
 
 `apps/web` only. Neighbouring chart markers that were drawn closer than 24px now merge, repeating until every pair is at least 24px apart. The merged marker stays on its highest-severity member and keeps every member. The marker label uses the same local date and time as the list under the chart. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
 

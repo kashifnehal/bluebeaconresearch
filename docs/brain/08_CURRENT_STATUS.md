@@ -4,21 +4,21 @@
 
 Last updated: 2026-10-18 (alerts badge render test)
 
-> ⚠️ NEW 2026-10-18 (alerts badge render test, `apps/web` only) — `useSyncUnreadBadge` writes the same badge as before. A rendered probe fails if it renders more than 4 times. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (alerts badge render test, `apps/web` only, `61773da`) — `useSyncUnreadBadge` writes the same badge as before. A rendered probe fails if it renders more than 4 times. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (story-thread Rule B sample, `apps/backend` only) — 7-day re-run: Rule B has 322 groups (size 1 = 307, size 2 = 14, size 4 = 1). No winner chosen. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-18 (home pulse direction tile, `apps/web` only) — all-assets mode labels that tile "Asset direction votes" and explains that one signal can add several votes. Single-asset labels are unchanged. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (home pulse direction tile, `apps/web` only, `125bb0a`) — all-assets mode labels that tile "Asset direction votes" and explains that one signal can add several votes. Single-asset labels are unchanged. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 
-> ⚠️ NEW 2026-10-18 (same-title merge measurement, `apps/backend` only) — read-only count of unmerged same-title pairs over 30 days: 3 pairs, 6 of 769 signals (0.8%). No single miss reason reached half, so the merge rule was not changed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (same-title merge measurement, `apps/backend` only, `9d76402`) — read-only count of unmerged same-title pairs over 30 days: 3 pairs, 6 of 769 signals (0.8%). No single miss reason reached half, so the merge rule was not changed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-18 (trust page ACLED line, `apps/web` only) — a connected row prints "ACLED conflict data: connected." Any other stored state prints that conflict signals use news sources only. No row hides the line. Stored error text is not printed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (trust page ACLED line, `apps/web` only, `c7c0185`) — a connected row prints "ACLED conflict data: connected." Any other stored state prints that conflict signals use news sources only. No row hides the line. Stored error text is not printed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 
-> ⚠️ NEW 2026-10-18 (marker citations, `apps/web` only) — the "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (marker citations, `apps/web` only, `169cfd7`) — the "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-18 (chart marker overlap, `apps/web` only) — neighbouring markers drawn closer than 24px now merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (chart marker overlap, `apps/web` only, `83b6f04`) — neighbouring markers drawn closer than 24px now merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (asset chart markers, price context, positioning panel, copy; `apps/web` only) — labelled event markers on the asset price chart (also on weekly ranges), "price at the event" and "since then" in the marker card from existing points only, a CFTC managed-money panel below the chart that shows only when `/api/cot` has rows, and plainer alert and Monitor-plan copy. Function region `hnd1` was tried and reverted by the 15% rule. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

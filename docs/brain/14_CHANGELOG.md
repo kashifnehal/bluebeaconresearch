@@ -10,7 +10,7 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### 2026-10-18 — Alerts badge sync is covered by a render test
+### 2026-10-18 — Alerts badge sync is covered by a render test (`61773da`)
 
 `apps/web` only. The badge write lives in `useSyncUnreadBadge`. Behaviour is unchanged: no data leaves the badge alone, and an empty list still clears it. A rendered probe fails if it renders more than 4 times for an empty list, no data, or three unread alerts. Not browser-checked.
 
@@ -18,25 +18,25 @@ This document records historic development milestones, schema evolutions, featur
 
 `apps/backend` only. Re-ran `measure:story-threads` on the last 7 days (339 signals). Rules were not changed and no winner was chosen. Sample lines now include region. Rule B: 322 groups, exact sizes 1=307, 2=14, 4=1. Rule A: 104 groups, largest 122. Rule C: 338 groups, largest 2. The report under `apps/backend/src/scripts/out/` is git-ignored.
 
-### 2026-10-18 — Home pulse direction tile explains asset votes
+### 2026-10-18 — Home pulse direction tile explains asset votes (`125bb0a`)
 
 `apps/web` only. On the dashboard home, the direction tile is labelled "Asset direction votes" with the line "One vote per asset per signal, so one signal can add several." A single asset still shows "Up / Down" with no caption. Not browser-checked.
 
 
-### 2026-10-18 — Same-title merge measurement
+### 2026-10-18 — Same-title merge measurement (`9d76402`)
 
 `apps/backend` only. Read-only `measure:duplicate-titles` counts unmerged same-title pairs among signals created in the last 30 days. 769 signals, 3 pairs, 6 signals (0.8%). The three first-reasons were one each: region differs, event date outside the 8-hour window, summary Jaccard below 0.33. No reason reached half the pairs, so the merge rule was not changed. The 0.33 threshold was left as it is. The report file under `apps/backend/scripts/out/` is git-ignored.
 
-### 2026-10-18 — Trust page ACLED line uses fixed sentences
+### 2026-10-18 — Trust page ACLED line uses fixed sentences (`c7c0185`)
 
 `apps/web` only. `/how-it-works` still reads the latest service_health_events row for ACLED. A connected row prints "ACLED conflict data: connected." Any other stored state prints "ACLED conflict data: not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed. Not browser-checked.
 
 
-### 2026-10-18 — Marker citation popovers use plain language
+### 2026-10-18 — Marker citation popovers use plain language (`169cfd7`)
 
 `apps/web` only. The "Since then" and "Reports" popovers no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover. Not browser-checked.
 
-### 2026-10-18 — Chart markers merge on drawn position; label uses the list date
+### 2026-10-18 — Chart markers merge on drawn position; label uses the list date (`83b6f04`)
 
 `apps/web` only. `buildMarkers` still groups from the leftmost point, then a second pass merges adjacent groups whose drawn positions (highest-severity member) are closer than 24px, repeating until every neighbouring pair is at least 24px apart. The combined marker is drawn at its highest-severity member and keeps the combined member list. `MARKER_MERGE_PX` stays 24. The marker label uses the same local date and time as the list under the chart. Not browser-checked.
 

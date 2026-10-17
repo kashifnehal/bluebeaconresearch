@@ -539,11 +539,11 @@ Sections:
 > ⚠️ UPDATED 2026-09-09 (#87 phase 4, `accd468`) — the `[symbol]` drill-down now resolves against `FOREX_PAIRS` too: a forex symbol shows its real label ("EUR/USD"), "You follow this" checks `forexPairs`, and the correlated-signals fetch sends a new `?forexPair=` param (mirroring `?commodity=` against `currency_pair_impacts`) so a forex drill-down lists its matched signals. `?commodity=` unchanged. `apps/web` only.
 > ⚠️ UPDATED 2026-09-19 (#145) — list page first-paints `COMMODITIES` when there are no user selections (page is never an empty dropdown) and adds a category-chip row to add/remove; the ADD COMMODITY dropdown stays. Drill-down is a **single** price chart with 1M / 6M / 1Y / 3Y / 5Y (1M = 90-day DB series; 6M+ = Yahoo weekly `history-5y`). The two honest 5Y fallback sentences are unchanged. Correlated-signals list still last-90-days.
 > ⚠️ UPDATED 2026-10-17 (asset chart markers, price context, positioning panel) — the price chart on the watchlist symbol page draws a labelled marker per signal (severity-band triangle, direction arrow when the signal has one for the asset, hover and focus card). The card shows price at the event and the move since only from existing points, and "Not available on weekly data" on weekly ranges. Weekly ranges now draw markers on the nearest weekly point. A positioning panel (CFTC managed money, 52 weeks) sits below the chart and shows only when `/api/cot` returns rows. New files: `components/assets/ChartEventMarker.tsx`, `ChartMarkerCard.tsx`, `PositioningPanel.tsx`, `lib/chart-markers.ts`, `lib/move-since-event.ts`, `lib/cot.ts`. Full detail: `docs/brain/06_COMPONENTS.md`.
-> ⚠️ UPDATED 2026-10-18 — marker "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. Full detail: `docs/brain/06_COMPONENTS.md`.
+> ⚠️ UPDATED 2026-10-18 (`169cfd7`) — marker "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. Full detail: `docs/brain/06_COMPONENTS.md`.
 
-> ⚠️ UPDATED 2026-10-18 — neighbouring chart markers drawn closer than 24px merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. Full detail: `docs/brain/06_COMPONENTS.md`.
+> ⚠️ UPDATED 2026-10-18 (`83b6f04`) — neighbouring chart markers drawn closer than 24px merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. Full detail: `docs/brain/06_COMPONENTS.md`.
 
-> ⚠️ UPDATED 2026-10-17, same day (WEB-FINISH task) — the "merged above 12 markers, 2% apart" rule above was replaced: markers now merge by real on-screen pixel distance (`MARKER_MERGE_PX = 24`, via `ResizeObserver`), independent of marker count, fixing a false negative where under-12-count clusters never merged despite visually overlapping. Clicking/focusing a merged marker opens a new `ChartMarkerList.tsx` (title/time/link per grouped signal) instead of jumping to attribution. `ChartMarkerCard.tsx` gained two click-to-open info-citation buttons (new `components/ui/InfoCitation.tsx`) on "Since then" and "Reports," naming the real table/code file behind each. `PulseTiles.tsx` on this same page gained an optional all-assets mode, now also mounted at the top of the dashboard home (`05_API.md`). Full detail: `docs/brain/06_COMPONENTS.md`.
+> ⚠️ UPDATED 2026-10-17, same day (WEB-FINISH task) — the "merged above 12 markers, 2% apart" rule above was replaced: markers now merge by real on-screen pixel distance (`MARKER_MERGE_PX = 24`, via `ResizeObserver`), independent of marker count, fixing a false negative where under-12-count clusters never merged despite visually overlapping. Clicking/focusing a merged marker opens a new `ChartMarkerList.tsx` (title/time/link per grouped signal) instead of jumping to attribution. `ChartMarkerCard.tsx` gained two click-to-open info-citation buttons (new `components/ui/InfoCitation.tsx`) on "Since then" and "Reports." The popover text that named a file or a table was replaced on 2026-10-18 (`169cfd7`) with plain language. `PulseTiles.tsx` on this same page gained an optional all-assets mode, now also mounted at the top of the dashboard home (`05_API.md`). Full detail: `docs/brain/06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-10-15 (pulse tiles) — five tiles under the watchlist symbol header count signals published in the last 24 hours against the prior 24 hours. News-only assets get the same tiles. They do not request a price. Full detail: `docs/brain/06_COMPONENTS.md` §3.7.
 
@@ -686,18 +686,19 @@ the seventh is backed by `classifyEvent()` and the briefing/chat instructions
 Laid out as a responsive CSS grid, not an HTML `<table>`, so it never needs horizontal
 scroll at phone width. A short **Limits** list follows.
 
-> ⚠️ UPDATED 2026-10-18 — alerts badge sync is `useSyncUnreadBadge`, with the same behaviour. A rendered probe fails above 4 renders. Full detail: `docs/brain/06_COMPONENTS.md`.
+> ⚠️ UPDATED 2026-10-18 (`61773da`) — alerts badge sync is `useSyncUnreadBadge`, with the same behaviour. A rendered probe fails above 4 renders. Full detail: `docs/brain/06_COMPONENTS.md`.
 
-> ⚠️ UPDATED 2026-10-18 — the dashboard home direction tile is labelled "Asset direction votes" and explains that one signal can add several votes. A single asset still shows "Up / Down". Full detail: `docs/brain/06_COMPONENTS.md`.
+> ⚠️ UPDATED 2026-10-18 (`125bb0a`) — the dashboard home direction tile is labelled "Asset direction votes" and explains that one signal can add several votes. A single asset still shows "Up / Down". Full detail: `docs/brain/06_COMPONENTS.md`.
 
-> ⚠️ UPDATED 2026-10-18 — the ACLED limit line still reads the latest service_health_events row, and now prints a fixed sentence: "connected." or "not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed.
+> ⚠️ UPDATED 2026-10-18 (`c7c0185`) — the ACLED limit line still reads the latest service_health_events row, and now prints a fixed sentence: "connected." or "not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed.
 
 > ⚠️ UPDATED 2026-10-17 (WEB-FINISH task 4) — correction: the Limits list's ACLED
 > line and keyword-fallback line were static hardcoded text as of ship time, not
 > actually checked live against `service_health_events` as the paragraph above used
 > to claim. Both are now real request-time queries: `loadAcledState()` reads the
-> latest `service_health_events` row for `service = 'acled'` and echoes its own
-> status/detail; `loadKeywordFallbackShare()` computes the real share of last-7-day
+> latest `service_health_events` row for `service = 'acled'`. On 2026-10-17 it echoed
+> that row's status and detail; on 2026-10-18 (`c7c0185`) that echo was replaced by
+> the two fixed sentences above. `loadKeywordFallbackShare()` computes the real share of last-7-day
 > `signals.classification_method = 'heuristic'` vs `'claude'`. Both degrade to an
 > honest "unavailable"/"no signals" line on query failure, never a fabricated 0% or
 > a stale claim. Full detail: `docs/brain/06_COMPONENTS.md` §3.6a.

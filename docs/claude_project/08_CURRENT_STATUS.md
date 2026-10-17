@@ -2,21 +2,21 @@
 
 > **📍 Doc status — live status banners as of 2026-10-18 (alerts badge render test — see the banner immediately below).**
 
-> ⚠️ NEW 2026-10-18 (alerts badge render test, `apps/web` only) — `useSyncUnreadBadge` writes the same badge as before. A rendered probe fails if it renders more than 4 times. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (alerts badge render test, `apps/web` only, `61773da`) — `useSyncUnreadBadge` writes the same badge as before. A rendered probe fails if it renders more than 4 times. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (story-thread Rule B sample, `apps/backend` only) — 7-day re-run: Rule B has 322 groups (size 1 = 307, size 2 = 14, size 4 = 1). No winner chosen. See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-18 (home pulse direction tile, `apps/web` only) — all-assets mode labels that tile "Asset direction votes" and explains that one signal can add several votes. Single-asset labels are unchanged. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (home pulse direction tile, `apps/web` only, `125bb0a`) — all-assets mode labels that tile "Asset direction votes" and explains that one signal can add several votes. Single-asset labels are unchanged. See `docs/brain/LIVE_TODO.md`.
 
 
-> ⚠️ NEW 2026-10-18 (same-title merge measurement, `apps/backend` only) — 3 unmerged same-title pairs in 30 days, 6 of 769 signals (0.8%). No single miss reason reached half, so the merge rule was not changed. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (same-title merge measurement, `apps/backend` only, `9d76402`) — 3 unmerged same-title pairs in 30 days, 6 of 769 signals (0.8%). No single miss reason reached half, so the merge rule was not changed. See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-18 (trust page ACLED line, `apps/web` only) — a connected row prints "ACLED conflict data: connected." Any other stored state prints that conflict signals use news sources only. No row hides the line. Stored error text is not printed. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (trust page ACLED line, `apps/web` only, `c7c0185`) — a connected row prints "ACLED conflict data: connected." Any other stored state prints that conflict signals use news sources only. No row hides the line. Stored error text is not printed. See `docs/brain/LIVE_TODO.md`.
 
 
-> ⚠️ NEW 2026-10-18 (marker citations, `apps/web` only) — the "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (marker citations, `apps/web` only, `169cfd7`) — the "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-18 (chart marker overlap, `apps/web` only) — neighbouring markers drawn closer than 24px now merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-18 (chart marker overlap, `apps/web` only, `83b6f04`) — neighbouring markers drawn closer than 24px now merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (restyle reverted; migrations applied; new standing rule, docs + revert commits only) — a restyle (new palette, Plex Sans + Newsreader fonts, reworked desk shell, keyword presets, desk-polish pass) shipped without founder approval and was reverted in full (`b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`). New standing rule: no brand, colour, or font change without founder approval (D52 in `10_DECISIONS.md`). `public.cot_positions` and `public.digest_send_log` migrations are now applied in production; the `/api/cot` positioning panel stays hidden until `cot_positions` has rows. See `docs/brain/LIVE_TODO.md`.
 
