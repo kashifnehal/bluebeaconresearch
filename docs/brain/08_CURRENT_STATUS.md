@@ -4,6 +4,8 @@
 
 Last updated: 2026-10-17 (search catalog speed claims)
 
+> ⚠️ NEW 2026-10-17 (desk redesign, `apps/web` only) — new palette/fonts, desk home (since-last-visit, story threads, markets ledger), keyword presets. See `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ NEW 2026-10-17 (search catalog speed claims, `apps/backend` only) — Intelligence Feed catalog copy no longer says real-time or live signal feed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (story-thread measurement, `apps/backend` only) — read-only `measure:story-threads` groups the last 48 hours of signals. `/tmp/threads-sample.md` is not committed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.

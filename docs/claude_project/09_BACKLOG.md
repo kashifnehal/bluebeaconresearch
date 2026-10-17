@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-17.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-17 — Desk redesign (`apps/web`). Palette, shell, desk home and keyword presets shipped; no prior numbered ticket. Evidence: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-17 — Search catalog speed-claim wording (`apps/backend`). Intelligence Feed catalog copy no longer says real-time or live signal feed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — Story-thread measurement script (`apps/backend`). Read-only `measure:story-threads` on the last 48 hours of signals. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

@@ -143,7 +143,7 @@ export default function OnboardingPage() {
   const chipStyle = (active: boolean) => ({
     border: `1px solid ${active ? "var(--interactive)" : "rgba(60,74,66,0.3)"}`,
     backgroundColor: active ? "var(--interactive)" : "#1c1b1b",
-    color: active ? "#005f40" : "#e5e2e1",
+    color: active ? "var(--bg-app)" : "#e5e2e1",
     padding: "10px 14px",
     borderRadius: "4px",
     fontFamily: "'IBM Plex Sans', sans-serif",
@@ -327,7 +327,7 @@ export default function OnboardingPage() {
                       style={{
                         border: `1px solid ${useCase === option.value ? "var(--interactive)" : "rgba(60,74,66,0.3)"}`,
                         backgroundColor: useCase === option.value ? "var(--interactive)" : "#1c1b1b",
-                        color: useCase === option.value ? "#005f40" : "#e5e2e1",
+                        color: useCase === option.value ? "var(--bg-app)" : "#e5e2e1",
                         padding: "12px 16px",
                         borderRadius: "4px",
                         fontFamily: "'IBM Plex Sans', sans-serif",
@@ -368,7 +368,7 @@ export default function OnboardingPage() {
                   style={{
                     width: "100%",
                     background: "linear-gradient(135deg, #6ffbbe, var(--interactive))",
-                    color: "#003824",
+                    color: "var(--bg-app)",
                     padding: "16px",
                     borderRadius: "4px",
                     border: "none",
@@ -513,7 +513,7 @@ export default function OnboardingPage() {
                   style={{
                     width: "100%",
                     background: "linear-gradient(135deg, #6ffbbe, var(--interactive))",
-                    color: "#003824",
+                    color: "var(--bg-app)",
                     padding: "16px",
                     borderRadius: "4px",
                     border: "none",

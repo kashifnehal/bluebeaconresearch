@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-17 — Desk redesign (palette, shell, desk home, keyword presets)
+
+`apps/web` only. New palette and fonts through the existing variables, amber reserved, desk home with since-last-visit strip, story threads, markets ledger and lead story, keyword presets. SHAs and detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-17 — Search catalog speed-claim wording
 
 `apps/backend` only. Intelligence Feed catalog copy no longer says real-time or live signal feed. Full detail: `docs/brain/LIVE_TODO.md`.

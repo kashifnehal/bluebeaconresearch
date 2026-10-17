@@ -124,7 +124,7 @@ export function NotificationConnectPrompt() {
             setSessionHidden(true);
             setNotificationConnectOpen(true);
           }}
-          className="px-4 py-2 bg-[var(--interactive)] text-[#003824] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
+          className="px-4 py-2 bg-[var(--interactive)] text-[var(--bg-app)] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
         >
           Connect Telegram

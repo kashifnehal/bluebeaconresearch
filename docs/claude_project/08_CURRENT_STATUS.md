@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live status banners as of 2026-10-17 (search catalog speed claims — see the banner immediately below).**
 
+> ⚠️ NEW 2026-10-17 (desk redesign, `apps/web` only) — new palette/fonts, desk home (since-last-visit, story threads, markets ledger), keyword presets. See `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ NEW 2026-10-17 (search catalog speed claims, `apps/backend` only) — Intelligence Feed catalog copy no longer says real-time or live signal feed. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (story-thread measurement, `apps/backend` only) — read-only `measure:story-threads` groups the last 48 hours of signals. See `docs/brain/LIVE_TODO.md`.

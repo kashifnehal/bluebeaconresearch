@@ -873,7 +873,7 @@ export default function EventDetailPage() {
                       }
                       className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
-                          ? "bg-[var(--interactive)] text-[#003824] border-[var(--interactive)]"
+                          ? "bg-[var(--interactive)] text-[var(--bg-app)] border-[var(--interactive)]"
                           : "bg-[#0e0e0e] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                       }`}
                     >
@@ -893,7 +893,7 @@ export default function EventDetailPage() {
               </button>
               <button
                 onClick={() => createAlertRule()}
-                className="px-6 py-2 bg-[var(--interactive)] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
+                className="px-6 py-2 bg-[var(--interactive)] text-[var(--bg-app)] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
               >
                 Save Rule
               </button>

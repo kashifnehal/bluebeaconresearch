@@ -38,7 +38,7 @@
 
 .bbr-feature-hint .driver-popover-footer-btn {
   background-color: var(--interactive);
-  color: #003824;
+  color: var(--bg-app);
   border: none;
   border-radius: 0;
   font-family: "IBM Plex Sans", sans-serif;

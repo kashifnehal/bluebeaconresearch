@@ -345,3 +345,11 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - `sheet.tsx`: Mobile slide-out drawer panel.
 - `skeleton.tsx`: Loading shimmer placeholder block (`animate-pulse bg-neutral-800`).
 - `sonner.tsx`: High-performance toast notification host.
+
+## 5. Desk Components (`apps/web/components/desk`, added 2026-10-17)
+
+- `SinceLastVisit.tsx` — strip on `/dashboard`. Counts rows from the loaded feed newer than the stored last-visit time (`lib/last-visit.ts`, localStorage in try/catch); falls back to "Today" counts. Stored time is written on page leave or after 60 s, never on load. Amber dot lives only here.
+- `StoryThreadCard.tsx` — one group of related reports (`lib/story-threads.ts`): lead (highest severity, ties newest) in Newsreader, "N related reports", summed report count, markets touched, newest age, expand list of members.
+- `MarketsLedger.tsx` + `useMarketsLedger.ts` — table of watchlist symbols: last price, change (arrow + up/down word), signals in the last 24h vs the 24h before as two small bars. Prices from `/api/prices`; counts from `/api/signals/pulse`, 4 at a time, 60 s cache; dash when the route cannot answer. Mobile: horizontal strip, first.
+- `components/signals/FilterBar.tsx` — optional `keywords` / `onKeywordsChange` props add preset chips (`lib/keyword-presets.ts`) and an Any/All switch on the dashboard and map.
+

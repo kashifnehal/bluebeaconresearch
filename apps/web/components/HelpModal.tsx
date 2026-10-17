@@ -162,7 +162,7 @@ export function HelpModal() {
           </button>
           <button
             onClick={() => setHelpOpen(false)}
-            className="px-6 py-2 bg-[var(--interactive)] text-[#003824] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
+            className="px-6 py-2 bg-[var(--interactive)] text-[var(--bg-app)] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
             style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             Close Guide
