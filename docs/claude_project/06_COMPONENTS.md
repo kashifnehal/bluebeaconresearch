@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-17 — Homepage Analyst pricing feature is "Signals with checkable sources". `NotificationConnectPrompt` no longer says "as it happens". Full detail: `docs/brain/06_COMPONENTS.md`.
+
 > ⚠️ UPDATED 2026-10-16 — Dashboard, map, watchlist, the symbol page, and alerts show the same slow-data line and Retry when a fetch times out or fails. Full detail: `docs/brain/06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Event detail aborts its fetch at 20000 ms and shows a retry when the fetch times out or fails (`b2fe912`). Full detail: `docs/brain/06_COMPONENTS.md`.
@@ -152,7 +154,7 @@ Small 14-day real match-count trend under each rule's name on `/alerts`, fed by 
 
 ### NotificationConnectPrompt (apps/web/components/NotificationConnectPrompt.tsx)
 **Mounted in:** (dashboard)/layout.tsx
-**Shows** after `NOTIFICATION_PROMPT_AFTER_SIGNALS` (3) signal-detail mounts this session, if `notification_prompt_dismissed_at` is null and Telegram is not already connected (`/api/telegram/status`). Compact non-blocking card. "Not now" updates the user's own `profiles` row.
+**Shows** after `NOTIFICATION_PROMPT_AFTER_SIGNALS` (3) signal-detail mounts this session, if `notification_prompt_dismissed_at` is null and Telegram is not already connected (`/api/telegram/status`). Compact non-blocking card. Body: "Connect Telegram to receive this kind of signal." "Not now" updates the user's own `profiles` row.
 
 ### FeatureHints (apps/web/components/onboarding/FeatureHints.tsx) (2026-09-19)
 **Mounted in:** (dashboard)/layout.tsx, next to ProductTour.

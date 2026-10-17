@@ -3,7 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ Public web health route, `apps/web`, 2026-10-17
+## ✅ Speed-claim wording on public pages, `apps/web`, 2026-10-17
+
+- Searched `apps/web` (not `app/admin`) for real-time, real time, instant, instantly, fastest, as it happens, live signal feed, in seconds, within seconds. Two user-visible claims were changed. Homepage Analyst feature "Live signal feed" is now "Signals with checkable sources". Telegram connect prompt dropped "as it happens".
+- Left unchanged (not a listed speed claim, or a product name): "Full Map Layers"; "View the live track record"; "Live checks run when this page loads"; "not live chat"; "Get alerted the moment this happens again"; no "Live Map" string in `apps/web`. The ACLED honesty line on `/how-it-works` is unchanged. API field names are unchanged. Admin pages were not searched for edits.
+- Search catalog (`apps/backend/src/lib/search-catalog.ts`) still has "Real-time global signal monitoring." and "This is your live signal feed." Not changed: this part is `apps/web` only.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `06`; claude_project `09`, `08`, `14`, `06`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, table, prompt, or standing rule.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0 (59 files, 391 passing cases, 0 failing, including the homepage/prompt copy asserts in `lib/ingestion-interval.test.ts`). `pnpm --filter web run build` (`next build`) exit 0. No browser run. Search catalog in `apps/backend` was not edited.
+
+## ✅ Public web health route, `apps/web`, 2026-10-17, `9f73bb6`
 
 - `GET /api/health` returns HTTP 200 and `{"status":"ok"}` with `Cache-Control: no-store` and `dynamic = "force-dynamic"`. No database, Upstash, auth, or other service call. The route comment says it must stay free of those so an outage in them does not report the web function as down.
 - `apps/web/proxy.ts` lists `/api/health` in `PUBLIC_UNMETERED` and returns next without a session check. Rate limiting stays off this path: this file does not rate-limit, and the route does not call `rateLimitOrPass`.

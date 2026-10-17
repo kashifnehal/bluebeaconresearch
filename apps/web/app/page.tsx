@@ -358,7 +358,7 @@ export default async function Home(props: {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
               {[
                 { title: "Monitor", price: "$0", features: ["Delayed Feed (4h)", "Limited Map Access", "Base Analytics"] },
-                { title: "Analyst", price: "$49", features: ["Live signal feed", "Full Map Layers", "Alerts", "Market Impact Assessment"], featured: true },
+                { title: "Analyst", price: "$49", features: ["Signals with checkable sources", "Full Map Layers", "Alerts", "Market Impact Assessment"], featured: true },
                 { title: "Pro", price: "$199", features: ["Full REST/WS API", "5-year price history", "Backtesting Lab", "Multi-user access"] }
               ].map((tier, i) => (
                 <div key={i} className={`p-6 md:p-10 rounded-3xl border ${tier.featured ? 'bg-surface-container border-primary/40 shadow-2xl shadow-primary/10' : 'bg-surface-container-high border-outline-variant/10'}`}>

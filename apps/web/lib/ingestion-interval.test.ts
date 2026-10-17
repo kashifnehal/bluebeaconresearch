@@ -69,6 +69,11 @@ runTest("homepage and dashboard render the shared copy", () => {
   assert.equal(page.includes("every 30 minutes"), false);
   assert.equal(page.includes("not in real time"), false);
   assert.ok(page.includes("AI-powered research platform"));
+  assert.equal(page.includes("Live signal feed"), false);
+  assert.ok(page.includes("Signals with checkable sources"));
+  const prompt = readFileSync(join(here, "../components/NotificationConnectPrompt.tsx"), "utf8");
+  assert.equal(prompt.includes("as it happens"), false);
+  assert.ok(prompt.includes("Connect Telegram to receive this kind of signal."));
   assert.ok(dashboard.includes("DASHBOARD_FEED_SUBHEAD"));
   assert.equal(dashboard.includes("updates roughly every 30 minutes"), false);
   assert.ok(dashboard.includes('data-tour="feed-header"'));

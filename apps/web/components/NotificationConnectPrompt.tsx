@@ -106,7 +106,7 @@ export function NotificationConnectPrompt() {
         Get alerted the moment this happens again
       </p>
       <p className="text-xs text-[var(--text-muted)] mb-4">
-        Connect Telegram to receive this kind of signal as it happens. Settings
+        Connect Telegram to receive this kind of signal. Settings
         stays the place to manage or disconnect later.
       </p>
       <div className="flex items-center justify-end gap-3">

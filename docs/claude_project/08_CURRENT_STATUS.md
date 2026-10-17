@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-17 (public web health route — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-17 (speed-claim wording on public pages — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-17 (speed-claim wording, `apps/web` only) — homepage Analyst feature is "Signals with checkable sources". Telegram connect prompt no longer says "as it happens". Search catalog in `apps/backend` was not changed. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (public web health route, `apps/web` only) — `GET /api/health` returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. No database, Upstash, or auth. See `docs/brain/LIVE_TODO.md`.
 
