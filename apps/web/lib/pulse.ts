@@ -28,17 +28,21 @@ export type PulseCounts = {
 };
 
 /**
- * Counts of signals BBR published (`created_at`) for one symbol.
+ * Counts of signals BBR published (`created_at`) for one symbol, or for
+ * every asset when `symbol` is null ("all assets" mode).
  * `last24h` is [now−24h, now]. `prior24h` is [now−48h, now−24h).
  * Up / down / other use the impact whose asset is this symbol, over `last24h` only.
+ * In all-assets mode, every distinct asset named on a signal (across both
+ * impact columns, de-duplicated per signal) counts as one up/down/other vote
+ * — DESIGN CHOICE, not measured.
  */
 export function computePulse(
   rows: readonly PulseSignalRow[],
-  symbol: string,
+  symbol: string | null,
   now: Date,
 ): PulseCounts {
-  const symbolKey = symbol.trim().toUpperCase();
-  const isForex = FOREX_PAIRS.some((pair) => pair.symbol === symbolKey);
+  const symbolKey = symbol ? symbol.trim().toUpperCase() : null;
+  const isForex = symbolKey ? FOREX_PAIRS.some((pair) => pair.symbol === symbolKey) : false;
   const nowMs = now.getTime();
   const lastStart = nowMs - DAY_MS;
   const priorStart = nowMs - 2 * DAY_MS;
@@ -56,10 +60,17 @@ export function computePulse(
     if (published >= lastStart) {
       last24h += 1;
       hours[new Date(published).getUTCHours()] += 1;
-      const direction = directionForSymbol(row, symbolKey, isForex);
-      if (direction === "up") up += 1;
-      else if (direction === "down") down += 1;
-      else other += 1;
+      if (symbolKey) {
+        const direction = directionForSymbol(row, symbolKey, isForex);
+        if (direction === "up") up += 1;
+        else if (direction === "down") down += 1;
+        else other += 1;
+      } else {
+        const counts = directionCountsAllAssets(row);
+        up += counts.up;
+        down += counts.down;
+        other += counts.other;
+      }
     } else {
       prior24h += 1;
     }
@@ -86,6 +97,31 @@ export function computePulse(
     down,
     other,
   };
+}
+
+/**
+ * All-assets mode: one vote per distinct asset named on this signal, from
+ * either impact column. The same asset appearing on both columns (forex
+ * pairs can be tagged in both — see route.ts's fetchImpactRows comment)
+ * counts once.
+ */
+function directionCountsAllAssets(row: PulseSignalRow): { up: number; down: number; other: number } {
+  let up = 0;
+  let down = 0;
+  let other = 0;
+  const seenAssets = new Set<string>();
+  for (const impacts of [row.commodity_impacts, row.currency_pair_impacts]) {
+    if (!Array.isArray(impacts)) continue;
+    for (const impact of impacts) {
+      const asset = (impact?.asset ?? "").trim().toUpperCase();
+      if (!asset || seenAssets.has(asset)) continue;
+      seenAssets.add(asset);
+      if (impact.direction === "up") up += 1;
+      else if (impact.direction === "down") down += 1;
+      else other += 1;
+    }
+  }
+  return { up, down, other };
 }
 
 function directionForSymbol(

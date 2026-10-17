@@ -41,6 +41,30 @@ async function fetchImpactRows(
 
 type PulseDbRow = PulseSignalRow & { id: string };
 
+/** All-assets mode: every signal in the window, no asset filter. */
+async function fetchAllRows(
+  supabase: RouteSupabaseClients["supabase"],
+  fromIso: string,
+): Promise<{ rows: PulseDbRow[]; error: string | null }> {
+  const rows: PulseDbRow[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("signals")
+      .select("id, created_at, commodity_impacts, currency_pair_impacts")
+      .gte("created_at", fromIso)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.error("[signals/pulse] DB error (all):", error.message);
+      return { rows, error: error.message };
+    }
+    const page = (data ?? []) as PulseDbRow[];
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) break;
+  }
+  return { rows, error: null };
+}
+
 function mergeById(rowSets: PulseDbRow[][]): PulseSignalRow[] {
   const byId = new Map<string, PulseDbRow>();
   for (const rows of rowSets) {
@@ -68,17 +92,26 @@ export async function GET(req: NextRequest) {
     }
 
     const url = new URL(req.url);
-    const symbol = url.searchParams.get("symbol")?.trim().toUpperCase();
-    if (!symbol || !/^[A-Z0-9_]+$/.test(symbol)) {
-      return NextResponse.json({ error: "symbol is required" }, { status: 400 });
-    }
+    // No `symbol` param at all (not merely an empty one) means "all assets" —
+    // the home dashboard's pulse tiles use this; the asset drill-down page
+    // always passes a symbol.
+    const symbolParam = url.searchParams.get("symbol");
+    const isAllMode = symbolParam === null;
+    let symbol: string | null = null;
+    let isForex = false;
+    if (!isAllMode) {
+      symbol = symbolParam.trim().toUpperCase();
+      if (!symbol || !/^[A-Z0-9_]+$/.test(symbol)) {
+        return NextResponse.json({ error: "symbol is required" }, { status: 400 });
+      }
 
-    const isForex = FOREX_PAIRS.some((pair) => pair.symbol === symbol);
-    const isCommodity =
-      COMMODITIES.some((commodity) => commodity.symbol === symbol) ||
-      NEWS_ONLY_COMMODITIES.some((commodity) => commodity.symbol === symbol);
-    if (!isForex && !isCommodity) {
-      return NextResponse.json({ error: "unknown symbol" }, { status: 400 });
+      isForex = FOREX_PAIRS.some((pair) => pair.symbol === symbol);
+      const isCommodity =
+        COMMODITIES.some((commodity) => commodity.symbol === symbol) ||
+        NEWS_ONLY_COMMODITIES.some((commodity) => commodity.symbol === symbol);
+      if (!isForex && !isCommodity) {
+        return NextResponse.json({ error: "unknown symbol" }, { status: 400 });
+      }
     }
 
     const clients = await getRouteSupabaseClients({ verify: "claims" });
@@ -93,19 +126,25 @@ export async function GET(req: NextRequest) {
 
     // Forex pairs are tagged in both impact columns (same split as
     // driver-breakdown). Commodity and news-only symbols stay on
-    // commodity_impacts.
+    // commodity_impacts. All-assets mode skips the asset filter entirely.
     let rows: PulseSignalRow[];
-    if (isForex) {
+    if (isAllMode) {
+      const result = await fetchAllRows(supabase, fromIso);
+      if (result.error) {
+        return NextResponse.json({ error: "db_error" }, { status: 200 });
+      }
+      rows = result.rows;
+    } else if (isForex) {
       const [currencyResult, commodityResult] = await Promise.all([
-        fetchImpactRows(supabase, "currency_pair_impacts", symbol, fromIso),
-        fetchImpactRows(supabase, "commodity_impacts", symbol, fromIso),
+        fetchImpactRows(supabase, "currency_pair_impacts", symbol as string, fromIso),
+        fetchImpactRows(supabase, "commodity_impacts", symbol as string, fromIso),
       ]);
       if (currencyResult.error || commodityResult.error) {
         return NextResponse.json({ error: "db_error" }, { status: 200 });
       }
       rows = mergeById([currencyResult.rows, commodityResult.rows]);
     } else {
-      const result = await fetchImpactRows(supabase, "commodity_impacts", symbol, fromIso);
+      const result = await fetchImpactRows(supabase, "commodity_impacts", symbol as string, fromIso);
       if (result.error) {
         return NextResponse.json({ error: "db_error" }, { status: 200 });
       }

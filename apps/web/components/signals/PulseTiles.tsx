@@ -37,12 +37,17 @@ function tileValue(pulse: PulseCounts | null, key: (typeof TILES)[number]["key"]
   return `${pulse.up} / ${pulse.down}`;
 }
 
-export function PulseTiles({ symbol }: { symbol: string }) {
+/**
+ * Signal pulse for one asset, or (when `symbol` is omitted) for every asset
+ * — the dashboard's top-of-page tiles use the same route without a symbol
+ * filter, same labels and styling as the per-asset version.
+ */
+export function PulseTiles({ symbol }: { symbol?: string }) {
   const { data, isSuccess, isError, dataUpdatedAt } = useQuery({
-    queryKey: ["signal-pulse", symbol],
-    enabled: Boolean(symbol),
+    queryKey: ["signal-pulse", symbol ?? "all"],
     queryFn: async () => {
-      const res = await fetch(`/api/signals/pulse?symbol=${encodeURIComponent(symbol)}`);
+      const qs = symbol ? `?symbol=${encodeURIComponent(symbol)}` : "";
+      const res = await fetch(`/api/signals/pulse${qs}`);
       const json = (await res.json()) as PulseResponse;
       if (!res.ok || json.error) throw new Error(json.error ?? "pulse_failed");
       return json;

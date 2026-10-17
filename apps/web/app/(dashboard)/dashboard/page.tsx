@@ -15,6 +15,7 @@ import { FreshTag } from "@/components/signals/FreshTag";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { PulseTiles } from "@/components/signals/PulseTiles";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
@@ -335,6 +336,8 @@ export default function DashboardPage() {
         style={{ padding: "32px", maxWidth: "1440px", margin: "0 auto" }}
       >
         <Breadcrumbs items={[{ label: "Dashboard" }]} className="mb-4" />
+
+        <PulseTiles />
 
         {/* Header */}
         <div className="mb-10" data-tour="feed-header">

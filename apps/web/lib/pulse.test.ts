@@ -119,4 +119,37 @@ assert.deepEqual(empty, {
   assert.equal(windows.down, 0);
 }
 
+{
+  const allNull = computePulse([], null, now);
+  assert.equal(allNull.last24h, 0);
+  assert.equal(allNull.up, 0);
+}
+
+{
+  // All-assets mode: one vote per distinct asset per signal, across both
+  // columns, and the row with no impacts still counts toward last24h but
+  // contributes no direction vote.
+  const all = computePulse(
+    [
+      row("2026-10-15T06:00:00.000Z", [
+        { asset: "UKOIL", direction: "up" },
+        { asset: "USOIL", direction: "down" },
+      ]),
+      row(
+        "2026-10-15T07:00:00.000Z",
+        [{ asset: "EURUSD", direction: "down" }],
+        [{ asset: "EURUSD", direction: "down" }, { asset: "GBPUSD", direction: "up" }],
+      ),
+      row("2026-10-15T08:00:00.000Z", [], []),
+    ],
+    null,
+    now,
+  );
+  assert.equal(all.last24h, 3);
+  // UKOIL up, USOIL down, EURUSD down (counted once despite both columns), GBPUSD up.
+  assert.equal(all.up, 2);
+  assert.equal(all.down, 2);
+  assert.equal(all.other, 0);
+}
+
 console.log("pulse.test.ts ok");

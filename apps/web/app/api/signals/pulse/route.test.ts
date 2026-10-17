@@ -64,8 +64,15 @@ async function main() {
     assert.equal(json.error, "unknown symbol");
   });
 
-  await runTest("a missing symbol returns 400", async () => {
+  await runTest("a missing symbol is all-assets mode, not an error", async () => {
     const res = await GET(req(null));
+    assert.equal(res.status, 200);
+    const json = await res.json();
+    assert.equal(json.error, "unavailable");
+  });
+
+  await runTest("an empty symbol value (present but blank) is still an error", async () => {
+    const res = await GET(req(""));
     assert.equal(res.status, 400);
     const json = await res.json();
     assert.equal(json.error, "symbol is required");
