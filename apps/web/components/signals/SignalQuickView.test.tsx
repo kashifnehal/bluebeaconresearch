@@ -186,6 +186,87 @@ async function main() {
     }
   });
 
+  await runTest("shows Confidence as a rounded percent, same field/format as the dashboard featured card", async () => {
+    clearQuickViewDetailCache();
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ sources: [headline(1, "reuters.com")] }), { status: 200 })) as typeof fetch;
+    let root: Root | undefined;
+    try {
+      const signal = baseSignal({ id: "sig-confidence", confidence: 0.823 });
+      const rendered = await renderDrawer(signal);
+      root = rendered.root;
+      assert.match(rendered.html, /data-testid="quick-view-confidence"[^>]*>\s*82%/);
+      const text = visibleText(rendered.html);
+      assert.match(text, /Confidence/);
+    } finally {
+      globalThis.fetch = original;
+      root?.unmount();
+      clearQuickViewDetailCache();
+    }
+  });
+
+  await runTest("shows Direction — a single label when every impact agrees, same text as the event page", async () => {
+    clearQuickViewDetailCache();
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ sources: [headline(1, "reuters.com")] }), { status: 200 })) as typeof fetch;
+    let root: Root | undefined;
+    try {
+      const signal = baseSignal({
+        id: "sig-direction",
+        commodityImpacts: [
+          { asset: "USOIL", direction: "up", confidence: 0.7 },
+          { asset: "UKOIL", direction: "up", confidence: 0.6 },
+        ],
+      });
+      const rendered = await renderDrawer(signal);
+      root = rendered.root;
+      assert.match(rendered.html, /data-testid="quick-view-direction"/);
+      const text = visibleText(rendered.html);
+      assert.match(text, /Direction/);
+      assert.match(text, /\bUp\b/);
+    } finally {
+      globalThis.fetch = original;
+      root?.unmount();
+      clearQuickViewDetailCache();
+    }
+  });
+
+  await runTest("Direction is per-asset when impacts disagree, and absent with no impacts", async () => {
+    clearQuickViewDetailCache();
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ sources: [headline(1, "reuters.com")] }), { status: 200 })) as typeof fetch;
+    let root: Root | undefined;
+    try {
+      const mixed = baseSignal({
+        id: "sig-direction-mixed",
+        commodityImpacts: [
+          { asset: "USOIL", direction: "up", confidence: 0.7 },
+          { asset: "GOLD", direction: "down", confidence: 0.6 },
+        ],
+      });
+      const mixedRendered = await renderDrawer(mixed);
+      root = mixedRendered.root;
+      const mixedText = visibleText(mixedRendered.html);
+      assert.match(mixedText, /USOIL Up/);
+      assert.match(mixedText, /GOLD Down/);
+      await act(async () => {
+        root?.unmount();
+      });
+
+      const none = baseSignal({ id: "sig-direction-none" });
+      const noneRendered = await renderDrawer(none);
+      root = noneRendered.root;
+      assert.equal(noneRendered.html.includes('data-testid="quick-view-direction"'), false);
+    } finally {
+      globalThis.fetch = original;
+      root?.unmount();
+      clearQuickViewDetailCache();
+    }
+  });
+
   await runTest("a failed fetch leaves the drawer up without the new lines", async () => {
     clearQuickViewDetailCache();
     const original = globalThis.fetch;

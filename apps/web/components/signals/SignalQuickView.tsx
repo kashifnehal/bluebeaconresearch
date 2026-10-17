@@ -9,9 +9,10 @@ import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import {
   collectMarketImpacts,
   eventCategoryLabel,
+  formatImpactDirections,
   sourceConfirmationLabel,
 } from "@/lib/market-impact-assessment";
-import { shouldShowLastUpdated } from "@/lib/signal-display";
+import { formatConfidencePercent, shouldShowLastUpdated } from "@/lib/signal-display";
 import { uniqueSourceCount } from "@/lib/source-host";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 
@@ -157,6 +158,10 @@ export function SignalQuickView({
       ? signal.marketMechanism.trim()
       : null;
   const impacts = signal ? collectMarketImpacts(signal) : [];
+  // Same text the event page's Market Impact Assessment box shows in its own
+  // "Direction" row (apps/web/components/signals/MarketImpactAssessment.tsx)
+  // — a single label when every impact agrees, else one per asset.
+  const direction = formatImpactDirections(impacts);
   const readySources =
     signal && detail.status === "ready" && detail.id === signal.id ? detail.sources : null;
   const uniqueSources =
@@ -258,6 +263,22 @@ export function SignalQuickView({
                   </div>
                 </Part>
 
+                {/* Same percent, same meaning, as the dashboard's featured-card
+                    "Confidence" field (data-tour="confidence-score" in
+                    app/(dashboard)/dashboard/page.tsx) and the help-center
+                    answer for "What does the confidence score mean?" — the
+                    classifier's self-reported certainty in its own read of
+                    the event, not a per-asset number. */}
+                <Part label="Confidence">
+                  <p
+                    data-testid="quick-view-confidence"
+                    className="text-sm font-bold"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    {formatConfidencePercent(signal.confidence)}
+                  </p>
+                </Part>
+
                 {impacts.length > 0 ? (
                   <Part label="Market impact">
                     <div className="flex flex-wrap gap-2">
@@ -271,6 +292,18 @@ export function SignalQuickView({
                         />
                       ))}
                     </div>
+                  </Part>
+                ) : null}
+
+                {direction ? (
+                  <Part label="Direction">
+                    <p
+                      data-testid="quick-view-direction"
+                      className="text-[12px] font-medium"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {direction}
+                    </p>
                   </Part>
                 ) : null}
 
