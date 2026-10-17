@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-10-17 — `GET /api/health` (`apps/web`) is public, unauthenticated, and unmetered. It returns HTTP 200 and `{"status":"ok"}` with `Cache-Control: no-store`. No database, Upstash, or other service call. `apps/web/proxy.ts` lists `/api/health` in `PUBLIC_UNMETERED` and does not send it to login.
+
 > ⚠️ UPDATED 2026-10-17 — `GET /api/ingestion/status` (`apps/web`) adds `newestStoredArticleAt` for an admin: the newest `raw_events.created_at`, or null when that read fails, times out at 5000 ms, or no service client exists. 5000 ms is an engineering choice with no outside source. The read runs beside the Redis `pipeline:last_run` read. `status`, `cronIntervalMinutes`, `degraded`, and `reason` stay as they were. The route stays admin-only.
 
 > ⚠️ UPDATED 2026-10-16 — `GET /api/signals/:id` calls `public.get_event_price_bundle` as soon as the signal row is read. The function is written in `20261016180000_get_event_price_bundle.sql` and is not applied. A missing function (`PGRST202` or "Could not find the function") keeps the three `commodity_prices` reads per commodity impact. Any other function error returns no quotes and adds `price_at_signal` to `degraded`. The `price_at_signal` Server-Timing name is unchanged. No speed claim.

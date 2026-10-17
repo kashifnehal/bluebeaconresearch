@@ -22,17 +22,22 @@ const GATED_ALLOWED = [
   "/reset-password",
 ];
 
+// Paths that stay unauthenticated and are never rate-limited in this file or
+// on the route. GET /api/health is the outside uptime check; it must not wait
+// on auth or other services.
+export const PUBLIC_UNMETERED = ["/api/health"];
+
 // Page routes that require an authenticated session.
 //
 // NOTE: /api/* is deliberately NOT listed here. Every API route authenticates
 // independently — user-scoped routes via getRouteSupabaseClients() (lib/
 // supabase-server.ts), and the handful of public ones (/api/prices,
 // /api/prices/history, /api/prices/history-5y, /api/backtesting) are explicit
-// public-data endpoints that are still rate-limited. GET /api/ingestion/status
-// is admin-only (same email allowlist as the admin pages) and returns 404
-// otherwise. Middleware must not run an
-// auth check for them: doing so put the entire API surface behind the auth
-// backend's latency (see incident note below).
+// public-data endpoints that are still rate-limited. GET /api/health is public
+// and unmetered (PUBLIC_UNMETERED). GET /api/ingestion/status is admin-only
+// (same email allowlist as the admin pages) and returns 404 otherwise.
+// Middleware must not run an auth check for them: doing so put the entire API
+// surface behind the auth backend's latency (see incident note below).
 const PROTECTED = [
   "/dashboard",
   "/events",
@@ -199,6 +204,10 @@ export function decideAuthAction(
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (PUBLIC_UNMETERED.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return NextResponse.next();
+  }
 
   // ── Gate: if project is NOT ready, block everything except /login, /signup, /auth, /api, and static assets ──
   if (!isProjectReady) {

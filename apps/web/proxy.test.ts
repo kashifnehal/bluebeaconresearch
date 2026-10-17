@@ -7,6 +7,8 @@ import {
   classifyAuthFailure,
   decideAuthAction,
   hasSupabaseAuthCookie,
+  proxy,
+  PUBLIC_UNMETERED,
   runAuthCheck,
 } from "./proxy";
 
@@ -192,6 +194,16 @@ async function main() {
 
   await runTest("retryable with no auth cookie redirects (nothing to fail open to)", () => {
     assert.equal(decideAuthAction("retryable", false), "redirect");
+  });
+
+  await runTest("/api/health is on the public unmetered path list", () => {
+    assert.equal(PUBLIC_UNMETERED.includes("/api/health"), true);
+  });
+
+  await runTest("/api/health is not redirected to login", async () => {
+    const res = await proxy(new NextRequest("https://app.example.com/api/health"));
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("location"), null);
   });
 }
 

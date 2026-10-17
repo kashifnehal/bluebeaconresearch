@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Public web health route, `apps/web`, 2026-10-17
+
+- `GET /api/health` returns HTTP 200 and `{"status":"ok"}` with `Cache-Control: no-store` and `dynamic = "force-dynamic"`. No database, Upstash, auth, or other service call. The route comment says it must stay free of those so an outage in them does not report the web function as down.
+- `apps/web/proxy.ts` lists `/api/health` in `PUBLIC_UNMETERED` and returns next without a session check. Rate limiting stays off this path: this file does not rate-limit, and the route does not call `rateLimitOrPass`.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `05`; claude_project `09`, `08`, `14`, `05`. Skipped both `06_COMPONENTS.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no new component, table, prompt, or standing rule.
+- Verification: `pnpm --filter web exec tsc --noEmit` exit 0. `pnpm --filter web test` exit 0 (59 files, 391 passing cases, 0 failing, including 1 in `app/api/health/route.test.ts` and 2 new proxy cases). `pnpm --filter web run build` (`next build`) exit 0; `/api/health` listed as dynamic. No browser run. No live uptime-monitor hit.
+
 ## ✅ Newest stored article time on the admin ingestion status route, `apps/web`, 2026-10-17, ab91e37
 
 - `GET /api/ingestion/status` adds `newestStoredArticleAt` next to `status`, `cronIntervalMinutes`, `degraded`, and `reason`. For an admin it is the newest `raw_events.created_at` as an ISO string, or null. The service-role client (`NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`) is built once and reused by the Redis-missing fallback. The article read runs in parallel with the Redis `pipeline:last_run` read. If that read throws or is still running after 5000 ms, the field is null and the rest of the JSON stays as it was. 5000 ms is an engineering choice with no outside source.

@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-17 — Public web health route
+
+`apps/web` only. `GET /api/health` returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. No database, Upstash, or auth. The proxy lists `/api/health` as public and unmetered. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-17 — Newest stored article time on the admin ingestion status route
 
 `apps/web` only. An admin `GET /api/ingestion/status` includes `newestStoredArticleAt`. The public ingestion box stays off dashboard, map, and alerts. Full detail: `LIVE_TODO.md`.

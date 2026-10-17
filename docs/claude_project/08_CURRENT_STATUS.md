@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-17 (newest stored article time on the admin ingestion status route — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-17 (public web health route — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-17 (public web health route, `apps/web` only) — `GET /api/health` returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. No database, Upstash, or auth. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (ingestion status article time, `apps/web` only) — an admin ingestion status response includes `newestStoredArticleAt`. The public ingestion box stays removed. See `docs/brain/LIVE_TODO.md`.
 

@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-17 — Public web health route
+
+`apps/web` only. `GET /api/health` returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. No database, Upstash, or auth. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-17 — Newest stored article time on the admin ingestion status route
 
 `apps/web` only. An admin ingestion status response includes `newestStoredArticleAt`. The public ingestion box stays removed. Full detail: `docs/brain/14_CHANGELOG.md`.

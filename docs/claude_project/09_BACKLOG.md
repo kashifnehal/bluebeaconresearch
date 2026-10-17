@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-17.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-17 — Public `GET /api/health` (`apps/web`) returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. No database, Upstash, or auth. The proxy lists it as public and unmetered. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-17 — Admin `GET /api/ingestion/status` includes `newestStoredArticleAt` (`apps/web`). The public ingestion box stays removed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Public status rows label Classifier as Analysis and Data Pipeline as Data Sources (`apps/web`). The how-it-works sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
