@@ -2,15 +2,17 @@
 
 > **📍 Doc status — live status banners as of 2026-10-17 (search catalog speed claims — see the banner immediately below).**
 
+> ⚠️ NEW 2026-10-17 (restyle reverted; migrations applied; new standing rule, docs + revert commits only) — a restyle (new palette, Plex Sans + Newsreader fonts, reworked desk shell, keyword presets, desk-polish pass) shipped without founder approval and was reverted in full (`b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`). New standing rule: no brand, colour, or font change without founder approval (D52 in `10_DECISIONS.md`). `public.cot_positions` and `public.digest_send_log` migrations are now applied in production; the `/api/cot` positioning panel stays hidden until `cot_positions` has rows. See `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ NEW 2026-10-17 (search catalog speed claims, `apps/backend` only) — Intelligence Feed catalog copy no longer says real-time or live signal feed. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (story-thread measurement, `apps/backend` only) — read-only `measure:story-threads` groups the last 48 hours of signals. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (asset chart markers, price context, positioning panel, copy; `apps/web` only) — labelled event markers on the asset price chart (also on weekly ranges), "price at the event" and "since then" in the marker card from existing points only, a CFTC managed-money panel below the chart that shows only when `/api/cot` has rows, and plainer alert and Monitor-plan copy. Function region `hnd1` was tried and reverted by the 15% rule. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-17 (CFTC COT collector, `apps/backend` plus one migration) — weekly Disaggregated Futures Only positioning into `public.cot_positions`. Migration written, not applied. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-17 (CFTC COT collector, `apps/backend` plus one migration) — weekly Disaggregated Futures Only positioning into `public.cot_positions`. Migration now applied in production (2026-10-17). See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-17 (digest send log, `apps/backend` plus one migration, `f6c693d`) — each digest run writes counters to `public.digest_send_log`. The migration is written and not applied. See `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-10-17 (digest send log, `apps/backend` plus one migration, `f6c693d`) — each digest run writes counters to `public.digest_send_log`. The migration is now applied in production (2026-10-17). See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (speed-claim wording, `apps/web` only) — homepage Analyst feature is "Signals with checkable sources". Telegram connect prompt no longer says "as it happens". Search catalog in `apps/backend` was not changed. See `docs/brain/LIVE_TODO.md`.
 

@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Restyle shipped without approval, reverted; two migrations applied; decision recorded, docs only, 2026-10-17
+
+- A restyle (new palette, Plex Sans + Newsreader fonts, reworked desk shell, keyword presets, desk-polish pass) shipped without founder approval, conflicted with the brand kit and design system, and was reverted in full: `b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`.
+- New standing rule: no brand, colour, or font change without founder approval — ADR 048 / D52 in both `10_DECISIONS.md` files.
+- The function-region pin to `hnd1` added in `cd12abb` and reverted in `171f178` (already detailed in the "Asset chart markers..." entry below) is unrelated to the restyle — noted here only because it reverted the same day.
+- `public.cot_positions` (`20261017180000_cot_positions.sql`) and `public.digest_send_log` (`20261017120000_digest_send_log.sql`) — both previously "written, not applied" per the entries below — are now applied in production, confirmed live via `mcp__claude_ai_Supabase__list_migrations` on project `evavcgfmemwryggdkjmx` (versions `20261017133428` and `20261017130303`).
+- The `/api/cot` positioning panel stays hidden in production until `public.cot_positions` has rows — the migration being applied does not by itself mean the weekly CFTC collector has run and populated rows yet.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `10_DECISIONS`, `16_MIGRATION_CHECKLIST`; claude_project `10_DECISIONS`, `09`, `08`, `14`. Skipped both `05_API.md`, both `06_COMPONENTS.md`, both `04_DATABASE.md` (no new table/column, only a status change on tables already documented), `18_AI_ENGINE.md`, `15_INGESTION_PIPELINE.md` — no route, component, new table, prompt, or pipeline change.
+
 ## ✅ Search catalog speed-claim wording, `apps/backend`, 2026-10-17, this commit
 
 - Intelligence Feed catalog lines: "Real-time global signal monitoring." → "Global signal monitoring." The live-signal-feed paragraph now names the Intelligence Feed and says items are listed with sources and the time each story was reported.

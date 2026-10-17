@@ -2,15 +2,17 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-17.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-17 — A restyle (new palette, Plex Sans + Newsreader fonts, reworked desk shell, keyword presets, desk-polish pass) shipped without founder approval and was reverted in full (`b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`). New standing rule: no brand, colour, or font change without founder approval (D52 in `10_DECISIONS.md`). `public.cot_positions` and `public.digest_send_log` migrations, previously written-not-applied, are now applied in production. The `/api/cot` positioning panel stays hidden until `cot_positions` has rows. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-17 — Search catalog speed-claim wording (`apps/backend`). Intelligence Feed catalog copy no longer says real-time or live signal feed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — Story-thread measurement script (`apps/backend`). Read-only `measure:story-threads` on the last 48 hours of signals. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — Asset chart markers, price context, weekly-range markers, CFTC positioning panel, alert and Monitor-plan copy shipped in `apps/web` (`8462405`, `9343849`, `591fd74`, `1d06214`, `3726098`). Function region `hnd1` tried and reverted (`cd12abb`, `171f178`); a signed-in re-test is queued. `/api/cot` returns `{ available: false }` until the `cot_positions` migration is applied. See `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-17 — Weekly CFTC positioning collector (`apps/backend` plus one migration). `public.cot_positions` is written, not applied. Eight mapped futures. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-17 — Weekly CFTC positioning collector (`apps/backend` plus one migration). `public.cot_positions` is now applied in production (2026-10-17). Eight mapped futures. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ UPDATED 2026-10-17 — Digest send log (`apps/backend` plus one migration, `f6c693d`). Each digest run writes counters to `public.digest_send_log`. The migration is written, not applied. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+> ⚠️ UPDATED 2026-10-17 — Digest send log (`apps/backend` plus one migration, `f6c693d`). Each digest run writes counters to `public.digest_send_log`. The migration is now applied in production (2026-10-17). No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — Speed-claim wording (`apps/web`). Homepage Analyst feature is "Signals with checkable sources". Telegram connect prompt no longer says "as it happens". Search catalog in `apps/backend` was not changed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

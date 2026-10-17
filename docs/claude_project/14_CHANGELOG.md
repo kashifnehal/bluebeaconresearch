@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-17 — Restyle reverted, two migrations applied, new standing rule
+
+A restyle (new palette, Plex Sans + Newsreader fonts, reworked desk shell, keyword presets, desk-polish pass) shipped without founder approval, conflicted with the brand kit and design system, and was reverted in full: `b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`. New standing rule: no brand, colour, or font change without founder approval (ADR 048 / D52). `public.cot_positions` and `public.digest_send_log`, both previously written-not-applied, are now applied in production. The `/api/cot` positioning panel stays hidden until `cot_positions` has rows. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-17 — Asset chart markers, price context, positioning panel
 
 `apps/web` only. Markers on the asset price chart are now labelled (severity-band triangle, direction arrow, hover and focus card, merged above 12), also on weekly ranges. The card shows price at the event and the move since from existing points only. New `GET /api/cot` and a positioning panel below the chart. Alert and Monitor-plan copy corrected. Function region `hnd1` tried and reverted. Full detail: `docs/brain/LIVE_TODO.md`.
@@ -22,11 +26,11 @@
 
 ## 2026-10-17 — Weekly CFTC positioning collector
 
-`apps/backend` plus one migration. CFTC Disaggregated Futures Only JSON upserts into `public.cot_positions`. The migration is written, not applied. Full detail: `docs/brain/LIVE_TODO.md`.
+`apps/backend` plus one migration. CFTC Disaggregated Futures Only JSON upserts into `public.cot_positions`. The migration is now applied in production (2026-10-17). Full detail: `docs/brain/LIVE_TODO.md`.
 
 ## 2026-10-17 — Digest send log (`f6c693d`)
 
-`apps/backend` plus one migration. Each digest run writes counters to `public.digest_send_log`. The migration is written, not applied. Full detail: `docs/brain/14_CHANGELOG.md`.
+`apps/backend` plus one migration. Each digest run writes counters to `public.digest_send_log`. The migration is now applied in production (2026-10-17). Full detail: `docs/brain/14_CHANGELOG.md`.
 
 ## 2026-10-17 — Speed-claim wording on public pages
 

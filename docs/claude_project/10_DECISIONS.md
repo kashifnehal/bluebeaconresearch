@@ -961,3 +961,13 @@ The thresholds above are working rules from BBR's own data, not published standa
 **Rationale:** Those eight ids match the competitor region chips and BBR's own counts. Writing one id keeps filters and alert rules on one list.
 
 **Cross-tree mapping:** Recorded as **ADR 047** in `docs/brain/10_DECISIONS.md`.
+
+## D52: No brand, colour or font change without founder approval (2026-10-17)
+
+**Context:** On 2026-10-17 a restyle (new palette, Plex Sans + Newsreader fonts, a reworked desk shell, keyword presets, and a desk-polish pass) shipped across five commits without founder approval. It conflicted with the existing brand kit and design system and was reverted in full: `b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`.
+
+**Decision:** No brand, colour, or font change ships without explicit founder approval first. This covers palette tokens, typography, and shell/layout restyles — not ordinary component or copy work that stays inside the existing design system.
+
+**Rationale:** The restyle had to be reverted in full because it was never approved and conflicted with standing brand and design-system constraints. Requiring approval before the work ships, rather than after, avoids repeating a five-commit revert.
+
+**Cross-tree mapping:** Recorded as **ADR 048** in `docs/brain/10_DECISIONS.md`.
