@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-18 — Chart markers merge on drawn position; label uses the list date
+
+`apps/web` only. `buildMarkers` still groups from the leftmost point, then a second pass merges adjacent groups whose drawn positions (highest-severity member) are closer than 24px, repeating until every neighbouring pair is at least 24px apart. The combined marker is drawn at its highest-severity member and keeps the combined member list. `MARKER_MERGE_PX` stays 24. The marker label uses the same local date and time as the list under the chart. Not browser-checked.
+
 ### 2026-10-17 — WEB-FINISH: marker-merge pixel fix, hover citations, pulse all-assets, how-it-works live limits, alerts-badge fix, SignalQuickView parity, AI-search 503 copy, calendar extension
 
 `apps/web` only, 8 commits, each with its own `tsc --noEmit` + relevant test file(s) pass, plus one final full-suite (`pnpm test`, 474/474 green) and one real `next build` (exit 0) at the end.

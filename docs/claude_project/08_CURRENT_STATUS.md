@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-17 (search catalog speed claims — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-18 (chart marker overlap — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-18 (chart marker overlap, `apps/web` only) — neighbouring markers drawn closer than 24px now merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (restyle reverted; migrations applied; new standing rule, docs + revert commits only) — a restyle (new palette, Plex Sans + Newsreader fonts, reworked desk shell, keyword presets, desk-polish pass) shipped without founder approval and was reverted in full (`b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`). New standing rule: no brand, colour, or font change without founder approval (D52 in `10_DECISIONS.md`). `public.cot_positions` and `public.digest_send_log` migrations are now applied in production; the `/api/cot` positioning panel stays hidden until `cot_positions` has rows. See `docs/brain/LIVE_TODO.md`.
 

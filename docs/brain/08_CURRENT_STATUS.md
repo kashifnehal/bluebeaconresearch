@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-17 (asset chart markers, positioning panel)
+Last updated: 2026-10-18 (chart marker overlap and label date)
+
+> ⚠️ NEW 2026-10-18 (chart marker overlap, `apps/web` only) — neighbouring markers drawn closer than 24px now merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (asset chart markers, price context, positioning panel, copy; `apps/web` only) — labelled event markers on the asset price chart (also on weekly ranges), "price at the event" and "since then" in the marker card from existing points only, a CFTC managed-money panel below the chart that shows only when `/api/cot` has rows, and plainer alert and Monitor-plan copy. Function region `hnd1` was tried and reverted by the 15% rule. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

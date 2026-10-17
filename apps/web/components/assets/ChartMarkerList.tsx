@@ -1,18 +1,8 @@
 "use client";
 
-import type { ChartMarker } from "@/lib/chart-markers";
+import { formatMarkerListTime, type ChartMarker } from "@/lib/chart-markers";
 
 const LIST_WIDTH = 280;
-
-function formatMemberTime(ms: number): string {
-  return new Date(ms).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 /**
  * Click/keyboard-focus panel for a merged marker (count > 1): a scrollable
@@ -75,7 +65,7 @@ export function ChartMarkerList({
                 {m.title}
               </span>
               <span className="block text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mt-0.5">
-                {formatMemberTime(m.eventMs)}
+                {formatMarkerListTime(m.eventMs)}
               </span>
             </a>
           </li>

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildMarkers,
   directionLabel,
+  formatMarkerListTime,
   markerAriaLabel,
   medianGapMs,
   snapToSeries,
@@ -198,4 +199,78 @@ runTest("snapped signals sharing a week share one marker, and merging follows th
 
 runTest("snapToSeries returns nothing for an empty series", () => {
   assert.deepEqual(snapToSeries([sig("a", 1)], []), []);
+});
+
+runTest("drawn positions at 694, 730 and 736 end at least 24px apart", () => {
+  // Each drawn position is the highest-severity member, which can sit well
+  // to the right of the leftmost point the first pass measured from.
+  // Groups paint at 694, 730 and 736 before the second pass; 730 and 736
+  // are 6px apart.
+  const inputs = [
+    pxInput("a", 680, 2),
+    pxInput("b", 694, 9),
+    pxInput("c", 710, 2),
+    pxInput("d", 730, 8),
+    pxInput("e", 734, 2),
+    pxInput("f", 736, 7),
+  ];
+  const markers = buildMarkers(inputs, pxDomain, pxBoxWidth);
+  const positions = markers.map((m) => m.t);
+  assert.deepEqual(positions, [694, 730]);
+  for (let i = 1; i < positions.length; i++) {
+    assert.ok(positions[i] - positions[i - 1] >= 24);
+  }
+});
+
+runTest("merging drawn overlaps never drops or duplicates a member", () => {
+  const inputs = [
+    pxInput("a", 680, 2),
+    pxInput("b", 694, 9),
+    pxInput("c", 710, 2),
+    pxInput("d", 730, 8),
+    pxInput("e", 734, 2),
+    pxInput("f", 736, 7),
+  ];
+  const ids = buildMarkers(inputs, pxDomain, pxBoxWidth)
+    .flatMap((m) => m.members.map((member) => member.id))
+    .sort();
+  assert.deepEqual(ids, ["a", "b", "c", "d", "e", "f"]);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+runTest("a single far-away marker is unchanged", () => {
+  const markers = buildMarkers(
+    [pxInput("near-a", 0, 4), pxInput("near-b", 10, 9), pxInput("far", 800, 6)],
+    pxDomain,
+    pxBoxWidth,
+  );
+  assert.equal(markers.length, 2);
+  const far = markers[1];
+  assert.equal(far.t, 800);
+  assert.equal(far.count, 1);
+  assert.equal(far.severity, 6);
+  assert.deepEqual(far.members.map((m) => m.id), ["far"]);
+});
+
+runTest("markerAriaLabel uses the marker list's local date and time", () => {
+  const eventMs = Date.UTC(2026, 9, 10, 18, 30);
+  const formatted = formatMarkerListTime(eventMs);
+  const marker = buildMarkers(
+    [
+      {
+        id: "d",
+        title: "Dated signal",
+        eventMs,
+        t: eventMs,
+        severity: 6,
+        direction: "up",
+        sourcesCount: 1,
+      },
+    ],
+    [eventMs - DAY, eventMs + DAY],
+    1000,
+  )[0];
+  const label = markerAriaLabel(marker);
+  assert.ok(label.includes(`Signal reported ${formatted}`), label);
+  assert.equal(label.includes(`Signal reported ${new Date(eventMs).toISOString().slice(0, 10)}`), false);
 });

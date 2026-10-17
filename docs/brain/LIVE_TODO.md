@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Chart markers no longer draw closer than 24px; label date matches the list, `apps/web`, 2026-10-18
+
+- Groups were formed from the leftmost point, then drawn at the highest-severity member, so two neighbours could paint closer than 24px (USOIL 1M drew at 694, 730 and 736). A second pass merges adjacent groups until every neighbouring drawn pair is at least 24px apart. The merged marker stays on its highest-severity member and keeps every member. `MARKER_MERGE_PX` stays 24.
+- The marker label uses the same local date and time as the list under the chart, not a UTC calendar day.
+- Tests: `lib/chart-markers.test.ts` (the 694/730/736 gap, members kept once, a far marker unchanged, local label date). Not browser-checked.
+
 ## ✅ WEB-FINISH task (marker merge, hover citations, pulse all-assets, how-it-works live limits, alerts badge, SignalQuickView parity, AI-search 503 copy, calendar extension), `apps/web`, 2026-10-17, `9f4cf6e` `fc479b6` `22f6f9b` `471100c` `c5e51f4` `1e5a481` `b19a500` `82140e9`
 
 - Done directly in a dedicated worktree (`.claude/worktrees/web-finish`), 8 parts each committed and pushed to `origin/main` separately, per the task's own instruction to commit after each part.

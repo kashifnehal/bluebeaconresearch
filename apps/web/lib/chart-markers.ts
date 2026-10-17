@@ -138,12 +138,49 @@ function toMarker(group: MarkerInput[]): ChartMarker {
 }
 
 /**
+ * The first pass groups from each cluster's leftmost point. The marker is
+ * then drawn at its highest-severity member, which can sit near the right
+ * edge, so two neighbouring clusters can be painted closer than
+ * MARKER_MERGE_PX. Fold any adjacent clusters whose drawn positions are
+ * still that close, and repeat until every neighbouring pair is at least
+ * MARKER_MERGE_PX apart. The combined marker is drawn at its own
+ * highest-severity member and keeps every member.
+ */
+function collapseDrawnOverlaps(groups: MarkerInput[][], pxPerMs: number): MarkerInput[][] {
+  if (pxPerMs <= 0 || groups.length < 2) return groups;
+  let pending = groups;
+  for (let pass = 0; pass < groups.length; pass++) {
+    const next: MarkerInput[][] = [];
+    const drawn: number[] = [];
+    let merged = false;
+    for (const group of pending) {
+      const t = toMarker(group).t;
+      const prev = drawn[drawn.length - 1];
+      if (prev !== undefined && Math.abs(t - prev) * pxPerMs < MARKER_MERGE_PX) {
+        const combined = next[next.length - 1].concat(group);
+        next[next.length - 1] = combined;
+        drawn[drawn.length - 1] = toMarker(combined).t;
+        merged = true;
+      } else {
+        next.push(group);
+        drawn.push(t);
+      }
+    }
+    pending = next;
+    if (!merged) break;
+  }
+  return pending;
+}
+
+/**
  * Markers visible in `domain`, positioned on a `boxWidthPx`-wide chart.
  * Markers at the exact same x always share one marker (they would be drawn
  * on top of each other). Otherwise, a marker joins the group to its left
- * once its on-screen distance from that group's first (anchor) marker is
- * less than MARKER_MERGE_PX. Pure function: positions in, clusters out —
- * `boxWidthPx` is the only thing that turns a time distance into a pixel one.
+ * once its on-screen distance from that group's leftmost point is less than
+ * MARKER_MERGE_PX. A second pass then merges adjacent groups whose drawn
+ * positions (highest-severity member) are still closer than that. Pure
+ * function: positions in, clusters out — `boxWidthPx` is the only thing
+ * that turns a time distance into a pixel one.
  *
  * `boxWidthPx <= 0` (chart not yet measured) disables distance-based
  * merging so markers never flash together before the real width is known;
@@ -172,7 +209,18 @@ export function buildMarkers(
     if (joins) current.push(m);
     else groups.push([m]);
   }
-  return groups.map(toMarker);
+  return collapseDrawnOverlaps(groups, pxPerMs).map(toMarker);
+}
+
+/** Local date and time, same formatter as the marker list under the chart. */
+export function formatMarkerListTime(ms: number): string {
+  return new Date(ms).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function directionLabel(direction: Direction | null): string {
@@ -191,7 +239,7 @@ export function directionLabel(direction: Direction | null): string {
 }
 
 export function markerAriaLabel(marker: ChartMarker): string {
-  const when = new Date(marker.members[0].eventMs).toISOString().slice(0, 10);
+  const when = formatMarkerListTime(marker.members[0].eventMs);
   if (marker.count > 1) {
     return `${marker.count} signals reported near ${when}, highest severity ${marker.severity}. Press Enter for news around this time.`;
   }
