@@ -8,9 +8,14 @@
 
 ---
 
+## 2026-10-18 — Same-title merge measurement
+
+`apps/backend` only. Read-only script over signals created in the last 30 days: 769 signals, 3 unmerged same-title pairs, 6 signals (0.8%). Reasons split one each across region differs, event date outside the 8-hour window, and summary Jaccard below 0.33. No merge-path change. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-18 — Trust page ACLED line uses fixed sentences
 
 `apps/web` only. `/how-it-works` still reads the latest service_health_events row for ACLED and prints a fixed sentence: connected, or not connected with conflict signals using news sources only. No row hides the line. Stored error text is not printed. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
+
 
 ## 2026-10-18 — Marker citation popovers use plain language
 

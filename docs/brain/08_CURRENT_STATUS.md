@@ -2,9 +2,12 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-18 (trust page ACLED line)
+Last updated: 2026-10-18 (same-title merge measurement)
+
+> ⚠️ NEW 2026-10-18 (same-title merge measurement, `apps/backend` only) — read-only count of unmerged same-title pairs over 30 days: 3 pairs, 6 of 769 signals (0.8%). No single miss reason reached half, so the merge rule was not changed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (trust page ACLED line, `apps/web` only) — a connected row prints "ACLED conflict data: connected." Any other stored state prints that conflict signals use news sources only. No row hides the line. Stored error text is not printed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+
 
 > ⚠️ NEW 2026-10-18 (marker citations, `apps/web` only) — the "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
@@ -107,8 +110,6 @@ Last updated: 2026-10-18 (trust page ACLED line)
 > ⚠️ NEW 2026-10-15 (map locations, `apps/web` only, `2c977d8`) — a country value of "Global", in any case, is counted with signals that have no country. It is not a Locations row. "European Union" stays a place. See `14_CHANGELOG.md` v0.191.0, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-15 (watchlist pulse tiles, `apps/web` only, `f2bf0f1`) — `/watchlist/[symbol]` shows five tiles under the header: signals BBR published in the last 24 hours, the prior 24 hours, the change, the peak hour in local time, and up / down. News-only assets get the same tiles. No price request. See `14_CHANGELOG.md` v0.185.0, `LIVE_TODO.md`.
-
-Last updated: 2026-10-15 (speed and timing claims recorded; seven queue lines not started)
 
 > ⚠️ NEW 2026-10-15 (speed and timing claims, docs only, `b9f7084`) — site and ad copy do not use a speed superlative until a public benchmark exists. The tagline "Intelligence before markets move." is HOLD. Seven queue lines are not started. See `14_CHANGELOG.md` v0.189.0, `10_DECISIONS.md`, `LIVE_TODO.md`.
 

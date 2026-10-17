@@ -2,7 +2,10 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-18.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-18 — Same-title merge measurement (`apps/backend`). Read-only count: 3 unmerged same-title pairs in 30 days, 6 of 769 signals. No single miss reason reached half, so the merge rule was not changed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-18 — Trust page ACLED line (`apps/web`) prints a fixed connected or not-connected sentence. No row hides the line. Stored error text is not printed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 
 > ⚠️ UPDATED 2026-10-18 — Marker "Since then" and "Reports" popovers use plain language (`apps/web`). A press inside the popover does not close the hover card. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

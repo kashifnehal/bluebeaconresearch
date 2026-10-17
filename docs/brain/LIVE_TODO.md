@@ -19,6 +19,15 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - The marker label uses the same local date and time as the list under the chart, not a UTC calendar day.
 - Tests: `lib/chart-markers.test.ts` (the 694/730/736 gap, members kept once, a far marker unchanged, local label date). Not browser-checked.
 
+## ✅ Same-title merge measurement, `apps/backend`, 2026-10-18, this commit
+
+- Read-only `measure:duplicate-titles` (`apps/backend/scripts/measure-duplicate-titles.ts`) over signals created in the last 30 days. A pair is two rows with the same normalized title (lower case, trimmed, collapsed spaces) whose `created_at` values are within 8 hours. Separate rows were not merged. Blank titles excluded: 0.
+- 769 signals in the window. 3 unmerged pairs, covering 6 signals (0.8%).
+- First reason the later row's merge lookup would return null: region differs 1, event date outside the 8-hour window 1, summary Jaccard below 0.33 1 (score 0.182). Region empty or global: 0. Past the 25-candidate limit: 0. No reason is at least half of the pairs, so the merge rule was not changed and 0.33 was left as it is.
+- The three pairs: "two ships sink near hormuz after projectile strikes amid escalating attacks" (middle-east / middle-east, Jaccard 0.261, outside the event-date window); "trump waives russian oil sanctions, offering relief to india" (asia-pacific / asia-pacific, Jaccard 0.182); "trump delays russia sanctions, citing national interest" (north-america then eastern-europe, Jaccard 0.500).
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`; claude_project `09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`. Skipped both API docs, both database docs, both component docs, the AI-engine doc, the ingestion-pipeline doc, the migration checklist, and both decision docs — no route, table, component, prompt, collector change, migration, or standing rule. The merge function still returns null for an empty or global region. The existing window, limit, region, and country checks are now exported so the script calls the same functions.
+
 ## ✅ WEB-FINISH task (marker merge, hover citations, pulse all-assets, how-it-works live limits, alerts badge, SignalQuickView parity, AI-search 503 copy, calendar extension), `apps/web`, 2026-10-17, `9f4cf6e` `fc479b6` `22f6f9b` `471100c` `c5e51f4` `1e5a481` `b19a500` `82140e9`
 
 - Done directly in a dedicated worktree (`.claude/worktrees/web-finish`), 8 parts each committed and pushed to `origin/main` separately, per the task's own instruction to commit after each part.

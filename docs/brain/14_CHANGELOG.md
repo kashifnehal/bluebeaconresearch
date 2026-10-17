@@ -10,9 +10,14 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-18 — Same-title merge measurement
+
+`apps/backend` only. Read-only `measure:duplicate-titles` counts unmerged same-title pairs among signals created in the last 30 days. 769 signals, 3 pairs, 6 signals (0.8%). The three first-reasons were one each: region differs, event date outside the 8-hour window, summary Jaccard below 0.33. No reason reached half the pairs, so the merge rule was not changed. The 0.33 threshold was left as it is. The report file under `apps/backend/scripts/out/` is git-ignored.
+
 ### 2026-10-18 — Trust page ACLED line uses fixed sentences
 
 `apps/web` only. `/how-it-works` still reads the latest service_health_events row for ACLED. A connected row prints "ACLED conflict data: connected." Any other stored state prints "ACLED conflict data: not connected. Conflict signals use news sources only." No row hides the line. Stored error text is not printed. Not browser-checked.
+
 
 ### 2026-10-18 — Marker citation popovers use plain language
 

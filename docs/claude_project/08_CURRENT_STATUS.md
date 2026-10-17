@@ -1,8 +1,13 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
+> **📍 Doc status — live status banners as of 2026-10-18 (same-title merge measurement — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-18 (same-title merge measurement, `apps/backend` only) — 3 unmerged same-title pairs in 30 days, 6 of 769 signals (0.8%). No single miss reason reached half, so the merge rule was not changed. See `docs/brain/LIVE_TODO.md`.
+
 > **📍 Doc status — live status banners as of 2026-10-18 (trust page ACLED line — see the banner immediately below).**
 
 > ⚠️ NEW 2026-10-18 (trust page ACLED line, `apps/web` only) — a connected row prints "ACLED conflict data: connected." Any other stored state prints that conflict signals use news sources only. No row hides the line. Stored error text is not printed. See `docs/brain/LIVE_TODO.md`.
+
 
 > ⚠️ NEW 2026-10-18 (marker citations, `apps/web` only) — the "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. See `docs/brain/LIVE_TODO.md`.
 

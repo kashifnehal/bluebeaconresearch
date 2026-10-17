@@ -31,11 +31,34 @@ import { buildEventCategoryPatch } from "../lib/event-category-patch.js";
  * pulling in genuinely unrelated wire-service noise — bias toward NOT merging (per task
  * restrictions) means we stop right at the evidence line, not past it.
  */
-const MATCH_WINDOW_HOURS = 8;
+export const MATCH_WINDOW_HOURS = 8;
 // Exported so alert-dispatcher.ts's per-story alert cooldown can reuse the exact same
 // "is this the same story" check instead of re-deriving its own threshold.
 export const SIMILARITY_THRESHOLD = 0.33;
-const CANDIDATE_LIMIT = 25;
+export const CANDIDATE_LIMIT = 25;
+
+/** True when findMergeCandidate returns null before any candidate query. */
+export function regionBlocksMerge(region: string | null | undefined): boolean {
+  const trimmed = (region || "").trim();
+  return !trimmed || trimmed.toLowerCase() === "global";
+}
+
+/**
+ * Both sides name a country other than the literal "Global", and those names differ.
+ * Same check as the candidate loop in findMergeCandidate.
+ */
+export function countriesConflict(
+  incomingCountry: string | null | undefined,
+  candidateCountry: string | null | undefined,
+): boolean {
+  return Boolean(
+    incomingCountry &&
+      incomingCountry !== "Global" &&
+      candidateCountry &&
+      candidateCountry !== "Global" &&
+      candidateCountry !== incomingCountry,
+  );
+}
 
 const STOPWORDS = new Set([
   "the", "a", "an", "of", "in", "on", "at", "to", "for", "and", "or", "is", "are",
@@ -155,7 +178,7 @@ async function findMergeCandidate(
   eventDate: string,
 ): Promise<(CandidateSignal & { similarity: number }) | null> {
   const region = (classification.region || "").trim();
-  if (!region || region.toLowerCase() === "global") return null;
+  if (regionBlocksMerge(region)) return null;
 
   const newEventTime = new Date(eventDate).getTime();
   if (Number.isNaN(newEventTime)) return null;
@@ -186,15 +209,7 @@ async function findMergeCandidate(
   for (const candidate of candidates as CandidateSignal[]) {
     // Extra safety: if both sides have a known (non-"Global") country and they differ,
     // this isn't the same event regardless of text similarity — skip.
-    if (
-      country &&
-      country !== "Global" &&
-      candidate.country &&
-      candidate.country !== "Global" &&
-      candidate.country !== country
-    ) {
-      continue;
-    }
+    if (countriesConflict(country, candidate.country)) continue;
 
     const similarity = jaccardSimilarity(newTokens, tokenize(candidate.summary));
     if (similarity >= SIMILARITY_THRESHOLD && (!best || similarity > best.similarity)) {

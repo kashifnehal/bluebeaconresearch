@@ -24,7 +24,8 @@
     "probe:futures-quote": "tsx src/scripts/probe-futures-quote-fields.ts",
     "probe:news-delay": "tsx src/scripts/probe-news-delay.ts",
     "probe:t2": "tsx src/scripts/t2-query-probe.ts",
-    "measure:story-threads": "tsx src/scripts/measure-story-threads.ts"
+    "measure:story-threads": "tsx src/scripts/measure-story-threads.ts",
+    "measure:duplicate-titles": "tsx scripts/measure-duplicate-titles.ts"
   },
   "keywords": [],
   "author": "",
