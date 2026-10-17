@@ -84,13 +84,14 @@ runTest("event markers replace the dashed reference lines and use a stable label
   assert.doesNotMatch(source, /Dashed lines mark/);
   assert.match(source, /content: \(\s*<ChartMarkerLabel/);
   assert.doesNotMatch(source, /content: \(props\)/);
-  assert.match(source, /buildMarkers\(inputs, domain\)/);
+  assert.match(source, /buildMarkers\(inputs, domain, chartBoxWidth\)/);
 });
 
-runTest("clicking a marker reuses the existing click-to-attribute handler", () => {
-  const fn = source.match(/function handleMarkerSelect\(marker: ChartMarker\) \{([\s\S]*?)\n  \}\n/);
+runTest("clicking a single marker reuses the existing click-to-attribute handler; a merged marker opens a signal list", () => {
+  const fn = source.match(/function handleMarkerSelect\(marker: ChartMarker, x: number\) \{([\s\S]*?)\n  \}\n/);
   assert.ok(fn, "expected handleMarkerSelect");
   assert.match(fn![1], /handleChartPointClick\(nearest\)/);
+  assert.match(fn![1], /setMarkerList\(\{ marker, x \}\)/);
 });
 
 runTest("marker price context uses the chart series on db ranges and the weekly notice on Yahoo ranges", () => {

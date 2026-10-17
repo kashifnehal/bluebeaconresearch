@@ -4,10 +4,13 @@ import type { Direction, Signal } from "@blue-beacon-research/shared";
 // what to fetch and draw, this file decides which markers exist and how they
 // group. Descriptive only — nothing here says an event moved a price.
 
-/** More markers than this inside the visible range triggers merging. */
-export const MARKER_MERGE_THRESHOLD = 12;
-/** Markers closer than this share of the visible range merge into one. */
-export const MARKER_MERGE_FRACTION = 0.02;
+/**
+ * Markers rendered closer than this many pixels merge into one marker that
+ * shows the total count. DESIGN CHOICE, not measured — chosen as roughly the
+ * on-screen footprint of one marker triangle plus its count/arrow labels, so
+ * two markers close enough to visually overlap always merge.
+ */
+export const MARKER_MERGE_PX = 24;
 
 export type SeverityBand = "critical" | "high" | "elevated" | "base";
 
@@ -135,15 +138,21 @@ function toMarker(group: MarkerInput[]): ChartMarker {
 }
 
 /**
- * Markers visible in `domain`. Up to MARKER_MERGE_THRESHOLD markers are drawn
- * one each, except markers at the exact same x (they would be drawn on top of
- * each other). Above the threshold, markers whose x is less than
- * MARKER_MERGE_FRACTION of the range from the first marker of a group join
- * that group and are drawn as one marker with a count.
+ * Markers visible in `domain`, positioned on a `boxWidthPx`-wide chart.
+ * Markers at the exact same x always share one marker (they would be drawn
+ * on top of each other). Otherwise, a marker joins the group to its left
+ * once its on-screen distance from that group's first (anchor) marker is
+ * less than MARKER_MERGE_PX. Pure function: positions in, clusters out —
+ * `boxWidthPx` is the only thing that turns a time distance into a pixel one.
+ *
+ * `boxWidthPx <= 0` (chart not yet measured) disables distance-based
+ * merging so markers never flash together before the real width is known;
+ * same-x markers still merge.
  */
 export function buildMarkers(
   inputs: MarkerInput[],
   domain: [number, number],
+  boxWidthPx: number,
 ): ChartMarker[] {
   const [lo, hi] = domain;
   const visible = inputs
@@ -151,16 +160,15 @@ export function buildMarkers(
     .sort((a, b) => a.t - b.t || b.severity - a.severity || a.id.localeCompare(b.id));
   if (visible.length === 0) return [];
 
-  const merge = visible.length > MARKER_MERGE_THRESHOLD;
-  const gap = (hi - lo) * MARKER_MERGE_FRACTION;
+  const span = hi - lo;
+  const pxPerMs = span > 0 && boxWidthPx > 0 ? boxWidthPx / span : 0;
   const groups: MarkerInput[][] = [];
   for (const m of visible) {
     const current = groups[groups.length - 1];
     const startT = current?.[0].t;
-    const joins =
-      current !== undefined &&
-      startT !== undefined &&
-      (m.t === startT || (merge && m.t - startT < gap));
+    const samePoint = startT !== undefined && m.t === startT;
+    const pxGap = startT !== undefined && pxPerMs > 0 ? (m.t - startT) * pxPerMs : Infinity;
+    const joins = current !== undefined && (samePoint || pxGap < MARKER_MERGE_PX);
     if (joins) current.push(m);
     else groups.push([m]);
   }

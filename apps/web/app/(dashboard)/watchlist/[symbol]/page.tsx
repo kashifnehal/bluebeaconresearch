@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
@@ -30,6 +30,7 @@ import { PulseTiles } from "@/components/signals/PulseTiles";
 import { PositioningPanel } from "@/components/assets/PositioningPanel";
 import { ChartMarkerLabel } from "@/components/assets/ChartEventMarker";
 import { ChartMarkerCard, type MarkerPriceContext } from "@/components/assets/ChartMarkerCard";
+import { ChartMarkerList } from "@/components/assets/ChartMarkerList";
 import { moveSinceEvent } from "@/lib/move-since-event";
 import {
   buildMarkers,
@@ -330,6 +331,9 @@ export default function WatchlistSymbolPage() {
 
   const [signalsPage, setSignalsPage] = useState(1);
   const [attributionPoint, setAttributionPoint] = useState<{ t: number; price: number } | null>(null);
+  // Click/keyboard-focus list for a merged marker (count > 1) — the hover
+  // card stays a summary; this shows every grouped signal with a link.
+  const [markerList, setMarkerList] = useState<{ marker: ChartMarker; x: number } | null>(null);
   // Different commodity → back to page 1. React's documented "adjust state when a
   // prop changes during render" pattern (store the last-seen symbol in state),
   // which avoids both an effect round-trip and a ref write during render.
@@ -340,6 +344,7 @@ export default function WatchlistSymbolPage() {
     setChartRange("1M");
     setAttributionPoint(null);
     setOverlaySymbol(null);
+    setMarkerList(null);
   }
 
   const {
@@ -439,6 +444,27 @@ export default function WatchlistSymbolPage() {
     },
     staleTime: 5 * 60 * 1000,
   });
+  const chartBoxRef = useRef<HTMLDivElement>(null);
+  // Real on-screen chart width, needed to turn the 24px marker-merge distance
+  // into a time distance. 0 until the chart box is measured (buildMarkers
+  // treats 0 as "not yet known" and skips distance-based merging). A
+  // callback ref (rather than a plain useEffect) so the observer attaches
+  // exactly when the box div mounts, however that render branch is reached.
+  const [chartBoxWidth, setChartBoxWidth] = useState(0);
+  const chartBoxResizeObserver = useRef<ResizeObserver | null>(null);
+  const setChartBoxRef = useCallback((el: HTMLDivElement | null) => {
+    chartBoxRef.current = el;
+    chartBoxResizeObserver.current?.disconnect();
+    chartBoxResizeObserver.current = null;
+    if (el && typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect.width;
+        if (width) setChartBoxWidth(width);
+      });
+      observer.observe(el);
+      chartBoxResizeObserver.current = observer;
+    }
+  }, []);
   const chartMarkers = useMemo<ChartMarker[]>(() => {
     if (chartData.length < 2 || !markerSignals) return [];
     const domain: [number, number] = [chartData[0].t, chartData[chartData.length - 1].t];
@@ -452,9 +478,8 @@ export default function WatchlistSymbolPage() {
             markerSignalsForAsset,
             chartData.map((p) => p.t),
           );
-    return buildMarkers(inputs, domain);
-  }, [chartData, markerSignals, symbol, isForex, activeRange.source]);
-  const chartBoxRef = useRef<HTMLDivElement>(null);
+    return buildMarkers(inputs, domain, chartBoxWidth);
+  }, [chartData, markerSignals, symbol, isForex, activeRange.source, chartBoxWidth]);
   const [activeMarker, setActiveMarker] = useState<{ marker: ChartMarker; x: number } | null>(null);
 
   // Price context for a single-signal marker card. Weekly (Yahoo) ranges have
@@ -468,7 +493,14 @@ export default function WatchlistSymbolPage() {
         : { kind: "weekly" };
   }
 
-  function handleMarkerSelect(marker: ChartMarker) {
+  function handleMarkerSelect(marker: ChartMarker, x: number) {
+    // A merged marker opens the list of signals it groups, each linking to
+    // its own event page; a single marker keeps the existing click-to-
+    // attribute behavior (jump to the nearest chart point's "why" panel).
+    if (marker.count > 1) {
+      setMarkerList({ marker, x });
+      return;
+    }
     let nearest = -1;
     let best = Infinity;
     chartData.forEach((p, i) => {
@@ -781,7 +813,7 @@ export default function WatchlistSymbolPage() {
             </p>
           ) : (
             <div
-              ref={chartBoxRef}
+              ref={setChartBoxRef}
               className="relative h-[340px]"
               data-testid={isOverlayActive ? "watchlist-chart-overlay" : "watchlist-chart-price"}
             >
@@ -940,6 +972,14 @@ export default function WatchlistSymbolPage() {
                   x={activeMarker.x}
                   boxWidth={chartBoxRef.current?.clientWidth ?? 0}
                   priceContext={markerPriceContext}
+                />
+              )}
+              {markerList && !isOverlayActive && (
+                <ChartMarkerList
+                  marker={markerList.marker}
+                  x={markerList.x}
+                  boxWidth={chartBoxRef.current?.clientWidth ?? 0}
+                  onClose={() => setMarkerList(null)}
                 />
               )}
             </div>

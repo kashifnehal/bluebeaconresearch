@@ -51,7 +51,7 @@ export function ChartEventMarker({
   describedBy?: string;
   onActivate: (marker: ChartMarker, x: number) => void;
   onDeactivate: () => void;
-  onSelect: (marker: ChartMarker) => void;
+  onSelect: (marker: ChartMarker, x: number) => void;
 }) {
   const band = severityBand(marker.severity);
   const size = BAND_SIZE[band];
@@ -62,7 +62,7 @@ export function ChartEventMarker({
   function onKeyDown(e: KeyboardEvent<SVGGElement>) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onSelect(marker);
+      onSelect(marker, x);
     } else if (e.key === "Escape") {
       onDeactivate();
     }
@@ -82,7 +82,7 @@ export function ChartEventMarker({
       onMouseLeave={onDeactivate}
       onFocus={() => onActivate(marker, x)}
       onBlur={onDeactivate}
-      onClick={() => onSelect(marker)}
+      onClick={() => onSelect(marker, x)}
       onKeyDown={onKeyDown}
     >
       {/* Larger invisible target so the small triangle is easy to hit. */}

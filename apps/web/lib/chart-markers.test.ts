@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 
 import {
-  MARKER_MERGE_THRESHOLD,
   buildMarkers,
   directionLabel,
   markerAriaLabel,
@@ -41,57 +40,68 @@ runTest("severity bands follow the SeverityBadge cut-offs", () => {
   assert.equal(severityBand(1), "base");
 });
 
-runTest("12 or fewer markers are never merged, even when close together", () => {
-  const inputs = Array.from({ length: MARKER_MERGE_THRESHOLD }, (_, i) => input(`a${i}`, i * 0.1));
-  const markers = buildMarkers(inputs, domain);
-  assert.equal(markers.length, MARKER_MERGE_THRESHOLD);
+// Pixel-based merge tests use a domain/box width pair where 1ms of t == 1px,
+// so the examples below can be read directly as pixel positions.
+const PX_LO = 0;
+const PX_HI = 1000;
+const pxDomain: [number, number] = [PX_LO, PX_HI];
+const pxBoxWidth = PX_HI - PX_LO;
+function pxInput(id: string, px: number, severity = 5, direction: MarkerInput["direction"] = null): MarkerInput {
+  return { id, title: `Signal ${id}`, eventMs: px, t: px, severity, direction, sourcesCount: 2 };
+}
+
+runTest("markers 24px or farther apart are never merged", () => {
+  const markers = buildMarkers([pxInput("a", 0), pxInput("b", 24), pxInput("c", 60)], pxDomain, pxBoxWidth);
+  assert.equal(markers.length, 3);
   assert.ok(markers.every((m) => m.count === 1));
 });
 
-runTest("more than 12 markers merge when less than 2% of the range apart", () => {
-  // 13 markers: a tight cluster of 5 within 1 day (1% of 100 days), 8 spread out.
-  const cluster = [0, 0.2, 0.4, 0.6, 0.8].map((d, i) => input(`c${i}`, 10 + d, 4 + i));
-  const spread = Array.from({ length: 8 }, (_, i) => input(`s${i}`, 20 + i * 5));
-  const markers = buildMarkers([...cluster, ...spread], domain);
-  assert.equal(markers.length, 9);
-  const merged = markers.find((m) => m.count > 1);
-  assert.ok(merged);
-  assert.equal(merged!.count, 5);
-  assert.equal(merged!.severity, 8);
+runTest("markers closer than 24px merge into one marker with the total count", () => {
+  const markers = buildMarkers([pxInput("a", 0, 4), pxInput("b", 10, 7), pxInput("c", 20, 5)], pxDomain, pxBoxWidth);
+  assert.equal(markers.length, 1);
+  assert.equal(markers[0].count, 3);
+  assert.equal(markers[0].severity, 7);
   // Anchored at its highest-severity member's real position.
-  assert.equal(merged!.t, T0 + 10.8 * DAY);
+  assert.equal(markers[0].t, 10);
 });
 
-runTest("markers exactly 2% apart do not merge", () => {
-  const inputs = Array.from({ length: 13 }, (_, i) => input(`e${i}`, 10 + i * 2));
-  const markers = buildMarkers(inputs, domain);
-  assert.equal(markers.length, 13);
+runTest("a merge group's distance is measured from its anchor, not chained point-to-point", () => {
+  // 0->20 is 20px (joins), 20->40 is within 24px of 20 but 40px from the
+  // anchor at 0, so it starts a new group rather than chaining forward.
+  const markers = buildMarkers([pxInput("a", 0), pxInput("b", 20), pxInput("c", 40)], pxDomain, pxBoxWidth);
+  assert.equal(markers.length, 2);
+  assert.deepEqual(markers.map((m) => m.count), [2, 1]);
 });
 
-runTest("markers at the exact same position always share one marker", () => {
-  const markers = buildMarkers([input("x", 5, 6), input("y", 5, 9)], domain);
+runTest("markers at the exact same position always share one marker, even unmeasured (boxWidthPx 0)", () => {
+  const markers = buildMarkers([input("x", 5, 6), input("y", 5, 9)], domain, 0);
   assert.equal(markers.length, 1);
   assert.equal(markers[0].count, 2);
   assert.equal(markers[0].severity, 9);
 });
 
+runTest("an unmeasured chart (boxWidthPx 0) does not merge otherwise-distinct markers", () => {
+  const markers = buildMarkers([pxInput("a", 0), pxInput("b", 10)], pxDomain, 0);
+  assert.equal(markers.length, 2);
+});
+
 runTest("markers outside the visible range are dropped", () => {
-  const markers = buildMarkers([input("in", 10), input("before", -5), input("after", 150)], domain);
+  const markers = buildMarkers([input("in", 10), input("before", -5), input("after", 150)], domain, 1000);
   assert.deepEqual(markers.map((m) => m.members[0].id), ["in"]);
 });
 
 runTest("an empty range or empty input gives no markers", () => {
-  assert.deepEqual(buildMarkers([], domain), []);
+  assert.deepEqual(buildMarkers([], domain, 1000), []);
 });
 
 runTest("direction arrow shows only for up or down and only when members agree", () => {
-  assert.equal(buildMarkers([input("u", 1, 5, "up")], domain)[0].direction, "up");
-  assert.equal(buildMarkers([input("d", 1, 5, "down")], domain)[0].direction, "down");
-  assert.equal(buildMarkers([input("v", 1, 5, "volatile")], domain)[0].direction, null);
-  assert.equal(buildMarkers([input("n", 1, 5, null)], domain)[0].direction, null);
-  const mixed = buildMarkers([input("m1", 1, 5, "up"), input("m2", 1, 4, "down")], domain);
+  assert.equal(buildMarkers([input("u", 1, 5, "up")], domain, 1000)[0].direction, "up");
+  assert.equal(buildMarkers([input("d", 1, 5, "down")], domain, 1000)[0].direction, "down");
+  assert.equal(buildMarkers([input("v", 1, 5, "volatile")], domain, 1000)[0].direction, null);
+  assert.equal(buildMarkers([input("n", 1, 5, null)], domain, 1000)[0].direction, null);
+  const mixed = buildMarkers([input("m1", 1, 5, "up"), input("m2", 1, 4, "down")], domain, 1000);
   assert.equal(mixed[0].direction, null);
-  const same = buildMarkers([input("s1", 1, 5, "down"), input("s2", 1, 4, "down")], domain);
+  const same = buildMarkers([input("s1", 1, 5, "down"), input("s2", 1, 4, "down")], domain, 1000);
   assert.equal(same[0].direction, "down");
 });
 
@@ -122,7 +132,7 @@ runTest("signalsToMarkerSignals reads the direction for this asset, event date f
 });
 
 runTest("labels are descriptive and contain no buy or sell wording", () => {
-  const m = buildMarkers([input("u", 1, 8, "up")], domain)[0];
+  const m = buildMarkers([input("u", 1, 8, "up")], domain, 1000)[0];
   const text = `${markerAriaLabel(m)} ${directionLabel("up")} ${directionLabel(null)}`;
   assert.doesNotMatch(text, /\b(buy|sell|caused|because)\b/i);
   assert.equal(directionLabel(null), "Not stated");
@@ -169,15 +179,19 @@ runTest("a signal in the current week after the last point still snaps to it; on
 runTest("snapped signals sharing a week share one marker, and merging follows the same rule", () => {
   const sameWeek = snapToSeries([sig("a", 8), sig("b", 9), sig("c", 10)], weekly);
   const range: [number, number] = [weekly[0], weekly[9]];
-  const markers = buildMarkers(sameWeek, range);
+  // Any box width works here: these three all snap to the same weekly point,
+  // so they merge on the always-on exact-position rule, not pixel distance.
+  const markers = buildMarkers(sameWeek, range, 1000);
   assert.equal(markers.length, 1);
   assert.equal(markers[0].count, 3);
-  // 14 signals across 10 weeks: above the threshold, and only same-week ones are < 2% apart.
+  // 14 signals across 10 weeks snapped onto weekly points ~111px apart at
+  // this box width (well over the 24px merge distance), so only the signals
+  // that land on the exact same weekly point merge.
   const many = snapToSeries(
     Array.from({ length: 14 }, (_, i) => sig(`m${i}`, i * 4)),
     weekly,
   );
-  const merged = buildMarkers(many, range);
+  const merged = buildMarkers(many, range, 1000);
   assert.ok(merged.length < 14);
   assert.equal(merged.reduce((n, m) => n + m.count, 0), many.filter((m) => m.t <= range[1]).length);
 });
