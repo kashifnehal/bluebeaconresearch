@@ -3,13 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ Digest send log, `apps/backend` plus one migration, 2026-10-17
+## ✅ Digest send log, `apps/backend` plus one migration, 2026-10-17, f6c693d
 
 - Each `runDigestOnce` writes one `public.digest_send_log` row with `eligible`, `sent`, `skipped_no_signals`, `failed`, `sender_enabled`, and nullable `error`. A failed insert is logged and never thrown. If the table is missing (`42P01` or `PGRST205`), one line is logged and the digest continues. The migration is written and not applied. About 365 rows a year; no retention job.
 - `public.alerts_sent` still only has a `deferred_to_digest` flag; it does not log digest sends.
 - No open priority-queue line. Nothing struck.
 - Docs: this entry; brain `08`, `14`, `04`, `16`; claude_project `09`, `08`, `14`, `04`. Skipped both `05_API.md`, both `06_COMPONENTS.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, component, prompt, or standing rule.
 - Verification: `pnpm --filter backend exec tsc --noEmit` exit 0. `pnpm --filter backend test` exit 0 (58 files, 490 passing cases, 0 failing, including 3 in `digest-send-log.test.ts`). Migration not applied. No browser run. No paid API call.
+- The commit SHA is f6c693dd49a393b59c5a47e677136aafcda87ad5.
 
 ## ✅ Speed-claim wording on public pages, `apps/web`, 2026-10-17
 

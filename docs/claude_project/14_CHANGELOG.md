@@ -8,7 +8,7 @@
 
 ---
 
-## 2026-10-17 — Digest send log
+## 2026-10-17 — Digest send log (`f6c693d`)
 
 `apps/backend` plus one migration. Each digest run writes counters to `public.digest_send_log`. The migration is written, not applied. Full detail: `docs/brain/14_CHANGELOG.md`.
 
