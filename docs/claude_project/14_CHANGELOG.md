@@ -11,6 +11,7 @@
 ## 2026-10-17 — Desk redesign (palette, shell, desk home, keyword presets)
 
 `apps/web` only. New palette and fonts through the existing variables, amber reserved, desk home with since-last-visit strip, story threads, markets ledger and lead story, keyword presets. SHAs and detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-17 — Asset chart markers, price context, positioning panel
 
 `apps/web` only. Markers on the asset price chart are now labelled (severity-band triangle, direction arrow, hover and focus card, merged above 12), also on weekly ranges. The card shows price at the event and the move since from existing points only. New `GET /api/cot` and a positioning panel below the chart. Alert and Monitor-plan copy corrected. Function region `hnd1` tried and reverted. Full detail: `docs/brain/LIVE_TODO.md`.
