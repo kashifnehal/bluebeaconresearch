@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-17.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-17 — Weekly CFTC positioning collector (`apps/backend` plus one migration). `public.cot_positions` is written, not applied. Eight mapped futures. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-17 — Digest send log (`apps/backend` plus one migration, `f6c693d`). Each digest run writes counters to `public.digest_send_log`. The migration is written, not applied. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — Speed-claim wording (`apps/web`). Homepage Analyst feature is "Signals with checkable sources". Telegram connect prompt no longer says "as it happens". Search catalog in `apps/backend` was not changed. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

@@ -164,6 +164,10 @@ shipping OR tanker OR port OR canal OR sanctions OR embargo OR "export ban" OR t
 **Auth:** `RESEND_API_KEY` (same Resend account as Auth SMTP; **not yet set in production** — worker logs and no-ops without it).
 **Logic:** `runDigestOnce()` → every `user_preferences` row with `onboarding_completed_at` set and `digest_enabled = true` → per user, the top 5 `is_active` signals from the last 24h whose `region`/`commodity_impacts` overlap that user's saved `regions`/`commodities` (same `.or()` matching as `/api/signals?personalized=true`), ranked by severity. No global fallback — a user with no saved preferences gets nothing. Email body: Event → Why it matters → Which instruments → Alert threshold + "Built from" source links + not-financial-advice line, via `EmailService` (`resend` npm package).
 
+### 2.7 COT collector (`cot-collector.ts`) — added 2026-10-17
+
+CFTC Disaggregated Futures Only JSON (`https://publicreporting.cftc.gov/resource/72hh-3qpy.json`), no API key. Own cron `COT_CRON` (default `30 6 * * *`, daily; the report is weekly and the upsert is idempotent). Fetches the last 156 weeks for the eight mapped futures contracts in `lib/cot-contracts.ts`, upserts `public.cot_positions` on `(report_date, contract_market_code)`. User-Agent is the product name; 20 s timeout and one retry. If the table is missing (`42P01` or `PGRST205`) it logs once and returns. Off when `ENABLE_COT_COLLECTOR` is exactly `false`. Migration `20261017180000_cot_positions.sql` is written, not applied. Not part of the news ingestion cycle.
+
 ---
 
 ## 3. Relevance Filter (`lib/relevance-filter.ts`)
@@ -350,6 +354,8 @@ all.)
 | `GNEWS_PLAN`                   | Railway workers              | Unset or `free`: one query, max 10. `essential`: all queries, max 25. Unset in production; nothing changes until it is set. |
 | `REDIS_URL`                    | Railway workers              | BullMQ + pipeline status         |
 | `UPSTASH_REDIS_REST_URL/TOKEN` | Vercel + Railway             | Banner reads `pipeline:last_run` |
+| `COT_CRON`                     | Railway workers              | COT collector schedule. Default `30 6 * * *`. |
+| `ENABLE_COT_COLLECTOR`         | Railway workers              | Off only when exactly `false`. Default on. Missing table logs once and returns. |
 
 ---
 

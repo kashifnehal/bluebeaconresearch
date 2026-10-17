@@ -12,6 +12,7 @@ import { runGnewsCollectorOnce } from "./workers/gnews-collector.js";
 import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
+import { isCotCollectorEnabled, runCotCollectorOnce } from "./workers/cot-collector.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
 import { runRetentionJobsOnce, runServiceHealthRetentionOnce } from "./workers/retention.js";
 import { runDigestOnce } from "./workers/digest-sender.js";
@@ -126,6 +127,16 @@ const PRICE_SYNC_CRON =
 if (process.env.PRICE_SYNC_CRON && PRICE_SYNC_CRON !== process.env.PRICE_SYNC_CRON) {
   console.warn(
     `[workers] PRICE_SYNC_CRON="${process.env.PRICE_SYNC_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_PRICE_SYNC_CRON}"`,
+  );
+}
+
+const DEFAULT_COT_CRON = "30 6 * * *";
+const COT_CRON =
+  process.env.COT_CRON && cron.validate(process.env.COT_CRON) ? process.env.COT_CRON : DEFAULT_COT_CRON;
+
+if (process.env.COT_CRON && COT_CRON !== process.env.COT_CRON) {
+  console.warn(
+    `[workers] COT_CRON="${process.env.COT_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_COT_CRON}"`,
   );
 }
 
@@ -383,6 +394,20 @@ async function main() {
       app.log.info({ nearCap }, "budget-warning-alert complete");
     } catch (e) {
       app.log.error({ err: e }, "budget-warning-alert failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // CFTC Commitments of Traders. Daily cron; the fetch is idempotent and the
+  // report is released weekly. Default 06:30 UTC. Off when ENABLE_COT_COLLECTOR
+  // is exactly "false". Missing cot_positions table: log once and return.
+  app.log.info({ schedule: COT_CRON, enabled: isCotCollectorEnabled() }, "workers: cot-collector cron schedule");
+  cron.schedule(COT_CRON, async () => {
+    try {
+      const res = await runCotCollectorOnce();
+      app.log.info({ res }, "cot-collector complete");
+    } catch (e) {
+      app.log.error({ err: e }, "cot-collector failed");
       Sentry.captureException(e);
     }
   });

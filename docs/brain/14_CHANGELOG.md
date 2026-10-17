@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-17 — Weekly CFTC positioning collector
+
+`apps/backend` plus one migration. CFTC Disaggregated Futures Only JSON upserts into `public.cot_positions`. The migration is written, not applied. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-17 — Digest send log (`f6c693d`)
 
 `apps/backend` plus one migration. Each digest run writes counters to `public.digest_send_log`. The migration is written, not applied. Full detail: `LIVE_TODO.md`.

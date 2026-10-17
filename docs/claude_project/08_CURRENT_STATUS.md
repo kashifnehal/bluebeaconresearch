@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-17 (digest send log — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-17 (CFTC COT collector — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-17 (CFTC COT collector, `apps/backend` plus one migration) — weekly Disaggregated Futures Only positioning into `public.cot_positions`. Migration written, not applied. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (digest send log, `apps/backend` plus one migration, `f6c693d`) — each digest run writes counters to `public.digest_send_log`. The migration is written and not applied. See `docs/brain/LIVE_TODO.md`.
 

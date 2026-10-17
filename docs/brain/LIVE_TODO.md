@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Weekly CFTC positioning collector, `apps/backend` plus one migration, 2026-10-17, this commit
+
+- New table `public.cot_positions` (`20261017180000_cot_positions.sql`): PK `(report_date, contract_market_code)`, RLS on, no policy, revoke from anon/authenticated, grant select/insert/update to service_role. Written, not applied.
+- Collector `apps/backend/src/workers/cot-collector.ts` fetches 156 weeks of CFTC Disaggregated Futures Only JSON for eight mapped futures (USOIL, UKOIL, NGAS, XAUUSD, XAGUSD, COPPER, WHEAT, CORN). Upserts on the PK. User-Agent is the product name. 20 s timeout, one retry. Missing table (`42P01` / `PGRST205`) logs once and returns. Cron `COT_CRON` default `30 6 * * *`. Off when `ENABLE_COT_COLLECTOR` is exactly `false`.
+- Contract codes were queried from the live dataset on 2026-10-17, not taken from memory. FX and unmatched commodities are omitted.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`, `04`, `16`, `15`; claude_project `09`, `08`, `14`, `04`, `16_DATA_PIPELINE`. Skipped both `05_API.md`, both `06_COMPONENTS.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` — no route, component, prompt, or standing rule.
+
 ## ✅ Digest send log, `apps/backend` plus one migration, 2026-10-17, f6c693d
 
 - Each `runDigestOnce` writes one `public.digest_send_log` row with `eligible`, `sent`, `skipped_no_signals`, `failed`, `sender_enabled`, and nullable `error`. A failed insert is logged and never thrown. If the table is missing (`42P01` or `PGRST205`), one line is logged and the digest continues. The migration is written and not applied. About 365 rows a year; no retention job.

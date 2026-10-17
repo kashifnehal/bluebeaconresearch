@@ -209,6 +209,10 @@ for (const category of categories) {
 
 ---
 
+### 2.3b CFTC Commitments of Traders (added 2026-10-17)
+
+Weekly Disaggregated Futures Only JSON from `https://publicreporting.cftc.gov/resource/72hh-3qpy.json`. No API key. Collector `cot-collector.ts` on `COT_CRON` (default `30 6 * * *`). Upserts `public.cot_positions`. The migration is written, not applied. Authoritative writeup: `docs/brain/15_INGESTION_PIPELINE.md` section 2.7.
+
 ### 2.4 Guardian API (Planned — Not Fully Integrated)
 
 **URL:** https://content.guardianapis.com/search

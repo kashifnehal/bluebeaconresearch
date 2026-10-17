@@ -246,6 +246,9 @@ Shadow materiality-gate results. `public.gate_shadow_results`. RLS on, no policy
 ### Table 13f: `digest_send_log` (written, not applied, 2026-10-17)
 One row per daily digest run. `public.digest_send_log`. Columns match `runDigestOnce`: `eligible`, `sent`, `skipped_no_signals`, `failed`, `sender_enabled`, plus `run_at` and nullable `error`. RLS on, no policy, `anon`/`authenticated` revoked, `service_role` select+insert. About 365 rows a year; no retention job. `20261017120000_digest_send_log.sql`.
 
+### Table 13g: `cot_positions` (written, not applied, 2026-10-17)
+Weekly CFTC Disaggregated Futures Only positioning. `public.cot_positions`. Primary key `(report_date, contract_market_code)`. Columns: `market_name`, BBR `symbol`, open interest, money-manager / swap / producer / non-reporting longs and shorts, money-manager changes, `traders_total`, `contract_units`, `fetched_at`. RLS on, no policy, `anon`/`authenticated` revoked, `service_role` select+insert+update. `20261017180000_cot_positions.sql`. Not applied.
+
 ### View: `feed_gap_p95` (written, not applied, 2026-10-15)
 `20261015130000_feed_gap_p95.sql` (`5a04fcb`). Read-only view `public.feed_gap_p95`. Not in the applied migration list checked 2026-10-15.
 
