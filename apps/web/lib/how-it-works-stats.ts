@@ -80,3 +80,101 @@ export async function loadHowItWorksSignalCounts(
 
   return { total, last7Days };
 }
+
+export type ClassificationMethodRow = { classification_method: string | null };
+type RowsResult = { data: ClassificationMethodRow[] | null; error: unknown };
+
+export type HowItWorksRowsQuery = PromiseLike<RowsResult> & {
+  gte: (column: string, value: string) => PromiseLike<RowsResult>;
+};
+
+export type HowItWorksRowsClient = {
+  from: (table: string) => {
+    select: (columns: string) => HowItWorksRowsQuery;
+  };
+};
+
+export type KeywordFallbackShare = { heuristicCount: number; total: number; pct: number };
+
+/**
+ * Share of signals created in the last 7 days classified by the keyword
+ * fallback (`signals.classification_method = 'heuristic'`, as opposed to
+ * `'claude'` — see apps/web/lib/status-checks.ts's evaluateClassifierHealth
+ * for the same two values). Null when there are no signals in the window or
+ * the query fails, so the page omits the stat rather than showing 0%.
+ */
+export async function loadKeywordFallbackShare(
+  getClient: () => Promise<HowItWorksRowsClient>,
+  now: number = Date.now(),
+): Promise<KeywordFallbackShare | null> {
+  try {
+    const supabase = await getClient();
+    const sevenDaysAgo = new Date(now - SEVEN_DAYS_MS).toISOString();
+    const { data, error } = await supabase
+      .from("signals")
+      .select("classification_method")
+      .gte("created_at", sevenDaysAgo);
+    if (error) {
+      console.error("[how-it-works] classification_method query failed:", error);
+      return null;
+    }
+    const rows = data ?? [];
+    if (rows.length === 0) return null;
+    const heuristicCount = rows.filter((r) => r.classification_method === "heuristic").length;
+    return { heuristicCount, total: rows.length, pct: (heuristicCount / rows.length) * 100 };
+  } catch (err) {
+    console.error("[how-it-works] classification_method query threw:", err);
+    return null;
+  }
+}
+
+export type AcledHealthRow = { status: string | null; detail: string | null } | null;
+type AcledHealthResult = { data: AcledHealthRow; error: unknown };
+
+export type HowItWorksAcledClient = {
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        order: (column: string, opts: { ascending: boolean }) => {
+          limit: (n: number) => {
+            maybeSingle: () => PromiseLike<AcledHealthResult>;
+          };
+        };
+      };
+    };
+  };
+};
+
+/**
+ * Current ACLED collector state, read live from the most recent
+ * `service_health_events` row for `service = 'acled'` (written by
+ * apps/backend/src/workers/acled-collector.ts). Always returns a sentence —
+ * there is nothing to hide here, only an honest "we don't know" when the
+ * query itself fails.
+ */
+export async function loadAcledState(getClient: () => Promise<HowItWorksAcledClient>): Promise<string> {
+  const unavailable = "ACLED conflict data: live state unavailable right now.";
+  try {
+    const supabase = await getClient();
+    const { data, error } = await supabase
+      .from("service_health_events")
+      .select("status, detail")
+      .eq("service", "acled")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error("[how-it-works] ACLED health query failed:", error);
+      return unavailable;
+    }
+    if (!data) return "ACLED conflict data: no health events recorded yet.";
+    if (data.status === "ok") {
+      return `ACLED conflict data: last reported healthy (${data.detail ?? "ok"}).`;
+    }
+    const detail = data.detail ?? "not currently healthy";
+    return `ACLED conflict data: ${detail}${detail.endsWith(".") ? "" : "."}`;
+  } catch (err) {
+    console.error("[how-it-works] ACLED health query threw:", err);
+    return unavailable;
+  }
+}

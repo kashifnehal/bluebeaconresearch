@@ -3,7 +3,13 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { createClient, getRouteSupabaseClients } from "@/lib/supabase-server";
-import { formatStatNumber, loadHowItWorksSignalCounts, TOTAL_COLLECTOR_COUNT } from "@/lib/how-it-works-stats";
+import {
+  formatStatNumber,
+  loadAcledState,
+  loadHowItWorksSignalCounts,
+  loadKeywordFallbackShare,
+  TOTAL_COLLECTOR_COUNT,
+} from "@/lib/how-it-works-stats";
 
 // Research integrity is the point of this page: every number below is either
 // computed live from the database at request time, or a direct pointer into
@@ -97,15 +103,36 @@ const CLAIM_ROWS: ClaimRow[] = [
   },
 ];
 
-const LIMITS = [
-  "Severity and confidence are model outputs, not guarantees.",
-  "Older signals were classified by a keyword fallback — those are marked, not hidden. New signals wait for the model.",
-  "ACLED conflict data: ACLED is configured but returning no data (access pending), so no ACLED events are ingested yet.",
-  "A merged \"reports\" count can include more than one article from the same outlet — it is not a count of distinct sources.",
-];
+/**
+ * Limits list — (a) severity/confidence framing is a fixed statement, (b)
+ * the keyword-fallback share and (c) the ACLED line are both computed live
+ * at request time, never a stored or invented figure.
+ */
+async function getLimits(): Promise<string[]> {
+  const [fallbackShare, acledState] = await Promise.all([
+    loadKeywordFallbackShare(getStatsClient),
+    loadAcledState(getStatsClient),
+  ]);
+
+  const limits: string[] = ["Severity and confidence are model outputs, not guarantees."];
+
+  limits.push(
+    fallbackShare
+      ? `${Math.round(fallbackShare.pct)}% of signals in the last 7 days (${fallbackShare.heuristicCount} of ${fallbackShare.total}) were classified by the keyword fallback rather than the model — computed live from signals.classification_method.`
+      : "No signals in the last 7 days to compute a keyword-fallback share from.",
+  );
+
+  limits.push(acledState);
+
+  limits.push(
+    "A merged \"reports\" count can include more than one article from the same outlet — it is not a count of distinct sources.",
+  );
+
+  return limits;
+}
 
 export default async function HowItWorksPage() {
-  const stats = await getStats();
+  const [stats, limits] = await Promise.all([getStats(), getLimits()]);
 
   return (
     <div
@@ -175,7 +202,7 @@ export default async function HowItWorksPage() {
             Limits — what we don&apos;t do yet
           </h2>
           <ul className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-5">
-            {LIMITS.map((item) => (
+            {limits.map((item) => (
               <li key={item} className="text-sm text-[var(--text-secondary)] leading-relaxed flex gap-2">
                 <span className="text-[#6b7a72]" aria-hidden="true">
                   —
