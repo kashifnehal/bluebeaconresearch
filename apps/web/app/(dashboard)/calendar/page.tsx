@@ -35,6 +35,10 @@ type CalendarEvent = {
   actual: string | null;
   sourceUrl: string;
   sourceLabel: string;
+  // Visible attribution shown under the event name — only set on EIA rows
+  // today (the task's explicit ask), not a general-purpose field for every
+  // source.
+  creditLine?: string;
 };
 
 type TimeZoneMode = "utc" | "local";
@@ -303,6 +307,11 @@ function EventTable({
               {e.event}
               <span className="material-symbols-outlined text-[13px] text-on-surface/30 mt-0.5 shrink-0">open_in_new</span>
             </a>
+            {e.creditLine && (
+              <p data-testid="calendar-credit-line" className="text-[11px] text-on-surface/40 mt-0.5">
+                {e.creditLine}
+              </p>
+            )}
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <span className="text-[12px] text-on-surface/70">{e.country}</span>
               <ImpactBadge impact={e.impact} />
@@ -377,6 +386,11 @@ function EventTable({
                       {e.event}
                       <span className="material-symbols-outlined text-[13px] text-on-surface/30">open_in_new</span>
                     </a>
+                    {e.creditLine && (
+                      <p data-testid="calendar-credit-line" className="text-[11px] font-normal text-on-surface/40 mt-0.5">
+                        {e.creditLine}
+                      </p>
+                    )}
                   </td>
                   <td className="py-3 px-3">
                     <ImpactBadge impact={e.impact} />

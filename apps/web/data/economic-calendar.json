@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "description": "Static, manually-curated economic calendar (#86). Dates sourced from each institution's own published schedule — original 10 events sourced 2026-09-07; EIA Weekly Petroleum Status Report and USDA WASDE/Grain Stocks/Crop Production entries added 2026-09-27 (#227 calendar magnitude line) from eia.gov's release schedule and NASS's 2026 Agricultural Statistics Board Calendar — not guessed, not from a paid calendar API. See docs/brain/09_BACKLOG.md and docs/brain/LIVE_TODO.md for the sourcing note and the live-provider upgrade path (e.g. Trading Economics) if this ever needs to become dynamic.",
-    "sourcedAt": "2026-09-27",
-    "window": "2026-09-10 through 2026-10-30 (~7.5 weeks) — extended slightly past the nominal 4-6 week target so the next full FOMC/ECB/BOJ/GDP cluster isn't cut in half mid-cycle; see LIVE_TODO #86.",
+    "description": "Static, manually-curated economic calendar (#86). Dates sourced from each institution's own published schedule — original 10 events sourced 2026-09-07; EIA Weekly Petroleum Status Report and USDA WASDE/Grain Stocks/Crop Production entries added 2026-09-27 (#227 calendar magnitude line) from eia.gov's release schedule and NASS's 2026 Agricultural Statistics Board Calendar — not guessed, not from a paid calendar API. EIA/USDA entries extended through 2026-12-16 on 2026-10-17 (WEB-FINISH task 6), sourced from eia.gov/petroleum/supply/weekly/schedule.php (whose own holiday-exceptions list for the rest of 2026 is only the Oct 9 week — shifted to Thu Oct 15 — and the Nov 6 week — shifted to Thu Nov 12 for Veterans Day; Thanksgiving week is not listed as shifted), USDA/NASS's own 2026-NASS-PFEI-Schedule.pdf (data.nass.usda.gov) for Crop Production (Nov 10, Dec 10 — confirmed from that PDF's own NOV/DEC columns), and the WASDE report's usda.gov schedule page (also Nov 10, Dec 10, released same day as Crop Production as usual). No USDA Grain Stocks entry was added for this window — NASS's own PFEI PDF shows '--' (no release) for both November and December 2026; its next release is January 2027, outside this window. Each EIA row also carries a visible creditLine, 'Source: U.S. Energy Information Administration', rendered on the calendar page. See docs/brain/09_BACKLOG.md and docs/brain/LIVE_TODO.md for the sourcing note and the live-provider upgrade path (e.g. Trading Economics) if this ever needs to become dynamic.",
+    "sourcedAt": "2026-10-17",
+    "window": "2026-09-10 through 2026-10-30 for the original FOMC/ECB/BOJ/GDP cluster (~7.5 weeks, extended slightly past the nominal 4-6 week target so that cluster isn't cut in half mid-cycle; see LIVE_TODO #86); EIA/USDA entries separately extended through 2026-12-16 (next 60 days from the 2026-10-17 sourcing date).",
     "forecastPreviousActualNote": "forecast/previous/actual are intentionally null — there is no live data feed behind this page yet. The UI renders null as — rather than inventing plausible-looking numbers."
   },
   "events": [
@@ -174,7 +174,8 @@
       "previous": null,
       "actual": null,
       "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
-      "sourceLabel": "eia.gov"
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
     },
     {
       "id": "usda-grain-stocks-2026-09-30",
@@ -208,7 +209,8 @@
       "previous": null,
       "actual": null,
       "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
-      "sourceLabel": "eia.gov"
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
     },
     {
       "id": "usda-crop-production-2026-10-09",
@@ -259,7 +261,8 @@
       "previous": null,
       "actual": null,
       "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
-      "sourceLabel": "eia.gov"
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
     },
     {
       "id": "eia-petroleum-2026-10-21",
@@ -276,7 +279,8 @@
       "previous": null,
       "actual": null,
       "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
-      "sourceLabel": "eia.gov"
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
     },
     {
       "id": "eia-petroleum-2026-10-28",
@@ -293,7 +297,8 @@
       "previous": null,
       "actual": null,
       "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
-      "sourceLabel": "eia.gov"
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
     },
     {
       "id": "boj-2026-10-30",
@@ -311,6 +316,200 @@
       "actual": null,
       "sourceUrl": "https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm",
       "sourceLabel": "boj.or.jp"
+    },
+    {
+      "id": "eia-petroleum-2026-11-04",
+      "date": "2026-11-04",
+      "time": "15:30",
+      "timeApprox": false,
+      "timeNote": "10:30am ET (standard weekly release time; UTC offset reflects EST — DST ends Nov 1, 2026)",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "EIA Weekly Petroleum Status Report",
+      "category": "Energy",
+      "impact": "medium",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
+    },
+    {
+      "id": "eia-petroleum-2026-11-12",
+      "date": "2026-11-12",
+      "time": "17:00",
+      "timeApprox": false,
+      "timeNote": "12:00pm ET — shifted from the standard Wednesday (Nov 11) release due to the Veterans Day federal holiday, per eia.gov's own release schedule",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "EIA Weekly Petroleum Status Report",
+      "category": "Energy",
+      "impact": "medium",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
+    },
+    {
+      "id": "eia-petroleum-2026-11-18",
+      "date": "2026-11-18",
+      "time": "15:30",
+      "timeApprox": false,
+      "timeNote": "10:30am ET (standard weekly release time)",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "EIA Weekly Petroleum Status Report",
+      "category": "Energy",
+      "impact": "medium",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
+    },
+    {
+      "id": "eia-petroleum-2026-11-25",
+      "date": "2026-11-25",
+      "time": "15:30",
+      "timeApprox": false,
+      "timeNote": "10:30am ET (standard weekly release time) — eia.gov's own schedule lists only two 2026 holiday-shifted weeks (Oct 9 and Nov 6); Thanksgiving week is not one of them",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "EIA Weekly Petroleum Status Report",
+      "category": "Energy",
+      "impact": "medium",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
+    },
+    {
+      "id": "usda-crop-production-2026-11-10",
+      "date": "2026-11-10",
+      "time": "17:00",
+      "timeApprox": false,
+      "timeNote": "12:00pm ET",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "USDA Crop Production",
+      "category": "Agriculture",
+      "impact": "high",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://data.nass.usda.gov/Publications/2026-NASS-PFEI-Schedule.pdf",
+      "sourceLabel": "nass.usda.gov"
+    },
+    {
+      "id": "usda-wasde-2026-11-10",
+      "date": "2026-11-10",
+      "time": "17:00",
+      "timeApprox": false,
+      "timeNote": "12:00pm ET; released same day as the November Crop Production report",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "USDA WASDE (World Agricultural Supply and Demand Estimates)",
+      "category": "Agriculture",
+      "impact": "high",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.usda.gov/about-usda/general-information/staff-offices/office-chief-economist/commodity-markets/wasde-report",
+      "sourceLabel": "usda.gov"
+    },
+    {
+      "id": "eia-petroleum-2026-12-02",
+      "date": "2026-12-02",
+      "time": "15:30",
+      "timeApprox": false,
+      "timeNote": "10:30am ET (standard weekly release time)",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "EIA Weekly Petroleum Status Report",
+      "category": "Energy",
+      "impact": "medium",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
+    },
+    {
+      "id": "eia-petroleum-2026-12-09",
+      "date": "2026-12-09",
+      "time": "15:30",
+      "timeApprox": false,
+      "timeNote": "10:30am ET (standard weekly release time)",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "EIA Weekly Petroleum Status Report",
+      "category": "Energy",
+      "impact": "medium",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
+    },
+    {
+      "id": "usda-crop-production-2026-12-10",
+      "date": "2026-12-10",
+      "time": "17:00",
+      "timeApprox": false,
+      "timeNote": "12:00pm ET",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "USDA Crop Production",
+      "category": "Agriculture",
+      "impact": "high",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://data.nass.usda.gov/Publications/2026-NASS-PFEI-Schedule.pdf",
+      "sourceLabel": "nass.usda.gov"
+    },
+    {
+      "id": "usda-wasde-2026-12-10",
+      "date": "2026-12-10",
+      "time": "17:00",
+      "timeApprox": false,
+      "timeNote": "12:00pm ET; released same day as the December Crop Production report",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "USDA WASDE (World Agricultural Supply and Demand Estimates)",
+      "category": "Agriculture",
+      "impact": "high",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.usda.gov/about-usda/general-information/staff-offices/office-chief-economist/commodity-markets/wasde-report",
+      "sourceLabel": "usda.gov"
+    },
+    {
+      "id": "eia-petroleum-2026-12-16",
+      "date": "2026-12-16",
+      "time": "15:30",
+      "timeApprox": false,
+      "timeNote": "10:30am ET (standard weekly release time)",
+      "country": "United States",
+      "countryCode": "US",
+      "event": "EIA Weekly Petroleum Status Report",
+      "category": "Energy",
+      "impact": "medium",
+      "forecast": null,
+      "previous": null,
+      "actual": null,
+      "sourceUrl": "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
+      "sourceLabel": "eia.gov",
+      "creditLine": "Source: U.S. Energy Information Administration"
     }
   ]
 }
