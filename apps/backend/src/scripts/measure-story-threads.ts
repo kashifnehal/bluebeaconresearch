@@ -51,6 +51,7 @@ type SignalRow = {
   id: string;
   title: string | null;
   summary: string | null;
+  region: string | null;
   event_category: string | null;
   commodity_impacts: unknown;
   created_at: string;
@@ -62,6 +63,7 @@ type ExtendedThreadSignal = ThreadSignal & {
   primarySymbol: string | null;
   rawEventIds: string[];
   clusterKeys: Set<string>;
+  region: string | null;
 };
 
 function symbolsFromImpacts(impacts: unknown): string[] {
@@ -114,7 +116,7 @@ async function loadRecentSignals(): Promise<SignalRow[]> {
   for (;;) {
     const { data, error } = await supabase
       .from("signals")
-      .select("id,title,summary,event_category,commodity_impacts,created_at,sources_count,raw_event_ids")
+      .select("id,title,summary,region,event_category,commodity_impacts,created_at,sources_count,raw_event_ids")
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
@@ -166,6 +168,7 @@ async function toExtendedSignals(rows: SignalRow[]): Promise<ExtendedThreadSigna
       primarySymbol: symbols[0] ?? null,
       rawEventIds,
       clusterKeys,
+      region: row.region,
     };
   });
 }
@@ -208,6 +211,12 @@ function renderRuleSection(
   seed: number,
 ): string {
   const stats = threadStats(threads);
+  const sizeCounts = new Map<number, number>();
+  for (const thread of threads) sizeCounts.set(thread.length, (sizeCounts.get(thread.length) ?? 0) + 1);
+  const exactHistogram = [...sizeCounts.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([size, count]) => `${size}=${count}`)
+    .join(", ");
   const sharePct = (stats.shareInSize2plus * 100).toFixed(1);
   const multi = threads.filter((t) => t.length >= 2);
   const rng = mulberry32(seed);
@@ -221,6 +230,7 @@ function renderRuleSection(
     `- signals: ${stats.signals}`,
     `- groups: ${stats.threads}`,
     `- size histogram: size 1 = ${stats.size1}, size 2–3 = ${stats.size2to3}, size 4+ = ${stats.size4plus}`,
+    `- exact size histogram (size=group count): ${exactHistogram || "none"}`,
     `- largest group size: ${stats.largest}`,
     `- share of signals in a group of size 2+: ${stats.shareInSize2plus.toFixed(4)} (${sharePct}%)`,
     `- groups of size 2+ in this run: ${multi.length}`,
@@ -231,7 +241,7 @@ function renderRuleSection(
   sample.forEach((group, i) => {
     lines.push(`**Group ${i + 1}** (size ${group.length})`);
     for (const member of group) {
-      lines.push(`- ${member.created_at} — ${member.title}`);
+      lines.push(`- ${member.created_at} — ${member.region || "(no region)"} — ${member.title}`);
     }
     lines.push("");
   });
@@ -290,8 +300,14 @@ export async function compareStoryThreadRules(seed = DEFAULT_SEED) {
     ["C", threadsC],
   ] as const) {
     const stats = threadStats(threads);
+    const sizeCounts = new Map<number, number>();
+    for (const thread of threads) sizeCounts.set(thread.length, (sizeCounts.get(thread.length) ?? 0) + 1);
+    const exactHistogram = [...sizeCounts.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([size, count]) => `${size}=${count}`)
+      .join(", ");
     console.log(
-      `rule ${label}: groups=${stats.threads} size1=${stats.size1} size2to3=${stats.size2to3} size4plus=${stats.size4plus} largest=${stats.largest} share2plus=${stats.shareInSize2plus.toFixed(4)}`,
+      `rule ${label}: groups=${stats.threads} size1=${stats.size1} size2to3=${stats.size2to3} size4plus=${stats.size4plus} largest=${stats.largest} share2plus=${stats.shareInSize2plus.toFixed(4)} histogram=${exactHistogram}`,
     );
   }
   console.log(`report written to ${OUT_PATH.pathname}`);

@@ -3,10 +3,20 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Story-thread Rule B sample, `apps/backend`, 2026-10-18, this commit
+
+- Re-ran `measure:story-threads` on signals from the last 7 days (339 signals). Grouping rules were not changed. No winner was chosen. Sample lines now include the stored region.
+- Rule B (same event category, same first commodity symbol, within 6 hours, title-word Jaccard at least 0.5): 322 groups. Exact size histogram: size 1 = 307, size 2 = 14, size 4 = 1. Largest group is 4. 15 groups have size 2 or more.
+- Ten of the seeded random size-2+ groups (seed 20261017), title and region: (1) north-america — Greenland oil and mineral exploration, two headlines. (2) middle-east — Houthi attack on a Saudi Aramco admin building, two headlines. (3) eastern-europe — Russia sanctions waiver, two headlines. (4) middle-east — Houthi strike on Saudi oil facilities, two headlines. (5) middle-east, size 4 — Riyadh airport attack, four headlines. (6) europe — Meloni on a Russia diesel deal, two headlines. (7) asia-pacific — North Korea submarine-launched missiles, two headlines. (8) asia-pacific — Russian oil sanctions waiver and India, same title twice. (9) eastern-europe — call for a change in Ukraine's leadership, two headlines. (10) eastern-europe — Russian diesel sanctions eased during an attack on a Ukrainian city, two headlines.
+- Same run, not a verdict: Rule A 104 groups (largest 122). Rule C 338 groups (largest 2).
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`; claude_project `09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`. Skipped both API docs, both database docs, both component docs, the AI-engine doc, the ingestion-pipeline doc, the migration checklist, and both decision docs — no route, table, component, prompt, collector change, migration, or standing rule.
+
 ## ✅ Home pulse direction tile explains asset votes, `apps/web`, 2026-10-18
 
 - All-assets mode (dashboard home) labels the direction tile "Asset direction votes" and adds "One vote per asset per signal, so one signal can add several." Single-asset labels are unchanged. The count is still one vote per distinct asset per signal.
 - Render test covers both modes. Not browser-checked.
+
 
 ## ✅ Trust page ACLED line uses fixed sentences, `apps/web`, 2026-10-18
 

@@ -8,9 +8,14 @@
 
 ---
 
+## 2026-10-18 — Story-thread Rule B sample
+
+`apps/backend` only. Re-ran the 7-day three-rule script. Rules unchanged. No winner chosen. Rule B: 322 groups, sizes 1=307, 2=14, 4=1. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-18 — Home pulse direction tile explains asset votes
 
 `apps/web` only. The dashboard home direction tile is labelled "Asset direction votes" and says one signal can add several votes. A single asset still shows "Up / Down". Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
+
 
 ## 2026-10-18 — Same-title merge measurement
 

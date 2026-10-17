@@ -2,9 +2,12 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-18 (home pulse direction tile)
+Last updated: 2026-10-18 (story-thread Rule B sample)
+
+> ⚠️ NEW 2026-10-18 (story-thread Rule B sample, `apps/backend` only) — 7-day re-run: Rule B has 322 groups (size 1 = 307, size 2 = 14, size 4 = 1). No winner chosen. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (home pulse direction tile, `apps/web` only) — all-assets mode labels that tile "Asset direction votes" and explains that one signal can add several votes. Single-asset labels are unchanged. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
+
 
 > ⚠️ NEW 2026-10-18 (same-title merge measurement, `apps/backend` only) — read-only count of unmerged same-title pairs over 30 days: 3 pairs, 6 of 769 signals (0.8%). No single miss reason reached half, so the merge rule was not changed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
