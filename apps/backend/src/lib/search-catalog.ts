@@ -106,8 +106,8 @@ export const SEARCH_PAGE_ENTRIES: SearchCatalogEntry[] = [
     url: "/dashboard",
     content: [
       "Intelligence Feed.",
-      "Real-time global signal monitoring.",
-      "This is your live signal feed. New geopolitical and macro events that could affect markets you care about show up here as they're confirmed.",
+      "Global signal monitoring.",
+      "This is the Intelligence Feed. Geopolitical and macro events that could affect markets you care about are listed here with their sources and the time each story was reported.",
       "commodity news. what's happening. today. updates.",
       "Narrow the Intelligence Feed by commodity, region, minimum severity, and time window. The list updates as soon as you change a dropdown.",
       "Need a faster look without leaving the feed? This preview opens a slide-over with severity, confidence, commodity impacts, and a short excerpt of the analyst briefing.",

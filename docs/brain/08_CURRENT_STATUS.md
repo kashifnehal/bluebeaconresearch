@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-17 (story-thread measurement)
+Last updated: 2026-10-17 (search catalog speed claims)
+
+> ⚠️ NEW 2026-10-17 (search catalog speed claims, `apps/backend` only) — Intelligence Feed catalog copy no longer says real-time or live signal feed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (story-thread measurement, `apps/backend` only) — read-only `measure:story-threads` groups the last 48 hours of signals. `/tmp/threads-sample.md` is not committed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

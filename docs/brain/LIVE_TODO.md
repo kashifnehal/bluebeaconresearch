@@ -3,7 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ Story-thread measurement script, `apps/backend`, 2026-10-17, this commit
+## ✅ Search catalog speed-claim wording, `apps/backend`, 2026-10-17, this commit
+
+- Intelligence Feed catalog lines: "Real-time global signal monitoring." → "Global signal monitoring." The live-signal-feed paragraph now names the Intelligence Feed and says items are listed with sources and the time each story was reported.
+- Searched `apps/backend/src/lib` for real-time, live feed, instant, as it happens, the moment. Hits: the two dashboard lines above (changed). No other match in that folder. Nearby "live" wording left as-is because it is not those phrases: "live price history", "not live chat", calendar "live market data" question, "not a live help desk", "not the live Intelligence Feed".
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`; claude_project `09`, `08`, `14`. Skipped both `05_API.md`, both `04_DATABASE.md`, both `06_COMPONENTS.md`, `18_AI_ENGINE.md`, `15_INGESTION_PIPELINE.md`, `16_MIGRATION_CHECKLIST.md`, and both `10_DECISIONS.md` — no route, table, component, prompt, collector, or standing rule.
+
+## ✅ Story-thread measurement script, `apps/backend`, 2026-10-17, `c5aeafd`
 
 - Read-only script `measure:story-threads` groups the last 48 hours of signals with a pure function in `lib/story-threads.ts`. Two signals join when created_at is within 24 hours, `event_category` matches, they share a `commodity_impacts` symbol, and titles share at least two 4+ letter words (or Jaccard ≥ 0.4 on those word sets). Threads are connected components of those pairs.
 - Prints counts and writes `/tmp/threads-sample.md` (not committed) with up to 40 seeded size-2+ threads. Seed is printed.

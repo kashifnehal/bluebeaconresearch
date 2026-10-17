@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-17 — Search catalog speed-claim wording
+
+`apps/backend` only. Intelligence Feed catalog copy no longer says real-time or live signal feed. Full detail: `LIVE_TODO.md`.
+
 ### 2026-10-17 — Story-thread measurement script
 
 `apps/backend` only. Read-only grouping of the last 48 hours of signals. Sample file is `/tmp/threads-sample.md`, not committed. Full detail: `LIVE_TODO.md`.
