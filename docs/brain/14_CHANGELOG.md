@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-18 — Alerts badge sync is covered by a render test
+
+`apps/web` only. The badge write lives in `useSyncUnreadBadge`. Behaviour is unchanged: no data leaves the badge alone, and an empty list still clears it. A rendered probe fails if it renders more than 4 times for an empty list, no data, or three unread alerts. Not browser-checked.
+
 ### 2026-10-18 — Story-thread Rule B sample
 
 `apps/backend` only. Re-ran `measure:story-threads` on the last 7 days (339 signals). Rules were not changed and no winner was chosen. Sample lines now include region. Rule B: 322 groups, exact sizes 1=307, 2=14, 4=1. Rule A: 104 groups, largest 122. Rule C: 338 groups, largest 2. The report under `apps/backend/src/scripts/out/` is git-ignored.

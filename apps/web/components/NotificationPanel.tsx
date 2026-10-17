@@ -37,8 +37,27 @@ export function computeUnreadAlertCount(
   return alerts.filter((a) => !a.is_read && !readItems[a.id]).length;
 }
 
+/**
+ * Writes the sidebar badge from a settled alerts response. A loading or
+ * failed fetch (`data` undefined) does not touch the badge. The empty list
+ * is one stable array so this effect does not schedule another render when
+ * the count is unchanged.
+ */
+export function useSyncUnreadBadge<T extends Pick<AlertItem, "id" | "is_read">>(
+  data: { alerts: T[] } | undefined,
+  readItems: Record<string, boolean>,
+): T[] {
+  const setUnreadCount = useUIStore((s) => s.setUnreadCount);
+  const alerts = useMemo(() => (data ? data.alerts : (EMPTY_ALERTS as unknown as T[])), [data]);
+  useEffect(() => {
+    if (!data) return;
+    setUnreadCount(computeUnreadAlertCount(alerts, readItems));
+  }, [data, alerts, readItems, setUnreadCount]);
+  return alerts;
+}
+
 export function NotificationPanel() {
-  const { notifOpen, setNotifOpen, resetUnread, setUnreadCount } = useUIStore();
+  const { notifOpen, setNotifOpen, resetUnread } = useUIStore();
   const [readItems, setReadItems] = useState<Record<string, boolean>>({});
 
   const { data, isLoading, isError } = useQuery({
@@ -54,18 +73,7 @@ export function NotificationPanel() {
     retry: 1,
   });
 
-  // Stable reference while there is no data. A fresh `[]` on every render made
-  // the effect below fire on every render, and since setUnreadCount updates the
-  // store this component subscribes to, that was an endless render loop
-  // (React error #185) for any user with an empty or failed alerts fetch.
-  const alerts = useMemo(() => data?.alerts ?? EMPTY_ALERTS, [data]);
-
-  useEffect(() => {
-    // Wait for a real answer: a loading or failed fetch must not touch the badge.
-    // An answered-but-empty fetch (data.alerts = []) still zeroes a stale count.
-    if (!data) return;
-    setUnreadCount(computeUnreadAlertCount(alerts, readItems));
-  }, [data, alerts, readItems, setUnreadCount]);
+  const alerts = useSyncUnreadBadge(data, readItems);
 
   useEffect(() => {
     if (notifOpen) {

@@ -3,6 +3,11 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Alerts badge sync is a rendered hook, `apps/web`, 2026-10-18
+
+- `useSyncUnreadBadge` holds the same badge write as before: it waits for a settled alerts response, and an empty list still clears a leftover count. A small rendered probe feeds an empty list, no data, and three unread alerts, and fails if that probe renders more than 4 times.
+- Not browser-checked.
+
 ## ✅ Story-thread Rule B sample, `apps/backend`, 2026-10-18, this commit
 
 - Re-ran `measure:story-threads` on signals from the last 7 days (339 signals). Grouping rules were not changed. No winner was chosen. Sample lines now include the stored region.

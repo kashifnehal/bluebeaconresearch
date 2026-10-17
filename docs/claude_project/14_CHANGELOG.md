@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-18 — Alerts badge sync is covered by a render test
+
+`apps/web` only. The badge write lives in `useSyncUnreadBadge` with the same behaviour: no data leaves the badge alone, and an empty list still clears it. A rendered probe fails above 4 renders. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-18 — Story-thread Rule B sample
 
 `apps/backend` only. Re-ran the 7-day three-rule script. Rules unchanged. No winner chosen. Rule B: 322 groups, sizes 1=307, 2=14, 4=1. Full detail: `docs/brain/LIVE_TODO.md`.

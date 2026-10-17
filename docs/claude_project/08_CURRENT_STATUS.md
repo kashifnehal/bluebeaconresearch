@@ -1,10 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-18 (story-thread Rule B sample — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-18 (alerts badge render test — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-18 (alerts badge render test, `apps/web` only) — `useSyncUnreadBadge` writes the same badge as before. A rendered probe fails if it renders more than 4 times. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (story-thread Rule B sample, `apps/backend` only) — 7-day re-run: Rule B has 322 groups (size 1 = 307, size 2 = 14, size 4 = 1). No winner chosen. See `docs/brain/LIVE_TODO.md`.
-
-> **📍 Doc status — live status banners as of 2026-10-18 (home pulse direction tile — see the banner immediately below).**
 
 > ⚠️ NEW 2026-10-18 (home pulse direction tile, `apps/web` only) — all-assets mode labels that tile "Asset direction votes" and explains that one signal can add several votes. Single-asset labels are unchanged. See `docs/brain/LIVE_TODO.md`.
 

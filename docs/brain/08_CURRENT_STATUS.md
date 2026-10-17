@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-18 (story-thread Rule B sample)
+Last updated: 2026-10-18 (alerts badge render test)
+
+> ⚠️ NEW 2026-10-18 (alerts badge render test, `apps/web` only) — `useSyncUnreadBadge` writes the same badge as before. A rendered probe fails if it renders more than 4 times. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (story-thread Rule B sample, `apps/backend` only) — 7-day re-run: Rule B has 322 groups (size 1 = 307, size 2 = 14, size 4 = 1). No winner chosen. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

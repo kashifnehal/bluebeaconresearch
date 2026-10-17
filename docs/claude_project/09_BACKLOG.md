@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-18.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-18 — Alerts badge sync (`apps/web`) is `useSyncUnreadBadge`, same behaviour as before. A rendered probe fails above 4 renders. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-18 — Story-thread Rule B sample (`apps/backend`). 7-day re-run: 322 groups, sizes 1=307, 2=14, 4=1. No winner chosen. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-18 — Home pulse direction tile (`apps/web`) reads "Asset direction votes" in all-assets mode, with a line that one signal can add several votes. Single-asset labels are unchanged. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
