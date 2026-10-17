@@ -12,7 +12,6 @@ import { MapSignalPopup } from "@/components/map/MapSignalPopup";
 import { LocationList } from "@/components/map/LocationList";
 import { MobileTensionSheet } from "@/components/map/MobileTensionSheet";
 import { FilterBar } from "@/components/signals/FilterBar";
-import { DEFAULT_KEYWORD_SELECTION, filterByKeywords, type KeywordSelection } from "@/lib/keyword-presets";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
@@ -186,7 +185,6 @@ export default function MapPage() {
   }, []);
 
   const [filters, setFilters] = useState<FilterBarValue>(DEFAULT_FILTERS);
-  const [keywords, setKeywords] = useState<KeywordSelection>(DEFAULT_KEYWORD_SELECTION);
   const {
     liveSignals,
     isLoading,
@@ -229,7 +227,7 @@ export default function MapPage() {
     const minSeverity = filters.minSeverity;
     const selectedRegion = filters.region;
     const timeWindow = filters.window;
-    return filterByKeywords(filterPool, keywords)
+    return filterPool
       .map((s) => {
         const [lng, lat] = getSignalCoordinates(s);
         return { ...s, lat, lng };
@@ -257,7 +255,7 @@ export default function MapPage() {
                     new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
                   : true),
       );
-  }, [filterPool, filters, keywords]);
+  }, [filterPool, filters]);
   const geolocatedSignalsRef = useRef<GeoSignal[]>([]);
   geolocatedSignalsRef.current = geolocatedSignals;
   // Stream list now shares the exact same filtered set as the map markers —
@@ -1195,8 +1193,6 @@ export default function MapPage() {
             value={filters}
             onChange={setFilters}
             extraRegions={signals.map((s) => s.region)}
-            keywords={keywords}
-            onKeywordsChange={setKeywords}
           />
         </div>
       </section>
@@ -1409,8 +1405,6 @@ export default function MapPage() {
               value={filters}
               onChange={setFilters}
               extraRegions={signals.map((s) => s.region)}
-              keywords={keywords}
-              onKeywordsChange={setKeywords}
             />
           </div>
         </div>
