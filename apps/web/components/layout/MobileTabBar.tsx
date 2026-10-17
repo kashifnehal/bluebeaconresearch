@@ -28,8 +28,8 @@ export function MobileTabBar() {
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-stretch"
       style={{
         height: "60px",
-        backgroundColor: "var(--bg-app)",
-        borderTop: "1px solid var(--bg-elevated)",
+        backgroundColor: "#000000",
+        borderTop: "1px solid #2a2a2a",
       }}
     >
       {TABS.map((item) => {
@@ -39,14 +39,14 @@ export function MobileTabBar() {
             key={item.href}
             href={item.href}
             className="flex-1 flex flex-col items-center justify-center gap-0.5 relative min-h-[44px]"
-            style={{ color: active ? "var(--interactive)" : "var(--text-muted)" }}
+            style={{ color: active ? "var(--accent)" : "var(--text-muted)" }}
           >
             <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
               {item.icon}
             </span>
             <span
-              className="text-[10px] "
-              style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+              className="text-[10px] uppercase tracking-wide"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               {item.label}
             </span>
@@ -54,8 +54,8 @@ export function MobileTabBar() {
               <span
                 className="absolute top-1.5 right-[calc(50%-18px)] text-[9px] font-bold px-1 min-w-[14px] text-center"
                 style={{
-                  backgroundColor: "var(--danger-subtle)",
-                  color: "var(--on-danger-subtle)",
+                  backgroundColor: "#7f2927",
+                  color: "#ff9993",
                   borderRadius: "9999px",
                 }}
               >
@@ -76,8 +76,8 @@ export function MobileTabBar() {
           menu
         </span>
         <span
-          className="text-[10px] "
-          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+          className="text-[10px] uppercase tracking-wide"
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           More
         </span>
