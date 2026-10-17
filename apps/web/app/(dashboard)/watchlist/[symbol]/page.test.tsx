@@ -79,6 +79,20 @@ runTest("news-only detail queries go through priceRequestUrl and stay disabled",
   assert.match(source, /data-testid="watchlist-follow-toggle"/);
 });
 
+runTest("event markers replace the dashed reference lines and use a stable label element", () => {
+  assert.doesNotMatch(source, /strokeDasharray="2 4"/);
+  assert.doesNotMatch(source, /Dashed lines mark/);
+  assert.match(source, /content: \(\s*<ChartMarkerLabel/);
+  assert.doesNotMatch(source, /content: \(props\)/);
+  assert.match(source, /buildMarkers\(inputs, domain\)/);
+});
+
+runTest("clicking a marker reuses the existing click-to-attribute handler", () => {
+  const fn = source.match(/function handleMarkerSelect\(marker: ChartMarker\) \{([\s\S]*?)\n  \}\n/);
+  assert.ok(fn, "expected handleMarkerSelect");
+  assert.match(fn![1], /handleChartPointClick\(nearest\)/);
+});
+
 async function runAsync(name: string, fn: () => Promise<void>) {
   try {
     await fn();

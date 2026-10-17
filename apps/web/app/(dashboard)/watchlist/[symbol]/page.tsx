@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
@@ -27,6 +27,13 @@ import { toast } from "sonner";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { DriverBreakdownChart } from "@/components/signals/DriverBreakdownChart";
 import { PulseTiles } from "@/components/signals/PulseTiles";
+import { ChartMarkerLabel } from "@/components/assets/ChartEventMarker";
+import { ChartMarkerCard } from "@/components/assets/ChartMarkerCard";
+import {
+  buildMarkers,
+  signalsToMarkerSignals,
+  type ChartMarker,
+} from "@/lib/chart-markers";
 import { Pagination } from "@/components/ui/Pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -86,6 +93,8 @@ const HISTORY_DAYS = 90;
 // Correlated-signals list page size. 20 matches what /api/signals returned by
 // default before pagination, so page 1 of this list is byte-identical to today.
 const SIGNALS_PAGE_SIZE = 20;
+// Most signals fetched for chart markers in one request (route cap is 500).
+const MARKER_SIGNALS_LIMIT = 200;
 
 type ChartRangeId = "1M" | "6M" | "1Y" | "3Y" | "5Y";
 const CHART_RANGES = [
@@ -412,6 +421,46 @@ export default function WatchlistSymbolPage() {
     ? [chartData[0].t, chartData[chartData.length - 1].t]
     : null;
 
+  // Event markers: every signal reported for this asset inside the visible
+  // range (the correlated list above only holds one page of 20).
+  const markerWindowDays = activeRange.days ?? 365 * 5;
+  const { data: markerSignals } = useQuery({
+    queryKey: ["chart-marker-signals", symbol, markerWindowDays],
+    enabled: !isNewsOnly && activeRange.source === "db",
+    queryFn: async () => {
+      const json = await fetchJsonWithTimeout<{ signals?: Signal[]; degraded?: boolean }>(
+        `/api/signals?${isForex ? "forexPair" : "commodity"}=${encodeURIComponent(symbol)}&window=${markerWindowDays}d&sort=newest&limit=${MARKER_SIGNALS_LIMIT}`,
+      );
+      if (json.degraded) throw new Error("fetch_failed");
+      return json.signals ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const chartMarkers = useMemo<ChartMarker[]>(() => {
+    if (chartData.length < 2 || !markerSignals) return [];
+    const domain: [number, number] = [chartData[0].t, chartData[chartData.length - 1].t];
+    const inputs = signalsToMarkerSignals(markerSignals, symbol, isForex).map((m) => ({
+      ...m,
+      t: m.eventMs,
+    }));
+    return buildMarkers(inputs, domain);
+  }, [chartData, markerSignals, symbol, isForex]);
+  const chartBoxRef = useRef<HTMLDivElement>(null);
+  const [activeMarker, setActiveMarker] = useState<{ marker: ChartMarker; x: number } | null>(null);
+
+  function handleMarkerSelect(marker: ChartMarker) {
+    let nearest = -1;
+    let best = Infinity;
+    chartData.forEach((p, i) => {
+      const d = Math.abs(p.t - marker.t);
+      if (d < best) {
+        best = d;
+        nearest = i;
+      }
+    });
+    if (nearest >= 0) void handleChartPointClick(nearest);
+  }
+
   const overlayChartData = useMemo(() => {
     if (!overlaySymbol) return [];
     const source = activeRange.source === "db" ? (overlayHistoryPoints ?? []) : (overlayHistory5y ?? []);
@@ -711,7 +760,11 @@ export default function WatchlistSymbolPage() {
                 : "Not enough price history yet for a chart view"}
             </p>
           ) : (
-            <div className="h-[340px]" data-testid={isOverlayActive ? "watchlist-chart-overlay" : "watchlist-chart-price"}>
+            <div
+              ref={chartBoxRef}
+              className="relative h-[340px]"
+              data-testid={isOverlayActive ? "watchlist-chart-overlay" : "watchlist-chart-price"}
+            >
               <ResponsiveContainer width="100%" height="100%">
                 {isOverlayActive ? (
                   <LineChart margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
@@ -838,26 +891,43 @@ export default function WatchlistSymbolPage() {
                         );
                       }}
                     />
-                    {activeRange.source === "db" &&
-                      chartDomain &&
-                      events.map((ev) => {
-                        const iso = ev.eventDate ?? ev.createdAt;
-                        const t = new Date(iso).getTime();
-                        if (t < chartDomain[0] || t > chartDomain[1]) return null;
-                        return (
-                          <ReferenceLine key={ev.id} x={t} stroke="rgba(255,255,255,0.35)" strokeDasharray="2 4" />
-                        );
-                      })}
+                    {chartMarkers.map((m) => (
+                      <ReferenceLine
+                        key={m.key}
+                        x={m.t}
+                        stroke="rgba(255,255,255,0.16)"
+                        label={{
+                          content: (
+                            <ChartMarkerLabel
+                              marker={m}
+                              active={activeMarker?.marker.key === m.key}
+                              describedBy="chart-marker-card"
+                              onActivate={(mk, x) => setActiveMarker({ marker: mk, x })}
+                              onDeactivate={() => setActiveMarker(null)}
+                              onSelect={handleMarkerSelect}
+                            />
+                          ),
+                        }}
+                      />
+                    ))}
                   </LineChart>
                 )}
               </ResponsiveContainer>
+              {activeMarker && !isOverlayActive && (
+                <ChartMarkerCard
+                  id="chart-marker-card"
+                  marker={activeMarker.marker}
+                  x={activeMarker.x}
+                  boxWidth={chartBoxRef.current?.clientWidth ?? 0}
+                />
+              )}
             </div>
           )}
           <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
             {isOverlayActive
               ? "Percent change from the start of the selected range. Informational only — not a trading recommendation."
               : activeRange.source === "db"
-                ? "Dashed lines mark geopolitical signals below. Informational only — not a trading recommendation."
+                ? "Triangles mark geopolitical signals reported for this asset; hover or focus one for details. Informational only — not a trading recommendation."
                 : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
           </p>
           {isOverlayActive && (
