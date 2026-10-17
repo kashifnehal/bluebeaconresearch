@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-17 — Digest send log
+
+`apps/backend` plus one migration. Each digest run writes counters to `public.digest_send_log`. The migration is written, not applied. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-10-17 — Speed-claim wording on public pages
 
 `apps/web` only. Homepage Analyst pricing feature is "Signals with checkable sources". Telegram connect prompt no longer says "as it happens". Search catalog in `apps/backend` was not changed. Full detail: `docs/brain/14_CHANGELOG.md`.

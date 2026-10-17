@@ -130,6 +130,8 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 
 > ⚠️ UPDATED 2026-10-14 — `public.rss_drop_samples` and `public.gate_shadow_results` applied. RLS on, no policy, service_role only. Drop-sample rows are deleted after 14 days. Full note: `docs/brain/04_DATABASE.md` Tables 13d and 13e; `docs/brain/16_MIGRATION_CHECKLIST.md`.
 
+> ⚠️ UPDATED 2026-10-17 — `public.digest_send_log` is written and not applied. RLS on, no policy, service_role select+insert. About 365 rows a year; no retention job. Full note: `docs/brain/04_DATABASE.md` Table 13f; `docs/brain/16_MIGRATION_CHECKLIST.md`.
+
 > ⚠️ UPDATED 2026-10-16 — eight policies wrap `auth.uid()` in `(select auth.uid())`, and six foreign-key indexes are added. Written, not applied. No other index is dropped. Full note: `docs/brain/04_DATABASE.md`.
 
 > ⚠️ UPDATED 2026-10-16 — `service_health_events` rows older than 45 days are deleted on Sunday 03:00 UTC. The 45-day window is an engineering choice. Full note: `docs/brain/04_DATABASE.md`.

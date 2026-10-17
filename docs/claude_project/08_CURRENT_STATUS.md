@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-17 (speed-claim wording on public pages — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-17 (digest send log — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-17 (digest send log, `apps/backend` plus one migration) — each digest run writes counters to `public.digest_send_log`. The migration is written and not applied. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (speed-claim wording, `apps/web` only) — homepage Analyst feature is "Signals with checkable sources". Telegram connect prompt no longer says "as it happens". Search catalog in `apps/backend` was not changed. See `docs/brain/LIVE_TODO.md`.
 

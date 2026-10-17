@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-17 (speed-claim wording on public pages)
+Last updated: 2026-10-17 (digest send log)
+
+> ⚠️ NEW 2026-10-17 (digest send log, `apps/backend` plus one migration) — each digest run writes counters to `public.digest_send_log`. The migration is written and not applied. A missing table does not stop the digest. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (speed-claim wording, `apps/web` only) — homepage Analyst feature is "Signals with checkable sources" (was "Live signal feed"). Telegram connect prompt no longer says "as it happens". Search catalog in `apps/backend` was not changed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

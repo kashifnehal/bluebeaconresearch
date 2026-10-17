@@ -243,6 +243,9 @@ Diagnostic store for relevance-filter drops, including GNews and GDELT (`4cc10c2
 ### Table 13e: `gate_shadow_results` (applied 2026-10-14)
 Shadow materiality-gate results. `public.gate_shadow_results`. RLS on, no policy, service_role only. Not read by the live classification path. Applied migrations checked 2026-10-15: `rss_drop_samples_public` and `gate_shadow_results_public`.
 
+### Table 13f: `digest_send_log` (written, not applied, 2026-10-17)
+One row per daily digest run. `public.digest_send_log`. Columns match `runDigestOnce`: `eligible`, `sent`, `skipped_no_signals`, `failed`, `sender_enabled`, plus `run_at` and nullable `error`. RLS on, no policy, `anon`/`authenticated` revoked, `service_role` select+insert. About 365 rows a year; no retention job. `20261017120000_digest_send_log.sql`.
+
 ### View: `feed_gap_p95` (written, not applied, 2026-10-15)
 `20261015130000_feed_gap_p95.sql` (`5a04fcb`). Read-only view `public.feed_gap_p95`. Not in the applied migration list checked 2026-10-15.
 

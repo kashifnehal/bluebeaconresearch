@@ -402,8 +402,43 @@ export type DigestRunResult = {
   senderEnabled: boolean;
 };
 
+type DigestLogError = { message?: string; code?: string };
+
+function isMissingDigestSendLogTable(error: DigestLogError): boolean {
+  return error.code === "42P01" || error.code === "PGRST205";
+}
+
 /**
- * #83 — once-daily personalized digest. Scheduled from workers.ts alongside the
+ * One public.digest_send_log row for this run. A failed insert is logged and
+ * never thrown, so a missing table or a write error cannot stop the digest
+ * or change what is sent.
+ */
+export async function recordDigestSendLog(
+  result: DigestRunResult,
+  errorText: string | null = null,
+): Promise<void> {
+  try {
+    const { error } = await supabase.from("digest_send_log").insert({
+      eligible: result.eligible,
+      sent: result.sent,
+      skipped_no_signals: result.skippedNoSignals,
+      failed: result.failed,
+      sender_enabled: result.senderEnabled,
+      error: errorText,
+    });
+    if (!error) return;
+    if (isMissingDigestSendLogTable(error)) {
+      console.warn("[digest] digest_send_log table missing, skipping log");
+      return;
+    }
+    console.error("[digest] digest_send_log insert failed:", error.message);
+  } catch (e) {
+    console.error("[digest] digest_send_log insert threw:", e instanceof Error ? e.message : e);
+  }
+}
+
+/**
+ * Once-daily personalized digest. Scheduled from workers.ts alongside the
  * existing collectors' cron. For every user who finished onboarding and hasn't opted
  * out, sends their own top-5 signals from the last 24h (matched to their watchlist),
  * in the same Event → Why → Instruments → Threshold framing as the in-app Alerts card.
@@ -416,81 +451,88 @@ export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: bo
     failed: 0,
     senderEnabled: email.enabled,
   };
+  let errorText: string | null = null;
 
-  let query = supabase
-    .from("user_preferences")
-    .select("user_id, commodities, regions, forex_pairs, min_severity")
-    .not("onboarding_completed_at", "is", null)
-    .eq("digest_enabled", true);
-  if (opts?.onlyUserIds?.length) query = query.in("user_id", opts.onlyUserIds);
+  try {
+    let query = supabase
+      .from("user_preferences")
+      .select("user_id, commodities, regions, forex_pairs, min_severity")
+      .not("onboarding_completed_at", "is", null)
+      .eq("digest_enabled", true);
+    if (opts?.onlyUserIds?.length) query = query.in("user_id", opts.onlyUserIds);
 
-  const { data: prefs, error } = await query;
-  if (error) {
-    console.error("[digest] preferences query failed:", error.message);
-    return result;
-  }
-
-  // #146 — demo/prospect accounts must never enter digest eligible/sent counts
-  // or generate bounce traffic to unused mailboxes.
-  const { data: testRows, error: testErr } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("is_test_account", true);
-  if (testErr) {
-    console.error("[digest] is_test_account filter failed:", testErr.message);
-    return result;
-  }
-  const testIds = new Set((testRows ?? []).map((r) => r.id as string));
-  const realPrefs = (prefs ?? []).filter((p) => !testIds.has(p.user_id));
-
-  result.eligible = realPrefs.length;
-  if (realPrefs.length === 0) return result;
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bluebeaconresearch.com";
-
-  // Resolve recipient emails once.
-  const emailById = new Map<string, string>();
-  const { data: userPage } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-  for (const u of userPage?.users ?? []) if (u.email) emailById.set(u.id, u.email);
-
-  for (const pref of realPrefs as PrefRow[]) {
-    const to = emailById.get(pref.user_id);
-    if (!to) {
-      result.failed += 1;
-      continue;
-    }
-    const signals = await selectDigestSignalsForUser(pref);
-    if (signals.length === 0) {
-      result.skippedNoSignals += 1;
-      continue;
-    }
-    const sources = await sourceUrlsFor(signals);
-    const { subject, html, text } = renderDigestEmail(signals, pref, sources, appUrl);
-
-    if (opts?.dryRun) {
-      console.log(`[digest] DRY RUN → ${to} (${signals.length} signals)`);
-      result.sent += 1;
-      continue;
+    const { data: prefs, error } = await query;
+    if (error) {
+      errorText = error.message;
+      console.error("[digest] preferences query failed:", error.message);
+      return result;
     }
 
-    try {
-      const res = await email.send({ to, subject, html, text });
-      if (res.sent) {
-        result.sent += 1;
-        console.log(`[digest] sent to ${to} (${signals.length} signals) id=${res.id}`);
-        // Only on a confirmed real send — never on a dry run or a failed/throwing
-        // send — so a budget-deferred signal keeps retrying tomorrow's digest
-        // until it has actually gone out once.
-        await clearDeferredDigestFlags(pref.user_id, signals.map((s) => s.id));
-      } else {
+    // #146 — demo/prospect accounts must never enter digest eligible/sent counts
+    // or generate bounce traffic to unused mailboxes.
+    const { data: testRows, error: testErr } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("is_test_account", true);
+    if (testErr) {
+      errorText = testErr.message;
+      console.error("[digest] is_test_account filter failed:", testErr.message);
+      return result;
+    }
+    const testIds = new Set((testRows ?? []).map((r) => r.id as string));
+    const realPrefs = (prefs ?? []).filter((p) => !testIds.has(p.user_id));
+
+    result.eligible = realPrefs.length;
+    if (realPrefs.length === 0) return result;
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bluebeaconresearch.com";
+
+    // Resolve recipient emails once.
+    const emailById = new Map<string, string>();
+    const { data: userPage } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+    for (const u of userPage?.users ?? []) if (u.email) emailById.set(u.id, u.email);
+
+    for (const pref of realPrefs as PrefRow[]) {
+      const to = emailById.get(pref.user_id);
+      if (!to) {
         result.failed += 1;
-        console.warn(`[digest] not sent to ${to}: ${res.reason}`);
+        continue;
       }
-    } catch (e) {
-      result.failed += 1;
-      console.error(`[digest] send threw for ${to}:`, e instanceof Error ? e.message : e);
-    }
-  }
+      const signals = await selectDigestSignalsForUser(pref);
+      if (signals.length === 0) {
+        result.skippedNoSignals += 1;
+        continue;
+      }
+      const sources = await sourceUrlsFor(signals);
+      const { subject, html, text } = renderDigestEmail(signals, pref, sources, appUrl);
 
-  return result;
+      if (opts?.dryRun) {
+        console.log(`[digest] DRY RUN → ${to} (${signals.length} signals)`);
+        result.sent += 1;
+        continue;
+      }
+
+      try {
+        const res = await email.send({ to, subject, html, text });
+        if (res.sent) {
+          result.sent += 1;
+          console.log(`[digest] sent to ${to} (${signals.length} signals) id=${res.id}`);
+          // Only on a confirmed real send — never on a dry run or a failed/throwing
+          // send — so a budget-deferred signal keeps retrying tomorrow's digest
+          // until it has actually gone out once.
+          await clearDeferredDigestFlags(pref.user_id, signals.map((s) => s.id));
+        } else {
+          result.failed += 1;
+          console.warn(`[digest] not sent to ${to}: ${res.reason}`);
+        }
+      } catch (e) {
+        result.failed += 1;
+        console.error(`[digest] send threw for ${to}:`, e instanceof Error ? e.message : e);
+      }
+    }
+
+    return result;
+  } finally {
+    await recordDigestSendLog(result, errorText);
+  }
 }
