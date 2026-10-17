@@ -93,6 +93,12 @@ runTest("clicking a marker reuses the existing click-to-attribute handler", () =
   assert.match(fn![1], /handleChartPointClick\(nearest\)/);
 });
 
+runTest("marker price context uses the chart series on db ranges and the weekly notice on Yahoo ranges", () => {
+  assert.match(source, /activeRange\.source === "db"\s*\? \{ kind: "series", move: moveSinceEvent\(/);
+  assert.match(source, /: \{ kind: "weekly" \}/);
+  assert.match(source, /priceContext=\{markerPriceContext\}/);
+});
+
 async function runAsync(name: string, fn: () => Promise<void>) {
   try {
     await fn();

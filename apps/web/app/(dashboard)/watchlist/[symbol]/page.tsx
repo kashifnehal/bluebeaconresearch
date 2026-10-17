@@ -28,7 +28,8 @@ import { CommodityChip } from "@/components/signals/CommodityChip";
 import { DriverBreakdownChart } from "@/components/signals/DriverBreakdownChart";
 import { PulseTiles } from "@/components/signals/PulseTiles";
 import { ChartMarkerLabel } from "@/components/assets/ChartEventMarker";
-import { ChartMarkerCard } from "@/components/assets/ChartMarkerCard";
+import { ChartMarkerCard, type MarkerPriceContext } from "@/components/assets/ChartMarkerCard";
+import { moveSinceEvent } from "@/lib/move-since-event";
 import {
   buildMarkers,
   signalsToMarkerSignals,
@@ -447,6 +448,17 @@ export default function WatchlistSymbolPage() {
   }, [chartData, markerSignals, symbol, isForex]);
   const chartBoxRef = useRef<HTMLDivElement>(null);
   const [activeMarker, setActiveMarker] = useState<{ marker: ChartMarker; x: number } | null>(null);
+
+  // Price context for a single-signal marker card. Weekly (Yahoo) ranges have
+  // one point a week, so a move since the event would not be a real
+  // measurement there.
+  let markerPriceContext: MarkerPriceContext | undefined;
+  if (activeMarker && activeMarker.marker.count === 1) {
+    markerPriceContext =
+      activeRange.source === "db"
+        ? { kind: "series", move: moveSinceEvent(activeMarker.marker.members[0].eventMs, chartData) }
+        : { kind: "weekly" };
+  }
 
   function handleMarkerSelect(marker: ChartMarker) {
     let nearest = -1;
@@ -919,6 +931,7 @@ export default function WatchlistSymbolPage() {
                   marker={activeMarker.marker}
                   x={activeMarker.x}
                   boxWidth={chartBoxRef.current?.clientWidth ?? 0}
+                  priceContext={markerPriceContext}
                 />
               )}
             </div>

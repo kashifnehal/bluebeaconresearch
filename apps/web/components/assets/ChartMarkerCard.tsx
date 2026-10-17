@@ -1,5 +1,71 @@
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { directionLabel, type ChartMarker } from "@/lib/chart-markers";
+import type { MoveSinceEvent } from "@/lib/move-since-event";
+
+export type MarkerPriceContext =
+  | { kind: "weekly" }
+  | { kind: "series"; move: MoveSinceEvent };
+
+export const PRICE_CONTEXT_NOTE =
+  "Descriptive only. Other news and market moves also affect price.";
+export const WEEKLY_UNAVAILABLE = "Not available on weekly data";
+
+function formatPrice(price: number): string {
+  return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatPct(pct: number | null): string {
+  if (pct == null) return "—";
+  return `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`;
+}
+
+function formatPointTime(ms: number): string {
+  return new Date(ms).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function PriceContext({ context }: { context: MarkerPriceContext }) {
+  if (context.kind === "weekly") {
+    return (
+      <div className="mt-2 border-t border-outline-variant/30 pt-2" data-testid="chart-marker-price-context">
+        <p className="text-[11px] font-mono text-on-surface-variant">{WEEKLY_UNAVAILABLE}</p>
+        <p className="mt-1 text-[10px] leading-snug text-on-surface-variant/70">{PRICE_CONTEXT_NOTE}</p>
+      </div>
+    );
+  }
+  const { move } = context;
+  return (
+    <div className="mt-2 border-t border-outline-variant/30 pt-2" data-testid="chart-marker-price-context">
+      <dl className="space-y-1 text-[11px] font-mono text-on-surface-variant">
+        <div className="flex justify-between gap-3">
+          <dt>Price at the event</dt>
+          <dd className="text-right" title={move.atEvent ? `First recorded point: ${formatPointTime(move.atEvent.t)}` : undefined}>
+            {move.atEvent ? formatPrice(move.atEvent.price) : "Not available"}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt>Since then</dt>
+          <dd className="text-right" title={move.latest ? `Latest point: ${formatPointTime(move.latest.t)}` : undefined}>
+            {move.latest && move.sincePct != null
+              ? `${formatPct(move.sincePct)} (${formatPrice(move.latest.price)})`
+              : "Not available"}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-3" data-testid="chart-marker-horizons">
+          <dt>After 1h / 4h / 24h</dt>
+          <dd className="text-right">
+            {formatPct(move.after1hPct)} / {formatPct(move.after4hPct)} / {formatPct(move.after24hPct)}
+          </dd>
+        </div>
+      </dl>
+      <p className="mt-1 text-[10px] leading-snug text-on-surface-variant/70">{PRICE_CONTEXT_NOTE}</p>
+    </div>
+  );
+}
 
 const CARD_WIDTH = 264;
 
@@ -22,6 +88,7 @@ export function ChartMarkerCard({
   marker,
   x,
   boxWidth,
+  priceContext,
 }: {
   id: string;
   marker: ChartMarker;
@@ -29,6 +96,8 @@ export function ChartMarkerCard({
   x: number;
   /** Chart box width in px, used to keep the card inside it. */
   boxWidth: number;
+  /** Shown for a single signal only; omitted for merged markers. */
+  priceContext?: MarkerPriceContext;
 }) {
   const half = CARD_WIDTH / 2;
   const left = Math.min(Math.max(x, half), Math.max(half, boxWidth - half));
@@ -97,6 +166,7 @@ export function ChartMarkerCard({
               <dd>{first.sourcesCount}</dd>
             </div>
           </dl>
+          {priceContext && <PriceContext context={priceContext} />}
         </>
       )}
       <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-on-surface-variant/70">

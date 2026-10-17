@@ -3,7 +3,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { ChartEventMarker, ChartMarkerLabel } from "./ChartEventMarker";
-import { ChartMarkerCard } from "./ChartMarkerCard";
+import { ChartMarkerCard, PRICE_CONTEXT_NOTE } from "./ChartMarkerCard";
+import { moveSinceEvent } from "@/lib/move-since-event";
 import type { ChartMarker } from "@/lib/chart-markers";
 
 function runTest(name: string, fn: () => void) {
@@ -158,4 +159,56 @@ runTest("card is clamped inside the chart box near the left edge", () => {
     createElement(ChartMarkerCard, { id: "card", marker: marker({ members: [member("a", 5, null)] }), x: 4, boxWidth: 600 }),
   );
   assert.match(html, /left:132px/);
+});
+
+const E = Date.UTC(2026, 9, 1, 12, 0, 0);
+const H = 3_600_000;
+const one = marker({ members: [{ ...member("a", 8, "up"), eventMs: E }], direction: "up" });
+
+runTest("card shows Price at the event, Since then, horizons and the descriptive note", () => {
+  const move = moveSinceEvent(E, [
+    { t: E, price: 100 },
+    { t: E + H, price: 101 },
+    { t: E + 30 * H, price: 110 },
+  ]);
+  const html = renderToStaticMarkup(
+    createElement(ChartMarkerCard, { id: "c", marker: one, x: 100, boxWidth: 600, priceContext: { kind: "series", move } }),
+  );
+  assert.match(html, />Price at the event</);
+  assert.match(html, />100\.00</);
+  assert.match(html, />Since then</);
+  assert.match(html, /\+10\.00% \(110\.00\)/);
+  assert.match(html, /\+1\.00% \/ — \/ —/);
+  assert.ok(html.includes(PRICE_CONTEXT_NOTE));
+  assert.doesNotMatch(html, /\b(buy|sell|caused|because)\b/i);
+});
+
+runTest("card says Not available when the series has no point for the event", () => {
+  const move = moveSinceEvent(E, []);
+  const html = renderToStaticMarkup(
+    createElement(ChartMarkerCard, { id: "c", marker: one, x: 100, boxWidth: 600, priceContext: { kind: "series", move } }),
+  );
+  assert.equal((html.match(/Not available/g) ?? []).length, 2);
+});
+
+runTest("weekly range card shows 'Not available on weekly data' and no price rows", () => {
+  const html = renderToStaticMarkup(
+    createElement(ChartMarkerCard, { id: "c", marker: one, x: 100, boxWidth: 600, priceContext: { kind: "weekly" } }),
+  );
+  assert.match(html, /Not available on weekly data/);
+  assert.doesNotMatch(html, /Price at the event/);
+  assert.ok(html.includes(PRICE_CONTEXT_NOTE));
+});
+
+runTest("a merged marker card never shows price context", () => {
+  const html = renderToStaticMarkup(
+    createElement(ChartMarkerCard, {
+      id: "c",
+      marker: marker({ members: [member("a", 8, null), member("b", 7, null)] }),
+      x: 100,
+      boxWidth: 600,
+      priceContext: { kind: "weekly" },
+    }),
+  );
+  assert.doesNotMatch(html, /chart-marker-price-context/);
 });
