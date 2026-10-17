@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-17 — Daily AI budget, admin article time, public collection-time rule
+
+Docs only. Daily ingestion budget stays at $2 until go-live; no monthly-limit variable; gate shadow stays off. Admin ingestion status returns `newestStoredArticleAt` (`ab91e372c219f350167c03dcea0ef0d82574785c`, docs `14d8fbe13bd36e47371401628238c826a5bcd478`). Public pages show no collection time (2026-10-16 rule). Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-18 — Alerts badge sync is covered by a render test (`61773da`)
 
 `apps/web` only. The badge write lives in `useSyncUnreadBadge` with the same behaviour: no data leaves the badge alone, and an empty list still clears it. A rendered probe fails above 4 renders. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.

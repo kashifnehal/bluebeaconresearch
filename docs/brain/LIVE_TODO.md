@@ -33,6 +33,14 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - "Since then" and "Reports" explanations no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover.
 - Render test mounts the card, opens both popovers, and checks the card is still mounted after a press inside. Not browser-checked.
 
+## ✅ Daily AI budget, admin article time, and public collection-time rule, docs only, 2026-10-17
+
+- Keep `ANTHROPIC_DAILY_BUDGET_USD_INGESTION` at 2 on workers and backend until go-live, then raise to 4 with the one-day test. Do not set `ANTHROPIC_MONTHLY_LIMIT_USD`. `GATE_SHADOW_ENABLED` stays unset. Measured 2026-10-09 to 2026-10-16: $2.00 spend each full UTC day at about 405 to 410 calls; collection stopped about 05:02 UTC on 2026-10-16 versus about 09:32 UTC on 2026-10-15; signals per day 71 and 75; 2026-10-12 and 2026-10-13 stored no signals because the Anthropic Console monthly limit blocked calls.
+- Admin `GET /api/ingestion/status` returns `newestStoredArticleAt` (code `ab91e372c219f350167c03dcea0ef0d82574785c`, docs `14d8fbe13bd36e47371401628238c826a5bcd478`).
+- Public pages show no collection time. That is the 2026-10-16 rule.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `10_DECISIONS.md`, `15_INGESTION_PIPELINE.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`; claude_project `10_DECISIONS.md`, `09_BACKLOG.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`. Skipped both API docs, both database docs, both component docs, the AI-engine doc, and the migration checklist — no route, table, component, prompt, or migration. `docs/claude_project/` has no ingestion-pipeline file.
+
 ## ✅ Chart markers no longer draw closer than 24px; label date matches the list, `apps/web`, 2026-10-18, `83b6f04`
 
 - Groups were formed from the leftmost point, then drawn at the highest-severity member, so two neighbours could paint closer than 24px (USOIL 1M drew at 694, 730 and 736). A second pass merges adjacent groups until every neighbouring drawn pair is at least 24px apart. The merged marker stays on its highest-severity member and keeps every member. `MARKER_MERGE_PX` stays 24.

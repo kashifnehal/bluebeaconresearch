@@ -1053,3 +1053,21 @@ The restyle had to be reverted in full because it was never approved and conflic
 ### Cross-tree mapping
 
 Recorded as **D52** in `docs/claude_project/10_DECISIONS.md`.
+
+## 50. ADR 049: Daily AI budget stays at $2 until go-live; no monthly limit variable; gate shadow trial stays off (2026-10-17)
+
+### Context
+
+Ingestion spend was $2.00 on each full UTC day from 2026-10-09 to 2026-10-16, at about 405 to 410 calls. On 2026-10-16 collection stopped at about 05:02 UTC after GDELT returned 205 of 444 raw rows (17 of the 205 linked to signals, against 30 of 94 for GNews and 33 of 145 for RSS), against about 09:32 UTC on 2026-10-15. Signals per day were 71 and 75. On 2026-10-12 and 2026-10-13 no signals were stored because the Anthropic Console monthly limit blocked calls (that limit is set in the Console, not by a BBR variable).
+
+### Decision
+
+Keep `ANTHROPIC_DAILY_BUDGET_USD_INGESTION` at 2 on the workers and backend services until go-live, then raise to 4 with the one-day test. Do not set `ANTHROPIC_MONTHLY_LIMIT_USD` (the daily caps are the control; the monthly-warning code stays inert). `GATE_SHADOW_ENABLED` stays unset. The existing sentence in the 2026-10-12 filter-expansion entry that says the gate shadow stays off remains true.
+
+### Rationale
+
+Money limits how long collection runs, never how well one article is judged.
+
+### Cross-tree mapping
+
+Recorded as **D53** in `docs/claude_project/10_DECISIONS.md`.

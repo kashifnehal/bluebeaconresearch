@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-18 (alerts badge render test — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-17 (daily AI budget and worker flags — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-17 (daily AI budget, docs only) — keep `ANTHROPIC_DAILY_BUDGET_USD_INGESTION` at 2 until go-live; do not set `ANTHROPIC_MONTHLY_LIMIT_USD`; `GATE_SHADOW_ENABLED` stays unset. See `10_DECISIONS.md` and `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (alerts badge render test, `apps/web` only, `61773da`) — `useSyncUnreadBadge` writes the same badge as before. A rendered probe fails if it renders more than 4 times. See `docs/brain/LIVE_TODO.md`.
 
@@ -576,6 +578,10 @@ If `created_at` advances but UI still shows old times → check `event_date` (pu
 ---
 
 ## 7. Environment Variables Required
+
+### Worker flags (checked on Railway 2026-10-17)
+
+`DROP_SAMPLE_STORE` is true on the workers. `GATE_SHADOW_ENABLED`, `T2_PAIR_RULE`, `GNEWS_T2_QUERY`, `GDELT_T2_QUERY`, and `ANTHROPIC_MONTHLY_LIMIT_USD` are unset.
 
 ### Supabase (Vercel + Railway + `.env.local`)
 
