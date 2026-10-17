@@ -54,6 +54,8 @@ The founder decided this on 2026-10-16. The cap is an internal limit. Readers sh
 
 ---
 
+Next free ADR number: 049. Next free decision number: D53.
+
 ## 1. ADR 001: Selection of Next.js 16 App Router for Web Terminal
 
 ### Context

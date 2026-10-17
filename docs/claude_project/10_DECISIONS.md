@@ -55,6 +55,8 @@ The founder decided this on 2026-10-16. The cap is an internal limit. Readers sh
 
 ---
 
+Next free ADR number: 049. Next free decision number: D53.
+
 ## D1: Monorepo vs Polyrepo
 
 **Decision:** Turborepo monorepo (pnpm workspaces)
