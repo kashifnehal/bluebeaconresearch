@@ -417,7 +417,7 @@ export default function DashboardPage() {
                     false,
                   )
                 }
-                className="relative overflow-hidden cursor-pointer group transition-all block no-underline"
+                className="relative overflow-hidden cursor-pointer group transition-all block"
                 style={{
                   backgroundColor: "var(--bg-primary)",
                   border: "1px solid var(--border)",
@@ -433,8 +433,8 @@ export default function DashboardPage() {
                 />
 
                 <div className="p-6">
-                  <div className="flex flex-wrap justify-between items-start gap-2 mb-4">
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 items-center">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-4 items-center">
                       <span
                         data-tour="severity-badge"
                         className="px-2 py-0.5 text-[12px] md:text-[10px] font-bold "
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                   <div className="flex flex-col lg:flex-row gap-8 items-end">
                     <div className="flex-1">
                       <h2
-                        className="font-story text-2xl md:text-3xl mb-4 leading-tight group-hover:underline"
+                        className="font-story text-3xl md:text-4xl mb-4 leading-tight group-hover:underline"
                         style={{ color: "var(--text-primary)" }}
                       >
                         {featured.title}
@@ -561,7 +561,7 @@ export default function DashboardPage() {
                       className="font-bold text-xs px-8 py-3 transition-all active:scale-95 duration-75 shrink-0 inline-block"
                       style={{
                         backgroundColor: "var(--interactive)",
-                        color: "var(--bg-app)",
+                        color: "var(--on-interactive-bg)",
                         fontFamily: "'IBM Plex Sans', sans-serif",
                         cursor: "pointer",
                       }}
@@ -1289,7 +1289,7 @@ export default function DashboardPage() {
                 fontFamily: "'IBM Plex Sans', sans-serif",
               }}
             >
-              Market and intelligence
+              MARKET & INTELLIGENCE
             </div>
           </div>
 
@@ -1313,7 +1313,7 @@ export default function DashboardPage() {
                     fontFamily: "'IBM Plex Sans', sans-serif",
                   }}
                 >
-                  System status
+                  SYSTEM STATUS
                 </span>
               </div>
               <div
@@ -1350,7 +1350,7 @@ export default function DashboardPage() {
                     fontFamily: "'IBM Plex Sans', sans-serif",
                   }}
                 >
-                  Active hotzones
+                  ACTIVE HOTZONES
                 </span>
               </div>
               <ul

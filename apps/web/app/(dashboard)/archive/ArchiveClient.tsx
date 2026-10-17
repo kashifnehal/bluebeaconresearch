@@ -153,7 +153,7 @@ export function ArchiveClient() {
                   style={{
                     fontFamily: "'IBM Plex Sans', sans-serif",
                     backgroundColor: selected ? "var(--interactive)" : "var(--bg-container)",
-                    color: selected ? "var(--bg-app)" : "var(--text-secondary)",
+                    color: selected ? "#005f40" : "var(--text-secondary)",
                     borderColor: selected ? "var(--interactive)" : "var(--border)",
                   }}
                 >

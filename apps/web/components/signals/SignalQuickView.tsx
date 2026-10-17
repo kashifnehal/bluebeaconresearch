@@ -327,7 +327,7 @@ export function SignalQuickView({
                   className="inline-flex w-full items-center justify-center gap-2 px-8 py-3 text-xs font-bold tracking-widest uppercase transition-all active:scale-95"
                   style={{
                     backgroundColor: "var(--interactive)",
-                    color: "var(--bg-app)",
+                    color: "var(--on-interactive-bg)",
                     fontFamily: "'IBM Plex Sans', sans-serif",
                   }}
                 >

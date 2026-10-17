@@ -455,7 +455,7 @@ export default function AlertsPage() {
         </span>
         <button
           onClick={() => openSetAlertModal()}
-          className="bg-[var(--interactive)] text-[var(--bg-app)] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+          className="bg-[var(--interactive)] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
           style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
         >
           + New Alert Rule
@@ -488,7 +488,7 @@ export default function AlertsPage() {
           </div>
           <button
             onClick={() => openSetAlertModal()}
-            className="bg-[var(--interactive)] text-[var(--bg-app)] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
+            className="bg-[var(--interactive)] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
             style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             Set Up Your First Rule
@@ -917,7 +917,7 @@ export default function AlertsPage() {
                       }
                       className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
-                          ? "bg-[var(--interactive)] text-[var(--bg-app)] border-[var(--interactive)]"
+                          ? "bg-[var(--interactive)] text-[#003824] border-[var(--interactive)]"
                           : "bg-[#0e0e0e] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                       }`}
                     >
@@ -938,7 +938,7 @@ export default function AlertsPage() {
               <button
                 onClick={() => createAlertRule.mutate()}
                 disabled={createAlertRule.isPending}
-                className="px-6 py-2 bg-[var(--interactive)] text-[var(--bg-app)] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
+                className="px-6 py-2 bg-[var(--interactive)] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
               >
                 {createAlertRule.isPending ? "Activating..." : "Save Rule"}
               </button>

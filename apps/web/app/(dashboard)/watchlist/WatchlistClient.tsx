@@ -502,7 +502,7 @@ export function WatchlistClient() {
                 type="button"
                 onClick={openAddCommodityPicker}
                 aria-label="Add asset to watchlist"
-                className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-sm bg-primary text-[var(--bg-app)] font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase cursor-pointer transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(111,251,190,0.3)]"
+                className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-sm bg-primary text-[#003824] font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase cursor-pointer transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(111,251,190,0.3)]"
               >
                 <span className="material-symbols-outlined text-lg">add</span>
                 Add Asset

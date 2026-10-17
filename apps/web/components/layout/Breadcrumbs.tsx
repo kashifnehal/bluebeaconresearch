@@ -16,7 +16,7 @@ export function Breadcrumbs({
     <nav
       data-testid="breadcrumbs"
       aria-label="Breadcrumb"
-      className={`flex items-center gap-1.5 overflow-hidden text-[12px] md:text-[10px] font-medium ${className}`}
+      className={`flex items-center gap-1.5 overflow-hidden text-[12px] md:text-[10px] font-black uppercase tracking-widest ${className}`}
     >
       {items.map((item, i) => {
         const isLast = i === items.length - 1;

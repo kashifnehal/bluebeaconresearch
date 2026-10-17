@@ -74,7 +74,7 @@ const TOUR_STYLES = {
   tooltipTitle: { fontFamily: "'IBM Plex Sans', sans-serif" },
   buttonNext: {
     backgroundColor: "var(--interactive)",
-    color: "var(--bg-app)",
+    color: "#003824",
     fontFamily: "'IBM Plex Sans', sans-serif",
     fontWeight: 700,
     fontSize: "11px",

@@ -36,7 +36,7 @@ function PulseBars({ row, max }: { row: LedgerRow; max: number }) {
   const { last24h, prior24h } = row.pulse;
   return (
     <div
-      className="flex gap-2"
+      className="flex items-end gap-2"
       role="img"
       aria-label={`${last24h} signals in the last 24 hours, ${prior24h} in the 24 hours before`}
     >
@@ -44,8 +44,8 @@ function PulseBars({ row, max }: { row: LedgerRow; max: number }) {
         { n: last24h, solid: true },
         { n: prior24h, solid: false },
       ].map((b, i) => (
-        <div key={i} className="min-w-[28px] flex-1">
-          <div className="h-2" style={{ backgroundColor: "var(--bg-container)" }}>
+        <div key={i} className="flex min-w-0 flex-1 items-center gap-1.5">
+          <div className="h-2 flex-1" style={{ backgroundColor: "var(--bg-container)" }}>
             <div
               className="h-2"
               style={{
@@ -56,7 +56,7 @@ function PulseBars({ row, max }: { row: LedgerRow; max: number }) {
               }}
             />
           </div>
-          <span className="block text-[11px]" style={{ color: "var(--text-secondary)" }}>
+          <span className="w-5 text-right text-[11px]" style={{ color: "var(--text-secondary)" }}>
             {b.n}
           </span>
         </div>
@@ -111,16 +111,16 @@ export function MarketsLedger({
         <table className="w-full text-[12px]">
           <thead>
             <tr style={{ color: "var(--text-muted)" }}>
-              <th scope="col" className="px-3 py-2 text-left font-medium">Asset</th>
-              <th scope="col" className="px-1 py-2 text-right font-medium">Last</th>
-              <th scope="col" className="px-1 py-2 text-right font-medium">Change</th>
-              <th scope="col" className="px-3 py-2 text-left font-medium">Signals, 24h and prior</th>
+              <th scope="col" className="px-4 py-2 text-left font-medium">Asset</th>
+              <th scope="col" className="px-2 py-2 text-right font-medium">Last</th>
+              <th scope="col" className="px-2 py-2 text-right font-medium">Change</th>
+              <th scope="col" className="px-4 py-2 text-left font-medium">24h vs prior 24h</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.symbol} className="border-t" style={{ borderColor: "var(--border)" }}>
-                <th scope="row" className="px-3 py-2 text-left font-medium">
+                <th scope="row" className="px-4 py-2 text-left font-medium">
                   <Link
                     href={`/watchlist/${encodeURIComponent(r.symbol)}`}
                     style={{ color: "var(--text-primary)" }}
@@ -129,13 +129,13 @@ export function MarketsLedger({
                     {r.label}
                   </Link>
                 </th>
-                <td className="px-1 py-2 text-right" style={{ color: "var(--text-primary)" }}>
+                <td className="px-2 py-2 text-right" style={{ color: "var(--text-primary)" }}>
                   {formatPrice(r.symbol, r.price)}
                 </td>
-                <td className="px-1 py-2 text-right">
+                <td className="px-2 py-2 text-right whitespace-nowrap">
                   <Change pct={r.changePct} />
                 </td>
-                <td className="px-3 py-2 min-w-[96px]">
+                <td className="px-4 py-2 w-[40%]">
                   <PulseBars row={r} max={max} />
                 </td>
               </tr>

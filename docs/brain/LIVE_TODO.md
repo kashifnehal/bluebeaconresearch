@@ -3,17 +3,6 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ Desk redesign: palette, shell, desk home, keyword presets, `apps/web`, 2026-10-17, `dcb5a0d` `d06f751` `fdc565c` `d3e050a`
-
-- Part 1 `dcb5a0d`: dark/light variables re-valued (app `#0C1B2A`, panel `#14293B`, text `#DCE6EE`, up `#46B8A8`, down `#E0726B`). IBM Plex Sans (tabular numerals) and Newsreader replace Inter / JetBrains Mono / Space Grotesk. Amber `#F4B23E` (`--accent`) is reserved for "new since your last visit" and severity 9+; links, focus and selected controls use new `--interactive` / `--interactive-bg`. Tailwind stitch tokens re-pointed to the variables. Up/down values show arrow + the word. This is a design choice, not a researched rule.
-- Part 2 `d06f751`: Sidebar, TopBar, MobileTabBar recoloured, sentence-case labels, same routes. Focus ring from a global `:focus-visible`.
-- Part 3 `fdc565c`: `/dashboard` home. `SinceLastVisit` (localStorage, written on page leave or after 60 s), `StoryThreadCard` + `lib/story-threads.ts` (same rule as the backend `measure:story-threads` script `c5aeafd`; engineering choice, no source), `MarketsLedger` (watchlist symbols only, pulse fetched 4 at a time, 60 s cache), lead story in Newsreader, "Group related reports" toggle (cards view only; table view stays flat).
-- Part 4 `d3e050a`: `lib/keyword-presets.ts` (Sanctions, Weather, OPEC, Shipping, Conflict + Any/All) in `FilterBar` on dashboard and map. Client-side over loaded rows because `/api/signals` `search` takes one phrase. Weather has no repo-sourced word, so its chip is disabled (GAP). Unsourced words are GAP comments.
-- Contrast (WCAG): every text colour is at least 4.5:1 on every panel tier in both themes (lowest pair: `--price-down` on the highest dark tier, 4.56:1). Panel tiers were kept close so this holds.
-- Not browser-verified in the light theme. Dark theme, desktop 1440 and mobile 390 were driven once with a local Playwright script (no committed test). Open: pages not touched still carry hard-coded legacy hex; `Node: BB-ALPHA-09` in the sidebar footer is a static label (not changed).
-- No open priority-queue line. Nothing struck.
-- Docs: this entry; brain `08`, `14`, `06_COMPONENTS`; claude_project `09`, `08`, `14`, `06_COMPONENTS`. Skipped both `05_API.md`, both `04_DATABASE.md`, `18_AI_ENGINE.md`, both `10_DECISIONS.md` — no route, table, prompt, or standing rule.
-
 ## ✅ Search catalog speed-claim wording, `apps/backend`, 2026-10-17, this commit
 
 - Intelligence Feed catalog lines: "Real-time global signal monitoring." → "Global signal monitoring." The live-signal-feed paragraph now names the Intelligence Feed and says items are listed with sources and the time each story was reported.

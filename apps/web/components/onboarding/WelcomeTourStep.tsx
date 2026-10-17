@@ -93,7 +93,7 @@ export function WelcomeTourStep({
           <button
             type="button"
             onClick={onContinue}
-            className="bg-[var(--interactive)] px-4 py-2 text-[12px] md:text-[11px] font-bold uppercase tracking-wider text-[var(--bg-app)]"
+            className="bg-[var(--interactive)] px-4 py-2 text-[12px] md:text-[11px] font-bold uppercase tracking-wider text-[#003824]"
             style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             Got it, show me around

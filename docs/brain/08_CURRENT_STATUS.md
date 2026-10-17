@@ -6,8 +6,6 @@ Last updated: 2026-10-17 (asset chart markers, positioning panel)
 
 > ⚠️ NEW 2026-10-17 (asset chart markers, price context, positioning panel, copy; `apps/web` only) — labelled event markers on the asset price chart (also on weekly ranges), "price at the event" and "since then" in the marker card from existing points only, a CFTC managed-money panel below the chart that shows only when `/api/cot` has rows, and plainer alert and Monitor-plan copy. Function region `hnd1` was tried and reverted by the 15% rule. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-10-17 (desk redesign, `apps/web` only) — new palette/fonts, desk home (since-last-visit, story threads, markets ledger), keyword presets. See `docs/brain/LIVE_TODO.md`.
-
 > ⚠️ NEW 2026-10-17 (search catalog speed claims, `apps/backend` only) — Intelligence Feed catalog copy no longer says real-time or live signal feed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (story-thread measurement, `apps/backend` only) — read-only `measure:story-threads` groups the last 48 hours of signals. `/tmp/threads-sample.md` is not committed. See `14_CHANGELOG.md`, `LIVE_TODO.md`.

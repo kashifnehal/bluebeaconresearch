@@ -13,7 +13,7 @@ const C = {
   italicText: "#a0b0a6",
   ctaText: "var(--interactive)",
   btnBg: "var(--interactive)",
-  btnText: "var(--bg-app)",
+  btnText: "#003824",
   btnHover: "#6ffbbe",
   metaText: "#3d5248",
   signInLink: "var(--interactive)",

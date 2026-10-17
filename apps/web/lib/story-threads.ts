@@ -6,9 +6,10 @@ import type { Signal } from "@blue-beacon-research/shared";
  * ENGINEERING CHOICE, NO PUBLISHED SOURCE. The rule below was picked on 2026-10-17
  * to collapse near-duplicate rows (for example eight rows of one sanctions story,
  * each with one report). It is a heuristic, not a research result. How well it
- * works is checked by the read-only `measure:story-threads` script in apps/backend
- * (group counts and a seeded sample of threads over the last 48 hours). That script
- * keeps its own copy of this rule; the two are not tied by a parity test.
+ * works is meant to be checked by a `measure:story-threads` script in
+ * apps/backend (group counts and group-size distribution against stored signals).
+ * That script is NOT written yet: the 2026-10-17 task that added this file could
+ * not touch apps/backend. Until it exists, the rule is only unit-tested here.
  *
  * Two rows are linked when ALL of these hold:
  *   1. created_at values are within 24 hours of each other;
