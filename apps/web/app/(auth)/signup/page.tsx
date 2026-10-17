@@ -26,7 +26,7 @@ const C = {
   surfaceHigh: "#2a2a2a",
   surfaceBright: "#393939",
   primary: "#6ffbbe",
-  primaryContainer: "var(--accent)",
+  primaryContainer: "var(--interactive)",
   onPrimary: "#003824",
   onPrimaryContainer: "#005f40",
   onSurface: "#e5e2e1",
@@ -200,7 +200,7 @@ function SignupForm() {
 
   const pw = form.watch("password");
   const score = passwordScore(pw ?? "");
-  const scoreColors = ["#ffb4ab", "#ffb4ab", "#f4fed3", "var(--accent)", "var(--accent)"];
+  const scoreColors = ["#ffb4ab", "#ffb4ab", "#f4fed3", "var(--interactive)", "var(--interactive)"];
   const scoreLabels = ["Weak", "Weak", "Fair", "Strong", "Strong"];
 
   const inputStyle = {
@@ -210,7 +210,7 @@ function SignupForm() {
     borderBottom: `1px solid ${C.outlineVariant}`,
     color: C.onSurface,
     padding: "12px 4px",
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: "'IBM Plex Sans', sans-serif",
     fontSize: "14px",
     outline: "none",
     boxSizing: "border-box" as const,
@@ -219,7 +219,7 @@ function SignupForm() {
 
   const labelStyle = {
     display: "block",
-    fontFamily: "'Space Grotesk', sans-serif",
+    fontFamily: "'IBM Plex Sans', sans-serif",
     fontSize: "11px",
     fontWeight: 700,
     textTransform: "uppercase" as const,
@@ -237,7 +237,7 @@ function SignupForm() {
         justifyContent: "center",
         backgroundColor: C.bg,
         color: C.onSurface,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'IBM Plex Sans', sans-serif",
         padding: "24px",
         position: "relative",
       }}
@@ -269,15 +269,15 @@ function SignupForm() {
         <header style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "32px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "24px" }}>
             <img src="/brand/mark-white.png" alt="" aria-hidden="true" width={28} height={28} />
-            <span style={{ fontFamily: "'Inter', sans-serif", fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em", color: C.onSurface, textTransform: "uppercase" }}>
+            <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "20px", fontWeight: 700, letterSpacing: "-0.02em", color: C.onSurface, textTransform: "uppercase" }}>
               Blue Beacon Research
             </span>
           </div>
           <div style={{ textAlign: "center" }}>
-            <h1 style={{ fontFamily: "'Inter', sans-serif", fontSize: "24px", fontWeight: 700, letterSpacing: "-0.02em", color: C.onSurface, marginBottom: "8px" }}>
+            <h1 style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "24px", fontWeight: 700, letterSpacing: "-0.02em", color: C.onSurface, marginBottom: "8px" }}>
               Create your account
             </h1>
-            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "12px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "12px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.1em" }}>
               Start monitoring conflict intelligence
             </p>
           </div>
@@ -300,7 +300,7 @@ function SignupForm() {
               color: C.onSurface,
               padding: "12px",
               borderRadius: "12px",
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'IBM Plex Sans', sans-serif",
               fontSize: "14px",
               fontWeight: 500,
               cursor: "pointer",
@@ -320,7 +320,7 @@ function SignupForm() {
             <div style={{ width: "100%", borderTop: "1px solid rgba(60,74,66,0.3)" }} />
           </div>
           <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-            <span style={{ backgroundColor: C.surface, padding: "0 16px", fontFamily: "'Space Grotesk', sans-serif", fontSize: "11px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.2em" }}>or</span>
+            <span style={{ backgroundColor: C.surface, padding: "0 16px", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "11px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.2em" }}>or</span>
           </div>
         </div>
 
@@ -335,7 +335,7 @@ function SignupForm() {
               onBlur={(e) => { e.target.style.borderBottomColor = C.outlineVariant; }}
             />
             {form.formState.errors.fullName && (
-              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'JetBrains Mono', monospace" }}>
+              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'IBM Plex Sans', sans-serif" }}>
                 {form.formState.errors.fullName.message}
               </p>
             )}
@@ -349,7 +349,7 @@ function SignupForm() {
               onBlur={(e) => { e.target.style.borderBottomColor = C.outlineVariant; }}
             />
             {form.formState.errors.email && (
-              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'JetBrains Mono', monospace" }}>
+              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'IBM Plex Sans', sans-serif" }}>
                 {form.formState.errors.email.message}
               </p>
             )}
@@ -376,12 +376,12 @@ function SignupForm() {
               ))}
             </div>
             {pw ? (
-              <p style={{ marginTop: "6px", fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: scoreColors[score] }}>
+              <p style={{ marginTop: "6px", fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "11px", color: scoreColors[score] }}>
                 Password strength: {scoreLabels[score]}
               </p>
             ) : null}
             {form.formState.errors.password && (
-              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'JetBrains Mono', monospace" }}>
+              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'IBM Plex Sans', sans-serif" }}>
                 {form.formState.errors.password.message}
               </p>
             )}
@@ -390,7 +390,7 @@ function SignupForm() {
           {/* Error */}
           {error && (
             <div style={{ padding: "12px", backgroundColor: "rgba(255,180,171,0.1)", border: "1px solid rgba(255,180,171,0.2)", borderRadius: "4px" }}>
-              <p style={{ color: C.error, fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", textAlign: "center" }}>{error}</p>
+              <p style={{ color: C.error, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "11px", textAlign: "center" }}>{error}</p>
             </div>
           )}
 
@@ -404,7 +404,7 @@ function SignupForm() {
                 color: C.onPrimaryContainer,
                 padding: "16px",
                 borderRadius: "12px",
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'IBM Plex Sans', sans-serif",
                 fontWeight: 800,
                 fontSize: "14px",
                 letterSpacing: "0.1em",
@@ -428,7 +428,7 @@ function SignupForm() {
 
         {/* Footer */}
         <footer style={{ marginTop: "40px", textAlign: "center" }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "14px", color: C.onSurfaceVariant }}>
+          <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "14px", color: C.onSurfaceVariant }}>
             Already have an account?{" "}
             <Link
               href={emailValue ? `/login?email=${encodeURIComponent(emailValue)}` : "/login"}
@@ -441,11 +441,11 @@ function SignupForm() {
 
         {/* System meta */}
         <div style={{ marginTop: "32px", display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", opacity: 0.3 }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
+          <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
             Secure Node: BB-ALPHA-09
           </span>
           <span style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: C.primaryContainer, display: "block" }} className="animate-pulse" />
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
+          <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
             v4.22.0
           </span>
         </div>

@@ -320,7 +320,7 @@ export default function EventDetailPage() {
                 <div className="px-3 py-1 bg-accent/10 border border-accent/20 rounded-sm">
                   <span
                     className="text-[12px] md:text-[10px] font-black uppercase tracking-widest text-accent"
-                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                    style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
                   >
                     Signal ID: {signal.id.slice(0, 8)}
                   </span>
@@ -537,7 +537,7 @@ export default function EventDetailPage() {
                   key={tab.value}
                   value={tab.value}
                   className="shrink-0 bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted transition-all"
-                  style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
                 >
                   {tab.value === "analysis" && <Shield size={14} className="mr-2" />}
                   {tab.label}
@@ -552,7 +552,7 @@ export default function EventDetailPage() {
                     <div className="prose prose-invert max-w-none">
                       <div
                         className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
                       >
                         Signal Summary
                       </div>
@@ -564,7 +564,7 @@ export default function EventDetailPage() {
                     <div>
                       <div
                         className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
-                        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
                       >
                         Full Analyst Briefing
                       </div>
@@ -597,7 +597,7 @@ export default function EventDetailPage() {
                       >
                         <summary
                           className="mb-4 cursor-pointer text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent"
-                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
                         >
                           Why this signal
                         </summary>
@@ -611,7 +611,7 @@ export default function EventDetailPage() {
                       <div data-testid="invalidation-condition">
                         <div
                           className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
-                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
                         >
                           What would change this assessment
                         </div>
@@ -625,7 +625,7 @@ export default function EventDetailPage() {
                       <div className="space-y-3">
                         <div
                           className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent"
-                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
                         >
                           Impact Breakdown
                         </div>
@@ -820,7 +820,7 @@ export default function EventDetailPage() {
             onClick={() => setAlertModalOpen(false)}
           />
           <div className="relative bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-6 w-full max-w-md z-50 text-white space-y-4">
-            <h3 className="text-lg font-bold text-[var(--accent)]">
+            <h3 className="text-lg font-bold text-[var(--interactive)]">
               Configure Alert Threshold
             </h3>
 
@@ -873,7 +873,7 @@ export default function EventDetailPage() {
                       }
                       className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
-                          ? "bg-[var(--accent)] text-[#003824] border-[var(--accent)]"
+                          ? "bg-[var(--interactive)] text-[#003824] border-[var(--interactive)]"
                           : "bg-[#0e0e0e] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                       }`}
                     >
@@ -893,7 +893,7 @@ export default function EventDetailPage() {
               </button>
               <button
                 onClick={() => createAlertRule()}
-                className="px-6 py-2 bg-[var(--accent)] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
+                className="px-6 py-2 bg-[var(--interactive)] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
               >
                 Save Rule
               </button>

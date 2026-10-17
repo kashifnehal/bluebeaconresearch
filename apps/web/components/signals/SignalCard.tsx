@@ -43,13 +43,13 @@ export function SignalCard({
       className={[
         "bg-surface-container-high/60 backdrop-blur-2xl border border-outline-variant/20 rounded-xl p-4 cursor-pointer transition-colors duration-150",
         "hover:border-accent/40 hover:bg-surface-container-low",
-        isBreaking ? "border-l-4 border-danger bg-danger-subtle/50" : "",
+        isBreaking ? "border-l-4 border-l-amber" : "",
       ].join(" ")}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <SeverityBadge score={signal.severity} />
-          <span className="text-outline text-xs uppercase tracking-wide">
+          <span className="text-outline text-xs ">
             {signal.eventType}
           </span>
           <MediaImpactTag
@@ -58,7 +58,7 @@ export function SignalCard({
           />
         </div>
         <div className="flex items-center gap-2 text-outline text-xs">
-          <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="text-primary font-mono" />
+          <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="text-primary" />
           <span>{timeAgo}</span>
           {lastUpdatedAgo ? <span>Last updated {lastUpdatedAgo}</span> : null}
           <span>{signal.sourcesCount} reports</span>
@@ -71,7 +71,7 @@ export function SignalCard({
         </div>
       </div>
 
-      <div className="mt-2 mb-1 text-on-surface text-base font-medium leading-snug line-clamp-2">
+      <div className="mt-2 mb-1 font-story text-on-surface text-lg leading-snug line-clamp-2">
         {signal.title}
       </div>
       <div className="text-on-surface-variant text-sm line-clamp-2 mb-3">

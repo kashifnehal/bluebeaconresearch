@@ -50,7 +50,7 @@ export function EventLocationMap({
         interactive: true,
       });
 
-      new maplib.Marker({ color: "var(--accent)" }).setLngLat([lng, lat]).addTo(map);
+      new maplib.Marker({ color: "var(--interactive)" }).setLngLat([lng, lat]).addTo(map);
       map.addControl(new maplib.AttributionControl({ compact: true }));
       mapRef.current = map;
 

@@ -62,6 +62,6 @@ runTest("SignalRowPriceChip shows plain asset/24h/pct text with no hover-only co
       prices: [{ symbol: "WTI", change_pct_24h: 3.4 }],
     }),
   );
-  assert.equal(visibleText(html), "WTI 24h +3.4%");
+  assert.equal(visibleText(html), "WTI 24h ↑ up 3.4%");
   assert.equal(/title=/.test(html), false);
 });

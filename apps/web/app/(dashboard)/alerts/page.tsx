@@ -455,8 +455,8 @@ export default function AlertsPage() {
         </span>
         <button
           onClick={() => openSetAlertModal()}
-          className="bg-[var(--accent)] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          className="bg-[var(--interactive)] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
         >
           + New Alert Rule
         </button>
@@ -488,8 +488,8 @@ export default function AlertsPage() {
           </div>
           <button
             onClick={() => openSetAlertModal()}
-            className="bg-[var(--accent)] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            className="bg-[var(--interactive)] text-[#003824] hover:bg-[#6ffbbe] px-6 py-2.5 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer mt-2"
+            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             Set Up Your First Rule
           </button>
@@ -831,7 +831,7 @@ export default function AlertsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/80 backdrop-blur-xs" onClick={() => setAlertModalOpen(false)} />
           <div className="relative bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg p-6 w-full max-w-md z-50 text-white space-y-4">
-            <h3 className="text-lg font-bold text-[var(--accent)]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h3 className="text-lg font-bold text-[var(--interactive)]" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
               Configure Alert Threshold
             </h3>
 
@@ -882,7 +882,7 @@ export default function AlertsPage() {
                       <span>{ch.label}</span>
                       <span
                         className={`text-[12px] md:text-[9px] uppercase font-bold ${
-                          isConnected ? "text-[var(--accent)]" : "text-[var(--text-muted)]"
+                          isConnected ? "text-[var(--interactive)]" : "text-[var(--text-muted)]"
                         }`}
                       >
                         {isConnected ? "Connected" : "Not connected"}
@@ -917,7 +917,7 @@ export default function AlertsPage() {
                       }
                       className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
-                          ? "bg-[var(--accent)] text-[#003824] border-[var(--accent)]"
+                          ? "bg-[var(--interactive)] text-[#003824] border-[var(--interactive)]"
                           : "bg-[#0e0e0e] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                       }`}
                     >
@@ -938,7 +938,7 @@ export default function AlertsPage() {
               <button
                 onClick={() => createAlertRule.mutate()}
                 disabled={createAlertRule.isPending}
-                className="px-6 py-2 bg-[var(--accent)] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
+                className="px-6 py-2 bg-[var(--interactive)] text-[#003824] text-xs font-bold uppercase rounded hover:bg-[#6ffbbe] transition-all"
               >
                 {createAlertRule.isPending ? "Activating..." : "Save Rule"}
               </button>

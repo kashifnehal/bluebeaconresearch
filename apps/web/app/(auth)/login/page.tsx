@@ -24,7 +24,7 @@ const C = {
   surfaceHigh: "#2a2a2a",
   surfaceBright: "#393939",
   primary: "#6ffbbe",
-  primaryContainer: "var(--accent)",
+  primaryContainer: "var(--interactive)",
   onPrimary: "#003824",
   onPrimaryContainer: "#005f40",
   onSurface: "#e5e2e1",
@@ -183,7 +183,7 @@ function LoginForm() {
     borderBottom: `1px solid ${C.outlineVariant}`,
     color: C.onSurface,
     padding: "12px 4px",
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: "'IBM Plex Sans', sans-serif",
     fontSize: "14px",
     outline: "none",
     boxSizing: "border-box" as const,
@@ -192,7 +192,7 @@ function LoginForm() {
 
   const labelStyle = {
     display: "block",
-    fontFamily: "'Space Grotesk', sans-serif",
+    fontFamily: "'IBM Plex Sans', sans-serif",
     fontSize: "11px",
     fontWeight: 700,
     textTransform: "uppercase" as const,
@@ -210,7 +210,7 @@ function LoginForm() {
         justifyContent: "center",
         backgroundColor: C.bg,
         color: C.onSurface,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'IBM Plex Sans', sans-serif",
         padding: "24px",
         position: "relative",
       }}
@@ -283,7 +283,7 @@ function LoginForm() {
             <img src="/brand/mark-white.png" alt="" aria-hidden="true" width={28} height={28} />
             <span
               style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'IBM Plex Sans', sans-serif",
                 fontSize: "20px",
                 fontWeight: 700,
                 letterSpacing: "-0.02em",
@@ -297,7 +297,7 @@ function LoginForm() {
           <div style={{ textAlign: "center" }}>
             <h1
               style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'IBM Plex Sans', sans-serif",
                 fontSize: "24px",
                 fontWeight: 700,
                 letterSpacing: "-0.02em",
@@ -309,7 +309,7 @@ function LoginForm() {
             </h1>
             <p
               style={{
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: "'IBM Plex Sans', sans-serif",
                 fontSize: "12px",
                 color: C.onSurfaceVariant,
                 textTransform: "uppercase",
@@ -339,7 +339,7 @@ function LoginForm() {
               color: C.onSurface,
               padding: "12px",
               borderRadius: "12px",
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'IBM Plex Sans', sans-serif",
               fontSize: "14px",
               fontWeight: 500,
               cursor: "pointer",
@@ -363,7 +363,7 @@ function LoginForm() {
               style={{
                 backgroundColor: C.surface,
                 padding: "0 16px",
-                fontFamily: "'Space Grotesk', sans-serif",
+                fontFamily: "'IBM Plex Sans', sans-serif",
                 fontSize: "11px",
                 color: C.onSurfaceVariant,
                 textTransform: "uppercase",
@@ -387,7 +387,7 @@ function LoginForm() {
                 borderRadius: "4px",
               }}
             >
-              <p style={{ color: C.onSurface, fontFamily: "'Space Grotesk', sans-serif", fontSize: "13px", textAlign: "center" }}>
+              <p style={{ color: C.onSurface, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "13px", textAlign: "center" }}>
                 Your email is confirmed — sign in to continue.
               </p>
             </div>
@@ -408,7 +408,7 @@ function LoginForm() {
               onBlur={(e) => { e.target.style.borderBottomColor = C.outlineVariant; }}
             />
             {form.formState.errors.email && (
-              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'JetBrains Mono', monospace" }}>
+              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'IBM Plex Sans', sans-serif" }}>
                 {form.formState.errors.email.message}
               </p>
             )}
@@ -423,7 +423,7 @@ function LoginForm() {
                 tabIndex={6}
                 className="inline-flex items-center min-h-[44px] md:min-h-0"
                 style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: "'IBM Plex Sans', sans-serif",
                   fontSize: "11px",
                   fontWeight: 700,
                   color: C.primaryContainer,
@@ -466,7 +466,7 @@ function LoginForm() {
               </button>
             </div>
             {form.formState.errors.password && (
-              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'JetBrains Mono', monospace" }}>
+              <p style={{ color: C.error, fontSize: "11px", marginTop: "4px", fontFamily: "'IBM Plex Sans', sans-serif" }}>
                 {form.formState.errors.password.message}
               </p>
             )}
@@ -485,7 +485,7 @@ function LoginForm() {
                 gap: "8px",
               }}
             >
-              <p style={{ color: C.onSurface, fontFamily: "'Space Grotesk', sans-serif", fontSize: "13px", textAlign: "center" }}>
+              <p style={{ color: C.onSurface, fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "13px", textAlign: "center" }}>
                 Your email isn&apos;t confirmed yet. Check your inbox for the confirmation link.
               </p>
               <button
@@ -496,7 +496,7 @@ function LoginForm() {
                   background: "none",
                   border: "none",
                   color: C.primaryContainer,
-                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontFamily: "'IBM Plex Sans', sans-serif",
                   fontSize: "12px",
                   fontWeight: 700,
                   cursor: resendState === "idle" ? "pointer" : "default",
@@ -525,7 +525,7 @@ function LoginForm() {
               <p
                 style={{
                   color: C.error,
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "'IBM Plex Sans', sans-serif",
                   fontSize: "11px",
                   textAlign: "center",
                 }}
@@ -548,7 +548,7 @@ function LoginForm() {
               <p
                 style={{
                   color: C.error,
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: "'IBM Plex Sans', sans-serif",
                   fontSize: "11px",
                   textAlign: "center",
                 }}
@@ -571,7 +571,7 @@ function LoginForm() {
                 color: C.onPrimaryContainer,
                 padding: "16px",
                 borderRadius: "12px",
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'IBM Plex Sans', sans-serif",
                 fontWeight: 800,
                 fontSize: "14px",
                 letterSpacing: "0.1em",
@@ -600,7 +600,7 @@ function LoginForm() {
 
         {/* Footer */}
         <footer style={{ marginTop: "40px", textAlign: "center" }}>
-          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "14px", color: C.onSurfaceVariant }}>
+          <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "14px", color: C.onSurfaceVariant }}>
             Don&apos;t have an account?{" "}
             <Link
               href={emailValue ? `/signup?email=${encodeURIComponent(emailValue)}` : "/signup"}
@@ -628,14 +628,14 @@ function LoginForm() {
             opacity: 0.3,
           }}
         >
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
+          <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
             Secure Node: BB-ALPHA-09
           </span>
           <span
             style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: C.primaryContainer, display: "block" }}
             className="animate-pulse"
           />
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
+          <span style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
             v4.22.0
           </span>
         </div>

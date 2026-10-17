@@ -155,11 +155,11 @@ export default async function AccuracyPage() {
   const data = await loadAccuracy();
 
   return (
-    <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
       <PublicHeader badge="TRACK RECORD" />
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-8 py-16">
-        <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
           Signal Accuracy
         </h1>
         <p className="text-xs text-[var(--text-muted)] mb-8 font-mono">
@@ -230,7 +230,7 @@ export default async function AccuracyPage() {
 
             {/* Per-asset breakdown table */}
             <section className="space-y-3 mb-10">
-              <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
                 By asset
               </h2>
               <div className="md:hidden rounded-lg border border-[var(--border)] divide-y divide-[#2a2a2a] px-4">

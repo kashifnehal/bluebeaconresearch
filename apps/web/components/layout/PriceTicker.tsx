@@ -1,5 +1,6 @@
 "use client";
 
+import { priceChangeParts } from "@/lib/price-change";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,8 +72,7 @@ export function PriceTicker() {
                 {Number(p.price).toFixed(2)}
               </span>
               <span className={`text-xs ${isUp ? "text-price-up" : "text-price-down"}`}>
-                {pct >= 0 ? "+" : ""}
-                {pct.toFixed(2)}%
+                {priceChangeParts(pct, 2).text}
               </span>
               <span className="mx-2 inline-block h-4 w-px bg-outline-variant" />
             </button>

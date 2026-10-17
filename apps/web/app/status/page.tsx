@@ -12,7 +12,7 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 function statusColor(status: CheckStatus) {
-  if (status === "Operational") return "var(--accent)";
+  if (status === "Operational") return "var(--interactive)";
   if (status === "Degraded") return "#f5a623";
   return "#8a8a8a";
 }
@@ -23,10 +23,10 @@ export default async function StatusPage() {
 
   const operationalCount = systems.filter((s) => s.status === "Operational").length;
   const allOperational = operationalCount === systems.length;
-  const bannerColor = allOperational ? "var(--accent)" : "#f5a623";
+  const bannerColor = allOperational ? "var(--interactive)" : "#f5a623";
 
   return (
-    <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
       <PublicHeader badge="SYSTEM MONITOR" />
 
       {/* Main Content */}
@@ -36,7 +36,7 @@ export default async function StatusPage() {
           <div className="flex items-center gap-4">
             <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: bannerColor }} />
             <div>
-              <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
                 {allOperational ? "All Systems Operational" : "Partial System Disruption"}
               </h1>
               <p className="text-xs text-[var(--text-muted)] mt-1 font-mono">
@@ -60,7 +60,7 @@ export default async function StatusPage() {
 
         {/* System List */}
         <section className="space-y-4 mb-12">
-          <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest mb-4" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
             Subsystem Operational Metrics
           </h2>
 
@@ -68,7 +68,7 @@ export default async function StatusPage() {
             {systems.map((sys) => (
               <div key={sys.name} className="p-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between hover:bg-[#1a1a1a] transition-colors">
                 <div>
-                  <h3 className="font-bold text-sm text-[#e5e2e1]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <h3 className="font-bold text-sm text-[#e5e2e1]" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
                     {publicStatusName(sys.name)}
                   </h3>
                 </div>

@@ -39,11 +39,11 @@ export function FilterBar({
     ? "flex flex-col gap-1"
     : "flex flex-col gap-1 md:flex-row md:items-center md:gap-2";
   const labelClass = stacked
-    ? "label text-[12px] md:text-[10px] text-on-surface-variant uppercase tracking-wider"
-    : "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
+    ? "label text-[12px] md:text-[10px] text-on-surface-variant "
+    : "text-[12px] md:text-[10px] shrink-0";
   const labelStyle = stacked
     ? undefined
-    : { color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" };
+    : { color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" };
   // Bar layout: full width on mobile so each select fills its grid cell (a long option
   // label like "East Asia / Korean Peninsula" was otherwise forcing the closed <select>
   // wide enough to break 3-across packing); back to auto/natural width at md+, unchanged.
@@ -165,16 +165,16 @@ export function FilterBar({
                           ? "bg-primary text-on-primary"
                           : "bg-surface-container/20"
                       }`
-                    : "px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+                    : "px-3 py-1.5 text-[12px] md:text-[11px] border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 }
                 style={
                   stacked
                     ? undefined
                     : {
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
-                        color: selected ? "#005f40" : "var(--text-secondary)",
-                        borderColor: selected ? "var(--accent)" : "var(--border)",
+                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        backgroundColor: selected ? "var(--interactive-bg)" : "var(--bg-container)",
+                        color: selected ? "var(--on-interactive-bg)" : "var(--text-secondary)",
+                        borderColor: selected ? "var(--interactive)" : "var(--border)",
                       }
                 }
               >

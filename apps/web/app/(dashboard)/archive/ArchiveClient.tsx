@@ -120,7 +120,7 @@ export function ArchiveClient() {
         {degraded && (
           <p
             className="mt-4 text-[12px] md:text-[11px]"
-            style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
+            style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             {degraded}
           </p>
@@ -151,10 +151,10 @@ export function ArchiveClient() {
                   onClick={() => applyDesk(id)}
                   className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                   style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    backgroundColor: selected ? "var(--interactive)" : "var(--bg-container)",
                     color: selected ? "#005f40" : "var(--text-secondary)",
-                    borderColor: selected ? "var(--accent)" : "var(--border)",
+                    borderColor: selected ? "var(--interactive)" : "var(--border)",
                   }}
                 >
                   {preset.label}
@@ -168,7 +168,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-from"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
               >
                 From date
               </label>
@@ -185,7 +185,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-to"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
               >
                 To date
               </label>
@@ -202,7 +202,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-commodity"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
               >
                 Commodity
               </label>
@@ -232,7 +232,7 @@ export function ArchiveClient() {
               <label
                 htmlFor="archive-region"
                 className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+                style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
               >
                 Region
               </label>
@@ -259,7 +259,7 @@ export function ArchiveClient() {
             <label
               htmlFor="archive-keyword"
               className="text-[12px] md:text-[10px] uppercase tracking-wider"
-              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
             >
               Keyword
             </label>
@@ -305,7 +305,7 @@ export function ArchiveClient() {
           {typeof total === "number" && !isLoading && (
             <span
               className="text-[12px] md:text-[11px] font-mono"
-              style={{ color: "var(--accent)" }}
+              style={{ color: "var(--interactive)" }}
               data-testid="archive-total"
             >
               {total} signal{total === 1 ? "" : "s"}
@@ -326,7 +326,7 @@ export function ArchiveClient() {
             </span>
             <p
               className="text-xs font-bold uppercase tracking-[0.2em]"
-              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
             >
               {filtersActive
                 ? "No signals matching these filters"

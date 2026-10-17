@@ -80,7 +80,7 @@ function Part({
     <div className="space-y-1.5" data-part={label}>
       <div
         className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted"
-        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
       >
         {label}
       </div>
@@ -132,7 +132,7 @@ export function MarketImpactAssessment({
         {headingIcon}
         <span
           className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-text-primary"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           data-testid="market-impact-heading"
         >
           MARKET IMPACT ASSESSMENT

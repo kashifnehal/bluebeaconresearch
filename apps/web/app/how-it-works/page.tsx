@@ -110,14 +110,14 @@ export default async function HowItWorksPage() {
   return (
     <div
       className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col"
-      style={{ fontFamily: "'Inter', sans-serif" }}
+      style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
     >
       <PublicHeader badge="HOW IT WORKS" />
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-5 md:p-8 py-12 md:py-16">
         <h1
           className="text-2xl font-bold text-white mb-2"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
         >
           How It Works
         </h1>
@@ -143,7 +143,7 @@ export default async function HowItWorksPage() {
         <section className="space-y-3 mb-10">
           <h2
             className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             What we claim, and how you can check it
           </h2>
@@ -170,7 +170,7 @@ export default async function HowItWorksPage() {
         <section className="space-y-3 mb-10">
           <h2
             className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             Limits — what we don&apos;t do yet
           </h2>
@@ -188,7 +188,7 @@ export default async function HowItWorksPage() {
 
         <p className="text-sm text-[#e5e2e1]">
           See the full history on the{" "}
-          <Link href="/accuracy" className="text-[var(--accent)] hover:underline">
+          <Link href="/accuracy" className="text-[var(--interactive)] hover:underline">
             Accuracy
           </Link>{" "}
           page.

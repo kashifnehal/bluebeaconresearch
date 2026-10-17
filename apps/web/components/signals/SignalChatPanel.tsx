@@ -228,7 +228,7 @@ export function SignalChatPanel({
             <MessageCircle size={14} className="text-primary-fixed-dim" />
             <span
               className="text-[12px] md:text-[11px] font-bold uppercase tracking-[0.16em] text-primary-fixed-dim"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
             >
               Ask About This Signal
             </span>
@@ -254,7 +254,7 @@ export function SignalChatPanel({
           <MessageCircle size={14} className="text-primary-fixed-dim" />
           <span
             className="text-[12px] md:text-[11px] font-bold uppercase tracking-[0.16em] text-primary-fixed-dim"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             Ask About This Signal
           </span>
@@ -264,7 +264,7 @@ export function SignalChatPanel({
 
       <div
         className="overflow-hidden rounded-lg border border-outline-variant/25 bg-surface-container-low"
-        style={{ boxShadow: "inset 2px 0 0 0 var(--accent)" }}
+        style={{ boxShadow: "inset 2px 0 0 0 var(--interactive)" }}
       >
         {showHeuristicNote && (
           <div
@@ -418,7 +418,7 @@ export function SignalChatPanel({
               disabled={isSending || !input.trim()}
               aria-label="Send"
               className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-primary-container px-4 text-[12px] font-bold uppercase tracking-[0.12em] text-surface-container-lowest disabled:opacity-40 @[420px]:w-auto w-full"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
             >
               <Send size={14} />
               Send
@@ -464,7 +464,7 @@ function CitedAssistantReply({ content }: { content: string }) {
         >
           <p
             className="mb-1.5 text-[12px] md:text-[10px] font-bold uppercase tracking-[0.14em] text-primary-fixed-dim"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
           >
             Sources
           </p>

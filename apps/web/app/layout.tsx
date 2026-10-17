@@ -18,7 +18,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:wght@500;600&display=swap"
           rel="stylesheet"
         />
         {/* Material Symbols Outlined – only opsz 24 / wght 400 / GRAD 0 are used anywhere in the app; FILL varies 0..1 for filled-icon states. Requesting the full axis ranges pulled a ~3.9MB font file. */}
@@ -43,7 +43,7 @@ export default function RootLayout({
           }
         `}</style>
       </head>
-      <body className="min-h-full" style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }} suppressHydrationWarning>
+      <body className="min-h-full" style={{ backgroundColor: "var(--bg-app)", color: "var(--text-primary)", fontFamily: "'IBM Plex Sans', sans-serif" }} suppressHydrationWarning>
         <Providers>{children}</Providers>
         {!isProjectReady && <AccessLimitedModalWrapper />}
       </body>

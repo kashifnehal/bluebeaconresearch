@@ -1,6 +1,6 @@
 /* Dark-terminal theme for Driver.js Feature Hints (not the Joyride tour). */
 :root {
-  --driver-hint-color: var(--accent);
+  --driver-hint-color: var(--interactive);
   --driver-hint-size: 18px;
 }
 
@@ -15,7 +15,7 @@
 }
 
 .bbr-feature-hint .driver-popover-title {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 14px;
   font-weight: 700;
   color: #e5e2e1;
@@ -37,11 +37,11 @@
 }
 
 .bbr-feature-hint .driver-popover-footer-btn {
-  background-color: var(--accent);
+  background-color: var(--interactive);
   color: #003824;
   border: none;
   border-radius: 0;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "IBM Plex Sans", sans-serif;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.05em;

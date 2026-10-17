@@ -7,16 +7,16 @@ const C = {
   backdrop: "rgba(0,0,0,0.85)",
   card: "#191c1a",
   border: "#2a3530",
-  borderGlow: "var(--accent)",
+  borderGlow: "var(--interactive)",
   heading: "#ffffff",
   bodyText: "#c8d5cc",
   italicText: "#a0b0a6",
-  ctaText: "var(--accent)",
-  btnBg: "var(--accent)",
+  ctaText: "var(--interactive)",
+  btnBg: "var(--interactive)",
   btnText: "#003824",
   btnHover: "#6ffbbe",
   metaText: "#3d5248",
-  signInLink: "var(--accent)",
+  signInLink: "var(--interactive)",
   footerText: "#8a9e93",
 };
 
@@ -171,7 +171,7 @@ export default function AccessLimitedModal({
         {/* Heading */}
         <h1
           style={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', sans-serif",
             fontWeight: 800,
             fontSize: "22px",
             letterSpacing: "0.12em",
@@ -187,7 +187,7 @@ export default function AccessLimitedModal({
         {/* Body text */}
         <p
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'IBM Plex Sans', sans-serif",
             fontSize: "13.5px",
             lineHeight: "1.6",
             color: C.bodyText,
@@ -201,7 +201,7 @@ export default function AccessLimitedModal({
         {italic && (
         <p
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'IBM Plex Sans', sans-serif",
             fontStyle: "italic",
             fontSize: "13px",
             lineHeight: "1.6",
@@ -217,7 +217,7 @@ export default function AccessLimitedModal({
         {!hideCta && (
         <p
           style={{
-            fontFamily: "'Space Grotesk', sans-serif",
+            fontFamily: "'IBM Plex Sans', sans-serif",
             fontWeight: 700,
             fontSize: "12px",
             letterSpacing: "0.06em",
@@ -245,7 +245,7 @@ export default function AccessLimitedModal({
             color: joinedWaitlist ? C.btnBg : C.btnText,
             padding: "14px",
             borderRadius: "3px",
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: "'IBM Plex Sans', sans-serif",
             fontWeight: 800,
             fontSize: "13px",
             letterSpacing: "0.14em",
@@ -273,7 +273,7 @@ export default function AccessLimitedModal({
         {/* Already Registered? */}
         {joinedWaitlist && <p
           style={{
-            fontFamily: "'JetBrains Mono', monospace",
+            fontFamily: "'IBM Plex Sans', sans-serif",
             fontSize: "10px",
             letterSpacing: "0.08em",
             color: C.italicText,
@@ -296,7 +296,7 @@ export default function AccessLimitedModal({
         >
           <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'IBM Plex Sans', sans-serif",
               fontSize: "9px",
               letterSpacing: "0.1em",
               color: C.metaText,
@@ -307,7 +307,7 @@ export default function AccessLimitedModal({
           </span>
           <span
             style={{
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'IBM Plex Sans', sans-serif",
               fontSize: "9px",
               letterSpacing: "0.1em",
               color: C.metaText,
