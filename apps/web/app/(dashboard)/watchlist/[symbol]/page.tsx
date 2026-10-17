@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { DriverBreakdownChart } from "@/components/signals/DriverBreakdownChart";
 import { PulseTiles } from "@/components/signals/PulseTiles";
+import { PositioningPanel } from "@/components/assets/PositioningPanel";
 import { ChartMarkerLabel } from "@/components/assets/ChartEventMarker";
 import { ChartMarkerCard, type MarkerPriceContext } from "@/components/assets/ChartMarkerCard";
 import { moveSinceEvent } from "@/lib/move-since-event";
@@ -1023,6 +1024,8 @@ export default function WatchlistSymbolPage() {
           )}
         </div>
         )}
+
+        {!isNewsOnly && <PositioningPanel symbol={symbol} />}
 
         <DriverBreakdownChart
           symbol={symbol}
