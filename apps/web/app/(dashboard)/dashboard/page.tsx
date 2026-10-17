@@ -34,6 +34,7 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { DASHBOARD_FEED_SUBHEAD } from "@/lib/ingestion-interval";
 import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
+import { DEFAULT_KEYWORD_SELECTION, filterByKeywords, type KeywordSelection } from "@/lib/keyword-presets";
 import { SinceLastVisit } from "@/components/desk/SinceLastVisit";
 import { MarketsLedger } from "@/components/desk/MarketsLedger";
 import { StoryThreadCard } from "@/components/desk/StoryThreadCard";
@@ -94,6 +95,7 @@ export default function DashboardPage() {
   // Default OFF: existing users see the exact same full feed until they turn it on.
   const [personalized, setPersonalized] = useState(false);
   const [filters, setFilters] = useState<FilterBarValue>(DEFAULT_FILTERS);
+  const [keywords, setKeywords] = useState<KeywordSelection>(DEFAULT_KEYWORD_SELECTION);
   // Cards | Table view toggle (4.1) — remembered per-browser. Reads lazily so
   // the very first render already matches a returning user's last choice
   // (no layout flash); wrapped in try/catch, as localStorage can throw (private
@@ -162,7 +164,7 @@ export default function DashboardPage() {
     }
   }, []);
   const {
-    liveSignals,
+    liveSignals: loadedSignals,
     justIn,
     resolvedWindow,
     oldestEventDate,
@@ -190,6 +192,10 @@ export default function DashboardPage() {
     minSources: filters.minSources,
     eventCategory: filters.eventCategory,
   });
+  // Keyword presets filter the rows already loaded (the /api/signals search
+  // parameter takes one phrase, not a word list), so this narrows what is on screen,
+  // and further pages are still fetched as the list scrolls.
+  const liveSignals = useMemo(() => filterByKeywords(loadedSignals, keywords), [loadedSignals, keywords]);
   const { tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
 
   // Per-row price-impact chip (dashboard-only addition) — reuses the same
@@ -338,7 +344,8 @@ export default function DashboardPage() {
     filters.minSeverity > DEFAULT_FILTERS.minSeverity ||
     filters.window != null ||
     filters.minSources > DEFAULT_FILTERS.minSources ||
-    filters.eventCategory != null;
+    filters.eventCategory != null ||
+    keywords.presets.length > 0;
   const canLoadMoreStream = hasNextPage;
   // Manual fallback for the "Load more" button — the sentinel div below
   // triggers the same fetchNextPage automatically as the user scrolls near it.
@@ -658,6 +665,8 @@ export default function DashboardPage() {
               value={filters}
               onChange={handleFiltersChange}
               extraRegions={liveSignals.map((s) => s.region)}
+              keywords={keywords}
+              onKeywordsChange={setKeywords}
             />
           </div>
           {typeof total === "number" && !isLoading && (

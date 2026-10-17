@@ -2,6 +2,12 @@
 
 import { SELECT_CLASSES } from "@/lib/utils";
 import {
+  KEYWORD_PRESETS,
+  toggleKeywordPreset,
+  type KeywordMode,
+  type KeywordSelection,
+} from "@/lib/keyword-presets";
+import {
   FILTER_CATEGORIES,
   FILTER_COMMODITIES,
   WINDOW_OPTIONS,
@@ -20,6 +26,9 @@ type FilterBarProps = {
   /** `bar` = dashboard horizontal row; `stack` = map sidebar. */
   layout?: "bar" | "stack";
   className?: string;
+  /** Keyword presets (dashboard and map). Omit both props to hide the row. */
+  keywords?: KeywordSelection;
+  onKeywordsChange?: (next: KeywordSelection) => void;
 };
 
 export function FilterBar({
@@ -28,6 +37,8 @@ export function FilterBar({
   extraRegions = [],
   layout = "bar",
   className,
+  keywords,
+  onKeywordsChange,
 }: FilterBarProps) {
   const regions = buildRegionOptions(extraRegions);
   const stacked = layout === "stack";
@@ -184,6 +195,66 @@ export function FilterBar({
           })}
         </div>
       </div>
+      {keywords && onKeywordsChange ? (
+        <div
+          data-testid="keyword-presets"
+          className={`${fieldClass} ${stacked ? "" : "col-span-3 md:col-span-1"}`}
+        >
+          <span className={labelClass} style={labelStyle}>
+            Keywords
+          </span>
+          <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Keyword presets">
+            {KEYWORD_PRESETS.map((preset) => {
+              const selected = keywords.presets.includes(preset.id);
+              const empty = preset.words.length === 0;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  data-testid={`keyword-preset-${preset.id}`}
+                  aria-pressed={selected}
+                  aria-disabled={empty || undefined}
+                  disabled={empty}
+                  title={empty ? "No tracked terms for this preset yet" : preset.words.join(", ")}
+                  onClick={() => onKeywordsChange(toggleKeywordPreset(keywords, preset.id))}
+                  className="px-3 py-1.5 text-[12px] md:text-[11px] border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{
+                    backgroundColor: selected ? "var(--interactive-bg)" : "var(--bg-container)",
+                    color: selected ? "var(--on-interactive-bg)" : "var(--text-secondary)",
+                    borderColor: selected ? "var(--interactive)" : "var(--border)",
+                  }}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+            <div
+              role="group"
+              aria-label="Match any or all keywords"
+              data-testid="keyword-mode"
+              className="ml-1 inline-flex border"
+              style={{ borderColor: "var(--border)" }}
+            >
+              {(["any", "all"] as KeywordMode[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  data-testid={`keyword-mode-${mode}`}
+                  aria-pressed={keywords.mode === mode}
+                  onClick={() => onKeywordsChange({ ...keywords, mode })}
+                  className="px-2 py-1.5 text-[12px] md:text-[11px] cursor-pointer min-h-[44px] md:min-h-0"
+                  style={{
+                    backgroundColor: keywords.mode === mode ? "var(--interactive-bg)" : "transparent",
+                    color: keywords.mode === mode ? "var(--on-interactive-bg)" : "var(--text-secondary)",
+                  }}
+                >
+                  {mode === "any" ? "Any" : "All"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
