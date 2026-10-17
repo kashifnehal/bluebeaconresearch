@@ -80,25 +80,33 @@ class UnionFind {
   }
 }
 
-/** Connected components: one link between a qualifying pair is enough. */
-export function buildStoryThreads(signals: ThreadSignal[]): ThreadSignal[][] {
-  const n = signals.length;
+/** Connected components over any pairing rule: one link between a qualifying pair is enough. */
+export function buildGroups<T extends { created_at: string; id: string }>(
+  items: T[],
+  pairBelongs: (a: T, b: T) => boolean,
+): T[][] {
+  const n = items.length;
   const uf = new UnionFind(n);
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
-      if (pairBelongsTogether(signals[i], signals[j])) uf.union(i, j);
+      if (pairBelongs(items[i], items[j])) uf.union(i, j);
     }
   }
-  const groups = new Map<number, ThreadSignal[]>();
+  const groups = new Map<number, T[]>();
   for (let i = 0; i < n; i++) {
     const root = uf.find(i);
     const list = groups.get(root) ?? [];
-    list.push(signals[i]);
+    list.push(items[i]);
     groups.set(root, list);
   }
-  return [...groups.values()].map((thread) =>
-    [...thread].sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)),
+  return [...groups.values()].map((group) =>
+    [...group].sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)),
   );
+}
+
+/** Connected components: one link between a qualifying pair is enough. */
+export function buildStoryThreads(signals: ThreadSignal[]): ThreadSignal[][] {
+  return buildGroups(signals, pairBelongsTogether);
 }
 
 export function threadStats(threads: ThreadSignal[][]) {
