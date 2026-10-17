@@ -20,6 +20,21 @@ type AlertItem = {
   };
 };
 
+/**
+ * Unread count, driving both this panel and the sidebar badge (same
+ * `unreadCount` store field — see components/layout/Sidebar.tsx). Always
+ * computed, even when `alerts` is empty: `unreadCount` is persisted across
+ * sessions (zustand persist in store/useUIStore.ts), so an empty/stale
+ * fetch must still overwrite a leftover non-zero badge from a prior
+ * session rather than leaving it stuck.
+ */
+export function computeUnreadAlertCount(
+  alerts: Pick<AlertItem, "id" | "is_read">[],
+  readItems: Record<string, boolean>,
+): number {
+  return alerts.filter((a) => !a.is_read && !readItems[a.id]).length;
+}
+
 export function NotificationPanel() {
   const { notifOpen, setNotifOpen, resetUnread, setUnreadCount } = useUIStore();
   const [readItems, setReadItems] = useState<Record<string, boolean>>({});
@@ -40,10 +55,7 @@ export function NotificationPanel() {
   const alerts = data?.alerts ?? [];
 
   useEffect(() => {
-    if (alerts.length > 0) {
-      const unread = alerts.filter((a) => !a.is_read && !readItems[a.id]).length;
-      setUnreadCount(unread);
-    }
+    setUnreadCount(computeUnreadAlertCount(alerts, readItems));
   }, [alerts, readItems, setUnreadCount]);
 
   useEffect(() => {
