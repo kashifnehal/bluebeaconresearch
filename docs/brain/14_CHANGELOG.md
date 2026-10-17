@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-18 — Rendered web test rule
+
+Docs only. Both deployment docs now require a render test for a store write, an effect, or a visible change. A source-text match does not count. User-facing text must not contain a file path, a table name, an HTTP code, or vendor error text.
+
 ### 2026-10-17 — Daily AI budget, admin article time, public collection-time rule
 
 Docs only. Daily ingestion budget stays at $2 until go-live; no monthly-limit variable; gate shadow stays off. Admin ingestion status returns `newestStoredArticleAt` (`ab91e372c219f350167c03dcea0ef0d82574785c`, docs `14d8fbe13bd36e47371401628238c826a5bcd478`). Public pages show no collection time (2026-10-16 rule). Full detail: `LIVE_TODO.md`.

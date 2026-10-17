@@ -79,7 +79,16 @@ pnpm run build
 
 # Start backend server
 pnpm --filter backend start
+
+# Web suite
+pnpm --filter web test
 ```
+
+### Web tests (2026-10-18)
+
+`pnpm --filter web test` is the web suite. A new `*.test.ts` or `*.test.tsx` file has to be appended to `apps/web/package.json`'s `test` script or it does not run.
+
+Rendered test rule. Any change that writes to a store, runs an effect, or changes what a user sees must have a test that renders the component with `react-dom/client` (the linkedom pattern already used in `apps/web/components/signals/SignalQuickView.test.tsx`). A test that only matches source text does not count. For a loop or crash risk, the test counts renders and fails above a small fixed number. User-facing text must never contain file paths, table names, HTTP codes or vendor error text.
 
 ---
 

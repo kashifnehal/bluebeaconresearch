@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-17 (daily AI budget and worker flags — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-18 (rendered web test rule — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-18 (rendered web test rule, docs only) — a store write, an effect, or a visible change needs a test that renders the component. A source-text match does not count. See `12_DEPLOYMENT.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (daily AI budget, docs only) — keep `ANTHROPIC_DAILY_BUDGET_USD_INGESTION` at 2 until go-live; do not set `ANTHROPIC_MONTHLY_LIMIT_USD`; `GATE_SHADOW_ENABLED` stays unset. See `10_DECISIONS.md` and `docs/brain/LIVE_TODO.md`.
 

@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Rendered web test rule, docs only, 2026-10-18
+
+- A change that writes to a store, runs an effect, or changes what a user sees needs a test that renders the component with `react-dom/client` (the linkedom pattern in `apps/web/components/signals/SignalQuickView.test.tsx`). A source-text match does not count. A loop or crash risk counts renders and fails above a small fixed number. User-facing text must not contain file paths, table names, HTTP codes, or vendor error text.
+- Written in both `12_DEPLOYMENT.md` files under Web tests. No code change.
+- No open priority-queue line. Nothing struck.
+
 ## ✅ Alerts badge sync is a rendered hook, `apps/web`, 2026-10-18, `61773da`
 
 - `useSyncUnreadBadge` holds the same badge write as before: it waits for a settled alerts response, and an empty list still clears a leftover count. A small rendered probe feeds an empty list, no data, and three unread alerts, and fails if that probe renders more than 4 times.
