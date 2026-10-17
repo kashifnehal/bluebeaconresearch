@@ -59,8 +59,12 @@ export const useUIStore = create<UIState>()(
       setNotifOpen: (open) => set({ notifOpen: open }),
 
       unreadCount: 0,
-      setUnreadCount: (count) => set({ unreadCount: count }),
-      resetUnread: () => set({ unreadCount: 0 }),
+      // No-op when the value is unchanged, so subscribers are not notified
+      // (and re-rendered) for a write that changes nothing.
+      setUnreadCount: (count) =>
+        set((s) => (s.unreadCount === count ? s : { unreadCount: count })),
+      resetUnread: () =>
+        set((s) => (s.unreadCount === 0 ? s : { unreadCount: 0 })),
 
       helpOpen: false,
       setHelpOpen: (open) => set({ helpOpen: open }),

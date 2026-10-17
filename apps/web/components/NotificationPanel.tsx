@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useUIStore } from "@/store/useUIStore";
@@ -19,6 +19,8 @@ type AlertItem = {
     severity: number;
   };
 };
+
+const EMPTY_ALERTS: AlertItem[] = [];
 
 /**
  * Unread count, driving both this panel and the sidebar badge (same
@@ -52,11 +54,18 @@ export function NotificationPanel() {
     retry: 1,
   });
 
-  const alerts = data?.alerts ?? [];
+  // Stable reference while there is no data. A fresh `[]` on every render made
+  // the effect below fire on every render, and since setUnreadCount updates the
+  // store this component subscribes to, that was an endless render loop
+  // (React error #185) for any user with an empty or failed alerts fetch.
+  const alerts = useMemo(() => data?.alerts ?? EMPTY_ALERTS, [data]);
 
   useEffect(() => {
+    // Wait for a real answer: a loading or failed fetch must not touch the badge.
+    // An answered-but-empty fetch (data.alerts = []) still zeroes a stale count.
+    if (!data) return;
     setUnreadCount(computeUnreadAlertCount(alerts, readItems));
-  }, [alerts, readItems, setUnreadCount]);
+  }, [data, alerts, readItems, setUnreadCount]);
 
   useEffect(() => {
     if (notifOpen) {
