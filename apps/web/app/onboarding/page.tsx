@@ -141,12 +141,12 @@ export default function OnboardingPage() {
   ];
 
   const chipStyle = (active: boolean) => ({
-    border: `1px solid ${active ? "var(--interactive)" : "rgba(60,74,66,0.3)"}`,
-    backgroundColor: active ? "var(--interactive)" : "#1c1b1b",
+    border: `1px solid ${active ? "var(--accent)" : "rgba(60,74,66,0.3)"}`,
+    backgroundColor: active ? "var(--accent)" : "#1c1b1b",
     color: active ? "#005f40" : "#e5e2e1",
     padding: "10px 14px",
     borderRadius: "4px",
-    fontFamily: "'IBM Plex Sans', sans-serif",
+    fontFamily: "'Space Grotesk', sans-serif",
     fontSize: "12px",
     fontWeight: 600,
     cursor: "pointer",
@@ -156,13 +156,13 @@ export default function OnboardingPage() {
   return (
     <div
       className="min-h-screen w-full flex items-center justify-center relative overflow-hidden"
-      style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'IBM Plex Sans', sans-serif" }}
+      style={{ backgroundColor: "#0e0e0e", color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
     >
       {/* Tactical grid overlay */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
-          backgroundImage: "radial-gradient(var(--interactive) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(var(--accent) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
           opacity: 0.1,
         }}
@@ -202,20 +202,20 @@ export default function OnboardingPage() {
               left: 0,
               width: "100%",
               height: "2px",
-              background: "linear-gradient(90deg, var(--interactive), #6ffbbe)",
+              background: "linear-gradient(90deg, var(--accent), #6ffbbe)",
             }}
           />
 
           {/* Header */}
           <header style={{ marginBottom: "32px", textAlign: "center" }}>
             <div style={{ marginBottom: "24px", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-              <Terminal size={28} color="var(--interactive)" />
+              <Terminal size={28} color="var(--accent)" />
               <span
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: "'Space Grotesk', sans-serif",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
-                  color: "var(--interactive)",
+                  color: "var(--accent)",
                   fontSize: "18px",
                   fontWeight: 700,
                 }}
@@ -225,7 +225,7 @@ export default function OnboardingPage() {
             </div>
             <h1
               style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: "'Inter', sans-serif",
                 fontSize: "30px",
                 fontWeight: 800,
                 color: "#e5e2e1",
@@ -235,7 +235,7 @@ export default function OnboardingPage() {
             >
               {step === 1 ? "Set up your profile" : "What should we keep an eye on for you?"}
             </h1>
-            <p style={{ color: "var(--text-secondary)", fontFamily: "'IBM Plex Sans', sans-serif" }}>
+            <p style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}>
               {step === 1
                 ? "Tell us how you'll use Blue Beacon Research"
                 : "Pick the commodities, currency pairs, and regions you follow so we can show you what matters to you. You can change this anytime in Settings."}
@@ -255,7 +255,7 @@ export default function OnboardingPage() {
                     width: "24px",
                     height: "3px",
                     borderRadius: "2px",
-                    backgroundColor: s <= step ? "var(--interactive)" : "var(--border)",
+                    backgroundColor: s <= step ? "var(--accent)" : "var(--border)",
                   }}
                 />
               ))}
@@ -270,7 +270,7 @@ export default function OnboardingPage() {
                 <label
                   htmlFor="name"
                   style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
@@ -294,13 +294,13 @@ export default function OnboardingPage() {
                     borderBottom: "1px solid var(--border)",
                     color: "#e5e2e1",
                     padding: "12px 0",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontSize: "14px",
                     outline: "none",
                     boxSizing: "border-box",
                     transition: "border-color 0.2s",
                   }}
-                  onFocus={(e) => { e.target.style.borderBottomColor = "var(--interactive)"; }}
+                  onFocus={(e) => { e.target.style.borderBottomColor = "var(--accent)"; }}
                   onBlur={(e) => { e.target.style.borderBottomColor = "var(--border)"; }}
                 />
               </div>
@@ -309,7 +309,7 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 <label
                   style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
@@ -325,12 +325,12 @@ export default function OnboardingPage() {
                       type="button"
                       onClick={() => setUseCase(option.value)}
                       style={{
-                        border: `1px solid ${useCase === option.value ? "var(--interactive)" : "rgba(60,74,66,0.3)"}`,
-                        backgroundColor: useCase === option.value ? "var(--interactive)" : "#1c1b1b",
+                        border: `1px solid ${useCase === option.value ? "var(--accent)" : "rgba(60,74,66,0.3)"}`,
+                        backgroundColor: useCase === option.value ? "var(--accent)" : "#1c1b1b",
                         color: useCase === option.value ? "#005f40" : "#e5e2e1",
                         padding: "12px 16px",
                         borderRadius: "4px",
-                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        fontFamily: "'Space Grotesk', sans-serif",
                         textTransform: "uppercase" as const,
                         letterSpacing: "0.05em",
                         fontSize: "13px",
@@ -352,7 +352,7 @@ export default function OnboardingPage() {
                   usable chat ID (see apps/web/components/TelegramConnect.tsx). */}
               <p
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: "10px",
                   color: "var(--text-muted)",
                   fontStyle: "italic",
@@ -367,12 +367,12 @@ export default function OnboardingPage() {
                   type="submit"
                   style={{
                     width: "100%",
-                    background: "linear-gradient(135deg, #6ffbbe, var(--interactive))",
+                    background: "linear-gradient(135deg, #6ffbbe, var(--accent))",
                     color: "#003824",
                     padding: "16px",
                     borderRadius: "4px",
                     border: "none",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     fontWeight: 700,
                     textTransform: "uppercase" as const,
                     letterSpacing: "0.08em",
@@ -397,7 +397,7 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <label
                   style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
@@ -424,7 +424,7 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <label
                   style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
@@ -451,7 +451,7 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <label
                   style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
@@ -472,7 +472,7 @@ export default function OnboardingPage() {
                     borderRadius: "4px",
                     padding: "10px 14px",
                     color: "#e5e2e1",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Inter', sans-serif",
                     fontSize: "14px",
                   }}
                 />
@@ -481,7 +481,7 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <label
                   style={{
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     textTransform: "uppercase",
                     letterSpacing: "0.05em",
                     fontSize: "11px",
@@ -512,12 +512,12 @@ export default function OnboardingPage() {
                   disabled={isSubmitting}
                   style={{
                     width: "100%",
-                    background: "linear-gradient(135deg, #6ffbbe, var(--interactive))",
+                    background: "linear-gradient(135deg, #6ffbbe, var(--accent))",
                     color: "#003824",
                     padding: "16px",
                     borderRadius: "4px",
                     border: "none",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     fontWeight: 700,
                     textTransform: "uppercase" as const,
                     letterSpacing: "0.08em",
@@ -543,7 +543,7 @@ export default function OnboardingPage() {
                     background: "none",
                     border: "none",
                     color: "var(--text-muted)",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                     fontSize: "11px",
                     fontWeight: 700,
                     textTransform: "uppercase" as const,
@@ -572,7 +572,7 @@ export default function OnboardingPage() {
             <div>
               <div
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: "'Space Grotesk', sans-serif",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                   fontSize: "10px",
@@ -583,9 +583,9 @@ export default function OnboardingPage() {
               </div>
               <div
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: "10px",
-                  color: "var(--interactive)",
+                  color: "var(--accent)",
                 }}
               >
                 BB-ALPHA-ONLINE
@@ -594,7 +594,7 @@ export default function OnboardingPage() {
             <div style={{ textAlign: "right" }}>
               <div
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: "'Space Grotesk', sans-serif",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
                   fontSize: "10px",
@@ -605,7 +605,7 @@ export default function OnboardingPage() {
               </div>
               <div
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontFamily: "'JetBrains Mono', monospace",
                   fontSize: "10px",
                   color: "#e5e2e1",
                 }}
@@ -632,7 +632,7 @@ export default function OnboardingPage() {
               style={{
                 height: "4px",
                 width: "4px",
-                backgroundColor: "var(--interactive)",
+                backgroundColor: "var(--accent)",
                 borderRadius: "50%",
                 display: "block",
               }}
@@ -640,7 +640,7 @@ export default function OnboardingPage() {
             />
             <span
               style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: "10px",
                 color: "#e5e2e1",
               }}
@@ -658,7 +658,7 @@ export default function OnboardingPage() {
       >
         <div
           style={{
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: "'JetBrains Mono', monospace",
             fontSize: "10px",
             textAlign: "right",
             color: "#e5e2e1",

@@ -12,7 +12,7 @@ export function SlowDataNotice({ onRetry }: { onRetry: () => void }) {
         type="button"
         onClick={onRetry}
         className="text-sm font-bold uppercase tracking-widest cursor-pointer"
-        style={{ color: "var(--interactive)" }}
+        style={{ color: "var(--accent)" }}
       >
         Retry
       </button>

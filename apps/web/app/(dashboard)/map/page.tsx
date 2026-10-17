@@ -1065,8 +1065,8 @@ export default function MapPage() {
           <div className="absolute inset-0 bg-[#111111] flex items-center justify-center text-center p-8">
             <div className="max-w-md">
               <p
-                className="text-sm font-semibold mb-3"
-                style={{ color: "var(--interactive)" }}
+                className="text-sm font-semibold uppercase tracking-[0.3em] mb-3"
+                style={{ color: "var(--accent)" }}
               >
                 Map unavailable
               </p>
@@ -1128,7 +1128,7 @@ export default function MapPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <div className="label text-[12px] md:text-[10px] text-on-surface-variant ">
+              <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
                 High-Severity Activity
               </div>
               <div className="relative group" ref={tensionInfoRef}>
@@ -1185,7 +1185,7 @@ export default function MapPage() {
           </div>
         </div>
         <div className="space-y-3 mb-8" data-filtered-count={geolocatedSignals.length}>
-          <div className="label text-[12px] md:text-[10px] text-on-surface-variant mb-2 ">
+          <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant mb-2 uppercase">
             Filters
           </div>
           <FilterBar
@@ -1220,7 +1220,7 @@ export default function MapPage() {
         <div className="p-6 border-b border-outline-variant/30 bg-surface-container-lowest/40 space-y-3">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="label text-xs font-bold text-on-surface ">
+            <span className="label text-xs tracking-[0.2em] font-bold text-on-surface uppercase">
               Intelligence Stream
             </span>
           </div>
@@ -1274,7 +1274,7 @@ export default function MapPage() {
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`px-1.5 py-0.5 label text-[12px] md:text-[8px] border ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
+                      className={`px-1.5 py-0.5 label text-[12px] md:text-[8px] border uppercase ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
                     >
                       {isUrgent ? "URGENT" : "SIGNAL"}
                     </span>
@@ -1308,7 +1308,7 @@ export default function MapPage() {
             })
           ) : (
             <div className="flex-1 flex items-center justify-center p-6 grayscale opacity-50">
-              <span className="label text-[12px] md:text-[10px] ">
+              <span className="label text-[12px] md:text-[10px] tracking-widest uppercase">
                 No stream data
               </span>
             </div>
@@ -1388,7 +1388,7 @@ export default function MapPage() {
           />
           <div className="relative bg-surface-container-lowest rounded-t-2xl p-6 max-h-[85vh] overflow-y-auto border-t border-outline-variant/30">
             <div className="flex items-center justify-between mb-4">
-              <span className="label text-xs text-on-surface-variant ">
+              <span className="label text-xs tracking-[0.2em] text-on-surface-variant uppercase">
                 Filters
               </span>
               <button

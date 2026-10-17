@@ -53,9 +53,9 @@ export function MarketImpactChart({
               fontSize: 11,
             }}
             labelStyle={{ color: "var(--text-muted)" }}
-            itemStyle={{ color: "var(--interactive)" }}
+            itemStyle={{ color: "var(--accent)" }}
           />
-          <Bar dataKey="medianMovePct" fill="var(--interactive)" radius={[2, 2, 0, 0]}>
+          <Bar dataKey="medianMovePct" fill="var(--accent)" radius={[2, 2, 0, 0]}>
             <LabelList
               dataKey="medianMovePct"
               position="top"

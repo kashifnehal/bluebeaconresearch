@@ -63,7 +63,7 @@ export function PulseTiles({ symbol }: { symbol: string }) {
             title={tile.key === "last24h" ? "Counts signals BBR published in the last 24 hours." : undefined}
             className="bg-surface-container/40 border border-outline-variant/30 rounded-xl p-4"
           >
-            <p className="font-label text-[11px] md:text-[9px] font-bold text-on-surface-variant ">
+            <p className="font-label text-[11px] md:text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
               {tile.label}
             </p>
             <p className="font-mono text-2xl font-bold text-on-surface mt-2">{tileValue(pulse, tile.key)}</p>
@@ -71,12 +71,12 @@ export function PulseTiles({ symbol }: { symbol: string }) {
         ))}
       </div>
       {isError ? (
-        <p className="mt-3 text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 ">
+        <p className="mt-3 text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest">
           Couldn&apos;t load signal counts.
         </p>
       ) : null}
       {asOf ? (
-        <p className="mt-3 text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 ">
+        <p className="mt-3 text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest">
           {asOf}
         </p>
       ) : null}

@@ -74,15 +74,15 @@ export function NotificationPanel() {
       {/* Drawer */}
       <aside
         className="relative w-[360px] h-full bg-[#0e0e0e] border-l border-[var(--border)] flex flex-col z-50 text-white shadow-2xl animate-in slide-in-from-right duration-200"
-        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+        style={{ fontFamily: "'Inter', sans-serif" }}
       >
         {/* Header */}
         <div className="p-4 border-b border-[#2a2a2a] flex items-center justify-between bg-[var(--bg-primary)]">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[var(--interactive)]" style={{ fontSize: "20px" }}>
+            <span className="material-symbols-outlined text-[var(--accent)]" style={{ fontSize: "20px" }}>
               notifications
             </span>
-            <span className="font-bold text-sm" style={{ fontFamily: "'IBM Plex Sans', sans-serif", color: "#e5e2e1" }}>
+            <span className="font-bold text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#e5e2e1" }}>
               Recent Alerts
             </span>
           </div>
@@ -90,14 +90,14 @@ export function NotificationPanel() {
           <div className="flex items-center gap-2">
             <button
               onClick={markAllRead}
-              className="text-[12px] md:text-[10px] uppercase font-bold tracking-wider px-2 py-1 border border-[var(--border)] hover:border-[var(--interactive)] hover:text-[var(--interactive)] transition-colors rounded-sm"
+              className="text-[12px] md:text-[10px] uppercase font-bold tracking-wider px-2 py-1 border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors rounded-sm"
               style={{ color: "#acabaa" }}
             >
               Mark all read
             </button>
             <button
               onClick={() => setNotifOpen(false)}
-              className="p-1 hover:text-[var(--interactive)] text-[var(--text-muted)] transition-colors"
+              className="p-1 hover:text-[var(--accent)] text-[var(--text-muted)] transition-colors"
             >
               <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
                 close
@@ -110,7 +110,7 @@ export function NotificationPanel() {
         <div className="flex-1 overflow-y-auto divide-y divide-[#2a2a2a]">
           {isLoading ? (
             <div className="p-8 text-center flex flex-col items-center gap-3">
-              <div className="w-6 h-6 border-2 border-[var(--interactive)]/20 border-t-[var(--interactive)] rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[var(--accent)]/20 border-t-[var(--accent)] rounded-full animate-spin" />
               <span className="text-xs text-[var(--text-muted)] font-mono uppercase">Loading notifications...</span>
             </div>
           ) : isError ? (
@@ -149,7 +149,7 @@ export function NotificationPanel() {
                     className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0"
                     style={{
                       backgroundColor:
-                        status === "failed" ? "#ee7d77" : status === "queued" ? "#e0a84e" : isHigh ? "#ee7d77" : "var(--interactive)",
+                        status === "failed" ? "#ee7d77" : status === "queued" ? "#e0a84e" : isHigh ? "#ee7d77" : "var(--accent)",
                     }}
                   />
 
@@ -161,21 +161,21 @@ export function NotificationPanel() {
                       {status === "failed" ? (
                         <span
                           className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider text-[#ee7d77]"
-                          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Delivery Failed
                         </span>
                       ) : status === "queued" ? (
                         <span
                           className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider text-[#e0a84e]"
-                          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Not Delivered
                         </span>
                       ) : (
                         <span
-                          className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[var(--interactive)] hover:underline"
-                          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+                          className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[var(--accent)] hover:underline"
+                          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           View <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>arrow_forward</span>
                         </span>
@@ -214,8 +214,8 @@ export function NotificationPanel() {
           <Link
             href="/alerts"
             onClick={() => setNotifOpen(false)}
-            className="text-xs font-bold text-[var(--interactive)] hover:underline uppercase tracking-wider flex items-center justify-center gap-1"
-            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+            className="text-xs font-bold text-[var(--accent)] hover:underline uppercase tracking-wider flex items-center justify-center gap-1"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Manage alert rules <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
           </Link>

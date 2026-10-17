@@ -19,7 +19,7 @@ function WelcomeDemoMedia({ src }: { src: string }) {
     return (
       <div
         className="flex aspect-video w-full items-center justify-center border border-[var(--border)] bg-[#1c1b1b] text-center text-sm text-[var(--text-muted)]"
-        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+        style={{ fontFamily: "'Inter', sans-serif" }}
       >
         Demo preview coming soon
       </div>
@@ -71,13 +71,13 @@ export function WelcomeTourStep({
       <div className="fixed inset-0 bg-black/78" />
       <div
         className="relative z-[10001] w-full max-w-xl border border-[var(--border)] bg-[var(--bg-primary)] p-6 text-[#e5e2e1] shadow-2xl"
-        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+        style={{ fontFamily: "'Inter', sans-serif" }}
       >
         <WelcomeDemoMedia src={WELCOME_DEMO_SRC} />
         <p
           id="welcome-tour-caption"
           className="mt-4 text-base font-semibold"
-          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           See how it works
         </p>
@@ -86,15 +86,15 @@ export function WelcomeTourStep({
             type="button"
             onClick={onSkip}
             className="text-[12px] md:text-[11px] font-bold text-[var(--text-muted)] underline"
-            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Skip tour
           </button>
           <button
             type="button"
             onClick={onContinue}
-            className="bg-[var(--interactive)] px-4 py-2 text-[12px] md:text-[11px] font-bold uppercase tracking-wider text-[#003824]"
-            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+            className="bg-[var(--accent)] px-4 py-2 text-[12px] md:text-[11px] font-bold uppercase tracking-wider text-[#003824]"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Got it, show me around
           </button>

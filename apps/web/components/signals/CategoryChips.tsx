@@ -42,12 +42,12 @@ export function CategoryChips({ value, onChange, className }: CategoryChipsProps
             data-testid={`category-chip-${opt.testKey}`}
             aria-pressed={selected}
             onClick={() => onChange(opt.chipValue)}
-            className="px-3 py-1.5 text-[12px] md:text-[11px] border transition-colors cursor-pointer inline-flex items-center min-h-[36px] md:min-h-0"
+            className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[36px] md:min-h-0"
             style={{
-              fontFamily: "'IBM Plex Sans', sans-serif",
-              backgroundColor: selected ? "var(--interactive-bg)" : "var(--bg-container)",
-              color: selected ? "var(--on-interactive-bg)" : "var(--text-secondary)",
-              borderColor: selected ? "var(--interactive)" : "var(--border)",
+              fontFamily: "'Space Grotesk', sans-serif",
+              backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+              color: selected ? "#005f40" : "var(--text-secondary)",
+              borderColor: selected ? "var(--accent)" : "var(--border)",
             }}
           >
             {opt.label}

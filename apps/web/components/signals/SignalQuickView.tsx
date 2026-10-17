@@ -88,7 +88,7 @@ function Part({ label, children }: { label: string; children: ReactNode }) {
     <div className="space-y-1.5">
       <div
         className="text-[12px] md:text-[9px] font-black uppercase tracking-widest"
-        style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+        style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
       >
         {label}
       </div>
@@ -190,15 +190,15 @@ export function SignalQuickView({
                   <SheetPrimitive.Title
                     className="text-xl font-bold leading-tight"
                     style={{
-                      color: "var(--text-primary)",
-                      fontFamily: "'IBM Plex Sans', sans-serif",
+                      color: "#e5e2e1",
+                      fontFamily: "'Inter', sans-serif",
                     }}
                   >
                     {signal.title}
                   </SheetPrimitive.Title>
                   <SheetPrimitive.Description
                     className="text-sm leading-relaxed"
-                    style={{ color: "var(--text-secondary)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+                    style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}
                   >
                     {signal.summary}
                   </SheetPrimitive.Description>
@@ -220,7 +220,7 @@ export function SignalQuickView({
                 <SheetPrimitive.Close
                   data-testid="signal-quick-view-close"
                   aria-label="Close"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--border)] text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center border border-[var(--border)] text-[var(--text-muted)] transition-colors hover:bg-[#2a2a2a] hover:text-[#e5e2e1]"
                 >
                   <span className="material-symbols-outlined text-[18px]">close</span>
                 </SheetPrimitive.Close>
@@ -286,12 +286,12 @@ export function SignalQuickView({
                               rel="noopener noreferrer"
                               data-testid="quick-view-headline"
                               className="block text-[13px] leading-snug underline-offset-2 hover:underline"
-                              style={{ color: "var(--text-primary)" }}
+                              style={{ color: "#e5e2e1" }}
                             >
                               {source.title}
                             </a>
                           ) : (
-                            <p className="text-[13px] leading-snug" style={{ color: "var(--text-primary)" }}>
+                            <p className="text-[13px] leading-snug" style={{ color: "#e5e2e1" }}>
                               {source.title}
                             </p>
                           )}
@@ -326,9 +326,9 @@ export function SignalQuickView({
                   }}
                   className="inline-flex w-full items-center justify-center gap-2 px-8 py-3 text-xs font-bold tracking-widest uppercase transition-all active:scale-95"
                   style={{
-                    backgroundColor: "var(--interactive)",
-                    color: "var(--on-interactive-bg)",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    backgroundColor: "var(--accent)",
+                    color: "#003824",
+                    fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
                   Open full event page →

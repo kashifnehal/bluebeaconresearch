@@ -415,7 +415,7 @@ function CalendarFilters({
 }) {
   const fieldClass = "flex items-center gap-2";
   const labelClass = "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
-  const labelStyle = { color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" } as const;
+  const labelStyle = { color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" } as const;
   const patch = (partial: Partial<CalendarFilterValue>) => onChange({ ...filters, ...partial });
 
   return (
@@ -502,10 +502,10 @@ function CalendarFilters({
                 onClick={() => onTimeZoneChange(opt.id)}
                 className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  backgroundColor: selected ? "var(--interactive)" : "var(--bg-container)",
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
                   color: selected ? "#005f40" : "var(--text-secondary)",
-                  borderColor: selected ? "var(--interactive)" : "var(--border)",
+                  borderColor: selected ? "var(--accent)" : "var(--border)",
                 }}
               >
                 {opt.label}
@@ -541,10 +541,10 @@ function DayStrip({
             onClick={() => onSelectDay(selected ? null : d.date)}
             className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 min-w-[56px] shrink-0 border rounded-md transition-colors cursor-pointer min-h-[44px]"
             style={{
-              fontFamily: "'IBM Plex Sans', sans-serif",
-              backgroundColor: selected ? "var(--interactive)" : "var(--bg-container)",
+              fontFamily: "'Space Grotesk', sans-serif",
+              backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
               color: selected ? "#005f40" : "var(--text-secondary)",
-              borderColor: selected ? "var(--interactive)" : "var(--border)",
+              borderColor: selected ? "var(--accent)" : "var(--border)",
             }}
           >
             <span className="text-[10px] font-bold uppercase tracking-widest">{d.weekday}</span>
@@ -560,7 +560,7 @@ function DayStrip({
           onClick={() => onSelectDay(null)}
           className="ml-1 px-3 py-2 text-[12px] font-bold uppercase tracking-widest border rounded-md shrink-0 min-h-[44px] cursor-pointer transition-colors"
           style={{
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: "'Space Grotesk', sans-serif",
             backgroundColor: "var(--bg-container)",
             color: "var(--text-secondary)",
             borderColor: "var(--border)",
@@ -668,9 +668,9 @@ export default function CalendarPage() {
           title="Downloads the events currently shown below as a one-time .ics file — it won't stay in sync with future updates."
           className="shrink-0 px-4 py-2.5 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center gap-2"
           style={{
-            fontFamily: "'IBM Plex Sans', sans-serif",
+            fontFamily: "'Space Grotesk', sans-serif",
             backgroundColor: "var(--bg-container)",
-            color: "var(--interactive)",
+            color: "var(--accent)",
             borderColor: "var(--border)",
           }}
         >

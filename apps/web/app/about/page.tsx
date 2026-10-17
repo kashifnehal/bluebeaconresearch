@@ -27,14 +27,14 @@ export default function AboutPage() {
   return (
     <div
       className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col"
-      style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+      style={{ fontFamily: "'Inter', sans-serif" }}
     >
       <PublicHeader badge="ABOUT" />
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-5 md:p-8 py-12 md:py-16">
         <h1
           className="text-2xl font-bold text-white mb-2"
-          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           About
         </h1>
@@ -47,7 +47,7 @@ export default function AboutPage() {
         <section className="space-y-3 mb-10">
           <h2
             className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest"
-            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             How it works
           </h2>
@@ -64,7 +64,7 @@ export default function AboutPage() {
         <section className="space-y-3 mb-10">
           <h2
             className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest"
-            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             No investment advice
           </h2>
@@ -77,12 +77,12 @@ export default function AboutPage() {
         <section className="space-y-3">
           <h2
             className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest"
-            style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Contact
           </h2>
           <p className="text-sm text-[#e5e2e1] leading-relaxed">
-            <a href="mailto:support@bluebeaconresearch.com" className="text-[var(--interactive)] hover:underline">
+            <a href="mailto:support@bluebeaconresearch.com" className="text-[var(--accent)] hover:underline">
               support@bluebeaconresearch.com
             </a>
           </p>

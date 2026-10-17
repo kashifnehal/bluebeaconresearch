@@ -44,9 +44,9 @@ export function AlertRuleTrendChart({ dailyCounts }: { dailyCounts: DailyCount[]
                 fontSize: 11,
               }}
               labelStyle={{ color: "var(--text-muted)" }}
-              itemStyle={{ color: "var(--interactive)" }}
+              itemStyle={{ color: "var(--accent)" }}
             />
-            <Bar dataKey="count" fill="var(--interactive)" radius={[1, 1, 0, 0]} />
+            <Bar dataKey="count" fill="var(--accent)" radius={[1, 1, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

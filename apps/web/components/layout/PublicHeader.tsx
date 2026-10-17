@@ -9,18 +9,18 @@ export function PublicHeader({ badge }: { badge: string }) {
         <Link
           href="/"
           className="font-extrabold text-sm tracking-tight text-white uppercase truncate inline-flex items-center min-h-[44px] md:min-h-0"
-          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Blue Beacon Research
         </Link>
-        <span className="hidden md:inline text-[12px] md:text-[10px] text-[var(--interactive)] font-mono px-2 py-0.5 border border-[var(--border)] bg-[var(--bg-primary)] shrink-0">
+        <span className="hidden md:inline text-[12px] md:text-[10px] text-[var(--accent)] font-mono px-2 py-0.5 border border-[var(--border)] bg-[var(--bg-primary)] shrink-0">
           {badge}
         </span>
       </div>
       <Link
         href="/dashboard"
-        className="text-xs font-bold text-[var(--interactive)] hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0 min-h-[44px] md:min-h-0"
-        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+        className="text-xs font-bold text-[var(--accent)] hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0 min-h-[44px] md:min-h-0"
+        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
       >
         Terminal <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
       </Link>

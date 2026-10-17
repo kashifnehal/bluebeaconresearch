@@ -97,11 +97,11 @@ export function NotificationConnectPrompt() {
     <div
       data-testid="notification-connect-prompt"
       className="fixed bottom-4 right-4 z-40 w-[min(100%-2rem,360px)] bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg shadow-2xl p-4 text-[#e5e2e1]"
-      style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+      style={{ fontFamily: "'Inter', sans-serif" }}
     >
       <p
         className="font-bold text-sm mb-1"
-        style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
       >
         Get alerted when a similar event is reported again
       </p>
@@ -114,7 +114,7 @@ export function NotificationConnectPrompt() {
           type="button"
           onClick={dismissForGood}
           className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] hover:text-[#e5e2e1] transition-colors"
-          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Not now
         </button>
@@ -124,8 +124,8 @@ export function NotificationConnectPrompt() {
             setSessionHidden(true);
             setNotificationConnectOpen(true);
           }}
-          className="px-4 py-2 bg-[var(--interactive)] text-[#003824] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
-          style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+          className="px-4 py-2 bg-[var(--accent)] text-[#003824] font-bold text-xs uppercase tracking-wider rounded-sm hover:bg-[#6ffbbe] transition-colors"
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           Connect Telegram
         </button>

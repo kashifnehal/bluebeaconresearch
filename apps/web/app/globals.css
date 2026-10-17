@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap');
 @import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -18,43 +18,37 @@
 }
 
 :root {
-  /* Desk palette (design choice, not a researched rule): deep blue-slate surfaces,
-     one amber accent reserved for "new since your last visit" and the highest
-     severity mark. Interactive/selected states use --interactive (steel blue). */
-  --bg-app: #0C1B2A;
-  --bg-primary: #14293B;       /* panels */
-  --bg-secondary: #112435;
-  --bg-container: #162B3E;
-  --bg-elevated: #162C40;
-  --bg-highest: #172D41;
-
-  --border: #2A4358;
-  --border-subtle: rgba(140, 163, 181, 0.12);
-
-  --text-primary: #DCE6EE;
-  --text-secondary: #8CA3B5;
-  --text-muted: #8AA1B3;
-
-  --accent: #F4B23E;           /* amber: new-since-last-visit + top severity only */
-  --accent-hover: #F8C468;
-  --accent-subtle: #3A2D12;
-
-  --interactive: #7FB6DE;      /* links, focus ring, selected controls */
-  --interactive-bg: #1F4562;   /* selected chip background */
-  --on-interactive-bg: #DCE6EE;
-
-  --danger: #E0726B;
-  --danger-subtle: #3A1F25;
-  --on-danger-subtle: #F2A29D;
+  /* BlueBeaconResearch - Absolute Dark Architecture */
+  --bg-app: #0E0E0E;           /* surface-container-lowest */
+  --bg-primary: #131313;       /* surface */
+  --bg-secondary: #1C1B1B;     /* surface-container-low */
+  --bg-container: #201F1F;     /* surface-container */
+  --bg-elevated: #2A2A2A;      /* surface-container-high */
+  --bg-highest: #353534;       /* surface-container-highest */
   
-  --warning: #B9C6D1;
-  --warning-subtle: #1F3448;
+  --border: #3C4A42;           /* outline-variant @ 20% opacity */
+  --border-subtle: rgba(60, 74, 66, 0.1);
   
-  --success: #46B8A8;
-  --success-subtle: #113A3A;
+  --text-primary: #E5E2E1;     /* on-surface */
+  --text-secondary: #BBCAC0;   /* on-surface-variant */
+  --text-muted: #86948A;       /* outline */
   
-  --price-up: #46B8A8;
-  --price-down: #E0726B;
+  --accent: #4EDEA3;           /* primary-fixed-dim */
+  --accent-hover: #6FFBBE;     /* primary */
+  --accent-subtle: #005236;    /* on-primary-fixed-variant */
+  
+  --danger: #FFB4AB;           /* error */
+  --danger-subtle: #7F2927;    /* tertiary-fixed-variant / critical bg */
+  --on-danger-subtle: #FF9993; /* light red text on dark red bg */
+  
+  --warning: #FFB3AE;          /* tertiary-fixed-dim */
+  --warning-subtle: #410004;    /* on-tertiary-fixed */
+  
+  --success: #4EDEA3;
+  --success-subtle: #002114;
+  
+  --price-up: #4EDEA3;
+  --price-down: #EE7D77;
   
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -68,45 +62,39 @@
   --card-foreground: var(--text-primary);
   --popover: var(--bg-primary);
   --popover-foreground: var(--text-primary);
-  --primary: var(--interactive);
-  --primary-foreground: #0C1B2A;
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
   --secondary: var(--bg-secondary);
   --secondary-foreground: var(--text-primary);
   --muted: var(--bg-secondary);
   --muted-foreground: var(--text-secondary);
-  --accent-foreground: #0C1B2A;
+  --accent-foreground: #ffffff;
   --destructive: var(--danger);
   --input: var(--bg-secondary);
-  --ring: var(--interactive);
+  --ring: var(--accent);
 }
 
 [data-theme="light"] {
-  --bg-app: #EAF0F6;
+  --bg-app: #F0F4FF;
   --bg-primary: #FFFFFF;
-  --bg-secondary: #F3F7FA;
-  --bg-container: #E8EFF5;
-  --bg-elevated: #E2EAF1;
-  --bg-highest: #DDE6EE;
-  --border: #C3D2DF;
-  --border-subtle: #D9E3EC;
-  --text-primary: #0C1B2A;
-  --text-secondary: #41596D;
-  --text-muted: #4D6578;
-  --accent: #8F5B00;           /* amber, darkened so it reads as text on light */
-  --accent-hover: #744900;
-  --accent-subtle: #FFF1D6;
-  --interactive: #1F5F8B;
-  --interactive-bg: #D3E5F2;
-  --on-interactive-bg: #0C1B2A;
-  --danger: #B03E37;
-  --danger-subtle: #FBE9E7;
-  --on-danger-subtle: #8C2F29;
-  --warning: #4D6578;
-  --warning-subtle: #E2EAF1;
-  --success: #1A6F63;
-  --success-subtle: #E1F2EF;
-  --price-up: #1A6F63;
-  --price-down: #B03E37;
+  --bg-secondary: #F6F8FA;
+  --bg-elevated: #EAECEF;
+  --border: #D1D5DB;
+  --border-subtle: #E5E7EB;
+  --text-primary: #0D1117;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-subtle: #EFF6FF;
+  --danger: #DC2626;
+  --danger-subtle: #FEF2F2;
+  --warning: #D97706;
+  --warning-subtle: #FFFBEB;
+  --success: #059669;
+  --success-subtle: #ECFDF5;
+  --price-up: #059669;
+  --price-down: #DC2626;
 
   /* shadcn/base-ui tokens mapped to design system */
   --background: var(--bg-app);
@@ -115,16 +103,16 @@
   --card-foreground: var(--text-primary);
   --popover: var(--bg-primary);
   --popover-foreground: var(--text-primary);
-  --primary: var(--interactive);
-  --primary-foreground: #0C1B2A;
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
   --secondary: var(--bg-secondary);
   --secondary-foreground: var(--text-primary);
   --muted: var(--bg-secondary);
   --muted-foreground: var(--text-secondary);
-  --accent-foreground: #0C1B2A;
+  --accent-foreground: #ffffff;
   --destructive: var(--danger);
   --input: var(--bg-secondary);
-  --ring: var(--interactive);
+  --ring: var(--accent);
 }
 
 * {
@@ -134,26 +122,13 @@
 body {
   background-color: var(--bg-app);
   color: var(--text-primary);
-  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-variant-numeric: tabular-nums;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
 }
 
 .font-mono {
-  /* Legacy class name kept so existing markup keeps working; it no longer
-     selects a monospace face. Plex Sans with tabular numerals aligns columns. */
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-variant-numeric: tabular-nums;
-}
-
-.font-story {
-  font-family: 'Newsreader', Georgia, serif;
-  font-weight: 500;
-}
-
-:focus-visible {
-  outline: 2px solid var(--interactive);
-  outline-offset: 2px;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 /* Mobile Safari zooms the viewport when a focused field's font-size is under 16px,
@@ -179,10 +154,10 @@ body {
 
 /* Base Tactical UI Classes from Stitch Design System */
 .glass {
-  background: color-mix(in srgb, var(--bg-container) 85%, transparent);
+  background: rgba(38, 38, 38, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(60, 74, 66, 0.2);
 }
 
 .pulse-emerald {

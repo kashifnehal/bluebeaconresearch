@@ -20,7 +20,6 @@ import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
 import { fetchMyProfile } from "@/lib/profile";
 import { signalsToCsv, downloadCsv } from "@/lib/signal-csv";
-import { priceChangeParts, priceChangeColor } from "@/lib/price-change";
 import { countryToFlagEmoji } from "@/lib/country-flags";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import {
@@ -62,23 +61,24 @@ export function SignalRowPriceChip({ signal, prices }: { signal: Signal; prices:
     return (
       <span
         className="text-[12px] md:text-[11px] shrink-0"
-        style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+        style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}
         aria-label="No associated price data"
       >
         —
       </span>
     );
   }
-  const change = priceChangeParts(move.pct);
+  const isUp = move.pct >= 0;
   return (
     <span
       className="text-[12px] md:text-[11px] shrink-0"
       style={{
-        color: priceChangeColor(change.direction),
-        fontFamily: "'IBM Plex Sans', sans-serif",
+        color: isUp ? "var(--accent)" : "#ee7d77",
+        fontFamily: "'JetBrains Mono', monospace",
       }}
     >
-      {move.asset} 24h {change.text}
+      {move.asset} 24h {isUp ? "+" : ""}
+      {move.pct.toFixed(1)}%
     </span>
   );
 }
@@ -327,7 +327,7 @@ export default function DashboardPage() {
   return (
     <div
       className="flex h-screen w-full pt-16"
-      style={{ backgroundColor: "var(--bg-app)" }}
+      style={{ backgroundColor: "#0e0e0e" }}
     >
       {/* ── Center: Intelligence Feed (Main Canvas) ────────────────────────────────── */}
       <div
@@ -339,14 +339,14 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="mb-10" data-tour="feed-header">
           <h1
-            className="text-3xl "
-            style={{ color: "var(--text-primary)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+            className="text-3xl font-extrabold tracking-tight"
+            style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
           >
             Intelligence Feed
           </h1>
           <p
             className="text-[14px] mt-1"
-            style={{ color: "var(--text-secondary)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+            style={{ color: "#acabaa", fontFamily: "'Inter', sans-serif" }}
           >
             {DASHBOARD_FEED_SUBHEAD}
           </p>
@@ -354,7 +354,7 @@ export default function DashboardPage() {
             <p
               data-testid="data-as-of"
               className="text-[12px] md:text-[11px] mt-2"
-              style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+              style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}
               suppressHydrationWarning
             >
               {formatDataAsOf(dataUpdatedAt)}
@@ -366,7 +366,7 @@ export default function DashboardPage() {
             <p
               data-testid="coverage-line"
               className="text-[12px] md:text-[11px] mt-2"
-              style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+              style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
             >
               {coverageLine}
             </p>
@@ -375,7 +375,7 @@ export default function DashboardPage() {
             <p
               data-testid="window-expanded-line"
               className="text-[12px] md:text-[11px] mt-2"
-              style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+              style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
             >
               {windowExpandedLine}
             </p>
@@ -412,7 +412,7 @@ export default function DashboardPage() {
               className="text-[12px] md:text-[11px] pb-1"
               style={{
                 color: "var(--text-muted)",
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                fontFamily: "'JetBrains Mono', monospace",
               }}
             >
               {total} signal{total === 1 ? "" : "s"}
@@ -424,16 +424,16 @@ export default function DashboardPage() {
             data-testid="export-csv-button"
             onClick={handleExportCsv}
             disabled={liveSignals.length === 0}
-            className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 min-h-[44px] md:min-h-0"
+            className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 min-h-[44px] md:min-h-0"
             style={{
-              fontFamily: "'IBM Plex Sans', sans-serif",
+              fontFamily: "'Space Grotesk', sans-serif",
               backgroundColor: "var(--bg-container)",
               color: "var(--text-secondary)",
               borderColor: "var(--border)",
             }}
           >
             <span className="material-symbols-outlined text-[14px]">download</span>
-            Export CSV
+            EXPORT CSV
           </button>
 
           {showMyFeedToggle && (
@@ -441,12 +441,12 @@ export default function DashboardPage() {
               <button
                 onClick={() => setPersonalized((v) => !v)}
                 aria-pressed={personalized}
-                className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold border transition-colors cursor-pointer flex items-center gap-2 min-h-[44px] md:min-h-0"
+                className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer flex items-center gap-2 min-h-[44px] md:min-h-0"
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  backgroundColor: personalized ? "var(--interactive-bg)" : "var(--bg-container)",
-                  color: personalized ? "var(--on-interactive-bg)" : "var(--text-secondary)",
-                  borderColor: personalized ? "var(--interactive)" : "var(--border)",
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  backgroundColor: personalized ? "var(--accent)" : "var(--bg-container)",
+                  color: personalized ? "#005f40" : "var(--text-secondary)",
+                  borderColor: personalized ? "var(--accent)" : "var(--border)",
                 }}
               >
                 <span
@@ -455,7 +455,7 @@ export default function DashboardPage() {
                 >
                   {personalized ? "person" : "public"}
                 </span>
-                {personalized ? "My feed" : "Full feed"}
+                {personalized ? "MY FEED" : "FULL FEED"}
               </button>
             </div>
           )}
@@ -479,12 +479,12 @@ export default function DashboardPage() {
                 data-testid={`desk-${id}`}
                 aria-pressed={selected}
                 onClick={() => applyDesk(id)}
-                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 style={{
-                  fontFamily: "'IBM Plex Sans', sans-serif",
-                  backgroundColor: selected ? "var(--interactive-bg)" : "var(--bg-container)",
-                  color: selected ? "var(--on-interactive-bg)" : "var(--text-secondary)",
-                  borderColor: selected ? "var(--interactive)" : "var(--border)",
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+                  color: selected ? "#005f40" : "var(--text-secondary)",
+                  borderColor: selected ? "var(--accent)" : "var(--border)",
                 }}
               >
                 {preset.label}
@@ -496,13 +496,13 @@ export default function DashboardPage() {
         {personalized && personalizedApplied && (
           <p
             className="-mt-4 mb-8 text-[12px] md:text-[11px]"
-            style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+            style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
           >
             Showing signals matching the commodities and regions you follow.{" "}
             <button
               onClick={() => setPersonalized(false)}
               className="underline cursor-pointer"
-              style={{ color: "var(--interactive)" }}
+              style={{ color: "var(--accent)" }}
             >
               Show the full feed
             </button>
@@ -517,14 +517,14 @@ export default function DashboardPage() {
             {/* Featured Card Skeleton */}
             <div className="p-8 bg-[var(--bg-primary)] border border-[var(--border)] space-y-4">
               <div className="flex justify-between">
-                <Skeleton className="h-5 w-32 bg-[var(--bg-elevated)]" />
-                <Skeleton className="h-4 w-24 bg-[var(--bg-elevated)]" />
+                <Skeleton className="h-5 w-32 bg-[#2a2a2a]" />
+                <Skeleton className="h-4 w-24 bg-[#2a2a2a]" />
               </div>
-              <Skeleton className="h-8 w-3/4 bg-[var(--bg-elevated)]" />
-              <Skeleton className="h-4 w-full bg-[var(--bg-elevated)]" />
+              <Skeleton className="h-8 w-3/4 bg-[#2a2a2a]" />
+              <Skeleton className="h-4 w-full bg-[#2a2a2a]" />
               <div className="flex justify-between items-center pt-4">
-                <Skeleton className="h-10 w-48 bg-[var(--bg-elevated)]" />
-                <Skeleton className="h-10 w-36 bg-[var(--bg-elevated)]" />
+                <Skeleton className="h-10 w-48 bg-[#2a2a2a]" />
+                <Skeleton className="h-10 w-36 bg-[#2a2a2a]" />
               </div>
             </div>
 
@@ -535,8 +535,8 @@ export default function DashboardPage() {
             </div>
 
             {/* Stream List Skeleton */}
-            <div className="bg-[var(--bg-app)] border border-[var(--border)] p-6 space-y-4">
-              <Skeleton className="h-6 w-48 bg-[var(--bg-elevated)]" />
+            <div className="bg-[#0e0e0e] border border-[var(--border)] p-6 space-y-4">
+              <Skeleton className="h-6 w-48 bg-[#2a2a2a]" />
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full bg-[var(--bg-primary)]" />
               ))}
@@ -568,7 +568,7 @@ export default function DashboardPage() {
                   className="absolute top-0 left-0 w-full h-[4px]"
                   style={{
                     backgroundColor:
-                      featured.severity >= 9 ? "var(--accent)" : "var(--border)",
+                      featured.severity >= 8 ? "#ee7d77" : "var(--accent)",
                   }}
                 />
 
@@ -577,17 +577,17 @@ export default function DashboardPage() {
                     <div className="flex gap-4 items-center">
                       <span
                         data-tour="severity-badge"
-                        className="px-2 py-0.5 text-[12px] md:text-[10px] font-bold "
+                        className="px-2 py-0.5 text-[12px] md:text-[10px] font-bold tracking-tighter"
                         style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          fontFamily: "'Space Grotesk', sans-serif",
                           backgroundColor:
-                            featured.severity >= 9 ? "var(--accent)" : "var(--bg-container)",
-                          color: featured.severity >= 9 ? "var(--bg-app)" : "var(--text-secondary)",
+                            featured.severity >= 8 ? "#7f2927" : "#262626",
+                          color: featured.severity >= 8 ? "#ff9993" : "var(--accent)",
                         }}
                       >
-                        {featured.severity >= 9
-                          ? "Highest severity"
-                          : featured.eventType || "Signal"}
+                        {featured.severity >= 8
+                          ? "PRIORITY: CRITICAL"
+                          : featured.eventType || "SIGNAL"}
                       </span>
                       <SeverityBadge score={featured.severity} />
                       <MediaImpactTag
@@ -597,33 +597,33 @@ export default function DashboardPage() {
                       <span
                         className="text-[12px] md:text-[11px]"
                         style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--text-muted)",
                         }}
                       >
-                        ID {featured.id.slice(0, 8)}
+                        ID: {featured.id.slice(0, 8).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <span
-                        className="text-[12px] md:text-[10px] "
+                        className="text-[12px] md:text-[10px] uppercase tracking-widest"
                         style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--text-muted)",
                         }}
                       >
                         {safeFormatDistanceToNow(
                           featured.eventDate ?? featured.createdAt,
-                        )}{" "}
-                        ago
+                        ).toUpperCase()}{" "}
+                        AGO
                       </span>
                       <FreshTag
                         createdAt={featured.createdAt}
                         eventDate={featured.eventDate}
                         className="text-[12px] md:text-[10px]"
                         style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
-                          color: "var(--interactive)",
+                          fontFamily: "'JetBrains Mono', monospace",
+                          color: "var(--accent)",
                         }}
                       />
                     </div>
@@ -632,10 +632,10 @@ export default function DashboardPage() {
                   <div className="flex flex-col lg:flex-row gap-8 items-end">
                     <div className="flex-1">
                       <h2
-                        className="text-2xl font-bold mb-4 leading-tight group-hover:text-[var(--interactive)] transition-colors"
+                        className="text-2xl font-bold mb-4 leading-tight group-hover:text-[var(--accent)] transition-colors"
                         style={{
-                          color: "var(--text-primary)",
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          color: "#e5e2e1",
+                          fontFamily: "'Inter', sans-serif",
                         }}
                       >
                         {featured.title}
@@ -644,19 +644,19 @@ export default function DashboardPage() {
                       <div className="flex gap-10">
                         <div>
                           <div
-                            className="text-[12px] md:text-[10px] mb-1"
+                            className="text-[12px] md:text-[10px] uppercase mb-1"
                             style={{
                               color: "var(--text-muted)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              fontFamily: "'Space Grotesk', sans-serif",
                             }}
                           >
                             Country / Region
                           </div>
                           <div
-                            className="text-sm font-bold "
+                            className="text-sm font-bold uppercase"
                             style={{
-                              color: "var(--interactive)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              color: "var(--accent)",
+                              fontFamily: "'Inter', sans-serif",
                             }}
                           >
                             {featured.country && countryToFlagEmoji(featured.country) ? (
@@ -669,10 +669,10 @@ export default function DashboardPage() {
                         </div>
                         <div data-tour="confidence-score">
                           <div
-                            className="text-[12px] md:text-[10px] mb-1"
+                            className="text-[12px] md:text-[10px] uppercase mb-1"
                             style={{
                               color: "var(--text-muted)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              fontFamily: "'Space Grotesk', sans-serif",
                             }}
                           >
                             Confidence
@@ -680,8 +680,8 @@ export default function DashboardPage() {
                           <div
                             className="text-sm font-bold"
                             style={{
-                              color: "var(--interactive)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              color: "var(--accent)",
+                              fontFamily: "'Inter', sans-serif",
                             }}
                           >
                             {Math.round(featured.confidence * 100)}%
@@ -692,15 +692,15 @@ export default function DashboardPage() {
 
                     <span
                       data-tour="analyze-impact"
-                      className="font-bold text-xs px-8 py-3 transition-all active:scale-95 duration-75 shrink-0 inline-block"
+                      className="font-bold text-xs tracking-widest px-8 py-3 transition-all active:scale-95 duration-75 shrink-0 inline-block"
                       style={{
-                        backgroundColor: "var(--interactive)",
-                        color: "var(--on-interactive-bg)",
-                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        backgroundColor: "var(--accent)",
+                        color: "#003824",
+                        fontFamily: "'Space Grotesk', sans-serif",
                         cursor: "pointer",
                       }}
                     >
-                      View assessment
+                      ANALYZE IMPACT
                     </span>
                   </div>
                 </div>
@@ -730,7 +730,7 @@ export default function DashboardPage() {
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLElement).style.backgroundColor =
-                        "var(--bg-elevated)";
+                        "#2a2a2a";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLElement).style.backgroundColor =
@@ -741,7 +741,7 @@ export default function DashboardPage() {
                       <div
                         className="flex justify-between items-center text-[12px] md:text-[10px] mb-2"
                         style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--text-muted)",
                         }}
                       >
@@ -749,20 +749,20 @@ export default function DashboardPage() {
                           <span>
                             {safeFormatDistanceToNow(
                               secondaryA.eventDate ?? secondaryA.createdAt,
-                            )}{" "}
-                            ago
+                            ).toUpperCase()}{" "}
+                            AGO
                           </span>
                           <FreshTag
                             createdAt={secondaryA.createdAt}
                             eventDate={secondaryA.eventDate}
                             className="text-[12px] md:text-[10px]"
                             style={{
-                              fontFamily: "'IBM Plex Sans', sans-serif",
-                              color: "var(--interactive)",
+                              fontFamily: "'JetBrains Mono', monospace",
+                              color: "var(--accent)",
                             }}
                           />
                         </div>
-                        <span className="text-[var(--interactive)] font-bold">
+                        <span className="text-[var(--accent)] font-bold">
                           {secondaryA.country && countryToFlagEmoji(secondaryA.country) ? (
                             <span data-testid="country-flag" className="mr-1">
                               {countryToFlagEmoji(secondaryA.country)}
@@ -772,10 +772,10 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <h3
-                        className="text-lg font-bold mb-3 group-hover:text-[var(--interactive)] transition-colors"
+                        className="text-lg font-bold mb-3 group-hover:text-[var(--accent)] transition-colors"
                         style={{
-                          color: "var(--text-primary)",
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          color: "#e5e2e1",
+                          fontFamily: "'Inter', sans-serif",
                         }}
                       >
                         {secondaryA.title}
@@ -784,7 +784,7 @@ export default function DashboardPage() {
                         className="text-sm leading-relaxed mb-6 line-clamp-2"
                         style={{
                           color: "var(--text-secondary)",
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          fontFamily: "'Inter', sans-serif",
                         }}
                       >
                         {secondaryA.summary}
@@ -792,15 +792,15 @@ export default function DashboardPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex gap-2">
                           <span
-                            className="px-2 py-0.5 text-[12px] md:text-[10px] border"
+                            className="px-2 py-0.5 text-[12px] md:text-[10px] uppercase border"
                             style={{
-                              backgroundColor: "var(--bg-elevated)",
+                              backgroundColor: "#2a2a2a",
                               color: "var(--text-muted)",
                               borderColor: "var(--border)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              fontFamily: "'Space Grotesk', sans-serif",
                             }}
                           >
-                            {secondaryA.eventType || "Signal"}
+                            {secondaryA.eventType || "INTELLIGENCE"}
                           </span>
                           <MediaImpactTag
                             entity={secondaryA.mediaImpactEntity}
@@ -809,7 +809,7 @@ export default function DashboardPage() {
                         </div>
                         <span
                           className="material-symbols-outlined text-xl"
-                          style={{ color: "var(--interactive)" }}
+                          style={{ color: "var(--accent)" }}
                         >
                           arrow_forward
                         </span>
@@ -838,7 +838,7 @@ export default function DashboardPage() {
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLElement).style.backgroundColor =
-                        "var(--bg-elevated)";
+                        "#2a2a2a";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLElement).style.backgroundColor =
@@ -849,7 +849,7 @@ export default function DashboardPage() {
                       <div
                         className="flex justify-between items-center text-[12px] md:text-[10px] mb-2"
                         style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--text-muted)",
                         }}
                       >
@@ -857,20 +857,20 @@ export default function DashboardPage() {
                           <span>
                             {safeFormatDistanceToNow(
                               secondaryB.eventDate ?? secondaryB.createdAt,
-                            )}{" "}
-                            ago
+                            ).toUpperCase()}{" "}
+                            AGO
                           </span>
                           <FreshTag
                             createdAt={secondaryB.createdAt}
                             eventDate={secondaryB.eventDate}
                             className="text-[12px] md:text-[10px]"
                             style={{
-                              fontFamily: "'IBM Plex Sans', sans-serif",
-                              color: "var(--interactive)",
+                              fontFamily: "'JetBrains Mono', monospace",
+                              color: "var(--accent)",
                             }}
                           />
                         </div>
-                        <span className="text-[var(--interactive)] font-bold">
+                        <span className="text-[var(--accent)] font-bold">
                           {secondaryB.country && countryToFlagEmoji(secondaryB.country) ? (
                             <span data-testid="country-flag" className="mr-1">
                               {countryToFlagEmoji(secondaryB.country)}
@@ -880,10 +880,10 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <h3
-                        className="text-lg font-bold mb-3 group-hover:text-[var(--interactive)] transition-colors"
+                        className="text-lg font-bold mb-3 group-hover:text-[var(--accent)] transition-colors"
                         style={{
-                          color: "var(--text-primary)",
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          color: "#e5e2e1",
+                          fontFamily: "'Inter', sans-serif",
                         }}
                       >
                         {secondaryB.title}
@@ -892,7 +892,7 @@ export default function DashboardPage() {
                         className="text-sm leading-relaxed mb-6 line-clamp-2"
                         style={{
                           color: "var(--text-secondary)",
-                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          fontFamily: "'Inter', sans-serif",
                         }}
                       >
                         {secondaryB.summary}
@@ -900,15 +900,15 @@ export default function DashboardPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex gap-2">
                           <span
-                            className="px-2 py-0.5 text-[12px] md:text-[10px] border"
+                            className="px-2 py-0.5 text-[12px] md:text-[10px] uppercase border"
                             style={{
-                              backgroundColor: "var(--bg-elevated)",
+                              backgroundColor: "#2a2a2a",
                               color: "var(--text-muted)",
                               borderColor: "var(--border)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              fontFamily: "'Space Grotesk', sans-serif",
                             }}
                           >
-                            {secondaryB.eventType || "Signal"}
+                            {secondaryB.eventType || "MARKET DRIFT"}
                           </span>
                           <MediaImpactTag
                             entity={secondaryB.mediaImpactEntity}
@@ -917,7 +917,7 @@ export default function DashboardPage() {
                         </div>
                         <span
                           className="material-symbols-outlined text-xl"
-                          style={{ color: "var(--interactive)" }}
+                          style={{ color: "var(--accent)" }}
                         >
                           bolt
                         </span>
@@ -931,17 +931,17 @@ export default function DashboardPage() {
             {/* ── Intelligence Feed List ────────────────────────────── */}
             <section
               className="border"
-              style={{ backgroundColor: "var(--bg-app)", borderColor: "var(--border)" }}
+              style={{ backgroundColor: "#0e0e0e", borderColor: "var(--border)" }}
             >
               <div
                 className="p-4 border-b flex justify-between items-center"
                 style={{ borderColor: "var(--border)" }}
               >
                 <h4
-                  className="text-[12px] md:text-[11px] font-bold "
+                  className="text-[12px] md:text-[11px] font-bold tracking-widest uppercase"
                   style={{
                     color: "var(--text-muted)",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    fontFamily: "'Space Grotesk', sans-serif",
                   }}
                   data-feed-total={total ?? undefined}
                 >
@@ -964,11 +964,11 @@ export default function DashboardPage() {
                           data-testid={`feed-view-${mode}`}
                           aria-pressed={selected}
                           onClick={() => setFeedViewModePersisted(mode)}
-                          className="px-3 py-1 text-[12px] md:text-[10px] font-bold cursor-pointer"
+                          className="px-3 py-1 text-[12px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer"
                           style={{
-                            fontFamily: "'IBM Plex Sans', sans-serif",
-                            backgroundColor: selected ? "var(--interactive-bg)" : "transparent",
-                            color: selected ? "var(--on-interactive-bg)" : "var(--text-muted)",
+                            fontFamily: "'Space Grotesk', sans-serif",
+                            backgroundColor: selected ? "var(--accent)" : "transparent",
+                            color: selected ? "#005f40" : "var(--text-muted)",
                           }}
                         >
                           {mode === "cards" ? "Cards" : "Table"}
@@ -982,12 +982,12 @@ export default function DashboardPage() {
                       data-testid="feed-hide-summaries"
                       aria-pressed={hideSummaries}
                       onClick={() => setHideSummariesPersisted(!hideSummaries)}
-                      className="px-3 py-1 text-[12px] md:text-[10px] font-bold cursor-pointer border"
+                      className="px-3 py-1 text-[12px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer border"
                       style={{
-                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        fontFamily: "'Space Grotesk', sans-serif",
                         borderColor: "var(--border)",
-                        backgroundColor: hideSummaries ? "var(--interactive-bg)" : "transparent",
-                        color: hideSummaries ? "var(--on-interactive-bg)" : "var(--text-muted)",
+                        backgroundColor: hideSummaries ? "var(--accent)" : "transparent",
+                        color: hideSummaries ? "#005f40" : "var(--text-muted)",
                       }}
                     >
                       Hide summaries
@@ -1000,7 +1000,7 @@ export default function DashboardPage() {
               ) : (
               <div
                 className="divide-y"
-                style={{ borderColor: "var(--border)" }}
+                style={{ borderColor: "rgba(60,74,66,0.3)" }}
               >
                 {streamList.length > 0 ? (
                   streamList.map((item, index) => (
@@ -1010,7 +1010,7 @@ export default function DashboardPage() {
                       style={{ backgroundColor: "transparent" }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLElement).style.backgroundColor =
-                          "var(--bg-container)";
+                          "#1f1f1f";
                       }}
                       onMouseLeave={(e) => {
                         (e.currentTarget as HTMLElement).style.backgroundColor =
@@ -1040,14 +1040,14 @@ export default function DashboardPage() {
                             className="w-2 h-2 rounded-full shrink-0"
                             style={{
                               backgroundColor:
-                                item.severity >= 9 ? "var(--accent)" : "var(--text-muted)",
+                                item.severity >= 8 ? "#ee7d77" : "var(--accent)",
                             }}
                           />
                           <div
                             className="w-16 md:w-20 text-[12px] shrink-0"
                             style={{
                               color: "var(--text-muted)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              fontFamily: "'JetBrains Mono', monospace",
                             }}
                           >
                             {safeFormatDistanceToNow(item.eventDate ?? item.createdAt)}
@@ -1057,8 +1057,8 @@ export default function DashboardPage() {
                             eventDate={item.eventDate}
                             className="text-[12px] md:text-[11px] shrink-0"
                             style={{
-                              fontFamily: "'IBM Plex Sans', sans-serif",
-                              color: "var(--interactive)",
+                              fontFamily: "'JetBrains Mono', monospace",
+                              color: "var(--accent)",
                             }}
                           />
                           <MediaImpactTag
@@ -1071,10 +1071,10 @@ export default function DashboardPage() {
                         {/* Headline: full row width on mobile (2-line clamp); single-line truncate at md+, unchanged */}
                         <div className="flex items-center gap-2 md:min-w-0 md:flex-1 md:gap-6">
                           <div
-                            className="flex-1 min-w-0 line-clamp-2 md:truncate md:line-clamp-none font-semibold transition-colors group-hover:text-[var(--interactive)]"
+                            className="flex-1 min-w-0 line-clamp-2 md:truncate md:line-clamp-none font-semibold transition-colors group-hover:text-[var(--accent)]"
                             style={{
-                              color: "var(--text-primary)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
+                              color: "#e5e2e1",
+                              fontFamily: "'Inter', sans-serif",
                             }}
                           >
                             {item.title}
@@ -1083,10 +1083,10 @@ export default function DashboardPage() {
                             <div
                               className="text-[12px] px-2 py-0.5 border shrink-0"
                               style={{
-                                color: "var(--interactive)",
-                                backgroundColor: "var(--bg-container)",
-                                borderColor: "var(--border)",
-                                fontFamily: "'IBM Plex Sans', sans-serif",
+                                color: "var(--accent)",
+                                backgroundColor: "rgba(78,222,163,0.1)",
+                                borderColor: "rgba(78,222,163,0.2)",
+                                fontFamily: "'JetBrains Mono', monospace",
                               }}
                             >
                               {sourceConfirmationLabel(item.sourceConfirmation)}
@@ -1106,7 +1106,7 @@ export default function DashboardPage() {
                         data-testid="signal-quick-view-open"
                         aria-label="Quick view"
                         onClick={() => setQuickViewSignal(item)}
-                        className="hidden md:inline-flex h-8 w-8 shrink-0 items-center justify-center text-[var(--text-muted)] transition-colors hover:text-[var(--interactive)]"
+                        className="hidden md:inline-flex h-8 w-8 shrink-0 items-center justify-center text-[var(--text-muted)] transition-colors hover:text-[var(--accent)]"
                       >
                         <span className="material-symbols-outlined text-lg">preview</span>
                       </button>
@@ -1118,10 +1118,10 @@ export default function DashboardPage() {
                       search_off
                     </span>
                     <p
-                      className="text-xs font-bold "
+                      className="text-xs font-bold uppercase tracking-[0.2em]"
                       style={{
                         color: "var(--text-muted)",
-                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        fontFamily: "'Space Grotesk', sans-serif",
                       }}
                     >
                       No active signals matching filter
@@ -1155,15 +1155,15 @@ export default function DashboardPage() {
       {/* ── Right: Market & AI Sidebar ────────────────────────── */}
       <aside
         className="w-[260px] shrink-0 border-l flex flex-col overflow-y-auto hidden xl:flex"
-        style={{ borderColor: "var(--bg-elevated)", backgroundColor: "var(--bg-app)" }}
+        style={{ borderColor: "#2a2a2a", backgroundColor: "#0e0e0e" }}
       >
         <div className="p-6">
           <div className="mb-8">
             <div
               className="text-sm font-bold"
               style={{
-                color: "var(--interactive)",
-                fontFamily: "'IBM Plex Sans', sans-serif",
+                color: "var(--accent)",
+                fontFamily: "'Space Grotesk', sans-serif",
               }}
             >
               MARKET & INTELLIGENCE
@@ -1174,20 +1174,20 @@ export default function DashboardPage() {
             {/* AI Module (now shows honest system status link) */}
             <div
               className="p-4 border"
-              style={{ backgroundColor: "var(--bg-app)", borderColor: "var(--border)" }}
+              style={{ backgroundColor: "#0e0e0e", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span
                   className="material-symbols-outlined text-sm"
-                  style={{ color: "var(--interactive)" }}
+                  style={{ color: "var(--accent)" }}
                 >
                   psychology
                 </span>
                 <span
                   className="text-[12px] md:text-[10px]"
                   style={{
-                    color: "var(--interactive)",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    color: "var(--accent)",
+                    fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
                   SYSTEM STATUS
@@ -1195,7 +1195,7 @@ export default function DashboardPage() {
               </div>
               <div
                 className="text-xs leading-relaxed mb-2"
-                style={{ color: "var(--text-primary)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+                style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
               >
                 Signal collection and classification across configured
                 regions and sources.
@@ -1211,20 +1211,20 @@ export default function DashboardPage() {
             {/* Active Hotzones: computed from live signals */}
             <div
               className="p-4 border"
-              style={{ backgroundColor: "var(--bg-app)", borderColor: "var(--border)" }}
+              style={{ backgroundColor: "#0e0e0e", borderColor: "var(--border)" }}
             >
               <div className="flex items-center gap-2 mb-3">
                 <span
                   className="material-symbols-outlined text-sm"
-                  style={{ color: "var(--interactive)" }}
+                  style={{ color: "var(--accent)" }}
                 >
                   radar
                 </span>
                 <span
                   className="text-[12px] md:text-[10px]"
                   style={{
-                    color: "var(--interactive)",
-                    fontFamily: "'IBM Plex Sans', sans-serif",
+                    color: "var(--accent)",
+                    fontFamily: "'Space Grotesk', sans-serif",
                   }}
                 >
                   ACTIVE HOTZONES
@@ -1232,7 +1232,7 @@ export default function DashboardPage() {
               </div>
               <ul
                 className="space-y-2 text-[12px] md:text-[10px]"
-                style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 {topHotzones.length === 0 ? (
                   <li className="text-[var(--text-muted)]">
@@ -1248,16 +1248,16 @@ export default function DashboardPage() {
                           : "LOW";
                     const color =
                       label === "HIGH"
-                        ? "var(--price-down)"
+                        ? "#ee7d77"
                         : label === "MED"
-                          ? "var(--danger)"
-                          : "var(--interactive)";
+                          ? "#ffb4ab"
+                          : "var(--accent)";
                     return (
                       <li
                         key={hz.region}
                         className="flex items-center justify-between"
                       >
-                        <span style={{ color: "var(--text-primary)" }}>{hz.region}</span>
+                        <span style={{ color: "#e5e2e1" }}>{hz.region}</span>
                         <span className="font-bold" style={{ color }}>
                           {label}
                         </span>

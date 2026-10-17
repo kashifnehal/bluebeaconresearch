@@ -57,14 +57,14 @@ export function SignalTable({
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-4 pt-3">
         <p
           className="text-[12px] md:text-[11px]"
-          style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+          style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
         >
           Sorting applies to loaded rows
         </p>
         <p
           data-testid="signal-table-count"
           className="text-[12px] md:text-[11px]"
-          style={{ color: "var(--text-secondary)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+          style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}
         >
           {countLine}
         </p>
@@ -79,20 +79,20 @@ export function SignalTable({
           <thead>
             <tr
               className="border-b"
-              style={{ borderColor: "var(--border)", color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+              style={{ borderColor: "var(--border)", color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               <HeaderCell label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-              <th className="px-4 py-3 font-bold ">Event</th>
+              <th className="px-4 py-3 font-bold uppercase tracking-widest">Event</th>
               {hideSummaries ? null : (
-                <th className="px-4 py-3 font-bold " data-testid="signal-table-summary-header">
+                <th className="px-4 py-3 font-bold uppercase tracking-widest" data-testid="signal-table-summary-header">
                   Summary
                 </th>
               )}
-              <th className="px-4 py-3 font-bold ">Type</th>
-              <th className="px-4 py-3 font-bold ">Direction</th>
+              <th className="px-4 py-3 font-bold uppercase tracking-widest">Type</th>
+              <th className="px-4 py-3 font-bold uppercase tracking-widest">Direction</th>
               <HeaderCell label="Severity" column="severity" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <HeaderCell label="Reports" column="reports" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-              <th className="px-4 py-3 font-bold ">Topic</th>
+              <th className="px-4 py-3 font-bold uppercase tracking-widest">Topic</th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{ borderColor: "rgba(60,74,66,0.3)" }}>
@@ -103,15 +103,15 @@ export function SignalTable({
                 <tr
                   key={signal.id}
                   data-testid="signal-table-row"
-                  className="transition-colors hover:bg-[var(--bg-container)]"
+                  className="transition-colors hover:bg-[#1f1f1f]"
                 >
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-muted)", fontFamily: "'IBM Plex Sans', sans-serif" }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt, { addSuffix: true })}
                     </a>
                   </td>
-                  <td className="px-4 py-3 max-w-[280px]" style={{ color: "var(--text-primary)", fontFamily: "'IBM Plex Sans', sans-serif" }}>
-                    <a href={`/events/${signal.id}`} className="block truncate hover:text-[var(--interactive)]">
+                  <td className="px-4 py-3 max-w-[280px]" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
+                    <a href={`/events/${signal.id}`} className="block truncate hover:text-[var(--accent)]">
                       {signal.title}
                     </a>
                   </td>
@@ -119,7 +119,7 @@ export function SignalTable({
                     <td
                       className="px-4 py-3 max-w-[320px]"
                       data-testid="signal-table-summary-cell"
-                      style={{ color: "var(--text-secondary)", fontFamily: "'IBM Plex Sans', sans-serif" }}
+                      style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}
                     >
                       <a href={`/events/${signal.id}`} className="block">
                         {truncateSignalSummary(signal.summary)}
@@ -149,12 +149,12 @@ export function SignalTable({
                       <SeverityBadge score={signal.severity} />
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'IBM Plex Sans', sans-serif" }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {signal.sourcesCount}
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'IBM Plex Sans', sans-serif" }}>
+                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {topicSymbols(signal)}
                     </a>
@@ -184,14 +184,14 @@ function HeaderCell({
 }) {
   const active = sortColumn === column;
   return (
-    <th className="px-4 py-3 font-bold ">
+    <th className="px-4 py-3 font-bold uppercase tracking-widest">
       <button
         type="button"
         data-testid={`signal-table-sort-${column}`}
         onClick={() => onSort(column)}
         aria-pressed={active}
         className="inline-flex items-center gap-1 cursor-pointer"
-        style={{ color: active ? "var(--interactive)" : "inherit" }}
+        style={{ color: active ? "var(--accent)" : "inherit" }}
       >
         {label}
         {active ? <span aria-hidden="true">{sortDirection === "asc" ? "↑" : "↓"}</span> : null}
