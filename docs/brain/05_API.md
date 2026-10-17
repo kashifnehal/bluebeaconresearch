@@ -209,12 +209,12 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Auth**: same as `/api/signals/attribution` — unauthenticated allowed outside production.
 - **Not a new Fastify/backend route** — implemented entirely in `apps/web` (queries Supabase directly), matching `/api/signals/attribution`'s existing pattern; no `apps/backend` change was needed.
 
-#### `GET /api/signals/pulse` (Next.js route, 2026-10-15)
+#### `GET /api/signals/pulse` (Next.js route, 2026-10-15, all-assets mode added 2026-10-17)
 
-- **Description**: Powers the five pulse tiles under the watchlist symbol header. Query: `symbol`. Pages `signals` with `.range()` where `created_at >= now − 48h` and the impact column contains `[{"asset": symbol}]` (`JSON.stringify`, `.filter(column, "cs", …)`).
-- **Symbol check**: `^[A-Z0-9_]+$`, then `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`. Otherwise `400` (`symbol is required` or `unknown symbol`).
-- **Symbol routing**: commodity and news-only symbols read `commodity_impacts` only. Forex reads `currency_pair_impacts` and `commodity_impacts` and de-dupes by `id`.
-- **Response `200 OK`**: `{ last24h, prior24h, changePct, peakHourUtc, peakHourCount, up, down, other }`. `changePct` is null when `prior24h` is 0. `peakHourUtc` is 0–23, or null when `last24h` is 0. A tie keeps the earlier hour.
+- **Description**: Powers the five pulse tiles under the watchlist symbol header, and (new) the same five tiles at the top of the dashboard home. Query: `symbol`, now optional. With `symbol`, pages `signals` with `.range()` where `created_at >= now − 48h` and the impact column contains `[{"asset": symbol}]` (`JSON.stringify`, `.filter(column, "cs", …)`). **With no `symbol` param at all** (not merely an empty one — an empty value is still `400`), the route is "all-assets mode": it fetches every `signals` row in the 48h window with no impact-column filter.
+- **Symbol check**: `^[A-Z0-9_]+$`, then `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS`. Otherwise `400` (`symbol is required` or `unknown symbol`). Skipped entirely in all-assets mode.
+- **Symbol routing**: commodity and news-only symbols read `commodity_impacts` only. Forex reads `currency_pair_impacts` and `commodity_impacts` and de-dupes by `id`. All-assets mode reads every row directly (`fetchAllRows`, no `.filter()`).
+- **Response `200 OK`**: `{ last24h, prior24h, changePct, peakHourUtc, peakHourCount, up, down, other }`. `changePct` is null when `prior24h` is 0. `peakHourUtc` is 0–23, or null when `last24h` is 0. A tie keeps the earlier hour. In all-assets mode, `up`/`down`/`other` count one vote per distinct asset per signal (same asset on both impact columns counts once) — `computePulse(rows, null, now)` in `apps/web/lib/pulse.ts`; DESIGN CHOICE, not measured, since there's no single asset to pick a direction from.
 - **Failure response**: `{ error: "rate_limited" | "db_error" | "unavailable" | "unauthenticated" }` still `200`, with no counts, so the tiles do not show zeros for a failed read.
 - **Rate limit**: `rateLimitOrPass('signals-pulse:<ip>')`.
 - **Not a Fastify route.** `apps/web` only.

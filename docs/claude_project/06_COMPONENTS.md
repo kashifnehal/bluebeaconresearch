@@ -56,6 +56,7 @@ Public page, `PrivacyPage`. Keeps the previous paragraphs and adds headed sectio
 Site-wide legal disclaimer footer (not-investment-advice / not-a-registered-adviser language), no props, `data-testid="legal-disclaimer-footer"`, muted small `font-mono` text matching the existing `/status` and `/accuracy` footer styling. Rendered in `(dashboard)/layout.tsx` (below `<main>`, so it appears on every page in that route group) and directly in `app/status/page.tsx` + `app/accuracy/page.tsx` — the two pages that render `PublicHeader`; there's no shared public layout wrapping them to add it to instead.
 
 ### Sidebar (apps/web/components/layout/Sidebar.tsx)
+> ⚠️ UPDATED 2026-10-17 (WEB-FINISH task 5a) — this sidebar's unread badge (and `MobileTabBar`'s Alerts slot, and `/alerts`' zero-rules empty-state line) all read the same persisted `useUIStore.unreadCount`, which `NotificationPanel.tsx` only wrote inside `if (alerts.length > 0)`. An empty `/api/alerts/recent` response never reset it, so a stale non-zero badge from a prior session could stick with nothing in the inbox to back it up. Fixed to call the tally unconditionally. Full detail: `docs/brain/06_COMPONENTS.md` §2.1.
 **Used in:** (dashboard)/layout.tsx
 **Fixed left, 256px wide. At `md`+ always visible. Below `md` an off-canvas drawer (`-translate-x-full` / `translate-x-0`) driven by `useUIStore.mobileSidebarOpen`, with a tap-outside backdrop. (#133, 2026-09-12)**
 
@@ -91,6 +92,7 @@ Contains:
 1b. **Connect-channel icon (`forum`)** — all screen sizes. Opens `NotificationConnectModal` (wraps existing `<TelegramConnect />`). Distinct from the alerts bell. (#112)
 
 1c. **Command palette (`CommandPalette.tsx`)** — Cmd+K / Ctrl+K **and** the header search button. Same Pages / Signals / Watchlist / Alert Rules search as 2026-09-20 (Fuse.js keywords + `sort=relevance` Signals + Suggested assist). **2026-09-20 header unify:** `open` lives in `useUIStore.commandPaletteOpen` so TopBar can open it. **Last-resort fallback:** if that search settles empty and assist is off or not `ok`, a single static **"Not sure? Try"** item links `/dashboard` (no extra network call). Keyword lists expanded (e.g. "oil price"→Watchlist). FAQ copy indexed as of #155 (`SEARCH_FAQ_ENTRIES` + Help page in Pages).
+> ⚠️ UPDATED 2026-10-17 (WEB-FINISH task 5c) — a `503` from `/api/search/assist` (today's Anthropic budget closed) is now a distinct `"unavailable"` status instead of collapsing into the ordinary empty-result state; it renders one line, "AI answers are unavailable right now. Page and signal search still work.", with no mention of the budget or a schedule. Full detail: `docs/brain/06_COMPONENTS.md`.
 2. **Notification Bell (🔔)**
    - Badge: red dot with unread_count from useUIStore.unreadAlerts
    - onClick: toggles useUIStore.notificationPanelOpen
@@ -536,7 +538,8 @@ Sections:
 > ⚠️ UPDATED 2026-09-09 (#87 phase 2, `55df380`) — `WatchlistClient.tsx` now covers commodities **and** the 6 forex pairs: its asset list is `[...COMMODITIES, ...FOREX_PAIRS]`, the #89 "My Commodities / Show All" default seeds from `commodities ∪ forex_pairs` (via `useMyPreferences().forexPairs`), and the add-asset dropdown lists all 13. Forex prices come from `/api/prices` (price-syncer already syncs them). The `[symbol]` drill-down still keys off `COMMODITIES` only — a forex card there is degraded (raw label, no matched signals); candidate for phase 3.
 > ⚠️ UPDATED 2026-09-09 (#87 phase 4, `accd468`) — the `[symbol]` drill-down now resolves against `FOREX_PAIRS` too: a forex symbol shows its real label ("EUR/USD"), "You follow this" checks `forexPairs`, and the correlated-signals fetch sends a new `?forexPair=` param (mirroring `?commodity=` against `currency_pair_impacts`) so a forex drill-down lists its matched signals. `?commodity=` unchanged. `apps/web` only.
 > ⚠️ UPDATED 2026-09-19 (#145) — list page first-paints `COMMODITIES` when there are no user selections (page is never an empty dropdown) and adds a category-chip row to add/remove; the ADD COMMODITY dropdown stays. Drill-down is a **single** price chart with 1M / 6M / 1Y / 3Y / 5Y (1M = 90-day DB series; 6M+ = Yahoo weekly `history-5y`). The two honest 5Y fallback sentences are unchanged. Correlated-signals list still last-90-days.
-> ⚠️ UPDATED 2026-10-17 (asset chart markers, price context, positioning panel) — the price chart on the watchlist symbol page draws a labelled marker per signal (severity-band triangle, direction arrow when the signal has one for the asset, hover and focus card, merged above 12 markers). The card shows price at the event and the move since only from existing points, and "Not available on weekly data" on weekly ranges. Weekly ranges now draw markers on the nearest weekly point. A positioning panel (CFTC managed money, 52 weeks) sits below the chart and shows only when `/api/cot` returns rows. New files: `components/assets/ChartEventMarker.tsx`, `ChartMarkerCard.tsx`, `PositioningPanel.tsx`, `lib/chart-markers.ts`, `lib/move-since-event.ts`, `lib/cot.ts`. Full detail: `docs/brain/06_COMPONENTS.md`.
+> ⚠️ UPDATED 2026-10-17 (asset chart markers, price context, positioning panel) — the price chart on the watchlist symbol page draws a labelled marker per signal (severity-band triangle, direction arrow when the signal has one for the asset, hover and focus card). The card shows price at the event and the move since only from existing points, and "Not available on weekly data" on weekly ranges. Weekly ranges now draw markers on the nearest weekly point. A positioning panel (CFTC managed money, 52 weeks) sits below the chart and shows only when `/api/cot` returns rows. New files: `components/assets/ChartEventMarker.tsx`, `ChartMarkerCard.tsx`, `PositioningPanel.tsx`, `lib/chart-markers.ts`, `lib/move-since-event.ts`, `lib/cot.ts`. Full detail: `docs/brain/06_COMPONENTS.md`.
+> ⚠️ UPDATED 2026-10-17, same day (WEB-FINISH task) — the "merged above 12 markers, 2% apart" rule above was replaced: markers now merge by real on-screen pixel distance (`MARKER_MERGE_PX = 24`, via `ResizeObserver`), independent of marker count, fixing a false negative where under-12-count clusters never merged despite visually overlapping. Clicking/focusing a merged marker opens a new `ChartMarkerList.tsx` (title/time/link per grouped signal) instead of jumping to attribution. `ChartMarkerCard.tsx` gained two click-to-open info-citation buttons (new `components/ui/InfoCitation.tsx`) on "Since then" and "Reports," naming the real table/code file behind each. `PulseTiles.tsx` on this same page gained an optional all-assets mode, now also mounted at the top of the dashboard home (`05_API.md`). Full detail: `docs/brain/06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-10-15 (pulse tiles) — five tiles under the watchlist symbol header count signals published in the last 24 hours against the prior 24 hours. News-only assets get the same tiles. They do not request a price. Full detail: `docs/brain/06_COMPONENTS.md` §3.7.
 
@@ -597,6 +600,7 @@ Added a 7-day tappable day strip (Mon–Sun, reusing the existing `getWeekRangeU
 **"Export to Calendar" .ics download (2026-09-25, `a8bace3`):** new header button exports whatever the page is currently showing (day-strip selection if active, else This Week + Upcoming) as a one-time `.ics` file — always respects the active Importance/Country/Category/Timezone filters. Pure client-side RFC5545 generation + `<a download>` Blob, no new endpoint, no library. Labeled as a one-time download, not a live sync. Full detail: `docs/brain/06_COMPONENTS.md` §3.10.
 
 **#227 calendar integration (2026-09-27):** 8 new real EIA (weekly Petroleum Status Report) and USDA (Grain Stocks, Crop Production, WASDE) entries added to `data/economic-calendar.json`. Qualifying events (`Energy`/`Agriculture` category) now show a per-asset historical magnitude sentence (`data-testid="calendar-magnitude-line"`), sourced from new asset-level `GET /api/market-impact` (reuses #227's exact functions/query, no duplication — see `05_API.md`). A one-time, sourced options-implied-volatility educational note (`data-testid="calendar-iv-note"`) sits on the Next High-Impact Event card. **Updated 2026-10-10 (`3dc96e6`):** the magnitude sentence uses the same observed-fact wording as the signal-detail fix, and a second `calendar-magnitude-line` baseline sentence (matched price-window baseline, same wording as the signal-detail baseline line) renders right after it when available. Full detail: `docs/brain/06_COMPONENTS.md` §3.10.
+> ⚠️ UPDATED 2026-10-17 (WEB-FINISH task 6) — EIA entries extended through every Wednesday (plus eia.gov's own 2 remaining 2026 holiday shifts) to 2026-12-16; USDA WASDE + Crop Production added for Nov 10 and Dec 10, 2026, both cross-checked against NASS's own PFEI schedule PDF. No Grain Stocks entry added — none scheduled in that window per that same PDF. All 12 EIA rows (new and existing) now carry a visible `creditLine`, "Source: U.S. Energy Information Administration," not just the pre-existing hover tooltip. Full detail: `docs/brain/06_COMPONENTS.md`.
 
 ### MapPage recenter control (`apps/web/app/(dashboard)/map/page.tsx`) (2026-09-25, `a8bace3`)
 
@@ -665,7 +669,7 @@ last 7 days are live Supabase counts computed at request time; "sources monitore
 is 30, counted 2026-10-16 from code, not a query — 28 objects in `RSS_FEEDS`
 (`apps/backend/src/workers/rss-collector.ts`; `CONFIGURED_RSS_FEED_COUNT` in
 `packages/shared/src/constants/ingestion.ts` is 28) plus `OTHER_COLLECTOR_COUNT` 2
-(GDELT and GNews). ACLED is not included. A failed query hides that stat rather than rendering 0. The sources caption is "RSS feeds plus other data sources." The ACLED limit line is unchanged. As of 2026-10-16 (`d165222`), both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
+(GDELT and GNews). ACLED is not included. A failed query hides that stat rather than rendering 0. The sources caption is "RSS feeds plus other data sources." As of 2026-10-16 (`d165222`), both signal counts use `select("id", { count: "exact", head: true })`. A total of 0 stays hidden. The last-7-days query still filters `created_at`.
 
 **Claim/proof table**: 7 claims (sources-tab links, pause-instead-of-guessing
 disclosure, zero headline-placement bonus, confidence-vs-report-count copy,
@@ -676,9 +680,17 @@ The original six were checked against code or live data before being written;
 the seventh is backed by `classifyEvent()` and the briefing/chat instructions
 (`docs/brain/LIVE_TODO.md`). The original Step 0 table is in that file's W2-TRUST entry.
 Laid out as a responsive CSS grid, not an HTML `<table>`, so it never needs horizontal
-scroll at phone width. A short **Limits** list follows, including a line on ACLED not
-yet ingesting — checked live against `service_health_events` (still failing auth at
-ship time) rather than assumed from the known-open-items list.
+scroll at phone width. A short **Limits** list follows.
+
+> ⚠️ UPDATED 2026-10-17 (WEB-FINISH task 4) — correction: the Limits list's ACLED
+> line and keyword-fallback line were static hardcoded text as of ship time, not
+> actually checked live against `service_health_events` as the paragraph above used
+> to claim. Both are now real request-time queries: `loadAcledState()` reads the
+> latest `service_health_events` row for `service = 'acled'` and echoes its own
+> status/detail; `loadKeywordFallbackShare()` computes the real share of last-7-day
+> `signals.classification_method = 'heuristic'` vs `'claude'`. Both degrade to an
+> honest "unavailable"/"no signals" line on query failure, never a fabricated 0% or
+> a stale claim. Full detail: `docs/brain/06_COMPONENTS.md` §3.6a.
 
 **Hard rule**: no accuracy percentage anywhere on this page — links to the existing
 `/accuracy` page instead, consistent with that page's own "no homepage hit-rate

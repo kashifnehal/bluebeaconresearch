@@ -310,8 +310,8 @@ A backfilled signal deliberately never triggers `dispatchAlertsForSignal` (see D
 
 ---
 
-#### GET /api/signals/pulse (Next.js BFF, 2026-10-15)
-Powers the watchlist symbol page's pulse tiles. Query: `symbol`. Counts signals by `created_at` over the last 24 hours and the prior 24 hours. Forex reads both impact columns and de-dupes by id. Unknown symbol is `400`. Failure responses carry `error` and no counts. Full detail: `docs/brain/05_API.md`.
+#### GET /api/signals/pulse (Next.js BFF, 2026-10-15, all-assets mode 2026-10-17)
+Powers the watchlist symbol page's pulse tiles, and (new) the same tiles at the top of the dashboard home. Query: `symbol`, now optional — omitting it entirely (not just leaving it blank) is "all assets": every signal in the window, no asset filter. With a symbol, counts signals by `created_at` over the last 24 hours and the prior 24 hours. Forex reads both impact columns and de-dupes by id. Unknown symbol is `400`. Failure responses carry `error` and no counts. Full detail: `docs/brain/05_API.md`.
 
 
 #### GET /api/cot (Next.js BFF, 2026-10-17)
