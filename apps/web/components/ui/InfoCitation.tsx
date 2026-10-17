@@ -3,10 +3,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
- * Small "i" button next to a number, opening a popover that states exactly
- * how that number is calculated and where. Only attach this where the
- * popover text can name a real source (table, code file) — it is not a
- * generic tooltip.
+ * Small "i" button next to a number, opening a short explanation in plain
+ * language. A press inside the popover does not bubble, so a parent hover
+ * card stays open. Escape and a press outside still close the popover.
  */
 export function InfoCitation({ label, children }: { label: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -47,6 +46,13 @@ export function InfoCitation({ label, children }: { label: string; children: Rea
         <span
           role="tooltip"
           data-testid="info-citation-popover"
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
           className="absolute bottom-full left-1/2 z-30 mb-1.5 w-56 -translate-x-1/2 rounded-md border border-outline-variant/40 bg-[#141414] p-2.5 text-left text-[10px] font-mono normal-case leading-snug text-on-surface-variant shadow-lg"
         >
           {children}

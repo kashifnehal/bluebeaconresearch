@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-18 (chart marker overlap — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-18 (marker citations — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-18 (marker citations, `apps/web` only) — the "Since then" and "Reports" popovers use plain language. A press inside the popover does not close the hover card. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (chart marker overlap, `apps/web` only) — neighbouring markers drawn closer than 24px now merge until every pair is at least 24px apart. The marker label uses the same local date and time as the list under the chart. See `docs/brain/LIVE_TODO.md`.
 

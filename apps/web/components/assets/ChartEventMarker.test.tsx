@@ -145,14 +145,13 @@ runTest("card for one signal shows title, time, severity, direction for this ass
   assert.match(html, />Reports</);
   assert.match(html, />4</);
   assert.doesNotMatch(html, /\b(buy|sell|caused)\b/i);
-  // Reports has an info-citation trigger; its popover only mounts on click,
-  // so SSR markup carries the accessible trigger — the citation text itself
-  // is checked directly below against the real merge code's behavior.
   assert.match(html, /data-testid="info-citation-trigger"/);
   assert.match(html, /How &quot;Reports&quot; is calculated/);
-  assert.match(REPORTS_CITATION, /sources_count/);
-  assert.match(REPORTS_CITATION, /apps\/backend\/src\/workers\/signal-merge\.ts/);
-  assert.match(REPORTS_CITATION, /not\s+distinct news outlets/);
+  assert.equal(
+    REPORTS_CITATION,
+    "Number of reports merged into this signal. Several can come from the same outlet, so this is not a count of different sources.",
+  );
+  assert.doesNotMatch(REPORTS_CITATION, /\.ts|sources_count|commodity_prices|\//);
 });
 
 runTest("card for a merged marker lists up to three titles and a remainder", () => {
@@ -194,11 +193,12 @@ runTest("card shows Price at the event, Since then, horizons and the descriptive
   assert.match(html, /\+1\.00% \/ — \/ —/);
   assert.ok(html.includes(PRICE_CONTEXT_NOTE));
   assert.doesNotMatch(html, /\b(buy|sell|caused|because)\b/i);
-  // Since then has an info-citation trigger; its popover text is checked
-  // directly against the real table and code file below.
   assert.match(html, /How &quot;Since then&quot; is calculated/);
-  assert.match(SINCE_THEN_CITATION, /commodity_prices/);
-  assert.match(SINCE_THEN_CITATION, /apps\/web\/lib\/move-since-event\.ts/);
+  assert.equal(
+    SINCE_THEN_CITATION,
+    "Price change from the price when this signal was reported to the latest price we have. It uses stored price checkpoints and does not predict anything.",
+  );
+  assert.doesNotMatch(SINCE_THEN_CITATION, /\.ts|sources_count|commodity_prices|\//);
 });
 
 runTest("card says Not available when the series has no point for the event", () => {

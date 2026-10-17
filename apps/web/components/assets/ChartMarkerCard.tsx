@@ -15,13 +15,9 @@ export const WEEKLY_UNAVAILABLE = "Not available on weekly data";
 // Info-citation popover text, as plain exported strings so a test can check
 // the claim against the real source without needing the popover open.
 export const SINCE_THEN_CITATION =
-  "Percent change from the price at or just after this signal's event time " +
-  "to the latest stored price, both from the commodity_prices table " +
-  "(90-day series). Computed in apps/web/lib/move-since-event.ts.";
+  "Price change from the price when this signal was reported to the latest price we have. It uses stored price checkpoints and does not predict anything.";
 export const REPORTS_CITATION =
-  "Counts merged reports folded into this signal as it was tracked, not " +
-  "distinct news outlets — each time a new raw event matches, " +
-  "sources_count increments by 1. See apps/backend/src/workers/signal-merge.ts.";
+  "Number of reports merged into this signal. Several can come from the same outlet, so this is not a count of different sources.";
 
 function formatPrice(price: number): string {
   return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });

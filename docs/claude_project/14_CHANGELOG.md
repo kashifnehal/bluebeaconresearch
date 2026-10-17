@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-18 — Marker citation popovers use plain language
+
+`apps/web` only. The "Since then" and "Reports" popovers no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-18 — Chart markers merge on drawn position; label uses the list date
 
 `apps/web` only. Neighbouring chart markers that were drawn closer than 24px now merge, repeating until every pair is at least 24px apart. The merged marker stays on its highest-severity member and keeps every member. The marker label uses the same local date and time as the list under the chart. Not browser-checked. Full detail: `docs/brain/LIVE_TODO.md`.

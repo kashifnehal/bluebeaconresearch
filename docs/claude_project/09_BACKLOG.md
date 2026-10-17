@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-10-18.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-18 — Marker "Since then" and "Reports" popovers use plain language (`apps/web`). A press inside the popover does not close the hover card. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-18 — Chart markers drawn closer than 24px now merge until every neighbouring pair is at least 24px apart (`apps/web`). The marker label uses the same local date and time as the list under the chart. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — A restyle (new palette, Plex Sans + Newsreader fonts, reworked desk shell, keyword presets, desk-polish pass) shipped without founder approval and was reverted in full (`b6eac54`, `c4abe33`, `68125a7`, `c19367e`, `61381c3`). New standing rule: no brand, colour, or font change without founder approval (D52 in `10_DECISIONS.md`). `public.cot_positions` and `public.digest_send_log` migrations, previously written-not-applied, are now applied in production. The `/api/cot` positioning panel stays hidden until `cot_positions` has rows. Full detail: `docs/brain/LIVE_TODO.md`.

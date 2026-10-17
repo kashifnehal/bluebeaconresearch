@@ -3,6 +3,11 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Marker citation popovers use plain language and stay open on an inside press, `apps/web`, 2026-10-18
+
+- "Since then" and "Reports" explanations no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover.
+- Render test mounts the card, opens both popovers, and checks the card is still mounted after a press inside. Not browser-checked.
+
 ## ✅ Chart markers no longer draw closer than 24px; label date matches the list, `apps/web`, 2026-10-18
 
 - Groups were formed from the leftmost point, then drawn at the highest-severity member, so two neighbours could paint closer than 24px (USOIL 1M drew at 694, 730 and 736). A second pass merges adjacent groups until every neighbouring drawn pair is at least 24px apart. The merged marker stays on its highest-severity member and keeps every member. `MARKER_MERGE_PX` stays 24.

@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-18 — Marker citation popovers use plain language
+
+`apps/web` only. The "Since then" and "Reports" popovers no longer name a file, a path, a table, or a function. A press inside the popover does not close the hover card. Escape and a press outside still close the popover. Not browser-checked.
+
 ### 2026-10-18 — Chart markers merge on drawn position; label uses the list date
 
 `apps/web` only. `buildMarkers` still groups from the leftmost point, then a second pass merges adjacent groups whose drawn positions (highest-severity member) are closer than 24px, repeating until every neighbouring pair is at least 24px apart. The combined marker is drawn at its highest-severity member and keeps the combined member list. `MARKER_MERGE_PX` stays 24. The marker label uses the same local date and time as the list under the chart. Not browser-checked.
