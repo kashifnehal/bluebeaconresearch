@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-10-17 (CFTC COT collector — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-10-17 (story-thread measurement — see the banner immediately below).**
+
+> ⚠️ NEW 2026-10-17 (story-thread measurement, `apps/backend` only) — read-only `measure:story-threads` groups the last 48 hours of signals. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-17 (CFTC COT collector, `apps/backend` plus one migration) — weekly Disaggregated Futures Only positioning into `public.cot_positions`. Migration written, not applied. See `docs/brain/LIVE_TODO.md`.
 

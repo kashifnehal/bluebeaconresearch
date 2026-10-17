@@ -3,7 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
-## ✅ Weekly CFTC positioning collector, `apps/backend` plus one migration, 2026-10-17, this commit
+## ✅ Story-thread measurement script, `apps/backend`, 2026-10-17, this commit
+
+- Read-only script `measure:story-threads` groups the last 48 hours of signals with a pure function in `lib/story-threads.ts`. Two signals join when created_at is within 24 hours, `event_category` matches, they share a `commodity_impacts` symbol, and titles share at least two 4+ letter words (or Jaccard ≥ 0.4 on those word sets). Threads are connected components of those pairs.
+- Prints counts and writes `/tmp/threads-sample.md` (not committed) with up to 40 seeded size-2+ threads. Seed is printed.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `08`, `14`; claude_project `09`, `08`, `14`. Skipped both `05_API.md`, both `04_DATABASE.md`, both `06_COMPONENTS.md`, `18_AI_ENGINE.md`, `15_INGESTION_PIPELINE.md`, `16_MIGRATION_CHECKLIST.md`, and both `10_DECISIONS.md` — no route, table, component, prompt, collector, or standing rule.
+
+## ✅ Weekly CFTC positioning collector, `apps/backend` plus one migration, 2026-10-17, `daa4c93`
 
 - New table `public.cot_positions` (`20261017180000_cot_positions.sql`): PK `(report_date, contract_market_code)`, RLS on, no policy, revoke from anon/authenticated, grant select/insert/update to service_role. Written, not applied.
 - Collector `apps/backend/src/workers/cot-collector.ts` fetches 156 weeks of CFTC Disaggregated Futures Only JSON for eight mapped futures (USOIL, UKOIL, NGAS, XAUUSD, XAGUSD, COPPER, WHEAT, CORN). Upserts on the PK. User-Agent is the product name. 20 s timeout, one retry. Missing table (`42P01` / `PGRST205`) logs once and returns. Cron `COT_CRON` default `30 6 * * *`. Off when `ENABLE_COT_COLLECTOR` is exactly `false`.

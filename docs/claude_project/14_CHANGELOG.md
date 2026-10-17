@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-17 — Story-thread measurement script
+
+`apps/backend` only. Read-only grouping of the last 48 hours of signals. Sample file is `/tmp/threads-sample.md`, not committed. Full detail: `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-17 — Weekly CFTC positioning collector
 
 `apps/backend` plus one migration. CFTC Disaggregated Futures Only JSON upserts into `public.cot_positions`. The migration is written, not applied. Full detail: `docs/brain/LIVE_TODO.md`.
