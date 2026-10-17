@@ -72,6 +72,45 @@ export function signalsToMarkerSignals(
   return out;
 }
 
+/** Median spacing between consecutive points, ms (0 when fewer than 2 points). */
+export function medianGapMs(sortedTs: number[]): number {
+  if (sortedTs.length < 2) return 0;
+  const gaps: number[] = [];
+  for (let i = 1; i < sortedTs.length; i++) gaps.push(sortedTs[i] - sortedTs[i - 1]);
+  gaps.sort((a, b) => a - b);
+  const mid = Math.floor(gaps.length / 2);
+  return gaps.length % 2 ? gaps[mid] : (gaps[mid - 1] + gaps[mid]) / 2;
+}
+
+/**
+ * Weekly ranges have one point a week, so a signal is drawn on the nearest
+ * point. A signal further from the nearest point than one typical point
+ * spacing (it falls outside the series) is left out rather than drawn at the
+ * edge. Returns inputs positioned at the snapped point; eventMs is unchanged.
+ */
+export function snapToSeries(
+  signals: MarkerSignal[],
+  pointTs: number[],
+): MarkerInput[] {
+  const ts = pointTs.filter(Number.isFinite).sort((a, b) => a - b);
+  if (ts.length === 0) return [];
+  const maxDistance = medianGapMs(ts);
+  const out: MarkerInput[] = [];
+  for (const s of signals) {
+    let best = ts[0];
+    let bestDist = Math.abs(s.eventMs - best);
+    for (const t of ts) {
+      const d = Math.abs(s.eventMs - t);
+      if (d < bestDist) {
+        best = t;
+        bestDist = d;
+      }
+    }
+    if (bestDist <= maxDistance) out.push({ ...s, t: best });
+  }
+  return out;
+}
+
 function groupDirection(members: MarkerSignal[]): "up" | "down" | null {
   const first = members[0]?.direction;
   if (first !== "up" && first !== "down") return null;

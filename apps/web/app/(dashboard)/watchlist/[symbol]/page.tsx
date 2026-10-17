@@ -33,6 +33,7 @@ import { moveSinceEvent } from "@/lib/move-since-event";
 import {
   buildMarkers,
   signalsToMarkerSignals,
+  snapToSeries,
   type ChartMarker,
 } from "@/lib/chart-markers";
 import { Pagination } from "@/components/ui/Pagination";
@@ -427,7 +428,7 @@ export default function WatchlistSymbolPage() {
   const markerWindowDays = activeRange.days ?? 365 * 5;
   const { data: markerSignals } = useQuery({
     queryKey: ["chart-marker-signals", symbol, markerWindowDays],
-    enabled: !isNewsOnly && activeRange.source === "db",
+    enabled: !isNewsOnly,
     queryFn: async () => {
       const json = await fetchJsonWithTimeout<{ signals?: Signal[]; degraded?: boolean }>(
         `/api/signals?${isForex ? "forexPair" : "commodity"}=${encodeURIComponent(symbol)}&window=${markerWindowDays}d&sort=newest&limit=${MARKER_SIGNALS_LIMIT}`,
@@ -440,12 +441,18 @@ export default function WatchlistSymbolPage() {
   const chartMarkers = useMemo<ChartMarker[]>(() => {
     if (chartData.length < 2 || !markerSignals) return [];
     const domain: [number, number] = [chartData[0].t, chartData[chartData.length - 1].t];
-    const inputs = signalsToMarkerSignals(markerSignals, symbol, isForex).map((m) => ({
-      ...m,
-      t: m.eventMs,
-    }));
+    const markerSignalsForAsset = signalsToMarkerSignals(markerSignals, symbol, isForex);
+    // Daily-style (db) ranges draw at the event time; weekly ranges draw on
+    // the nearest weekly point.
+    const inputs =
+      activeRange.source === "db"
+        ? markerSignalsForAsset.map((m) => ({ ...m, t: m.eventMs }))
+        : snapToSeries(
+            markerSignalsForAsset,
+            chartData.map((p) => p.t),
+          );
     return buildMarkers(inputs, domain);
-  }, [chartData, markerSignals, symbol, isForex]);
+  }, [chartData, markerSignals, symbol, isForex, activeRange.source]);
   const chartBoxRef = useRef<HTMLDivElement>(null);
   const [activeMarker, setActiveMarker] = useState<{ marker: ChartMarker; x: number } | null>(null);
 
@@ -941,8 +948,16 @@ export default function WatchlistSymbolPage() {
               ? "Percent change from the start of the selected range. Informational only — not a trading recommendation."
               : activeRange.source === "db"
                 ? "Triangles mark geopolitical signals reported for this asset; hover or focus one for details. Informational only — not a trading recommendation."
-                : "Weekly closes from Yahoo Finance. Informational only — not a trading recommendation."}
+                : "Weekly closes from Yahoo Finance. Triangles mark reported signals placed on the nearest weekly point; hover or focus one for details. Informational only — not a trading recommendation."}
           </p>
+          {!isOverlayActive && (markerSignals?.length ?? 0) >= MARKER_SIGNALS_LIMIT && (
+            <p
+              data-testid="chart-markers-truncated"
+              className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-1"
+            >
+              Markers show the {MARKER_SIGNALS_LIMIT} most recent signals in this range.
+            </p>
+          )}
           {isOverlayActive && (
             <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-1">
               Event markers and click-to-attribute are available when Compare is set to None.

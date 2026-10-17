@@ -99,6 +99,12 @@ runTest("marker price context uses the chart series on db ranges and the weekly 
   assert.match(source, /priceContext=\{markerPriceContext\}/);
 });
 
+runTest("weekly ranges snap markers to the weekly points and the marker query is not limited to the db source", () => {
+  assert.match(source, /snapToSeries\(\s*markerSignalsForAsset,/);
+  assert.doesNotMatch(source, /enabled: !isNewsOnly && activeRange\.source === "db",\n    queryFn: async \(\) => \{\n      const json = await fetchJsonWithTimeout<\{ signals\?: Signal\[\]; degraded/);
+  assert.match(source, /chart-markers-truncated/);
+});
+
 async function runAsync(name: string, fn: () => Promise<void>) {
   try {
     await fn();

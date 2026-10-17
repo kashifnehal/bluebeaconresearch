@@ -5,6 +5,8 @@ import {
   buildMarkers,
   directionLabel,
   markerAriaLabel,
+  medianGapMs,
+  snapToSeries,
   severityBand,
   signalsToMarkerSignals,
   type MarkerInput,
@@ -124,4 +126,62 @@ runTest("labels are descriptive and contain no buy or sell wording", () => {
   const text = `${markerAriaLabel(m)} ${directionLabel("up")} ${directionLabel(null)}`;
   assert.doesNotMatch(text, /\b(buy|sell|caused|because)\b/i);
   assert.equal(directionLabel(null), "Not stated");
+});
+
+const WEEK = 7 * DAY;
+const weekly = Array.from({ length: 10 }, (_, i) => T0 + i * WEEK);
+const sig = (id: string, dayOffset: number) => ({
+  id,
+  title: id,
+  eventMs: T0 + dayOffset * DAY,
+  severity: 6,
+  direction: null,
+  sourcesCount: 1,
+});
+
+runTest("medianGapMs reads the series spacing", () => {
+  assert.equal(medianGapMs(weekly), WEEK);
+  assert.equal(medianGapMs([1]), 0);
+  assert.equal(medianGapMs([]), 0);
+});
+
+runTest("snapToSeries places a signal on the nearest weekly point and keeps its event time", () => {
+  const out = snapToSeries([sig("a", 9), sig("b", 11)], weekly);
+  assert.equal(out[0].t, T0 + 7 * DAY); // 9 days -> nearest is day 7
+  assert.equal(out[1].t, T0 + 14 * DAY); // 11 days -> nearest is day 14
+  assert.equal(out[0].eventMs, T0 + 9 * DAY);
+});
+
+runTest("a signal in the current week after the last point still snaps to it; one far outside is dropped", () => {
+  const last = T0 + 9 * WEEK;
+  const out = snapToSeries(
+    [
+      { ...sig("near", 0), eventMs: last + 5 * DAY },
+      { ...sig("far", 0), eventMs: last + 40 * DAY },
+      { ...sig("early", 0), eventMs: T0 - 60 * DAY },
+    ],
+    weekly,
+  );
+  assert.deepEqual(out.map((o) => o.id), ["near"]);
+  assert.equal(out[0].t, last);
+});
+
+runTest("snapped signals sharing a week share one marker, and merging follows the same rule", () => {
+  const sameWeek = snapToSeries([sig("a", 8), sig("b", 9), sig("c", 10)], weekly);
+  const range: [number, number] = [weekly[0], weekly[9]];
+  const markers = buildMarkers(sameWeek, range);
+  assert.equal(markers.length, 1);
+  assert.equal(markers[0].count, 3);
+  // 14 signals across 10 weeks: above the threshold, and only same-week ones are < 2% apart.
+  const many = snapToSeries(
+    Array.from({ length: 14 }, (_, i) => sig(`m${i}`, i * 4)),
+    weekly,
+  );
+  const merged = buildMarkers(many, range);
+  assert.ok(merged.length < 14);
+  assert.equal(merged.reduce((n, m) => n + m.count, 0), many.filter((m) => m.t <= range[1]).length);
+});
+
+runTest("snapToSeries returns nothing for an empty series", () => {
+  assert.deepEqual(snapToSeries([sig("a", 1)], []), []);
 });
