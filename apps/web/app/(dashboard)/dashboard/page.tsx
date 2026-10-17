@@ -34,12 +34,6 @@ import type { Signal } from "@blue-beacon-research/shared";
 import { DASHBOARD_FEED_SUBHEAD } from "@/lib/ingestion-interval";
 import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
-import { SinceLastVisit } from "@/components/desk/SinceLastVisit";
-import { MarketsLedger } from "@/components/desk/MarketsLedger";
-import { StoryThreadCard } from "@/components/desk/StoryThreadCard";
-import { useMarketsLedger } from "@/components/desk/useMarketsLedger";
-import { groupStoryThreads, type FeedItem } from "@/lib/story-threads";
-import { biggestMover, resolveLedgerSymbols, LEDGER_WATCHLIST_STORAGE_KEY } from "@/lib/desk-ledger";
 
 // Same shape/lookup already used by PriceTicker and the watchlist pages — reusing
 // the existing /api/prices 24h-change calculation here rather than adding a new one.
@@ -131,36 +125,7 @@ export default function DashboardPage() {
       // ignore — toggle still works for this session, just not remembered
     }
   };
-  // "Group related reports" (default on). Remembered per browser; the flat list is one click away.
-  const [groupRelated, setGroupRelated] = useState(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      return window.localStorage.getItem("bbr.feed.groupRelated") !== "false";
-    } catch {
-      return true;
-    }
-  });
-  const setGroupRelatedPersisted = (next: boolean) => {
-    setGroupRelated(next);
-    try {
-      window.localStorage.setItem("bbr.feed.groupRelated", next ? "true" : "false");
-    } catch {
-      // ignore — toggle still works for this session, just not remembered
-    }
-  };
-  const { data: myPrefs, isFetched: prefsFetched } = useMyPreferences();
-  const [storedWatch, setStoredWatch] = useState<string[] | null>(null);
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(LEDGER_WATCHLIST_STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as { symbols?: unknown }) : null;
-      if (parsed && Array.isArray(parsed.symbols)) {
-        setStoredWatch(parsed.symbols.filter((x): x is string => typeof x === "string"));
-      }
-    } catch {
-      // storage unavailable — fall back to the default tracked list
-    }
-  }, []);
+  const { data: myPrefs } = useMyPreferences();
   const {
     liveSignals,
     justIn,
@@ -200,15 +165,6 @@ export default function DashboardPage() {
     refetchInterval: 60_000,
   });
   const latestPrices = pricesData?.prices ?? [];
-
-  // Markets ledger: only symbols already on the user's watchlist (server list,
-  // then the local cache, then the default list), so no extra symbols are fetched.
-  const ledgerSymbols = useMemo(
-    () => resolveLedgerSymbols(myPrefs?.watchlistSymbols, storedWatch),
-    [myPrefs?.watchlistSymbols, storedWatch],
-  );
-  const ledger = useMarketsLedger(ledgerSymbols, prefsFetched);
-  const mover = useMemo(() => biggestMover(ledger.rows), [ledger.rows]);
 
   const showMyFeedToggle = Boolean(myPrefs?.hasPreferences);
   const [quickViewSignal, setQuickViewSignal] = useState<Signal | null>(null);
@@ -295,39 +251,9 @@ export default function DashboardPage() {
   // `justIn[0]` is both the single freshest signal AND, by construction,
   // already near the top of the recency+severity blend, so this doesn't trade
   // relevance for recency — see docs/brain/15_INGESTION_PIPELINE.md §5.4.
-  // Story threads are grouped from every loaded page at once; grouping the whole
-  // loaded list gives the same result as grouping each page and merging by the same rule.
-  const feedItems = useMemo<FeedItem<Signal>[]>(() => groupStoryThreads(liveSignals), [liveSignals]);
-  const threadCount = useMemo(() => feedItems.filter((i) => i.kind === "thread").length, [feedItems]);
-  const streamItems: FeedItem<Signal>[] = groupRelated
-    ? feedItems
-    : liveSignals.map((signal) => ({ kind: "single" as const, signal }));
-  // Lead story: the first thread's lead, else the highest-severity item from the
-  // last 24 hours, else the previous pick.
-  const leadSignal = useMemo<Signal | undefined>(() => {
-    const firstThread = feedItems.find((i) => i.kind === "thread");
-    if (firstThread && firstThread.kind === "thread") return firstThread.thread.lead;
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-    let best: Signal | undefined;
-    for (const s of liveSignals) {
-      const t = Date.parse(s.createdAt);
-      if (!Number.isFinite(t) || t < cutoff) continue;
-      if (!best || s.severity > best.severity) best = s;
-    }
-    return best;
-  }, [feedItems, liveSignals]);
-  const featured = leadSignal ?? (justIn.length > 0 ? justIn[0] : liveSignals[0]);
-  const leadThread = useMemo(() => {
-    for (const i of feedItems) {
-      if (i.kind === "thread" && featured && i.thread.members.some((m) => m.id === featured.id)) {
-        return i.thread;
-      }
-    }
-    return null;
-  }, [feedItems, featured]);
-  const secondaryPool = liveSignals.filter((s) => s.id !== featured?.id);
-  const secondaryA = secondaryPool[0];
-  const secondaryB = secondaryPool[1];
+  const featured = justIn.length > 0 ? justIn[0] : liveSignals[0];
+  const secondaryA = liveSignals[1];
+  const secondaryB = liveSignals[2];
   // Real infinite scroll now (sentinelRef, below) — every loaded signal
   // renders, rather than being held back behind a client-side reveal batch.
   const streamList = liveSignals;
@@ -398,175 +324,6 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tourActive, tourPhase, featured?.id]);
 
-  const leadCard = featured ? (
-              <a
-                href={`/events/${featured.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() =>
-                  logUsageEvent(
-                    "signal_viewed",
-                    signalEventMetadata(featured),
-                    false,
-                  )
-                }
-                className="relative overflow-hidden cursor-pointer group transition-all block"
-                style={{
-                  backgroundColor: "var(--bg-primary)",
-                  border: "1px solid var(--border)",
-                }}
-              >
-                {/* Status Ribbon */}
-                <div
-                  className="absolute top-0 left-0 w-full h-[4px]"
-                  style={{
-                    backgroundColor:
-                      featured.severity >= 9 ? "var(--accent)" : "var(--border)",
-                  }}
-                />
-
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex gap-4 items-center">
-                      <span
-                        data-tour="severity-badge"
-                        className="px-2 py-0.5 text-[12px] md:text-[10px] font-bold "
-                        style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
-                          backgroundColor:
-                            featured.severity >= 9 ? "var(--accent)" : "var(--bg-container)",
-                          color: featured.severity >= 9 ? "var(--bg-app)" : "var(--text-secondary)",
-                        }}
-                      >
-                        {featured.severity >= 9
-                          ? "Highest severity"
-                          : featured.eventType || "Signal"}
-                      </span>
-                      <SeverityBadge score={featured.severity} />
-                      <MediaImpactTag
-                        entity={featured.mediaImpactEntity}
-                        caveat={featured.mediaImpactCaveat}
-                      />
-                      <span
-                        className="text-[12px] md:text-[11px]"
-                        style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
-                          color: "var(--text-muted)",
-                        }}
-                      >
-                        ID {featured.id.slice(0, 8)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="text-[12px] md:text-[10px] "
-                        style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
-                          color: "var(--text-muted)",
-                        }}
-                      >
-                        {safeFormatDistanceToNow(
-                          featured.eventDate ?? featured.createdAt,
-                        )}{" "}
-                        ago
-                      </span>
-                      <FreshTag
-                        createdAt={featured.createdAt}
-                        eventDate={featured.eventDate}
-                        className="text-[12px] md:text-[10px]"
-                        style={{
-                          fontFamily: "'IBM Plex Sans', sans-serif",
-                          color: "var(--interactive)",
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col lg:flex-row gap-8 items-end">
-                    <div className="flex-1">
-                      <h2
-                        className="font-story text-3xl md:text-4xl mb-4 leading-tight group-hover:underline"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {featured.title}
-                      </h2>
-                      {leadThread ? (
-                        <p
-                          data-testid="lead-thread-label"
-                          className="mb-4 text-[13px]"
-                          style={{ color: "var(--text-secondary)" }}
-                        >
-                          {leadThread.members.length} related reports · {leadThread.totalReports} source reports in total
-                        </p>
-                      ) : null}
-
-                      <div className="flex gap-10">
-                        <div>
-                          <div
-                            className="text-[12px] md:text-[10px] mb-1"
-                            style={{
-                              color: "var(--text-muted)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
-                            }}
-                          >
-                            Country / Region
-                          </div>
-                          <div
-                            className="text-sm font-bold "
-                            style={{
-                              color: "var(--interactive)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
-                            }}
-                          >
-                            {featured.country && countryToFlagEmoji(featured.country) ? (
-                              <span data-testid="country-flag" className="mr-1 normal-case">
-                                {countryToFlagEmoji(featured.country)}
-                              </span>
-                            ) : null}
-                            {featured.country || "Global"}
-                          </div>
-                        </div>
-                        <div data-tour="confidence-score">
-                          <div
-                            className="text-[12px] md:text-[10px] mb-1"
-                            style={{
-                              color: "var(--text-muted)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
-                            }}
-                          >
-                            Confidence
-                          </div>
-                          <div
-                            className="text-sm font-bold"
-                            style={{
-                              color: "var(--interactive)",
-                              fontFamily: "'IBM Plex Sans', sans-serif",
-                            }}
-                          >
-                            {Math.round(featured.confidence * 100)}%
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <span
-                      data-tour="analyze-impact"
-                      className="font-bold text-xs px-8 py-3 transition-all active:scale-95 duration-75 shrink-0 inline-block"
-                      style={{
-                        backgroundColor: "var(--interactive)",
-                        color: "var(--on-interactive-bg)",
-                        fontFamily: "'IBM Plex Sans', sans-serif",
-                        cursor: "pointer",
-                      }}
-                    >
-                      View assessment
-                    </span>
-                  </div>
-                </div>
-              </a>
-            ) : null;
-  const feedReady = !(isError || degraded) && !(isLoading || (liveSignals.length === 0 && !filtersActive));
-
   return (
     <div
       className="flex h-screen w-full pt-16"
@@ -623,18 +380,6 @@ export default function DashboardPage() {
               {windowExpandedLine}
             </p>
           ) : null}
-        </div>
-
-        {/* Desk home: since-last-visit + lead story (8 cols) beside the markets ledger (4 cols).
-            Mobile: one column, ledger first as a horizontal strip. */}
-        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <div className="order-2 min-w-0 space-y-6 lg:order-1 lg:col-span-8">
-            <SinceLastVisit signals={liveSignals} threadCount={threadCount} mover={mover} />
-            {feedReady ? leadCard : null}
-          </div>
-          <div className="order-1 min-w-0 lg:order-2 lg:col-span-4">
-            <MarketsLedger rows={ledger.rows} asOf={ledger.pricesUpdatedAt} loading={ledger.pricesLoading} />
-          </div>
         </div>
 
         {fallback && (
@@ -799,6 +544,169 @@ export default function DashboardPage() {
           </div>
         ) : (
           <>
+            {/* ── Featured Critical Card ────────────────────────────────── */}
+            {featured ? (
+              <a
+                href={`/events/${featured.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  logUsageEvent(
+                    "signal_viewed",
+                    signalEventMetadata(featured),
+                    false,
+                  )
+                }
+                className="mb-10 relative overflow-hidden cursor-pointer group transition-all block"
+                style={{
+                  backgroundColor: "var(--bg-primary)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                {/* Status Ribbon */}
+                <div
+                  className="absolute top-0 left-0 w-full h-[4px]"
+                  style={{
+                    backgroundColor:
+                      featured.severity >= 9 ? "var(--accent)" : "var(--border)",
+                  }}
+                />
+
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-4 items-center">
+                      <span
+                        data-tour="severity-badge"
+                        className="px-2 py-0.5 text-[12px] md:text-[10px] font-bold "
+                        style={{
+                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          backgroundColor:
+                            featured.severity >= 9 ? "var(--accent)" : "var(--bg-container)",
+                          color: featured.severity >= 9 ? "var(--bg-app)" : "var(--text-secondary)",
+                        }}
+                      >
+                        {featured.severity >= 9
+                          ? "Highest severity"
+                          : featured.eventType || "Signal"}
+                      </span>
+                      <SeverityBadge score={featured.severity} />
+                      <MediaImpactTag
+                        entity={featured.mediaImpactEntity}
+                        caveat={featured.mediaImpactCaveat}
+                      />
+                      <span
+                        className="text-[12px] md:text-[11px]"
+                        style={{
+                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        ID {featured.id.slice(0, 8)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="text-[12px] md:text-[10px] "
+                        style={{
+                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          color: "var(--text-muted)",
+                        }}
+                      >
+                        {safeFormatDistanceToNow(
+                          featured.eventDate ?? featured.createdAt,
+                        )}{" "}
+                        ago
+                      </span>
+                      <FreshTag
+                        createdAt={featured.createdAt}
+                        eventDate={featured.eventDate}
+                        className="text-[12px] md:text-[10px]"
+                        style={{
+                          fontFamily: "'IBM Plex Sans', sans-serif",
+                          color: "var(--interactive)",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col lg:flex-row gap-8 items-end">
+                    <div className="flex-1">
+                      <h2
+                        className="text-2xl font-bold mb-4 leading-tight group-hover:text-[var(--interactive)] transition-colors"
+                        style={{
+                          color: "var(--text-primary)",
+                          fontFamily: "'IBM Plex Sans', sans-serif",
+                        }}
+                      >
+                        {featured.title}
+                      </h2>
+
+                      <div className="flex gap-10">
+                        <div>
+                          <div
+                            className="text-[12px] md:text-[10px] mb-1"
+                            style={{
+                              color: "var(--text-muted)",
+                              fontFamily: "'IBM Plex Sans', sans-serif",
+                            }}
+                          >
+                            Country / Region
+                          </div>
+                          <div
+                            className="text-sm font-bold "
+                            style={{
+                              color: "var(--interactive)",
+                              fontFamily: "'IBM Plex Sans', sans-serif",
+                            }}
+                          >
+                            {featured.country && countryToFlagEmoji(featured.country) ? (
+                              <span data-testid="country-flag" className="mr-1 normal-case">
+                                {countryToFlagEmoji(featured.country)}
+                              </span>
+                            ) : null}
+                            {featured.country || "Global"}
+                          </div>
+                        </div>
+                        <div data-tour="confidence-score">
+                          <div
+                            className="text-[12px] md:text-[10px] mb-1"
+                            style={{
+                              color: "var(--text-muted)",
+                              fontFamily: "'IBM Plex Sans', sans-serif",
+                            }}
+                          >
+                            Confidence
+                          </div>
+                          <div
+                            className="text-sm font-bold"
+                            style={{
+                              color: "var(--interactive)",
+                              fontFamily: "'IBM Plex Sans', sans-serif",
+                            }}
+                          >
+                            {Math.round(featured.confidence * 100)}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span
+                      data-tour="analyze-impact"
+                      className="font-bold text-xs px-8 py-3 transition-all active:scale-95 duration-75 shrink-0 inline-block"
+                      style={{
+                        backgroundColor: "var(--interactive)",
+                        color: "var(--on-interactive-bg)",
+                        fontFamily: "'IBM Plex Sans', sans-serif",
+                        cursor: "pointer",
+                      }}
+                    >
+                      View assessment
+                    </span>
+                  </div>
+                </div>
+              </a>
+            ) : null}
+
             {/* ── Secondary Intelligence Grid ────────────────────────────── */}
             {(secondaryA || secondaryB) && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
@@ -1037,7 +945,7 @@ export default function DashboardPage() {
                   }}
                   data-feed-total={total ?? undefined}
                 >
-                  Recent signal stream
+                  Recent Signal Stream
                 </h4>
                 <div className="flex items-center gap-3">
                   <div
@@ -1068,22 +976,6 @@ export default function DashboardPage() {
                       );
                     })}
                   </div>
-                  {feedViewMode === "cards" ? (
-                    <button
-                      type="button"
-                      data-testid="feed-group-related"
-                      aria-pressed={groupRelated}
-                      onClick={() => setGroupRelatedPersisted(!groupRelated)}
-                      className="px-3 py-1 text-[12px] md:text-[10px] font-bold cursor-pointer border"
-                      style={{
-                        borderColor: "var(--border)",
-                        backgroundColor: groupRelated ? "var(--interactive-bg)" : "transparent",
-                        color: groupRelated ? "var(--on-interactive-bg)" : "var(--text-muted)",
-                      }}
-                    >
-                      Group related reports
-                    </button>
-                  ) : null}
                   {feedViewMode === "table" ? (
                     <button
                       type="button"
@@ -1111,12 +1003,7 @@ export default function DashboardPage() {
                 style={{ borderColor: "var(--border)" }}
               >
                 {streamList.length > 0 ? (
-                  streamItems.map((entry, index) => {
-                    if (entry.kind === "thread") {
-                      return <StoryThreadCard key={`thread-${entry.thread.id}`} thread={entry.thread} />;
-                    }
-                    const item = entry.signal;
-                    return (
+                  streamList.map((item, index) => (
                     <div
                       key={item.id}
                       className="px-6 py-4 flex items-center gap-6 group transition-colors"
@@ -1224,8 +1111,7 @@ export default function DashboardPage() {
                         <span className="material-symbols-outlined text-lg">preview</span>
                       </button>
                     </div>
-                    );
-                  })
+                  ))
                 ) : (
                   <div className="py-20 text-center flex flex-col items-center gap-4">
                     <span className="material-symbols-outlined text-4xl text-[var(--border)]">
