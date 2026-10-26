@@ -99,7 +99,33 @@ function fixtureEvent(overrides: Partial<Fixture> = {}): Fixture {
 }
 
 async function main() {
-  const { EventTable, OptionsIvNote } = await import("./page");
+  const { EventTable, OptionsIvNote, ScheduleEndNotice } = await import("./page");
+
+  await runTest("ScheduleEndNotice shows nothing when the last event is far out", async () => {
+    const events = [fixtureEvent({ date: "2026-12-01" })];
+    const today = new Date("2026-10-26T00:00:00Z");
+    const { html, root } = await mount(createElement(ScheduleEndNotice, { events, today }));
+    try {
+      assert.doesNotMatch(html, /calendar-schedule-end-notice/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("ScheduleEndNotice shows the end date and 'added regularly' line within 14 days", async () => {
+    const events = [fixtureEvent({ date: "2026-11-03" })];
+    const today = new Date("2026-10-26T00:00:00Z");
+    const { html, root } = await mount(createElement(ScheduleEndNotice, { events, today }));
+    try {
+      assert.match(html, /data-testid="calendar-schedule-end-notice"/);
+      const text = visibleText(html);
+      assert.match(text, /ends on/);
+      assert.match(text, /Nov(ember)? 3,? 2026|November 3/);
+      assert.match(text, /More dates are added regularly/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
 
   await runTest("OptionsIvNote cites Ederington and Lee, not Wright, and keeps its testid", async () => {
     const { html, root } = await mount(createElement(OptionsIvNote));

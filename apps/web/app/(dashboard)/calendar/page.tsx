@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import {
   EMPTY_CALENDAR_FILTERS,
   eventMatchesCalendarFilters,
+  scheduleEndNotice,
   visibleValueColumns,
   type CalendarFilterValue,
   type CalendarImpact,
@@ -106,6 +107,16 @@ function MagnitudeLines({ lines }: { lines: string[] }) {
 
 const OPTIONS_IV_NOTE =
   "Implied volatility on options usually falls after a scheduled release (Ederington and Lee, 1996, Journal of Financial and Quantitative Analysis; Fernandez-Perez and Lopez, 2023, Journal of Futures Markets, for crude oil, gold and silver).";
+
+export function ScheduleEndNotice({ events, today }: { events: CalendarEvent[]; today: Date }) {
+  const notice = scheduleEndNotice(events, today);
+  if (!notice) return null;
+  return (
+    <p data-testid="calendar-schedule-end-notice" className="text-on-surface/50 mt-1 text-sm">
+      {notice}
+    </p>
+  );
+}
 
 export function OptionsIvNote() {
   return (
@@ -686,6 +697,7 @@ export default function CalendarPage() {
             Fed, ECB, BOJ, and major US data releases — the scheduled events that move the instruments Blue Beacon
             tracks.
           </p>
+          {now && <ScheduleEndNotice events={EVENTS} today={now} />}
         </div>
         <button
           type="button"

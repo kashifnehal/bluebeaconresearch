@@ -39,3 +39,28 @@ export function visibleValueColumns(
   };
 }
 
+// DESIGN CHOICE (2026-10-26): 14 days is an arbitrary "give enough runway to
+// notice" threshold, not a sourced figure.
+const SCHEDULE_END_WARNING_DAYS = 14;
+
+/**
+ * A plain-language line when the loaded schedule runs out soon, so the page
+ * doesn't silently look complete when it's actually just unextended. Returns
+ * null when the last event is far enough out, or when there are no events.
+ */
+export function scheduleEndNotice(events: { date: string }[], today: Date): string | null {
+  if (events.length === 0) return null;
+  const lastDate = events.map((e) => e.date).sort().at(-1)!;
+  const last = new Date(`${lastDate}T00:00:00Z`);
+  const diffDays = (last.getTime() - today.getTime()) / (24 * 60 * 60 * 1000);
+  if (diffDays >= SCHEDULE_END_WARNING_DAYS) return null;
+  const formatted = last.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return `The schedule below ends on ${formatted}. More dates are added regularly.`;
+}
+
