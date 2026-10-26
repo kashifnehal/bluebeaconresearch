@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createElement, useState } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Same linkedom + react-dom/client harness as components/signals/SignalQuickView.test.tsx
 // and components/CommandPalette.test.tsx — see those files for why this setup is needed
@@ -33,6 +34,10 @@ g.cancelAnimationFrame = caf;
 (window as any).requestAnimationFrame = raf;
 (window as any).cancelAnimationFrame = caf;
 g.IS_REACT_ACT_ENVIRONMENT = true;
+// next/link's prefetch-on-visible wiring calls requestIdleCallback, which
+// references the browser global `self` — absent under plain linkedom.
+if (typeof g.self === "undefined") g.self = g;
+if (typeof (window as any).self === "undefined") (window as any).self = window;
 
 function visibleText(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
@@ -175,6 +180,108 @@ async function main() {
       assert.match(visibleText(html), /USDA WASDE/);
     } finally {
       await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("mounting the page sends exactly one calendar_viewed usage event", async () => {
+    const { AppRouterContext } = await import(
+      "next/dist/shared/lib/app-router-context.shared-runtime.js"
+    );
+
+    const eventsSent: { eventType: string; metadata?: unknown }[] = [];
+    const originalFetch = g.fetch;
+    g.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/market-impact")) {
+        return new Response(JSON.stringify({ magnitudes: {} }), { status: 200 });
+      }
+      if (url.includes("/api/events") && init?.method === "POST") {
+        eventsSent.push(JSON.parse(String(init.body)));
+        return new Response(JSON.stringify({ inserted: true }), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    };
+
+    const fakeRouter = {
+      push: () => {},
+      replace: () => {},
+      back: () => {},
+      forward: () => {},
+      refresh: () => {},
+      prefetch: async () => {},
+    };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { default: CalendarPage } = await import("./page");
+
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(
+          createElement(
+            AppRouterContext.Provider,
+            { value: fakeRouter },
+            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+          ),
+        );
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+
+      const viewedCalls = eventsSent.filter((e) => e.eventType === "calendar_viewed");
+      assert.equal(viewedCalls.length, 1);
+
+      const toggle = document.querySelector('[data-testid="calendar-my-commodities-toggle"]')!;
+      await act(async () => {
+        (toggle as HTMLElement).click();
+      });
+
+      const toggledCalls = eventsSent.filter((e) => e.eventType === "calendar_my_commodities_toggled");
+      assert.equal(toggledCalls.length, 1);
+      assert.deepEqual(toggledCalls[0].metadata, { on: true });
+    } finally {
+      await act(async () => root.unmount());
+      g.fetch = originalFetch;
+    }
+  });
+
+  await runTest("clicking a source link sends calendar_source_clicked with only the event id", async () => {
+    const eventsSent: { eventType: string; metadata?: unknown }[] = [];
+    const originalFetch = g.fetch;
+    g.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/events") && init?.method === "POST") {
+        eventsSent.push(JSON.parse(String(init.body)));
+        return new Response(JSON.stringify({ inserted: true }), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    };
+    try {
+      const events = [fixtureEvent({ id: "evt-click-me" })];
+      const { root } = await mount(
+        createElement(EventTable, {
+          events,
+          timeZone: "utc",
+          marketImpact: null,
+          visibleColumns: { forecast: false, previous: false, actual: false },
+        }),
+      );
+      try {
+        const link = document.querySelector('a[href="https://www.eia.gov/petroleum/supply/weekly/schedule.php"]')!;
+        await act(async () => {
+          (link as HTMLElement).click();
+        });
+        const clickCalls = eventsSent.filter((e) => e.eventType === "calendar_source_clicked");
+        assert.equal(clickCalls.length, 1);
+        assert.deepEqual(clickCalls[0].metadata, { id: "evt-click-me" });
+      } finally {
+        await act(async () => root.unmount());
+      }
+    } finally {
+      g.fetch = originalFetch;
     }
   });
 

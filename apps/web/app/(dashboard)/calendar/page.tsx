@@ -15,6 +15,7 @@ import {
   type CalendarImpact,
 } from "@/lib/calendar-filters";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
+import { logUsageEvent } from "@/lib/funnel-events";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
   type MarketImpactMagnitude,
@@ -390,6 +391,7 @@ export function EventTable({
               href={e.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => logUsageEvent("calendar_source_clicked", { id: e.id }, "entity")}
               className="hover:text-primary transition-colors inline-flex items-start gap-1.5 text-sm font-bold text-on-surface"
               title={`Source: ${e.sourceLabel}`}
             >
@@ -477,6 +479,7 @@ export function EventTable({
                       href={e.sourceUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => logUsageEvent("calendar_source_clicked", { id: e.id }, "entity")}
                       className="hover:text-primary transition-colors inline-flex items-center gap-1.5"
                       title={`Source: ${e.sourceLabel}`}
                     >
@@ -716,6 +719,9 @@ export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [marketImpact, setMarketImpact] = useState<Record<string, CalendarMarketImpactEntry> | null>(null);
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    logUsageEvent("calendar_viewed");
+  }, []);
 
   const { data: myPreferences } = useMyPreferences();
   const mySymbols = useMemo(
@@ -732,6 +738,11 @@ export default function CalendarPage() {
       onlyMineDefaulted.current = true;
     }
   }, [mySymbols]);
+  function handleOnlyMineChange(next: boolean) {
+    setOnlyMine(next);
+    onlyMineDefaulted.current = true;
+    logUsageEvent("calendar_my_commodities_toggled", { on: next }, false);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -839,7 +850,7 @@ export default function CalendarPage() {
         timeZone={timeZone}
         onTimeZoneChange={setTimeZone}
         onlyMine={onlyMine}
-        onOnlyMineChange={setOnlyMine}
+        onOnlyMineChange={handleOnlyMineChange}
       />
 
       {mounted && (
