@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { visibleValueColumns } from "./calendar-filters";
+import { eventMatchesSymbols, visibleValueColumns } from "./calendar-filters";
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -38,4 +38,28 @@ runTest("visibleValueColumns is independent per column with a mixed dataset", ()
 
 runTest("visibleValueColumns on an empty event list hides everything", () => {
   assert.deepEqual(visibleValueColumns([]), { forecast: false, previous: false, actual: false });
+});
+
+// "my symbols" is the union of onboarding preferences (commodities) and
+// watchlist follows — stubbed here the same way useMyPreferences() would
+// combine them, without mounting the real hook.
+const stubbedPreferencesCommodities = ["USOIL"];
+const stubbedWatchlistFollows = ["CORN"];
+const mySymbols = [...stubbedPreferencesCommodities, ...stubbedWatchlistFollows];
+
+runTest("eventMatchesSymbols matches an Energy event against a followed Energy symbol", () => {
+  assert.equal(eventMatchesSymbols({ category: "Energy" }, mySymbols), true);
+});
+
+runTest("eventMatchesSymbols matches an Agriculture event against a watchlist-followed symbol", () => {
+  assert.equal(eventMatchesSymbols({ category: "Agriculture" }, mySymbols), true);
+});
+
+runTest("eventMatchesSymbols rejects a mapped category with none of its assets in my symbols", () => {
+  assert.equal(eventMatchesSymbols({ category: "Agriculture" }, ["USOIL"]), false);
+});
+
+runTest("eventMatchesSymbols always keeps an unmapped (macro) category, even with no symbols", () => {
+  assert.equal(eventMatchesSymbols({ category: "Monetary policy" }, []), true);
+  assert.equal(eventMatchesSymbols({ category: "Labor" }, mySymbols), true);
 });

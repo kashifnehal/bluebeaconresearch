@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createElement } from "react";
+import { createElement, useState } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
@@ -99,8 +99,84 @@ function fixtureEvent(overrides: Partial<Fixture> = {}): Fixture {
 }
 
 async function main() {
-  const { EventTable, OptionsIvNote, ScheduleEndNotice, WeeklyRhythmRow, NextEventChip } = await import("./page");
+  const { EventTable, OptionsIvNote, ScheduleEndNotice, WeeklyRhythmRow, NextEventChip, MyCommoditiesToggle } =
+    await import("./page");
   const { weeklyRhythm } = await import("@/lib/calendar-rhythm");
+  const { eventMatchesSymbols } = await import("@/lib/calendar-filters");
+
+  // Mirrors exactly how CalendarPage wires useMyPreferences()'s output into
+  // MyCommoditiesToggle + eventMatchesSymbols + EventTable — built here from
+  // real exports, with "my symbols" passed in directly (stubbed, standing in
+  // for a resolved preferences+watchlist union) rather than mounting the
+  // Supabase-backed hook itself.
+  function MyCommoditiesTestHarness({
+    events,
+    mySymbols,
+  }: {
+    events: Fixture[];
+    mySymbols: string[];
+  }) {
+    const [onlyMine, setOnlyMine] = useState(mySymbols.length > 0);
+    const visible = onlyMine ? events.filter((e) => eventMatchesSymbols(e, mySymbols)) : events;
+    return createElement(
+      "div",
+      null,
+      createElement(MyCommoditiesToggle, { checked: onlyMine, onChange: setOnlyMine }),
+      createElement(EventTable, {
+        events: visible,
+        timeZone: "utc",
+        marketImpact: null,
+        highlightAllMarkets: onlyMine,
+        visibleColumns: { forecast: false, previous: false, actual: false },
+      }),
+    );
+  }
+
+  await runTest("My commodities toggle defaults on when my symbols is non-empty, filtering out non-matching events", async () => {
+    const events = [
+      fixtureEvent({ id: "evt-energy", category: "Energy", event: "EIA Weekly Petroleum Status Report" }),
+      fixtureEvent({ id: "evt-agri", category: "Agriculture", event: "USDA WASDE" }),
+      fixtureEvent({ id: "evt-macro", category: "Monetary policy", event: "FOMC Interest Rate Decision" }),
+    ];
+    const { html, root } = await mount(createElement(MyCommoditiesTestHarness, { events, mySymbols: ["USOIL"] }));
+    try {
+      assert.match(html, /aria-pressed="true"/);
+      const text = visibleText(html);
+      assert.match(text, /EIA Weekly Petroleum Status Report/); // Energy -> USOIL matches
+      assert.doesNotMatch(text, /USDA WASDE/); // Agriculture -> WHEAT\/CORN, no match
+      assert.match(text, /FOMC Interest Rate Decision/); // unmapped macro event always stays
+      assert.match(html, /data-testid="calendar-all-markets-tag"/);
+
+      // Toggle off — everything (including USDA WASDE) should reappear.
+      const toggle = document.querySelector('[data-testid="calendar-my-commodities-toggle"]')!;
+      await act(async () => {
+        (toggle as HTMLElement).click();
+      });
+      const offText = visibleText(document.body.innerHTML);
+      assert.match(offText, /USDA WASDE/);
+      assert.match(document.body.innerHTML, /aria-pressed="false"/);
+
+      // Toggle back on — USDA WASDE should hide again.
+      await act(async () => {
+        (toggle as HTMLElement).click();
+      });
+      const onAgainText = visibleText(document.body.innerHTML);
+      assert.doesNotMatch(onAgainText, /USDA WASDE/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("My commodities toggle defaults off when my symbols is empty", async () => {
+    const events = [fixtureEvent({ id: "evt-agri", category: "Agriculture", event: "USDA WASDE" })];
+    const { html, root } = await mount(createElement(MyCommoditiesTestHarness, { events, mySymbols: [] }));
+    try {
+      assert.match(html, /aria-pressed="false"/);
+      assert.match(visibleText(html), /USDA WASDE/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
 
   await runTest("WeeklyRhythmRow renders every entry with its day and event name", async () => {
     const rhythm = weeklyRhythm();

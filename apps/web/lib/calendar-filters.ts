@@ -64,3 +64,23 @@ export function scheduleEndNotice(events: { date: string }[], today: Date): stri
   return `The schedule below ends on ${formatted}. More dates are added regularly.`;
 }
 
+// Which #227-tracked assets a calendar category maps to. Only categories with
+// an obvious, direct commodity link are mapped — macro releases (Monetary
+// policy, Labor, Growth, Inflation) have no single asset they belong to.
+export const CATEGORY_ASSET_MAP: Record<string, string[]> = {
+  Energy: ["USOIL", "UKOIL"],
+  Agriculture: ["WHEAT", "CORN"],
+};
+
+// DESIGN CHOICE (2026-10-26): an event with no asset mapping (a macro
+// release) always matches the "My commodities" filter and is labelled "All
+// markets" in the UI rather than hidden — hiding FOMC/CPI/NFP behind a
+// commodity-only filter would make the calendar look emptier than it is.
+// DESIGN CHOICE: "my symbols" is the union of onboarding preferences and
+// watchlist follows, not just one or the other.
+export function eventMatchesSymbols(event: { category: string }, symbols: string[]): boolean {
+  const assets = CATEGORY_ASSET_MAP[event.category];
+  if (!assets) return true;
+  return assets.some((asset) => symbols.includes(asset));
+}
+

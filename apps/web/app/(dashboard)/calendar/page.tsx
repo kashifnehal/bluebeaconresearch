@@ -1,17 +1,20 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import calendarData from "@/data/economic-calendar.json";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import {
+  CATEGORY_ASSET_MAP,
   EMPTY_CALENDAR_FILTERS,
   eventMatchesCalendarFilters,
+  eventMatchesSymbols,
   scheduleEndNotice,
   visibleValueColumns,
   type CalendarFilterValue,
   type CalendarImpact,
 } from "@/lib/calendar-filters";
+import { useMyPreferences } from "@/hooks/useMyPreferences";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
   type MarketImpactMagnitude,
@@ -53,15 +56,6 @@ type CalendarMarketImpactEntry = {
   magnitude: MarketImpactMagnitude | null;
   timeHorizonLabel: TimeHorizonLabel | null;
   baselines?: WindowMoveBaseline[];
-};
-
-// Which #227-tracked assets a calendar category's magnitude line should draw
-// from. Only categories with an obvious, direct commodity link are mapped —
-// e.g. NGAS is a #227-gated asset but nothing in this calendar is a
-// natural-gas-specific release, so it's deliberately absent here.
-const CATEGORY_ASSET_MAP: Record<string, string[]> = {
-  Energy: ["USOIL", "UKOIL"],
-  Agriculture: ["WHEAT", "CORN"],
 };
 
 const MAGNITUDE_ASSETS = [...new Set(Object.values(CATEGORY_ASSET_MAP).flat())];
@@ -315,16 +309,58 @@ function TentativeTag() {
   );
 }
 
+function AllMarketsTag() {
+  return (
+    <span
+      data-testid="calendar-all-markets-tag"
+      className="inline-flex items-center px-1.5 py-0.5 text-[10px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border border-outline-variant/20 text-on-surface/40"
+    >
+      All markets
+    </span>
+  );
+}
+
+export function MyCommoditiesToggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid="calendar-my-commodities-toggle"
+      aria-pressed={checked}
+      onClick={() => onChange(!checked)}
+      className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+      style={{
+        fontFamily: "'Space Grotesk', sans-serif",
+        backgroundColor: checked ? "var(--accent)" : "var(--bg-container)",
+        color: checked ? "#005f40" : "var(--text-secondary)",
+        borderColor: checked ? "var(--accent)" : "var(--border)",
+      }}
+    >
+      My commodities
+    </button>
+  );
+}
+
 export function EventTable({
   events,
   timeZone,
   marketImpact,
   visibleColumns = VISIBLE_VALUE_COLUMNS,
+  highlightAllMarkets = false,
 }: {
   events: CalendarEvent[];
   timeZone: TimeZoneMode;
   marketImpact: Record<string, CalendarMarketImpactEntry> | null;
   visibleColumns?: { forecast: boolean; previous: boolean; actual: boolean };
+  // Only meaningful while the "My commodities" filter is on — see
+  // eventMatchesSymbols/CATEGORY_ASSET_MAP: an unmapped-category event always
+  // stays visible under that filter, labelled "All markets" so it's clear why.
+  highlightAllMarkets?: boolean;
 }) {
   if (events.length === 0) {
     return <p className="text-xs text-on-surface/50 px-2 py-6 italic text-center">No events in this range.</p>;
@@ -369,6 +405,7 @@ export function EventTable({
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <span className="text-[12px] text-on-surface/70">{e.country}</span>
               <CategoryTag category={e.category} />
+              {highlightAllMarkets && !CATEGORY_ASSET_MAP[e.category] && <AllMarketsTag />}
               <span className="mono text-[12px] text-on-surface/70">{formatEventDate(e, timeZone)}</span>
               <span className="mono text-[12px] text-on-surface/70" title={e.timeNote}>{formatEventTime(e, timeZone)}</span>
             </div>
@@ -453,8 +490,9 @@ export function EventTable({
                       </p>
                     )}
                   </td>
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 flex items-center gap-1.5">
                     <CategoryTag category={e.category} />
+                    {highlightAllMarkets && !CATEGORY_ASSET_MAP[e.category] && <AllMarketsTag />}
                   </td>
                   {visibleColumns.forecast && (
                     <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
@@ -488,11 +526,15 @@ function CalendarFilters({
   onChange,
   timeZone,
   onTimeZoneChange,
+  onlyMine,
+  onOnlyMineChange,
 }: {
   filters: CalendarFilterValue;
   onChange: (next: CalendarFilterValue) => void;
   timeZone: TimeZoneMode;
   onTimeZoneChange: (next: TimeZoneMode) => void;
+  onlyMine: boolean;
+  onOnlyMineChange: (next: boolean) => void;
 }) {
   const fieldClass = "flex items-center gap-2";
   const labelClass = "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
@@ -575,6 +617,8 @@ function CalendarFilters({
           })}
         </div>
       </div>
+
+      <MyCommoditiesToggle checked={onlyMine} onChange={onOnlyMineChange} />
     </div>
   );
 }
@@ -673,6 +717,22 @@ export default function CalendarPage() {
   const [marketImpact, setMarketImpact] = useState<Record<string, CalendarMarketImpactEntry> | null>(null);
   useEffect(() => setMounted(true), []);
 
+  const { data: myPreferences } = useMyPreferences();
+  const mySymbols = useMemo(
+    () => Array.from(new Set([...(myPreferences?.commodities ?? []), ...(myPreferences?.watchlistSymbols ?? [])])),
+    [myPreferences],
+  );
+  const [onlyMine, setOnlyMine] = useState(false);
+  const onlyMineDefaulted = useRef(false);
+  useEffect(() => {
+    // Default on only the first time mySymbols resolves non-empty — once the
+    // viewer has touched the toggle themselves, this effect leaves it alone.
+    if (!onlyMineDefaulted.current && mySymbols.length > 0) {
+      setOnlyMine(true);
+      onlyMineDefaulted.current = true;
+    }
+  }, [mySymbols]);
+
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/market-impact?assets=${MAGNITUDE_ASSETS.join(",")}`)
@@ -709,6 +769,7 @@ export default function CalendarPage() {
     const filteredEvents: CalendarEvent[] = [];
     for (const e of EVENTS) {
       if (!eventMatchesCalendarFilters(e, filters)) continue;
+      if (onlyMine && !eventMatchesSymbols(e, mySymbols)) continue;
       filteredEvents.push(e);
       const dt = eventDateTime(e);
       if (dt >= start && dt < end) thisWeek.push(e);
@@ -731,7 +792,7 @@ export default function CalendarPage() {
     const selectedDayEvents = selectedDay ? filteredEvents.filter((e) => e.date === selectedDay) : [];
 
     return { thisWeek, upcoming, nextEvent, weekDays, selectedDayEvents };
-  }, [now, filters, selectedDay]);
+  }, [now, filters, selectedDay, onlyMine, mySymbols]);
 
   // Whatever the page is currently showing below — the day-strip drill-down when
   // active, otherwise This Week + Upcoming — so the export always matches what's
@@ -777,6 +838,8 @@ export default function CalendarPage() {
         onChange={setFilters}
         timeZone={timeZone}
         onTimeZoneChange={setTimeZone}
+        onlyMine={onlyMine}
+        onOnlyMineChange={setOnlyMine}
       />
 
       {mounted && (
@@ -818,7 +881,7 @@ export default function CalendarPage() {
             </button>
           </div>
           <div className="p-2">
-            <EventTable events={selectedDayEvents} timeZone={timeZone} marketImpact={marketImpact} />
+            <EventTable events={selectedDayEvents} timeZone={timeZone} marketImpact={marketImpact} highlightAllMarkets={onlyMine} />
           </div>
         </section>
       ) : (
@@ -833,7 +896,7 @@ export default function CalendarPage() {
               <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">This Week</span>
             </div>
             <div className="p-2">
-              <EventTable events={thisWeek} timeZone={timeZone} marketImpact={marketImpact} />
+              <EventTable events={thisWeek} timeZone={timeZone} marketImpact={marketImpact} highlightAllMarkets={onlyMine} />
             </div>
           </section>
 
@@ -849,7 +912,7 @@ export default function CalendarPage() {
               </span>
             </div>
             <div className="p-2">
-              <EventTable events={upcoming} timeZone={timeZone} marketImpact={marketImpact} />
+              <EventTable events={upcoming} timeZone={timeZone} marketImpact={marketImpact} highlightAllMarkets={onlyMine} />
             </div>
           </section>
         </>
