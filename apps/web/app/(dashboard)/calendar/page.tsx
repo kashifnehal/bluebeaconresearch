@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import {
   EMPTY_CALENDAR_FILTERS,
   eventMatchesCalendarFilters,
+  visibleValueColumns,
   type CalendarFilterValue,
   type CalendarImpact,
 } from "@/lib/calendar-filters";
@@ -104,7 +105,18 @@ function MagnitudeLines({ lines }: { lines: string[] }) {
 }
 
 const OPTIONS_IV_NOTE =
-  "Options traders should note: implied volatility on these instruments typically rises heading into a scheduled release like this and falls sharply afterward (a ‘volatility crush’) — Wright (2021), NBER Working Paper 28306; Cboe and CME Group trader education.";
+  "Implied volatility on options usually falls after a scheduled release (Ederington and Lee, 1996, Journal of Financial and Quantitative Analysis; Fernandez-Perez and Lopez, 2023, Journal of Futures Markets, for crude oil, gold and silver).";
+
+export function OptionsIvNote() {
+  return (
+    <p
+      data-testid="calendar-iv-note"
+      className="mt-4 pt-4 border-t border-outline-variant/10 text-[12px] md:text-[11px] leading-relaxed text-on-surface/50"
+    >
+      {OPTIONS_IV_NOTE}
+    </p>
+  );
+}
 
 const EVENTS = (calendarData.events as CalendarEvent[]).slice().sort((a, b) => {
   const ak = `${a.date}T${a.time ?? "00:00"}`;
@@ -114,13 +126,12 @@ const EVENTS = (calendarData.events as CalendarEvent[]).slice().sort((a, b) => {
 
 const COUNTRIES = Array.from(new Set(EVENTS.map((e) => e.country))).sort();
 const CATEGORIES = Array.from(new Set(EVENTS.map((e) => e.category))).sort();
-const IMPACT_LEVELS: Impact[] = ["high", "medium", "low"];
 
-const IMPACT_META: Record<Impact, { emoji: string; label: string; className: string }> = {
-  high: { emoji: "🔴", label: "High", className: "bg-error-container/20 border-error/50 text-error" },
-  medium: { emoji: "🟡", label: "Medium", className: "bg-[#ffb340]/10 border-[#ffb340]/50 text-[#ffb340]" },
-  low: { emoji: "🟢", label: "Low", className: "bg-primary/10 border-primary/50 text-primary" },
-};
+// impact rating hidden: no documented method
+// (_meta in economic-calendar.json has no written method for how `impact` is
+// assigned, so the bars/filter that would present it as a rated fact are
+// hidden. The field stays on CalendarEvent/the JSON for when one exists.)
+const VISIBLE_VALUE_COLUMNS = visibleValueColumns(EVENTS);
 
 /** Event date+time as a real UTC Date, for sorting/countdown/week-filtering. Events with no
  * announced time (e.g. the OPEC report) sort/compare as start-of-day UTC. */
@@ -261,32 +272,42 @@ function Countdown({ target }: { target: Date }) {
   );
 }
 
-function ImpactBadge({ impact }: { impact: Impact }) {
-  const meta = IMPACT_META[impact];
+function CategoryTag({ category }: { category: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border ${meta.className}`}
-      aria-label={`${meta.label} impact`}
+      data-testid="calendar-category-tag"
+      className="inline-flex items-center px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border border-outline-variant/30 text-on-surface/60"
     >
-      <span aria-hidden="true">{meta.emoji}</span>
-      {meta.label}
+      {category}
     </span>
   );
 }
 
-function EventTable({
+export function EventTable({
   events,
   timeZone,
   marketImpact,
+  visibleColumns = VISIBLE_VALUE_COLUMNS,
 }: {
   events: CalendarEvent[];
   timeZone: TimeZoneMode;
   marketImpact: Record<string, CalendarMarketImpactEntry> | null;
+  visibleColumns?: { forecast: boolean; previous: boolean; actual: boolean };
 }) {
   if (events.length === 0) {
     return <p className="text-xs text-on-surface/50 px-2 py-6 italic text-center">No events in this range.</p>;
   }
   const timeHeader = timeZone === "utc" ? "Time (UTC)" : "Time (local)";
+  const headers = [
+    "Date",
+    timeHeader,
+    "Country",
+    "Event",
+    "Category",
+    ...(visibleColumns.forecast ? ["Forecast"] : []),
+    ...(visibleColumns.previous ? ["Previous"] : []),
+    ...(visibleColumns.actual ? ["Actual"] : []),
+  ];
   return (
     <>
       {/* Mobile: stacked cards — a table's column order can't put "Event" (the thing that matters)
@@ -314,24 +335,30 @@ function EventTable({
             )}
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <span className="text-[12px] text-on-surface/70">{e.country}</span>
-              <ImpactBadge impact={e.impact} />
+              <CategoryTag category={e.category} />
               <span className="mono text-[12px] text-on-surface/70">{formatEventDate(e, timeZone)}</span>
               <span className="mono text-[12px] text-on-surface/70" title={e.timeNote}>{formatEventTime(e, timeZone)}</span>
             </div>
-            {(e.forecast != null || e.previous != null || e.actual != null) && (
+            {(visibleColumns.forecast || visibleColumns.previous || visibleColumns.actual) && (
               <div className="mt-2 grid grid-cols-3 gap-2">
-                <div>
-                  <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Forecast</div>
-                  <div className="mono text-[12px] text-on-surface/40">{e.forecast ?? "—"}</div>
-                </div>
-                <div>
-                  <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Previous</div>
-                  <div className="mono text-[12px] text-on-surface/40">{e.previous ?? "—"}</div>
-                </div>
-                <div>
-                  <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Actual</div>
-                  <div className="mono text-[12px] text-on-surface/40">{e.actual ?? "—"}</div>
-                </div>
+                {visibleColumns.forecast && (
+                  <div>
+                    <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Forecast</div>
+                    <div className="mono text-[12px] text-on-surface/40">{e.forecast ?? "—"}</div>
+                  </div>
+                )}
+                {visibleColumns.previous && (
+                  <div>
+                    <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Previous</div>
+                    <div className="mono text-[12px] text-on-surface/40">{e.previous ?? "—"}</div>
+                  </div>
+                )}
+                {visibleColumns.actual && (
+                  <div>
+                    <div className="label text-[9px] tracking-widest text-outline font-bold uppercase">Actual</div>
+                    <div className="mono text-[12px] text-on-surface/40">{e.actual ?? "—"}</div>
+                  </div>
+                )}
               </div>
             )}
             {magnitudeLines.length > 0 && (
@@ -349,7 +376,7 @@ function EventTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-outline-variant/20">
-              {["Date", timeHeader, "Country", "Event", "Impact", "Forecast", "Previous", "Actual"].map((h) => (
+              {headers.map((h) => (
                 <th
                   key={h}
                   className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase py-2.5 px-3 whitespace-nowrap"
@@ -393,15 +420,21 @@ function EventTable({
                     )}
                   </td>
                   <td className="py-3 px-3">
-                    <ImpactBadge impact={e.impact} />
+                    <CategoryTag category={e.category} />
                   </td>
-                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
-                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
-                  <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
+                  {visibleColumns.forecast && (
+                    <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.forecast ?? "—"}</td>
+                  )}
+                  {visibleColumns.previous && (
+                    <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.previous ?? "—"}</td>
+                  )}
+                  {visibleColumns.actual && (
+                    <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
+                  )}
                 </tr>
                 {magnitudeLines.length > 0 && (
                   <tr className="bg-surface-bright/5">
-                    <td colSpan={8} className="px-3 pb-3 -mt-1 space-y-1">
+                    <td colSpan={headers.length} className="px-3 pb-3 -mt-1 space-y-1">
                       <MagnitudeLines lines={magnitudeLines} />
                     </td>
                   </tr>
@@ -437,26 +470,6 @@ function CalendarFilters({
       data-testid="calendar-filter-bar"
       className="flex flex-wrap gap-3 items-center mb-8"
     >
-      <div className={fieldClass}>
-        <label htmlFor="calendar-filter-importance" className={labelClass} style={labelStyle}>
-          Importance
-        </label>
-        <select
-          id="calendar-filter-importance"
-          data-testid="calendar-filter-importance"
-          value={filters.importance}
-          onChange={(e) => patch({ importance: e.target.value as CalendarImpact | "" })}
-          className={SELECT_CLASSES}
-        >
-          <option value="">All</option>
-          {IMPACT_LEVELS.map((level) => (
-            <option key={level} value={level}>
-              {IMPACT_META[level].label}
-            </option>
-          ))}
-        </select>
-      </div>
-
       <div className={fieldClass}>
         <label htmlFor="calendar-filter-country" className={labelClass} style={labelStyle}>
           Country
@@ -727,14 +740,7 @@ export default function CalendarPage() {
             </div>
           )}
         </div>
-        {nextHighImpact && (
-          <p
-            data-testid="calendar-iv-note"
-            className="mt-4 pt-4 border-t border-outline-variant/10 text-[12px] md:text-[11px] leading-relaxed text-on-surface/50"
-          >
-            {OPTIONS_IV_NOTE}
-          </p>
-        )}
+        {nextHighImpact && <OptionsIvNote />}
       </section>
 
       {mounted && (
