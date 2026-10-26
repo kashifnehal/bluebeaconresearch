@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createElement } from "react";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 
 import {
+  formatFallbackShareLine,
   formatStatNumber,
   loadAcledState,
   loadHowItWorksSignalCounts,
@@ -14,6 +18,31 @@ import {
   type HowItWorksCountClient,
   type HowItWorksRowsClient,
 } from "./how-it-works-stats";
+
+declare module "linkedom" {
+  export function parseHTML(html: string): { window: any; document: Document };
+}
+
+import { parseHTML } from "linkedom";
+
+const { window: domWindow, document: domDocument } = parseHTML("<!doctype html><html><body></body></html>");
+const g = globalThis as any;
+for (const key of ["window", "document", "HTMLElement", "Element", "Node", "DocumentFragment", "MutationObserver"] as const) {
+  Object.defineProperty(g, key, {
+    value: key === "window" ? domWindow : key === "document" ? domDocument : (domWindow as any)[key],
+    configurable: true,
+  });
+}
+const computedStyle = () => ({ getPropertyValue: () => "", contentVisibility: "visible", display: "block" });
+g.getComputedStyle = computedStyle;
+(domWindow as any).getComputedStyle = computedStyle;
+const raf = (cb: (time: number) => void) => setTimeout(() => cb(Date.now()), 0);
+const caf = (id: number) => clearTimeout(id);
+g.requestAnimationFrame = raf;
+g.cancelAnimationFrame = caf;
+(domWindow as any).requestAnimationFrame = raf;
+(domWindow as any).cancelAnimationFrame = caf;
+g.IS_REACT_ACT_ENVIRONMENT = true;
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -230,6 +259,114 @@ async function main() {
       assert.equal(text.includes(word), false, word);
     }
   });
+
+  const TABLE_COLUMN_RE = /[a-z_]+\.[a-z_]+_[a-z_]+|classification_method|signals\./;
+
+  await runAsync("formatFallbackShareLine renders with the percent and counts and no table/column name", async () => {
+    const line = formatFallbackShareLine({ heuristicCount: 2, total: 4, pct: 50 });
+    const host = domDocument.createElement("div");
+    domDocument.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(createElement("p", null, line));
+      });
+      const text = host.textContent ?? "";
+      assert.match(text, /50%/);
+      assert.match(text, /2 of 4/);
+      assert.equal(TABLE_COLUMN_RE.test(text), false);
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
+      host.remove();
+    }
+  });
+
+  await runAsync("formatFallbackShareLine with no signals also renders clean", async () => {
+    const line = formatFallbackShareLine(null);
+    const host = domDocument.createElement("div");
+    domDocument.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(createElement("p", null, line));
+      });
+      const text = host.textContent ?? "";
+      assert.equal(TABLE_COLUMN_RE.test(text), false);
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
+      host.remove();
+    }
+  });
 }
+
+/**
+ * Guard (extra, not the required rendered test above): scans app/component
+ * source for string literals that leak a raw table.column name into what
+ * could become user-facing copy. Skips import lines and comments, and only
+ * inspects string-literal contents, not code identifiers like `signals.map`.
+ */
+const GUARDED_TABLE_COLUMN_RE = /\b(signals|prices|alert_rules|digest_send_log|cot_positions)\.[a-z_]+/;
+// Literals are not allowed to cross a line break: JSX source has stray quote
+// characters (className text, apostrophes in copy) that are not real string
+// delimiters, and without this a naive scan can pair a quote on one line
+// with an unrelated one many lines later and swallow real code in between.
+const STRING_LITERAL_RE = /"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\\n]|\\.)*`/g;
+
+function stripCommentsAndImports(src: string): string {
+  let out = src.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
+  out = out.replace(/\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, " "));
+  out = out.replace(/^[ \t]*import\b[\s\S]*?;/gm, (m) => m.replace(/[^\n]/g, " "));
+  return out;
+}
+
+function listTsxFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...listTsxFiles(full));
+    } else if (entry.isFile() && entry.name.endsWith(".tsx") && !entry.name.endsWith(".test.tsx")) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+
+function runSync(name: string, fn: () => void) {
+  try {
+    fn();
+    console.log(`✔ ${name}`);
+  } catch (err) {
+    console.error(`✖ ${name}`);
+    console.error(err);
+    process.exitCode = 1;
+  }
+}
+
+runSync("no raw table.column string literal leaks into apps/web/app or apps/web/components", () => {
+  const webDir = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const roots = [join(webDir, "app"), join(webDir, "components")];
+  const hits: string[] = [];
+  for (const root of roots) {
+    for (const file of listTsxFiles(root)) {
+      const src = readFileSync(file, "utf8");
+      const sanitized = stripCommentsAndImports(src);
+      let match: RegExpExecArray | null;
+      STRING_LITERAL_RE.lastIndex = 0;
+      while ((match = STRING_LITERAL_RE.exec(sanitized))) {
+        const literal = match[0];
+        if (GUARDED_TABLE_COLUMN_RE.test(literal)) {
+          const line = sanitized.slice(0, match.index).split("\n").length;
+          hits.push(`${file}:${line}: ${literal}`);
+        }
+      }
+    }
+  }
+  assert.deepEqual(hits, []);
+});
 
 void main();

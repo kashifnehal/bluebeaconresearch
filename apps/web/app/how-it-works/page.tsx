@@ -4,6 +4,7 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { createClient, getRouteSupabaseClients } from "@/lib/supabase-server";
 import {
+  formatFallbackShareLine,
   formatStatNumber,
   loadAcledState,
   loadHowItWorksSignalCounts,
@@ -116,11 +117,7 @@ async function getLimits(): Promise<string[]> {
 
   const limits: string[] = ["Severity and confidence are model outputs, not guarantees."];
 
-  limits.push(
-    fallbackShare
-      ? `${Math.round(fallbackShare.pct)}% of signals in the last 7 days (${fallbackShare.heuristicCount} of ${fallbackShare.total}) were classified by the keyword fallback rather than the model — computed live from signals.classification_method.`
-      : "No signals in the last 7 days to compute a keyword-fallback share from.",
-  );
+  limits.push(formatFallbackShareLine(fallbackShare));
 
   if (acledState) limits.push(acledState);
 

@@ -97,6 +97,17 @@ export type HowItWorksRowsClient = {
 export type KeywordFallbackShare = { heuristicCount: number; total: number; pct: number };
 
 /**
+ * Keyword-fallback limits-list line. Takes the live share computed by
+ * loadKeywordFallbackShare and renders the fixed sentence around it — kept
+ * as a pure function so it can be unit- and render-tested without a client.
+ */
+export function formatFallbackShareLine(fallbackShare: KeywordFallbackShare | null): string {
+  return fallbackShare
+    ? `${Math.round(fallbackShare.pct)}% of signals in the last 7 days (${fallbackShare.heuristicCount} of ${fallbackShare.total}) were classified by the keyword fallback rather than the model — computed live from our own records.`
+    : "No signals in the last 7 days to compute a keyword-fallback share from.";
+}
+
+/**
  * Share of signals created in the last 7 days classified by the keyword
  * fallback (`signals.classification_method = 'heuristic'`, as opposed to
  * `'claude'` — see apps/web/lib/status-checks.ts's evaluateClassifierHealth
