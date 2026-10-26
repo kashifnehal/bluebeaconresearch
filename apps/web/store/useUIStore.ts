@@ -17,8 +17,8 @@ type UIState = {
   helpOpen: boolean;
   setHelpOpen: (open: boolean) => void;
 
-  // Mobile off-canvas sidebar (below md). Persisted with the rest of this
-  // store — cheaper than adding a partialize exception for one field.
+  // Mobile off-canvas sidebar (below md). Excluded from persist (see
+  // partialize below) so it never reopens stuck from a stale session.
   mobileSidebarOpen: boolean;
   setMobileSidebarOpen: (open: boolean) => void;
 
@@ -97,9 +97,33 @@ export const useUIStore = create<UIState>()(
     {
       name: "blue-beacon-ui",
       partialize: (state) => {
-        const { signalsViewedThisSession, ...persisted } = state;
+        const {
+          signalsViewedThisSession,
+          notifOpen,
+          helpOpen,
+          mobileSidebarOpen,
+          notificationConnectOpen,
+          commandPaletteOpen,
+          unreadCount,
+          ...persisted
+        } = state;
         return persisted;
       },
+      // Users who had these six flags saved before this change shipped still
+      // have them in localStorage. partialize above stops writing them going
+      // forward, but a stale blob already on disk would otherwise come back
+      // through zustand's default merge (persisted state wins). Force the
+      // six panel/badge fields back to their defaults on every rehydrate.
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...(persistedState as Partial<UIState>),
+        notifOpen: false,
+        helpOpen: false,
+        mobileSidebarOpen: false,
+        notificationConnectOpen: false,
+        commandPaletteOpen: false,
+        unreadCount: 0,
+      }),
     },
   ),
 );
