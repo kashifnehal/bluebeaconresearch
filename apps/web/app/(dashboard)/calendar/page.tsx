@@ -18,6 +18,7 @@ import {
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
+import { weeklyRhythm, type WeeklyRhythmEntry } from "@/lib/calendar-rhythm";
 
 type Impact = CalendarImpact;
 
@@ -37,6 +38,9 @@ type CalendarEvent = {
   actual: string | null;
   sourceUrl: string;
   sourceLabel: string;
+  // Optional, not set on any existing row today — "tentative" shows a small
+  // badge next to the event name when a date isn't yet confirmed by its source.
+  status?: "confirmed" | "tentative";
   // Visible attribution shown under the event name — only set on EIA rows
   // today (the task's explicit ask), not a general-purpose field for every
   // source.
@@ -143,6 +147,8 @@ const CATEGORIES = Array.from(new Set(EVENTS.map((e) => e.category))).sort();
 // assigned, so the bars/filter that would present it as a rated fact are
 // hidden. The field stays on CalendarEvent/the JSON for when one exists.)
 const VISIBLE_VALUE_COLUMNS = visibleValueColumns(EVENTS);
+
+const WEEKLY_RHYTHM = weeklyRhythm();
 
 /** Event date+time as a real UTC Date, for sorting/countdown/week-filtering. Events with no
  * announced time (e.g. the OPEC report) sort/compare as start-of-day UTC. */
@@ -251,35 +257,39 @@ function getWeekRangeUTC(now: Date): { start: Date; end: Date } {
   return { start, end };
 }
 
-function Countdown({ target }: { target: Date }) {
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  if (!now) {
-    // Avoids an SSR/client hydration mismatch — the countdown is inherently
-    // client-clock-dependent, so it renders only after mount.
-    return <span className="mono text-2xl font-bold text-on-surface/40">—:—:—:—</span>;
+/** Local time + zone abbreviation for the Next chip, or the date alone when
+ * the event has no announced time (e.g. the OPEC report). */
+function nextEventChipTimeText(e: CalendarEvent): string {
+  if (!e.time) {
+    const d = new Date(`${e.date}T00:00:00Z`);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
   }
+  const formatted = new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(eventDateTime(e));
+  return e.timeApprox ? `${formatted} (approx.)` : formatted;
+}
 
-  const diffMs = target.getTime() - now.getTime();
-  if (diffMs <= 0) {
-    return <span className="mono text-lg font-bold text-primary">Happening now / just passed</span>;
+export function NextEventChip({ event }: { event: CalendarEvent | null }) {
+  if (!event) {
+    return (
+      <p data-testid="calendar-next-chip" className="text-sm text-on-surface/50 italic">
+        No upcoming events in this calendar's window.
+      </p>
+    );
   }
-  const totalSeconds = Math.floor(diffMs / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
   return (
-    <span className="mono text-2xl font-bold text-primary tabular-nums">
-      {days}d {String(hours).padStart(2, "0")}h {String(minutes).padStart(2, "0")}m{" "}
-      {String(seconds).padStart(2, "0")}s
-    </span>
+    <div
+      data-testid="calendar-next-chip"
+      className="inline-flex items-center gap-2 px-3 py-2 text-[12px] md:text-[11px] bg-surface-container rounded-md border border-primary/30"
+    >
+      <span className="label text-outline font-bold uppercase tracking-widest text-[10px]">Next:</span>
+      <span className="font-bold text-on-surface">
+        {event.event}, {nextEventChipTimeText(event)}
+      </span>
+    </div>
   );
 }
 
@@ -290,6 +300,17 @@ function CategoryTag({ category }: { category: string }) {
       className="inline-flex items-center px-2 py-0.5 text-[12px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border border-outline-variant/30 text-on-surface/60"
     >
       {category}
+    </span>
+  );
+}
+
+function TentativeTag() {
+  return (
+    <span
+      data-testid="calendar-tentative-tag"
+      className="inline-flex items-center px-1.5 py-0.5 text-[10px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border border-[#ffb340]/50 text-[#ffb340]"
+    >
+      Tentative
     </span>
   );
 }
@@ -339,6 +360,7 @@ export function EventTable({
               {e.event}
               <span className="material-symbols-outlined text-[13px] text-on-surface/30 mt-0.5 shrink-0">open_in_new</span>
             </a>
+            {e.status === "tentative" && <TentativeTag />}
             {e.creditLine && (
               <p data-testid="calendar-credit-line" className="text-[11px] text-on-surface/40 mt-0.5">
                 {e.creditLine}
@@ -424,6 +446,7 @@ export function EventTable({
                       {e.event}
                       <span className="material-symbols-outlined text-[13px] text-on-surface/30">open_in_new</span>
                     </a>
+                    {e.status === "tentative" && <TentativeTag />}
                     {e.creditLine && (
                       <p data-testid="calendar-credit-line" className="text-[11px] font-normal text-on-surface/40 mt-0.5">
                         {e.creditLine}
@@ -556,6 +579,37 @@ function CalendarFilters({
   );
 }
 
+export function WeeklyRhythmRow({ rhythm }: { rhythm: WeeklyRhythmEntry[] }) {
+  return (
+    <div data-testid="calendar-weekly-rhythm" className="flex flex-wrap items-center gap-2 mb-4">
+      <span className="text-[12px] md:text-[10px] uppercase tracking-wider text-on-surface/40 shrink-0">
+        Every week
+      </span>
+      {rhythm.map((entry) => (
+        <span
+          key={`${entry.day}-${entry.event}`}
+          data-testid="calendar-weekly-rhythm-entry"
+          className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] text-on-surface/60 border border-outline-variant/20 rounded-sm"
+        >
+          <span className="font-bold text-on-surface/80">{entry.day}</span>
+          {entry.sourceUrl ? (
+            <a
+              href={entry.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors"
+            >
+              {entry.event}
+            </a>
+          ) : (
+            entry.event
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function DayStrip({
   days,
   selectedDay,
@@ -639,12 +693,12 @@ export default function CalendarPage() {
   // second — only the countdown itself needs second-level ticking).
   const now = mounted ? new Date() : null;
 
-  const { thisWeek, upcoming, nextHighImpact, weekDays, selectedDayEvents } = useMemo(() => {
+  const { thisWeek, upcoming, nextEvent, weekDays, selectedDayEvents } = useMemo(() => {
     if (!now) {
       return {
         thisWeek: [] as CalendarEvent[],
         upcoming: [] as CalendarEvent[],
-        nextHighImpact: null as CalendarEvent | null,
+        nextEvent: null as CalendarEvent | null,
         weekDays: [] as { date: string; weekday: string; dayNum: string; count: number }[],
         selectedDayEvents: [] as CalendarEvent[],
       };
@@ -660,7 +714,7 @@ export default function CalendarPage() {
       if (dt >= start && dt < end) thisWeek.push(e);
       else if (dt >= end) upcoming.push(e);
     }
-    const nextHighImpact = EVENTS.find((e) => e.impact === "high" && eventDateTime(e).getTime() > now.getTime()) ?? null;
+    const nextEvent = EVENTS.find((e) => eventDateTime(e).getTime() > now.getTime()) ?? null;
 
     // Same Mon-Sun span as getWeekRangeUTC, so the day strip can never
     // disagree with what "This Week" considers the current week.
@@ -676,7 +730,7 @@ export default function CalendarPage() {
 
     const selectedDayEvents = selectedDay ? filteredEvents.filter((e) => e.date === selectedDay) : [];
 
-    return { thisWeek, upcoming, nextHighImpact, weekDays, selectedDayEvents };
+    return { thisWeek, upcoming, nextEvent, weekDays, selectedDayEvents };
   }, [now, filters, selectedDay]);
 
   // Whatever the page is currently showing below — the day-strip drill-down when
@@ -725,35 +779,14 @@ export default function CalendarPage() {
         onTimeZoneChange={setTimeZone}
       />
 
-      {/* Countdown to next high-impact event — prominent, persistent */}
-      <section className="bg-surface-container rounded-lg border border-primary/30 shadow-xl p-6 mb-8">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
-              Next High-Impact Event
-            </span>
-            {nextHighImpact ? (
-              <>
-                <p className="text-lg font-bold text-on-surface">{nextHighImpact.event}</p>
-                <p className="text-xs text-on-surface/50 mt-0.5">
-                  {nextHighImpact.country} · {formatEventDate(nextHighImpact, timeZone)} at {formatEventTime(nextHighImpact, timeZone)}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-on-surface/50 italic">No upcoming high-impact events in this calendar's window.</p>
-            )}
-          </div>
-          {nextHighImpact && (
-            <div className="text-right">
-              <span className="label text-[12px] md:text-[9px] tracking-widest text-outline font-bold uppercase block mb-1">
-                Countdown
-              </span>
-              <Countdown target={eventDateTime(nextHighImpact)} />
-            </div>
-          )}
-        </div>
-        {nextHighImpact && <OptionsIvNote />}
-      </section>
+      {mounted && (
+        <section className="mb-8">
+          <NextEventChip event={nextEvent} />
+          {nextEvent && <OptionsIvNote />}
+        </section>
+      )}
+
+      <WeeklyRhythmRow rhythm={WEEKLY_RHYTHM} />
 
       {mounted && (
         <DayStrip days={weekDays} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
