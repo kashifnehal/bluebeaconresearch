@@ -13,6 +13,7 @@ import { runRssCollectorOnce } from "./workers/rss-collector.js";
 import { runPriceSyncOnce } from "./workers/price-syncer.js";
 import { runSanctionsSyncOnce } from "./workers/sanctions-syncer.js";
 import { isCotCollectorEnabled, runCotCollectorOnce } from "./workers/cot-collector.js";
+import { isEiaCollectorEnabled, runEiaWeeklyOnce } from "./workers/eia-weekly.js";
 import { reconcileOrphanedRawEventsOnce } from "./workers/reconciliation.js";
 import { runRetentionJobsOnce, runServiceHealthRetentionOnce } from "./workers/retention.js";
 import { runDigestOnce } from "./workers/digest-sender.js";
@@ -141,6 +142,20 @@ if (process.env.COT_CRON && COT_CRON !== process.env.COT_CRON) {
   );
 }
 
+// EIA weekly petroleum/natural-gas collector. Wed-Fri covers the 10:30am ET
+// release and the usual holiday shifts seen in the calendar (e.g. a Monday
+// holiday pushing the Wednesday release to Thursday). Idempotent (upsert on
+// series_id+period), so a repeat run inside the window is harmless.
+const DEFAULT_EIA_CRON = "*/30 14-21 * * 3,4,5";
+const EIA_CRON =
+  process.env.EIA_CRON && cron.validate(process.env.EIA_CRON) ? process.env.EIA_CRON : DEFAULT_EIA_CRON;
+
+if (process.env.EIA_CRON && EIA_CRON !== process.env.EIA_CRON) {
+  console.warn(
+    `[workers] EIA_CRON="${process.env.EIA_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_EIA_CRON}"`,
+  );
+}
+
 // Collection-stalled and 80% daily-cap warning. Default every 15 minutes.
 const DEFAULT_OPS_ALERT_CRON = "*/15 * * * *";
 const OPS_ALERT_CRON =
@@ -230,6 +245,11 @@ async function main() {
     app.log.info({ res }, "startup:price-sync complete");
   }).catch((e) => {
     app.log.error({ err: e }, "startup:price-sync failed");
+  });
+  runEiaWeeklyOnce().then((res) => {
+    app.log.info({ res }, "eia-weekly complete");
+  }).catch((e) => {
+    app.log.error({ err: e }, "startup:eia-weekly failed");
   });
 
   // ── Prices — own schedule, set by PRICE_SYNC_CRON, default 15 min ──
@@ -416,6 +436,20 @@ async function main() {
       app.log.info({ res }, "cot-collector complete");
     } catch (e) {
       app.log.error({ err: e }, "cot-collector failed");
+      Sentry.captureException(e);
+    }
+  });
+
+  // EIA weekly petroleum stocks + natural-gas storage. Off when
+  // ENABLE_EIA_COLLECTOR is exactly "false". Missing EIA_API_KEY or
+  // economic_event_values table: log once and return.
+  app.log.info({ schedule: EIA_CRON, enabled: isEiaCollectorEnabled() }, "workers: eia-weekly cron schedule");
+  cron.schedule(EIA_CRON, async () => {
+    try {
+      const res = await runEiaWeeklyOnce();
+      app.log.info({ res }, "eia-weekly complete");
+    } catch (e) {
+      app.log.error({ err: e }, "eia-weekly failed");
       Sentry.captureException(e);
     }
   });

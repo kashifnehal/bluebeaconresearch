@@ -109,6 +109,11 @@ const envSchema = z.object({
   ACLED_PASSWORD: z.string().optional(),
   GNEWS_API_KEY: z.string().optional(),
 
+  // EIA (U.S. Energy Information Administration) weekly petroleum/natural-gas
+  // collector. Unset => the collector logs and returns { skipped: "no_key" }
+  // instead of throwing.
+  EIA_API_KEY: z.string().optional(),
+
   // Resend API key for the #83 daily digest. Same Resend account that already backs
   // Supabase Auth's custom SMTP (verified sender domain send.bluebeaconresearch.com) —
   // this is app-level API access to that same account, not a new provider. Unset =>
