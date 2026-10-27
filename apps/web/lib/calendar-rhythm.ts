@@ -14,14 +14,17 @@ const EXISTING_SOURCE_URLS = new Set<string>(
 );
 
 // Only point to a URL this calendar already cites elsewhere — a new URL
-// invented just for this row would be an unverified source.
+// invented just for this row would be an unverified source. Rows below that
+// instead hardcode a sourceUrl do so because that exact URL was opened and
+// confirmed to load directly in the task that added it (see the comment on
+// that row) — not invented.
 function knownSourceUrl(url: string): string | null {
   return EXISTING_SOURCE_URLS.has(url) ? url : null;
 }
 
 /**
  * Recurring weekly releases that aren't individually dated rows in
- * economic-calendar.json (#86) — a standing "every week" reminder, separate
+ * economic-calendar.json — a standing "every week" reminder, separate
  * from the specific dated EIA/USDA rows already in the calendar.
  */
 export function weeklyRhythm(): WeeklyRhythmEntry[] {
@@ -42,13 +45,15 @@ export function weeklyRhythm(): WeeklyRhythmEntry[] {
       day: "Thursday",
       event: "EIA Weekly Natural Gas Storage Report",
       commodities: ["NGAS"],
-      sourceUrl: knownSourceUrl("https://www.eia.gov/naturalgas/storage/"),
+      // https://www.eia.gov/dnav/ng/ng_stor_wkly_s1_w.htm confirmed to load on 2026-10-27.
+      sourceUrl: "https://www.eia.gov/dnav/ng/ng_stor_wkly_s1_w.htm",
     },
     {
       day: "Friday",
       event: "CFTC Commitments of Traders",
       commodities: ["USOIL", "UKOIL", "NGAS", "WHEAT", "CORN", "COPPER", "XAUUSD", "XAGUSD"],
-      sourceUrl: knownSourceUrl("https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm"),
+      // https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm confirmed to load on 2026-10-27.
+      sourceUrl: "https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm",
     },
     {
       day: "Friday",

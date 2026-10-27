@@ -32,14 +32,24 @@ runTest("every weeklyRhythm entry has at least one commodity", () => {
   }
 });
 
-runTest("only the EIA Weekly Petroleum entry gets a sourceUrl — it's the only one already in the JSON", () => {
+runTest("EIA Weekly Petroleum, EIA Natural Gas Storage, and CFTC entries get a sourceUrl — each confirmed to load", () => {
   const rhythm = weeklyRhythm();
   const withLinks = rhythm.filter((e) => e.sourceUrl != null);
-  assert.deepEqual(withLinks.map((e) => e.event), ["EIA Weekly Petroleum Status Report"]);
+  assert.deepEqual(withLinks.map((e) => e.event), [
+    "EIA Weekly Petroleum Status Report",
+    "EIA Weekly Natural Gas Storage Report",
+    "CFTC Commitments of Traders",
+  ]);
   for (const entry of rhythm) {
     if (entry.sourceUrl == null) continue;
     assert.match(entry.sourceUrl, /^https:\/\//);
   }
+});
+
+runTest("Baker Hughes rig count has no sourceUrl — its page returned 403 and did not load", () => {
+  const rhythm = weeklyRhythm();
+  const bakerHughes = rhythm.find((e) => e.event === "Baker Hughes rig count")!;
+  assert.equal(bakerHughes.sourceUrl, null);
 });
 
 runTest("expected five recurring releases are all present", () => {
