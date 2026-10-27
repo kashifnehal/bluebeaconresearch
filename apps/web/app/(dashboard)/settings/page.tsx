@@ -13,7 +13,9 @@ import { SELECT_CLASSES } from "@/lib/utils";
 import { DiscordConnect } from "@/components/DiscordConnect";
 import { TelegramConnect } from "@/components/TelegramConnect";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { PageShell } from "@/components/layout/PageShell";
 
 const TABS = [
   "ACCOUNT",
@@ -148,8 +150,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
-      <div className="max-w-[1440px] mx-auto">
+    <PageShell width="wide">
         <Breadcrumbs
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Settings" }]}
           className="mb-4"
@@ -337,57 +338,30 @@ export default function SettingsPage() {
                     <div className="border-t border-outline-variant/20 my-2" />
                     <DiscordConnect />
                     <div className="border-t border-outline-variant/20 my-2" />
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">
-                          Daily Digest
-                        </p>
-                        <p className="text-[12px] md:text-[10px] text-on-surface-variant max-w-md">
-                          Once a day, your top signals from the last 24 hours — filtered to the
-                          regions and commodities you follow, ranked by severity. Informational
-                          only, not financial advice.
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        aria-label="Daily digest email"
-                        checked={digestEnabled}
-                        disabled={digestSaving}
-                        onChange={(e) => toggleDigest(e.target.checked)}
-                      />
-                    </div>
+                    <Switch
+                      label="Daily Digest"
+                      ariaLabel="Daily digest email"
+                      description="Once a day, your top signals from the last 24 hours — filtered to the regions and commodities you follow, ranked by severity. Informational only, not financial advice."
+                      checked={digestEnabled}
+                      disabled={digestSaving}
+                      onChange={toggleDigest}
+                    />
                     <div className="border-t border-outline-variant/20 my-2" />
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">
-                          Email Alerts
-                        </p>
-                        <p className="text-[12px] md:text-[10px] text-on-surface-variant">
-                          Receive urgent alerts via email
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={notifEmail}
-                        onChange={(e) => setNotifEmail(e.target.checked)}
-                      />
-                    </div>
+                    <Switch
+                      label="Email Alerts"
+                      ariaLabel="Email alerts"
+                      description="Receive urgent alerts via email"
+                      checked={notifEmail}
+                      onChange={setNotifEmail}
+                    />
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-label text-[12px] md:text-[10px] font-bold uppercase">
-                          Push Notifications
-                        </p>
-                        <p className="text-[12px] md:text-[10px] text-on-surface-variant">
-                          Use browser push for critical updates
-                        </p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={notifPush}
-                        onChange={(e) => setNotifPush(e.target.checked)}
-                      />
-                    </div>
+                    <Switch
+                      label="Push Notifications"
+                      ariaLabel="Push notifications"
+                      description="Use browser push for critical updates"
+                      checked={notifPush}
+                      onChange={setNotifPush}
+                    />
 
                     <div className="flex justify-end">
                       <button
@@ -474,7 +448,6 @@ export default function SettingsPage() {
             </section>
           )}
         </div>
-      </div>
 
       {/* Footer — purely decorative terminal chrome (no real data). Hidden from
           assistive tech per 07_DESIGN_SYSTEM.md §12, which also resolves the
@@ -489,6 +462,6 @@ export default function SettingsPage() {
           <span>SESSION_ID: 88F9-AX21</span>
         </div>
       </footer>
-    </div>
+    </PageShell>
   );
 }

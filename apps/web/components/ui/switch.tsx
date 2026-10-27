@@ -6,6 +6,7 @@ export function Switch({
   disabled,
   hideLabel,
   id,
+  ariaLabel,
   "data-testid": dataTestId,
 }: {
   label: string;
@@ -15,6 +16,8 @@ export function Switch({
   disabled?: boolean;
   hideLabel?: boolean;
   id?: string;
+  /** Overrides the accessible name when it must differ from the visible `label` text. */
+  ariaLabel?: string;
   "data-testid"?: string;
 }) {
   return (
@@ -30,7 +33,7 @@ export function Switch({
         type="button"
         role="switch"
         aria-checked={checked}
-        aria-label={hideLabel ? label : undefined}
+        aria-label={ariaLabel ?? (hideLabel ? label : undefined)}
         data-testid={dataTestId}
         disabled={disabled}
         onClick={() => onChange(!checked)}

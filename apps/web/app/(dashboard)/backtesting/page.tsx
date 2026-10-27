@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { COMMODITIES, REGIONS } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { PageShell } from "@/components/layout/PageShell";
 
 type BacktestResult = {
   totalEvents: number;
@@ -137,8 +138,7 @@ export default function BacktestingPage() {
   }, [eventType, region, commodity, horizon, from, to]);
 
   return (
-    <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
-      <div className="max-w-[1440px] mx-auto">
+    <PageShell width="wide">
         <Breadcrumbs
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Backtesting" }]}
           className="mb-4"
@@ -549,12 +549,11 @@ export default function BacktestingPage() {
             </p>
           </div>
         )}
-      </div>
 
       {/* Footer */}
       <footer className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-center items-center text-[12px] md:text-[10px] font-mono text-on-surface-variant/30 uppercase tracking-[0.2em] font-bold">
         <div>BLUE BEACON RESEARCH</div>
       </footer>
-    </div>
+    </PageShell>
   );
 }

@@ -26,6 +26,12 @@ function runTest(name: string, fn: () => void) {
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(path.join(dir, "page.tsx"), "utf8");
 
+runTest("the page sits on PageShell, not the old md:fixed box", () => {
+  assert.match(source, /from "@\/components\/layout\/PageShell"/);
+  assert.match(source, /<PageShell width="wide">/);
+  assert.doesNotMatch(source, /md:fixed/);
+});
+
 runTest("both db-backed queries (historyPoints, overlayHistoryPoints) parse through parsePriceHistoryPoints", () => {
   const matches = [...source.matchAll(/return parsePriceHistoryPoints\(true, json\);/g)];
   assert.equal(matches.length, 2, "expected both the primary and overlay history queryFns to throw via parsePriceHistoryPoints");
