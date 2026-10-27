@@ -329,6 +329,29 @@ async function main() {
     }
   });
 
+  await runTest("stream row single-line layout starts at lg, not md (TASK UI-FIX1 Part 1)", async () => {
+    const signals = [makeSignal(0, { id: "a" }), makeSignal(1, { id: "b" })];
+    const { root, client, restoreFetch } = await renderDashboard(signals);
+    try {
+      const rows = document.querySelectorAll('[data-testid="signal-stream-row"]');
+      assert.equal(rows.length, 2);
+      for (const row of rows) {
+        const rowClass = row.getAttribute("class") ?? "";
+        assert.match(rowClass, /\blg:flex-row\b/);
+        assert.doesNotMatch(rowClass, /\bmd:flex-row\b/);
+        const titleDiv = row.querySelector(".line-clamp-2");
+        assert.ok(titleDiv, "expected the headline title div");
+        const titleClass = titleDiv!.getAttribute("class") ?? "";
+        assert.match(titleClass, /\blg:truncate\b/);
+        assert.doesNotMatch(titleClass, /\bmd:truncate\b/);
+      }
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
   await runTest("render count stays bounded across mount + a handful of interactions (no render loop)", async () => {
     let renderCount = 0;
     function CountingDashboard() {

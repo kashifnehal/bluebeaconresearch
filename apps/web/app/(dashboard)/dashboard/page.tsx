@@ -1246,7 +1246,7 @@ export default function DashboardPage() {
                   streamList.map((item, index) => (
                     <div
                       key={item.id}
-                      className="px-6 py-4 flex items-center gap-6 group transition-colors"
+                      className="px-6 py-4 flex items-center gap-6 group transition-colors min-w-0"
                       style={{ backgroundColor: "transparent" }}
                       onMouseEnter={(e) => {
                         (e.currentTarget as HTMLElement).style.backgroundColor =
@@ -1269,13 +1269,13 @@ export default function DashboardPage() {
                             false,
                           )
                         }
-                        className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center md:gap-6"
+                        className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:gap-6"
                       >
                         {/* Metadata: its own row on mobile so it never competes with the headline for width.
                             flex-wrap so MediaImpactTag (previously hidden below md) drops to its own line
                             on narrow screens instead of being cut off — dot/timestamp/FreshTag are shrink-0
                             and always stay on the first line. */}
-                        <div className="flex flex-wrap items-center gap-2 md:gap-6 md:shrink-0">
+                        <div className="flex flex-wrap items-center gap-2 lg:gap-6 lg:shrink-0">
                           <div
                             className="w-2 h-2 rounded-full shrink-0"
                             style={{
@@ -1309,9 +1309,9 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Headline: full row width on mobile (2-line clamp); single-line truncate at md+, unchanged */}
-                        <div className="flex items-center gap-2 md:min-w-0 md:flex-1 md:gap-6">
+                        <div className="flex items-center gap-2 lg:min-w-0 lg:flex-1 lg:gap-6">
                           <div
-                            className="flex-1 min-w-0 line-clamp-2 md:truncate md:line-clamp-none font-semibold transition-colors group-hover:text-[var(--accent)]"
+                            className="flex-1 min-w-0 line-clamp-2 lg:truncate lg:line-clamp-none font-semibold transition-colors group-hover:text-[var(--accent)]"
                             style={{
                               color: "#e5e2e1",
                               fontFamily: "'Inter', sans-serif",
