@@ -7,7 +7,8 @@ import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SignalCard } from "@/components/signals/SignalCard";
 import { SignalQuickView } from "@/components/signals/SignalQuickView";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
@@ -103,279 +104,271 @@ export function ArchiveClient() {
   const degraded = fallback ? feedDegradedCopy(fallbackReason) : null;
 
   return (
-    <div className="p-8 md:p-10 min-h-screen bg-surface-container-lowest text-on-surface">
-      <div className="max-w-4xl">
-        <Breadcrumbs
-          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Archive" }]}
-          className="mb-4"
-        />
-        <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">
-          Archive
-        </h1>
-        <p className="text-on-surface/60 mt-2 font-body font-medium">
-          Jump to older signals by date, desk, region, or keyword. This list has
-          no severity floor and no recency cutoff — unlike the Intelligence Feed.
-        </p>
+    <PageShell width="medium">
+      <PageHeader
+        title="Archive"
+        description="Jump to older signals by date, desk, region, or keyword. This list has no severity floor and no recency cutoff — unlike the Intelligence Feed."
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Archive" }]}
+      />
 
-        {degraded && (
-          <p
-            className="mt-4 text-[12px] md:text-[11px]"
-            style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
-          >
-            {degraded}
-          </p>
-        )}
-
-        <form
-          data-testid="archive-filters"
-          className="mt-8 space-y-5"
-          onSubmit={(e) => e.preventDefault()}
+      {degraded && (
+        <p
+          className="mt-4 text-[12px] md:text-[11px]"
+          style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
         >
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Desk presets">
-            {(Object.keys(DESK_PRESETS) as DeskPresetId[]).map((id) => {
-              const preset = DESK_PRESETS[id];
-              const selected = deskMatchesFilters(id, {
-                commodity: filters.commodity,
-                region: filters.region,
-                minSeverity: 1,
-                window: null,
-                minSources: 1,
-                eventCategory: null,
-              });
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  data-testid={`archive-desk-${id}`}
-                  aria-pressed={selected}
-                  onClick={() => applyDesk(id)}
-                  className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
-                  style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
-                    color: selected ? "#005f40" : "var(--text-secondary)",
-                    borderColor: selected ? "var(--accent)" : "var(--border)",
-                  }}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
-          </div>
+          {degraded}
+        </p>
+      )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="archive-from"
-                className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+      <form
+        data-testid="archive-filters"
+        className="mt-8 space-y-5"
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Desk presets">
+          {(Object.keys(DESK_PRESETS) as DeskPresetId[]).map((id) => {
+            const preset = DESK_PRESETS[id];
+            const selected = deskMatchesFilters(id, {
+              commodity: filters.commodity,
+              region: filters.region,
+              minSeverity: 1,
+              window: null,
+              minSources: 1,
+              eventCategory: null,
+            });
+            return (
+              <button
+                key={id}
+                type="button"
+                data-testid={`archive-desk-${id}`}
+                aria-pressed={selected}
+                onClick={() => applyDesk(id)}
+                className="px-3 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+                style={{
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  backgroundColor: selected ? "var(--accent)" : "var(--bg-container)",
+                  color: selected ? "#005f40" : "var(--text-secondary)",
+                  borderColor: selected ? "var(--accent)" : "var(--border)",
+                }}
               >
-                From date
-              </label>
-              <input
-                id="archive-from"
-                data-testid="archive-from"
-                type="date"
-                value={filters.from}
-                onChange={(e) => setFilters((prev) => ({ ...prev, from: e.target.value }))}
-                className={SELECT_CLASSES}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="archive-to"
-                className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                To date
-              </label>
-              <input
-                id="archive-to"
-                data-testid="archive-to"
-                type="date"
-                value={filters.to}
-                onChange={(e) => setFilters((prev) => ({ ...prev, to: e.target.value }))}
-                className={SELECT_CLASSES}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="archive-commodity"
-                className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                Commodity
-              </label>
-              <select
-                id="archive-commodity"
-                data-testid="archive-commodity"
-                value={filters.commodity ?? ""}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, commodity: e.target.value || null }))
-                }
-                className={SELECT_CLASSES}
-              >
-                <option value="">All</option>
-                {FILTER_CATEGORIES.map((c) => (
-                  <option key={c.id} value={`${COMMODITY_CATEGORY_PREFIX}${c.id}`}>
-                    {c.label}
-                  </option>
-                ))}
-                {FILTER_COMMODITIES.map((c) => (
-                  <option key={c.symbol} value={c.symbol}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="archive-region"
-                className="text-[12px] md:text-[10px] uppercase tracking-wider"
-                style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                Region
-              </label>
-              <select
-                id="archive-region"
-                data-testid="archive-region"
-                value={filters.region ?? ""}
-                onChange={(e) =>
-                  setFilters((prev) => ({ ...prev, region: e.target.value || null }))
-                }
-                className={SELECT_CLASSES}
-              >
-                <option value="">All</option>
-                {regionOptions.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1">
             <label
-              htmlFor="archive-keyword"
+              htmlFor="archive-from"
               className="text-[12px] md:text-[10px] uppercase tracking-wider"
               style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              Keyword
+              From date
             </label>
             <input
-              id="archive-keyword"
-              data-testid="archive-keyword"
-              type="search"
-              value={filters.keyword}
-              onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
-              placeholder="Search title or summary (3+ characters)"
-              className={`${SELECT_CLASSES} font-sans normal-case tracking-normal`}
+              id="archive-from"
+              data-testid="archive-from"
+              type="date"
+              value={filters.from}
+              onChange={(e) => setFilters((prev) => ({ ...prev, from: e.target.value }))}
+              className={SELECT_CLASSES}
             />
-            {filters.keyword.trim().length > 0 && filters.keyword.trim().length < 3 && (
-              <p className="text-[12px] md:text-[11px] text-on-surface/45 font-mono">
-                Type at least 3 characters to search.
-              </p>
-            )}
           </div>
-
-          {datesInvalid && (
-            <p
-              data-testid="archive-date-error"
-              className="text-[12px] md:text-[11px] text-[#ee7d77] font-mono"
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="archive-to"
+              className="text-[12px] md:text-[10px] uppercase tracking-wider"
+              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              From date is after To date.
+              To date
+            </label>
+            <input
+              id="archive-to"
+              data-testid="archive-to"
+              type="date"
+              value={filters.to}
+              onChange={(e) => setFilters((prev) => ({ ...prev, to: e.target.value }))}
+              className={SELECT_CLASSES}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="archive-commodity"
+              className="text-[12px] md:text-[10px] uppercase tracking-wider"
+              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Commodity
+            </label>
+            <select
+              id="archive-commodity"
+              data-testid="archive-commodity"
+              value={filters.commodity ?? ""}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, commodity: e.target.value || null }))
+              }
+              className={SELECT_CLASSES}
+            >
+              <option value="">All</option>
+              {FILTER_CATEGORIES.map((c) => (
+                <option key={c.id} value={`${COMMODITY_CATEGORY_PREFIX}${c.id}`}>
+                  {c.label}
+                </option>
+              ))}
+              {FILTER_COMMODITIES.map((c) => (
+                <option key={c.symbol} value={c.symbol}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="archive-region"
+              className="text-[12px] md:text-[10px] uppercase tracking-wider"
+              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              Region
+            </label>
+            <select
+              id="archive-region"
+              data-testid="archive-region"
+              value={filters.region ?? ""}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, region: e.target.value || null }))
+              }
+              className={SELECT_CLASSES}
+            >
+              <option value="">All</option>
+              {regionOptions.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="archive-keyword"
+            className="text-[12px] md:text-[10px] uppercase tracking-wider"
+            style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Keyword
+          </label>
+          <input
+            id="archive-keyword"
+            data-testid="archive-keyword"
+            type="search"
+            value={filters.keyword}
+            onChange={(e) => setFilters((prev) => ({ ...prev, keyword: e.target.value }))}
+            placeholder="Search title or summary (3+ characters)"
+            className={`${SELECT_CLASSES} font-sans normal-case tracking-normal`}
+          />
+          {filters.keyword.trim().length > 0 && filters.keyword.trim().length < 3 && (
+            <p className="text-[12px] md:text-[11px] text-on-surface/45 font-mono">
+              Type at least 3 characters to search.
             </p>
-          )}
-
-          {filtersActive && (
-            <button
-              type="button"
-              data-testid="archive-clear"
-              onClick={() => setFilters(EMPTY_FILTERS)}
-              className="text-[12px] md:text-[11px] font-bold uppercase tracking-widest text-primary hover:underline cursor-pointer min-h-[44px] inline-flex items-center"
-            >
-              Clear filters
-            </button>
-          )}
-        </form>
-
-        <div className="mt-8 flex items-baseline gap-3">
-          <h2 className="text-lg font-bold text-white font-headline">Results</h2>
-          {typeof total === "number" && !isLoading && (
-            <span
-              className="text-[12px] md:text-[11px] font-mono"
-              style={{ color: "var(--accent)" }}
-              data-testid="archive-total"
-            >
-              {total} signal{total === 1 ? "" : "s"}
-            </span>
           )}
         </div>
 
-        {isLoading || isError ? (
-          <div className="mt-6 space-y-4">
-            <Skeleton className="h-28 w-full bg-[#2a2a2a]" />
-            <Skeleton className="h-28 w-full bg-[#2a2a2a]" />
-            <Skeleton className="h-28 w-full bg-[#2a2a2a]" />
-          </div>
-        ) : liveSignals.length === 0 ? (
-          <div className="py-20 text-center flex flex-col items-center gap-4">
-            <span className="material-symbols-outlined text-4xl text-[var(--border)]">
-              search_off
-            </span>
-            <p
-              className="text-xs font-bold uppercase tracking-[0.2em]"
-              style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              {filtersActive
-                ? "No signals matching these filters"
-                : "No signals in the archive"}
-            </p>
-          </div>
-        ) : (
-          <div className="mt-6 space-y-4">
-            {liveSignals.map((signal) => {
-              const dated = signal.eventDate ?? signal.createdAt;
-              let dateLabel = "";
-              try {
-                dateLabel = format(new Date(dated), "yyyy-MM-dd");
-              } catch {
-                dateLabel = "";
-              }
-              return (
-                <div key={signal.id} data-testid="archive-result-row">
-                  {dateLabel ? (
-                    <div
-                      className="mb-1.5 text-[12px] md:text-[11px] font-mono text-on-surface/45"
-                      data-testid="archive-result-date"
-                    >
-                      {dateLabel}
-                    </div>
-                  ) : null}
-                  <SignalCard
-                    signal={signal}
-                    variant="compact"
-                    onClick={() => {
-                      logUsageEvent("signal_viewed", signalEventMetadata(signal), false);
-                      setQuickViewSignal(signal);
-                    }}
-                  />
-                </div>
-              );
-            })}
-            {hasNextPage && <div ref={sentinelRef} aria-hidden="true" />}
-            <LoadMoreButton
-              hasMore={hasNextPage}
-              isLoading={isFetchingNextPage}
-              onClick={() => void fetchNextPage()}
-              loadedCount={liveSignals.length}
-              totalCount={total}
-              endLabel="End of archive results"
-            />
-          </div>
+        {datesInvalid && (
+          <p
+            data-testid="archive-date-error"
+            className="text-[12px] md:text-[11px] text-[#ee7d77] font-mono"
+          >
+            From date is after To date.
+          </p>
+        )}
+
+        {filtersActive && (
+          <button
+            type="button"
+            data-testid="archive-clear"
+            onClick={() => setFilters(EMPTY_FILTERS)}
+            className="text-[12px] md:text-[11px] font-bold uppercase tracking-widest text-primary hover:underline cursor-pointer min-h-[44px] inline-flex items-center"
+          >
+            Clear filters
+          </button>
+        )}
+      </form>
+
+      <div className="mt-8 flex items-baseline gap-3">
+        <h2 className="text-lg font-bold text-white font-headline">Results</h2>
+        {typeof total === "number" && !isLoading && (
+          <span
+            className="text-[12px] md:text-[11px] font-mono"
+            style={{ color: "var(--accent)" }}
+            data-testid="archive-total"
+          >
+            {total} signal{total === 1 ? "" : "s"}
+          </span>
         )}
       </div>
+
+      {isLoading || isError ? (
+        <div className="mt-6 space-y-4">
+          <Skeleton className="h-28 w-full bg-[#2a2a2a]" />
+          <Skeleton className="h-28 w-full bg-[#2a2a2a]" />
+          <Skeleton className="h-28 w-full bg-[#2a2a2a]" />
+        </div>
+      ) : liveSignals.length === 0 ? (
+        <div className="py-20 text-center flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined text-4xl text-[var(--border)]">
+            search_off
+          </span>
+          <p
+            className="text-xs font-bold uppercase tracking-[0.2em]"
+            style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            {filtersActive
+              ? "No signals matching these filters"
+              : "No signals in the archive"}
+          </p>
+        </div>
+      ) : (
+        <div className="mt-6 space-y-4">
+          {liveSignals.map((signal) => {
+            const dated = signal.eventDate ?? signal.createdAt;
+            let dateLabel = "";
+            try {
+              dateLabel = format(new Date(dated), "yyyy-MM-dd");
+            } catch {
+              dateLabel = "";
+            }
+            return (
+              <div key={signal.id} data-testid="archive-result-row">
+                {dateLabel ? (
+                  <div
+                    className="mb-1.5 text-[12px] md:text-[11px] font-mono text-on-surface/45"
+                    data-testid="archive-result-date"
+                  >
+                    {dateLabel}
+                  </div>
+                ) : null}
+                <SignalCard
+                  signal={signal}
+                  variant="compact"
+                  onClick={() => {
+                    logUsageEvent("signal_viewed", signalEventMetadata(signal), false);
+                    setQuickViewSignal(signal);
+                  }}
+                />
+              </div>
+            );
+          })}
+          {hasNextPage && <div ref={sentinelRef} aria-hidden="true" />}
+          <LoadMoreButton
+            hasMore={hasNextPage}
+            isLoading={isFetchingNextPage}
+            onClick={() => void fetchNextPage()}
+            loadedCount={liveSignals.length}
+            totalCount={total}
+            endLabel="End of archive results"
+          />
+        </div>
+      )}
 
       {quickViewSignal && (
         <SignalQuickView
@@ -383,6 +376,6 @@ export function ArchiveClient() {
           onClose={() => setQuickViewSignal(null)}
         />
       )}
-    </div>
+    </PageShell>
   );
 }
