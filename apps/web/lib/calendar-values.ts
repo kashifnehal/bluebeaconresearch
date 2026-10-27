@@ -19,6 +19,7 @@ export type FormattedOfficialFigure = {
   label: string;
   period: string; // e.g. "Week ending Oct 17, 2026"
   latestValueText: string;
+  unitText: string; // e.g. "million barrels" or "Bcf"
   previousValueText: string | null;
   changeText: string | null; // e.g. "+2.4" or "-3.1"; null when there is no previous row
   sourceUrl: string;
@@ -28,6 +29,7 @@ export type FormattedOfficialFigure = {
 type SeriesSpec = {
   label: string;
   decimals: number;
+  unitText: string;
   // Raw stored value -> the number actually displayed (e.g. thousand barrels -> million barrels).
   toDisplayValue: (raw: number) => number;
 };
@@ -39,11 +41,13 @@ const SERIES_SPECS: Record<string, SeriesSpec> = {
   WCESTUS1: {
     label: "U.S. commercial crude oil stocks (excluding SPR)",
     decimals: 1,
+    unitText: "million barrels",
     toDisplayValue: (raw) => raw / 1000, // stored in thousand barrels; shown in million barrels
   },
   NW2_EPG0_SWO_R48_BCF: {
     label: "U.S. Lower 48 working gas in storage",
     decimals: 0,
+    unitText: "Bcf",
     toDisplayValue: (raw) => raw, // stored and shown in Bcf
   },
 };
@@ -96,6 +100,7 @@ export function formatOfficialFigures(rows: OfficialFigureRow[]): FormattedOffic
       label: spec.label,
       period: formatWeekEnding(latest.period),
       latestValueText: latestDisplay.toFixed(spec.decimals),
+      unitText: spec.unitText,
       previousValueText: previousDisplay != null ? previousDisplay.toFixed(spec.decimals) : null,
       changeText: previousDisplay != null ? formatSigned(latestDisplay - previousDisplay, spec.decimals) : null,
       sourceUrl: latest.source_url,

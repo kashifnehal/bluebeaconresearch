@@ -657,6 +657,7 @@ export function OfficialFiguresPanel({ figures }: { figures: FormattedOfficialFi
             <div className="text-[12px] text-on-surface/50 mt-0.5">{f.period}</div>
             <div className="mt-2 flex items-baseline gap-3">
               <span className="mono text-2xl font-bold text-on-surface">{f.latestValueText}</span>
+              <span className="text-[12px] text-on-surface/50">{f.unitText}</span>
               {f.previousValueText != null && (
                 <span className="mono text-[12px] text-on-surface/50">
                   prev {f.previousValueText}

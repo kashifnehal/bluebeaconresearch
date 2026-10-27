@@ -28,6 +28,7 @@ function row(overrides: Partial<OfficialFigureRow> = {}): OfficialFigureRow {
 runTest("WCESTUS1 converts thousand barrels to million barrels with one decimal", () => {
   const [figure] = formatOfficialFigures([row({ value: 425300 })]);
   assert.equal(figure.latestValueText, "425.3");
+  assert.equal(figure.unitText, "million barrels");
 });
 
 runTest("NW2_EPG0_SWO_R48_BCF shows Bcf with no decimals", () => {
@@ -35,6 +36,7 @@ runTest("NW2_EPG0_SWO_R48_BCF shows Bcf with no decimals", () => {
     row({ series_id: "NW2_EPG0_SWO_R48_BCF", value: 3812, unit: "Bcf" }),
   ]);
   assert.equal(figure.latestValueText, "3812");
+  assert.equal(figure.unitText, "Bcf");
 });
 
 runTest("change is the plain signed difference between latest and previous", () => {

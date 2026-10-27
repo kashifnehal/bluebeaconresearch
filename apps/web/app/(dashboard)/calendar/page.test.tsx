@@ -576,6 +576,8 @@ async function main() {
       assert.match(text, /U\.S\. Lower 48 working gas in storage/);
       assert.match(text, /425\.3/);
       assert.match(text, /3812/);
+      assert.match(text, /million barrels/);
+      assert.match(text, /Bcf/);
       assert.match(html, /href="https:\/\/www\.eia\.gov\/petroleum\/supply\/weekly\/"/);
       assert.match(html, /href="https:\/\/www\.eia\.gov\/naturalgas\/storage\/"/);
       assert.match(text, /Source: U\.S\. Energy Information Administration \(October 2026\)/);
