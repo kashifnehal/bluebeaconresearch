@@ -47,37 +47,82 @@ export type SpendLimitAlertOutcome =
   | "no_recipients"
   | "send_failed";
 
+// Generalised 2026-10-27 to cover two more Anthropic account-level
+// conditions that were previously silent: a credit-balance exhaustion (HTTP 400,
+// message includes "credit balance" — see isAnthropicUsageLimitError in
+// claude.service.ts) and an outright rejected API key (HTTP 401/403 — see
+// isAnthropicAuthError). All three kinds share the exact same shape: at most one
+// admin email per UTC day, same Redis-unavailable/no-recipient behaviour, same 36h
+// dedupe TTL — only the subject/body and the dedupe key's kind segment differ.
+export type AnthropicAlertKind = "spend_limit" | "credit_balance" | "auth_rejected";
+export type AnthropicAlertOutcome = SpendLimitAlertOutcome;
+
+const ALERT_SUBJECTS: Record<AnthropicAlertKind, string> = {
+  spend_limit: "BBR: Anthropic spend limit reached",
+  credit_balance: "BBR: Anthropic credit balance too low",
+  auth_rejected: "BBR: Anthropic API key rejected",
+};
+
+// Deliberately never takes the API's own error text as input — these bodies are
+// static per kind so the email can never leak Anthropic's raw error message.
+const ALERT_PAUSED_LINE = "Classification is paused; no keyword fallback signals are being created.";
+const ALERT_CHECK_LINES: Record<AnthropicAlertKind, string> = {
+  spend_limit: "Check Anthropic Console billing for credit.",
+  credit_balance: "Check Anthropic Console billing for credit.",
+  auth_rejected: "Check the key set on Railway services workers and backend.",
+};
+
+function alertBody(kind: AnthropicAlertKind, date: string): { text: string; html: string } {
+  // spend_limit keeps its original 2026-10-01 wording byte-for-byte (existing
+  // tests assert on it) — the two new kinds get the paused+check-line shape.
+  if (kind === "spend_limit") {
+    const line =
+      "Classification is paused until the limit is raised. No keyword fallback signals are being created.";
+    return {
+      text: `${date} (UTC)\n\n${line}`,
+      html: `<p>${date} (UTC)</p><p>${line}</p>`,
+    };
+  }
+  const checkLine = ALERT_CHECK_LINES[kind];
+  return {
+    text: `${date} (UTC)\n\n${ALERT_PAUSED_LINE}\n${checkLine}`,
+    html: `<p>${date} (UTC)</p><p>${ALERT_PAUSED_LINE}</p><p>${checkLine}</p>`,
+  };
+}
+
 /**
- * At most one email per UTC day. Returns the outcome rather than throwing — callers
- * (classifyEvent's catch block) still wrap this in their own try/catch per the task's
- * "a failure to send must never break classification" requirement, but this function
- * itself never throws on a Redis or Resend failure either.
+ * At most one email per UTC day per `kind`. Returns the outcome rather than
+ * throwing — callers (classifyEvent's catch block) still wrap this in their own
+ * try/catch per the task's "a failure to send must never break classification"
+ * requirement, but this function itself never throws on a Redis or Resend
+ * failure either.
  *
  * `deps` exists only so unit tests can inject a fake Redis/email client without a
  * module-mocking framework (this repo's test runner is plain tsx + node:assert, no
  * jest/vitest mocking available) — production call sites pass nothing and get the real
  * getRedis()/EmailService.
  */
-export async function maybeSendSpendLimitAlert(
+export async function maybeSendAnthropicAlert(
+  kind: AnthropicAlertKind,
   deps: { redis?: RedisSetter | null; email?: EmailSender; now?: Date } = {},
-): Promise<SpendLimitAlertOutcome> {
+): Promise<AnthropicAlertOutcome> {
   const redis = deps.redis !== undefined ? deps.redis : getRedis();
   if (!redis) {
     console.warn(
-      "[spend-limit-alert] Redis unavailable — sending NO email (never falling back to an " +
+      `[anthropic-alert:${kind}] Redis unavailable — sending NO email (never falling back to an ` +
         "in-memory date check, which would re-send on every worker restart).",
     );
     return "redis_unavailable";
   }
 
   const date = utcDateString(deps.now ?? new Date());
-  const key = `alert:spend-limit:${date}`;
+  const key = `alert:anthropic:${kind}:${date}`;
 
   let claimed: string | null;
   try {
     claimed = await redis.set(key, "1", "EX", 36 * 60 * 60, "NX");
   } catch (err: any) {
-    console.warn(`[spend-limit-alert] Redis SET NX failed: ${err?.message ?? err} — sending NO email.`);
+    console.warn(`[anthropic-alert:${kind}] Redis SET NX failed: ${err?.message ?? err} — sending NO email.`);
     return "redis_error";
   }
 
@@ -88,17 +133,14 @@ export async function maybeSendSpendLimitAlert(
   const recipients = adminRecipients();
   if (recipients.length === 0) {
     console.warn(
-      "[spend-limit-alert] ADMIN_EMAILS is empty — no alert email sent (today's dedupe flag is still set).",
+      `[anthropic-alert:${kind}] ADMIN_EMAILS is empty — no alert email sent (today's dedupe flag is still set).`,
     );
     return "no_recipients";
   }
 
   const email = deps.email ?? new EmailService();
-  const subject = "BBR: Anthropic spend limit reached";
-  const text =
-    `${date} (UTC)\n\n` +
-    `Classification is paused until the limit is raised. No keyword fallback signals are being created.`;
-  const html = `<p>${date} (UTC)</p><p>Classification is paused until the limit is raised. No keyword fallback signals are being created.</p>`;
+  const subject = ALERT_SUBJECTS[kind];
+  const { text, html } = alertBody(kind, date);
 
   let anySent = false;
   for (const to of recipients) {
@@ -106,8 +148,19 @@ export async function maybeSendSpendLimitAlert(
     if (result.sent) {
       anySent = true;
     } else {
-      console.warn(`[spend-limit-alert] email to ${to} failed: ${result.reason}`);
+      console.warn(`[anthropic-alert:${kind}] email to ${to} failed: ${result.reason}`);
     }
   }
   return anySent ? "sent" : "send_failed";
+}
+
+/**
+ * Unchanged entry point for the original spend-limit condition — now a thin
+ * wrapper over maybeSendAnthropicAlert("spend_limit", ...). Behaviour and the
+ * existing test file are unaffected.
+ */
+export async function maybeSendSpendLimitAlert(
+  deps: { redis?: RedisSetter | null; email?: EmailSender; now?: Date } = {},
+): Promise<SpendLimitAlertOutcome> {
+  return maybeSendAnthropicAlert("spend_limit", deps);
 }

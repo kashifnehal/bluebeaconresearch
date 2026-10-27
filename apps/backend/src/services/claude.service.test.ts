@@ -4,6 +4,7 @@ import {
   ClaudeService,
   isAnthropicUsageLimitError,
   isAnthropicSpendLimitError,
+  isAnthropicAuthError,
   applyHeadlinePlacementBonus,
   HEADLINE_PLACEMENT_SEVERITY_BONUS,
   MATERIALITY_GATE_INSTRUCTION,
@@ -989,6 +990,26 @@ async function main() {
         false,
       );
       assert.equal(isAnthropicSpendLimitError({}), false);
+    },
+  );
+
+  // 2026-10-27 — Anthropic's documented error table
+  // (https://docs.anthropic.com/en/api/errors, already cited above this file's
+  // shouldStopBatch) has exactly two statuses for "the key itself is no good":
+  // 401 authentication_error and 403 permission_error. Nothing else should match,
+  // including a 400 spend-limit condition or a 429/5xx transient failure.
+  await runTest(
+    "isAnthropicAuthError: matches only HTTP 401 and 403, not any other status",
+    () => {
+      assert.equal(isAnthropicAuthError({ status: 401 }), true);
+      assert.equal(isAnthropicAuthError({ status: 403 }), true);
+      assert.equal(isAnthropicAuthError({ status: 400 }), false);
+      assert.equal(isAnthropicAuthError({ status: 404 }), false);
+      assert.equal(isAnthropicAuthError({ status: 429 }), false);
+      assert.equal(isAnthropicAuthError({ status: 500 }), false);
+      assert.equal(isAnthropicAuthError({ status: 529 }), false);
+      assert.equal(isAnthropicAuthError({}), false);
+      assert.equal(isAnthropicAuthError({ status: undefined }), false);
     },
   );
 

@@ -4,7 +4,7 @@ process.env.SUPABASE_URL = process.env.SUPABASE_URL || "http://localhost";
 process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || "test-supabase-role-key";
 
-import { maybeSendSpendLimitAlert } from "./spend-limit-alert.js";
+import { maybeSendAnthropicAlert, maybeSendSpendLimitAlert } from "./spend-limit-alert.js";
 
 // W5-SPEND-ALERT — these tests inject fake Redis/email clients via maybeSendSpendLimitAlert's
 // `deps` parameter (see spend-limit-alert.ts) instead of mocking modules: this repo's test
@@ -137,6 +137,126 @@ async function main() {
         assert.equal(email.calls.length, 0);
       } finally {
         process.env.ADMIN_EMAILS = prev;
+      }
+    },
+  );
+
+  // 2026-10-27 — maybeSendAnthropicAlert generalises the above to
+  // "credit_balance" and "auth_rejected" without touching spend_limit's own
+  // behaviour (covered above, unchanged).
+
+  await runTest(
+    "credit_balance: first error of the UTC day sends exactly one email with the right subject",
+    async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const outcome = await maybeSendAnthropicAlert("credit_balance", {
+        redis,
+        email,
+        now: new Date("2026-10-27T12:00:00Z"),
+      });
+      assert.equal(outcome, "sent");
+      assert.equal(email.calls.length, 1);
+      assert.equal(email.calls[0]?.subject, "BBR: Anthropic credit balance too low");
+      assert.match(email.calls[0]?.text ?? "", /2026-10-27 \(UTC\)/);
+      assert.match(email.calls[0]?.text ?? "", /Check Anthropic Console billing for credit\./);
+    },
+  );
+
+  await runTest(
+    "auth_rejected: first error of the UTC day sends exactly one email with the right subject",
+    async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const outcome = await maybeSendAnthropicAlert("auth_rejected", {
+        redis,
+        email,
+        now: new Date("2026-10-27T12:00:00Z"),
+      });
+      assert.equal(outcome, "sent");
+      assert.equal(email.calls.length, 1);
+      assert.equal(email.calls[0]?.subject, "BBR: Anthropic API key rejected");
+      assert.match(email.calls[0]?.text ?? "", /Check the key set on Railway services workers and backend\./);
+    },
+  );
+
+  await runTest(
+    "credit_balance and auth_rejected use independent dedupe keys (both fire the same day)",
+    async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const now = new Date("2026-10-27T12:00:00Z");
+      const creditOutcome = await maybeSendAnthropicAlert("credit_balance", { redis, email, now });
+      const authOutcome = await maybeSendAnthropicAlert("auth_rejected", { redis, email, now });
+      assert.equal(creditOutcome, "sent");
+      assert.equal(authOutcome, "sent");
+      assert.equal(email.calls.length, 2);
+    },
+  );
+
+  await runTest(
+    "credit_balance: a second error the same UTC day does not send another email",
+    async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const first = await maybeSendAnthropicAlert("credit_balance", { redis, email, now: new Date("2026-10-27T12:00:00Z") });
+      const second = await maybeSendAnthropicAlert("credit_balance", { redis, email, now: new Date("2026-10-27T18:00:00Z") });
+      assert.equal(first, "sent");
+      assert.equal(second, "already_sent_today");
+      assert.equal(email.calls.length, 1);
+    },
+  );
+
+  await runTest(
+    "auth_rejected: no ADMIN_EMAILS configured means dedupe flag is still claimed but no email is sent",
+    async () => {
+      const prev = process.env.ADMIN_EMAILS;
+      process.env.ADMIN_EMAILS = "";
+      try {
+        const redis = fakeRedis();
+        const email = fakeEmail();
+        const outcome = await maybeSendAnthropicAlert("auth_rejected", { redis, email, now: new Date("2026-10-27T12:00:00Z") });
+        assert.equal(outcome, "no_recipients");
+        assert.equal(email.calls.length, 0);
+      } finally {
+        process.env.ADMIN_EMAILS = prev;
+      }
+    },
+  );
+
+  await runTest(
+    "credit_balance: Redis unreachable sends no email and does not throw",
+    async () => {
+      const email = fakeEmail();
+      const outcome = await maybeSendAnthropicAlert("credit_balance", { redis: null, email, now: new Date("2026-10-27T12:00:00Z") });
+      assert.equal(outcome, "redis_unavailable");
+      assert.equal(email.calls.length, 0);
+    },
+  );
+
+  await runTest(
+    "auth_rejected: Redis unreachable sends no email and does not throw",
+    async () => {
+      const email = fakeEmail();
+      const outcome = await maybeSendAnthropicAlert("auth_rejected", { redis: null, email, now: new Date("2026-10-27T12:00:00Z") });
+      assert.equal(outcome, "redis_unavailable");
+      assert.equal(email.calls.length, 0);
+    },
+  );
+
+  await runTest(
+    "neither credit_balance nor auth_rejected ever embeds raw API error text in the email body",
+    async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const rawApiErrorText = "anthropic api error: your credit balance is too low to access the Claude API x-request-id abc123";
+      await maybeSendAnthropicAlert("credit_balance", { redis, email, now: new Date("2026-10-27T12:00:00Z") });
+      await maybeSendAnthropicAlert("auth_rejected", { redis, email, now: new Date("2026-10-27T12:00:00Z") });
+      for (const call of email.calls) {
+        assert.equal(call.text.includes(rawApiErrorText), false);
+        assert.equal(call.html.includes(rawApiErrorText), false);
+        assert.equal(call.text.toLowerCase().includes("x-request-id"), false);
+        assert.equal(call.html.toLowerCase().includes("x-request-id"), false);
       }
     },
   );

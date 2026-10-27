@@ -18,7 +18,7 @@ import {
   isAnthropicUsageLimitAlerted,
   setAnthropicUsageLimitAlerted,
 } from "../lib/pipeline-status.js";
-import { maybeSendSpendLimitAlert } from "../lib/spend-limit-alert.js";
+import { maybeSendAnthropicAlert, maybeSendSpendLimitAlert } from "../lib/spend-limit-alert.js";
 import {
   formatWatchlistPromptBlock,
   getActiveWatchlist,
@@ -80,6 +80,16 @@ export function isAnthropicSpendLimitError(err: {
   const status = err?.status;
   const message = String(err?.message ?? "").toLowerCase();
   return status === 400 && message.includes("reached your");
+}
+
+// 2026-10-27 — the Oct 19-26 outage's second phase was a
+// rejected API key: HTTP 401/403, which isAnthropicUsageLimitError/
+// isAnthropicSpendLimitError above don't match at all (different status, different
+// message), so nothing alerted. Anthropic's documented error table (cited just
+// below) — 401 authentication_error, 403 permission_error — is exactly these two
+// and only these two; a 400/404/413/429/5xx/529 must never match here.
+export function isAnthropicAuthError(err: { status?: unknown }): boolean {
+  return err?.status === 401 || err?.status === 403;
 }
 
 export type DeferReason = "budget_closed" | "spend_limit" | "api_error" | "json_parse";
@@ -710,6 +720,50 @@ export class ClaudeService {
           );
           await setAnthropicUsageLimitAlerted(true);
           usageLimitAlertedLocally = true;
+        }
+
+        // 2026-10-27 — the Sentry capture above is deduped by
+        // its own persisted flag (isAnthropicUsageLimitAlerted) and never told a
+        // human directly; this adds the admin email, with its own at-most-once-
+        // per-UTC-day dedupe (maybeSendAnthropicAlert's own Redis key), fired
+        // independently of that flag so it still works across the flag's own
+        // lifecycle. Skipped when fallbackReason is already "spend_limit" — that
+        // condition gets its own distinct email below. Never throws out to here.
+        if (isAnthropicUsageLimitError(err?.message) && fallbackReason !== "spend_limit") {
+          try {
+            await maybeSendAnthropicAlert("credit_balance");
+          } catch (alertErr: any) {
+            console.warn(
+              `[classify-fallback] credit-balance alert email failed: ${alertErr?.message ?? alertErr}`,
+            );
+          }
+        }
+
+        // 2026-10-27 — a rejected key (401/403) previously alerted nobody at
+        // all (Oct 19-26's second outage phase). Sentry capture is deduped on the
+        // SAME Redis key maybeSendAnthropicAlert just claimed: it only fires on an
+        // outcome that means "this call just claimed today's key" (sent/send_failed/
+        // no_recipients), never on already_sent_today/redis_unavailable/redis_error,
+        // so at most one Sentry message per UTC day too.
+        if (isAnthropicAuthError(err)) {
+          try {
+            const authAlertOutcome = await maybeSendAnthropicAlert("auth_rejected");
+            if (
+              authAlertOutcome !== "already_sent_today" &&
+              authAlertOutcome !== "redis_unavailable" &&
+              authAlertOutcome !== "redis_error"
+            ) {
+              Sentry.captureMessage(
+                `[claude.service] classifyEvent() hit an Anthropic authentication/permission error ` +
+                  `(HTTP ${err?.status}) — classification cannot proceed until the API key is fixed: ${err?.message}`,
+                "error",
+              );
+            }
+          } catch (alertErr: any) {
+            console.warn(
+              `[classify-fallback] auth-rejected alert failed: ${alertErr?.message ?? alertErr}`,
+            );
+          }
         }
 
         // W5-SPEND-ALERT — the fallback decision is already made (fallbackReason is
