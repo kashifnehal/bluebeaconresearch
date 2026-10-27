@@ -38,7 +38,7 @@ async function runTest(name: string, fn: () => Promise<void>) {
   }
 }
 
-function makeSignal(i: number) {
+function makeSignal(i: number, overrides: Partial<Record<string, unknown>> = {}) {
   const now = new Date(Date.now() - i * 3_600_000).toISOString();
   return {
     id: `sig-${i}`,
@@ -57,10 +57,33 @@ function makeSignal(i: number) {
     createdAt: now,
     updatedAt: now,
     eventDate: now,
+    ...overrides,
   };
 }
 
-async function renderDashboard() {
+function changeSelect(select: Element, value: string) {
+  const options = [...select.querySelectorAll("option")] as any[];
+  const index = options.findIndex((o) => o.getAttribute("value") === value);
+  options.forEach((o, i) => {
+    if (i === index) o.setAttribute("selected", "");
+    else o.removeAttribute("selected");
+  });
+  (select as any).selectedIndex = index;
+  const event = new (globalThis as any).window.Event("change", { bubbles: true });
+  select.dispatchEvent(event);
+}
+
+async function renderDashboard(signals = Array.from({ length: 5 }, (_, i) => makeSignal(i))) {
+  // This file shares one `document`/localStorage across tests (setupDom is
+  // called once per module) — clear persisted view/sort state so each test
+  // starts from the real first-visit defaults instead of a previous test's.
+  try {
+    (globalThis as any).window.localStorage.removeItem("bbr_feed_view_mode");
+    (globalThis as any).window.localStorage.removeItem("bbr.feed.sort");
+    (globalThis as any).window.localStorage.removeItem("bbr.feed.hideSummaries");
+  } catch {
+    // ignore
+  }
   const original = globalThis.fetch;
   globalThis.fetch = (async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -68,7 +91,6 @@ async function renderDashboard() {
       return new Response(JSON.stringify({ sourcesLast24h: 12 }), { status: 200 });
     }
     if (url.startsWith("/api/signals")) {
-      const signals = Array.from({ length: 5 }, (_, i) => makeSignal(i));
       return new Response(JSON.stringify({ signals, total: signals.length }), { status: 200 });
     }
     if (url.startsWith("/api/prices")) {
@@ -151,6 +173,209 @@ async function main() {
       await act(async () => click(tableButton!));
       const html = document.body.innerHTML;
       assert.doesNotMatch(html, /MARKET &amp; INTELLIGENCE/);
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("Sort: 'Newest first' reorders the stream and shows feed-sort-note; 'Relevance' restores order", async () => {
+    const signals = [
+      makeSignal(0, { id: "a", severity: 3, eventDate: "2026-10-01T00:00:00.000Z" }),
+      makeSignal(1, { id: "b", severity: 9, eventDate: "2026-10-05T00:00:00.000Z" }),
+      makeSignal(2, { id: "c", severity: 6, eventDate: "2026-10-10T00:00:00.000Z" }),
+    ];
+    const { root, client, restoreFetch } = await renderDashboard(signals);
+    try {
+      const sortSelect = document.querySelector('select[aria-label="Sort loaded signals"]');
+      assert.ok(sortSelect, "expected the stream Sort select");
+      assert.doesNotMatch(document.body.innerHTML, /data-testid="feed-sort-note"/);
+
+      // Exact-text-node match (">Signal N<") so the row checkbox's sr-only
+      // "Select Signal N" label (a substring match otherwise) isn't double-counted.
+      const streamOrder = () => {
+        const html = document.body.innerHTML;
+        const start = html.indexOf("Recent Signal Stream");
+        return [...html.slice(start).matchAll(/>Signal (\d)</g)].map((m) => m[1]);
+      };
+
+      await act(async () => changeSelect(sortSelect!, "newest"));
+      assert.deepEqual(streamOrder(), ["2", "1", "0"]);
+      assert.match(document.body.innerHTML, /data-testid="feed-sort-note"/);
+
+      await act(async () => changeSelect(sortSelect!, "relevance"));
+      assert.deepEqual(streamOrder(), ["0", "1", "2"]);
+      assert.doesNotMatch(document.body.innerHTML, /data-testid="feed-sort-note"/);
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("Active filters: removing a chip resets only that field; Clear all resets every field", async () => {
+    const { root, client, restoreFetch } = await renderDashboard();
+    try {
+      assert.doesNotMatch(document.body.innerHTML, /data-testid="active-filters"/);
+
+      const todayButton = document.querySelector('[data-testid="filter-window-24h"]');
+      assert.ok(todayButton, "expected the Today time-range button");
+      await act(async () => click(todayButton!));
+      assert.match(document.body.innerHTML, /data-testid="active-filter-chip"/);
+      assert.match(document.body.innerHTML, /Today/);
+
+      const categoryChip = document.querySelector('[data-testid="category-chip-armed_conflict_security"]');
+      assert.ok(categoryChip);
+      await act(async () => click(categoryChip!));
+      let chips = document.querySelectorAll('[data-testid="active-filter-chip"]');
+      assert.equal(chips.length, 2);
+
+      const windowChipRemove = document.querySelector('[aria-label="Remove filter: Today"]');
+      assert.ok(windowChipRemove, "expected a removable chip labelled Today");
+      await act(async () => click(windowChipRemove!));
+      chips = document.querySelectorAll('[data-testid="active-filter-chip"]');
+      assert.equal(chips.length, 1);
+      assert.doesNotMatch(document.body.innerHTML, /aria-label="Remove filter: Today"/);
+      // Category chip (set separately) is still selected — removing one field
+      // did not touch the other.
+      assert.equal(
+        document.querySelector('[data-testid="category-chip-armed_conflict_security"]')?.getAttribute("aria-pressed"),
+        "true",
+      );
+
+      const clearAll = document.querySelector('[data-testid="active-filters-clear-all"]');
+      assert.ok(clearAll);
+      await act(async () => click(clearAll!));
+      assert.doesNotMatch(document.body.innerHTML, /data-testid="active-filters"/);
+      assert.equal(
+        document.querySelector('[data-testid="category-chip-all"]')?.getAttribute("aria-pressed"),
+        "true",
+      );
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("Table view row selection: selecting two rows shows '2 selected' and Export selected downloads exactly those two", async () => {
+    const signals = [makeSignal(0, { id: "a" }), makeSignal(1, { id: "b" }), makeSignal(2, { id: "c" })];
+    const { root, client, restoreFetch } = await renderDashboard(signals);
+    const originalCreateObjectURL = (globalThis as any).URL?.createObjectURL;
+    const originalRevokeObjectURL = (globalThis as any).URL?.revokeObjectURL;
+    let capturedCsv = "";
+    const OriginalBlob = globalThis.Blob;
+    (globalThis as any).Blob = class {
+      parts: any[];
+      constructor(parts: any[]) {
+        this.parts = parts;
+        capturedCsv = parts.join("");
+      }
+    };
+    (globalThis as any).URL.createObjectURL = () => "blob:fake";
+    (globalThis as any).URL.revokeObjectURL = () => {};
+    try {
+      const tableButton = document.querySelector('[data-testid="feed-view-table"]');
+      assert.ok(tableButton);
+      await act(async () => click(tableButton!));
+
+      const rowCheckboxes = [...document.querySelectorAll('[data-testid="table-select-row"]')] as any[];
+      assert.equal(rowCheckboxes.length, 3);
+      rowCheckboxes[0].checked = true;
+      await act(async () => click(rowCheckboxes[0]));
+      rowCheckboxes[1].checked = true;
+      await act(async () => click(rowCheckboxes[1]));
+
+      assert.match(document.body.innerHTML, /2 selected/);
+      const exportBtn = document.querySelector('[data-testid="export-selected-button"]');
+      assert.ok(exportBtn, "expected the Export selected button");
+      await act(async () => click(exportBtn!));
+
+      assert.match(capturedCsv, /Signal 0/);
+      assert.match(capturedCsv, /Signal 1/);
+      assert.doesNotMatch(capturedCsv, /Signal 2/);
+    } finally {
+      (globalThis as any).Blob = OriginalBlob;
+      (globalThis as any).URL.createObjectURL = originalCreateObjectURL;
+      (globalThis as any).URL.revokeObjectURL = originalRevokeObjectURL;
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("Table view row selection clears when a filter changes", async () => {
+    const signals = [makeSignal(0, { id: "a" }), makeSignal(1, { id: "b" })];
+    const { root, client, restoreFetch } = await renderDashboard(signals);
+    try {
+      const tableButton = document.querySelector('[data-testid="feed-view-table"]');
+      assert.ok(tableButton);
+      await act(async () => click(tableButton!));
+
+      const rowCheckboxes = [...document.querySelectorAll('[data-testid="table-select-row"]')] as any[];
+      rowCheckboxes[0].checked = true;
+      await act(async () => click(rowCheckboxes[0]));
+      assert.match(document.body.innerHTML, /1 selected/);
+
+      const todayButton = document.querySelector('[data-testid="filter-window-24h"]');
+      assert.ok(todayButton);
+      await act(async () => click(todayButton!));
+      assert.doesNotMatch(document.body.innerHTML, /\d selected/);
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("render count stays bounded across mount + a handful of interactions (no render loop)", async () => {
+    let renderCount = 0;
+    function CountingDashboard() {
+      renderCount++;
+      return createElement(DashboardPage);
+    }
+    const { root, client, restoreFetch } = await (async () => {
+      try {
+        (globalThis as any).window.localStorage.removeItem("bbr_feed_view_mode");
+        (globalThis as any).window.localStorage.removeItem("bbr.feed.sort");
+      } catch {
+        // ignore
+      }
+      const original = globalThis.fetch;
+      globalThis.fetch = (async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.startsWith("/api/signals")) {
+          const signals = Array.from({ length: 3 }, (_, i) => makeSignal(i));
+          return new Response(JSON.stringify({ signals, total: signals.length }), { status: 200 });
+        }
+        return new Response(JSON.stringify({}), { status: 200 });
+      }) as typeof fetch;
+      const client = new QueryClient();
+      const { root } = await renderElement(
+        document,
+        createElement(QueryClientProvider, { client }, createElement(CountingDashboard)),
+      );
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      });
+      return { root, client, restoreFetch: () => (globalThis.fetch = original) };
+    })();
+    try {
+      const sortSelect = document.querySelector('select[aria-label="Sort loaded signals"]');
+      assert.ok(sortSelect);
+      await act(async () => changeSelect(sortSelect!, "newest"));
+      const todayButton = document.querySelector('[data-testid="filter-window-24h"]');
+      assert.ok(todayButton);
+      await act(async () => click(todayButton!));
+      const tableButton = document.querySelector('[data-testid="feed-view-table"]');
+      assert.ok(tableButton);
+      await act(async () => click(tableButton!));
+
+      assert.ok(
+        renderCount < 30,
+        `expected a bounded render count for mount + 3 interactions, got ${renderCount}`,
+      );
     } finally {
       restoreFetch();
       await act(async () => root.unmount());

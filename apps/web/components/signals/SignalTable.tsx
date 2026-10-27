@@ -6,6 +6,7 @@ import { safeFormatDistanceToNow } from "@/lib/utils";
 import { eventCategoryLabel } from "@/lib/market-impact-assessment";
 import { SeverityBadge } from "./SeverityBadge";
 import { CommodityChip } from "./CommodityChip";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   formatTableCountLine,
   primaryTableImpact,
@@ -33,9 +34,17 @@ function topicSymbols(signal: Signal): string {
 export function SignalTable({
   signals,
   hideSummaries,
+  selectable,
+  selectedIds,
+  onToggleRow,
+  onToggleAll,
 }: {
   signals: Signal[];
   hideSummaries: boolean;
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onToggleRow?: (id: string) => void;
+  onToggleAll?: (ids: string[], checked: boolean) => void;
 }) {
   const [sortColumn, setSortColumn] = useState<SignalTableSortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SignalTableSortDirection>("desc");
@@ -51,6 +60,9 @@ export function SignalTable({
     }
     setSortDirection((d) => (d === "desc" ? "asc" : "desc"));
   };
+
+  const allRowIds = rows.map((r) => r.id);
+  const allSelected = selectable && allRowIds.length > 0 && allRowIds.every((id) => selectedIds?.has(id));
 
   return (
     <div>
@@ -81,6 +93,17 @@ export function SignalTable({
               className="border-b"
               style={{ borderColor: "var(--border)", color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
+              {selectable && (
+                <th className="px-4 py-3 w-10">
+                  <Checkbox
+                    hideLabel
+                    label="Select all loaded rows"
+                    data-testid="table-select-all"
+                    checked={Boolean(allSelected)}
+                    onChange={(checked) => onToggleAll?.(allRowIds, checked)}
+                  />
+                </th>
+              )}
               <HeaderCell label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <th className="px-4 py-3 font-bold uppercase tracking-widest">Event</th>
               {hideSummaries ? null : (
@@ -105,6 +128,17 @@ export function SignalTable({
                   data-testid="signal-table-row"
                   className="transition-colors hover:bg-[#1f1f1f]"
                 >
+                  {selectable && (
+                    <td className="px-4 py-3">
+                      <Checkbox
+                        hideLabel
+                        label={`Select ${signal.title}`}
+                        data-testid="table-select-row"
+                        checked={Boolean(selectedIds?.has(signal.id))}
+                        onChange={() => onToggleRow?.(signal.id)}
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt, { addSuffix: true })}
@@ -183,14 +217,19 @@ function HeaderCell({
   onSort: (column: SignalTableSortColumn) => void;
 }) {
   const active = sortColumn === column;
+  const ariaSort: "ascending" | "descending" | "none" = !active
+    ? "none"
+    : sortDirection === "asc"
+      ? "ascending"
+      : "descending";
   return (
-    <th className="px-4 py-3 font-bold uppercase tracking-widest">
+    <th className="px-4 py-3 font-bold uppercase tracking-widest" aria-sort={ariaSort}>
       <button
         type="button"
         data-testid={`signal-table-sort-${column}`}
         onClick={() => onSort(column)}
         aria-pressed={active}
-        className="inline-flex items-center gap-1 cursor-pointer"
+        className="inline-flex items-center gap-1 cursor-pointer min-h-6"
         style={{ color: active ? "var(--accent)" : "inherit" }}
       >
         {label}

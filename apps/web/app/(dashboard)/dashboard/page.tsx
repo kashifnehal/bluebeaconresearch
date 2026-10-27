@@ -16,7 +16,14 @@ import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { PageShell } from "@/components/layout/PageShell";
+import { Toolbar, ActiveFilters, SortSelect } from "@/components/layout/Toolbar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StatusLine } from "@/components/signals/StatusLine";
+import {
+  buildActiveFilterChips,
+  sortStreamList,
+  type StreamSort,
+} from "@/lib/dashboard-feed";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
@@ -279,7 +286,39 @@ export default function DashboardPage() {
   const secondaryB = liveSignals[2];
   // Real infinite scroll now (sentinelRef, below) — every loaded signal
   // renders, rather than being held back behind a client-side reveal batch.
-  const streamList = liveSignals;
+  const [streamSort, setStreamSort] = useState<StreamSort>(() => {
+    if (typeof window === "undefined") return "relevance";
+    try {
+      const stored = window.localStorage.getItem("bbr.feed.sort");
+      return stored === "newest" || stored === "severity" ? stored : "relevance";
+    } catch {
+      return "relevance";
+    }
+  });
+  const setStreamSortPersisted = (next: StreamSort) => {
+    setStreamSort(next);
+    try {
+      window.localStorage.setItem("bbr.feed.sort", next);
+    } catch {
+      // ignore — sort still works for this session, just not remembered
+    }
+  };
+  const streamList = useMemo(
+    () => sortStreamList(liveSignals, streamSort),
+    [liveSignals, streamSort],
+  );
+
+  // Active-filter chips (#active-filters) — built from the same comparison
+  // the existing `filtersActive` boolean already uses against DEFAULT_FILTERS.
+  const activeFilterChips = useMemo(() => buildActiveFilterChips(filters), [filters]);
+
+  // Row selection (Table view only) — cleared whenever filters change, same
+  // spirit as a fresh result set invalidating a stale selection.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setSelectedIds(new Set());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters]);
 
   const filtersActive =
     filters.commodity != null ||
@@ -566,6 +605,23 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {activeFilterChips.length > 0 && (
+          <div className="mb-4">
+            <ActiveFilters
+              chips={activeFilterChips.map((chip) => ({
+                id: chip.id,
+                label: chip.label,
+                onRemove: () =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    [chip.id]: (DEFAULT_FILTERS as Record<string, unknown>)[chip.id],
+                  })),
+              }))}
+              onClearAll={() => setFilters(DEFAULT_FILTERS)}
+            />
+          </div>
+        )}
 
         {/* Category filter chips (4.2) — dashboard only, not the map. */}
         <div className="mb-4">
@@ -1054,6 +1110,17 @@ export default function DashboardPage() {
                   Recent Signal Stream
                 </h4>
                 <div className="flex items-center gap-3">
+                  <SortSelect
+                    label="Sort"
+                    ariaLabel="Sort loaded signals"
+                    value={streamSort}
+                    options={[
+                      { value: "relevance", label: "Relevance" },
+                      { value: "newest", label: "Newest first" },
+                      { value: "severity", label: "Severity (high to low)" },
+                    ]}
+                    onChange={(v) => setStreamSortPersisted(v as StreamSort)}
+                  />
                   <div
                     data-testid="feed-view-toggle"
                     role="group"
@@ -1101,8 +1168,75 @@ export default function DashboardPage() {
                   ) : null}
                 </div>
               </div>
+              {streamSort !== "relevance" && (
+                <p
+                  data-testid="feed-sort-note"
+                  className="px-4 pt-3 text-[12px] md:text-[11px]"
+                  style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
+                >
+                  Sorted within the signals loaded so far. More load as you scroll.
+                </p>
+              )}
+              {feedViewMode === "table" && selectedIds.size > 0 && (
+                <div
+                  className="px-4 py-2 flex items-center gap-3 border-b"
+                  style={{ borderColor: "var(--border)" }}
+                >
+                  <span
+                    className="text-[12px] md:text-[11px]"
+                    style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
+                  >
+                    {selectedIds.size} selected
+                  </span>
+                  <button
+                    type="button"
+                    data-testid="export-selected-button"
+                    onClick={() => {
+                      const selected = streamList.filter((s) => selectedIds.has(s.id));
+                      const csv = signalsToCsv(selected);
+                      downloadCsv(
+                        `blue-beacon-signals-selected-${new Date().toISOString().slice(0, 10)}.csv`,
+                        csv,
+                      );
+                    }}
+                    className="text-[12px] md:text-[11px] font-bold uppercase tracking-widest text-primary hover:underline cursor-pointer"
+                  >
+                    Export selected
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIds(new Set())}
+                    className="text-[12px] md:text-[11px] font-bold uppercase tracking-widest text-on-surface/60 hover:underline cursor-pointer"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+              )}
               {feedViewMode === "table" ? (
-                <SignalTable signals={streamList} hideSummaries={hideSummaries} />
+                <SignalTable
+                  signals={streamList}
+                  hideSummaries={hideSummaries}
+                  selectable
+                  selectedIds={selectedIds}
+                  onToggleRow={(id) =>
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    })
+                  }
+                  onToggleAll={(ids, checked) =>
+                    setSelectedIds((prev) => {
+                      const next = new Set(prev);
+                      for (const id of ids) {
+                        if (checked) next.add(id);
+                        else next.delete(id);
+                      }
+                      return next;
+                    })
+                  }
+                />
               ) : (
               <div
                 className="divide-y"

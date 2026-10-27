@@ -1,10 +1,19 @@
 import assert from "node:assert/strict";
 import { createElement } from "react";
+import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { Signal } from "@blue-beacon-research/shared";
 
+import { setupDom, renderElement } from "@/lib/test-render";
 import { SignalTable } from "./SignalTable";
+
+const document = setupDom();
+
+function click(el: Element) {
+  const event = new (globalThis as any).window.Event("click", { bubbles: true });
+  el.dispatchEvent(event);
+}
 
 function visibleText(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -65,3 +74,105 @@ runTest("hideSummaries removes the Summary column and keeps scroll rules", () =>
   assert.match(visibleText(html), /1 signal loaded · 1 day · Up 1 · Down 0 · Other 0/);
   assert.match(visibleText(html), /Sorting applies to loaded rows/);
 });
+
+runTest("every sortable header exposes aria-sort, 'none' until clicked", () => {
+  const html = renderToStaticMarkup(
+    createElement(SignalTable, { signals: [signal()], hideSummaries: false }),
+  );
+  const sortHeaders = html.match(/<th[^>]*aria-sort="[a-z]+"/g) ?? [];
+  assert.ok(sortHeaders.length >= 3, "expected Date/Severity/Reports headers to carry aria-sort");
+  assert.ok(sortHeaders.every((h) => h.includes('aria-sort="none"')));
+  assert.match(html, /min-h-6/);
+});
+
+runTest("selectable is off by default: no checkbox column renders", () => {
+  const html = renderToStaticMarkup(
+    createElement(SignalTable, { signals: [signal()], hideSummaries: false }),
+  );
+  assert.doesNotMatch(html, /table-select-row|table-select-all/);
+});
+
+async function runAsync(name: string, fn: () => Promise<void>) {
+  try {
+    await fn();
+    console.log(`✔ ${name}`);
+  } catch (err) {
+    console.error(`✖ ${name}`);
+    console.error(err);
+    process.exitCode = 1;
+  }
+}
+
+async function main() {
+  await runAsync("clicking a sortable header flips its aria-sort to ascending/descending", async () => {
+    const { root } = await renderElement(
+      document,
+      createElement(SignalTable, { signals: [signal(), signal({ id: "sig-2", severity: 2 })], hideSummaries: false }),
+    );
+    try {
+      const severityButton = document.querySelector('[data-testid="signal-table-sort-severity"]');
+      assert.ok(severityButton);
+      await act(async () => click(severityButton!));
+      const th = severityButton!.closest("th");
+      assert.equal(th?.getAttribute("aria-sort"), "descending");
+      await act(async () => click(severityButton!));
+      assert.equal(th?.getAttribute("aria-sort"), "ascending");
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runAsync(
+    "selectable: row checkboxes have an accessible name naming the signal; select-all toggles every loaded row",
+    async () => {
+      const signals = [signal({ id: "a", title: "Alpha event" }), signal({ id: "b", title: "Beta event" })];
+      let selected = new Set<string>();
+      const onToggleRow = (id: string) => {
+        selected = new Set(selected);
+        if (selected.has(id)) selected.delete(id);
+        else selected.add(id);
+      };
+      const onToggleAll = (ids: string[], checked: boolean) => {
+        selected = new Set(selected);
+        for (const id of ids) {
+          if (checked) selected.add(id);
+          else selected.delete(id);
+        }
+      };
+      const { root } = await renderElement(
+        document,
+        createElement(SignalTable, {
+          signals,
+          hideSummaries: false,
+          selectable: true,
+          selectedIds: selected,
+          onToggleRow,
+          onToggleAll,
+        }),
+      );
+      try {
+        const rowCheckboxes = [...document.querySelectorAll('[data-testid="table-select-row"]')];
+        assert.equal(rowCheckboxes.length, 2);
+        const firstLabel = rowCheckboxes[0].closest("label");
+        assert.match(firstLabel?.textContent ?? "", /Select Alpha event/);
+
+        // linkedom doesn't implement the browser's native "click toggles
+        // checked" default action for a programmatically dispatched click
+        // (same workaround as components/ui/checkbox.test.tsx).
+        (rowCheckboxes[0] as any).checked = true;
+        await act(async () => click(rowCheckboxes[0]));
+        assert.deepEqual([...selected], ["a"]);
+
+        const selectAll = document.querySelector('[data-testid="table-select-all"]') as any;
+        assert.ok(selectAll, "expected the select-all header checkbox");
+        selectAll.checked = true;
+        await act(async () => click(selectAll));
+        assert.deepEqual(new Set(selected), new Set(["a", "b"]));
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
+}
+
+main();
