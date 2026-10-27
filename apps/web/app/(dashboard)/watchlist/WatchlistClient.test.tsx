@@ -12,6 +12,7 @@ import {
   NewsOnlyCardSummary,
   WATCHLIST_ASSETS,
   parsePriceHistoryPoints,
+  sortWatchlistSymbols,
   sparklineDisplayState,
   withPreselect,
 } from "./WatchlistClient";
@@ -132,6 +133,28 @@ runTest("DEFAULT_WATCHLIST stays the priced commodity list", () => {
   for (const symbol of NEWS_ONLY_SYMBOLS) {
     assert.equal(defaults.includes(symbol), false);
   }
+});
+
+runTest("sortWatchlistSymbols: 'added' returns the list unchanged", () => {
+  const symbols = ["GOLD", "USOIL", "WHEAT"];
+  assert.deepEqual(sortWatchlistSymbols(symbols, "added", () => "", () => null), symbols);
+});
+
+runTest("sortWatchlistSymbols: 'name' sorts by label A to Z", () => {
+  const labels: Record<string, string> = { USOIL: "WTI Crude", XAUUSD: "Gold", WHEAT: "Wheat" };
+  const sorted = sortWatchlistSymbols(
+    ["USOIL", "XAUUSD", "WHEAT"],
+    "name",
+    (sym) => labels[sym],
+    () => null,
+  );
+  assert.deepEqual(sorted, ["XAUUSD", "WHEAT", "USOIL"]);
+});
+
+runTest("sortWatchlistSymbols: 'change' sorts high to low, missing price sorts last", () => {
+  const pct: Record<string, number | null> = { A: -1.5, B: 3.2, C: null, D: 0.1 };
+  const sorted = sortWatchlistSymbols(["A", "B", "C", "D"], "change", () => "", (sym) => pct[sym]);
+  assert.deepEqual(sorted, ["B", "D", "A", "C"]);
 });
 
 runTest("WATCHLIST_ASSETS includes the seven news-only symbols", () => {

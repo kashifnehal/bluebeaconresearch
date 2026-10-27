@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
 import { DATA_SLOW_MESSAGE, fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { PageShell } from "@/components/layout/PageShell";
+import { Toolbar, SortSelect } from "@/components/layout/Toolbar";
 import {
   NEWS_ONLY_FEED_LABEL,
   fetchNewsOnlyCardSignals,
@@ -326,6 +328,35 @@ export function withPreselect(symbols: string[], preselect: string | null): stri
   return [...symbols, preselect];
 }
 
+export type WatchlistSort = "added" | "name" | "change";
+export const WATCHLIST_SORT_STORAGE_KEY = "bbr.watchlist.sort";
+export const WATCHLIST_SORT_OPTIONS: { value: WatchlistSort; label: string }[] = [
+  { value: "added", label: "Added order" },
+  { value: "name", label: "Name A to Z" },
+  { value: "change", label: "24h change (high to low)" },
+];
+
+/** Pure so it can be unit-tested without the surrounding query/localStorage plumbing. */
+export function sortWatchlistSymbols(
+  symbols: string[],
+  sort: WatchlistSort,
+  getLabel: (symbol: string) => string,
+  getChangePct: (symbol: string) => number | null,
+): string[] {
+  if (sort === "added") return symbols;
+  if (sort === "name") {
+    return [...symbols].sort((a, b) => getLabel(a).localeCompare(getLabel(b)));
+  }
+  return [...symbols].sort((a, b) => {
+    const pa = getChangePct(a);
+    const pb = getChangePct(b);
+    if (pa == null && pb == null) return 0;
+    if (pa == null) return 1;
+    if (pb == null) return -1;
+    return pb - pa;
+  });
+}
+
 export function WatchlistClient() {
   const params = useSearchParams();
   const preselect = params.get("symbol");
@@ -443,6 +474,37 @@ export function WatchlistClient() {
     return map;
   }, [data?.prices]);
 
+  const [sort, setSort] = useState<WatchlistSort>(() => {
+    if (typeof window === "undefined") return "added";
+    try {
+      const stored = window.localStorage.getItem(WATCHLIST_SORT_STORAGE_KEY);
+      return stored === "name" || stored === "change" ? stored : "added";
+    } catch {
+      return "added";
+    }
+  });
+  const setSortPersisted = (next: WatchlistSort) => {
+    setSort(next);
+    try {
+      window.localStorage.setItem(WATCHLIST_SORT_STORAGE_KEY, next);
+    } catch {
+      // Quota / private mode — sort still works for this session.
+    }
+  };
+
+  const getWatchlistLabel = (sym: string) =>
+    WATCHLIST_ASSETS.find((c) => c.symbol === sym)?.label || sym;
+  const getWatchlistChangePct = (sym: string): number | null => {
+    const p = priceBySymbol.get(sym);
+    if (!p) return null;
+    return p.change_pct_24h ?? p.changePct24h ?? null;
+  };
+  const sortedWatch = useMemo(
+    () => sortWatchlistSymbols(watch, sort, getWatchlistLabel, getWatchlistChangePct),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [watch, sort, priceBySymbol],
+  );
+
   const available = WATCHLIST_ASSETS.filter((c) => !watch.includes(c.symbol));
 
   const handleSelectAdd = (value: string) => {
@@ -476,8 +538,7 @@ export function WatchlistClient() {
   };
 
   return (
-    <div className="mt-16 md:mt-0 md:fixed md:inset-0 md:left-[256px] md:right-0 md:top-16 bg-surface-container-lowest overflow-y-auto p-4 md:p-10">
-      <div className="max-w-[1440px] mx-auto">
+    <PageShell width="wide">
         <Breadcrumbs
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Watchlist" }]}
           className="mb-4"
@@ -557,6 +618,18 @@ export function WatchlistClient() {
 
         </div>
 
+        {hydrated && watch.length > 0 && (
+          <Toolbar>
+            <SortSelect
+              label="Sort"
+              ariaLabel="Sort watchlist"
+              value={sort}
+              options={WATCHLIST_SORT_OPTIONS}
+              onChange={(v) => setSortPersisted(v as WatchlistSort)}
+            />
+          </Toolbar>
+        )}
+
         {/* Commodity Cards Grid */}
         {!hydrated ? (
           <div
@@ -569,7 +642,7 @@ export function WatchlistClient() {
           </div>
         ) : (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {watch.map((sym) => {
+          {sortedWatch.map((sym) => {
             const meta = WATCHLIST_ASSETS.find((c) => c.symbol === sym);
             const label = meta?.label || sym;
             if (isNewsOnlySymbol(sym)) {
@@ -710,7 +783,6 @@ export function WatchlistClient() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Desktop-only floating action — the mobile FAB was removed (#186):
           it sat position:fixed over scrolling card content. The header
@@ -729,6 +801,6 @@ export function WatchlistClient() {
           </span>
         </div>
       </button>
-    </div>
+    </PageShell>
   );
 }
