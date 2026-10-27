@@ -115,7 +115,7 @@ export const STATIC_PAGES: StaticPage[] = [
     keywords: ["help", "faq", "support", "contact", "feedback", "how do i", "question", "contact us"],
   },
   {
-    label: "Economic Calendar",
+    label: "Week Ahead",
     href: "/calendar",
     icon: "calendar_month",
     keywords: [

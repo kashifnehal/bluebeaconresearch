@@ -87,9 +87,9 @@ runTest("alert-rule keyword match still works against name/region/commodity hays
   assert.ok(names.includes("Severe Middle East oil"));
 });
 
-runTest("Economic Calendar page is findable by real user words, not just its title", () => {
+runTest("Week Ahead (the economic calendar page) is findable by real user words, not just its title", () => {
   const labels = matchStaticPages("fed meeting").map((p) => p.label);
-  assert.ok(labels.includes("Economic Calendar"), `expected Economic Calendar in ${JSON.stringify(labels)}`);
+  assert.ok(labels.includes("Week Ahead"), `expected Week Ahead in ${JSON.stringify(labels)}`);
   const cpiLabels = matchStaticPages("cpi").map((p) => p.label);
-  assert.ok(cpiLabels.includes("Economic Calendar"));
+  assert.ok(cpiLabels.includes("Week Ahead"));
 });

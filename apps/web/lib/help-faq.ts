@@ -59,9 +59,9 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
   },
   {
     id: "calendar",
-    question: "Is the Economic Calendar live market data?",
+    question: "Is Week Ahead live market data?",
     answer:
-      "No. The Calendar is a manually curated static list of scheduled releases (Fed, ECB, BOJ, and major US prints), not a live paid calendar API. Times in the file are UTC; the local-time toggle is display-only.",
+      "No. Week Ahead is a manually curated static list of scheduled releases (Fed, ECB, BOJ, and major US prints), not a live paid calendar API. Times in the file are UTC; the local-time toggle is display-only.",
   },
   {
     id: "severity",

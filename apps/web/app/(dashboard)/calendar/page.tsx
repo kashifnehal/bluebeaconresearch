@@ -818,7 +818,7 @@ export default function CalendarPage() {
       />
       <section className="flex justify-between items-end mb-8 gap-4 flex-wrap">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Economic Calendar</h1>
+          <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Week Ahead</h1>
           <p className="text-on-surface/60 mt-2 font-body font-medium">
             Fed, ECB, BOJ, and major US data releases — the scheduled events that move the instruments Blue Beacon
             tracks.
