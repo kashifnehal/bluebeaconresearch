@@ -15,6 +15,7 @@ import { FreshTag } from "@/components/signals/FreshTag";
 import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { PageShell } from "@/components/layout/PageShell";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
@@ -345,16 +346,136 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tourActive, tourPhase, featured?.id]);
 
-  return (
-    <div
-      className="flex h-screen w-full pt-16"
-      style={{ backgroundColor: "#0e0e0e" }}
-    >
-      {/* ── Center: Intelligence Feed (Main Canvas) ────────────────────────────────── */}
-      <div
-        className="flex-1 overflow-y-auto"
-        style={{ padding: "32px", maxWidth: "1440px", margin: "0 auto" }}
+  // Market & Intelligence sidebar (system status link + computed hotzones).
+  // Hidden in Table view: at 1440 the feed column is ~860px with it present
+  // (1440 - 256 sidebar - 260 aside - 64 padding), but SignalTable has
+  // min-w-[900px], cutting off Severity and heavily wrapping Summary; without
+  // it the column is ~1120px. Its content (the /status link and hotzones) is
+  // not shown anywhere else on this page while hidden — see TASK UI-ALL PART
+  // 6a report.
+  const marketAside =
+    feedViewMode === "table" ? undefined : (
+      <aside
+        className="w-[260px] shrink-0 border-l flex flex-col overflow-y-auto hidden xl:flex sticky top-16 self-start max-h-[calc(100vh-4rem)]"
+        style={{ borderColor: "#2a2a2a", backgroundColor: "#0e0e0e" }}
       >
+        <div className="p-6">
+          <div className="mb-8">
+            <div
+              className="text-sm font-bold"
+              style={{
+                color: "var(--accent)",
+                fontFamily: "'Space Grotesk', sans-serif",
+              }}
+            >
+              MARKET & INTELLIGENCE
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* AI Module (now shows honest system status link) */}
+            <div
+              className="p-4 border"
+              style={{ backgroundColor: "#0e0e0e", borderColor: "var(--border)" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span
+                  className="material-symbols-outlined text-sm"
+                  style={{ color: "var(--accent)" }}
+                >
+                  psychology
+                </span>
+                <span
+                  className="text-[12px] md:text-[10px]"
+                  style={{
+                    color: "var(--accent)",
+                    fontFamily: "'Space Grotesk', sans-serif",
+                  }}
+                >
+                  SYSTEM STATUS
+                </span>
+              </div>
+              <div
+                className="text-xs leading-relaxed mb-2"
+                style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
+              >
+                Signal collection and classification across configured
+                regions and sources.
+              </div>
+              <a
+                href="/status"
+                className="text-xs text-[var(--text-secondary)] hover:underline"
+              >
+                View pipeline & ingestion details
+              </a>
+            </div>
+
+            {/* Active Hotzones: computed from live signals */}
+            <div
+              className="p-4 border"
+              style={{ backgroundColor: "#0e0e0e", borderColor: "var(--border)" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <span
+                  className="material-symbols-outlined text-sm"
+                  style={{ color: "var(--accent)" }}
+                >
+                  radar
+                </span>
+                <span
+                  className="text-[12px] md:text-[10px]"
+                  style={{
+                    color: "var(--accent)",
+                    fontFamily: "'Space Grotesk', sans-serif",
+                  }}
+                >
+                  ACTIVE HOTZONES
+                </span>
+              </div>
+              <ul
+                className="space-y-2 text-[12px] md:text-[10px]"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                {topHotzones.length === 0 ? (
+                  <li className="text-[var(--text-muted)]">
+                    No active hotzones detected
+                  </li>
+                ) : (
+                  topHotzones.map((hz) => {
+                    const label =
+                      hz.avgSeverity >= 8
+                        ? "HIGH"
+                        : hz.avgSeverity >= 5
+                          ? "MED"
+                          : "LOW";
+                    const color =
+                      label === "HIGH"
+                        ? "#ee7d77"
+                        : label === "MED"
+                          ? "#ffb4ab"
+                          : "var(--accent)";
+                    return (
+                      <li
+                        key={hz.region}
+                        className="flex items-center justify-between"
+                      >
+                        <span style={{ color: "#e5e2e1" }}>{hz.region}</span>
+                        <span className="font-bold" style={{ color }}>
+                          {label}
+                        </span>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
+
+  return (
+    <PageShell width="wide" aside={marketAside}>
         <Breadcrumbs items={[{ label: "Dashboard" }]} className="mb-4" />
 
         {/* Header */}
@@ -1156,131 +1277,11 @@ export default function DashboardPage() {
             </section>
           </>
         )}
-      </div>
-
-      {/* ── Right: Market & AI Sidebar ────────────────────────── */}
-      <aside
-        className="w-[260px] shrink-0 border-l flex flex-col overflow-y-auto hidden xl:flex"
-        style={{ borderColor: "#2a2a2a", backgroundColor: "#0e0e0e" }}
-      >
-        <div className="p-6">
-          <div className="mb-8">
-            <div
-              className="text-sm font-bold"
-              style={{
-                color: "var(--accent)",
-                fontFamily: "'Space Grotesk', sans-serif",
-              }}
-            >
-              MARKET & INTELLIGENCE
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {/* AI Module (now shows honest system status link) */}
-            <div
-              className="p-4 border"
-              style={{ backgroundColor: "#0e0e0e", borderColor: "var(--border)" }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="material-symbols-outlined text-sm"
-                  style={{ color: "var(--accent)" }}
-                >
-                  psychology
-                </span>
-                <span
-                  className="text-[12px] md:text-[10px]"
-                  style={{
-                    color: "var(--accent)",
-                    fontFamily: "'Space Grotesk', sans-serif",
-                  }}
-                >
-                  SYSTEM STATUS
-                </span>
-              </div>
-              <div
-                className="text-xs leading-relaxed mb-2"
-                style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
-              >
-                Signal collection and classification across configured
-                regions and sources.
-              </div>
-              <a
-                href="/status"
-                className="text-xs text-[var(--text-secondary)] hover:underline"
-              >
-                View pipeline & ingestion details
-              </a>
-            </div>
-
-            {/* Active Hotzones: computed from live signals */}
-            <div
-              className="p-4 border"
-              style={{ backgroundColor: "#0e0e0e", borderColor: "var(--border)" }}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <span
-                  className="material-symbols-outlined text-sm"
-                  style={{ color: "var(--accent)" }}
-                >
-                  radar
-                </span>
-                <span
-                  className="text-[12px] md:text-[10px]"
-                  style={{
-                    color: "var(--accent)",
-                    fontFamily: "'Space Grotesk', sans-serif",
-                  }}
-                >
-                  ACTIVE HOTZONES
-                </span>
-              </div>
-              <ul
-                className="space-y-2 text-[12px] md:text-[10px]"
-                style={{ fontFamily: "'JetBrains Mono', monospace" }}
-              >
-                {topHotzones.length === 0 ? (
-                  <li className="text-[var(--text-muted)]">
-                    No active hotzones detected
-                  </li>
-                ) : (
-                  topHotzones.map((hz) => {
-                    const label =
-                      hz.avgSeverity >= 8
-                        ? "HIGH"
-                        : hz.avgSeverity >= 5
-                          ? "MED"
-                          : "LOW";
-                    const color =
-                      label === "HIGH"
-                        ? "#ee7d77"
-                        : label === "MED"
-                          ? "#ffb4ab"
-                          : "var(--accent)";
-                    return (
-                      <li
-                        key={hz.region}
-                        className="flex items-center justify-between"
-                      >
-                        <span style={{ color: "#e5e2e1" }}>{hz.region}</span>
-                        <span className="font-bold" style={{ color }}>
-                          {label}
-                        </span>
-                      </li>
-                    );
-                  })
-                )}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </aside>
 
       <SignalQuickView
         signal={quickViewSignal}
         onClose={() => setQuickViewSignal(null)}
       />
-    </div>
+    </PageShell>
   );
 }
