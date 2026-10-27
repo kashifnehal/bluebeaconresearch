@@ -65,7 +65,7 @@ export function PulseTiles({ symbol }: { symbol?: string }) {
 
   return (
     <section className="mb-8" aria-label="Signal pulse" data-testid="pulse-tiles">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
         {TILES.map((tile) => {
           const label = tile.key === "direction" && allAssets ? ALL_ASSETS_DIRECTION_LABEL : tile.label;
           return (

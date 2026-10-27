@@ -102,6 +102,27 @@ async function main() {
       root.unmount();
     });
   });
+
+  await runTest("renders five tiles with their test ids on a grid that auto-fits available width (TASK UI-FIX1 Part 3)", async () => {
+    const root = await renderTiles();
+    const grid = document.querySelector('[data-testid="pulse-tiles"] > div');
+    assert.ok(grid, "expected the tiles grid wrapper");
+    const gridClass = grid!.getAttribute("class") ?? "";
+    assert.match(gridClass, /grid-cols-\[repeat\(auto-fit,minmax\(150px,1fr\)\)\]/);
+    assert.doesNotMatch(gridClass, /md:grid-cols-5/);
+    for (const testId of [
+      "pulse-tile-last24h",
+      "pulse-tile-prior24h",
+      "pulse-tile-change",
+      "pulse-tile-peak",
+      "pulse-tile-direction",
+    ]) {
+      assert.ok(document.querySelector(`[data-testid="${testId}"]`), `expected ${testId} to render`);
+    }
+    await act(async () => {
+      root.unmount();
+    });
+  });
 }
 
 void main();
