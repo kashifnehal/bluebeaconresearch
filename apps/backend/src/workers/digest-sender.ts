@@ -1,9 +1,11 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { EmailService } from "../services/email.service.js";
 import { tokenize, jaccardSimilarity } from "./signal-merge.js";
+import { weekAheadFor, weeklyRhythmLines, type WeekAheadEvent } from "../lib/week-ahead.js";
 
 let supabase = getSupabaseAdmin();
 let email = new EmailService();
+let weekAhead = weekAheadFor;
 
 /** Test-only. Production call sites keep the module clients. */
 export function __setDigestSupabaseForTests(client: unknown): void {
@@ -13,6 +15,11 @@ export function __setDigestSupabaseForTests(client: unknown): void {
 /** Test-only. Production call sites keep the Resend client. */
 export function __setDigestEmailForTests(next: EmailService): void {
   email = next;
+}
+
+/** Test-only. Production call sites keep the real calendar-backed week-ahead lookup. */
+export function __setWeekAheadForTests(next: typeof weekAheadFor): void {
+  weekAhead = next;
 }
 
 // Canonical region id → display label. signals.region is free text ("Middle East",
@@ -32,6 +39,8 @@ const DIRECTION_ARROW: Record<string, string> = { up: "↑", down: "↓", volati
 
 const TRUST_LINE =
   "Blue Beacon surfaces signals for your own analysis — informational only, not financial advice or a buy/sell call.";
+
+const CALENDAR_URL = "https://www.bluebeaconresearch.com/calendar";
 
 const DIGEST_LIMIT = 5;
 // Candidate pool fetched before diversity picking — DESIGN CHOICE, not a tuned
@@ -284,7 +293,81 @@ function newestIncludedLine(signals: SignalRow[]): string {
   return `Newest signal in this email: ${stamp}`;
 }
 
-function renderText(signals: SignalRow[], pref: PrefRow, sources: Map<string, string[]>): string {
+function formatWeekAheadAssets(assets: WeekAheadEvent["assets"]): string {
+  return assets === "all" ? "All markets" : assets.join(", ");
+}
+
+function renderWeekAheadText(events: WeekAheadEvent[]): string {
+  const lines = events.map(
+    (e) =>
+      `${e.date}${e.time ? ` ${e.time} UTC` : ""} — ${e.event} (${formatWeekAheadAssets(e.assets)}) — ${e.sourceUrl}`,
+  );
+  return [
+    "WEEK AHEAD",
+    ...lines,
+    "",
+    "Weekly rhythm:",
+    ...weeklyRhythmLines().map((l) => `- ${l}`),
+    "",
+    `Full calendar: ${CALENDAR_URL}`,
+  ].join("\n");
+}
+
+function renderWeekAheadHtml(events: WeekAheadEvent[]): string {
+  const rows = events
+    .map(
+      (e) =>
+        `<li><a href="${esc(e.sourceUrl)}" style="color:#2563eb;">${esc(e.event)}</a> — ${esc(e.date)}${
+          e.time ? ` ${esc(e.time)} UTC` : ""
+        } <span style="color:#6b7280;">(${esc(formatWeekAheadAssets(e.assets))})</span></li>`,
+    )
+    .join("");
+  const rhythm = weeklyRhythmLines()
+    .map((l) => `<li>${esc(l)}</li>`)
+    .join("");
+  return `<div style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;">
+    <div style="font:800 14px/1.3 -apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;margin-bottom:8px;">Week ahead</div>
+    <ul style="margin:0 0 10px;padding-left:18px;font:400 13px/1.6 -apple-system,sans-serif;color:#1f2937;">${rows}</ul>
+    <div style="font:700 11px/1.5 -apple-system,sans-serif;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;">Weekly rhythm</div>
+    <ul style="margin:0;padding-left:18px;font:400 12px/1.6 -apple-system,sans-serif;color:#6b7280;">${rhythm}</ul>
+    <div style="margin-top:8px;"><a href="${CALENDAR_URL}" style="color:#2563eb;font:400 12px -apple-system,sans-serif;">Full calendar →</a></div>
+  </div>`;
+}
+
+/**
+ * Monday-only "no watchlist matches, but your commodities have scheduled
+ * releases this week" email. Sent in place of the usual skip when
+ * selectDigestSignalsForUser() returns nothing and weekAheadFor() returns at
+ * least one event (#CAL2, 2026-10-27).
+ */
+export function renderWeekAheadOnlyEmail(
+  events: WeekAheadEvent[],
+  appUrl: string,
+): { subject: string; html: string; text: string } {
+  const intro = "No new matches for your watchlist in the last 24 hours — here's what's scheduled this week.";
+  const subject = `Week ahead: ${events.length} scheduled releases for your commodities`;
+  const text = [intro, "", renderWeekAheadText(events), "", TRUST_LINE, "", "Turn this digest off anytime in Settings → Notifications."].join(
+    "\n",
+  );
+  const html = `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#ffffff;">
+    <div style="font:800 20px/1.2 -apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;">Your Blue Beacon digest</div>
+    <div style="font:400 13px/1.5 -apple-system,sans-serif;color:#6b7280;margin:4px 0 20px;">${esc(intro)}</div>
+    ${renderWeekAheadHtml(events)}
+    <div style="font:400 11px/1.5 -apple-system,sans-serif;color:#9ca3af;border-top:1px solid #eee;padding-top:12px;margin-top:16px;">
+      ${TRUST_LINE}<br><br>
+      You're receiving this because the daily digest is on for your account.
+      <a href="${appUrl}/settings" style="color:#6b7280;">Turn it off in Settings → Notifications</a>.
+    </div>
+  </div>`;
+  return { subject, html, text };
+}
+
+function renderText(
+  signals: SignalRow[],
+  pref: PrefRow,
+  sources: Map<string, string[]>,
+  weekAheadEvents: WeekAheadEvent[] = [],
+): string {
   const blocks = signals.map((s, i) => {
     const impacts = [
       ...(Array.isArray(s.commodity_impacts) ? s.commodity_impacts : []),
@@ -305,7 +388,7 @@ function renderText(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
       ...(src.length ? [`   SOURCE: ${src.join("  ")}`] : []),
     ].join("\n");
   });
-  return [
+  const lines = [
     `Your Blue Beacon digest — top ${signals.length} from the last 24 hours, ranked by severity,`,
     `filtered to the regions, commodities, and forex pairs you follow.`,
     ``,
@@ -315,10 +398,20 @@ function renderText(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
     ``,
     `Turn this digest off anytime in Settings → Notifications.`,
     newestIncludedLine(signals),
-  ].join("\n");
+  ];
+  if (weekAheadEvents.length > 0) {
+    lines.push("", renderWeekAheadText(weekAheadEvents));
+  }
+  return lines.join("\n");
 }
 
-function renderHtml(signals: SignalRow[], pref: PrefRow, sources: Map<string, string[]>, appUrl: string): string {
+function renderHtml(
+  signals: SignalRow[],
+  pref: PrefRow,
+  sources: Map<string, string[]>,
+  appUrl: string,
+  weekAheadEvents: WeekAheadEvent[] = [],
+): string {
   const section = (step: number, label: string, body: string) =>
     `<tr><td style="padding:6px 0;border-top:1px solid #eee;">
        <div style="font:700 10px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#3aa981;">${step} · ${label}</div>
@@ -373,6 +466,7 @@ function renderHtml(signals: SignalRow[], pref: PrefRow, sources: Map<string, st
       <a href="${appUrl}/settings" style="color:#6b7280;">Turn it off in Settings → Notifications</a>.
     </div>
     <div style="font:400 12px/1.5 -apple-system,sans-serif;color:#6b7280;margin-top:8px;">${esc(newestIncludedLine(signals))}</div>
+    ${weekAheadEvents.length > 0 ? renderWeekAheadHtml(weekAheadEvents) : ""}
   </div>`;
 }
 
@@ -382,13 +476,14 @@ export function renderDigestEmail(
   pref: PrefRow,
   sources: Map<string, string[]>,
   appUrl: string,
+  weekAheadEvents: WeekAheadEvent[] = [],
 ): { subject: string; html: string; text: string } {
   return {
     subject: `Blue Beacon digest — ${signals[0].title.slice(0, 60)}${
       signals.length > 1 ? ` +${signals.length - 1} more` : ""
     }`,
-    html: renderHtml(signals, pref, sources, appUrl),
-    text: renderText(signals, pref, sources),
+    html: renderHtml(signals, pref, sources, appUrl, weekAheadEvents),
+    text: renderText(signals, pref, sources, weekAheadEvents),
   };
 }
 
@@ -443,7 +538,9 @@ export async function recordDigestSendLog(
  * out, sends their own top-5 signals from the last 24h (matched to their watchlist),
  * in the same Event → Why → Instruments → Threshold framing as the in-app Alerts card.
  */
-export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: boolean }): Promise<DigestRunResult> {
+export async function runDigestOnce(
+  opts?: { onlyUserIds?: string[]; dryRun?: boolean; now?: Date },
+): Promise<DigestRunResult> {
   const result: DigestRunResult = {
     eligible: 0,
     sent: 0,
@@ -452,6 +549,11 @@ export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: bo
     senderEnabled: email.enabled,
   };
   let errorText: string | null = null;
+  const now = opts?.now ?? new Date();
+  // Mondays only (UTC). The "Week ahead" section/calendar-only email is a
+  // this-task addition (2026-10-27) layered on top of the existing digest —
+  // every other day behaves exactly as before.
+  const isMonday = now.getUTCDay() === 1;
 
   try {
     let query = supabase
@@ -498,13 +600,43 @@ export async function runDigestOnce(opts?: { onlyUserIds?: string[]; dryRun?: bo
         result.failed += 1;
         continue;
       }
-      const signals = await selectDigestSignalsForUser(pref);
+
+      const commodities = Array.isArray(pref.commodities) ? pref.commodities : [];
+      const weekAheadEvents = isMonday ? weekAhead(commodities, now) : [];
+
+      const signals = await selectDigestSignalsForUser(pref, now);
       if (signals.length === 0) {
-        result.skippedNoSignals += 1;
+        if (weekAheadEvents.length === 0) {
+          result.skippedNoSignals += 1;
+          continue;
+        }
+        // Monday, nothing matched the watchlist, but there's a scheduled
+        // release this week for the user's commodities — send a calendar-only
+        // email instead of skipping. Counted in `sent` (no separate field):
+        // it's still a sent digest for this user today.
+        const { subject, html, text } = renderWeekAheadOnlyEmail(weekAheadEvents, appUrl);
+        if (opts?.dryRun) {
+          console.log(`[digest] DRY RUN (week-ahead only) → ${to} (${weekAheadEvents.length} events)`);
+          result.sent += 1;
+          continue;
+        }
+        try {
+          const res = await email.send({ to, subject, html, text });
+          if (res.sent) {
+            result.sent += 1;
+            console.log(`[digest] sent week-ahead-only to ${to} (${weekAheadEvents.length} events) id=${res.id}`);
+          } else {
+            result.failed += 1;
+            console.warn(`[digest] week-ahead-only not sent to ${to}: ${res.reason}`);
+          }
+        } catch (e) {
+          result.failed += 1;
+          console.error(`[digest] week-ahead-only send threw for ${to}:`, e instanceof Error ? e.message : e);
+        }
         continue;
       }
       const sources = await sourceUrlsFor(signals);
-      const { subject, html, text } = renderDigestEmail(signals, pref, sources, appUrl);
+      const { subject, html, text } = renderDigestEmail(signals, pref, sources, appUrl, weekAheadEvents);
 
       if (opts?.dryRun) {
         console.log(`[digest] DRY RUN → ${to} (${signals.length} signals)`);
