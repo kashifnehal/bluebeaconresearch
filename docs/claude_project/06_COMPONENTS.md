@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-28 — One shared `PageShell`/`PageHeader`/`Toolbar` kit now backs every signed-in page; new `ui/checkbox`, `ui/switch`, `signals/StatusLine`. Dashboard gained Sort, active-filter chips, Table row selection + CSV export; watchlist's add control is now a working dialog. Full detail: `docs/brain/06_COMPONENTS.md`.
+
 > ⚠️ UPDATED 2026-10-17 — Homepage Analyst pricing feature is "Signals with checkable sources". `NotificationConnectPrompt` no longer says "as it happens". Full detail: `docs/brain/06_COMPONENTS.md`.
 
 > ⚠️ UPDATED 2026-10-16 — Dashboard, map, watchlist, the symbol page, and alerts show the same slow-data line and Retry when a fetch times out or fails. Full detail: `docs/brain/06_COMPONENTS.md`.

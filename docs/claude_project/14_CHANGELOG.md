@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-28 — One page-layout system for the signed-in app
+
+`apps/web` only. All signed-in pages now share one `PageShell`/`PageHeader`/`Toolbar` kit instead of six different wrappers; dashboard gained Sort, active-filter chips, and Table row selection with CSV export; watchlist's add control (a select two buttons couldn't actually open) became a working dialog. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-18 — Rendered web test rule
 
 Docs only. A store write, an effect, or a visible change needs a test that renders the component. A source-text match does not count. Full detail: `docs/brain/12_DEPLOYMENT.md`.

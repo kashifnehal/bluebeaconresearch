@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-10-28 — New shared layout/toolbar/form components in `apps/web/components/layout/` and `apps/web/components/ui/`: `PageShell`, `PageHeader`, `Toolbar`/`ActiveFilters`/`SortSelect`/`SegmentedControl`, `checkbox.tsx`, `switch.tsx`. New `components/signals/StatusLine.tsx` (the dashboard's one combined data-as-of/coverage/window-expanded line) and `lib/dashboard-feed.ts` (pure `sortStreamList`/`buildActiveFilterChips`). Every signed-in page (dashboard, alerts, settings, backtesting, watchlist, watchlist/[symbol], archive, help) now sits on `PageShell` — a guard test (`lib/page-shell-guard.test.ts`) fails if a new one doesn't. `SignalTable.tsx` gained `selectable`/`selectedIds`/`onToggleRow`/`onToggleAll` (row checkboxes, select-all) and `aria-sort` on its sortable headers. `components/ui/dialog.tsx` is now also used by the watchlist's add-asset picker (search + multi-select), not just `CommandPalette`. Full detail: `LIVE_TODO.md`, `14_CHANGELOG.md` (2026-10-28 entry).
+
 > ⚠️ UPDATED 2026-10-17 — Homepage Analyst pricing feature is "Signals with checkable sources". `NotificationConnectPrompt` body is "Connect Telegram to receive this kind of signal." It no longer says "as it happens".
 
 > ⚠️ UPDATED 2026-10-16 — `SlowDataNotice` shows "This is taking longer than usual. The data service is slow right now." and Retry. Dashboard, map, watchlist (sparkline, news card, price sync), the symbol page (chart, overlay, correlated signals, chart attribution), and alerts use it when a fetch times out or fails. The event page uses the same sentence.
