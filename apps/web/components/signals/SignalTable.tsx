@@ -94,7 +94,7 @@ export function SignalTable({
               style={{ borderColor: "var(--border)", color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               {selectable && (
-                <th className="px-4 py-3 w-10">
+                <th className="px-3 py-3 w-10">
                   <Checkbox
                     hideLabel
                     label="Select all loaded rows"
@@ -105,17 +105,17 @@ export function SignalTable({
                 </th>
               )}
               <HeaderCell label="Date" column="date" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-              <th className="px-4 py-3 font-bold uppercase tracking-widest">Event</th>
+              <th className="px-3 py-3 font-bold uppercase tracking-widest">Event</th>
               {hideSummaries ? null : (
-                <th className="px-4 py-3 font-bold uppercase tracking-widest" data-testid="signal-table-summary-header">
+                <th className="px-3 py-3 font-bold uppercase tracking-widest" data-testid="signal-table-summary-header">
                   Summary
                 </th>
               )}
-              <th className="px-4 py-3 font-bold uppercase tracking-widest">Type</th>
-              <th className="px-4 py-3 font-bold uppercase tracking-widest">Direction</th>
+              <th className="px-3 py-3 font-bold uppercase tracking-widest">Type</th>
+              <th className="px-3 py-3 font-bold uppercase tracking-widest">Direction</th>
               <HeaderCell label="Severity" column="severity" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
               <HeaderCell label="Reports" column="reports" sortColumn={sortColumn} sortDirection={sortDirection} onSort={handleSort} />
-              <th className="px-4 py-3 font-bold uppercase tracking-widest">Topic</th>
+              <th className="px-3 py-3 font-bold uppercase tracking-widest">Topic</th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{ borderColor: "rgba(60,74,66,0.3)" }}>
@@ -129,7 +129,7 @@ export function SignalTable({
                   className="transition-colors hover:bg-[#1f1f1f]"
                 >
                   {selectable && (
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <Checkbox
                         hideLabel
                         label={`Select ${signal.title}`}
@@ -139,19 +139,19 @@ export function SignalTable({
                       />
                     </td>
                   )}
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
+                  <td className="px-3 py-3 whitespace-nowrap" style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt, { addSuffix: true })}
                     </a>
                   </td>
-                  <td className="px-4 py-3 max-w-[280px]" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
-                    <a href={`/events/${signal.id}`} className="block truncate hover:text-[var(--accent)]">
+                  <td className="px-3 py-3 max-w-[220px]" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
+                    <a href={`/events/${signal.id}`} className="block truncate hover:text-[var(--accent)]" title={signal.title}>
                       {signal.title}
                     </a>
                   </td>
                   {hideSummaries ? null : (
                     <td
-                      className="px-4 py-3 max-w-[320px]"
+                      className="px-3 py-3 min-w-[240px] max-w-[320px]"
                       data-testid="signal-table-summary-cell"
                       style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}
                     >
@@ -160,12 +160,12 @@ export function SignalTable({
                       </a>
                     </td>
                   )}
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)" }}>
-                    <a href={`/events/${signal.id}`} className="block">
+                  <td className="px-3 py-3 max-w-[150px] truncate" style={{ color: "var(--text-secondary)" }} title={type}>
+                    <a href={`/events/${signal.id}`} className="block truncate" title={type}>
                       {type}
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap">
                     <a href={`/events/${signal.id}`} className="block">
                       {primaryImpact ? (
                         <CommodityChip
@@ -178,18 +178,18 @@ export function SignalTable({
                       )}
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-3 py-3 whitespace-nowrap">
                     <a href={`/events/${signal.id}`} className="block">
                       <SeverityBadge score={signal.severity} />
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}>
+                  <td className="px-3 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}>
                     <a href={`/events/${signal.id}`} className="block">
                       {signal.sourcesCount}
                     </a>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }}>
-                    <a href={`/events/${signal.id}`} className="block">
+                  <td className="px-3 py-3 max-w-[160px] truncate overflow-hidden" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }} title={topicSymbols(signal)}>
+                    <a href={`/events/${signal.id}`} className="block truncate">
                       {topicSymbols(signal)}
                     </a>
                   </td>
@@ -223,7 +223,7 @@ function HeaderCell({
       ? "ascending"
       : "descending";
   return (
-    <th className="px-4 py-3 font-bold uppercase tracking-widest" aria-sort={ariaSort}>
+    <th className="px-3 py-3 font-bold uppercase tracking-widest" aria-sort={ariaSort}>
       <button
         type="button"
         data-testid={`signal-table-sort-${column}`}
