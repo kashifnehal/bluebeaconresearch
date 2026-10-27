@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-27 — Calendar copy/date refresh, official-figures panel, CSV button relabel
+
+`apps/web` only. Calendar page description, footer sourcing line (now reads `_meta.sourcedAt` live instead of a hardcoded date), and breadcrumb ("Calendar" → "Week Ahead") updated. 10 more real rows added to `economic-calendar.json`, each opened and read directly off the source: FOMC (Dec 9), ECB (Dec 17), BOJ (Dec 18), US Employment Situation + CPI for Nov 2026/Dec 2026/Jan 2027 (bls.gov's own schedule pages), and a tentative OPEC+ row for Nov 1 — opec.org's press-release page returned HTTP 402, so that one row cites a news report of OPEC's own Oct 4 statement instead, marked `status: "tentative"`. `calendar-rhythm.ts` now also links the EIA Natural Gas Storage and CFTC Commitments of Traders weekly rows (both confirmed to load); Baker Hughes stays unlinked (its page returned HTTP 403). New `GET /api/calendar/values` + `OfficialFiguresPanel` show the latest EIA crude-stocks and Lower-48 gas-storage readings, hidden until a row exists; the backing table does not exist yet. Dashboard "EXPORT CSV" button relabeled "Export loaded rows (CSV)" and extracted into a named `ExportCsvButton` for direct render-testing. Full detail: `05_API.md`, `06_COMPONENTS.md`, `LIVE_TODO.md`.
+
 ### 2026-10-18 — Rendered web test rule
 
 Docs only. Both deployment docs now require a render test for a store write, an effect, or a visible change. A source-text match does not count. User-facing text must not contain a file path, a table name, an HTTP code, or vendor error text.

@@ -318,6 +318,10 @@ Powers the watchlist symbol page's pulse tiles, and (new) the same tiles at the 
 Last 52 weeks of CFTC managed-money positions for one symbol from `public.cot_positions`. Query: `symbol` (same validation as the pulse route; unknown is `400`). Returns `{ available: true, symbol, rows: [{ reportDate, long, short, net, spread }] }`, oldest first. A missing table or column (`42P01`, `PGRST205`, `42703`) returns `{ available: false }` with `200`. Other database errors are `500` with `no-store`. Rows carry `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`. Public data, no session check, rate-limited with `rateLimitOrPass('cot:<ip>')`. Full detail: `docs/brain/05_API.md`.
 ---
 
+#### GET /api/calendar/values (Next.js BFF, 2026-10-27)
+Powers the Economic Calendar's "Latest official figures" panel. Latest two periods per series for two fixed series (crude oil stocks, Lower 48 natural gas storage) from `public.economic_event_values`. Same auth/caching approach as `/api/cot`. Returns `{ values: [] }` with `200` when the table does not exist yet, the query errors, or there are no rows — the table ships separately, so this route works ahead of it. Full detail: `docs/brain/05_API.md`.
+---
+
 #### GET /api/signals/driver-breakdown (Next.js BFF, doc 278 Part A, 2026-10-01; forex fix 2026-10-01; error-flag fix 2026-10-02)
 Powers the watchlist symbol page's stacked-area "Signal Drivers" chart. Query: `symbol`, `from`, `to` (ISO). Groups signals matching that asset by UTC day + `event_category`, paged with `.range()`. `symbol` must match `^[A-Z0-9_]+$` and be in `COMMODITIES`, `NEWS_ONLY_COMMODITIES`, or `FOREX_PAIRS` (2026-10-15). A forex symbol queries **both** `currency_pair_impacts` and `commodity_impacts` and de-dupes by signal id (a pair can be tagged in either or both — a single-column query undercounted); a commodity symbol, including one in `NEWS_ONLY_COMMODITIES` (2026-10-15), queries `commodity_impacts` only. Response: `{ "rows": [{ "date", "category", "count" }], "total" }`, or `{ "rows": [], "error": "rate_limited" | "db_error" | "unavailable" | "unauthenticated" }` on failure (still `200`) — every early-return failure path now carries an `error` flag, so the frontend never mistakes a failure for the honest empty state of a real zero-signal instrument (e.g. COPPER, XAGUSD). The frontend throws on any `error` value (react-query retries twice) and shows "Sign in to see driver data." for `unauthenticated` or a generic "couldn't load" state with a Retry button otherwise. `category` is a real `EventCategory` value or `"uncategorized"` when `event_category IS NULL` (true for most historical signals, a real data-quality gap — see `docs/brain/05_API.md` for detail). Implemented in `apps/web` only, same pattern as `/api/signals/attribution` — no backend route added.
 
@@ -799,6 +803,10 @@ apps/web/app/api/
 │                                signals/[id]/route.ts's exact query (shared
 │                                lib/signal-outcomes-server.ts) and pure functions — see
 │                                `docs/brain/05_API.md`
+├── calendar/values/route.ts  → GET (2026-10-27), latest official figures for the calendar
+│                                page from public.economic_event_values, same auth/caching
+│                                as cot/route.ts, {values:[]} when the table is missing —
+│                                see `docs/brain/05_API.md`
 ├── signals/attribution/route.ts → #207/#228 chart attribution (2026-09-26, revised
 │                                2026-09-27): reads Supabase directly. GET
 │                                ?asset&timestamp&direction → up to 10 ranked signals

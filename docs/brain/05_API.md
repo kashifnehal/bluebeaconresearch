@@ -232,6 +232,16 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Not a Fastify route.** `apps/web` only. Table `public.cot_positions` is filled by the weekly collector; its migration was written, not applied, as of 2026-10-17.
 ---
 
+#### `GET /api/calendar/values` (Next.js route, 2026-10-27)
+
+- **Description**: Latest two periods (by `period` descending) for each of two fixed series — `WCESTUS1` (U.S. commercial crude oil stocks ex-SPR) and `NW2_EPG0_SWO_R48_BCF` (U.S. Lower 48 working gas in storage) — from `public.economic_event_values` (`series_id, period, value, unit, source_url, released_at, fetched_at`). Mirrors `/api/cot`'s auth/caching pattern: `getRouteSupabaseClients({ verify: "claims" })`, no session required. Powers the Economic Calendar page's "Latest official figures" panel (`apps/web/lib/calendar-values.ts` does the unit conversion/formatting client-side; the route returns raw rows).
+- **Response `200 OK`**: `{ values: [...rows] }`, raw rows as stored, newest period first within each series.
+- **Table missing or column mismatch** (`42P01`, `PGRST205`, `42703`), any other DB error, no rows, or rate-limited: `{ values: [] }` with `200` — the table is created by a separate backend change and does not exist yet as of 2026-10-27, so this route must degrade cleanly ahead of it. The cause is logged server-side only, never in the response.
+- **Cache-Control**: `public, s-maxage=3600, stale-while-revalidate=86400` when `values` is non-empty; `public, s-maxage=300` when empty, so a table created later shows up soon.
+- **Rate limit**: `rateLimitOrPass('calendar-values:<ip>')`.
+- **Not a Fastify route.** `apps/web` only.
+---
+
 ### 2.2 Alert Rules & Dispatch Endpoints
 
 #### `GET /api/alerts`

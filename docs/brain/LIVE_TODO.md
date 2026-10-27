@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Calendar copy/date refresh, official-figures panel, CSV button relabel, `apps/web`, 2026-10-27, `c753434`/`4f31e4b`/`c4bb0b5`/`428b9df`
+
+- Calendar page description, footer sourcing line (reads `_meta.sourcedAt` live), and breadcrumb ("Calendar" → "Week Ahead") updated.
+- 10 more real rows in `economic-calendar.json`, each opened and read directly off the source: FOMC (Dec 9), ECB (Dec 17), BOJ (Dec 18), US Employment Situation + CPI for Nov 2026/Dec 2026/Jan 2027, and a tentative OPEC+ row for Nov 1 (opec.org's press-release page returned HTTP 402 — that one row cites a news report of OPEC's own Oct 4 statement instead, marked tentative).
+- `calendar-rhythm.ts` now links the EIA Natural Gas Storage and CFTC Commitments of Traders rows (both confirmed to load); Baker Hughes stays unlinked (HTTP 403).
+- New `GET /api/calendar/values` + `OfficialFiguresPanel` show the latest EIA crude-stocks and Lower-48 gas-storage readings, hidden until a row exists — the backing table does not exist yet, this route degrades to `{values:[]}` ahead of it.
+- Dashboard "EXPORT CSV" button relabeled "Export loaded rows (CSV)", extracted into named `ExportCsvButton` for direct render-testing.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`; claude_project `05_API.md`, `06_COMPONENTS.md`. Skipped both database docs (no new table — `economic_event_values` ships in a separate backend change), the AI-engine doc, the ingestion-pipeline doc, the migration checklist, and both decision docs — no prompt, collector, migration, or standing rule.
+
 ## ✅ Rendered web test rule, docs only, 2026-10-18
 
 - A change that writes to a store, runs an effect, or changes what a user sees needs a test that renders the component with `react-dom/client` (the linkedom pattern in `apps/web/components/signals/SignalQuickView.test.tsx`). A source-text match does not count. A loop or crash risk counts renders and fails above a small fixed number. User-facing text must not contain file paths, table names, HTTP codes, or vendor error text.
