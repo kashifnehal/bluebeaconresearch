@@ -104,10 +104,18 @@ function fixtureEvent(overrides: Partial<Fixture> = {}): Fixture {
 }
 
 async function main() {
-  const { EventTable, OptionsIvNote, ScheduleEndNotice, WeeklyRhythmRow, NextEventChip, MyCommoditiesToggle } =
-    await import("./page");
+  const {
+    EventTable,
+    OptionsIvNote,
+    ScheduleEndNotice,
+    WeeklyRhythmRow,
+    NextEventChip,
+    MyCommoditiesToggle,
+    OfficialFiguresPanel,
+  } = await import("./page");
   const { weeklyRhythm } = await import("@/lib/calendar-rhythm");
   const { eventMatchesSymbols } = await import("@/lib/calendar-filters");
+  const { formatOfficialFigures } = await import("@/lib/calendar-values");
 
   // Mirrors exactly how CalendarPage wires useMyPreferences()'s output into
   // MyCommoditiesToggle + eventMatchesSymbols + EventTable — built here from
@@ -248,6 +256,65 @@ async function main() {
     }
   });
 
+  await runTest("page copy: new description, sourced-footer date, and 'Week Ahead' breadcrumb", async () => {
+    const { AppRouterContext } = await import(
+      "next/dist/shared/lib/app-router-context.shared-runtime.js"
+    );
+    const originalFetch = g.fetch;
+    g.fetch = async () => new Response(JSON.stringify({ magnitudes: {} }), { status: 200 });
+    const fakeRouter = {
+      push: () => {},
+      replace: () => {},
+      back: () => {},
+      forward: () => {},
+      refresh: () => {},
+      prefetch: async () => {},
+    };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { default: CalendarPage } = await import("./page");
+    const calendarData = (await import("@/data/economic-calendar.json")).default;
+
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(
+          createElement(
+            AppRouterContext.Provider,
+            { value: fakeRouter },
+            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+          ),
+        );
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+
+      const text = visibleText(document.body.innerHTML);
+      assert.match(
+        text,
+        /The scheduled releases that move the commodities Blue Beacon tracks: central bank decisions, official energy and farm reports, and policy meetings\./,
+      );
+      const sourcedAtFormatted = new Date(`${calendarData._meta.sourcedAt}T00:00:00Z`).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+      assert.match(text, new RegExp(`last checked on ${sourcedAtFormatted}`));
+      assert.doesNotMatch(text, /Forecast/);
+      const breadcrumbs = document.querySelector('[data-testid="breadcrumbs"]')!;
+      const breadcrumbText = visibleText(breadcrumbs.innerHTML);
+      assert.match(breadcrumbText, /Week Ahead/);
+      assert.doesNotMatch(breadcrumbText, /^Calendar$|Dashboard Calendar$/);
+    } finally {
+      await act(async () => root.unmount());
+      g.fetch = originalFetch;
+    }
+  });
+
   await runTest("clicking a source link sends calendar_source_clicked with only the event id", async () => {
     const eventsSent: { eventType: string; metadata?: unknown }[] = [];
     const originalFetch = g.fetch;
@@ -296,7 +363,7 @@ async function main() {
       for (const entry of rhythm) {
         assert.match(text, new RegExp(entry.event.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
       }
-      // Wednesday's EIA entry is the only one with a known sourceUrl — it should link out.
+      // Wednesday's EIA entry has a confirmed sourceUrl — it should link out.
       assert.match(html, /href="https:\/\/www\.eia\.gov\/petroleum\/supply\/weekly\/schedule\.php"/);
     } finally {
       await act(async () => root.unmount());
@@ -448,6 +515,162 @@ async function main() {
       assert.match(visibleText(html), /Energy/);
     } finally {
       await act(async () => root.unmount());
+    }
+  });
+
+  const officialFigureRows = [
+    {
+      series_id: "WCESTUS1",
+      period: "2026-10-17",
+      value: 425300,
+      unit: "thousand barrels",
+      source_url: "https://www.eia.gov/petroleum/supply/weekly/",
+      released_at: "2026-10-22T14:30:00Z",
+      fetched_at: "2026-10-22T15:00:00Z",
+    },
+    {
+      series_id: "WCESTUS1",
+      period: "2026-10-10",
+      value: 423000,
+      unit: "thousand barrels",
+      source_url: "https://www.eia.gov/petroleum/supply/weekly/",
+      released_at: "2026-10-15T14:30:00Z",
+      fetched_at: "2026-10-15T15:00:00Z",
+    },
+    {
+      series_id: "NW2_EPG0_SWO_R48_BCF",
+      period: "2026-10-17",
+      value: 3812,
+      unit: "Bcf",
+      source_url: "https://www.eia.gov/naturalgas/storage/",
+      released_at: "2026-10-22T14:30:00Z",
+      fetched_at: "2026-10-22T15:00:00Z",
+    },
+    {
+      series_id: "NW2_EPG0_SWO_R48_BCF",
+      period: "2026-10-10",
+      value: 3790,
+      unit: "Bcf",
+      source_url: "https://www.eia.gov/naturalgas/storage/",
+      released_at: "2026-10-15T14:30:00Z",
+      fetched_at: "2026-10-15T15:00:00Z",
+    },
+  ];
+
+  await runTest("OfficialFiguresPanel renders nothing when there are no figures", async () => {
+    const { html, root } = await mount(createElement(OfficialFiguresPanel, { figures: [] }));
+    try {
+      assert.doesNotMatch(html, /calendar-official-figures/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("OfficialFiguresPanel shows both series with a footer link to each sourceUrl", async () => {
+    const figures = formatOfficialFigures(officialFigureRows);
+    const { html, root } = await mount(createElement(OfficialFiguresPanel, { figures }));
+    try {
+      assert.match(html, /data-testid="calendar-official-figures"/);
+      const text = visibleText(html);
+      assert.match(text, /U\.S\. commercial crude oil stocks/);
+      assert.match(text, /U\.S\. Lower 48 working gas in storage/);
+      assert.match(text, /425\.3/);
+      assert.match(text, /3812/);
+      assert.match(html, /href="https:\/\/www\.eia\.gov\/petroleum\/supply\/weekly\/"/);
+      assert.match(html, /href="https:\/\/www\.eia\.gov\/naturalgas\/storage\/"/);
+      assert.match(text, /Source: U\.S\. Energy Information Administration \(October 2026\)/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("full page: official figures panel is hidden and no usage event fires when the route returns no values", async () => {
+    const { AppRouterContext } = await import(
+      "next/dist/shared/lib/app-router-context.shared-runtime.js"
+    );
+    const eventsSent: { eventType: string }[] = [];
+    const originalFetch = g.fetch;
+    g.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/market-impact")) return new Response(JSON.stringify({ magnitudes: {} }), { status: 200 });
+      if (url.includes("/api/calendar/values")) return new Response(JSON.stringify({ values: [] }), { status: 200 });
+      if (url.includes("/api/events") && init?.method === "POST") {
+        eventsSent.push(JSON.parse(String(init.body)));
+        return new Response(JSON.stringify({ inserted: true }), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    };
+    const fakeRouter = { push: () => {}, replace: () => {}, back: () => {}, forward: () => {}, refresh: () => {}, prefetch: async () => {} };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { default: CalendarPage } = await import("./page");
+
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(
+          createElement(
+            AppRouterContext.Provider,
+            { value: fakeRouter },
+            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+          ),
+        );
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      assert.doesNotMatch(document.body.innerHTML, /calendar-official-figures/);
+      assert.equal(eventsSent.filter((e) => e.eventType === "calendar_values_shown").length, 0);
+    } finally {
+      await act(async () => root.unmount());
+      g.fetch = originalFetch;
+    }
+  });
+
+  await runTest("full page: official figures panel shows and fires calendar_values_shown exactly once when the route returns rows", async () => {
+    const { AppRouterContext } = await import(
+      "next/dist/shared/lib/app-router-context.shared-runtime.js"
+    );
+    const eventsSent: { eventType: string }[] = [];
+    const originalFetch = g.fetch;
+    g.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes("/api/market-impact")) return new Response(JSON.stringify({ magnitudes: {} }), { status: 200 });
+      if (url.includes("/api/calendar/values")) return new Response(JSON.stringify({ values: officialFigureRows }), { status: 200 });
+      if (url.includes("/api/events") && init?.method === "POST") {
+        eventsSent.push(JSON.parse(String(init.body)));
+        return new Response(JSON.stringify({ inserted: true }), { status: 200 });
+      }
+      return new Response("{}", { status: 200 });
+    };
+    const fakeRouter = { push: () => {}, replace: () => {}, back: () => {}, forward: () => {}, refresh: () => {}, prefetch: async () => {} };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { default: CalendarPage } = await import("./page");
+
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(
+          createElement(
+            AppRouterContext.Provider,
+            { value: fakeRouter },
+            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+          ),
+        );
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      assert.match(document.body.innerHTML, /calendar-official-figures/);
+      assert.equal(eventsSent.filter((e) => e.eventType === "calendar_values_shown").length, 1);
+    } finally {
+      await act(async () => root.unmount());
+      g.fetch = originalFetch;
     }
   });
 

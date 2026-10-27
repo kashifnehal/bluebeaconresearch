@@ -23,6 +23,11 @@ import {
 } from "@/lib/market-impact-assessment";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { weeklyRhythm, type WeeklyRhythmEntry } from "@/lib/calendar-rhythm";
+import {
+  formatOfficialFigures,
+  type FormattedOfficialFigure,
+  type OfficialFigureRow,
+} from "@/lib/calendar-values";
 
 type Impact = CalendarImpact;
 
@@ -144,6 +149,13 @@ const CATEGORIES = Array.from(new Set(EVENTS.map((e) => e.category))).sort();
 const VISIBLE_VALUE_COLUMNS = visibleValueColumns(EVENTS);
 
 const WEEKLY_RHYTHM = weeklyRhythm();
+
+const sourcedAtFormatted = new Date(`${calendarData._meta.sourcedAt}T00:00:00Z`).toLocaleDateString("en-US", {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 /** Event date+time as a real UTC Date, for sorting/countdown/week-filtering. Events with no
  * announced time (e.g. the OPEC report) sort/compare as start-of-day UTC. */
@@ -626,6 +638,47 @@ function CalendarFilters({
   );
 }
 
+export function OfficialFiguresPanel({ figures }: { figures: FormattedOfficialFigure[] }) {
+  if (figures.length === 0) return null;
+  return (
+    <section
+      data-testid="calendar-official-figures"
+      className="bg-surface-container rounded-lg overflow-hidden border border-outline-variant/10 shadow-xl mb-6"
+    >
+      <div className="p-4 border-b border-outline-variant/10 bg-surface-container-high/30">
+        <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">
+          Latest official figures
+        </span>
+      </div>
+      <div className="p-4 grid gap-6 md:grid-cols-2">
+        {figures.map((f) => (
+          <div key={f.seriesId} data-testid="calendar-official-figure">
+            <div className="text-sm font-bold text-on-surface">{f.label}</div>
+            <div className="text-[12px] text-on-surface/50 mt-0.5">{f.period}</div>
+            <div className="mt-2 flex items-baseline gap-3">
+              <span className="mono text-2xl font-bold text-on-surface">{f.latestValueText}</span>
+              {f.previousValueText != null && (
+                <span className="mono text-[12px] text-on-surface/50">
+                  prev {f.previousValueText}
+                  {f.changeText != null ? ` (${f.changeText})` : ""}
+                </span>
+              )}
+            </div>
+            <a
+              href={f.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mt-2 text-[11px] text-on-surface/40 hover:text-primary transition-colors"
+            >
+              Source: U.S. Energy Information Administration ({f.fetchedMonthYear})
+            </a>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function WeeklyRhythmRow({ rhythm }: { rhythm: WeeklyRhythmEntry[] }) {
   return (
     <div data-testid="calendar-weekly-rhythm" className="flex flex-wrap items-center gap-2 mb-4">
@@ -718,6 +771,7 @@ export default function CalendarPage() {
   const [timeZone, setTimeZone] = useState<TimeZoneMode>("utc");
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [marketImpact, setMarketImpact] = useState<Record<string, CalendarMarketImpactEntry> | null>(null);
+  const [officialFigureRows, setOfficialFigureRows] = useState<OfficialFigureRow[]>([]);
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     logUsageEvent("calendar_viewed");
@@ -759,6 +813,26 @@ export default function CalendarPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/calendar/values")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && Array.isArray(data?.values)) setOfficialFigureRows(data.values);
+      })
+      .catch(() => {
+        // No panel is a reasonable degrade — the table may not exist yet.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const officialFigures = useMemo(() => formatOfficialFigures(officialFigureRows), [officialFigureRows]);
+  useEffect(() => {
+    if (officialFigures.length > 0) logUsageEvent("calendar_values_shown");
+  }, [officialFigures.length]);
 
   // `now` used for the this-week split; recomputed on mount only (not every
   // second — only the countdown itself needs second-level ticking).
@@ -813,15 +887,15 @@ export default function CalendarPage() {
   return (
     <div className="mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
       <Breadcrumbs
-        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Calendar" }]}
+        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Week Ahead" }]}
         className="mb-4"
       />
       <section className="flex justify-between items-end mb-8 gap-4 flex-wrap">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Week Ahead</h1>
           <p className="text-on-surface/60 mt-2 font-body font-medium">
-            Fed, ECB, BOJ, and major US data releases — the scheduled events that move the instruments Blue Beacon
-            tracks.
+            The scheduled releases that move the commodities Blue Beacon tracks: central bank decisions, official
+            energy and farm reports, and policy meetings.
           </p>
           {now && <ScheduleEndNotice events={EVENTS} today={now} />}
         </div>
@@ -861,6 +935,8 @@ export default function CalendarPage() {
       )}
 
       <WeeklyRhythmRow rhythm={WEEKLY_RHYTHM} />
+
+      <OfficialFiguresPanel figures={officialFigures} />
 
       {mounted && (
         <DayStrip days={weekDays} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
@@ -930,10 +1006,9 @@ export default function CalendarPage() {
       )}
 
       <p className="text-[12px] md:text-[10px] text-on-surface/35 leading-relaxed max-w-3xl">
-        Dates are sourced directly from each institution's own published schedule (linked per event) as of{" "}
-        {calendarData._meta.sourcedAt}, not a paid calendar API — this is a deliberate v1 choice, not a gap. Forecast
-        / Previous / Actual show — because there is no live data feed behind them yet; Blue Beacon never fabricates
-        placeholder numbers.
+        Dates come from each institution's own published schedule, linked on each row, last checked on{" "}
+        {sourcedAtFormatted}. Official figures are shown only where an official source supplies them. Blue Beacon
+        never fills in placeholder numbers.
       </p>
     </div>
   );
