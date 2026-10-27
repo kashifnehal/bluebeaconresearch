@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Units added to the calendar's "Latest official figures" values (TASK WEB-CAL3), `apps/web` only, 2026-10-28, `19a5e0a`
+
+- The "Latest official figures" panel on `/calendar` showed bare numbers ("412.5", "3644") with no unit — crude is stored in thousand barrels and displayed in million barrels, gas is in Bcf.
+- Added a `unitText` field to `SeriesSpec`/`FormattedOfficialFigure` in `apps/web/lib/calendar-values.ts` ("million barrels" for WCESTUS1, "Bcf" for the gas series). `OfficialFiguresPanel` now renders it right after the latest value in a smaller muted span, e.g. "412.5 million barrels". The previous-value line is unchanged (`prev <value> (<change>)`, no repeated unit). No colour/font/layout change beyond the new span.
+- No `aria-label` exists today on this panel's value elements, so there was nothing to add a unit to there.
+- No open priority-queue line named this task by number — it arrived as a direct, fully-specified task, not a queued backlog ticket. Nothing struck.
+- **Verification:** `pnpm --filter web exec tsc --noEmit` clean (exit 0). Full `pnpm --filter web test` green — 607 assertions, 0 failures, exit 0 (the known `page-shell-guard.test.ts` failure the task prompt flagged as possibly still-open did not occur on this fetch of `main`). Real `pnpm --filter web exec next build` clean (exit 0). Updated `calendar-values.test.ts` (asserts `unitText` for both series) and extended the existing rendered test in `(dashboard)/calendar/page.test.tsx` ("OfficialFiguresPanel shows both series with a footer link to each sourceUrl") to also assert the panel text contains "million barrels" and "Bcf" and still contains the EIA source line — no brand-new test added, the existing rendered test (`createRoot`/`react-dom/client`) already covered mounting both series with mocked values.
+- Docs: this entry; brain `06_COMPONENTS.md`, `14_CHANGELOG.md`; claude_project `06_COMPONENTS.md`. Skipped `05_API.md` both trees (no route change — `GET /api/calendar/values`'s response shape is unchanged, the unit is derived client-side from the existing `series_id`), `04_DATABASE.md` both trees (no schema/migration change), `18_AI_ENGINE.md` (no prompt/model change), `10_DECISIONS.md` both trees (no standing rule — this is a display-copy fix, not a product/business decision), `09_BACKLOG.md`/`08_CURRENT_STATUS.md` both trees (not a numbered backlog ticket and no current-status line to close), `claude_project/14_CHANGELOG.md` (this task's own Part 2 instructions named `docs/brain/14_CHANGELOG.md` only, not the claude_project copy).
+
 ## ✅ Three layout-overflow fixes from the live check of UI-ALL (TASK UI-FIX1), `apps/web` only, 2026-10-28, `fdca3aa`/`7165e37`/`4bc9d1f`
 
 - A live, signed-in production check of the page-layout system shipped directly below this entry (same day) found three places that still scroll sideways, each the same bug class: a breakpoint keyed to window width rather than the space actually available.
