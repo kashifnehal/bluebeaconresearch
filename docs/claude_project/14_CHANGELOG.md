@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-10-28 — Three layout-overflow fixes from the live check of UI-ALL
+
+`apps/web` only. A live, signed-in production check of the page-layout system below found three places that still scrolled sideways: the dashboard at 768px, the signal table at 1440px, and the asset page's pulse tiles at 768px. All three were breakpoints keyed to window width instead of the space actually available (the sidebar, a hidden side panel, the tiles' own container). Fixed with class-only changes — no colour, copy, API, or logic change. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-28 — One page-layout system for the signed-in app
 
 `apps/web` only. All signed-in pages now share one `PageShell`/`PageHeader`/`Toolbar` kit instead of six different wrappers; dashboard gained Sort, active-filter chips, and Table row selection with CSV export; watchlist's add control (a select two buttons couldn't actually open) became a working dialog. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
