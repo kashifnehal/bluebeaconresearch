@@ -331,9 +331,6 @@ export default function EventDetailPage() {
                   caveat={signal.mediaImpactCaveat}
                   expanded
                 />
-                <span className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-muted">
-                  Acknowledge Status: ACTIVE
-                </span>
               </div>
 
               <h1 className="text-3xl leading-[1.05] mb-4 md:text-5xl md:leading-[0.9] md:mb-8 font-black text-text-primary tracking-tighter">

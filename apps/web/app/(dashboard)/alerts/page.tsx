@@ -1,18 +1,19 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import type { Signal } from "@blue-beacon-research/shared";
 import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import { safeFormatDistanceToNow, generateAlertRuleName } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CommodityChip } from "@/components/signals/CommodityChip";
 import { toast } from "sonner";
 import { Pagination } from "@/components/ui/Pagination";
 import { LoadMoreButton } from "@/components/ui/LoadMoreButton";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { PageShell } from "@/components/layout/PageShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
 import { track } from "@/lib/analytics";
@@ -200,7 +201,6 @@ function CardSection({
 }
 
 export default function AlertsPage() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { unreadCount } = useUIStore();
   const [alertModalOpen, setAlertModalOpen] = useState(false);
@@ -428,38 +428,27 @@ export default function AlertsPage() {
   });
 
   return (
-    <div className="mt-16 p-4 md:p-8 min-h-screen bg-surface-container-lowest text-on-surface">
-      <Breadcrumbs
-        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Alerts" }]}
-        className="mb-4"
+    <PageShell width="wide">
+      <PageHeader
+        title="Alert Rules & Signals"
+        description="What you asked to be told about — your rules, and the signals that actually matched them."
+        breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: "Alerts" }]}
+        actions={
+          <button
+            onClick={() => openSetAlertModal()}
+            className="bg-[var(--accent)] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            + New Alert Rule
+          </button>
+        }
       />
-      {/* Header Section */}
-      <section className="flex flex-wrap justify-between items-end gap-4 mb-8">
-        <div className="min-w-0">
-          <h1 className="text-4xl font-extrabold tracking-tighter font-headline text-white">Alert Rules & Signals</h1>
-          <p className="text-on-surface/60 mt-2 font-body font-medium">What you asked to be told about — your rules, and the signals that actually matched them.</p>
-        </div>
-        <nav aria-label="Other views" className="flex items-center gap-2 text-xs label font-bold uppercase tracking-wider">
-          <button onClick={() => router.push("/dashboard")} className="text-on-surface/60 hover:text-on-surface hover:underline transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Feed</button>
-          <span className="text-on-surface/30" aria-hidden="true">/</span>
-          <button onClick={() => router.push("/watchlist")} className="text-on-surface/60 hover:text-on-surface hover:underline transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Watchlist</button>
-          <span className="text-on-surface/30" aria-hidden="true">/</span>
-          <button onClick={() => router.push("/backtesting")} className="text-on-surface/60 hover:text-on-surface hover:underline transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0">Lab</button>
-        </nav>
-      </section>
 
-      {/* Rules Header + New Rule Action */}
+      {/* Rules Header */}
       <section className="flex justify-between items-center py-4 border-y border-outline-variant/20 mb-8">
         <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">
           {rules.length > 0 ? `${rules.length} Alert Rule${rules.length === 1 ? "" : "s"}` : "No Alert Rules Yet"}
         </span>
-        <button
-          onClick={() => openSetAlertModal()}
-          className="bg-[var(--accent)] text-[#003824] hover:bg-[#6ffbbe] px-5 py-2 label text-[12px] md:text-[10px] font-bold tracking-widest uppercase active:scale-95 transition-all shadow-lg rounded-sm cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          + New Alert Rule
-        </button>
       </section>
 
       {rulesError || alertsError ? (
@@ -869,25 +858,14 @@ export default function AlertsPage() {
                   const checked = modalChannels.includes(ch.id);
                   const isConnected = Boolean(connectedChannels?.[ch.id]);
                   return (
-                    <label
+                    <Checkbox
                       key={ch.id}
-                      className="flex items-center gap-2 text-xs text-white cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        data-testid={`alert-channel-${ch.id}`}
-                        checked={checked}
-                        onChange={() => toggleModalChannel(ch.id)}
-                      />
-                      <span>{ch.label}</span>
-                      <span
-                        className={`text-[12px] md:text-[9px] uppercase font-bold ${
-                          isConnected ? "text-[var(--accent)]" : "text-[var(--text-muted)]"
-                        }`}
-                      >
-                        {isConnected ? "Connected" : "Not connected"}
-                      </span>
-                    </label>
+                      data-testid={`alert-channel-${ch.id}`}
+                      label={ch.label}
+                      description={isConnected ? "Connected" : "Not connected"}
+                      checked={checked}
+                      onChange={() => toggleModalChannel(ch.id)}
+                    />
                   );
                 })}
               </div>
@@ -946,6 +924,6 @@ export default function AlertsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

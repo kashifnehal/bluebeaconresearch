@@ -11,6 +11,22 @@ declare module "linkedom" {
   export function parseHTML(html: string): { window: any; document: Document };
 }
 
+// Same minimal localStorage stand-in as components/layout/Sidebar.test.tsx —
+// linkedom doesn't implement it, and zustand's persist middleware (useUIStore)
+// and several pages' own localStorage reads need it to exist at all.
+class MemoryStorage {
+  private store = new Map<string, string>();
+  getItem(key: string): string | null {
+    return this.store.has(key) ? this.store.get(key)! : null;
+  }
+  setItem(key: string, value: string): void {
+    this.store.set(key, value);
+  }
+  removeItem(key: string): void {
+    this.store.delete(key);
+  }
+}
+
 let initialized = false;
 
 /** Call once per test file/process — see the `initialized` guard below. */
@@ -48,6 +64,8 @@ export function setupDom(): Document {
     g.IS_REACT_ACT_ENVIRONMENT = true;
     if (typeof g.self === "undefined") g.self = g;
     if (typeof (window as any).self === "undefined") (window as any).self = window;
+    (window as any).localStorage = new MemoryStorage();
+    (window as any).sessionStorage = new MemoryStorage();
     initialized = true;
   }
   return document;
