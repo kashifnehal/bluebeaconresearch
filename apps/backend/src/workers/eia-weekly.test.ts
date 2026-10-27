@@ -218,19 +218,50 @@ await runTest("gas facet check: configured id present -> used directly", async (
   assert.equal(result.gasSeriesId, EIA_GAS_SERIES.seriesId);
 });
 
-await runTest("gas facet check: single Lower 48 / Working Gas match -> fallback id used", async () => {
-  const { fakeSupabase } = makeSupabase(null);
+await runTest("gas facet check: single Lower 48 / Working Gas match -> fallback id resolved but gas skipped", async () => {
+  const { fakeSupabase, upserts } = makeSupabase(null);
+  let gasDataFetched = false;
   const result = await runEiaWeeklyOnce({
     apiKey: "test-key",
     sleep: noopSleep,
     supabase: fakeSupabase,
     fetchEia: async (url: string) => {
       if (url.includes("facet/series")) return GAS_FACET_FALLBACK;
-      if (url.includes(EIA_GAS_SERIES.route)) return GAS_FIXTURE;
+      if (url.includes(EIA_GAS_SERIES.route)) {
+        gasDataFetched = true;
+        return GAS_FIXTURE;
+      }
       return PETROLEUM_FIXTURE;
     },
   });
   assert.equal(result.gasSeriesId, "NW2_OTHER_ID");
+  assert.equal(gasDataFetched, false, "a fallback-resolved gas series id must not be fetched");
+  assert.equal(result.upserted, 2, "only the crude rows should be upserted, gas is skipped");
+  assert.equal(upserts.length, 1);
+  assert.ok(
+    upserts[0].rows.every((r) => r.series_id === EIA_PETROLEUM_SERIES.seriesId),
+    "no gas rows should be stored when the series id differs from the configured one",
+  );
+});
+
+await runTest('gas id mismatch logs "eia gas series id differs from configured; skipped" once', async () => {
+  resetEiaLogsForTests();
+  const logs: string[] = [];
+  const originalLog = console.log;
+  console.log = (...args: unknown[]) => logs.push(String(args[0] ?? ""));
+  try {
+    const { fakeSupabase } = makeSupabase(null);
+    await runEiaWeeklyOnce({
+      apiKey: "test-key",
+      sleep: noopSleep,
+      supabase: fakeSupabase,
+      fetchEia: async (url: string) => (url.includes("facet/series") ? GAS_FACET_FALLBACK : PETROLEUM_FIXTURE),
+    });
+    const mismatchLogs = logs.filter((l) => l === "eia gas series id differs from configured; skipped");
+    assert.equal(mismatchLogs.length, 1, "mismatch warning must log exactly once");
+  } finally {
+    console.log = originalLog;
+  }
 });
 
 for (const [label, fixture] of [

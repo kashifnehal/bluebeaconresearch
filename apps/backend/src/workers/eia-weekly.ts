@@ -64,11 +64,13 @@ export interface EiaCollectorDeps {
 
 let loggedMissingTable = false;
 let loggedGasFallback = false;
+let loggedGasIdMismatch = false;
 
 /** Test-only: allow the one-time log lines to fire again. */
 export function resetEiaLogsForTests() {
   loggedMissingTable = false;
   loggedGasFallback = false;
+  loggedGasIdMismatch = false;
 }
 
 export function isEiaCollectorEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -197,7 +199,10 @@ function createRequestBudget(fetchEia: (url: string) => Promise<unknown>, sleep:
  * The gas series id is unverified against EIA's own facet list. Confirms the
  * configured id exists; otherwise looks for exactly one facet whose name
  * contains both "Lower 48" and "Working Gas" and falls back to its id. Never
- * guesses: zero or multiple matches both mean "skip gas this run".
+ * guesses: zero or multiple matches both mean "skip gas this run". A
+ * fallback-resolved id is also skipped (see runEiaWeeklyOnce) — apps/web
+ * reads only the configured id, so rows stored under another id would never
+ * be shown.
  */
 export async function resolveGasSeriesId(apiKey: string, request: RequestFn): Promise<string | null> {
   const url = buildFacetUrl(EIA_GAS_SERIES.route, apiKey);
@@ -256,8 +261,17 @@ export async function runEiaWeeklyOnce(deps: EiaCollectorDeps = {}): Promise<Eia
   }
 
   const seriesToFetch: EiaSeriesConfig[] = [EIA_PETROLEUM_SERIES];
-  if (gasSeriesId) {
-    seriesToFetch.push({ ...EIA_GAS_SERIES, seriesId: gasSeriesId });
+  if (gasSeriesId === EIA_GAS_SERIES.seriesId) {
+    seriesToFetch.push(EIA_GAS_SERIES);
+  } else if (gasSeriesId) {
+    // Resolved via the name-match fallback, not the configured id. apps/web
+    // only reads EIA_GAS_SERIES.seriesId, so rows stored under another id
+    // would never be shown — skip storing them rather than fetch and store
+    // data nothing displays.
+    if (!loggedGasIdMismatch) {
+      console.log("eia gas series id differs from configured; skipped");
+      loggedGasIdMismatch = true;
+    }
   }
 
   let fetched = 0;
