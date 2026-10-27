@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { signalPriceMovePct, SignalRowPriceChip } from "./page";
+import { signalPriceMovePct, SignalRowPriceChip, ExportCsvButton } from "./page";
 import type { Signal } from "@blue-beacon-research/shared";
 
 function visibleText(html: string): string {
@@ -53,6 +53,19 @@ runTest("SignalRowPriceChip shows an em dash with no associated price", () => {
     }),
   );
   assert.equal(visibleText(html), "—");
+});
+
+runTest("ExportCsvButton shows the current label and keeps its testid", () => {
+  const html = renderToStaticMarkup(createElement(ExportCsvButton, { onClick: () => {}, disabled: false }));
+  assert.match(html, /data-testid="export-csv-button"/);
+  assert.equal(visibleText(html), "download Export loaded rows (CSV)");
+  assert.doesNotMatch(html, /EXPORT CSV\b/);
+});
+
+runTest("ExportCsvButton disables when told to, without changing the label", () => {
+  const html = renderToStaticMarkup(createElement(ExportCsvButton, { onClick: () => {}, disabled: true }));
+  assert.match(html, /disabled=""/);
+  assert.equal(visibleText(html), "download Export loaded rows (CSV)");
 });
 
 runTest("SignalRowPriceChip shows plain asset/24h/pct text with no hover-only content", () => {

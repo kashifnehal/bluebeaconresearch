@@ -84,6 +84,27 @@ export function SignalRowPriceChip({ signal, prices }: { signal: Signal; prices:
   );
 }
 
+export function ExportCsvButton({ onClick, disabled }: { onClick: () => void; disabled: boolean }) {
+  return (
+    <button
+      type="button"
+      data-testid="export-csv-button"
+      onClick={onClick}
+      disabled={disabled}
+      className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 min-h-[44px] md:min-h-0"
+      style={{
+        fontFamily: "'Space Grotesk', sans-serif",
+        backgroundColor: "var(--bg-container)",
+        color: "var(--text-secondary)",
+        borderColor: "var(--border)",
+      }}
+    >
+      <span className="material-symbols-outlined text-[14px]">download</span>
+      Export loaded rows (CSV)
+    </button>
+  );
+}
+
 export default function DashboardPage() {
   // "My Feed" (#81) — opt-in narrowing to the commodities/regions the user follows.
   // Default OFF: existing users see the exact same full feed until they turn it on.
@@ -422,22 +443,7 @@ export default function DashboardPage() {
             </span>
           )}
 
-          <button
-            type="button"
-            data-testid="export-csv-button"
-            onClick={handleExportCsv}
-            disabled={liveSignals.length === 0}
-            className="px-4 py-1.5 text-[12px] md:text-[11px] font-bold tracking-widest border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-2 min-h-[44px] md:min-h-0"
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              backgroundColor: "var(--bg-container)",
-              color: "var(--text-secondary)",
-              borderColor: "var(--border)",
-            }}
-          >
-            <span className="material-symbols-outlined text-[14px]">download</span>
-            EXPORT CSV
-          </button>
+          <ExportCsvButton onClick={handleExportCsv} disabled={liveSignals.length === 0} />
 
           {showMyFeedToggle && (
             <div className="ml-auto flex items-center gap-2 pb-0.5">
