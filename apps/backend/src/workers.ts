@@ -33,6 +33,7 @@ import { checkCategoryGuard } from "./lib/category-guard-alert.js";
 import { checkFeedVolume } from "./lib/feed-volume-alarm.js";
 import { runGateDriftOnce } from "./lib/gate-drift.js";
 import { checkCategoryCoverage } from "./lib/category-guard.js";
+import { checkSignalSilence } from "./lib/signal-silence-alert.js";
 
 // Consecutive-failed-run thresholds before a collector going silent pages someone.
 // GDELT: 8 runs (~4h at */30). A single GDELT 429 is an expected IP-level block on
@@ -167,6 +168,28 @@ if (process.env.OPS_ALERT_CRON && OPS_ALERT_CRON !== process.env.OPS_ALERT_CRON)
   console.warn(
     `[workers] OPS_ALERT_CRON="${process.env.OPS_ALERT_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_OPS_ALERT_CRON}"`,
   );
+}
+
+// 2026-10-27 — "no new signals" watchdog. Every 6 hours by
+// default so a full-pipeline stall (Anthropic credit/key, or a dead collector)
+// is caught well within the 24h lookback window it checks, without adding a
+// fifth cron cadence to reason about. Off only when ENABLE_SIGNAL_SILENCE_ALERT
+// is exactly "false" — on by default, same idiom as isCotCollectorEnabled/
+// isEiaCollectorEnabled.
+const DEFAULT_SIGNAL_SILENCE_CRON = "10 */6 * * *";
+const SIGNAL_SILENCE_CRON =
+  process.env.SIGNAL_SILENCE_CRON && cron.validate(process.env.SIGNAL_SILENCE_CRON)
+    ? process.env.SIGNAL_SILENCE_CRON
+    : DEFAULT_SIGNAL_SILENCE_CRON;
+
+if (process.env.SIGNAL_SILENCE_CRON && SIGNAL_SILENCE_CRON !== process.env.SIGNAL_SILENCE_CRON) {
+  console.warn(
+    `[workers] SIGNAL_SILENCE_CRON="${process.env.SIGNAL_SILENCE_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_SIGNAL_SILENCE_CRON}"`,
+  );
+}
+
+function isSignalSilenceAlertEnabled(): boolean {
+  return (process.env.ENABLE_SIGNAL_SILENCE_ALERT || "true").toLowerCase() !== "false";
 }
 
 async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
@@ -425,6 +448,26 @@ async function main() {
       Sentry.captureException(e);
     }
   });
+
+  // 2026-10-27 — "no new signals in 24h" watchdog. Deliberately not run on
+  // startup (unlike the collectors above): the first tick naturally lands within
+  // SIGNAL_SILENCE_CRON's own cadence, and a check right at process boot would
+  // just measure the 24h window ending at a cold start, which tells us nothing.
+  app.log.info(
+    { schedule: SIGNAL_SILENCE_CRON, enabled: isSignalSilenceAlertEnabled() },
+    "workers: signal-silence cron schedule",
+  );
+  if (isSignalSilenceAlertEnabled()) {
+    cron.schedule(SIGNAL_SILENCE_CRON, async () => {
+      try {
+        const result = await checkSignalSilence();
+        app.log.info({ result }, "signal-silence check");
+      } catch (e) {
+        app.log.error({ err: e }, "signal-silence check failed");
+        Sentry.captureException(e);
+      }
+    });
+  }
 
   // CFTC Commitments of Traders. Daily cron; the fetch is idempotent and the
   // report is released weekly. Default 06:30 UTC. Off when ENABLE_COT_COLLECTOR
