@@ -16,11 +16,13 @@ type CalendarEvent = {
   id: string;
   date: string;
   time: string | null;
+  timeApprox: boolean;
   event: string;
   category: string;
   sourceUrl: string;
   sourceLabel: string;
   creditLine?: string;
+  status?: "confirmed" | "tentative";
 };
 
 const events = calendarData.events as CalendarEvent[];
@@ -103,6 +105,14 @@ runTest("every event has a real source URL and label — nothing invented with a
   for (const e of events) {
     assert.match(e.sourceUrl, /^https:\/\//, e.id);
     assert.ok(e.sourceLabel.length > 0, e.id);
+  }
+});
+
+runTest("every row with status 'tentative' has timeApprox true — an unconfirmed date is never shown as a firm time", () => {
+  for (const e of events) {
+    if (e.status === "tentative") {
+      assert.equal(e.timeApprox, true, `${e.id} is tentative but timeApprox is not true`);
+    }
   }
 });
 
