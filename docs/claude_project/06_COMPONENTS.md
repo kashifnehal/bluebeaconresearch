@@ -545,6 +545,8 @@ Sections:
 
 > ⚠️ UPDATED 2026-10-17, same day (WEB-FINISH task) — the "merged above 12 markers, 2% apart" rule above was replaced: markers now merge by real on-screen pixel distance (`MARKER_MERGE_PX = 24`, via `ResizeObserver`), independent of marker count, fixing a false negative where under-12-count clusters never merged despite visually overlapping. Clicking/focusing a merged marker opens a new `ChartMarkerList.tsx` (title/time/link per grouped signal) instead of jumping to attribution. `ChartMarkerCard.tsx` gained two click-to-open info-citation buttons (new `components/ui/InfoCitation.tsx`) on "Since then" and "Reports." The popover text that named a file or a table was replaced on 2026-10-18 (`169cfd7`) with plain language. `PulseTiles.tsx` on this same page gained an optional all-assets mode, now also mounted at the top of the dashboard home (`05_API.md`). Full detail: `docs/brain/06_COMPONENTS.md`.
 
+> ⚠️ UPDATED 2026-10-27 — `PulseTiles.tsx` removed from the dashboard home; a small data set made the tiles look sparse there. It now mounts on the single-asset `[symbol]` watchlist page only. Full detail: `docs/brain/06_COMPONENTS.md`.
+
 > ⚠️ UPDATED 2026-10-15 (pulse tiles) — five tiles under the watchlist symbol header count signals published in the last 24 hours against the prior 24 hours. News-only assets get the same tiles. They do not request a price. Full detail: `docs/brain/06_COMPONENTS.md` §3.7.
 
 > ⚠️ UPDATED 2026-10-14 (news-only watchlist cards and detail pages) — the seven news-only commodities can be added and followed. Their cards and detail pages show signals and "News only (no price feed)", with no sparkline, price, or price chart. Full detail: `docs/brain/06_COMPONENTS.md` §3.7.

@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Pulse tiles removed from the dashboard home, `apps/web` only, 2026-10-27, `4385e99`/`523a49b`/this commit
+
+- `<PulseTiles />` (no `symbol`) dropped from `app/(dashboard)/dashboard/page.tsx` — import and mount only; no leftover wrapper or gap. `PulseTiles.tsx` itself is unchanged and still mounts on `/watchlist/[symbol]` (`<PulseTiles symbol={symbol} />`), which keeps using it.
+- New rendered test (`createRoot`, not source-text) in `dashboard/page.test.tsx`: mounts the full dashboard page and asserts none of the five tile labels (`Signals last 24h`, `Prior 24h`, `Change vs prior`, `Peak hour`, `Asset direction votes`) or `[data-testid="pulse-tiles"]` appear. The existing rendered test in `components/signals/PulseTiles.test.tsx` already covers single-asset mode, so kept as-is, nothing added there — mounting `/watchlist/[symbol]` itself for a render test isn't cheap (`useParams` throws outside a mounted App Router, same constraint noted in that page's own test file).
+- No existing test previously expected the tiles on the dashboard home, so nothing else needed updating.
+- Unrelated pre-existing failure observed while verifying, not caused by this change and not fixed here (out of scope): `lib/page-shell-guard.test.ts` fails because `dashboard/page.tsx` doesn't import `PageShell` and isn't on that test's allow-list — that's a concurrent, in-progress PageShell-migration task's own gap, confirmed present on `origin/main` before this change touched anything.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `06_COMPONENTS.md`, `14_CHANGELOG.md`; claude_project `06_COMPONENTS.md`. Skipped both API docs, both database docs, the AI-engine doc, the ingestion-pipeline doc, the migration checklist, both decision docs, and both backlog/current-status docs — no new route, table, prompt, collector, migration, or standing rule; this was a UI removal plus doc parity, not a new shipped feature.
+
 ## ✅ Backend calendar copy sync + strict parity test + EIA gas series-id safety, `apps/backend`, 2026-10-27, `874c7b6`/`233be28`/`3f6970b`
 
 - `apps/backend/src/data/economic-calendar.json` was a stale snapshot missing rows the Monday "Week ahead" digest needs (first real run is 2026-11-02 06:00 UTC) — notably `us-nfp-2026-11-06` and `us-cpi-2026-11-10`. Copied byte-for-byte from `apps/web/data/economic-calendar.json`; `cmp` confirmed identical.

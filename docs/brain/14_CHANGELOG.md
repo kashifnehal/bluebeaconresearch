@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-10-27 — Pulse tiles removed from the dashboard home
+
+`apps/web` only. A small data set made the five pulse tiles (`Signals last 24h`, `Prior 24h`, `Change vs prior`, `Peak hour`, `Asset direction votes`) look sparse on the dashboard home, so `<PulseTiles />` (no `symbol`) was dropped from `app/(dashboard)/dashboard/page.tsx` — the import and the mount only, no wrapper or leftover gap. `components/signals/PulseTiles.tsx` itself is unchanged and still mounts on the single-asset `[symbol]` watchlist page (`<PulseTiles symbol={symbol} />`), which keeps using it. New rendered test (`createRoot`, not a source-text match) in `dashboard/page.test.tsx` mounts the full dashboard page and asserts none of the five tile labels or `[data-testid="pulse-tiles"]` appear; the existing rendered test in `components/signals/PulseTiles.test.tsx` already covers single-asset mode rendering, so nothing new was needed there. Full detail: `LIVE_TODO.md`, `06_COMPONENTS.md`.
+
 ### 2026-10-27 — Backend calendar copy sync, strict parity test, EIA gas series-id safety
 
 `apps/backend` only. The backend's `economic-calendar.json` copy was a stale snapshot missing rows added to the web copy, including the Nov 2026 NFP/CPI releases the Monday "Week ahead" digest needs (first real run 2026-11-02 06:00 UTC); copied byte-for-byte from `apps/web/data/economic-calendar.json` and confirmed identical with `cmp`. `week-ahead.test.ts`'s parity check was previously subset-only — strengthened to strict equality (id, date, time, status, sourceUrl, count) so a stale copy fails loudly, with window-boundary test coverage added for the new rows. `eia-weekly.ts` now skips storing gas rows when the series id only resolves via the name-match fallback rather than the configured `NW2_EPG0_SWO_R48_BCF` — `apps/web`'s `GET /api/calendar/values` only reads the configured id, so fallback-id rows were written but never displayed; crude stocks unaffected. Full detail: `LIVE_TODO.md`.
