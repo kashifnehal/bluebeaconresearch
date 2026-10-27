@@ -14,6 +14,13 @@ import { DATA_SLOW_MESSAGE, fetchJsonWithTimeout } from "@/lib/fetch-with-timeou
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { PageShell } from "@/components/layout/PageShell";
 import { Toolbar, SortSelect } from "@/components/layout/Toolbar";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   NEWS_ONLY_FEED_LABEL,
   fetchNewsOnlyCardSignals,
@@ -507,33 +514,66 @@ export function WatchlistClient() {
 
   const available = WATCHLIST_ASSETS.filter((c) => !watch.includes(c.symbol));
 
-  const handleSelectAdd = (value: string) => {
-    if (!value || value === "SELECT COMMODITY") return;
-    touchedRef.current = true;
-    setIsSuggested(false);
-    if (value === "__ALL__") {
-      setWatch((p) => [...new Set([...p, ...available.map((c) => c.symbol)])]);
-      return;
-    }
-    setWatch((p) => (p.includes(value) ? p : [...p, value]));
-  };
-
   const handleRemove = (sym: string) => {
     touchedRef.current = true;
     setIsSuggested(false);
     setWatch((w) => w.filter((x) => x !== sym));
   };
 
-  // Shared by the header "+ Add Asset" button and the desktop FAB — both just
-  // surface the one remaining add mechanism (the ADD COMMODITY select) rather
-  // than duplicating a picker.
+  // Shared by the header "+ Add Asset" button and the desktop FAB — both
+  // open the one add mechanism, now a dialog (the old select's
+  // scrollIntoView+focus had no real target once the picker stopped being a
+  // plain <select>, so it's replaced rather than kept pointing at nothing).
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addSearch, setAddSearch] = useState("");
+  const [addSelected, setAddSelected] = useState<string[]>([]);
+  const [addError, setAddError] = useState<string | null>(null);
   const openAddCommodityPicker = () => {
-    const el = document.querySelector<HTMLSelectElement>(
-      "select[aria-label='Add commodity to watchlist']",
+    setAddSearch("");
+    setAddSelected([]);
+    setAddError(null);
+    setAddDialogOpen(true);
+  };
+
+  const addSearchLower = addSearch.trim().toLowerCase();
+  const shownAvailable = addSearchLower
+    ? available.filter((c) => c.label.toLowerCase().includes(addSearchLower))
+    : available;
+
+  const toggleAddSelected = (symbol: string) => {
+    setAddSelected((prev) =>
+      prev.includes(symbol) ? prev.filter((s) => s !== symbol) : [...prev, symbol],
     );
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.focus();
+  };
+
+  const allShownSelected =
+    shownAvailable.length > 0 && shownAvailable.every((c) => addSelected.includes(c.symbol));
+  const toggleSelectAllShown = (checked: boolean) => {
+    const shownSymbols: string[] = shownAvailable.map((c) => c.symbol);
+    setAddSelected((prev) =>
+      checked
+        ? [...prev, ...shownSymbols.filter((s) => !prev.includes(s))]
+        : prev.filter((s) => !shownSymbols.includes(s)),
+    );
+  };
+
+  // Same add logic the old select's onChange used (its single-symbol
+  // branch), once per symbol, in the order checked — same de-duplication
+  // (functional setWatch, skips symbols already in watch).
+  const handleAddSelected = () => {
+    if (addSelected.length === 0) return;
+    setAddError(null);
+    try {
+      touchedRef.current = true;
+      setIsSuggested(false);
+      for (const sym of addSelected) {
+        setWatch((p) => (p.includes(sym) ? p : [...p, sym]));
+      }
+      setAddDialogOpen(false);
+      setAddSelected([]);
+      setAddSearch("");
+    } catch {
+      setAddError("Could not add the selected assets. Try again.");
     }
   };
 
@@ -587,36 +627,75 @@ export function WatchlistClient() {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <select
-                aria-label="Add commodity to watchlist"
-                value="SELECT COMMODITY"
-                onChange={(e) => handleSelectAdd(e.target.value)}
-                className={`w-[220px] ${SELECT_CLASSES}`}
-              >
-                <option disabled value="SELECT COMMODITY">
-                  ADD COMMODITY
-                </option>
-                {available.length > 1 && (
-                  <option value="__ALL__">
-                    Select All ({available.length} remaining)
-                  </option>
-                )}
-                {available.map((c) => (
-                  <option key={c.symbol} value={c.symbol}>
-                    {isNewsOnlySymbol(c.symbol) ? newsOnlyMarketLabel(c.label) : c.label}
-                  </option>
-                ))}
-              </select>
-              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
-                keyboard_arrow_down
-              </span>
-            </div>
-          </div>
         </div>
 
         </div>
+
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogContent className="max-w-md translate-y-0 gap-0 rounded-lg border border-[var(--border)] bg-[#0e0e0e] p-0 text-[#e5e2e1] ring-0 sm:max-w-md">
+            <div className="p-4 border-b border-[var(--border)]">
+              <DialogTitle className="text-sm font-bold text-[#e5e2e1]">Add assets</DialogTitle>
+              <DialogDescription className="text-[12px] md:text-[11px] text-on-surface-variant">
+                {available.length} remaining to add.
+              </DialogDescription>
+              <input
+                type="search"
+                autoFocus
+                placeholder="Search commodities, forex, news-only…"
+                value={addSearch}
+                onChange={(e) => setAddSearch(e.target.value)}
+                aria-label="Search assets to add"
+                data-testid="watchlist-add-search"
+                className={`mt-3 w-full font-sans normal-case tracking-normal ${SELECT_CLASSES}`}
+              />
+            </div>
+
+            {shownAvailable.length > 0 && (
+              <div className="px-4 py-2 border-b border-[var(--border)]">
+                <Checkbox
+                  label="Select all shown"
+                  data-testid="watchlist-add-select-all"
+                  checked={allShownSelected}
+                  onChange={toggleSelectAllShown}
+                />
+              </div>
+            )}
+
+            <div className="max-h-[320px] overflow-y-auto px-4 py-2 flex flex-col gap-1">
+              {shownAvailable.length === 0 ? (
+                <p className="py-6 text-center text-[12px] md:text-[11px] text-on-surface-variant">
+                  No matching assets.
+                </p>
+              ) : (
+                shownAvailable.map((c) => (
+                  <Checkbox
+                    key={c.symbol}
+                    label={isNewsOnlySymbol(c.symbol) ? newsOnlyMarketLabel(c.label) : c.label}
+                    data-testid="watchlist-add-option"
+                    checked={addSelected.includes(c.symbol)}
+                    onChange={() => toggleAddSelected(c.symbol)}
+                  />
+                ))
+              )}
+            </div>
+
+            {addError && (
+              <p className="px-4 pb-2 text-[12px] md:text-[11px] text-[#ee7d77]">{addError}</p>
+            )}
+
+            <div className="p-4 border-t border-[var(--border)]">
+              <button
+                type="button"
+                data-testid="watchlist-add-submit"
+                disabled={addSelected.length === 0}
+                onClick={handleAddSelected}
+                className="w-full inline-flex items-center justify-center gap-1.5 px-4 min-h-[44px] rounded-sm bg-primary text-[#003824] font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-transform hover:scale-105 active:scale-95"
+              >
+                Add selected ({addSelected.length})
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {hydrated && watch.length > 0 && (
           <Toolbar>
