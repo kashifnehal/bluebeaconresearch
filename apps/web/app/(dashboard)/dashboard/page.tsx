@@ -16,6 +16,7 @@ import { MediaImpactTag } from "@/components/signals/MediaImpactTag";
 import { SeverityBadge } from "@/components/signals/SeverityBadge";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { PageShell } from "@/components/layout/PageShell";
+import { StatusLine } from "@/components/signals/StatusLine";
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
@@ -479,7 +480,7 @@ export default function DashboardPage() {
         <Breadcrumbs items={[{ label: "Dashboard" }]} className="mb-4" />
 
         {/* Header */}
-        <div className="mb-10" data-tour="feed-header">
+        <div className="mb-6" data-tour="feed-header">
           <h1
             className="text-3xl font-extrabold tracking-tight"
             style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}
@@ -492,35 +493,13 @@ export default function DashboardPage() {
           >
             {DASHBOARD_FEED_SUBHEAD}
           </p>
-          {formatDataAsOf(dataUpdatedAt) ? (
-            <p
-              data-testid="data-as-of"
-              className="text-[12px] md:text-[11px] mt-2"
-              style={{ color: "var(--text-muted)", fontFamily: "'JetBrains Mono', monospace" }}
-              suppressHydrationWarning
-            >
-              {formatDataAsOf(dataUpdatedAt)}
-            </p>
-          ) : null}
+          <StatusLine
+            dataAsOf={formatDataAsOf(dataUpdatedAt)}
+            coverageLine={coverageLine}
+            windowExpandedLine={windowExpandedLine}
+          />
           {coverageFailed ? (
             <SlowDataNotice onRetry={() => setCoverageRetry((n) => n + 1)} />
-          ) : coverageLine ? (
-            <p
-              data-testid="coverage-line"
-              className="text-[12px] md:text-[11px] mt-2"
-              style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
-            >
-              {coverageLine}
-            </p>
-          ) : null}
-          {windowExpandedLine ? (
-            <p
-              data-testid="window-expanded-line"
-              className="text-[12px] md:text-[11px] mt-2"
-              style={{ color: "var(--text-muted)", fontFamily: "'Inter', sans-serif" }}
-            >
-              {windowExpandedLine}
-            </p>
           ) : null}
         </div>
 

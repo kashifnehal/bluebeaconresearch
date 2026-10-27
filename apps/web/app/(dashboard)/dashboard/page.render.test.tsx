@@ -108,6 +108,28 @@ async function main() {
     }
   });
 
+  await runTest("one combined status line holds data-as-of, coverage-line, window-expanded-line in order", async () => {
+    const { root, client, restoreFetch } = await renderDashboard();
+    try {
+      const html = document.body.innerHTML;
+      const order = [
+        html.indexOf('data-testid="data-as-of"'),
+        html.indexOf('data-testid="coverage-line"'),
+      ];
+      assert.ok(order[0] > -1 && order[1] > -1, "expected both data-as-of and coverage-line");
+      assert.ok(order[0] < order[1]);
+      // Exactly one data-as-of line (the old header duplicated "Data as of" —
+      // once above PulseTiles, once under the subhead; PulseTiles itself was
+      // already removed from this page before this task, see PART 6a note).
+      const dataAsOfCount = html.match(/data-testid="data-as-of"/g)?.length ?? 0;
+      assert.equal(dataAsOfCount, 1);
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
   await runTest("the Market & Intelligence aside is present in Cards view, sticky", async () => {
     const { root, client, restoreFetch } = await renderDashboard();
     try {
