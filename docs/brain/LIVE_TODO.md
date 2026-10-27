@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Backend calendar copy sync + strict parity test + EIA gas series-id safety, `apps/backend`, 2026-10-27, `874c7b6`/`233be28`/`3f6970b`
+
+- `apps/backend/src/data/economic-calendar.json` was a stale snapshot missing rows the Monday "Week ahead" digest needs (first real run is 2026-11-02 06:00 UTC) — notably `us-nfp-2026-11-06` and `us-cpi-2026-11-10`. Copied byte-for-byte from `apps/web/data/economic-calendar.json`; `cmp` confirmed identical.
+- `week-ahead.test.ts`'s backend/web parity check was subset-only (a stale backend copy could still pass). Now strict equality on id, date, time, status, sourceUrl, and count, with a failure message pointing at the fix. Added window-boundary tests for the Nov 2026 NFP/CPI rows.
+- `eia-weekly.ts`: if the gas series id only resolves via the name-match fallback (not the configured `NW2_EPG0_SWO_R48_BCF`), gas rows are now skipped rather than stored — `apps/web`'s `GET /api/calendar/values` only reads the configured id, so fallback-id rows were being written but never shown. Crude stocks unaffected. One-time log line.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `14_CHANGELOG.md`, `05_API.md`. Skipped `04_DATABASE.md` (no schema change), `16_MIGRATION_CHECKLIST.md` (no migration), claude_project tree (no product/business decision, no new route), both `10_DECISIONS.md` files (no standing rule — the gas-id-mismatch skip is a correctness fix documented in the code itself), `06_COMPONENTS.md` (no React component), `18_AI_ENGINE.md` (no Claude prompt change).
+
 ## ✅ EIA weekly collector + economic_event_values + Monday digest "Week ahead" block, `apps/backend` plus one migration, 2026-10-27, `0c47550`/`5b27a3b`/`279105a`
 
 - `20261018000000_economic_event_values.sql` written, not applied (service-only; RLS on, no policy, service_role only). Columns/series ids (`WCESTUS1`, `NW2_EPG0_SWO_R48_BCF`) match what `apps/web`'s `GET /api/calendar/values` already reads — that route shipped ahead of this table and degrades to `{values:[]}` until a founder applies the migration.

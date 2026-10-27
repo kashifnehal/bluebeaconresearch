@@ -240,6 +240,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - **Cache-Control**: `public, s-maxage=3600, stale-while-revalidate=86400` when `values` is non-empty; `public, s-maxage=300` when empty, so a table created later shows up soon.
 - **Rate limit**: `rateLimitOrPass('calendar-values:<ip>')`.
 - **Not a Fastify route.** `apps/web` only.
+- Any change to `apps/web/data/economic-calendar.json` must be copied to `apps/backend/src/data/economic-calendar.json`; the parity test enforces it.
 ---
 
 ### 2.2 Alert Rules & Dispatch Endpoints
