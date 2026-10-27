@@ -249,6 +249,9 @@ One row per daily digest run. `public.digest_send_log`. Columns match `runDigest
 ### Table 13g: `cot_positions` (written, not applied, 2026-10-17)
 Weekly CFTC Disaggregated Futures Only positioning. `public.cot_positions`. Primary key `(report_date, contract_market_code)`. Columns: `market_name`, BBR `symbol`, open interest, money-manager / swap / producer / non-reporting longs and shorts, money-manager changes, `traders_total`, `contract_units`, `fetched_at`. RLS on, no policy, `anon`/`authenticated` revoked, `service_role` select+insert+update. `20261017180000_cot_positions.sql`. Not applied.
 
+### Table 13h: `economic_event_values` (written, not applied, 2026-10-27)
+Periodic economic series values (currently EIA weekly petroleum stocks and natural-gas storage). `public.economic_event_values`. Columns: `id` (uuid pk), `series_id`, `period` (date), `value` (numeric), `unit`, `source_url`, nullable `released_at`, `fetched_at`. Unique `(series_id, period)`. RLS on, no policy, `anon`/`authenticated` revoked, `service_role` select+insert+update. `20261018000000_economic_event_values.sql`. Not applied. Filled by `apps/backend/src/workers/eia-weekly.ts` (series ids `WCESTUS1`, `NW2_EPG0_SWO_R48_BCF`); already read by `apps/web`'s `GET /api/calendar/values` (shipped ahead of this table, degrades to `{values:[]}` until it exists) — column names and series ids match what that route selects.
+
 ### View: `feed_gap_p95` (written, not applied, 2026-10-15)
 `20261015130000_feed_gap_p95.sql` (`5a04fcb`). Read-only view `public.feed_gap_p95`. Not in the applied migration list checked 2026-10-15.
 

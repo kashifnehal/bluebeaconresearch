@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ EIA weekly collector + economic_event_values + Monday digest "Week ahead" block, `apps/backend` plus one migration, 2026-10-27, `0c47550`/`5b27a3b`/`279105a`
+
+- `20261018000000_economic_event_values.sql` written, not applied (service-only; RLS on, no policy, service_role only). Columns/series ids (`WCESTUS1`, `NW2_EPG0_SWO_R48_BCF`) match what `apps/web`'s `GET /api/calendar/values` already reads — that route shipped ahead of this table and degrades to `{values:[]}` until a founder applies the migration.
+- New `eia-weekly.ts` worker: EIA weekly petroleum stocks + natural-gas storage (gas series id verified against EIA's own facet list at runtime, never guessed). Off/no-op without `EIA_API_KEY` (not set locally — Railway workers service already has it) or the table. Registered on `EIA_CRON` (default Wed-Fri UTC).
+- `week-ahead.ts` + a backend copy of `economic-calendar.json` (parity enforced by a disk-read test, no apps/web runtime import): Monday-only digest addition — a "Week ahead" section on the normal digest, or a calendar-only email when the user would otherwise be skipped for no signals but has a scheduled release this week. Counted in `sent`; `digest_send_log` schema and eligibility/preference gates unchanged.
+- Known follow-up, not done here: the backend's `economic-calendar.json` copy is a snapshot taken before a concurrent session's "Calendar copy/date refresh" commits landed more rows through Jan 2027 — still valid (parity test only requires the backend's events to be a subset of the web file's), just not the newest snapshot. Also: if the EIA gas series id ever resolves via the facet-name fallback instead of the configured `NW2_EPG0_SWO_R48_BCF`, rows would be stored under that fallback id, which `apps/web`'s `GET /api/calendar/values` does not currently look for.
+- No open priority-queue line. Nothing struck.
+- Docs: this entry; brain `04_DATABASE.md`, `14_CHANGELOG.md`, `16_MIGRATION_CHECKLIST.md`; claude_project `04_DATABASE.md`. Skipped `05_API.md` (no new HTTP route — the worker and digest change have no route), `06_COMPONENTS.md` (no React component), `18_AI_ENGINE.md` (no Claude prompt change), and both `10_DECISIONS.md` files (no standing rule — the macro-always-included and 7-day-window choices are documented as DESIGN CHOICE comments in the code itself, not repo-wide decisions).
+
 ## ✅ Calendar copy/date refresh, official-figures panel, CSV button relabel, `apps/web`, 2026-10-27, `c753434`/`4f31e4b`/`c4bb0b5`/`428b9df`
 
 - Calendar page description, footer sourcing line (reads `_meta.sourcedAt` live), and breadcrumb ("Calendar" → "Week Ahead") updated.
