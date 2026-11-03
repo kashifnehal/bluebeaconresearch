@@ -62,7 +62,7 @@ export function MobileTensionSheet({
           <div className="w-10 h-1 rounded-full bg-outline-variant/40 mx-auto mb-4" />
 
           <div className="flex items-center gap-1.5 mb-3">
-            <span className="label text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
+            <span className="label text-[11px] tracking-[0.2em] text-on-surface-variant uppercase">
               High-Severity Activity
             </span>
             <div className="relative">
@@ -102,7 +102,7 @@ export function MobileTensionSheet({
             {clusterFilterCount != null && (
               <button
                 onClick={onClearClusterFilter}
-                className="label text-[10px] text-primary hover:underline shrink-0"
+                className="label text-[11px] text-primary hover:underline shrink-0"
               >
                 SHOW ALL
               </button>
@@ -136,14 +136,14 @@ export function MobileTensionSheet({
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span
-                        className={`px-1.5 py-0.5 label text-[10px] border uppercase ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
+                        className={`px-1.5 py-0.5 label text-[11px] border uppercase ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
                       >
                         {isUrgent ? "URGENT" : "SIGNAL"}
                       </span>
-                      <span className="font-mono text-[10px] text-on-surface-variant">
+                      <span className="font-mono text-[11px] text-on-surface-variant">
                         {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)} ago
                       </span>
-                      <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="font-mono text-[10px] text-primary" />
+                      <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="font-mono text-[11px] text-primary" />
                     </div>
                     <p className="text-[13px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2">
                       {signal.title}
@@ -163,7 +163,7 @@ export function MobileTensionSheet({
               })
             ) : (
               <div className="flex items-center justify-center p-6 grayscale opacity-50">
-                <span className="label text-[10px] tracking-widest uppercase">No stream data</span>
+                <span className="label text-[11px] tracking-widest uppercase">No stream data</span>
               </div>
             )}
             {!isLoading && !isError && (
@@ -209,12 +209,12 @@ export function MobileTensionSheet({
         <div className="flex items-center gap-3 min-w-0">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
           <div className="text-left min-w-0">
-            <div className="label text-[9px] tracking-[0.2em] text-on-surface-variant uppercase">
+            <div className="label text-[11px] tracking-[0.2em] text-on-surface-variant uppercase">
               High-Severity Activity
             </div>
             <div className="flex items-baseline gap-1.5">
               <span className="font-mono text-xl font-bold text-on-surface">{tensionMetrics.highSeverityCount}</span>
-              <span className="font-mono text-[9px] text-on-surface-variant/70 truncate">
+              <span className="font-mono text-[11px] text-on-surface-variant/70 truncate">
                 of {tensionMetrics.sampleSize} active
               </span>
             </div>

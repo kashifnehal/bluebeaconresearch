@@ -42,7 +42,7 @@ function PriceContext({ context }: { context: MarkerPriceContext }) {
     return (
       <div className="mt-2 border-t border-outline-variant/30 pt-2" data-testid="chart-marker-price-context">
         <p className="text-[11px] font-mono text-on-surface-variant">{WEEKLY_UNAVAILABLE}</p>
-        <p className="mt-1 text-[10px] leading-snug text-on-surface-variant/70">{PRICE_CONTEXT_NOTE}</p>
+        <p className="mt-1 text-[11px] leading-snug text-on-surface-variant/70">{PRICE_CONTEXT_NOTE}</p>
       </div>
     );
   }
@@ -74,7 +74,7 @@ function PriceContext({ context }: { context: MarkerPriceContext }) {
           </dd>
         </div>
       </dl>
-      <p className="mt-1 text-[10px] leading-snug text-on-surface-variant/70">{PRICE_CONTEXT_NOTE}</p>
+      <p className="mt-1 text-[11px] leading-snug text-on-surface-variant/70">{PRICE_CONTEXT_NOTE}</p>
     </div>
   );
 }
@@ -201,7 +201,7 @@ export function ChartMarkerCard({
           {priceContext && <PriceContext context={priceContext} />}
         </>
       )}
-      <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-on-surface-variant/70">
+      <p className="mt-2 text-[11px] font-mono uppercase tracking-widest text-on-surface-variant/70">
         Select to see news around this time
       </p>
     </div>

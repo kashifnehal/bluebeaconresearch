@@ -64,7 +64,7 @@ export function ChartMarkerList({
               <span className="block text-[12px] font-bold leading-snug text-on-surface">
                 {m.title}
               </span>
-              <span className="block text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mt-0.5">
+              <span className="block text-[11px] font-mono text-on-surface-variant uppercase tracking-widest mt-0.5">
                 {formatMarkerListTime(m.eventMs)}
               </span>
             </a>

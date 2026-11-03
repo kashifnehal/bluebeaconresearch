@@ -274,7 +274,7 @@ export default function AccessLimitedModal({
         {joinedWaitlist && <p
           style={{
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "10px",
+            fontSize: "11px",
             letterSpacing: "0.08em",
             color: C.italicText,
             textAlign: "center",
@@ -297,7 +297,7 @@ export default function AccessLimitedModal({
           <span
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "9px",
+              fontSize: "11px",
               letterSpacing: "0.1em",
               color: C.metaText,
               textTransform: "uppercase",
@@ -308,7 +308,7 @@ export default function AccessLimitedModal({
           <span
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: "9px",
+              fontSize: "11px",
               letterSpacing: "0.1em",
               color: C.metaText,
               textTransform: "uppercase",

@@ -230,7 +230,7 @@ export function TopBar() {
                 </div>
                 <div
                   style={{
-                    fontSize: "10px",
+                    fontSize: "11px",
                     fontFamily: "'JetBrains Mono', monospace",
                     color: "var(--text-muted)",
                   }}

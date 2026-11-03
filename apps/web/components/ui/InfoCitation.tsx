@@ -53,7 +53,7 @@ export function InfoCitation({ label, children }: { label: string; children: Rea
           onClick={(e) => {
             e.stopPropagation();
           }}
-          className="absolute bottom-full left-1/2 z-30 mb-1.5 w-56 -translate-x-1/2 rounded-md border border-outline-variant/40 bg-[#141414] p-2.5 text-left text-[10px] font-mono normal-case leading-snug text-on-surface-variant shadow-lg"
+          className="absolute bottom-full left-1/2 z-30 mb-1.5 w-56 -translate-x-1/2 rounded-md border border-outline-variant/40 bg-[#141414] p-2.5 text-left text-[11px] font-mono normal-case leading-snug text-on-surface-variant shadow-lg"
         >
           {children}
         </span>

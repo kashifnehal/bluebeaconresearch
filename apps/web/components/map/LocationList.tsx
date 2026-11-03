@@ -67,7 +67,7 @@ function LocationListBody({
         Signals with a location: {grouping.withLocation} of {grouping.total} · Up: {grouping.up} · Down: {grouping.down} · Unique locations: {grouping.uniqueLocations}
       </p>
       <div className="flex items-center justify-between gap-2">
-        <label className="label text-[10px] tracking-[0.14em] uppercase text-on-surface-variant" htmlFor="location-order">
+        <label className="label text-[11px] tracking-[0.14em] uppercase text-on-surface-variant" htmlFor="location-order">
           Order
         </label>
         <select
@@ -88,7 +88,7 @@ function LocationListBody({
         <button
           type="button"
           onClick={onClearCountry}
-          className="label text-[10px] text-primary text-left hover:underline"
+          className="label text-[11px] text-primary text-left hover:underline"
         >
           Show all
         </button>
@@ -121,7 +121,7 @@ function LocationListBody({
         })}
       </ul>
       <div>
-        <h3 className="label text-[10px] tracking-[0.16em] uppercase text-on-surface-variant mb-1">
+        <h3 className="label text-[11px] tracking-[0.16em] uppercase text-on-surface-variant mb-1">
           Chokepoints
         </h3>
         <ul className="space-y-1 overflow-y-auto">
@@ -154,7 +154,7 @@ function LocationListBody({
             );
           })}
         </ul>
-        <p className="mt-2 text-[10px] text-on-surface-variant/80">
+        <p className="mt-2 text-[11px] text-on-surface-variant/80">
           Counts are signals within {radiusKm} km (a display choice, not a sourced threshold).
         </p>
       </div>
@@ -280,7 +280,7 @@ export function LocationList({
           mobileExpanded ? "" : "rounded-t-2xl mx-3"
         }`}
       >
-        <span className="label text-[10px] tracking-[0.16em] font-bold text-on-surface uppercase">
+        <span className="label text-[11px] tracking-[0.16em] font-bold text-on-surface uppercase">
           Locations
         </span>
         <span className="material-symbols-outlined text-on-surface-variant">

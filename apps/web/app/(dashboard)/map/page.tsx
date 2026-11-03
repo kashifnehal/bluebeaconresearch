@@ -1046,7 +1046,7 @@ export default function MapPage() {
                 );
               })}
             </ul>
-            <p className="mt-2 px-2 text-[10px] text-on-surface-variant/80">
+            <p className="mt-2 px-2 text-[11px] text-on-surface-variant/80">
               Counts are signals within {CHOKEPOINT_SIGNAL_RADIUS_KM} km (a
               display choice, not a sourced threshold).
             </p>
@@ -1231,7 +1231,7 @@ export default function MapPage() {
               </span>
               <button
                 onClick={clearClusterStream}
-                className="label text-[10px] text-primary hover:underline shrink-0"
+                className="label text-[11px] text-primary hover:underline shrink-0"
               >
                 SHOW ALL
               </button>

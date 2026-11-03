@@ -88,7 +88,7 @@ export function PositioningPanelView({ rows }: { rows: CotRow[] }) {
       <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label}>
-            <dt className="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+            <dt className="font-label text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
               {s.label}
             </dt>
             <dd className="font-mono text-sm text-on-surface">{s.value}</dd>
