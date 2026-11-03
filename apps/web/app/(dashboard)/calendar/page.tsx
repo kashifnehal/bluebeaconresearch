@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import calendarData from "@/data/economic-calendar.json";
 import { SELECT_CLASSES } from "@/lib/utils";
+import { SITE_ORIGIN } from "@/lib/site-metadata";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import {
   CATEGORY_ASSET_MAP,
@@ -900,23 +901,40 @@ export default function CalendarPage() {
           </p>
           {now && <ScheduleEndNotice events={EVENTS} today={now} />}
         </div>
-        <button
-          type="button"
-          data-testid="calendar-export-ics"
-          disabled={exportableEvents.length === 0}
-          onClick={() => downloadEventsAsIcs(exportableEvents)}
-          title="Downloads the events currently shown below as a one-time .ics file — it won't stay in sync with future updates."
-          className="shrink-0 px-4 py-2.5 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center gap-2"
-          style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            backgroundColor: "var(--bg-container)",
-            color: "var(--accent)",
-            borderColor: "var(--border)",
-          }}
-        >
-          <span className="material-symbols-outlined text-[16px]">download</span>
-          Export to Calendar ({exportableEvents.length})
-        </button>
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
+          <button
+            type="button"
+            data-testid="calendar-export-ics"
+            disabled={exportableEvents.length === 0}
+            onClick={() => downloadEventsAsIcs(exportableEvents)}
+            title="Downloads the events currently shown below as a one-time .ics file — it won't stay in sync with future updates."
+            className="shrink-0 px-4 py-2.5 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border rounded-md transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center gap-2"
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              backgroundColor: "var(--bg-container)",
+              color: "var(--accent)",
+              borderColor: "var(--border)",
+            }}
+          >
+            <span className="material-symbols-outlined text-[16px]">download</span>
+            Export to Calendar ({exportableEvents.length})
+          </button>
+          <a
+            data-testid="calendar-subscribe-feed"
+            href={`webcal://${SITE_ORIGIN.replace(/^https:\/\//, "")}/api/calendar/feed`}
+            title="Adds the Week Ahead dates to your own calendar app. The app refreshes it on its own schedule."
+            className="shrink-0 px-4 py-2.5 text-[12px] md:text-[11px] font-bold uppercase tracking-widest border rounded-md transition-colors cursor-pointer min-h-[44px] inline-flex items-center gap-2"
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              backgroundColor: "var(--bg-container)",
+              color: "var(--accent)",
+              borderColor: "var(--border)",
+            }}
+          >
+            <span className="material-symbols-outlined text-[16px]">calendar_add_on</span>
+            Subscribe in your calendar app
+          </a>
+        </div>
       </section>
 
       <CalendarFilters

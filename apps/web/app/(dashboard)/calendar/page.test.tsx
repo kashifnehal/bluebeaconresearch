@@ -698,6 +698,56 @@ async function main() {
       await act(async () => root.unmount());
     }
   });
+
+  await runTest("subscribe-feed link exists with a webcal href, alongside the export button", async () => {
+    const { AppRouterContext } = await import(
+      "next/dist/shared/lib/app-router-context.shared-runtime.js"
+    );
+    const originalFetch = g.fetch;
+    g.fetch = async () => new Response(JSON.stringify({ magnitudes: {} }), { status: 200 });
+    const fakeRouter = {
+      push: () => {},
+      replace: () => {},
+      back: () => {},
+      forward: () => {},
+      refresh: () => {},
+      prefetch: async () => {},
+    };
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { default: CalendarPage } = await import("./page");
+
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(
+          createElement(
+            AppRouterContext.Provider,
+            { value: fakeRouter },
+            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+          ),
+        );
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+
+      const link = document.querySelector('[data-testid="calendar-subscribe-feed"]');
+      assert.ok(link, "calendar-subscribe-feed link not found");
+      const href = link!.getAttribute("href") ?? "";
+      assert.ok(
+        href.startsWith("webcal://www.bluebeaconresearch.com/api/calendar/feed"),
+        `unexpected href: ${href}`,
+      );
+      const exportButton = document.querySelector('[data-testid="calendar-export-ics"]');
+      assert.ok(exportButton, "calendar-export-ics button should still exist");
+    } finally {
+      await act(async () => root.unmount());
+      g.fetch = originalFetch;
+    }
+  });
 }
 
 main();

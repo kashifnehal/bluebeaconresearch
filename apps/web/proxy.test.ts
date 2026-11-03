@@ -210,6 +210,16 @@ async function main() {
   await runTest("/assessments is not in PROTECTED (public, no auth check — never calls getUser())", () => {
     assert.equal(PROTECTED.includes("/assessments"), false);
   });
+
+  await runTest("/api/calendar/feed is not in PROTECTED", () => {
+    assert.equal(PROTECTED.includes("/api/calendar/feed"), false);
+  });
+
+  await runTest("/api/calendar/feed is not redirected to login", async () => {
+    const res = await proxy(new NextRequest("https://app.example.com/api/calendar/feed"));
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("location"), null);
+  });
 }
 
 main();
