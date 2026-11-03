@@ -2,6 +2,14 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { EmailService } from "../services/email.service.js";
 import { tokenize, jaccardSimilarity } from "./signal-merge.js";
 import { weekAheadFor, weeklyRhythmLines, type WeekAheadEvent } from "../lib/week-ahead.js";
+import {
+  documentWrapper,
+  masthead,
+  preheader,
+  eventExposureEvidence,
+  tagList,
+  footer,
+} from "../lib/email-layout.js";
 
 let supabase = getSupabaseAdmin();
 let email = new EmailService();
@@ -35,10 +43,7 @@ const REGION_LABEL: Record<string, string> = {
   global: "Global",
 };
 
-const DIRECTION_ARROW: Record<string, string> = { up: "↑", down: "↓", volatile: "↕", neutral: "→" };
-
-const TRUST_LINE =
-  "Blue Beacon surfaces signals for your own analysis — informational only, not financial advice or a buy/sell call.";
+const TRUST_LINE = "Informational research, not investment advice. Sources and dates are shown on each item.";
 
 const CALENDAR_URL = "https://www.bluebeaconresearch.com/calendar";
 
@@ -86,6 +91,28 @@ function leadSentence(text: string, cap = 320): string {
 
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "03 Nov UTC" — used in the masthead date line and the digest subject. */
+function formatDateUTC(d: Date): string {
+  return `${String(d.getUTCDate()).padStart(2, "0")} ${MONTHS[d.getUTCMonth()]} UTC`;
+}
+
+/** "03 Nov" — used next to a linked source, where repeating "UTC" per source is just noise. */
+function formatSourceDateUTC(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${String(d.getUTCDate()).padStart(2, "0")} ${MONTHS[d.getUTCMonth()]}`;
+}
+
+function sourceHost(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
 }
 
 const SIGNAL_COLUMNS =
@@ -262,23 +289,28 @@ function whichWatchMatched(signal: SignalRow, pref: PrefRow): string {
   return hits.length ? hits.join(", ") : "your watchlist";
 }
 
-async function sourceUrlsFor(signals: SignalRow[]): Promise<Map<string, string[]>> {
+export type DigestSource = { url: string; date: string | null };
+
+/** Article date comes from raw_events.event_date (set by every collector to the article's publish time), not raw_data — so it's available the same way regardless of source. */
+async function sourceUrlsFor(signals: SignalRow[]): Promise<Map<string, DigestSource[]>> {
   const ids = [...new Set(signals.flatMap((s) => (Array.isArray(s.raw_event_ids) ? s.raw_event_ids : [])))];
-  const byRawEvent = new Map<string, string>();
+  const byRawEvent = new Map<string, DigestSource>();
   if (ids.length) {
-    const { data } = await supabase.from("raw_events").select("id, raw_data").in("id", ids);
+    const { data } = await supabase.from("raw_events").select("id, raw_data, event_date").in("id", ids);
     for (const re of data ?? []) {
       const url = (re as any).raw_data?.url;
-      if (typeof url === "string" && url) byRawEvent.set((re as any).id, url);
+      if (typeof url === "string" && url) {
+        byRawEvent.set((re as any).id, { url, date: (re as any).event_date ?? null });
+      }
     }
   }
-  const out = new Map<string, string[]>();
+  const out = new Map<string, DigestSource[]>();
   for (const s of signals) {
-    const urls = (s.raw_event_ids ?? [])
+    const srcs = (s.raw_event_ids ?? [])
       .map((id) => byRawEvent.get(id))
-      .filter((u): u is string => Boolean(u))
+      .filter((u): u is DigestSource => Boolean(u))
       .slice(0, 2);
-    out.set(s.id, urls);
+    out.set(s.id, srcs);
   }
   return out;
 }
@@ -365,7 +397,7 @@ export function renderWeekAheadOnlyEmail(
 function renderText(
   signals: SignalRow[],
   pref: PrefRow,
-  sources: Map<string, string[]>,
+  sources: Map<string, DigestSource[]>,
   weekAheadEvents: WeekAheadEvent[] = [],
 ): string {
   const blocks = signals.map((s, i) => {
@@ -374,18 +406,21 @@ function renderText(
       ...(Array.isArray(s.currency_pair_impacts) ? s.currency_pair_impacts : []),
     ];
     const instruments = impacts.length
-      ? impacts.map((c) => `${c.asset} ${DIRECTION_ARROW[c.direction ?? "neutral"] ?? "→"}`).join("  ·  ")
+      ? impacts.map((c) => c.asset).filter(Boolean).join("  ·  ")
       : "No specific instruments were flagged.";
     const why = s.ai_analysis
       ? leadSentence(String(s.ai_analysis))
-      : `${s.summary ?? "No summary available."} (Deeper analyst commentary wasn't available for this signal.)`;
+      : `${s.summary ?? "No summary available."} No extended note for this item.`;
     const src = sources.get(s.id) ?? [];
+    const srcLines = src.map((item) =>
+      item.date ? `${sourceHost(item.url)} (${formatSourceDateUTC(item.date)})` : sourceHost(item.url),
+    );
     return [
       `${i + 1}. EVENT: ${s.title}`,
       `   WHY IT MATTERS: ${why}`,
       `   WHICH INSTRUMENTS: ${instruments}`,
       `   ALERT THRESHOLD: severity ${s.severity} — matched ${whichWatchMatched(s, pref)}`,
-      ...(src.length ? [`   SOURCE: ${src.join("  ")}`] : []),
+      ...(srcLines.length ? [`   SOURCE: ${srcLines.join("  ·  ")}`] : []),
     ].join("\n");
   });
   const lines = [
@@ -408,16 +443,12 @@ function renderText(
 function renderHtml(
   signals: SignalRow[],
   pref: PrefRow,
-  sources: Map<string, string[]>,
+  sources: Map<string, DigestSource[]>,
   appUrl: string,
   weekAheadEvents: WeekAheadEvent[] = [],
+  now: Date = new Date(),
+  address?: string,
 ): string {
-  const section = (step: number, label: string, body: string) =>
-    `<tr><td style="padding:6px 0;border-top:1px solid #eee;">
-       <div style="font:700 10px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#3aa981;">${step} · ${label}</div>
-       <div style="font:400 14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#1f2937;margin-top:3px;">${body}</div>
-     </td></tr>`;
-
   const cards = signals
     .map((s) => {
       const impacts = [
@@ -425,64 +456,70 @@ function renderHtml(
         ...(Array.isArray(s.currency_pair_impacts) ? s.currency_pair_impacts : []),
       ];
       const instruments = impacts.length
-        ? impacts
-            .map(
-              (c) =>
-                `<span style="display:inline-block;padding:2px 8px;margin:2px 4px 2px 0;border-radius:999px;background:#f1f5f9;font:600 12px monospace;color:#0f172a;">${esc(
-                  c.asset ?? "",
-                )} ${DIRECTION_ARROW[c.direction ?? "neutral"] ?? "→"}</span>`,
-            )
-            .join("")
-        : `<em style="color:#6b7280;">No specific instruments were flagged.</em>`;
+        ? tagList(impacts.map((c) => c.asset ?? "").filter(Boolean))
+        : `<em style="color:#5B6B7F;">No specific instruments were flagged.</em>`;
       const why = s.ai_analysis
         ? esc(leadSentence(String(s.ai_analysis)))
-        : `${esc(s.summary ?? "No summary available.")}<br><span style="color:#9ca3af;font-style:italic;font-size:12px;">Deeper analyst commentary wasn't available for this signal — showing the event summary.</span>`;
+        : `${esc(s.summary ?? "No summary available.")}<br><span style="color:#5B6B7F;font-style:italic;font-size:12px;">No extended note for this item.</span>`;
       const src = sources.get(s.id) ?? [];
-      const srcHtml = src.length
-        ? `<tr><td style="padding:6px 0;border-top:1px solid #eee;font:400 12px/1.5 -apple-system,sans-serif;">
-             <span style="font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.1em;font-size:10px;">Built from</span><br>
-             ${src.map((u) => `<a href="${esc(u)}" style="color:#2563eb;">${esc(u.replace(/^https?:\/\//, "").slice(0, 70))}</a>`).join("<br>")}
-           </td></tr>`
-        : "";
-      return `<table role="presentation" width="100%" style="margin:0 0 18px;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;">
-        ${section(1, "Event", `<a href="${appUrl}/events/${s.id}" style="color:#0f172a;font-weight:700;text-decoration:none;">${esc(s.title)}</a>`)}
-        ${section(2, "Why it matters", why)}
-        ${section(3, "Which instruments", instruments)}
-        ${section(4, "Alert threshold", `Severity ${s.severity} — matched <strong>${esc(whichWatchMatched(s, pref))}</strong>`)}
-        ${srcHtml}
-      </table>`;
+      const evidence = src.length
+        ? src
+            .map(
+              (item) =>
+                `<a href="${esc(item.url)}" style="color:#0A2643;">${esc(sourceHost(item.url))}</a>${
+                  item.date ? ` — ${esc(formatSourceDateUTC(item.date))}` : ""
+                }`,
+            )
+            .join("<br>")
+        : `<span style="color:#5B6B7F;">No linked source for this item.</span>`;
+
+      const block = eventExposureEvidence({
+        event: `<a href="${appUrl}/events/${s.id}" style="color:#0B1220;font-weight:700;text-decoration:none;">${esc(
+          s.title,
+        )}</a>`,
+        exposure: `${instruments}<div style="margin-top:4px;">${why}</div>`,
+        evidence,
+      });
+      const matched = `<div style="font:400 12px/1.6 Arial,Helvetica,sans-serif;color:#5B6B7F;margin-top:4px;">Matched: ${esc(
+        whichWatchMatched(s, pref),
+      )} · Severity ${s.severity}</div>`;
+      return `<div style="margin:0 0 18px;border-bottom:1px solid #D9DDE3;padding-bottom:12px;">${block}${matched}</div>`;
     })
     .join("");
 
-  return `<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#ffffff;">
-    <div style="font:800 20px/1.2 -apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a;">Your Blue Beacon digest</div>
-    <div style="font:400 13px/1.5 -apple-system,sans-serif;color:#6b7280;margin:4px 0 20px;">
+  const body = `
+    ${masthead("BLUE BEACON RESEARCH", `Daily Brief · ${formatDateUTC(now)}`)}
+    ${preheader(signals[0]?.title ?? "")}
+    <div style="font:400 13px/1.5 Arial,Helvetica,sans-serif;color:#5B6B7F;margin:0 0 16px;">
       Top ${signals.length} from the last 24 hours, ranked by severity, filtered to the regions, commodities, and forex pairs you follow.
     </div>
     ${cards}
-    <div style="font:400 11px/1.5 -apple-system,sans-serif;color:#9ca3af;border-top:1px solid #eee;padding-top:12px;">
-      ${TRUST_LINE}<br><br>
-      You're receiving this because the daily digest is on for your account.
-      <a href="${appUrl}/settings" style="color:#6b7280;">Turn it off in Settings → Notifications</a>.
-    </div>
-    <div style="font:400 12px/1.5 -apple-system,sans-serif;color:#6b7280;margin-top:8px;">${esc(newestIncludedLine(signals))}</div>
+    <div style="font:400 12px/1.5 Arial,Helvetica,sans-serif;color:#5B6B7F;">${esc(newestIncludedLine(signals))}</div>
     ${weekAheadEvents.length > 0 ? renderWeekAheadHtml(weekAheadEvents) : ""}
-  </div>`;
+    ${footer({
+      reason: `${TRUST_LINE} You're receiving this because the daily digest is on for your account.`,
+      unsubscribeUrl: `${appUrl}/settings`,
+      preferencesUrl: `${appUrl}/settings`,
+      address,
+    })}
+  `;
+
+  return documentWrapper("Blue Beacon Research — Daily Brief", body);
 }
 
 /** Build the {subject, html, text} for one user's digest. Exported for tests/verification. */
 export function renderDigestEmail(
   signals: SignalRow[],
   pref: PrefRow,
-  sources: Map<string, string[]>,
+  sources: Map<string, DigestSource[]>,
   appUrl: string,
   weekAheadEvents: WeekAheadEvent[] = [],
+  now: Date = new Date(),
+  address?: string,
 ): { subject: string; html: string; text: string } {
   return {
-    subject: `Blue Beacon digest — ${signals[0].title.slice(0, 60)}${
-      signals.length > 1 ? ` +${signals.length - 1} more` : ""
-    }`,
-    html: renderHtml(signals, pref, sources, appUrl, weekAheadEvents),
+    subject: `Blue Beacon Research: ${signals[0].title.slice(0, 60)} (${formatDateUTC(now)})`,
+    html: renderHtml(signals, pref, sources, appUrl, weekAheadEvents, now, address),
     text: renderText(signals, pref, sources, weekAheadEvents),
   };
 }
@@ -621,7 +658,13 @@ export async function runDigestOnce(
           continue;
         }
         try {
-          const res = await email.send({ to, subject, html, text });
+          const res = await email.send({
+            to,
+            subject,
+            html,
+            text,
+            headers: { "List-Unsubscribe": `<${appUrl}/settings>` },
+          });
           if (res.sent) {
             result.sent += 1;
             console.log(`[digest] sent week-ahead-only to ${to} (${weekAheadEvents.length} events) id=${res.id}`);
@@ -636,7 +679,7 @@ export async function runDigestOnce(
         continue;
       }
       const sources = await sourceUrlsFor(signals);
-      const { subject, html, text } = renderDigestEmail(signals, pref, sources, appUrl, weekAheadEvents);
+      const { subject, html, text } = renderDigestEmail(signals, pref, sources, appUrl, weekAheadEvents, now);
 
       if (opts?.dryRun) {
         console.log(`[digest] DRY RUN → ${to} (${signals.length} signals)`);
@@ -645,7 +688,13 @@ export async function runDigestOnce(
       }
 
       try {
-        const res = await email.send({ to, subject, html, text });
+        const res = await email.send({
+          to,
+          subject,
+          html,
+          text,
+          headers: { "List-Unsubscribe": `<${appUrl}/settings>` },
+        });
         if (res.sent) {
           result.sent += 1;
           console.log(`[digest] sent to ${to} (${signals.length} signals) id=${res.id}`);

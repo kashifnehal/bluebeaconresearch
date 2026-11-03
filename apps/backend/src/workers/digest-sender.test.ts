@@ -282,11 +282,9 @@ const FAKE_WEEK_AHEAD_EVENT = {
   assets: ["USOIL", "UKOIL"] as const,
 };
 
-// TRUST_LINE itself legitimately says "not financial advice or a buy/sell
-// call" (the existing disclaimer predates this task) — so "no buy or sell
-// wording" is checked against only the newly-added Week-ahead content, up to
-// where TRUST_LINE begins, not the whole email.
-const TRUST_LINE_MARKER = "Blue Beacon surfaces signals for your own analysis";
+// "no buy or sell wording" is checked against only the Week-ahead content,
+// up to where the footer's trust line begins, not the whole email.
+const TRUST_LINE_MARKER = "Informational research, not investment advice.";
 
 function sectionBefore(haystack: string, startMarker: string, endMarker: string): string {
   const start = haystack.indexOf(startMarker);
@@ -422,6 +420,86 @@ async function weekAheadDigestTests() {
   });
 }
 
+async function partThreeTests() {
+  const withAnalysis = row("with-analysis", "Signal with AI analysis", 7, "2026-11-01T00:00:00Z");
+  withAnalysis.ai_analysis =
+    "This is a clear paragraph of analysis text that explains the market impact in some detail.";
+  withAnalysis.commodity_impacts = [{ asset: "USOIL", direction: "up" }];
+
+  const withoutAnalysis = row("without-analysis", "Signal without AI analysis", 6, "2026-11-01T01:00:00Z");
+  withoutAnalysis.summary = "A short summary of the event.";
+
+  await runTest(
+    "fallback: no ai_analysis renders 'No extended note for this item.' and never the old sentence or the word analyst",
+    () => {
+      const rendered = renderDigestEmail(
+        [withoutAnalysis],
+        emptyPref,
+        new Map(),
+        "https://bluebeaconresearch.com",
+      );
+      assert.match(rendered.text, /No extended note for this item\./);
+      assert.match(rendered.html, /No extended note for this item\./);
+      assert.ok(!/analyst/i.test(rendered.text), "text should never say \"analyst\"");
+      assert.ok(!/analyst/i.test(rendered.html), "html should never say \"analyst\"");
+    },
+  );
+
+  await runTest("no market-direction arrows anywhere in the rendered digest", () => {
+    // ↑↓↕ were the old up/down/volatile instrument glyphs this task removes.
+    // The plain "→" the digest already uses as a breadcrumb separator (e.g.
+    // "Settings → Notifications") is unrelated UI copy, not a market signal,
+    // so it is intentionally not part of this check.
+    const rendered = renderDigestEmail(
+      [withAnalysis, withoutAnalysis],
+      emptyPref,
+      new Map(),
+      "https://bluebeaconresearch.com",
+    );
+    assert.ok(!/[↑↓↕]/.test(rendered.text), "text should contain no market-direction arrow");
+    assert.ok(!/[↑↓↕]/.test(rendered.html), "html should contain no market-direction arrow");
+  });
+
+  await runTest("footer carries the new disclaimer wording", () => {
+    const rendered = renderDigestEmail([withAnalysis], emptyPref, new Map(), "https://bluebeaconresearch.com");
+    assert.ok(
+      rendered.html.includes("Informational research, not investment advice. Sources and dates are shown on each item."),
+    );
+  });
+
+  await runTest("subject follows 'Blue Beacon Research: <title> (<DD Mon UTC>)'", () => {
+    const now = new Date("2026-11-03T06:00:00.000Z");
+    const rendered = renderDigestEmail(
+      [withAnalysis],
+      emptyPref,
+      new Map(),
+      "https://bluebeaconresearch.com",
+      [],
+      now,
+    );
+    assert.equal(rendered.subject, "Blue Beacon Research: Signal with AI analysis (03 Nov UTC)");
+  });
+
+  await runTest("evidence shows the source host and article date as the link text, not the raw URL", () => {
+    const sources = new Map([
+      ["with-analysis", [{ url: "https://www.reuters.com/world/some-article", date: "2026-11-01T00:00:00Z" }]],
+    ]);
+    const rendered = renderDigestEmail([withAnalysis], emptyPref, sources, "https://bluebeaconresearch.com");
+    // The href still carries the real URL (the link must work); it's the
+    // *displayed* text that changes from a truncated raw URL to host + date.
+    assert.match(
+      rendered.html,
+      /<a href="https:\/\/www\.reuters\.com\/world\/some-article"[^>]*>reuters\.com<\/a> — 01 Nov/,
+    );
+  });
+
+  await runTest("evidence shows the host only when the article date is unavailable", () => {
+    const sources = new Map([["with-analysis", [{ url: "https://apnews.com/some-article", date: null }]]]);
+    const rendered = renderDigestEmail([withAnalysis], emptyPref, sources, "https://bluebeaconresearch.com");
+    assert.match(rendered.html, /apnews\.com/);
+  });
+}
+
 function main() {
   runTest("5 near-duplicate stories + 3 different stories → output contains the different ones", () => {
     // High-severity near-duplicates all covering the same Red Sea tanker strike —
@@ -465,3 +543,4 @@ function main() {
 
 main();
 void ageTests();
+void partThreeTests();
