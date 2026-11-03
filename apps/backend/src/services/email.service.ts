@@ -27,7 +27,19 @@ export class EmailService {
     return this.client !== null;
   }
 
-  async send(opts: { to: string; subject: string; html: string; text: string }) {
+  /** Test-only seam: swap in a mocked Resend-shaped client. */
+  __setClientForTests(client: unknown): void {
+    this.client = client as Resend | null;
+  }
+
+  async send(opts: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+    headers?: Record<string, string>;
+    replyTo?: string;
+  }) {
     if (!this.client) return { sent: false as const, reason: "no_api_key" as const };
     const res = await this.client.emails.send({
       from: this.from,
@@ -35,6 +47,8 @@ export class EmailService {
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
+      ...(opts.headers ? { headers: opts.headers } : {}),
+      ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
     });
     if (res.error) {
       return { sent: false as const, reason: res.error.message ?? "resend_error" };
