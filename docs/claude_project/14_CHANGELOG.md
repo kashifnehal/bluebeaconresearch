@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-03 — Public newsletter sign-up + walkthrough/professional-access lead intake (TASK WEB-M2)
+
+`apps/web` plus one migration. New public, no-auth lead-capture surface for the marketing site: a newsletter sign-up (`/subscribe`, confirm/unsubscribe by email link) and a walkthrough/professional-access request form (`/walkthrough`). Both write to new service-only tables (`newsletter_subscribers`, `lead_requests`) guarded by a honeypot field, a minimum fill-time check, and a 3-rows-per-24h per-email DB rate limit; mail goes out through the existing Resend sender. The migration (`20261103120000_lead_intake.sql`) is written, not applied — every route degrades to a safe unavailable response until a founder applies it. No homepage placement yet (a separate follow-up task). Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-03 — Email layout rebuild + weekly generator (TASK BE-M6)
 
 `apps/backend` only, four parts: `e65d90d`, `68fb0a9`, `c6823a7`, `2735bd3`. `EmailService.send()` gained optional `headers`/`replyTo`. A new shared `email-layout.ts` provides pure, inline-CSS table-based HTML builders on a navy/paper palette (brand kit not yet approved), with no direction arrows and every leaf value escaped. The daily digest's HTML/text rendering was rebuilt on those helpers — removing the old up/down/volatile arrow glyphs, replacing the "Deeper analyst commentary" fallback and the trust line, showing each source as host + article date instead of a raw URL, and adding a `List-Unsubscribe` header. A new render-only `renderWeeklyEmail()` builds "The Beacon Weekly" from the same helpers and validates its input (headline/preheader length, non-empty summary, https-only links, a 90,000-byte HTML cap) — not yet wired to a scheduler or send path. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

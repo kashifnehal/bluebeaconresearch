@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-03 (email layout rebuild + weekly generator)
+Last updated: 2026-11-03 (public newsletter sign-up + walkthrough/professional-access lead intake)
+
+> ⚠️ NEW 2026-11-03 (public newsletter sign-up + walkthrough/professional-access lead intake, `apps/web` plus one migration, `bbb5cf3`) — new `newsletter_subscribers`/`lead_requests` tables (service-role only), four public no-auth routes (`/api/subscribe`, `/api/subscribe/confirm`, `/api/unsubscribe`, `/api/leads`), and `/walkthrough`/`/subscribe`/`/subscribe/confirmed`/`/unsubscribe` pages. Migration `20261103120000_lead_intake.sql` written, not applied — every route degrades to a safe 503 until it is. No homepage placement yet. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-03 (email layout rebuild + weekly generator, `apps/backend` only, TASK BE-M6, `e65d90d`/`68fb0a9`/`c6823a7`/`2735bd3`) — daily digest `renderHtml`/`renderText` rebuilt on new shared `email-layout.ts` helpers (navy/paper palette, no direction arrows, "No extended note for this item." fallback); each source now shows as host + article date instead of a raw URL; subject format changed; digest sends carry a `List-Unsubscribe` header. New render-only `renderWeeklyEmail()` for "The Beacon Weekly" — not yet wired to a sender. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
