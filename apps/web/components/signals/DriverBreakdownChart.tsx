@@ -156,7 +156,7 @@ export function DriverBreakdownChart({
       <h2 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase mb-1">
         Signal Drivers — {rangeId}
       </h2>
-      <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
+      <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
         Daily signal counts by event category. Informational only — not a trading recommendation.
       </p>
 
@@ -164,14 +164,14 @@ export function DriverBreakdownChart({
         <Skeleton className="h-[220px] w-full rounded-lg" data-testid="driver-breakdown-skeleton" />
       ) : isError && loadErrorCode === "unauthenticated" ? (
         <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-error">
-          <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+          <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
             Sign in to see driver data.
           </p>
           <button
             type="button"
             data-testid="driver-breakdown-retry"
             onClick={() => refetch()}
-            className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
+            className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[11px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
           >
             Retry
           </button>
@@ -182,14 +182,14 @@ export function DriverBreakdownChart({
         // panel's content, never the price chart, and always shows this line
         // rather than leaving the panel blank.
         <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-unavailable">
-          <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+          <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
             Signal breakdown unavailable for this range.
           </p>
           <button
             type="button"
             data-testid="driver-breakdown-retry"
             onClick={() => refetch()}
-            className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
+            className="px-3 py-1 rounded-sm font-label text-[11px] md:text-[11px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
           >
             Retry
           </button>
@@ -198,7 +198,7 @@ export function DriverBreakdownChart({
         // A real zero-signals result, not a fetch failure — say so plainly
         // rather than reusing the error copy above.
         <div className="flex flex-col items-center gap-3 py-16" data-testid="driver-breakdown-empty">
-          <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+          <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
             No signals flagged in this range.
           </p>
         </div>
@@ -214,7 +214,7 @@ export function DriverBreakdownChart({
                   data-testid={`driver-legend-${s.key}`}
                   aria-pressed={!isHidden}
                   onClick={() => toggle(s.key)}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-sm font-label text-[11px] md:text-[11px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
                   style={{
                     borderColor: isHidden ? "var(--border)" : s.color,
                     color: isHidden ? "#6b7570" : "#e8ece9",
@@ -275,13 +275,13 @@ export function DriverBreakdownChart({
             </ResponsiveContainer>
           </div>
           {allUncategorized ? (
-            <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
+            <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
               Signals in this range were created before categories were added, so they are grouped together. The price
               chart is not affected.
             </p>
           ) : (
             showUncategorizedNote && (
-              <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
+              <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-3">
                 Most signals in this range have no event category stored, so they show as Uncategorized.
               </p>
             )

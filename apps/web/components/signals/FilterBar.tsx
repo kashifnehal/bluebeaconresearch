@@ -39,8 +39,8 @@ export function FilterBar({
     ? "flex flex-col gap-1"
     : "flex flex-col gap-1 md:flex-row md:items-center md:gap-2";
   const labelClass = stacked
-    ? "label text-[12px] md:text-[10px] text-on-surface-variant uppercase tracking-wider"
-    : "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
+    ? "label text-[12px] md:text-[11px] text-on-surface-variant uppercase tracking-wider"
+    : "text-[12px] md:text-[11px] uppercase tracking-wider shrink-0";
   const labelStyle = stacked
     ? undefined
     : { color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" };
@@ -160,7 +160,7 @@ export function FilterBar({
                 onClick={() => patch({ window: opt.id })}
                 className={
                   stacked
-                    ? `px-2 py-1 rounded text-[12px] md:text-[10px] ${
+                    ? `px-2 py-1 rounded text-[12px] md:text-[11px] ${
                         selected
                           ? "bg-primary text-on-primary"
                           : "bg-surface-container/20"

@@ -463,7 +463,7 @@ function CitedAssistantReply({ content }: { content: string }) {
           className="border-t border-outline-variant/25 pt-2.5"
         >
           <p
-            className="mb-1.5 text-[12px] md:text-[10px] font-bold uppercase tracking-[0.14em] text-primary-fixed-dim"
+            className="mb-1.5 text-[12px] md:text-[11px] font-bold uppercase tracking-[0.14em] text-primary-fixed-dim"
             style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Sources

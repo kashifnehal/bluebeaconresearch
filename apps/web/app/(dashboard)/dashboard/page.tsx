@@ -426,7 +426,7 @@ export default function DashboardPage() {
                   psychology
                 </span>
                 <span
-                  className="text-[12px] md:text-[10px]"
+                  className="text-[12px] md:text-[11px]"
                   style={{
                     color: "var(--accent)",
                     fontFamily: "'Space Grotesk', sans-serif",
@@ -463,7 +463,7 @@ export default function DashboardPage() {
                   radar
                 </span>
                 <span
-                  className="text-[12px] md:text-[10px]"
+                  className="text-[12px] md:text-[11px]"
                   style={{
                     color: "var(--accent)",
                     fontFamily: "'Space Grotesk', sans-serif",
@@ -473,7 +473,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <ul
-                className="space-y-2 text-[12px] md:text-[10px]"
+                className="space-y-2 text-[12px] md:text-[11px]"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 {topHotzones.length === 0 ? (
@@ -549,7 +549,7 @@ export default function DashboardPage() {
           >
             {feedDegradedCopy(fallbackReason)}
             {fallbackLastUpdated ? (
-              <span className="ml-2 text-[12px] md:text-[10px] text-black/80" suppressHydrationWarning>
+              <span className="ml-2 text-[12px] md:text-[11px] text-black/80" suppressHydrationWarning>
                 (updated {safeFormatDistanceToNow(fallbackLastUpdated)} ago)
               </span>
             ) : null}
@@ -739,7 +739,7 @@ export default function DashboardPage() {
                     <div className="flex gap-4 items-center">
                       <span
                         data-tour="severity-badge"
-                        className="px-2 py-0.5 text-[12px] md:text-[10px] font-bold tracking-tighter"
+                        className="px-2 py-0.5 text-[12px] md:text-[11px] font-bold tracking-tighter"
                         style={{
                           fontFamily: "'Space Grotesk', sans-serif",
                           backgroundColor:
@@ -768,7 +768,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span
-                        className="text-[12px] md:text-[10px] uppercase tracking-widest"
+                        className="text-[12px] md:text-[11px] uppercase tracking-widest"
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--text-muted)",
@@ -782,7 +782,7 @@ export default function DashboardPage() {
                       <FreshTag
                         createdAt={featured.createdAt}
                         eventDate={featured.eventDate}
-                        className="text-[12px] md:text-[10px]"
+                        className="text-[12px] md:text-[11px]"
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--accent)",
@@ -806,7 +806,7 @@ export default function DashboardPage() {
                       <div className="flex gap-10">
                         <div>
                           <div
-                            className="text-[12px] md:text-[10px] uppercase mb-1"
+                            className="text-[12px] md:text-[11px] uppercase mb-1"
                             style={{
                               color: "var(--text-muted)",
                               fontFamily: "'Space Grotesk', sans-serif",
@@ -831,7 +831,7 @@ export default function DashboardPage() {
                         </div>
                         <div data-tour="confidence-score">
                           <div
-                            className="text-[12px] md:text-[10px] uppercase mb-1"
+                            className="text-[12px] md:text-[11px] uppercase mb-1"
                             style={{
                               color: "var(--text-muted)",
                               fontFamily: "'Space Grotesk', sans-serif",
@@ -901,7 +901,7 @@ export default function DashboardPage() {
                   >
                     <div className="p-6">
                       <div
-                        className="flex justify-between items-center text-[12px] md:text-[10px] mb-2"
+                        className="flex justify-between items-center text-[12px] md:text-[11px] mb-2"
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--text-muted)",
@@ -917,7 +917,7 @@ export default function DashboardPage() {
                           <FreshTag
                             createdAt={secondaryA.createdAt}
                             eventDate={secondaryA.eventDate}
-                            className="text-[12px] md:text-[10px]"
+                            className="text-[12px] md:text-[11px]"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",
                               color: "var(--accent)",
@@ -954,7 +954,7 @@ export default function DashboardPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex gap-2">
                           <span
-                            className="px-2 py-0.5 text-[12px] md:text-[10px] uppercase border"
+                            className="px-2 py-0.5 text-[12px] md:text-[11px] uppercase border"
                             style={{
                               backgroundColor: "#2a2a2a",
                               color: "var(--text-muted)",
@@ -1009,7 +1009,7 @@ export default function DashboardPage() {
                   >
                     <div className="p-6">
                       <div
-                        className="flex justify-between items-center text-[12px] md:text-[10px] mb-2"
+                        className="flex justify-between items-center text-[12px] md:text-[11px] mb-2"
                         style={{
                           fontFamily: "'JetBrains Mono', monospace",
                           color: "var(--text-muted)",
@@ -1025,7 +1025,7 @@ export default function DashboardPage() {
                           <FreshTag
                             createdAt={secondaryB.createdAt}
                             eventDate={secondaryB.eventDate}
-                            className="text-[12px] md:text-[10px]"
+                            className="text-[12px] md:text-[11px]"
                             style={{
                               fontFamily: "'JetBrains Mono', monospace",
                               color: "var(--accent)",
@@ -1062,7 +1062,7 @@ export default function DashboardPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex gap-2">
                           <span
-                            className="px-2 py-0.5 text-[12px] md:text-[10px] uppercase border"
+                            className="px-2 py-0.5 text-[12px] md:text-[11px] uppercase border"
                             style={{
                               backgroundColor: "#2a2a2a",
                               color: "var(--text-muted)",
@@ -1137,7 +1137,7 @@ export default function DashboardPage() {
                           data-testid={`feed-view-${mode}`}
                           aria-pressed={selected}
                           onClick={() => setFeedViewModePersisted(mode)}
-                          className="px-3 py-1 text-[12px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer"
+                          className="px-3 py-1 text-[12px] md:text-[11px] font-bold uppercase tracking-widest cursor-pointer"
                           style={{
                             fontFamily: "'Space Grotesk', sans-serif",
                             backgroundColor: selected ? "var(--accent)" : "transparent",
@@ -1155,7 +1155,7 @@ export default function DashboardPage() {
                       data-testid="feed-hide-summaries"
                       aria-pressed={hideSummaries}
                       onClick={() => setHideSummariesPersisted(!hideSummaries)}
-                      className="px-3 py-1 text-[12px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer border"
+                      className="px-3 py-1 text-[12px] md:text-[11px] font-bold uppercase tracking-widest cursor-pointer border"
                       style={{
                         fontFamily: "'Space Grotesk', sans-serif",
                         borderColor: "var(--border)",

@@ -88,7 +88,7 @@ function Part({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
       <div
-        className="text-[12px] md:text-[9px] font-black uppercase tracking-widest"
+        className="text-[12px] md:text-[11px] font-black uppercase tracking-widest"
         style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
       >
         {label}

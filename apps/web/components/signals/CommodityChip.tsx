@@ -32,7 +32,7 @@ export function CommodityChip({
   return (
     <span className="inline-flex flex-col items-start gap-0.5">
       {label ? (
-        <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
+        <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted">
           {label}
         </span>
       ) : null}

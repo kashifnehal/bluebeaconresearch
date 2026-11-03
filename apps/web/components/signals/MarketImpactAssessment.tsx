@@ -59,7 +59,7 @@ function PriceTimeline({
   );
   if (lines.length === 0) return null;
   return (
-    <div className="pl-1 font-mono text-[12px] md:text-[9px] text-muted" data-testid="price-timeline">
+    <div className="pl-1 font-mono text-[12px] md:text-[11px] text-muted" data-testid="price-timeline">
       <span className="font-black uppercase tracking-widest">Price timeline:</span>
       {lines.map((line, index) => (
         <span key={`${index}-${line}`} className="mt-1 block">
@@ -79,7 +79,7 @@ function Part({
   return (
     <div className="space-y-1.5" data-part={label}>
       <div
-        className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted"
+        className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted"
         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
       >
         {label}
@@ -131,7 +131,7 @@ export function MarketImpactAssessment({
       <div className="flex items-center gap-2">
         {headingIcon}
         <span
-          className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-text-primary"
+          className="text-[12px] md:text-[11px] font-black uppercase tracking-[0.2em] text-text-primary"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           data-testid="market-impact-heading"
         >
@@ -264,7 +264,7 @@ export function MarketImpactAssessment({
                         <details className="group pl-1">
                           <summary
                             data-testid="market-impact-chart-toggle"
-                            className="cursor-pointer select-none text-[11px] md:text-[10px] font-bold uppercase tracking-wide text-accent"
+                            className="cursor-pointer select-none text-[11px] md:text-[11px] font-bold uppercase tracking-wide text-accent"
                           >
                             View historical pattern
                           </summary>
