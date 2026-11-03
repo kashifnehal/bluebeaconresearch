@@ -34,6 +34,7 @@ import { checkFeedVolume } from "./lib/feed-volume-alarm.js";
 import { runGateDriftOnce } from "./lib/gate-drift.js";
 import { checkCategoryCoverage } from "./lib/category-guard.js";
 import { checkSignalSilence } from "./lib/signal-silence-alert.js";
+import { checkDatabaseReachable } from "./lib/db-unreachable-alert.js";
 
 // Consecutive-failed-run thresholds before a collector going silent pages someone.
 // GDELT: 8 runs (~4h at */30). A single GDELT 429 is an expected IP-level block on
@@ -190,6 +191,28 @@ if (process.env.SIGNAL_SILENCE_CRON && SIGNAL_SILENCE_CRON !== process.env.SIGNA
 
 function isSignalSilenceAlertEnabled(): boolean {
   return (process.env.ENABLE_SIGNAL_SILENCE_ALERT || "true").toLowerCase() !== "false";
+}
+
+// BE-DBALERT1 — database-reachability probe. Every existing alert above reads the
+// database to decide whether to fire, so none of them can fire during a Supabase
+// outage; this one only touches Redis and Resend. Every 5 minutes by default so 3
+// consecutive failures (the alert's own threshold) are caught within 15 minutes. Off
+// only when ENABLE_DB_HEALTH_ALERT is exactly "false" — on by default, same idiom as
+// isSignalSilenceAlertEnabled/isCotCollectorEnabled.
+const DEFAULT_DB_HEALTH_CRON = "*/5 * * * *";
+const DB_HEALTH_CRON =
+  process.env.DB_HEALTH_CRON && cron.validate(process.env.DB_HEALTH_CRON)
+    ? process.env.DB_HEALTH_CRON
+    : DEFAULT_DB_HEALTH_CRON;
+
+if (process.env.DB_HEALTH_CRON && DB_HEALTH_CRON !== process.env.DB_HEALTH_CRON) {
+  console.warn(
+    `[workers] DB_HEALTH_CRON="${process.env.DB_HEALTH_CRON}" is not a valid cron expression — falling back to default "${DEFAULT_DB_HEALTH_CRON}"`,
+  );
+}
+
+function isDbHealthAlertEnabled(): boolean {
+  return (process.env.ENABLE_DB_HEALTH_ALERT || "true").toLowerCase() !== "false";
 }
 
 async function runIngestionCycle(app: ReturnType<typeof buildApp>) {
@@ -464,6 +487,24 @@ async function main() {
         app.log.info({ result }, "signal-silence check");
       } catch (e) {
         app.log.error({ err: e }, "signal-silence check failed");
+        Sentry.captureException(e);
+      }
+    });
+  }
+
+  // BE-DBALERT1 — database-reachability probe. Deliberately not run on startup: the
+  // first tick naturally lands within DB_HEALTH_CRON's own cadence.
+  app.log.info(
+    { schedule: DB_HEALTH_CRON, enabled: isDbHealthAlertEnabled() },
+    "workers: db-health cron schedule",
+  );
+  if (isDbHealthAlertEnabled()) {
+    cron.schedule(DB_HEALTH_CRON, async () => {
+      try {
+        const outcome = await checkDatabaseReachable();
+        app.log.info({ outcome: String(outcome) }, "db-health-check complete");
+      } catch (e) {
+        app.log.error({ err: e }, "db-health-check failed");
         Sentry.captureException(e);
       }
     });
