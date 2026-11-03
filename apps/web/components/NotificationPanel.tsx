@@ -119,7 +119,7 @@ export function NotificationPanel() {
           <div className="flex items-center gap-2">
             <button
               onClick={markAllRead}
-              className="text-[12px] md:text-[10px] uppercase font-bold tracking-wider px-2 py-1 border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors rounded-sm"
+              className="text-[12px] md:text-[11px] uppercase font-bold tracking-wider px-2 py-1 border border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors rounded-sm"
               style={{ color: "#acabaa" }}
             >
               Mark all read
@@ -184,26 +184,26 @@ export function NotificationPanel() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-[12px] md:text-[10px] font-mono uppercase text-[var(--text-muted)]">
+                      <span className="text-[12px] md:text-[11px] font-mono uppercase text-[var(--text-muted)]">
                         {safeFormatDistanceToNow(item.created_at)} ago
                       </span>
                       {status === "failed" ? (
                         <span
-                          className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider text-[#ee7d77]"
+                          className="text-[12px] md:text-[11px] font-bold uppercase tracking-wider text-[#ee7d77]"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Delivery Failed
                         </span>
                       ) : status === "queued" ? (
                         <span
-                          className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider text-[#e0a84e]"
+                          className="text-[12px] md:text-[11px] font-bold uppercase tracking-wider text-[#e0a84e]"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Not Delivered
                         </span>
                       ) : (
                         <span
-                          className="text-[12px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[var(--accent)] hover:underline"
+                          className="text-[12px] md:text-[11px] font-bold uppercase tracking-wider flex items-center gap-0.5 text-[var(--accent)] hover:underline"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           View <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>arrow_forward</span>
@@ -216,7 +216,7 @@ export function NotificationPanel() {
                     </p>
 
                     {notDelivered && (
-                      <p className="text-[12px] md:text-[10px] text-[var(--text-muted)] mt-1">
+                      <p className="text-[12px] md:text-[11px] text-[var(--text-muted)] mt-1">
                         {status === "failed"
                           ? "This alert fired but delivery failed."
                           : "This alert fired but no delivery channel is connected."}

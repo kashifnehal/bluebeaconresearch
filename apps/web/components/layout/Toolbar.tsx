@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { SELECT_CLASSES } from "@/lib/utils";
 
-const LABEL_CLASS = "text-[12px] md:text-[10px] uppercase tracking-wider shrink-0";
+const LABEL_CLASS = "text-[12px] md:text-[11px] uppercase tracking-wider shrink-0";
 const LABEL_STYLE = { color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" };
 
 export function Toolbar({ children }: { children: ReactNode }) {
@@ -122,7 +122,7 @@ export function SegmentedControl({
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(opt.value)}
-            className="px-3 py-1 text-[12px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer"
+            className="px-3 py-1 text-[12px] md:text-[11px] font-bold uppercase tracking-widest cursor-pointer"
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               backgroundColor: selected ? "var(--accent)" : "transparent",

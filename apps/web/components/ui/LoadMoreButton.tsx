@@ -41,7 +41,7 @@ export function LoadMoreButton({
     return (
       <div
         className={cn(
-          "py-4 text-center text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-white/30",
+          "py-4 text-center text-[12px] md:text-[11px] font-bold uppercase tracking-[0.2em] text-white/30",
           className,
         )}
       >

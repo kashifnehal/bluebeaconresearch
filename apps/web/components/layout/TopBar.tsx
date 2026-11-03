@@ -277,7 +277,7 @@ export function TopBar() {
                   <p className="font-bold text-[#e5e2e1] truncate">
                     {user?.name || "Terminal User"}
                   </p>
-                  <p className="text-[12px] md:text-[10px] text-[var(--text-muted)] font-mono truncate">
+                  <p className="text-[12px] md:text-[11px] text-[var(--text-muted)] font-mono truncate">
                     {user?.email || ""}
                   </p>
                 </div>

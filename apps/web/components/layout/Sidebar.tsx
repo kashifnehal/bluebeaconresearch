@@ -119,7 +119,7 @@ export function Sidebar() {
                 <span>{item.label}</span>
                 {item.showBadge && unreadCount > 0 && (
                   <span
-                    className="ml-auto text-[12px] md:text-[8px] font-bold px-1.5 py-0.5"
+                    className="ml-auto text-[12px] md:text-[11px] font-bold px-1.5 py-0.5"
                     style={{
                       backgroundColor: "#7f2927",
                       color: "#ff9993",
@@ -142,7 +142,7 @@ export function Sidebar() {
         className="mt-auto p-6 border-t space-y-2"
         style={{ borderColor: "var(--border)", backgroundColor: "#0e0e0e" }}
       >
-        <div className="text-[12px] md:text-[10px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--accent)" }}>
+        <div className="text-[12px] md:text-[11px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--accent)" }}>
           Node: BB-ALPHA-09
         </div>
         <Link
