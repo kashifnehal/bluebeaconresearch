@@ -319,7 +319,7 @@ export default function EventDetailPage() {
               <div className="flex items-center gap-4 mb-4">
                 <div className="px-3 py-1 bg-accent/10 border border-accent/20 rounded-sm">
                   <span
-                    className="text-[12px] md:text-[10px] font-black uppercase tracking-widest text-accent"
+                    className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-accent"
                     style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                   >
                     Signal ID: {signal.id.slice(0, 8)}
@@ -346,7 +346,7 @@ export default function EventDetailPage() {
                     <div className="flex min-w-0 items-start gap-3">
                       <Clock size={16} className="mt-0.5 shrink-0 text-accent" />
                       <div className="flex min-w-0 flex-col">
-                        <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                        <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted break-words">
                           {reportLabel}
                         </span>
                         <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
@@ -355,7 +355,7 @@ export default function EventDetailPage() {
                       </div>
                     </div>
                     <div className="flex min-w-0 flex-col">
-                      <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                      <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted break-words">
                         Fetched by BBR
                       </span>
                       <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
@@ -363,7 +363,7 @@ export default function EventDetailPage() {
                       </span>
                     </div>
                     <div className="flex min-w-0 flex-col">
-                      <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                      <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted break-words">
                         Flagged by BBR
                       </span>
                       <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
@@ -371,7 +371,7 @@ export default function EventDetailPage() {
                       </span>
                     </div>
                     <div className="flex min-w-0 flex-col">
-                      <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted break-words">
+                      <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted break-words">
                         Delay
                       </span>
                       <span className="text-xs font-mono font-bold text-text-secondary break-words [overflow-wrap:anywhere]">
@@ -392,14 +392,14 @@ export default function EventDetailPage() {
                 >
                   <Database size={16} className="text-accent" />
                   <div className="flex flex-col">
-                    <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
+                    <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted">
                       Verification
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary break-words">
                       {describeReports(sources)}
                     </span>
                     {showLastUpdated ? (
-                      <span className="text-[12px] md:text-[9px] font-mono text-muted">
+                      <span className="text-[12px] md:text-[11px] font-mono text-muted">
                         Last updated{" "}
                         {safeFormatDistanceToNow(signal.updatedAt, { addSuffix: true })}
                       </span>
@@ -409,7 +409,7 @@ export default function EventDetailPage() {
                 <div className="flex items-center gap-3">
                   <MapPin size={16} className="text-accent" />
                   <div className="flex flex-col">
-                    <span className="text-[12px] md:text-[9px] font-black uppercase tracking-widest text-muted">
+                    <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-muted">
                       Location
                     </span>
                     <span className="text-xs font-mono font-bold text-text-secondary uppercase">
@@ -458,8 +458,8 @@ export default function EventDetailPage() {
                   }}
                   className={
                     alertCta.variant === "severe"
-                      ? "h-11 bg-accent text-bg-app text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
-                      : "h-11 border border-border bg-transparent text-text-secondary text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm hover:bg-surface/40 transition-all"
+                      ? "h-11 bg-accent text-bg-app text-[12px] md:text-[11px] font-black uppercase tracking-widest rounded-sm shadow-[0_4px_15px_rgba(78,222,163,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                      : "h-11 border border-border bg-transparent text-text-secondary text-[12px] md:text-[11px] font-black uppercase tracking-widest rounded-sm hover:bg-surface/40 transition-all"
                   }
                   variant={alertCta.variant === "severe" ? "default" : "outline"}
                 >
@@ -469,7 +469,7 @@ export default function EventDetailPage() {
                   <Button
                     onClick={handleShare}
                     variant="outline"
-                    className="h-11 border-border text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm"
+                    className="h-11 border-border text-[12px] md:text-[11px] font-black uppercase tracking-widest rounded-sm"
                   >
                     <Share2 size={14} className="mr-2" /> SHARE
                   </Button>
@@ -482,7 +482,7 @@ export default function EventDetailPage() {
                           data-testid="event-record"
                           onClick={handleRecord}
                           variant="outline"
-                          className="h-11 border-border text-[12px] md:text-[9px] font-black uppercase tracking-widest rounded-sm"
+                          className="h-11 border-border text-[12px] md:text-[11px] font-black uppercase tracking-widest rounded-sm"
                         />
                       }
                     >
@@ -533,7 +533,7 @@ export default function EventDetailPage() {
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="shrink-0 bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-muted transition-all"
+                  className="shrink-0 bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:text-accent rounded-none px-2 py-4 text-[12px] md:text-[11px] font-black uppercase tracking-[0.3em] text-muted transition-all"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
                   {tab.value === "analysis" && <Shield size={14} className="mr-2" />}
@@ -548,7 +548,7 @@ export default function EventDetailPage() {
                 <div className="space-y-8">
                     <div className="prose prose-invert max-w-none">
                       <div
-                        className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
+                        className="text-[12px] md:text-[11px] font-black uppercase tracking-[0.2em] text-accent mb-4"
                         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                       >
                         Signal Summary
@@ -560,7 +560,7 @@ export default function EventDetailPage() {
 
                     <div>
                       <div
-                        className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
+                        className="text-[12px] md:text-[11px] font-black uppercase tracking-[0.2em] text-accent mb-4"
                         style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                       >
                         Full Analyst Briefing
@@ -593,7 +593,7 @@ export default function EventDetailPage() {
                         className="group"
                       >
                         <summary
-                          className="mb-4 cursor-pointer text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent"
+                          className="mb-4 cursor-pointer text-[12px] md:text-[11px] font-black uppercase tracking-[0.2em] text-accent"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Why this signal
@@ -607,7 +607,7 @@ export default function EventDetailPage() {
                     {signal.invalidationCondition ? (
                       <div data-testid="invalidation-condition">
                         <div
-                          className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent mb-4"
+                          className="text-[12px] md:text-[11px] font-black uppercase tracking-[0.2em] text-accent mb-4"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           What would change this assessment
@@ -621,7 +621,7 @@ export default function EventDetailPage() {
                     {signal.commodityImpacts.length > 0 && (
                       <div className="space-y-3">
                         <div
-                          className="text-[12px] md:text-[10px] font-black uppercase tracking-[0.2em] text-accent"
+                          className="text-[12px] md:text-[11px] font-black uppercase tracking-[0.2em] text-accent"
                           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                         >
                           Impact Breakdown
@@ -667,7 +667,7 @@ export default function EventDetailPage() {
                       >
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-bold text-text-primary">{h.title}</span>
-                          <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
+                          <span className="text-[12px] md:text-[11px] font-mono text-muted uppercase">
                             {h.country} · {h.eventDate ? safeFormatDistanceToNow(h.eventDate, { addSuffix: true }) : "unknown date"} · Severity {h.severity}
                           </span>
                         </div>
@@ -685,7 +685,7 @@ export default function EventDetailPage() {
                     <h3 className="text-sm font-black uppercase tracking-[0.3em] text-text-primary mb-2">
                       Not Enough Historical Data Yet
                     </h3>
-                    <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                    <p className="text-[12px] md:text-[11px] font-bold text-muted uppercase tracking-widest leading-relaxed">
                       Comparisons for this event type will appear as more signals are recorded.
                     </p>
                   </div>
@@ -700,7 +700,7 @@ export default function EventDetailPage() {
                 >
                   <EventLocationMap lng={mapLng} lat={mapLat} zoom={hasPreciseLocation ? 6 : 3} />
                   <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/60 backdrop-blur-sm">
-                    <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
+                    <span className="text-[12px] md:text-[11px] font-mono text-muted uppercase">
                       {hasPreciseLocation
                         ? "Precise coordinates"
                         : "Approximate location — precise coordinates unavailable for this event"}
@@ -711,10 +711,10 @@ export default function EventDetailPage() {
 
               {/* ── SOURCES TAB ──────────────────────────────────── */}
               <TabsContent value="sources" className="m-0 outline-none">
-                <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest mb-2">
+                <p className="text-[12px] md:text-[11px] font-mono text-muted uppercase tracking-widest mb-2">
                   Signals list the named sources they were built from, linking out where the publisher's URL is available, and are tagged with a claim-status label — official statement, reported claim, or speculative/unconfirmed — where that label is available.
                 </p>
-                <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest mb-4">
+                <p className="text-[12px] md:text-[11px] font-mono text-muted uppercase tracking-widest mb-4">
                   As a general practice, events are screened for real market relevance before they are published as a signal.
                 </p>
                 {sources.length > 0 ? (
@@ -728,10 +728,10 @@ export default function EventDetailPage() {
                         className="p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 cursor-pointer transition-all"
                       >
                         <div className="flex flex-col">
-                          <span className="text-[12px] md:text-[10px] font-black uppercase tracking-widest text-text-primary">
+                          <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-text-primary">
                             {s.title}
                           </span>
-                          <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
+                          <span className="text-[12px] md:text-[11px] font-mono text-muted uppercase">
                             {s.domain ?? s.sourceLabel ?? "Unknown source"}
                             {s.publishedAt ? ` · ${safeFormatDistanceToNow(s.publishedAt, { addSuffix: true })}` : ""}
                           </span>
@@ -746,7 +746,7 @@ export default function EventDetailPage() {
                 ) : (
                   <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
                     <Database className="w-12 h-12 text-muted mb-6" />
-                    <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                    <p className="text-[12px] md:text-[11px] font-bold text-muted uppercase tracking-widest leading-relaxed">
                       No source articles are linked to this signal.
                     </p>
                   </div>
@@ -757,7 +757,7 @@ export default function EventDetailPage() {
               <TabsContent value="related" className="m-0 outline-none">
                 {relatedEventsAll.length > 0 ? (
                   <div className="space-y-3">
-                    <p className="text-[12px] md:text-[10px] font-mono text-muted uppercase tracking-widest">
+                    <p className="text-[12px] md:text-[11px] font-mono text-muted uppercase tracking-widest">
                       Showing {relatedEvents.length} of {relatedEventsTotal}
                     </p>
                     {relatedEvents.map((r) => (
@@ -768,13 +768,13 @@ export default function EventDetailPage() {
                       >
                         <div className="flex flex-col gap-1">
                           <span className="text-xs font-bold text-text-primary">{r.title}</span>
-                          <span className="text-[12px] md:text-[9px] font-mono text-muted uppercase">
+                          <span className="text-[12px] md:text-[11px] font-mono text-muted uppercase">
                             {r.country ?? "Unknown"} · {r.eventDate ? safeFormatDistanceToNow(r.eventDate, { addSuffix: true }) : "unknown date"} ·{" "}
                             {r.sharedCommodities.join(", ")}
                           </span>
                         </div>
                         <span
-                          className={`shrink-0 px-2 py-1 rounded-sm text-[12px] md:text-[9px] font-black uppercase tracking-widest border ${
+                          className={`shrink-0 px-2 py-1 rounded-sm text-[12px] md:text-[11px] font-black uppercase tracking-widest border ${
                             r.matchLabel === "reinforcing"
                               ? "text-accent border-accent/30 bg-accent/10"
                               : r.matchLabel === "conflicting"
@@ -800,7 +800,7 @@ export default function EventDetailPage() {
                 ) : notice.hideRelated ? null : (
                   <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">
                     <Database className="w-12 h-12 text-muted mb-6" />
-                    <p className="text-[12px] md:text-[10px] font-bold text-muted uppercase tracking-widest leading-relaxed">
+                    <p className="text-[12px] md:text-[11px] font-bold text-muted uppercase tracking-widest leading-relaxed">
                       No related events found.
                     </p>
                   </div>
@@ -822,7 +822,7 @@ export default function EventDetailPage() {
             </h3>
 
             <div>
-              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">
+              <label className="text-[12px] md:text-[11px] uppercase font-bold text-[var(--text-muted)] block mb-1">
                 Target Region
               </label>
               <input
@@ -833,7 +833,7 @@ export default function EventDetailPage() {
             </div>
 
             <div>
-              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">
+              <label className="text-[12px] md:text-[11px] uppercase font-bold text-[var(--text-muted)] block mb-1">
                 Min Severity Threshold (1-10)
               </label>
               <input
@@ -847,10 +847,10 @@ export default function EventDetailPage() {
             </div>
 
             <div>
-              <label className="text-[12px] md:text-[10px] uppercase font-bold text-[var(--text-muted)] block mb-1">
+              <label className="text-[12px] md:text-[11px] uppercase font-bold text-[var(--text-muted)] block mb-1">
                 Forex Pairs (optional)
               </label>
-              <p className="text-[12px] md:text-[10px] text-[#6b7674] mb-2">
+              <p className="text-[12px] md:text-[11px] text-[#6b7674] mb-2">
                 Leave empty to match on region alone. Any pair selected here also triggers this rule.
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -868,7 +868,7 @@ export default function EventDetailPage() {
                             : [...prev, f.symbol],
                         )
                       }
-                      className={`px-2.5 py-1 text-[12px] md:text-[10px] font-mono font-bold rounded border transition-colors cursor-pointer ${
+                      className={`px-2.5 py-1 text-[12px] md:text-[11px] font-mono font-bold rounded border transition-colors cursor-pointer ${
                         active
                           ? "bg-[var(--accent)] text-[#003824] border-[var(--accent)]"
                           : "bg-[#0e0e0e] text-[var(--text-muted)] border-[var(--border)] hover:text-white"

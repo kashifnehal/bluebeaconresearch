@@ -97,7 +97,7 @@ export function PositioningPanelView({ rows }: { rows: CotRow[] }) {
       </dl>
       <p
         data-testid="positioning-note"
-        className="mt-4 text-[12px] md:text-[10px] font-mono text-on-surface-variant/80"
+        className="mt-4 text-[12px] md:text-[11px] font-mono text-on-surface-variant/80"
       >
         Weekly report by the US Commodity Futures Trading Commission, positions as of {asOf}, published with a lag.
         Descriptive only.
