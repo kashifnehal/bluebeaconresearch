@@ -66,13 +66,19 @@ export type DbUnreachableDeps = {
   email?: EmailSender;
   now?: Date;
   timeoutMs?: number;
+  // DB-SPEED2 — lets the cron handler in workers.ts log how long the probe took, for
+  // diagnosing slow-but-not-failing moments later. Diagnostics only: it does not feed
+  // any threshold, alert, or stored outcome here. Log retention is set by whatever the
+  // Railway plan keeps, which is not verified in this file.
+  onProbe?: (probe: { ok: boolean; ms: number }) => void;
 };
 
 // One read, aborted after timeoutMs. A timeout, a thrown error, or a returned
 // Postgrest error all count as a failed probe.
-async function probeDatabase(supabase: DbProbeSupabase, timeoutMs: number): Promise<boolean> {
+async function probeDatabase(supabase: DbProbeSupabase, timeoutMs: number): Promise<{ ok: boolean; ms: number }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const startedAt = Date.now();
   try {
     let query: any = supabase.from("signals").select("id").limit(1);
     if (typeof query.abortSignal === "function") {
@@ -82,9 +88,9 @@ async function probeDatabase(supabase: DbProbeSupabase, timeoutMs: number): Prom
       controller.signal.addEventListener("abort", () => reject(new Error("db probe timed out")));
     });
     const { error } = await Promise.race([query, timedOut]);
-    return !error;
+    return { ok: !error, ms: Date.now() - startedAt };
   } catch {
-    return false;
+    return { ok: false, ms: Date.now() - startedAt };
   } finally {
     clearTimeout(timer);
   }
@@ -246,9 +252,16 @@ export async function checkDatabaseReachable(deps: DbUnreachableDeps = {}): Prom
     const timeoutMs = deps.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const supabase = deps.supabase ?? (getSupabaseAdmin() as unknown as DbProbeSupabase);
 
-    const reachable = await probeDatabase(supabase, timeoutMs);
+    const probe = await probeDatabase(supabase, timeoutMs);
+    if (deps.onProbe) {
+      try {
+        deps.onProbe(probe);
+      } catch {
+        // diagnostics only — never let a bad onProbe affect the outcome
+      }
+    }
 
-    return reachable ? await recordSuccess(redis, deps.email, now) : await recordFailure(redis, deps.email, now);
+    return probe.ok ? await recordSuccess(redis, deps.email, now) : await recordFailure(redis, deps.email, now);
   } catch (err: any) {
     console.warn(`[db-unreachable-alert] unexpected failure: ${err?.message ?? err} — doing nothing.`);
     return "redis_error";

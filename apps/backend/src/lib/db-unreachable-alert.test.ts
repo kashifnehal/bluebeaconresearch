@@ -222,6 +222,55 @@ async function main() {
     assert.equal(email.calls.length, 2);
   });
 
+  await runTest("onProbe receives ok true and a number for a fast probe", async () => {
+    const redis = fakeRedis();
+    const email = fakeEmail();
+    const probes: Array<{ ok: boolean; ms: number }> = [];
+    const outcome = await checkDatabaseReachable({
+      redis,
+      email,
+      now: NOW,
+      supabase: okSupabase(),
+      onProbe: (p) => probes.push(p),
+    });
+    assert.equal(outcome, "ok");
+    assert.equal(probes.length, 1);
+    assert.equal(probes[0]?.ok, true);
+    assert.equal(typeof probes[0]?.ms, "number");
+  });
+
+  await runTest("onProbe receives ok false for a failing probe", async () => {
+    const redis = fakeRedis();
+    const email = fakeEmail();
+    const probes: Array<{ ok: boolean; ms: number }> = [];
+    const outcome = await checkDatabaseReachable({
+      redis,
+      email,
+      now: NOW,
+      supabase: erroringSupabase(),
+      onProbe: (p) => probes.push(p),
+    });
+    assert.equal(outcome, "failure_recorded");
+    assert.equal(probes.length, 1);
+    assert.equal(probes[0]?.ok, false);
+    assert.equal(typeof probes[0]?.ms, "number");
+  });
+
+  await runTest("a throwing onProbe does not change the outcome", async () => {
+    const redis = fakeRedis();
+    const email = fakeEmail();
+    const outcome = await checkDatabaseReachable({
+      redis,
+      email,
+      now: NOW,
+      supabase: okSupabase(),
+      onProbe: () => {
+        throw new Error("boom");
+      },
+    });
+    assert.equal(outcome, "ok");
+  });
+
   await runTest("empty ADMIN_EMAILS gives no_recipients", async () => {
     const previous = process.env.ADMIN_EMAILS;
     process.env.ADMIN_EMAILS = "";

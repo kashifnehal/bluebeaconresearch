@@ -501,8 +501,13 @@ async function main() {
   if (isDbHealthAlertEnabled()) {
     cron.schedule(DB_HEALTH_CRON, async () => {
       try {
-        const outcome = await checkDatabaseReachable();
-        app.log.info({ outcome: String(outcome) }, "db-health-check complete");
+        let probe: { ok: boolean; ms: number } | undefined;
+        const outcome = await checkDatabaseReachable({
+          onProbe: (p) => {
+            probe = p;
+          },
+        });
+        app.log.info({ outcome: String(outcome), probeMs: probe?.ms }, "db-health-check complete");
       } catch (e) {
         app.log.error({ err: e }, "db-health-check failed");
         Sentry.captureException(e);
