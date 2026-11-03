@@ -83,7 +83,7 @@ async function loadIngestionSpendAndCap(
 // One row, newest created_at. Live check 2026-10-16: public.raw_events has
 // no index on created_at (only pkey, unique (source, external_id),
 // idx_raw_events_dedup, and a partial materiality_checked_at index).
-// No migration added.
+// idx_raw_events_created_at is added by migration 20261103180000.
 async function loadNewestCreatedAt(supabase: CollectionStalledSupabase): Promise<Date | null> {
   const { data, error } = await supabase
     .from("raw_events")

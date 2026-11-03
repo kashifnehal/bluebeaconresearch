@@ -3,6 +3,8 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## 🟡 `idx_raw_events_created_at` migration written, not applied (TASK DB-SPEED1), 2026-11-03 — `supabase/migrations/20261103180000_raw_events_created_at_index.sql` fixes the 1.7s full-scan newest-row lookup (23,329-row `raw_events`, 63 calls/mean 1,672ms per `pg_stat_statements`); needs founder or approved apply.
+
 ## ✅ Database-unreachable admin alert (TASK BE-DBALERT1), `apps/backend` only, 2026-11-03, `4d03756`/`a7fb45b`
 
 - Part 1 (`4d03756`): `db-unreachable-alert.ts` — one `signals` read, 10s timeout. 3 consecutive failures (tracked in Redis, a separate service from Supabase) sends `ADMIN_EMAILS` one email, re-alerting every 6h while still down; the next successful probe sends one recovery email and clears the Redis keys. No Redis or no recipients: no-op, never throws. 3/5-min/10s/6h are engineering choices, no outside source. 9 cases in `db-unreachable-alert.test.ts`.

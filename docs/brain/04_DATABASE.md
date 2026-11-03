@@ -104,7 +104,7 @@ Ingested news articles and incident logs before classification.
 - `raw_data` (`jsonb`, NOT NULL, default `'{}'::jsonb`)
 - `created_at` / `updated_at` (`timestamptz`, NOT NULL, default `now()`)
 - **Unique Constraint**: `UNIQUE(source, external_id)` — the dedup key every collector checks
-- **Index note (2026-10-16):** no index on `created_at`. Live indexes are pkey, unique `(source, external_id)`, `idx_raw_events_dedup`, and a partial `idx_raw_events_materiality_checked_at`. The collection-stalled check reads the newest row by `created_at`. No migration added.
+- **Index note (2026-10-16, updated 2026-11-03):** `idx_raw_events_created_at` written 2026-11-03 (`20261103180000_raw_events_created_at_index.sql`), not yet applied — see section 3. Live indexes before that apply are pkey, unique `(source, external_id)`, `idx_raw_events_dedup`, and a partial `idx_raw_events_materiality_checked_at`. The collection-stalled check reads the newest row by `created_at`.
 
 ### Table 4: `commodity_prices`
 - `id` (`uuid`, PK, default `uuid_generate_v4()`)
@@ -357,6 +357,11 @@ CREATE INDEX idx_signals_fulltext ON public.signals USING gin (
 CREATE INDEX idx_commodity_prices_symbol ON public.commodity_prices (symbol, fetched_at DESC);
 CREATE INDEX idx_alerts_sent_user ON public.alerts_sent (user_id, created_at DESC);
 CREATE INDEX idx_raw_events_dedup ON public.raw_events (external_id, source);
+
+-- Written 2026-11-03 (20261103180000_raw_events_created_at_index.sql), NOT yet applied:
+-- newest-row lookup (stalled-collection alert, /status, ingestion status) was a 1.7s
+-- full scan at 23,329 rows (pg_stat_statements: 63 calls, mean 1,672ms).
+CREATE INDEX idx_raw_events_created_at ON public.raw_events (created_at DESC);
 
 -- Added 2026-08-18 (20260817220714_reliability_indexes_parts_2_4.sql) — ownership columns that
 -- are both application-filtered and RLS-checked on every row had no supporting index:
