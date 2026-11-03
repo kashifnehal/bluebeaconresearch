@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-03 — Public assessment pages with stable URLs and share cards (TASK WEB-M1)
+
+`apps/web` plus one migration. A logged-out reader can now open a finished BBR assessment at a stable `/assessments/[slug]` URL, and a link to it produces a correct share card. The page shows what happened, market exposure and mechanism, evidence, what's uncertain, what to watch, and sources — then a fixed disclaimer line and a CTA to request a walkthrough, set markets, or subscribe (all carrying campaign tracking). `/assessments` lists published items and tells search engines not to index the page while there are none. Assessment text is BBR-written only — never a copied news article, per the feed's non-commercial licence. The new table and its migration are written, not applied; no row exists yet, so nothing is live to share. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-03 — Public newsletter sign-up + walkthrough/professional-access lead intake (TASK WEB-M2)
 
 `apps/web` plus one migration. New public, no-auth lead-capture surface for the marketing site: a newsletter sign-up (`/subscribe`, confirm/unsubscribe by email link) and a walkthrough/professional-access request form (`/walkthrough`). Both write to new service-only tables (`newsletter_subscribers`, `lead_requests`) guarded by a honeypot field, a minimum fill-time check, and a 3-rows-per-24h per-email DB rate limit; mail goes out through the existing Resend sender. The migration (`20261103120000_lead_intake.sql`) is written, not applied — every route degrades to a safe unavailable response until a founder applies it. No homepage placement yet (a separate follow-up task). Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

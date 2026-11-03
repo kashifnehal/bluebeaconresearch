@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-03 (public newsletter sign-up + walkthrough/professional-access lead intake)
+Last updated: 2026-11-03 (public assessment pages with stable URLs and share cards)
+
+> ⚠️ NEW 2026-11-03 (public assessment pages with stable URLs and share cards, `apps/web` plus one migration, `91badce`) — new `public_assessments` table (service-role only, no row seeded); `/assessments` (list, noindex-when-empty) and `/assessments/[slug]` (six blocks, fixed disclaimer, CTA row carrying `utm_*`, `notFound()` on a missing/draft slug) with a matching share-card OG image. Migration `20261103190000_public_assessments.sql` written, not applied. `sitemap.ts`/`robots.ts` now use `SITE_ORIGIN`; `proxy.ts`'s `PROTECTED` list is exported. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-03 (public newsletter sign-up + walkthrough/professional-access lead intake, `apps/web` plus one migration, `bbb5cf3`) — new `newsletter_subscribers`/`lead_requests` tables (service-role only), four public no-auth routes (`/api/subscribe`, `/api/subscribe/confirm`, `/api/unsubscribe`, `/api/leads`), and `/walkthrough`/`/subscribe`/`/subscribe/confirmed`/`/unsubscribe` pages. Migration `20261103120000_lead_intake.sql` written, not applied — every route degrades to a safe 503 until it is. No homepage placement yet. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
