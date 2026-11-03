@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-04 — Webcal subscribe feed for the Week Ahead calendar (TASK WEB-FEED1)
+
+`apps/web` only. The Week Ahead calendar's "Export to Calendar" button only ever produced a one-time, point-in-time `.ics` download. It now also offers a live subscribe link (`webcal://`) next to that button, so a reader's own Google/Apple/Outlook calendar keeps pulling the same 39 events on its own refresh schedule instead of going stale the moment new events are added. Served from a new public, no-auth, no-database route; never includes forecast/previous/actual values, since none exist yet. The existing one-time download is unchanged. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-03 — Public assessment pages with stable URLs and share cards (TASK WEB-M1)
 
 `apps/web` plus one migration. A logged-out reader can now open a finished BBR assessment at a stable `/assessments/[slug]` URL, and a link to it produces a correct share card. The page shows what happened, market exposure and mechanism, evidence, what's uncertain, what to watch, and sources — then a fixed disclaimer line and a CTA to request a walkthrough, set markets, or subscribe (all carrying campaign tracking). `/assessments` lists published items and tells search engines not to index the page while there are none. Assessment text is BBR-written only — never a copied news article, per the feed's non-commercial licence. The new table and its migration are written, not applied; no row exists yet, so nothing is live to share. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

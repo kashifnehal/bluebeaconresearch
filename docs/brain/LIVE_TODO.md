@@ -3,6 +3,16 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Webcal subscribe feed for the Week Ahead calendar (TASK WEB-FEED1), `apps/web` only, 2026-11-04, `13bc648`
+
+- New pure `apps/web/lib/calendar-feed.ts` (`buildCalendarFeed`) builds a deterministic RFC 5545 `.ics` from the existing 39 `economic-calendar.json` events: CRLF everywhere, UTF-8-safe 75-octet line folding, full TEXT escaping, sorted by date/time(null last)/id, `DTSTAMP` fixed to `_meta.sourcedAt` (not `Date.now()`) so output never drifts between fetches. No `forecast`/`previous`/`actual`.
+- New `GET /api/calendar/feed`: public, no auth, no DB call, no cookie/IP logging, `export const dynamic = "force-static"`, `Cache-Control: public, max-age=3600, s-maxage=3600`.
+- Calendar page: new `data-testid="calendar-subscribe-feed"` webcal link next to the pre-existing `calendar-export-ics` button (now both inside one `flex-wrap` container so they wrap as a unit at phone width). The existing one-time download button and its helpers are untouched, as the task required.
+- `proxy.ts` checked via a new test assertion, not modified — `/api/calendar/feed` was already outside `PROTECTED` (same as every other `/api/*` route).
+- **Known expiry, not a bug:** the feed can only show what `economic-calendar.json` has. EIA/USDA rows end 2026-12-16; FOMC/ECB/BOJ/BLS rows end 2027-01-13. The data file needs a refresh before either date or subscribers will just stop seeing new events with no error.
+- **Verification:** `pnpm --filter web exec tsc --noEmit` clean (exit 0). Full `pnpm --filter web test` green, 0 failures (2 new test files appended to the `test` chain: `lib/calendar-feed.test.ts`, `app/api/calendar/feed/route.test.ts`; additions to `proxy.test.ts` and the existing `calendar/page.test.tsx`). Real `pnpm --filter web exec next build` clean — `/api/calendar/feed` listed as static (`○`). **Not verified**: no real calendar app (Google/Apple/Outlook) was tried, no live URL fetch, no browser walkthrough.
+- Docs: this entry; brain `05_API.md`, `06_COMPONENTS.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`; claude_project `05_API.md`, `06_COMPONENTS.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`. Skipped: `04_DATABASE.md` both trees (no table/column/migration), `18_AI_ENGINE.md` (no Claude prompt/model change), both `10_DECISIONS.md` files (no standing rule), `09_BACKLOG.md` (not a pre-existing numbered backlog ticket — arrived as a direct, fully-specified task).
+
 ## ✅ Public assessment pages with stable URLs and share cards, migration written not applied (TASK WEB-M1), `apps/web` plus one migration, 2026-11-03, `91badce`
 
 - New service-only table `public_assessments` (slug unique, `^[a-z0-9-]{3,80}$`; `summary` capped at 400 chars; `body`/`sources` jsonb; `status` draft/published). Migration `supabase/migrations/20261103190000_public_assessments.sql` is written, not applied — no `apply_migration` call, per the task's own instruction. No row seeded. Stores BBR-written text only — never a news article's own text, since the news feed licence is non-commercial.

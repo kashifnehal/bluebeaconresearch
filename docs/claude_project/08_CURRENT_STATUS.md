@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-03 (public assessment pages with stable URLs and share cards — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-04 (webcal subscribe feed for the Week Ahead calendar — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-04 (webcal subscribe feed for the Week Ahead calendar, `apps/web` only, TASK WEB-FEED1, `13bc648`) — new public, no-auth, static `GET /api/calendar/feed` (deterministic RFC 5545 `.ics`, new `lib/calendar-feed.ts`) covering the same 39 Week Ahead events; a webcal link sits next to the existing one-time `.ics` export button, unchanged. `proxy.ts` confirmed, not modified. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-03 (public assessment pages with stable URLs and share cards, `apps/web` plus one migration, `91badce`) — new `public_assessments` table (service-role only, no row seeded); `/assessments` (list, noindex-when-empty) and `/assessments/[slug]` (six blocks, fixed disclaimer, CTA row carrying `utm_*`, `notFound()` on a missing/draft slug) with a matching share-card OG image. Migration `20261103190000_public_assessments.sql` written, not applied. `sitemap.ts`/`robots.ts` now use `SITE_ORIGIN`; `proxy.ts`'s `PROTECTED` list is exported. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 

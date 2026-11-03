@@ -243,6 +243,16 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 - Any change to `apps/web/data/economic-calendar.json` must be copied to `apps/backend/src/data/economic-calendar.json`; the parity test enforces it.
 ---
 
+#### `GET /api/calendar/feed` (Next.js route, new 2026-11-04)
+
+- **Description**: RFC 5545 `.ics` feed of the same 39 `economic-calendar.json` events the Week Ahead page shows, for subscribing in Google/Apple/Outlook rather than a one-time download. Built by pure `apps/web/lib/calendar-feed.ts` (`buildCalendarFeed`) — deterministic output, CRLF line endings, line folding at 75 octets (UTF-8-safe), `\`/`;`/`,`/newline escaping, sorted by date/time(null last)/id. `forecast`/`previous`/`actual` are never included (they're null anyway — see `economic-calendar.json`'s own `forecastPreviousActualNote`). `DTSTAMP` is fixed to `${_meta.sourcedAt}T00:00:00Z`, not `Date.now()`, so the body does not change between fetches.
+- **Response `200 OK`**: `text/calendar; charset=utf-8` body, `Content-Disposition: inline; filename="blue-beacon-week-ahead.ics"`.
+- **Auth**: None — no session, no database call, no cookie read, no IP logging. `export const dynamic = "force-static"`; not rate-limited (static content, no per-request cost).
+- **Cache-Control**: `public, max-age=3600, s-maxage=3600`.
+- **Not a Fastify route.** `apps/web` only. `apps/web/proxy.ts`'s `PROTECTED` list was checked (not changed) and already excludes it, same as the rest of `/api/*`.
+- Ends where the JSON ends: EIA/USDA entries run to 2026-12-16, FOMC/ECB/BOJ/BLS entries to 2027-01-13 — the feed has nothing to show past those dates until `economic-calendar.json` is refreshed.
+---
+
 ### 2.2 Alert Rules & Dispatch Endpoints
 
 #### `GET /api/alerts`

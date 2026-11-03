@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-03 (public assessment pages with stable URLs and share cards)
+Last updated: 2026-11-04 (webcal subscribe feed for the Week Ahead calendar)
+
+> ⚠️ NEW 2026-11-04 (webcal subscribe feed for the Week Ahead calendar, `apps/web` only, TASK WEB-FEED1, `13bc648`) — new public, no-auth, static `GET /api/calendar/feed` serves a deterministic RFC 5545 `.ics` of the same 39 events the Week Ahead page shows (built by new `lib/calendar-feed.ts`); a `data-testid="calendar-subscribe-feed"` webcal link sits next to the existing one-time `.ics` export button, which is unchanged. `proxy.ts` checked, not modified — `/api/calendar/feed` was already outside `PROTECTED`. Feed is only as current as `economic-calendar.json`: nothing past 2026-12-16 (EIA/USDA) or 2027-01-13 (FOMC/ECB/BOJ/BLS) until that file is refreshed. See `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-03 (public assessment pages with stable URLs and share cards, `apps/web` plus one migration, `91badce`) — new `public_assessments` table (service-role only, no row seeded); `/assessments` (list, noindex-when-empty) and `/assessments/[slug]` (six blocks, fixed disclaimer, CTA row carrying `utm_*`, `notFound()` on a missing/draft slug) with a matching share-card OG image. Migration `20261103190000_public_assessments.sql` written, not applied. `sitemap.ts`/`robots.ts` now use `SITE_ORIGIN`; `proxy.ts`'s `PROTECTED` list is exported. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

@@ -616,6 +616,8 @@ Added a 7-day tappable day strip (Mon–Sun, reusing the existing `getWeekRangeU
 
 **OfficialFiguresPanel shows units (2026-10-28):** the latest-figure numbers were unitless ("412.5", "3644"). Added a `unitText` field ("million barrels" / "Bcf") rendered next to the value, e.g. "412.5 million barrels"; the previous-value line is unchanged. Full detail: `docs/brain/06_COMPONENTS.md` §3.10.
 
+**"Subscribe in your calendar app" webcal link (2026-11-04):** new `data-testid="calendar-subscribe-feed"` link next to the existing one-time `.ics` export button — subscribes to new `GET /api/calendar/feed` (see `05_API.md`) so the calendar app keeps it current on its own schedule, instead of a one-off download. Both controls share a `flex-wrap` container so they wrap together at phone width. The existing export button and its logic are unchanged. Full detail: `docs/brain/06_COMPONENTS.md` §3.10.
+
 **Dashboard CSV export button relabeled (2026-10-27):** `apps/web/app/(dashboard)/dashboard/page.tsx`'s export button is now a named `ExportCsvButton` component (same testid, same export logic, passed in as a prop) reading "Export loaded rows (CSV)" instead of "EXPORT CSV". Full detail: `docs/brain/06_COMPONENTS.md` §3.1.
 
 ### MapPage recenter control (`apps/web/app/(dashboard)/map/page.tsx`) (2026-09-25, `a8bace3`)
