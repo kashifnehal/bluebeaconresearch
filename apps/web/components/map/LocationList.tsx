@@ -112,7 +112,7 @@ function LocationListBody({
                   <span className="font-medium">{group.country}</span>
                   <span className="font-mono text-on-surface-variant">{group.count}</span>
                 </span>
-                <span className="text-on-surface-variant text-[11px] md:text-[10px]">
+                <span className="text-on-surface-variant text-[11px] md:text-[11px]">
                   Up {group.up} · Down {group.down}
                 </span>
               </button>
@@ -141,11 +141,11 @@ function LocationListBody({
                     <span className="font-mono text-on-surface-variant">{count}</span>
                   </span>
                   {chokepoint.commodities.length === 0 ? (
-                    <span className="block text-on-surface-variant text-[11px] md:text-[10px]">
+                    <span className="block text-on-surface-variant text-[11px] md:text-[11px]">
                       No commodity link found (no source)
                     </span>
                   ) : directions ? (
-                    <span className="block text-on-surface-variant text-[11px] md:text-[10px]">
+                    <span className="block text-on-surface-variant text-[11px] md:text-[11px]">
                       {directions}
                     </span>
                   ) : null}

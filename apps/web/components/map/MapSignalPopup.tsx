@@ -49,7 +49,7 @@ export function MapSignalPopup({
           <div className="flex flex-wrap items-center gap-2 min-w-0">
             <SeverityBadge score={signal.severity} />
             {confirmationLabel != null && (
-              <span className="font-mono text-[12px] md:text-[10px] text-on-surface-variant uppercase tracking-wider">
+              <span className="font-mono text-[12px] md:text-[11px] text-on-surface-variant uppercase tracking-wider">
                 {confirmationLabel}
               </span>
             )}
@@ -77,7 +77,7 @@ export function MapSignalPopup({
           </p>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 font-mono text-[12px] md:text-[10px] text-on-surface-variant uppercase tracking-wider">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-3 font-mono text-[12px] md:text-[11px] text-on-surface-variant uppercase tracking-wider">
           <FreshTag createdAt={signal.createdAt} eventDate={signal.eventDate} className="text-primary normal-case tracking-normal" />
           <span>{timeAgo} ago</span>
           <span>
@@ -105,7 +105,7 @@ export function MapSignalPopup({
           href={`/events/${signal.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 label text-[12px] md:text-[10px] font-bold tracking-[0.12em] text-primary hover:underline"
+          className="inline-flex items-center gap-1 label text-[12px] md:text-[11px] font-bold tracking-[0.12em] text-primary hover:underline"
         >
           VIEW FULL SIGNAL
           <span className="material-symbols-outlined text-[12px]">arrow_forward</span>

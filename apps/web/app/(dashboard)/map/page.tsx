@@ -986,7 +986,7 @@ export default function MapPage() {
         {formatDataAsOf(dataUpdatedAt) ? (
           <span
             data-testid="data-as-of"
-            className="text-[11px] md:text-[10px] text-on-surface-variant/80 bg-black/50 backdrop-blur px-3 py-1 rounded-md"
+            className="text-[11px] md:text-[11px] text-on-surface-variant/80 bg-black/50 backdrop-blur px-3 py-1 rounded-md"
             suppressHydrationWarning
           >
             {formatDataAsOf(dataUpdatedAt)}
@@ -1033,11 +1033,11 @@ export default function MapPage() {
                         </span>
                       </div>
                       {!hasCommodities ? (
-                        <div className="text-on-surface-variant text-[11px] md:text-[10px]">
+                        <div className="text-on-surface-variant text-[11px] md:text-[11px]">
                           No commodity link found (no source)
                         </div>
                       ) : directionParts.length > 0 ? (
-                        <div className="text-on-surface-variant text-[11px] md:text-[10px]">
+                        <div className="text-on-surface-variant text-[11px] md:text-[11px]">
                           {directionParts.join(" · ")}
                         </div>
                       ) : null}
@@ -1083,7 +1083,7 @@ export default function MapPage() {
       </div>
 
       <div
-        className="absolute bottom-2 left-2 z-20 text-[12px] md:text-[10px] text-on-surface-variant/80 px-2 py-1.5"
+        className="absolute bottom-2 left-2 z-20 text-[12px] md:text-[11px] text-on-surface-variant/80 px-2 py-1.5"
         suppressHydrationWarning
       >
         {BASEMAP_ATTRIBUTION}
@@ -1097,7 +1097,7 @@ export default function MapPage() {
           >
             {feedDegradedCopy(fallbackReason)}
             {fallbackLastUpdated ? (
-              <span className="ml-2 text-[12px] md:text-[10px] text-black/80" suppressHydrationWarning>
+              <span className="ml-2 text-[12px] md:text-[11px] text-black/80" suppressHydrationWarning>
                 (updated{" "}
                 {safeFormatDistanceToNow(fallbackLastUpdated)} ago)
               </span>
@@ -1128,7 +1128,7 @@ export default function MapPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant uppercase">
+              <div className="label text-[12px] md:text-[11px] tracking-[0.2em] text-on-surface-variant uppercase">
                 High-Severity Activity
               </div>
               <div className="relative group" ref={tensionInfoRef}>
@@ -1145,7 +1145,7 @@ export default function MapPage() {
                     undone by the hover that necessarily precedes a real click. */}
                 <div
                   role="tooltip"
-                  className={`absolute left-0 top-full mt-2 w-56 z-30 p-3 rounded-lg bg-surface-container-high border border-outline-variant/40 shadow-xl text-[12px] md:text-[10px] leading-relaxed text-on-surface-variant normal-case tracking-normal transition-opacity ${
+                  className={`absolute left-0 top-full mt-2 w-56 z-30 p-3 rounded-lg bg-surface-container-high border border-outline-variant/40 shadow-xl text-[12px] md:text-[11px] leading-relaxed text-on-surface-variant normal-case tracking-normal transition-opacity ${
                     tensionInfoOpen
                       ? "opacity-100 pointer-events-auto"
                       : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
@@ -1158,7 +1158,7 @@ export default function MapPage() {
             <div className="flex items-baseline gap-2">
               {isLoading ? (
                 <span
-                  className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70"
+                  className="font-mono text-[12px] md:text-[11px] text-on-surface-variant/70"
                   data-testid="map-signal-count"
                 >
                   Loading
@@ -1169,7 +1169,7 @@ export default function MapPage() {
                     {tensionMetrics.highSeverityCount}
                   </span>
                   <span
-                    className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/70"
+                    className="font-mono text-[12px] md:text-[11px] text-on-surface-variant/70"
                     data-testid="map-signal-count"
                   >
                     high-severity event{tensionMetrics.highSeverityCount === 1 ? "" : "s"} active, of {tensionMetrics.sampleSize} loaded signals
@@ -1185,7 +1185,7 @@ export default function MapPage() {
           </div>
         </div>
         <div className="space-y-3 mb-8" data-filtered-count={geolocatedSignals.length}>
-          <div className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface-variant mb-2 uppercase">
+          <div className="label text-[12px] md:text-[11px] tracking-[0.2em] text-on-surface-variant mb-2 uppercase">
             Filters
           </div>
           <FilterBar
@@ -1274,18 +1274,18 @@ export default function MapPage() {
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`px-1.5 py-0.5 label text-[12px] md:text-[8px] border uppercase ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
+                      className={`px-1.5 py-0.5 label text-[12px] md:text-[11px] border uppercase ${isUrgent ? "bg-error/10 text-error border-error/20" : "bg-primary/10 text-primary border-primary/20"}`}
                     >
                       {isUrgent ? "URGENT" : "SIGNAL"}
                     </span>
-                    <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant">
+                    <span className="font-mono text-[12px] md:text-[11px] text-on-surface-variant">
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt)}{" "}
                       ago
                     </span>
                     <FreshTag
                       createdAt={signal.createdAt}
                       eventDate={signal.eventDate}
-                      className="font-mono text-[12px] md:text-[9px] text-primary"
+                      className="font-mono text-[12px] md:text-[11px] text-primary"
                     />
                   </div>
                   <p className="text-[12px] md:text-[11px] leading-relaxed text-on-surface mb-2 font-medium line-clamp-2 group-hover:text-primary transition-colors">
@@ -1296,10 +1296,10 @@ export default function MapPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="label text-[12px] md:text-[9px] text-primary inline-flex items-center gap-1 group-hover:underline"
+                    className="label text-[12px] md:text-[11px] text-primary inline-flex items-center gap-1 group-hover:underline"
                   >
                     VIEW DETAILS
-                    <span className="material-symbols-outlined text-[12px] md:text-[10px]">
+                    <span className="material-symbols-outlined text-[12px] md:text-[11px]">
                       arrow_forward
                     </span>
                   </a>
@@ -1308,7 +1308,7 @@ export default function MapPage() {
             })
           ) : (
             <div className="flex-1 flex items-center justify-center p-6 grayscale opacity-50">
-              <span className="label text-[12px] md:text-[10px] tracking-widest uppercase">
+              <span className="label text-[12px] md:text-[11px] tracking-widest uppercase">
                 No stream data
               </span>
             </div>
