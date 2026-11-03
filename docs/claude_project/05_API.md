@@ -838,16 +838,35 @@ apps/web/app/api/
 ├── feedback/route.ts     → #155 authenticated POST. Body `{ message, email?, pageContext? }`
 │                              writes `feedback_submissions` (RLS own-row insert). `{ ok: true }`.
 │                              401 if signed out. Not live chat. Not Resend.
-└── auth/
-    └── register-session/route.ts → fresh task, no ticket number, 2026-09-27. Authenticated
-                               POST called after password login (also inlined in
-                               auth/callback/route.ts for Google OAuth). Session-cap
-                               bookkeeping: decodes the JWT's session_id claim, derives a
-                               device_label from User-Agent, deletes user_sessions rows
-                               >30 days stale, evicts the single oldest row if already at
-                               MAX_SESSIONS_PER_USER (2), inserts the new row. Row-only
-                               eviction — cannot force-revoke the evicted JWT (Supabase's
-                               documented lazy-enforcement lag, up to its ~1h access-token
-                               lifetime). **user_sessions migration not yet applied to the
-                               live DB** — see `docs/brain/16_MIGRATION_CHECKLIST.md`.
+├── auth/
+│   └── register-session/route.ts → fresh task, no ticket number, 2026-09-27. Authenticated
+│                              POST called after password login (also inlined in
+│                              auth/callback/route.ts for Google OAuth). Session-cap
+│                              bookkeeping: decodes the JWT's session_id claim, derives a
+│                              device_label from User-Agent, deletes user_sessions rows
+│                              >30 days stale, evicts the single oldest row if already at
+│                              MAX_SESSIONS_PER_USER (2), inserts the new row. Row-only
+│                              eviction — cannot force-revoke the evicted JWT (Supabase's
+│                              documented lazy-enforcement lag, up to its ~1h access-token
+│                              lifetime). **user_sessions migration not yet applied to the
+│                              live DB** — see `docs/brain/16_MIGRATION_CHECKLIST.md`.
+├── subscribe/
+│   ├── route.ts              → public POST, no auth. Newsletter sign-up: validates, inserts a
+│   │                              `pending` `newsletter_subscribers` row, sends a confirmation
+│   │                              mail (Resend). No mail sent → row deleted, 503. Existing
+│   │                              email → same 200 `{ ok: true }` either way (no enumeration).
+│   │                              4th attempt for one email in 24h → 429.
+│   └── confirm/route.ts      → public GET `?t=`, clicked from the confirmation mail. Redirects
+│                                  to `/subscribe/confirmed` (or `?state=invalid` on a bad/used
+│                                  token). Fresh task, no ticket number, 2026-11-03.
+├── unsubscribe/route.ts      → public GET `?t=` redirects to the `/unsubscribe` page; POST
+│                                  (the page's button, and a mail client's RFC 8058 one-click
+│                                  List-Unsubscribe-Post) sets the row `unsubscribed`. Always
+│                                  `{ ok: true, message }`, known token or not. Fresh task, no
+│                                  ticket number, 2026-11-03.
+└── leads/route.ts            → public POST, no auth. Walkthrough / professional-access request
+                                   from `/walkthrough`. Validates, inserts `lead_requests`,
+                                   emails `LEADS_NOTIFY_EMAIL` if set (never blocks the 200 on a
+                                   notify failure). 4th attempt for one work email in 24h → 429.
+                                   Fresh task, no ticket number, 2026-11-03.
 ```

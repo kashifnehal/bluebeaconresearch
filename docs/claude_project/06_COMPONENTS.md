@@ -745,3 +745,5 @@ From shadcn/ui (all code lives in apps/web/components/ui/):
 - Form + FormField (react-hook-form integration)
 - Accordion (help modal sections)
 - Switch (toggles in settings/alerts)
+
+> ⚠️ UPDATED 2026-11-03 (fresh task, no ticket number) — new public, no-auth lead-intake surface: `components/marketing/SubscribeForm.tsx` (homepage placement is a separate follow-up task) and `app/walkthrough/page.tsx`, `app/subscribe/page.tsx`, `app/subscribe/confirmed/page.tsx`, `app/unsubscribe/page.tsx`. Reuses `about/page.tsx`'s and `PublicHeader.tsx`'s existing tokens — no new colour/font/layout. Full detail: `docs/brain/06_COMPONENTS.md` §3.13.

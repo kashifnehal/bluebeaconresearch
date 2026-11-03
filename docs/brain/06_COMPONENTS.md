@@ -355,6 +355,14 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - View choice (`"cards" | "table"`) is remembered in `localStorage` (`bbr_feed_view_mode`), read/written inside `try`/`catch` — renders "cards" by default when storage is unavailable (private mode, quota, SSR). Toggling never affects the existing infinite-scroll (`sentinelRef`)/"Load more" behavior or the Export CSV button (`lib/signal-csv.ts`), both of which sit outside this component and are unchanged.
 - **Hide summaries + loaded-row count (2026-10-14):** `hideSummaries` drops the Summary `<th>` and every Summary `<td>`. `min-w-[900px]` and `data-testid="signal-table-scroll"` (`overflow-x-auto`) stay. The dashboard stores the choice at `bbr.feed.hideSummaries` (try/catch, default false) and shows `data-testid="feed-hide-summaries"` only while the feed is in table mode. Next to "Sorting applies to loaded rows", `tableCountLine` / `formatTableCountLine` render `N signals loaded · D days · Up U · Down V · Other X`. When the number is 1 the words are "1 signal loaded" and "1 day" (2026-10-15). Zero stays plural. Days are distinct UTC dates of `eventDate`, else `createdAt`. Direction is `primaryTableImpact` (first commodity impact, else first currency-pair impact). Other is volatile + neutral + no impact. No Impact or sentiment number column, no bull-day count, no timezone chip.
 
+### 3.13 `components/marketing/SubscribeForm.tsx` + public lead-intake pages (fresh task, no ticket number, 2026-11-03)
+
+- **Purpose:** public, no-auth lead capture. Reuses `app/about/page.tsx`'s and `components/layout/PublicHeader.tsx`'s existing Tailwind classes/CSS-var tokens — no new colour, font, or layout system.
+- `SubscribeForm.tsx`: email + the `NEWSLETTER_CONSENT` checkbox (`lib/consent-copy.ts`, starts unchecked) + submit, posting to `POST /api/subscribe`. Not yet placed on the homepage — that's WEB-M3.
+- `app/subscribe/page.tsx`, `app/subscribe/confirmed/page.tsx` (reads `?state=invalid`), `app/unsubscribe/page.tsx` (reads `?t=`, button POSTs to `/api/unsubscribe`).
+- `app/walkthrough/page.tsx`: name/work-email/organisation/role/markets (checkbox grid over `lib/signal-filters.ts`'s `FILTER_COMMODITIES`)/message + the `LEAD_CONSENT` checkbox, posting to `POST /api/leads`. `?type=professional` switches the heading to "Request professional access", the posted `kind` to `professional_access`, and adds the fixed-scope-pilot line (no price stated).
+- Both forms share the honeypot `website` field + hidden render-timestamp `t` anti-spam pattern (`lib/lead-validation.ts`) and read `lib/first-touch.ts`'s `readFirstTouch()` for the `source` UTM fields. Submit stays disabled until consent is ticked; on failure the shown text is always the fixed "...not available right now..." copy, never a vendor message, status code, or table name.
+
 ---
 
 ## 4. Primitives & UI Component Suite (`apps/web/components/ui`)

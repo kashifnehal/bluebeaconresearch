@@ -376,3 +376,27 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 #### `POST /api/auth/register-session` (Next.js, `apps/web/app/api/auth/register-session/route.ts`, fresh task, no ticket number, 2026-09-27)
 
 - **Description**: Session-cap bookkeeping, called right after a successful password login (also inlined server-side in `auth/callback/route.ts` for Google OAuth). Decodes the `session_id` claim from the caller's JWT, derives a `device_label` from `User-Agent`, deletes any of that user's `user_sessions` rows older than 30 days, evicts the single oldest row if the user is already at `MAX_SESSIONS_PER_USER` (2), then inserts the new row. 401 if signed out; otherwise always `{ ok: true|false }` — never blocks login on failure. Eviction is row-only (see Table 18e, `04_DATABASE.md`) — it cannot force-revoke the evicted session's already-issued JWT. **`user_sessions` migration not yet applied to the live DB** — this route's writes currently fail silently until it is (see `16_MIGRATION_CHECKLIST.md`).
+
+### 2.6 Public Lead Intake (newsletter + walkthrough/professional-access) (Next.js, `apps/web`, fresh task, no ticket number, 2026-11-03)
+
+All four routes are public, no-auth, and never log or store an IP address. Validation lives in `lib/lead-validation.ts` (honeypot `website` field + a hidden render-timestamp `t`, min 3s fill time; email shape check; field length caps; `markets` must be a subset of `lib/signal-filters.ts`'s `FILTER_COMMODITIES` symbols). Persistence is `lib/lead-store.ts` against the new `newsletter_subscribers` / `lead_requests` tables (`supabase/migrations/20261103120000_lead_intake.sql`, **written, not yet applied** — see `16_MIGRATION_CHECKLIST.md`). Mail is `lib/lead-mail.ts` via the existing Resend account/sender. Each route is a thin wrapper around an injectable-deps handler in `lib/*-handler.ts` (same pattern as `lib/events-post-handler.ts`), so route tests mock the store/mail functions rather than hitting Supabase/Resend.
+
+#### `POST /api/subscribe`
+
+- **Description**: Newsletter sign-up. Inserts a `pending` row, sends a confirmation mail with a `confirm`/`unsubscribe` link pair. If the mail can't be sent (no `RESEND_API_KEY`, or a Resend error) the pending row is deleted and the response is 503. An email that already has a row (any status) gets the exact same `200 { ok: true }` as a brand-new sign-up — no enumeration. A 4th sign-up attempt for the same email within 24h is `429`.
+- **Auth**: None. Rate-limited by IP (`rateLimitOrPass`) and, independently, by email inside the DB (`lead-store.ts`'s `isRateLimited`, max 3 rows/24h before the 4th is refused).
+
+#### `GET /api/subscribe/confirm?t=<token>`
+
+- **Description**: The link in the confirmation mail. Looks up `confirm_token_hash = sha256(t)` on a `pending` row, flips it to `confirmed`, clears the hash. Always redirects — to `/subscribe/confirmed`, or `/subscribe/confirmed?state=invalid` for a missing/bad/already-used token.
+- **Auth**: None.
+
+#### `GET /api/unsubscribe?t=<token>` / `POST /api/unsubscribe`
+
+- **Description**: GET just forwards the token to the `/unsubscribe` page (no DB write). POST sets the row `unsubscribed` and always returns `200 { ok: true, message }` — an unknown token looks identical to a real one. POST also serves mail clients' RFC 8058 one-click `List-Unsubscribe-Post` (token read from the query string, not the form-urlencoded body).
+- **Auth**: None.
+
+#### `POST /api/leads`
+
+- **Description**: Walkthrough / professional-access request from `/walkthrough`. Inserts into `lead_requests` (`kind`, `markets[]`, free-text fields). If `LEADS_NOTIFY_EMAIL` is set, awaits an internal notification mail — a notify failure never fails the 200, the row is already saved. A 4th request for the same work email within 24h is `429`.
+- **Auth**: None. Same IP + per-email DB rate limiting as `/api/subscribe`.
