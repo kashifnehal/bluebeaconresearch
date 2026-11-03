@@ -160,7 +160,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
   if (display === "error") {
     return (
       <div className="flex flex-col items-center gap-2">
-        <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
+        <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
           {DATA_SLOW_MESSAGE}
         </p>
         <button
@@ -176,7 +176,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 
   if (display === "insufficient") {
     return (
-      <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
+      <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
         Not enough price history yet for a trend view
       </p>
     );
@@ -184,7 +184,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
 
   if (display === "flat") {
     return (
-      <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
+      <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center leading-relaxed">
         No price change in the last 7 days
       </p>
     );
@@ -213,7 +213,7 @@ function PriceSparkline({ symbol, isUp }: { symbol: string; isUp: boolean }) {
           );
         })}
       </div>
-      <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center mt-4 font-bold border-t border-outline-variant/10 pt-4">
+      <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-[0.2em] text-center mt-4 font-bold border-t border-outline-variant/10 pt-4">
         Recent price trend
       </p>
     </>
@@ -298,7 +298,7 @@ function NewsOnlyWatchlistCard({
         <span className="material-symbols-outlined text-lg">close</span>
       </button>
       <div className="p-6 bg-black/40 relative z-10 pointer-events-none min-h-[220px]">
-        <span className="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[9px] text-on-surface-variant tracking-widest mb-2 inline-block uppercase">
+        <span className="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[11px] text-on-surface-variant tracking-widest mb-2 inline-block uppercase">
           {category}
         </span>
         {isLoading ? (
@@ -766,7 +766,7 @@ export function WatchlistClient() {
                 <div className="p-6 bg-black/40 relative z-10 pointer-events-none">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <span className="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[9px] text-on-surface-variant tracking-widest mb-2 inline-block uppercase">
+                      <span className="bg-surface-container-high px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[11px] text-on-surface-variant tracking-widest mb-2 inline-block uppercase">
                         {meta?.category ?? "MARKET"}
                       </span>
                       <h2 className="text-xl font-headline font-bold text-on-surface">
@@ -848,13 +848,13 @@ export function WatchlistClient() {
                       ? `${Math.floor((Date.now() - lastFetchAt) / 1000)}s`
                       : "--"}
                   </p>
-                  <p className="font-label text-[12px] md:text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">
+                  <p className="font-label text-[12px] md:text-[11px] text-on-surface-variant uppercase font-bold tracking-widest">
                     Time since last update
                   </p>
                 </div>
                 <button
                   onClick={() => refetch()}
-                  className="text-primary hover:text-primary-container font-label text-[12px] md:text-[10px] uppercase tracking-widest font-bold transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+                  className="text-primary hover:text-primary-container font-label text-[12px] md:text-[11px] uppercase tracking-widest font-bold transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                 >
                   Force Refresh
                 </button>
@@ -875,7 +875,7 @@ export function WatchlistClient() {
           add
         </span>
         <div className="absolute right-full mr-4 px-4 py-2 bg-surface-container border border-outline-variant/30 rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap backdrop-blur-md">
-          <span className="label text-[12px] md:text-[10px] tracking-[0.2em] text-on-surface font-black uppercase">
+          <span className="label text-[12px] md:text-[11px] tracking-[0.2em] text-on-surface font-black uppercase">
             Initialize New Monitor
           </span>
         </div>

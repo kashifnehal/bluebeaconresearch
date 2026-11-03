@@ -627,7 +627,7 @@ export default function WatchlistSymbolPage() {
               </p>
               {isFollowed && (
                 <span
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[9px] font-bold tracking-widest uppercase border border-primary/50 bg-primary/10 text-primary"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-sm font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase border border-primary/50 bg-primary/10 text-primary"
                   title="One of the assets you follow"
                 >
                   <span className="material-symbols-outlined text-[12px]">star</span>
@@ -655,7 +655,7 @@ export default function WatchlistSymbolPage() {
               disabled={followPending || !prefsFetched}
               aria-pressed={isWatchlisted}
               data-testid="watchlist-follow-toggle"
-              className="inline-flex items-center gap-1.5 px-3 min-h-[44px] md:min-h-0 md:py-1.5 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 px-3 min-h-[44px] md:min-h-0 md:py-1.5 rounded-sm font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase border transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
               style={{
                 backgroundColor: isWatchlisted ? "var(--accent)" : "transparent",
                 color: isWatchlisted ? "#003824" : "var(--text-secondary)",
@@ -720,7 +720,7 @@ export default function WatchlistSymbolPage() {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setChartRange(range.id)}
-                    className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[10px] font-bold tracking-widest uppercase border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+                    className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
                     style={{
                       backgroundColor: selected ? "var(--accent)" : "transparent",
                       color: selected ? "#003824" : "var(--text-secondary)",
@@ -740,7 +740,7 @@ export default function WatchlistSymbolPage() {
               aria-label="Compare with another instrument"
               data-testid="watchlist-overlay-control"
             >
-              <span className="font-label text-[11px] md:text-[9px] font-bold tracking-widest text-on-surface-variant uppercase">
+              <span className="font-label text-[11px] md:text-[11px] font-bold tracking-widest text-on-surface-variant uppercase">
                 Compare with
               </span>
               <button
@@ -748,7 +748,7 @@ export default function WatchlistSymbolPage() {
                 aria-pressed={!overlaySymbol}
                 data-testid="watchlist-overlay-none"
                 onClick={() => setOverlaySymbol(null)}
-                className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[11px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
                 style={{
                   backgroundColor: !overlaySymbol ? "var(--border)" : "transparent",
                   color: !overlaySymbol ? "#e8ece9" : "var(--text-secondary)",
@@ -766,7 +766,7 @@ export default function WatchlistSymbolPage() {
                     aria-pressed={selected}
                     data-testid={`watchlist-overlay-${peer.symbol}`}
                     onClick={() => setOverlaySymbol(peer.symbol)}
-                    className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[9px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-sm font-label text-[11px] md:text-[11px] font-bold tracking-widest uppercase border transition-colors cursor-pointer"
                     style={{
                       backgroundColor: selected ? OVERLAY_LINE_COLOR : "transparent",
                       color: selected ? "#04101f" : "var(--text-secondary)",
@@ -788,7 +788,7 @@ export default function WatchlistSymbolPage() {
             />
           ) : null}
           {showYahooIncomplete && history5y?.availableFrom && (
-            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
+            <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/70 uppercase tracking-widest mb-4">
               Showing available history from{" "}
               {new Date(history5y.availableFrom).toLocaleDateString(undefined, {
                 month: "short",
@@ -798,7 +798,7 @@ export default function WatchlistSymbolPage() {
             </p>
           )}
           {showAttributionHint && !chartLoading && chartData.length >= 2 && (
-            <p className="mb-3 flex items-center gap-1.5 text-[12px] md:text-[10px] font-mono text-primary/80 uppercase tracking-widest">
+            <p className="mb-3 flex items-center gap-1.5 text-[12px] md:text-[11px] font-mono text-primary/80 uppercase tracking-widest">
               <span className="material-symbols-outlined text-sm">info</span>
               What happened around this time
             </p>
@@ -807,7 +807,7 @@ export default function WatchlistSymbolPage() {
             <Skeleton className="h-[340px] w-full rounded-lg" data-testid="price-chart-skeleton" />
           ) : chartDisplay === "error" ? (
             <div className="flex flex-col items-center gap-3 py-20" data-testid="price-chart-error">
-              <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
+              <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center">
                 {DATA_SLOW_MESSAGE}
               </p>
               <button
@@ -822,7 +822,7 @@ export default function WatchlistSymbolPage() {
               </button>
             </div>
           ) : chartDisplay === "insufficient" ? (
-            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
+            <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-20">
               {isFiveYearRange
                 ? "Not enough 5-year price history available for this symbol"
                 : "Not enough price history yet for a chart view"}
@@ -1011,7 +1011,7 @@ export default function WatchlistSymbolPage() {
               )}
             </div>
           )}
-          <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
+          <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest text-center mt-4">
             {isOverlayActive
               ? "Percent change from the start of the selected range. Informational only — not a trading recommendation."
               : activeRange.source === "db"
@@ -1021,13 +1021,13 @@ export default function WatchlistSymbolPage() {
           {!isOverlayActive && (markerSignals?.length ?? 0) >= MARKER_SIGNALS_LIMIT && (
             <p
               data-testid="chart-markers-truncated"
-              className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-1"
+              className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-1"
             >
               Markers show the {MARKER_SIGNALS_LIMIT} most recent signals in this range.
             </p>
           )}
           {isOverlayActive && (
-            <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-1">
+            <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/70 uppercase tracking-widest text-center mt-1">
               Event markers and click-to-attribute are available when Compare is set to None.
             </p>
           )}
@@ -1060,7 +1060,7 @@ export default function WatchlistSymbolPage() {
                 />
               ) : attributionResults && attributionResults.length > 0 ? (
                 <div className="space-y-2">
-                  <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/80 uppercase tracking-widest">
+                  <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/80 uppercase tracking-widest">
                     News from the 7 days before this move, shown by severity — not a claim that any single one caused it.
                   </p>
                   {attributionResults.map((r) => (
@@ -1073,17 +1073,17 @@ export default function WatchlistSymbolPage() {
                       className="block p-3 rounded-lg bg-black/20 border border-outline-variant/20 hover:border-primary/40 transition-colors"
                     >
                       <span className="block text-sm font-bold text-on-surface leading-snug">{r.title}</span>
-                      <span className="block text-[12px] md:text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mt-1">
+                      <span className="block text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest mt-1">
                         {formatTimeBefore(r.hoursBefore)} · Severity {r.severity}
                       </span>
                     </a>
                   ))}
-                  <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/70 uppercase tracking-widest pt-1">
+                  <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/70 uppercase tracking-widest pt-1">
                     Time-window observation only — not a claim that this event caused the move.
                   </p>
                 </div>
               ) : (
-                <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest">
+                <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest">
                   No clearly related event found in BBR&apos;s tracked history for this window.
                 </p>
               )}
@@ -1116,7 +1116,7 @@ export default function WatchlistSymbolPage() {
               ))}
             </div>
           ) : events.length === 0 && signalsPage === 1 ? (
-            <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
+            <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest text-center py-10">
               No signals flagged {symbol} impact in the last {HISTORY_DAYS} days
             </p>
           ) : (
@@ -1142,12 +1142,12 @@ export default function WatchlistSymbolPage() {
                         <CommodityChip asset={impact.asset} direction={impact.direction} confidence={impact.confidence} />
                       )}
                     </div>
-                    <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant uppercase tracking-widest mb-2">
+                    <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest mb-2">
                       {ev.country} · {safeFormatDistanceToNow(ev.eventDate ?? ev.createdAt, { addSuffix: true })} ·
                       Severity {ev.severity}
                     </p>
                     {move && (
-                    <p className="text-[12px] md:text-[10px] font-mono text-on-surface-variant/80">
+                    <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant/80">
                       {move.status === "too-recent" &&
                         "Signaled less than an hour ago — not enough time has passed to measure a price move yet."}
                       {move.status === "insufficient-data" &&
