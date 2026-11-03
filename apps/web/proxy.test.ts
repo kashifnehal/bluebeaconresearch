@@ -8,6 +8,7 @@ import {
   decideAuthAction,
   hasSupabaseAuthCookie,
   proxy,
+  PROTECTED,
   PUBLIC_UNMETERED,
   runAuthCheck,
 } from "./proxy";
@@ -204,6 +205,10 @@ async function main() {
     const res = await proxy(new NextRequest("https://app.example.com/api/health"));
     assert.equal(res.status, 200);
     assert.equal(res.headers.get("location"), null);
+  });
+
+  await runTest("/assessments is not in PROTECTED (public, no auth check — never calls getUser())", () => {
+    assert.equal(PROTECTED.includes("/assessments"), false);
   });
 }
 

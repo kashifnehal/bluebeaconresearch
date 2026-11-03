@@ -38,7 +38,7 @@ export const PUBLIC_UNMETERED = ["/api/health"];
 // (same email allowlist as the admin pages) and returns 404 otherwise.
 // Middleware must not run an auth check for them: doing so put the entire API
 // surface behind the auth backend's latency (see incident note below).
-const PROTECTED = [
+export const PROTECTED = [
   "/dashboard",
   "/events",
   "/watchlist",

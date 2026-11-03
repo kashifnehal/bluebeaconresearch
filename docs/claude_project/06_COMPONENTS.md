@@ -747,3 +747,5 @@ From shadcn/ui (all code lives in apps/web/components/ui/):
 - Switch (toggles in settings/alerts)
 
 > ⚠️ UPDATED 2026-11-03 (fresh task, no ticket number) — new public, no-auth lead-intake surface: `components/marketing/SubscribeForm.tsx` (homepage placement is a separate follow-up task) and `app/walkthrough/page.tsx`, `app/subscribe/page.tsx`, `app/subscribe/confirmed/page.tsx`, `app/unsubscribe/page.tsx`. Reuses `about/page.tsx`'s and `PublicHeader.tsx`'s existing tokens — no new colour/font/layout. Full detail: `docs/brain/06_COMPONENTS.md` §3.13.
+
+> ⚠️ UPDATED 2026-11-03 (fresh task, no ticket number) — new public, no-login assessment pages: `app/assessments/page.tsx` (list, empty-state noindex) and `app/assessments/[slug]/page.tsx` (Event/Exposure/Evidence/uncertainty/What to watch/Sources blocks, fixed disclaimer footer, a CTA row to `/walkthrough`/`/signup`/`/subscribe` carrying `utm_*`). Its share-card image (`opengraph-image.tsx`) reuses the root OG image's navy palette and brand mark, not the pages' own dark theme. Full detail: `docs/brain/06_COMPONENTS.md` §3.14.

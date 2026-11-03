@@ -408,6 +408,10 @@ CREATE UNIQUE INDEX idx_signals_raw_event_ids_unique ON public.signals (raw_even
     - `newsletter_subscribers`: `id`, `email` (unique on `lower(email)`), `status` (`pending`/`confirmed`/`unsubscribed`), `consent_text`, `consent_version`, `consent_at`, `confirm_token_hash` (sha256 of the mailed token; nulled on confirm), `unsubscribe_token` (stored as-is — the link only unsubscribes, nothing else), `confirmed_at`, `unsubscribed_at`, `source jsonb` (page path + first-touch UTM only, never an IP), `created_at`.
     - `lead_requests`: `id`, `kind` (`walkthrough`/`professional_access`), `name`, `work_email`, `organisation`, `role`, `markets text[]`, `message`, `consent_contact`, `consent_text`, `consent_version`, `source jsonb`, `status` (default `new`), `created_at`. Index on `(lower(work_email), created_at)`.
     - **Written, NOT yet applied to the live DB** — no `apply_migration` call was made this session, per the task's own instruction. See `16_MIGRATION_CHECKLIST.md`.
+15. **`20261103190000_public_assessments.sql`** (fresh task, no ticket number, 2026-11-03): one new service-only table, `public_assessments` — a stable public URL for a finished BBR assessment, readable with no login, for logged-out readers and share cards:
+    - `id`, `slug` (unique, `^[a-z0-9-]{3,80}$`), `headline`, `summary` (max 400 chars, BBR-written), `event_time` (nullable), `assessed_at`, `markets text[]`, `body jsonb` (what happened / exposure / evidence / uncertainty / what to watch), `sources jsonb` (publisher/title/url/published_at — `url` must be `https://`), `status` (`draft`/`published`), `published_at`, `created_at`, `updated_at`.
+    - Stores BBR-written text only — never a news article's own text, since the news feed licence is non-commercial. No row seeded by this task.
+    - **Written, NOT yet applied to the live DB** — no `apply_migration` call was made this session, per the task's own instruction. See `16_MIGRATION_CHECKLIST.md`.
 
 ## 5. Data Retention & Archival — planned, not yet built
 
