@@ -85,7 +85,10 @@ runTest("every sortable header exposes aria-sort, 'none' until clicked", () => {
   assert.match(html, /min-h-6/);
 });
 
-runTest("Type and Topic cells carry a title with their visible text; Summary has min-w-[240px] (TASK UI-FIX1 Part 2)", () => {
+// jsdom/linkedom cannot measure rendered layout (no real layout engine), so
+// this only checks the className caps and title attributes land on the
+// right cells — it does not confirm the resulting table width.
+runTest("Type and Topic cells carry a title with their visible text; Event/Summary/Type/Topic caps match TASK UI-FINAL Part 1", () => {
   const html = renderToStaticMarkup(
     createElement(SignalTable, {
       signals: [signal({ eventType: "supply_disruption_logistics", commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }] })],
@@ -94,9 +97,9 @@ runTest("Type and Topic cells carry a title with their visible text; Summary has
   );
   assert.match(html, /title="supply_disruption_logistics"/);
   assert.match(html, /title="USOIL"/);
-  assert.match(html, /max-w-\[150px\] truncate/);
-  assert.match(html, /max-w-\[160px\] truncate/);
-  assert.match(html, /min-w-\[240px\] max-w-\[320px\]/);
+  assert.match(html, /max-w-\[190px\]/);
+  assert.match(html, /max-w-\[120px\] truncate/);
+  assert.match(html, /min-w-\[220px\] max-w-\[320px\]/);
   // Event cell keeps its link title too, and header sort buttons still carry
   // aria-sort + min-h-6 (unchanged by this task, re-asserted here).
   assert.match(html, /title="Refinery outage"/);

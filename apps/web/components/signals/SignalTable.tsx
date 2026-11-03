@@ -144,14 +144,14 @@ export function SignalTable({
                       {safeFormatDistanceToNow(signal.eventDate ?? signal.createdAt, { addSuffix: true })}
                     </a>
                   </td>
-                  <td className="px-3 py-3 max-w-[220px]" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
+                  <td className="px-3 py-3 max-w-[190px]" style={{ color: "#e5e2e1", fontFamily: "'Inter', sans-serif" }}>
                     <a href={`/events/${signal.id}`} className="block truncate hover:text-[var(--accent)]" title={signal.title}>
                       {signal.title}
                     </a>
                   </td>
                   {hideSummaries ? null : (
                     <td
-                      className="px-3 py-3 min-w-[240px] max-w-[320px]"
+                      className="px-3 py-3 min-w-[220px] max-w-[320px]"
                       data-testid="signal-table-summary-cell"
                       style={{ color: "var(--text-secondary)", fontFamily: "'Inter', sans-serif" }}
                     >
@@ -160,7 +160,7 @@ export function SignalTable({
                       </a>
                     </td>
                   )}
-                  <td className="px-3 py-3 max-w-[150px] truncate" style={{ color: "var(--text-secondary)" }} title={type}>
+                  <td className="px-3 py-3 max-w-[120px] truncate" style={{ color: "var(--text-secondary)" }} title={type}>
                     <a href={`/events/${signal.id}`} className="block truncate" title={type}>
                       {type}
                     </a>
@@ -188,7 +188,7 @@ export function SignalTable({
                       {signal.sourcesCount}
                     </a>
                   </td>
-                  <td className="px-3 py-3 max-w-[160px] truncate overflow-hidden" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }} title={topicSymbols(signal)}>
+                  <td className="px-3 py-3 max-w-[120px] truncate overflow-hidden" style={{ color: "var(--text-secondary)", fontFamily: "'JetBrains Mono', monospace" }} title={topicSymbols(signal)}>
                     <a href={`/events/${signal.id}`} className="block truncate">
                       {topicSymbols(signal)}
                     </a>
