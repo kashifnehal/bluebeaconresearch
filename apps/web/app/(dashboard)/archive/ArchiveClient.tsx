@@ -161,7 +161,7 @@ export function ArchiveClient() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="archive-from"
-              className="text-[12px] md:text-[10px] uppercase tracking-wider"
+              className="text-[12px] md:text-[11px] uppercase tracking-wider"
               style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               From date
@@ -178,7 +178,7 @@ export function ArchiveClient() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="archive-to"
-              className="text-[12px] md:text-[10px] uppercase tracking-wider"
+              className="text-[12px] md:text-[11px] uppercase tracking-wider"
               style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               To date
@@ -195,7 +195,7 @@ export function ArchiveClient() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="archive-commodity"
-              className="text-[12px] md:text-[10px] uppercase tracking-wider"
+              className="text-[12px] md:text-[11px] uppercase tracking-wider"
               style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               Commodity
@@ -225,7 +225,7 @@ export function ArchiveClient() {
           <div className="flex flex-col gap-1">
             <label
               htmlFor="archive-region"
-              className="text-[12px] md:text-[10px] uppercase tracking-wider"
+              className="text-[12px] md:text-[11px] uppercase tracking-wider"
               style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
             >
               Region
@@ -252,7 +252,7 @@ export function ArchiveClient() {
         <div className="flex flex-col gap-1">
           <label
             htmlFor="archive-keyword"
-            className="text-[12px] md:text-[10px] uppercase tracking-wider"
+            className="text-[12px] md:text-[11px] uppercase tracking-wider"
             style={{ color: "var(--text-muted)", fontFamily: "'Space Grotesk', sans-serif" }}
           >
             Keyword
