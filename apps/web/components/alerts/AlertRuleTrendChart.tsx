@@ -50,7 +50,7 @@ export function AlertRuleTrendChart({ dailyCounts }: { dailyCounts: DailyCount[]
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <span className="mono text-[12px] md:text-[10px] text-on-surface/70 font-bold whitespace-nowrap">
+      <span className="mono text-[12px] md:text-[11px] text-on-surface/70 font-bold whitespace-nowrap">
         {weekTotal} match{weekTotal === 1 ? "" : "es"} this week
       </span>
     </div>
@@ -61,7 +61,7 @@ export function AlertRuleTrendEmptyState() {
   return (
     <div className="flex items-center gap-2">
       <span className="h-8 w-24 md:w-28 shrink-0 rounded-sm border border-dashed border-outline-variant/30" aria-hidden="true" />
-      <span className="text-[12px] md:text-[10px] text-on-surface/45 italic whitespace-nowrap">
+      <span className="text-[12px] md:text-[11px] text-on-surface/45 italic whitespace-nowrap">
         Not enough history yet
       </span>
     </div>
