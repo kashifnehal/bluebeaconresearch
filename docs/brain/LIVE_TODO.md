@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Database-unreachable admin alert (TASK BE-DBALERT1), `apps/backend` only, 2026-11-03, `4d03756`/`a7fb45b`
+
+- Part 1 (`4d03756`): `db-unreachable-alert.ts` — one `signals` read, 10s timeout. 3 consecutive failures (tracked in Redis, a separate service from Supabase) sends `ADMIN_EMAILS` one email, re-alerting every 6h while still down; the next successful probe sends one recovery email and clears the Redis keys. No Redis or no recipients: no-op, never throws. 3/5-min/10s/6h are engineering choices, no outside source. 9 cases in `db-unreachable-alert.test.ts`.
+- Part 2 (`a7fb45b`): wired into `workers.ts` as `DB_HEALTH_CRON` (default `*/5 * * * *`), off only when `ENABLE_DB_HEALTH_ALERT` is exactly `"false"`, not run at startup — same idiom as `SIGNAL_SILENCE_CRON`. Both vars added to `.env.example`; none set on Railway.
+- Part 3 (this commit, docs only): this entry. `tsc --noEmit` clean; `pnpm test` 65/65 files, 557 assertions, exit 0.
+- The task prompt named `signal-silence-alert.ts` and a `SIGNAL_SILENCE_CRON` block as the pattern to copy; neither existed in the local checkout at task start because `main` was 57 commits behind origin (other concurrent sessions/worktrees had pushed since). Pulled/rebased before finishing Part 2, found the real file (added 2026-10-27 per `fb958d1`/`89349ee`) and reconciled the wiring against it — it already matched the structure used.
+- Skipped: `05_API.md` (no route), `04_DATABASE.md`/`16_MIGRATION_CHECKLIST.md` (no table/column/migration), `18_AI_ENGINE.md` (no prompt), `06_COMPONENTS.md` (no React component), `10_DECISIONS.md` (ops tooling, not a standing rule). Updated per the canonical-trio rule: `claude_project/08_CURRENT_STATUS.md` + `brain/08_CURRENT_STATUS.md` (new ⚠️ NEW note), `claude_project/14_CHANGELOG.md` + `brain/14_CHANGELOG.md` (new entries). `09_BACKLOG.md` not touched — this was an ad-hoc CTO task, not a pre-existing backlog line.
+
 ## ✅ Raised the smallest signed-in text to the 11px type-floor (TASK UI-TYPE), `apps/web` only, 2026-11-03, `257920b`/`50e67f1`/`187abd9`/`6ece48e`/`c78f8a2`/`52207c7`/`0cb45ff`/`db4780d`/`0df6167`/`99ab81f`/`c00d391`
 
 - The written type scale starts at 11px, but 259 places (this task's own grep, in scope) used `md:text-[8px|9px|10px]` — a desktop-only override pattern like `text-[12px] md:text-[10px]` — making desktop text smaller than the already-fine phone size at the same breakpoint. 25 more used those sizes at every width (no `md:`), and 15 inline `fontSize` props/styles set 9 or 10.

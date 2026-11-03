@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-03 — Database-unreachable admin alert (TASK BE-DBALERT1)
+
+`apps/backend` only. Every existing ops alert reads the database to decide whether to fire, so none of them could fire during a Supabase outage. New check (`4d03756`) probes `signals` once with a 10s timeout; 3 consecutive failures email `ADMIN_EMAILS` via Redis-tracked state (a separate service from Supabase) and re-alert every 6h while still down, then send one recovery email once the database answers again. Wired (`a7fb45b`) as a new 5-minute cron, off only when `ENABLE_DB_HEALTH_ALERT` is exactly `"false"`; neither new env var is set on Railway. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-10-28 — Three layout-overflow fixes from the live check of UI-ALL
 
 `apps/web` only. A live, signed-in production check of the page-layout system below found three places that still scrolled sideways: the dashboard at 768px, the signal table at 1440px, and the asset page's pulse tiles at 768px. All three were breakpoints keyed to window width instead of the space actually available (the sidebar, a hidden side panel, the tiles' own container). Fixed with class-only changes — no colour, copy, API, or logic change. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

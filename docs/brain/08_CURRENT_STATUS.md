@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-10-18 (rendered web test rule)
+Last updated: 2026-11-03 (database-unreachable admin alert)
+
+> ⚠️ NEW 2026-11-03 (database-unreachable admin alert, `apps/backend` only, `4d03756`/`a7fb45b`) — 3 consecutive failed probes of `signals` (10s timeout each) email `ADMIN_EMAILS`, re-alerting every 6h while still down; the next successful probe sends one recovery email. New `DB_HEALTH_CRON` (default every 5 min UTC) and `ENABLE_DB_HEALTH_ALERT`; neither set on Railway. No Redis or no recipients: no-op. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-10-18 (rendered web test rule, docs only) — a store write, an effect, or a visible change needs a test that renders the component. A source-text match does not count. See `12_DEPLOYMENT.md`, `LIVE_TODO.md`.
 
