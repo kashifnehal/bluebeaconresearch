@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-03 (database-unreachable admin alert)
+Last updated: 2026-11-03 (email layout rebuild + weekly generator)
+
+> ⚠️ NEW 2026-11-03 (email layout rebuild + weekly generator, `apps/backend` only, TASK BE-M6, `e65d90d`/`68fb0a9`/`c6823a7`/`2735bd3`) — daily digest `renderHtml`/`renderText` rebuilt on new shared `email-layout.ts` helpers (navy/paper palette, no direction arrows, "No extended note for this item." fallback); each source now shows as host + article date instead of a raw URL; subject format changed; digest sends carry a `List-Unsubscribe` header. New render-only `renderWeeklyEmail()` for "The Beacon Weekly" — not yet wired to a sender. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-03 (database-unreachable admin alert, `apps/backend` only, `4d03756`/`a7fb45b`) — 3 consecutive failed probes of `signals` (10s timeout each) email `ADMIN_EMAILS`, re-alerting every 6h while still down; the next successful probe sends one recovery email. New `DB_HEALTH_CRON` (default every 5 min UTC) and `ENABLE_DB_HEALTH_ALERT`; neither set on Railway. No Redis or no recipients: no-op. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

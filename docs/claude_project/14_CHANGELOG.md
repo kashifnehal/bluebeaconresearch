@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-03 — Email layout rebuild + weekly generator (TASK BE-M6)
+
+`apps/backend` only, four parts: `e65d90d`, `68fb0a9`, `c6823a7`, `2735bd3`. `EmailService.send()` gained optional `headers`/`replyTo`. A new shared `email-layout.ts` provides pure, inline-CSS table-based HTML builders on a navy/paper palette (brand kit not yet approved), with no direction arrows and every leaf value escaped. The daily digest's HTML/text rendering was rebuilt on those helpers — removing the old up/down/volatile arrow glyphs, replacing the "Deeper analyst commentary" fallback and the trust line, showing each source as host + article date instead of a raw URL, and adding a `List-Unsubscribe` header. A new render-only `renderWeeklyEmail()` builds "The Beacon Weekly" from the same helpers and validates its input (headline/preheader length, non-empty summary, https-only links, a 90,000-byte HTML cap) — not yet wired to a scheduler or send path. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-03 — Database-unreachable admin alert (TASK BE-DBALERT1)
 
 `apps/backend` only. Every existing ops alert reads the database to decide whether to fire, so none of them could fire during a Supabase outage. New check (`4d03756`) probes `signals` once with a 10s timeout; 3 consecutive failures email `ADMIN_EMAILS` via Redis-tracked state (a separate service from Supabase) and re-alert every 6h while still down, then send one recovery email once the database answers again. Wired (`a7fb45b`) as a new 5-minute cron, off only when `ENABLE_DB_HEALTH_ALERT` is exactly `"false"`; neither new env var is set on Railway. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
