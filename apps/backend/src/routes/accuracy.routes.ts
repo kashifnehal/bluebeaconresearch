@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { FLAT_THRESHOLD_PCT } from "../lib/outcome-threshold.js";
 
 /**
  * Public GET /v1/accuracy. Reads only from signal_outcomes (written once, daily,
@@ -228,6 +229,7 @@ export function buildAccuracyPayload(
     date_range: spanDates([...byCheckpoint.values()]),
     min_sample_size: MIN_SAMPLE_SIZE,
     volatility_threshold_pct: VOLATILITY_THRESHOLD_PCT,
+    flat_threshold_pct: FLAT_THRESHOLD_PCT,
   };
 }
 

@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { FLAT_THRESHOLD_PCT } from "../lib/outcome-threshold.js";
 
 /**
  * Permanent outcome tracking for signal_outcomes.
@@ -18,7 +19,6 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
  */
 const CHECKPOINT_HOURS_LIST = [1, 4, 24, 48] as const;
 const SHORTEST_CHECKPOINT_HOURS = CHECKPOINT_HOURS_LIST[0];
-const FLAT_THRESHOLD_PCT = 0.5;
 const SIGNAL_PAGE_SIZE = 1000;
 const PRICE_PAGE_SIZE = 1000;
 const OUTCOME_PAGE_SIZE = 1000;

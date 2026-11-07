@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 
+import { FLAT_THRESHOLD_PCT } from "../lib/outcome-threshold.js";
 import {
   ACCURACY_CHECKPOINT_HOURS,
   BY_ASSET_CHECKPOINT_HOURS,
@@ -208,4 +209,9 @@ runTest("by-asset rows stay on the 48-hour checkpoint and match overall", () => 
   assert.equal(payload.date_range?.earliest, "2026-07-01T00:00:00.000Z");
   assert.equal(payload.date_range?.latest, "2026-08-03T00:00:00.000Z");
   assert.equal(payload.overall.date_range?.earliest, "2026-08-01T00:00:00.000Z");
+});
+
+runTest("flat_threshold_pct equals the scoring constant", () => {
+  const payload = buildAccuracyPayload([]);
+  assert.equal(payload.flat_threshold_pct, FLAT_THRESHOLD_PCT);
 });
