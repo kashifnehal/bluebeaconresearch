@@ -84,6 +84,18 @@ async function main() {
     browserClient.auth.getSession = (async () => ({ data: { session: null }, error: null })) as typeof browserClient.auth.getSession;
   }
 
+  await runTest("FirstTouchCapture stores nothing without analytics consent", async () => {
+    g.window.localStorage.removeItem("bbr.consent");
+    storage.removeItem(FIRST_TOUCH_STORAGE_KEY);
+    const { FirstTouchCapture } = await import("./FirstTouchCapture");
+    const { root } = await renderElement(document, createElement(FirstTouchCapture));
+    try {
+      assert.equal(storage.getItem(FIRST_TOUCH_STORAGE_KEY), null);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
   await runTest("FirstTouchCapture stores the landing utm values", async () => {
     g.window.localStorage.setItem(
       "bbr.consent",
@@ -149,6 +161,62 @@ async function main() {
         options?: { data?: { first_touch?: unknown } };
       };
       assert.deepEqual(call.options?.data?.first_touch, expected);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("signup reads utm values from the current address when nothing is stored", async () => {
+    g.window.localStorage.removeItem("bbr.consent");
+    storage.removeItem(FIRST_TOUCH_STORAGE_KEY);
+    assert.equal(readFirstTouch(), null);
+    const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime.js");
+    const { SearchParamsContext } = await import("next/dist/shared/lib/hooks-client-context.shared-runtime.js");
+    const { default: SignupPage } = await import("../app/(auth)/signup/page");
+    const fromUrl = parseFirstTouch(SEARCH, "", location.hostname);
+    assert.ok(fromUrl);
+
+    const { root } = await renderElement(
+      document,
+      createElement(
+        AppRouterContext.Provider,
+        {
+          value: {
+            push: () => {},
+            replace: () => {},
+            back: () => {},
+            forward: () => {},
+            refresh: () => {},
+            prefetch: async () => {},
+          },
+        },
+        createElement(
+          SearchParamsContext.Provider,
+          { value: new URLSearchParams("") },
+          createElement(SignupPage),
+        ),
+      ),
+    );
+    try {
+      const name = document.querySelector("#fullName") as HTMLInputElement;
+      const email = document.querySelector("#email") as HTMLInputElement;
+      const password = document.querySelector("#password") as HTMLInputElement;
+      const form = document.querySelector("form");
+      assert.ok(name && email && password && form);
+      await act(async () => {
+        typeInto(name, "Ada Lovelace");
+        typeInto(email, "ada@example.com");
+        typeInto(password, "correct-horse");
+      });
+      await act(async () => {
+        reactProps(form).onSubmit({ preventDefault() {}, persist() {} });
+      });
+      assert.equal(signUpCalls.length, 2);
+      const call = signUpCalls[1] as {
+        options?: { data?: { first_touch?: unknown } };
+      };
+      assert.deepEqual(call.options?.data?.first_touch, fromUrl);
+      assert.equal(storage.getItem(FIRST_TOUCH_STORAGE_KEY), null);
     } finally {
       await act(async () => root.unmount());
     }

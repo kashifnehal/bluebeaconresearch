@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { initAnalytics } from "@/lib/analytics";
-import { CONSENT_OPEN_EVENT, readConsent, writeConsent } from "@/lib/consent";
+import { readConsent, subscribeConsentOpen, writeConsent } from "@/lib/consent";
 import { captureFirstTouch } from "@/lib/first-touch";
 
 const BANNER_TEXT =
@@ -16,21 +16,7 @@ export function ConsentBanner() {
 
   useEffect(() => {
     if (readConsent()) setOpen(false);
-    function onOpen() {
-      setOpen(true);
-    }
-    try {
-      window.addEventListener(CONSENT_OPEN_EVENT, onOpen);
-    } catch {
-      return;
-    }
-    return () => {
-      try {
-        window.removeEventListener(CONSENT_OPEN_EVENT, onOpen);
-      } catch {
-        // The page must keep working.
-      }
-    };
+    return subscribeConsentOpen(() => setOpen(true));
   }, []);
 
   function choose(analytics: boolean) {

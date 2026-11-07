@@ -1,5 +1,6 @@
 export const CONSENT_STORAGE_KEY = "bbr.consent";
-export const CONSENT_OPEN_EVENT = "bbr-consent-open";
+
+const openListeners = new Set<() => void>();
 
 export type ConsentChoice = {
   v: 1;
@@ -39,10 +40,18 @@ export function hasAnalyticsConsent(): boolean {
 }
 
 export function openConsentSettings(): void {
-  try {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new Event(CONSENT_OPEN_EVENT));
-  } catch {
-    // Events are unavailable. The page must keep working.
+  for (const listener of openListeners) {
+    try {
+      listener();
+    } catch {
+      // A listener must not block the page.
+    }
   }
+}
+
+export function subscribeConsentOpen(listener: () => void): () => void {
+  openListeners.add(listener);
+  return () => {
+    openListeners.delete(listener);
+  };
 }
