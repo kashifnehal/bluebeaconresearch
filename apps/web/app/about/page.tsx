@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 export const metadata: Metadata = {
   title: "About | Blue Beacon Research",
@@ -87,9 +88,7 @@ export default function AboutPage() {
         </section>
       </main>
 
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
-        Blue Beacon Research — Not investment advice.
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

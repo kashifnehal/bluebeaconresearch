@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { getPublishedAssessmentBySlug, type PublicAssessment } from "@/lib/public-assessments";
 import { SITE_ORIGIN } from "@/lib/site-metadata";
 
@@ -192,9 +193,7 @@ function AssessmentDetail({ assessment, searchParams }: { assessment: PublicAsse
           </Link>
         </div>
       </main>
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
-        Blue Beacon Research — Not investment advice.
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

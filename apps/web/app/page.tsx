@@ -11,6 +11,7 @@ import {
 } from "./../lib/ingestion-interval";
 import { cachedHomepageSignalCount, loadHomepageSignalCount } from "./../lib/homepage-stats";
 import { SubscribeForm } from "./../components/marketing/SubscribeForm";
+import { CookieSettingsButton } from "./../components/ConsentBanner";
 import { getPublishedAssessments, type PublicAssessment } from "./../lib/public-assessments";
 
 export const dynamic = "force-dynamic";
@@ -484,6 +485,9 @@ export function renderHomePage(input: {
                 </Link>
               </li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/privacy">Privacy</Link></li>
+              <li>
+                <CookieSettingsButton className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center bg-transparent border-0 p-0" />
+              </li>
             </ul>
           </div>
           <div className="space-y-4 md:space-y-8">

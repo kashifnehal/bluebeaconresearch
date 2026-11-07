@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { getPublishedAssessments, type PublicAssessment } from "@/lib/public-assessments";
 
 export const revalidate = 300;
@@ -77,9 +78,7 @@ export async function renderAssessmentsList(deps?: Partial<Deps>) {
           </ul>
         )}
       </main>
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
-        Blue Beacon Research — Not investment advice.
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 
 type Status = "idle" | "submitting" | "done" | "error";
 
@@ -59,9 +60,7 @@ export default function UnsubscribePage() {
       <Suspense fallback={null}>
         <UnsubscribeBody />
       </Suspense>
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
-        Blue Beacon Research — Not investment advice.
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { createClient, getRouteSupabaseClients } from "@/lib/supabase-server";
 import {
@@ -219,9 +220,7 @@ export default async function HowItWorksPage() {
         </p>
       </main>
 
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
-        Blue Beacon Research — Not investment advice.
-      </footer>
+      <PublicFooter />
       <LegalDisclaimerFooter />
     </div>
   );

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { PublicHeader } from "@/components/layout/PublicHeader";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FILTER_COMMODITIES } from "@/lib/signal-filters";
 import { LEAD_CONSENT } from "@/lib/consent-copy";
@@ -183,9 +184,7 @@ function WalkthroughForm() {
           </form>
         )}
       </main>
-      <footer className="p-6 border-t border-[#2a2a2a] text-center text-xs text-[var(--text-muted)] font-mono">
-        Blue Beacon Research — Not investment advice.
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

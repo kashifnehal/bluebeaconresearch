@@ -3,6 +3,7 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { FirstTouchCapture } from "@/components/FirstTouchCapture";
+import { ConsentBanner } from "@/components/ConsentBanner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useMe } from "@/hooks/useMe";
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <FirstTouchCapture />
+          <ConsentBanner />
           {children}
           <Toaster richColors theme="dark" />
         </TooltipProvider>
