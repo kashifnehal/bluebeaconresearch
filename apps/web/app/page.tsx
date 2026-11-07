@@ -343,14 +343,14 @@ export function renderHomePage(input: {
           </div>
         </section>
 
-        {/* Published track record — link only, no homepage hit-rate number */}
+        {/* Accuracy record — link only, no homepage hit-rate number */}
         <section className="px-5 py-12 md:px-10 md:py-24 bg-surface-container-lowest border-b border-outline-variant/10" id="track-record">
           <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 items-center">
             <div className="lg:col-span-8">
               <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Source Verification</p>
-              <h2 className="text-2xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-4">We publish the track record</h2>
+              <h2 className="text-2xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-4">See the accuracy record</h2>
               <p className="text-on-surface/60 leading-relaxed font-medium max-w-2xl text-sm md:text-base">
-                Directional outcomes are scored from real price data after a 48-hour checkpoint, with methodology and sample size on a public page. That page is the proof point — not a homepage accuracy percentage.
+                Directional outcomes are scored from recorded price changes at four checkpoints: 1, 4, 24 and 48 hours. The method and sample sizes are on a public page. Past results are a historical statistic, not a forecast.
               </p>
             </div>
             <div className="lg:col-span-4 flex lg:justify-end">

@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "How It Works | Blue Beacon Research",
   description:
-    "What Blue Beacon Research does and how you can check it: source links on every signal, disclosed classification method, and a published track record.",
+    "What Blue Beacon Research does and how you can check it: source links on every signal, disclosed classification method, and a public accuracy page.",
 };
 
 // signals RLS is `signals_select_authenticated` only — the cookie/anon client
