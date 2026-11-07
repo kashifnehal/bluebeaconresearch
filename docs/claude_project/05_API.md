@@ -419,6 +419,7 @@ It never live-recomputes against `commodity_prices`.
   "by_asset": { "USOIL": { "...same shape as overall..." } },
   "min_sample_size": 20,
   "volatility_threshold_pct": 2,
+  "flat_threshold_pct": 0.5,
   "generated_at": "2026-09-11T14:09:08.504Z"
 }
 ```
@@ -435,6 +436,10 @@ direction to score against.
 > (48, the horizon `by_asset` and `overall` still use), and a top-level `date_range`
 > spanning every horizon. The same 20-call floor applies to the horizon rate and to
 > each direction's own rate. No Cache-Control header is set. Backs `/accuracy`.
+>
+> Updated 2026-11-08 (`f12c123`). Top-level `flat_threshold_pct` is 0.5, shared with
+> outcome scoring. A smaller absolute move is flat and is not a correct up or down call.
+> No other response field changed.
 
 ---
 

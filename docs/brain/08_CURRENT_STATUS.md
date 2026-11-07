@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-07 (analytics stays off until the visitor accepts)
+Last updated: 2026-11-08 (accuracy wording matches the flat-move rule)
+
+> ⚠️ NEW 2026-11-08 (accuracy wording, `apps/backend` + `apps/web`, `f12c123`, `7f75e55`, `7c46fb5`, `faeeed5`) — `GET /v1/accuracy` returns `flat_threshold_pct` 0.5. The accuracy caption is built from that field. A missing checkpoint list still shows the 48-hour overall row. Homepage and help text describe all four horizons. After consent, PostHog init disables session recording, autocapture, heatmaps, surveys, and performance capture. Not verified: Railway deploy and the live pages. See `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-07 (analytics consent, `apps/web` only, `33bce9b`, `45deef4`, `f80b8e8`) — a banner stores accept or decline locally. PostHog starts only after accept and only when a key is set. A later decline opts out and resets. Cookie settings in the homepage footer and the public footer reopens the banner. `/privacy` names PostHog, the EU region, page visits and sign-up steps, and the accept gate. No retention period is stated. Not verified: no live analytics event; the key is not set. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

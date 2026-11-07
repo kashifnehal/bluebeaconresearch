@@ -360,7 +360,7 @@ This document details every REST endpoint in `apps/backend/src/routes`, includin
 
 #### `GET /v1/accuracy` (#121, 2026-09-11)
 
-- **Description**: Public, no-auth aggregation of `signal_outcomes`. As of 2026-11-07 (`1010e80`) the response includes `checkpoints` for 1, 4, 24, and 48 hours, each with scored count, a hit rate that is null below 20, and separate `up` and `down` counts and hit rates. `overall` and `by_asset` stay the 48-hour rollup (`by_asset_checkpoint_hours` says so). `volatile_neutral_summary` stays off the hit rate. A top-level `date_range` spans every horizon. No Cache-Control header. Never live-recomputes against `commodity_prices` (90-day retention would erase history). Endpoint contract: `docs/claude_project/05_API.md` §"Accuracy — GET /v1/accuracy".
+- **Description**: Public, no-auth aggregation of `signal_outcomes`. As of 2026-11-07 (`1010e80`) the response includes `checkpoints` for 1, 4, 24, and 48 hours, each with scored count, a hit rate that is null below 20, and separate `up` and `down` counts and hit rates. `overall` and `by_asset` stay the 48-hour rollup (`by_asset_checkpoint_hours` says so). `volatile_neutral_summary` stays off the hit rate. A top-level `date_range` spans every horizon. As of 2026-11-08 (`f12c123`) the response also includes top-level `flat_threshold_pct` (0.5), the same constant `outcome-tracker.ts` uses: an absolute price move under that value is flat and is not a correct up or down call. No other response field changed. No Cache-Control header. Never live-recomputes against `commodity_prices` (90-day retention would erase history). Endpoint contract: `docs/claude_project/05_API.md` §"Accuracy — GET /v1/accuracy".
 - **Auth**: None.
 
 ---

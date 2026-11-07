@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — React & React Native Component Inventory
 
-> **📍 Doc status — current as of 2026-11-07** for the analytics consent banner. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-11-08** for the accuracy caption and PostHog limits. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-08 (`faeeed5`) — after consent, `initAnalytics` still starts PostHog only when the visitor has accepted and a key is set. The init call keeps `person_profiles: "identified_only"` and `capture_pageview: true`, and sets `disable_session_recording: true`, `autocapture: false`, `capture_dead_clicks: false`, `capture_heatmaps: false`, `disable_surveys: true`, `capture_performance: false`. Consent gating is unchanged. Full detail: `LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-07 — `ConsentBanner` asks every visitor to accept or decline before analytics runs. `CookieSettingsButton` in the homepage footer and `PublicFooter` reopens it. `FirstTouchCapture` stores campaign tags only after acceptance. Full detail: `LIVE_TODO.md`.
 
@@ -211,7 +213,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 
 - Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()`. The signal count is `loadHomepageSignalCount` in `apps/web/lib/homepage-stats.ts`: `select("id", { count: "exact", head: true })`. RLS is authenticated-only, so reads go through `getRouteSupabaseClients()`.
 - Copy integrity: fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second lines removed; research-register CTAs.
-- Links to `/accuracy` without displaying a hit-rate percentage.
+- Links to `/accuracy` without displaying a hit-rate percentage. As of 2026-11-08 (`7c46fb5`) the section heading is "See the accuracy record". The paragraph names the 1, 4, 24, and 48 hour checkpoints and says past results are a historical statistic, not a forecast. The link text is still "View the live track record".
 - Hero `<p>` (#174): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.
 
 ### 3.5c Map page Tension Index tooltip (`app/(dashboard)/map/page.tsx`) (#175)
@@ -271,7 +273,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 ### 3.6 `app/accuracy/page.tsx` (2026-11-07, `1010e80`)
 - **Purpose**: public (no auth) page of stored direction checks — reads `GET /v1/accuracy`, never recomputes live.
 - **How**: server component, direct server-side fetch; dark-terminal styling matches `/status`.
-- **Shows**: one table of 1 hour, 4 hours, 24 hours, and 48 hours, with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral calls stay out of every hit rate. A per-asset table remains, labeled as the 48-hour horizon. The caption under the horizon table is fixed text. Full detail: `docs/claude_project/06_COMPONENTS.md` §7a.
+- **Shows**: one table of 1 hour, 4 hours, 24 hours, and 48 hours, with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral calls stay out of every hit rate. A per-asset table remains, labeled as the 48-hour horizon. As of 2026-11-08 (`7f75e55`) the caption is built from `flat_threshold_pct` when that field is a number, and otherwise starts at "This is a historical statistic". The page source does not hard-code a percentage. If `checkpoints` is missing and `overall` is present, the table shows one 48-hour row from `overall` and still applies the sample floor. Full detail: `docs/claude_project/06_COMPONENTS.md` §7a.
 - **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page. No hard-coded percentage.
 
 ### 3.6a `app/how-it-works/page.tsx` (W2-TRUST, 2026-10-01)

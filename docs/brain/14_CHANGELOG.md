@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-11-08 — Accuracy wording matches the flat-move rule (`f12c123`, `7f75e55`, `7c46fb5`, `faeeed5`)
+
+`apps/backend` and `apps/web`. `GET /v1/accuracy` now returns `flat_threshold_pct` (0.5), the same constant the outcome tracker uses for a flat move. The public accuracy caption is built from that field. A missing checkpoint list still shows one 48-hour overall row under the existing sample floor. The homepage accuracy section and the help answers no longer describe the page as a single 48-hour record. After consent, PostHog init disables session recording, autocapture, heatmaps, surveys, and performance capture. Web `tsc --noEmit` exit 0, web test exit 0 (757 ✔, 0 ✖), `next build` exit 0. Backend `tsc --noEmit` exit 0, backend test exit 0 (608 ✔, 0 ✖). Not verified: Railway deploy and the live pages. Full detail: `LIVE_TODO.md`, `05_API.md`, `06_COMPONENTS.md`.
+
 ### 2026-11-07 — Analytics stays off until the visitor accepts (`33bce9b`, `45deef4`, `f80b8e8`)
 
 `apps/web` only. Visitors see a banner until they accept or decline. The choice is stored locally. PostHog does not start until the choice allows it and a key is set; a later decline opts out and resets. Cookie settings in the homepage footer and the shared public footer reopens the banner. Campaign tags are stored only after acceptance. Lead and sign-up forms still read tags on the current page address. `/privacy` names PostHog, the EU region, page visits and sign-up steps, the accept gate, and Cookie settings. No retention period. No live analytics event was seen; the key is not set yet. Full detail: `LIVE_TODO.md`.

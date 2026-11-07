@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-07 (analytics stays off until the visitor accepts — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-08 (accuracy wording matches the flat-move rule — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-08 (accuracy wording, `apps/backend` + `apps/web`, `f12c123`, `7f75e55`, `7c46fb5`, `faeeed5`) — the accuracy response includes the 0.5% flat-move threshold, and the public caption is built from that value. Homepage and help text describe all four horizons. After consent, PostHog does not record sessions or autocapture. Railway deploy and the live pages were not opened. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-07 (analytics consent, `apps/web` only, `33bce9b`, `45deef4`, `f80b8e8`) — analytics does not run until a visitor accepts. The privacy page names PostHog, the EU region, page visits and sign-up steps, and Cookie settings in the footer. No live event was seen; the key is not set. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 

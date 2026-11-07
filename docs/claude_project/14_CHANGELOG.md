@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-08 — Accuracy wording matches the flat-move rule
+
+`apps/backend` and `apps/web`, `f12c123`, `7f75e55`, `7c46fb5`, `faeeed5`. The accuracy response now includes the 0.5% flat-move threshold the scorer already uses. The public page explains that rule from the API value, and a response without checkpoint rows still shows the 48-hour overall figures. Homepage and help text describe all four horizons. PostHog, after a visitor accepts, does not record sessions or autocapture. Railway deploy and the live pages were not opened. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-07 — Analytics stays off until the visitor accepts
 
 `apps/web` only, `33bce9b`, `45deef4`, `f80b8e8`. Analytics does not run until a visitor accepts. The tool is PostHog, described on the privacy page as hosted in the EU region. It counts page visits and sign-up steps, and it is off until that choice. Cookie settings in the footer changes the choice. No live event was seen; the key is not set yet. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
-> **📍 Doc status — current as of 2026-11-07** for the analytics consent banner. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-11-08** for the accuracy caption and PostHog limits. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-08 (`faeeed5`) — accepted analytics still counts page visits. Session recording, autocapture, heatmaps, surveys, and performance capture are off in the init call. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-07 — Visitors choose before analytics runs. Cookie settings in the public footer reopens that choice. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
@@ -442,7 +444,7 @@ No separate `components/landing/*` files exist. The public homepage is this serv
 - `dynamic = "force-dynamic"`. `getLatestSignal()` still reads the newest active `signals` row. Public reads use `getRouteSupabaseClients().supabase` (service role when the key is set). Live RLS is `signals_select_authenticated` only; the cookie/anon client returns 0 rows to a logged-out visitor.
 - `getHomepageStats()` counts signals with `select("id", { count: "exact", head: true })` in `apps/web/lib/homepage-stats.ts` (`loadHomepageSignalCount`) and renders "N signals tracked". Failures log the Postgrest error.
 - CTA overlay: "Sign up to read the full assessment" → `/signup`. Empty state is "Loading the latest signal…" (no Beacon-Alpha / hardcoded example card).
-- New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point).
+- New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point). As of 2026-11-08 (`7c46fb5`) the heading is "See the accuracy record" and the paragraph names four checkpoints. The link text is unchanged.
 - Removed fabricated lines: 42ms, 100% Verified, 40yr Intel Archive, Encrypted Support, sub-second synthesis.
 - Hero `<p>` (#174, 2026-09-20): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.
 
@@ -652,7 +654,7 @@ Each row is a name and a state: Operational, Degraded, or Unknown. The detail st
 
 ### AccuracyPage (apps/web/app/accuracy/page.tsx) (2026-11-07, `1010e80`)
 
-Reads stored outcome rows only. `GET /v1/accuracy` returns 1 hour, 4 hours, 24 hours, and 48 hours separately. The page shows each, with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral calls stay out of every hit rate. The per-asset table is the 48-hour rollup. No hard-coded percentage.
+Reads stored outcome rows only. `GET /v1/accuracy` returns 1 hour, 4 hours, 24 hours, and 48 hours separately. The page shows each, with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral calls stay out of every hit rate. The per-asset table is the 48-hour rollup. No hard-coded percentage. As of 2026-11-08 (`7f75e55`) the caption uses `flat_threshold_pct` from the response when that field is a number. If `checkpoints` is missing and `overall` exists, one 48-hour row is shown from `overall`, and the sample floor still applies.
 
 Homepage (2026-09-20) links here from nav, footer, and a dedicated track-record section and does **not** reprint `hit_rate` on `/`.
 
