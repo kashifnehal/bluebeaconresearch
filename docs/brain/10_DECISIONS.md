@@ -6,6 +6,22 @@ This document records the foundational architectural decisions, framework select
 
 ---
 
+## Public accuracy page shows each stored horizon (2026-11-07)
+
+### Context
+
+The accuracy endpoint previously aggregated only the 48-hour rows. The stored table also has 1-hour, 4-hour, and 24-hour rows. One unnamed hit rate hid that shorter waits score worse.
+
+### Decision
+
+The public accuracy page and `GET /v1/accuracy` show 1 hour, 4 hours, 24 hours, and 48 hours separately. Up and down calls are counted separately. Volatile and neutral calls stay out of the hit rate. Below 20 scored calls, the count is shown and the percentage is not. Horizons are not blended into one rate. A move after an assessment is not described as caused by the assessment.
+
+### Rationale
+
+The founder confirmed this on 2026-11-07. The longer wait has the higher hit rate, and short horizons are weak. Publishing only the 48-hour figure made the record look stronger than the shorter checks.
+
+---
+
 ## Outages reach the founder by email, not readers by banner (2026-10-16)
 
 ### Context
@@ -481,6 +497,8 @@ Write `signal_outcomes` once, 48h after `event_date`, never recompute live. Excl
 Recorded as **D22** in `docs/claude_project/10_DECISIONS.md`. Full methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Related: #53, #115.
 
 > ⚠️ UPDATED 2026-09-13 (#144) — worker also writes 1h / 4h / 24h. Public headline stays 48h. Do not blend horizons.
+>
+> Updated 2026-11-07 (`1010e80`) — the public page and `GET /v1/accuracy` now return 1h, 4h, 24h, and 48h separately. They are not blended. See "Public accuracy page shows each stored horizon" in this file.
 
 ---
 

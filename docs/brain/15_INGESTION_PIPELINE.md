@@ -38,7 +38,7 @@ Railway workers (startup + every 30 min)
 **Schedule:** `node-cron`, interval set by `INGESTION_INTERVAL_CRON` (Railway env, default `*/15 * * * *`; production is currently `*/30 * * * *`) + immediate run on deploy. `buildPipelineStatus()` (`apps/backend/src/lib/pipeline-status.ts`) parses this at write time and stamps the real interval onto `pipeline:last_run.intervalMinutes`, so `/api/ingestion/status` and the banner never hardcode a cadence that can drift out of sync again (fixed 2026-09-26 — see `LIVE_TODO.md`).  
 **Last-fetched banner:** reads `pipeline:last_run` from Upstash Redis (fallback: newest `raw_events.created_at`).
 
-#121/#144's `outcome-tracker.ts` is **not** on this loop. It is a separate daily cron (`0 5 * * *`) that writes `signal_outcomes` at 1h/4h/24h/48h from already-stored signals + `commodity_prices`. `GET /v1/accuracy` still aggregates 48h only. Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Do not fold it into collectors.
+#121/#144's `outcome-tracker.ts` is **not** on this loop. It is a separate daily cron (`0 5 * * *`) that writes `signal_outcomes` at 1h/4h/24h/48h from already-stored signals + `commodity_prices`. As of 2026-11-07 `GET /v1/accuracy` returns 1h, 4h, 24h, and 48h separately. Methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7. Do not fold it into collectors.
 
 ---
 

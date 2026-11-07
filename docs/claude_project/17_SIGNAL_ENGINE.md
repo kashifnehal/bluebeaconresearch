@@ -275,11 +275,11 @@ The block that used to live here (`alerts_sent.outcome_direction`, "NOT YET BUIL
 
 ### Why a permanent table, not a live recompute
 
-`commodity_prices` is retained 90 days (`retention.ts`). Recomputing hit-rate on demand from that table would silently lose every outcome older than 90 days and the public track record would shrink. `signal_outcomes` is written once per `(signal_id, asset, checkpoint_hours)` and never rewritten. Horizons stored: 1h / 4h / 24h / 48h (2026-09-13 follow-up). `GET /v1/accuracy` still reads only the 48h rows.
+`commodity_prices` is retained 90 days (`retention.ts`). Recomputing hit-rate on demand from that table would silently lose every outcome older than 90 days and the public track record would shrink. `signal_outcomes` is written once per `(signal_id, asset, checkpoint_hours)` and never rewritten. Horizons stored: 1h / 4h / 24h / 48h (2026-09-13 follow-up). `GET /v1/accuracy` returns those four horizons separately (2026-11-07, `1010e80`).
 
 ### 48-hour fixed checkpoint, anchored on `event_date`
 
-Not "price now" and not `created_at`. #144 also stores 1h / 4h / 24h rows once a signal is that old; the public headline remains 48h. For every signal old enough for a given horizon, with a non-empty `commodity_impacts` array, for each `(signal, asset, checkpoint_hours)` not already stored:
+Not "price now" and not `created_at`. #144 also stores 1h / 4h / 24h rows once a signal is that old. As of 2026-11-07 the public page shows each horizon on its own. For every signal old enough for a given horizon, with a non-empty `commodity_impacts` array, for each `(signal, asset, checkpoint_hours)` not already stored:
 
 1. Price at `event_date` (article/event time).
 2. Price at `event_date + 48h` (fixed horizon).

@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-07 — Accuracy page shows every stored horizon
+
+`apps/web` + `apps/backend`, `1010e80`. The public accuracy page listed one unnamed 48-hour hit rate. It now shows 1 hour, 4 hours, 24 hours, and 48 hours, with the number scored and separate up and down rates. Below 20 scored calls the percentage is withheld. Volatile and neutral calls stay out of the rate. No live page was opened. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-04 — Webcal subscribe feed for the Week Ahead calendar (TASK WEB-FEED1)
 
 `apps/web` only. The Week Ahead calendar's "Export to Calendar" button only ever produced a one-time, point-in-time `.ics` download. It now also offers a live subscribe link (`webcal://`) next to that button, so a reader's own Google/Apple/Outlook calendar keeps pulling the same 39 events on its own refresh schedule instead of going stale the moment new events are added. Served from a new public, no-auth, no-database route; never includes forecast/previous/actual values, since none exist yet. The existing one-time download is unchanged. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

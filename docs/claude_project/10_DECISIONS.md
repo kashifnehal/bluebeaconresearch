@@ -7,6 +7,22 @@
 
 ---
 
+## Public accuracy page shows each stored horizon (2026-11-07)
+
+### Context
+
+The accuracy endpoint previously aggregated only the 48-hour rows. The stored table also has 1-hour, 4-hour, and 24-hour rows. One unnamed hit rate hid that shorter waits score worse.
+
+### Decision
+
+The public accuracy page and `GET /v1/accuracy` show 1 hour, 4 hours, 24 hours, and 48 hours separately. Up and down calls are counted separately. Volatile and neutral calls stay out of the hit rate. Below 20 scored calls, the count is shown and the percentage is not. Horizons are not blended into one rate. A move after an assessment is not described as caused by the assessment.
+
+### Rationale
+
+The founder confirmed this on 2026-11-07. The longer wait has the higher hit rate, and short horizons are weak. Publishing only the 48-hour figure made the record look stronger than the shorter checks.
+
+---
+
 ## Outages reach the founder by email, not readers by banner (2026-10-16)
 
 ### Context
@@ -630,6 +646,8 @@ credit (already an open item) means this path currently covers meaningful live t
 **Cross-tree mapping:** Recorded as **ADR 018** in `docs/brain/10_DECISIONS.md`. Full methodology: `17_SIGNAL_ENGINE.md` §7. Related: #53 (prerequisite), #115 (severity-bunching audit this work confirmed and extended).
 
 > ⚠️ UPDATED 2026-09-13 (#144) — the worker also writes 1h / 4h / 24h rows. The public headline and `GET /v1/accuracy` stay on 48h. Do not blend horizons. No `/accuracy` time-horizon selector unless a future prompt adds one.
+>
+> Updated 2026-11-07 (`1010e80`) — that prompt arrived. The public page and `GET /v1/accuracy` return 1h, 4h, 24h, and 48h separately. They are not blended. See "Public accuracy page shows each stored horizon" in this file.
 
 ---
 

@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-04 (webcal subscribe feed for the Week Ahead calendar)
+Last updated: 2026-11-07 (accuracy page shows 1h, 4h, 24h, and 48h separately)
+
+> ⚠️ NEW 2026-11-07 (accuracy page shows every stored horizon, `apps/web` + `apps/backend`, `1010e80`) — `/accuracy` lists 1 hour, 4 hours, 24 hours, and 48 hours with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral stay out of the hit rate. `GET /v1/accuracy` reads those four checkpoints from `signal_outcomes` (no migration, no new cache header). `overall` and `by_asset` remain the 48-hour rollup. Not verified in a browser. See `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-04 (webcal subscribe feed for the Week Ahead calendar, `apps/web` only, TASK WEB-FEED1, `13bc648`) — new public, no-auth, static `GET /api/calendar/feed` serves a deterministic RFC 5545 `.ics` of the same 39 events the Week Ahead page shows (built by new `lib/calendar-feed.ts`); a `data-testid="calendar-subscribe-feed"` webcal link sits next to the existing one-time `.ics` export button, which is unchanged. `proxy.ts` checked, not modified — `/api/calendar/feed` was already outside `PROTECTED`. Feed is only as current as `economic-calendar.json`: nothing past 2026-12-16 (EIA/USDA) or 2027-01-13 (FOMC/ECB/BOJ/BLS) until that file is refreshed. See `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

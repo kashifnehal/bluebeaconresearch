@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-04 (webcal subscribe feed for the Week Ahead calendar — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-07 (accuracy page shows 1h, 4h, 24h, and 48h separately — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-07 (accuracy page shows every stored horizon, `apps/web` + `apps/backend`, `1010e80`) — `/accuracy` lists 1 hour, 4 hours, 24 hours, and 48 hours with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral stay out of the hit rate. `GET /v1/accuracy` reads those four checkpoints. Not verified in a browser. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-04 (webcal subscribe feed for the Week Ahead calendar, `apps/web` only, TASK WEB-FEED1, `13bc648`) — new public, no-auth, static `GET /api/calendar/feed` (deterministic RFC 5545 `.ics`, new `lib/calendar-feed.ts`) covering the same 39 Week Ahead events; a webcal link sits next to the existing one-time `.ics` export button, unchanged. `proxy.ts` confirmed, not modified. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 

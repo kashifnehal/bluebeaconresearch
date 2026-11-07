@@ -398,11 +398,10 @@ Single commodity price. Useful for signal card price display.
 
 ### Accuracy — GET /v1/accuracy (#121, 2026-09-11)
 
-Public track-record aggregation. No auth (same posture as the two Prices endpoints
-above — public/informational, not personal). Reads only `signal_outcomes` rows
-with `checkpoint_hours = 48` (written daily by `outcome-tracker.ts`, which also
-stores 1h/4h/24h rows that this endpoint ignores), never live-recomputes against
-`commodity_prices`.
+Public aggregation of stored outcomes. No auth (same posture as the two Prices endpoints
+above — public/informational, not personal). As of 2026-11-07 (`1010e80`) it reads
+`signal_outcomes` rows at 1, 4, 24, and 48 hours and returns each horizon on its own.
+It never live-recomputes against `commodity_prices`.
 
 **Response 200:**
 ```json
@@ -428,11 +427,14 @@ Per-asset (or overall) `hit_rate` is `null` and `not_enough_history: true` below
 a tiny sample is more misleading than useful. `sample_size_note` is always returned
 alongside `hit_rate`, never one without the other. `volatile_neutral_summary` (moves
 ≥2% counted as "the volatility call played out") is reported separately and never
-blended into `hit_rate`, since a volatile/neutral prediction has no single correct
-direction to score against. Backs the public `/accuracy` page (`06_COMPONENTS.md`).
-Methodology (48h/`event_date`, 24h price-distance guard, why the table is
-permanent): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite **#53**;
-quality context **#115**.
+blended into `hit_rate`, since a volatile/neutral call has no single correct
+direction to score against.
+
+> Updated 2026-11-07 (`1010e80`). The response also includes `checkpoints` (one object
+> per 1, 4, 24, and 48 hour horizon, each with `up` and `down`), `by_asset_checkpoint_hours`
+> (48, the horizon `by_asset` and `overall` still use), and a top-level `date_range`
+> spanning every horizon. The same 20-call floor applies to the horizon rate and to
+> each direction's own rate. No Cache-Control header is set. Backs `/accuracy`.
 
 ---
 

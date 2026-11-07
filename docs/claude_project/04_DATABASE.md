@@ -148,7 +148,7 @@ Per-user feed/notification settings (`unique(user_id)`). `regions` / `commoditie
 
 > ⚠️ UPDATED 2026-09-28 (#216) — `signals.invalidation_condition` (`text`, nullable): one-sentence "what would prove this signal wrong" statement from `classifyEvent()`, grounded in the article's own claim. Applied live via `20260928140000_signals_invalidation_condition.sql`. UI: event detail Analysis tab only (ADR 032). Full detail: `docs/brain/04_DATABASE.md` Table 2.
 >
-> ⚠️ UPDATED 2026-09-13 (#144) — unique key widened to `(signal_id, asset, checkpoint_hours)` so 1h/4h/24h/48h rows can coexist. Applied live via `20260913190000_signal_outcomes_checkpoint_unique.sql`. No new column. `GET /v1/accuracy` still reads only `checkpoint_hours = 48`.
+> ⚠️ UPDATED 2026-09-13 (#144) — unique key widened to `(signal_id, asset, checkpoint_hours)` so 1h/4h/24h/48h rows can coexist. Applied live via `20260913190000_signal_outcomes_checkpoint_unique.sql`. No new column. As of 2026-11-07 `GET /v1/accuracy` returns all four checkpoints (`1010e80`).
 >
 > ⚠️ UPDATED 2026-09-12 (reliability/trust fix) — two new `signals` columns: `classification_method` (`claude`|`heuristic`|NULL) and `classification_method_inferred` (boolean). Set going forward by `classifyEvent()`; historical rows best-effort backfilled by confidence-pattern match (1,722 marked `heuristic`, 1,124 left NULL). Paired with this: heuristic-path severity is now hard-capped at 6 — two confirmed real false positives ("military" scoring 8, "war" scoring 9 on unrelated stories) drove the cap; see `docs/brain/10_DECISIONS.md` ADR 016. Applied live via `20260912000000_signals_classification_method.sql`. Full detail: `docs/brain/04_DATABASE.md` Table 2.
 >

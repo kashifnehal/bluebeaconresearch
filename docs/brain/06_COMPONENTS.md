@@ -266,12 +266,11 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 - Desktop: a Locations panel on the map, between the filters panel and the intelligence stream. Mobile: a bottom sheet opened like the tension sheet (peek, tap to expand).
 - A country row limits the markers already drawn to that country and opens the same signal popup the feed uses, on the newest signal in the group (`updatedAt`, else `createdAt`). Show all restores the full filtered set. The Chokepoints section lists every chokepoint with `signalsNearChokepoint` at 500 km and `chokepointDirectionTally`. A chokepoint row flies the map there. `data-testid="chokepoint-row"`. Marker drawing is unchanged.
 
-### 3.6 `app/accuracy/page.tsx` (#121, 2026-09-11)
-- **Purpose**: public (no auth) track-record page — reads `GET /v1/accuracy`, never recomputes live.
-- **How**: server component, direct server-side fetch (same pattern as `admin/metrics/page.tsx`, no client proxy route needed); dark-terminal styling matches `/status`.
-- **Shows**: overall hit rate + avg move + sample size always together; a separate volatile/neutral summary; a per-asset table with a "not enough history yet" state below `min_sample_size`; a permanent non-dismissible disclaimer; the plain-language date range. Full detail: `docs/claude_project/06_COMPONENTS.md` §7a.
-- **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page.
-- **Methodology**: `docs/claude_project/17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115. #144: worker stores 1h/4h/24h/48h; this page still reads 48h only (no horizon selector).
+### 3.6 `app/accuracy/page.tsx` (2026-11-07, `1010e80`)
+- **Purpose**: public (no auth) page of stored direction checks — reads `GET /v1/accuracy`, never recomputes live.
+- **How**: server component, direct server-side fetch; dark-terminal styling matches `/status`.
+- **Shows**: one table of 1 hour, 4 hours, 24 hours, and 48 hours, with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral calls stay out of every hit rate. A per-asset table remains, labeled as the 48-hour horizon. The caption under the horizon table is fixed text. Full detail: `docs/claude_project/06_COMPONENTS.md` §7a.
+- **Hard rule**: no "top signals"/"best calls" highlight list anywhere on this page. No hard-coded percentage.
 
 ### 3.6a `app/how-it-works/page.tsx` (W2-TRUST, 2026-10-01)
 - **Purpose**: public (no auth) research-integrity page — "what we claim, and how you can check it."

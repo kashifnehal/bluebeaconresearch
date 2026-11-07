@@ -648,31 +648,20 @@ Lookup tool, not a priority feed. Filters: date range, `#125` Oil/Grain/Metals d
 
 Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices. Classifier is labeled Analysis. Data Pipeline is labeled Data Sources. A closed daily budget does not by itself mark Classifier, Data Pipeline, or Intelligence Feed Degraded.
 
-### AccuracyPage (apps/web/app/accuracy/page.tsx) (#121, 2026-09-11)
+### AccuracyPage (apps/web/app/accuracy/page.tsx) (2026-11-07, `1010e80`)
 
-Reads stored `signal_outcomes` only — `GET /v1/accuracy` filters `checkpoint_hours = 48`. The worker also writes 1h/4h/24h rows (#144); this page does not select a horizon. Methodology (48h/`event_date`, volatile/neutral excluded from headline, 20-sample floor, 24h price-distance guard, why not live-recomputed): `17_SIGNAL_ENGINE.md` §7, D22 / ADR 018. Prerequisite #53; quality context #115.
+Reads stored outcome rows only. `GET /v1/accuracy` returns 1 hour, 4 hours, 24 hours, and 48 hours separately. The page shows each, with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral calls stay out of every hit rate. The per-asset table is the 48-hour rollup. No hard-coded percentage.
 
 Homepage (2026-09-20) links here from nav, footer, and a dedicated track-record section and does **not** reprint `hit_rate` on `/`.
 
-Public track-record page, server component, `dynamic = "force-dynamic"`. Fetches
-`GET /v1/accuracy` directly server-side (`process.env.API_URL`, `cache: "no-store"`)
-— same direct-fetch pattern as `app/admin/metrics/page.tsx`, no client-side proxy
-route needed since there's no interactivity. Dark-terminal styling matches
-`/status` (same header/Logo/footer chrome, `#0e0e0e`/`#131313`/`#3c4a42` tokens).
+Server component, `dynamic = "force-dynamic"`. Fetches `GET /v1/accuracy` directly
+server-side (`process.env.API_URL`, `cache: "no-store"`). Dark-terminal styling matches
+`/status`.
 
-Renders, always together (never a bare percentage): overall hit rate, avg move
-when correct, and sample size (3 `HeadlineStat` cards); a `volatile_neutral_summary`
-box kept visually and semantically separate from the hit-rate cards; a permanent,
-non-dismissible past-performance disclaimer near the top (no dismiss button, no
-localStorage state); a per-asset table (`AssetRow`, `hidden md:block`) with a "not
-enough history yet" cell in place of hit rate/avg-move for any asset below
-`min_sample_size` — desktop only, 2026-09-24 (`5644617`), since a 520px-wide table
-was pushing that message and the avg-move column off-screen on a 311px viewport;
-mobile gets a stacked-card equivalent (`AssetCard`, `md:hidden`, same data, no table);
-and the
-plain-language date range ("Based on N signals scored between … and …"). Contains
-**no** "top signals"/"best calls" highlight list anywhere — a hard product rule, not
-a style choice, per the #121 spec.
+As of 2026-11-07 the horizon table replaces the old three headline cards. Desktop is a
+table; mobile is stacked cards of the same rows. The per-asset table is still desktop-only
+with stacked cards on small screens, and a row below 20 scored calls says "not enough
+history yet" instead of a percentage. Contains **no** "top signals"/"best calls" list.
 
 ### HowItWorksPage (apps/web/app/how-it-works/page.tsx) (W2-TRUST, 2026-10-01)
 

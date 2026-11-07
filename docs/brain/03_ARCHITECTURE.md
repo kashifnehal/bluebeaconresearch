@@ -151,7 +151,7 @@ Two prompt rules: (1) no buy/sell — same as `generateAnalysis()` / **#103**; (
 
 Canonical methodology: `docs/claude_project/17_SIGNAL_ENGINE.md` §7 and D22 / ADR 018.
 
-`outcome-tracker.ts` (`0 5 * * *`) writes `signal_outcomes` once per `(signal, asset, checkpoint_hours)` for 1h/4h/24h/48h. `GET /v1/accuracy` reads only the 48h rows. 48h checkpoint on `event_date` remains the public headline; `volatile`/`neutral` out of headline hit-rate; 20-sample floor per asset; 24h price-point guard (Prompt M / `1cdc95d`: legacy EURUSD/USDRUB clamped to a distant print and fabricated false flats). Permanent storage because `commodity_prices` drops rows after 90 days.
+`outcome-tracker.ts` (`0 5 * * *`) writes `signal_outcomes` once per `(signal, asset, checkpoint_hours)` for 1h/4h/24h/48h. As of 2026-11-07 `GET /v1/accuracy` returns each of those horizons separately. `volatile`/`neutral` stay out of the hit rate; 20-sample floor; 24h price-point guard (a distant print was fabricating false flats). Permanent storage because `commodity_prices` drops rows after 90 days.
 
 Prerequisite **#53**. Quality context **#115**.
 
