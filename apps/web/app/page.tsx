@@ -358,7 +358,7 @@ export function renderHomePage(input: {
                 href="/accuracy"
                 className="px-8 py-4 bg-primary text-black font-label font-extrabold uppercase tracking-widest rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all"
               >
-                View the live track record
+                View the accuracy page
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </Link>
             </div>
