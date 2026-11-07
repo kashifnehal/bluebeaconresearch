@@ -1,21 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CONSENT_OPEN_EVENT, openConsentSettings, readConsent, writeConsent } from "@/lib/consent";
+import { initAnalytics } from "@/lib/analytics";
+import { CONSENT_OPEN_EVENT, readConsent, writeConsent } from "@/lib/consent";
+import { captureFirstTouch } from "@/lib/first-touch";
 
 const BANNER_TEXT =
   "We use a privacy-focused analytics tool to count visits and see which pages help. It is off until you accept.";
 
 const buttonClass =
   "min-h-[44px] w-full text-xs font-bold uppercase tracking-wider px-4 py-2 rounded";
-
-export function CookieSettingsButton({ className }: { className?: string }) {
-  return (
-    <button type="button" className={className} data-testid="cookie-settings" onClick={openConsentSettings}>
-      Cookie settings
-    </button>
-  );
-}
 
 export function ConsentBanner() {
   const [open, setOpen] = useState(true);
@@ -42,6 +36,12 @@ export function ConsentBanner() {
   function choose(analytics: boolean) {
     writeConsent(analytics);
     setOpen(false);
+    try {
+      initAnalytics();
+      if (analytics) captureFirstTouch();
+    } catch {
+      // Analytics must not break the page.
+    }
   }
 
   if (!open) return null;

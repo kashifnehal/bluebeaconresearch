@@ -7,7 +7,7 @@ import { PublicFooter } from "@/components/layout/PublicFooter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FILTER_COMMODITIES } from "@/lib/signal-filters";
 import { LEAD_CONSENT } from "@/lib/consent-copy";
-import { readFirstTouch } from "@/lib/first-touch";
+import { readSubmitAttribution } from "@/lib/first-touch";
 import { trackFunnelEvent } from "@/lib/funnel-events";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -61,7 +61,7 @@ function WalkthroughForm() {
     setErrorText(null);
     trackFunnelEvent("lead_form_submitted", { kind });
     try {
-      const firstTouch = readFirstTouch();
+      const firstTouch = readSubmitAttribution();
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -51,9 +51,23 @@ runTest("upper case is lowered", () => {
 });
 
 function installBrowser(search: string, referrer: string, storage: Storage) {
+  const local = new Map<string, string>([
+    ["bbr.consent", JSON.stringify({ v: 1, analytics: true, at: "2026-11-07T00:00:00.000Z" })],
+  ]);
   Object.defineProperty(globalThis, "window", {
     configurable: true,
-    value: { location: { search, hostname: OWN } },
+    value: {
+      location: { search, hostname: OWN },
+      localStorage: {
+        getItem: (key: string) => (local.has(key) ? local.get(key)! : null),
+        setItem: (key: string, value: string) => {
+          local.set(key, value);
+        },
+        removeItem: (key: string) => {
+          local.delete(key);
+        },
+      },
+    },
   });
   Object.defineProperty(globalThis, "document", {
     configurable: true,

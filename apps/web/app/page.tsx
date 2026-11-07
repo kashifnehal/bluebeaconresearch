@@ -11,7 +11,7 @@ import {
 } from "./../lib/ingestion-interval";
 import { cachedHomepageSignalCount, loadHomepageSignalCount } from "./../lib/homepage-stats";
 import { SubscribeForm } from "./../components/marketing/SubscribeForm";
-import { CookieSettingsButton } from "./../components/ConsentBanner";
+import { CookieSettingsButton } from "./../components/CookieSettingsButton";
 import { getPublishedAssessments, type PublicAssessment } from "./../lib/public-assessments";
 
 export const dynamic = "force-dynamic";

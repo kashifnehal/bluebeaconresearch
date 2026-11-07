@@ -1,3 +1,5 @@
+import { hasAnalyticsConsent } from "@/lib/consent";
+
 export const FIRST_TOUCH_STORAGE_KEY = "bbr.firstTouch";
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
@@ -73,8 +75,26 @@ function parseStored(value: object): FirstTouch | null {
   return Object.keys(out).length > 0 ? out : null;
 }
 
+/** UTM tags on this page's address. Does not read or write storage. */
+export function readUrlUtm(): FirstTouch | null {
+  try {
+    if (typeof window === "undefined") return null;
+    return parseFirstTouch(window.location.search ?? "", "", window.location.hostname ?? "");
+  } catch {
+    return null;
+  }
+}
+
+/** Stored first touch while analytics is accepted, otherwise UTM tags on the current address. */
+export function readSubmitAttribution(): FirstTouch | null {
+  const stored = hasAnalyticsConsent() ? readFirstTouch() : null;
+  return stored ?? readUrlUtm();
+}
+
 /** Writes the first touch for this tab. Never overwrites. Never throws. */
 export function captureFirstTouch(): void {
+  // Design choice, not researched: counsel to confirm whether first-party attribution needs consent.
+  if (!hasAnalyticsConsent()) return;
   try {
     if (typeof window === "undefined") return;
     let existing: string | null;

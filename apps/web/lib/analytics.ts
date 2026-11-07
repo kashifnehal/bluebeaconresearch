@@ -1,17 +1,35 @@
 import posthog from "posthog-js";
+import { readConsent } from "@/lib/consent";
 
 let initialized = false;
 
 export function initAnalytics() {
-  if (initialized || typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
+  const analytics = readConsent()?.analytics === true;
+  if (!analytics) {
+    if (!initialized) return;
+    try {
+      posthog.opt_out_capturing();
+      posthog.reset();
+    } catch {
+      // Analytics must not break the page.
+    }
+    initialized = false;
+    return;
+  }
+  if (initialized) return;
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   if (!key) return; // no-op until a real key is configured, same pattern as Sentry
-  posthog.init(key, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
-    person_profiles: "identified_only",
-    capture_pageview: true,
-  });
-  initialized = true;
+  try {
+    posthog.init(key, {
+      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
+      person_profiles: "identified_only",
+      capture_pageview: true,
+    });
+    initialized = true;
+  } catch {
+    // A missing or rejected analytics setup must not break the page.
+  }
 }
 
 // Minimum funnel this wires: signup_started -> signup_completed -> signal_viewed ->

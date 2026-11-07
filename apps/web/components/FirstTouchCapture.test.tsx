@@ -85,6 +85,10 @@ async function main() {
   }
 
   await runTest("FirstTouchCapture stores the landing utm values", async () => {
+    g.window.localStorage.setItem(
+      "bbr.consent",
+      JSON.stringify({ v: 1, analytics: true, at: "2026-11-07T00:00:00.000Z" }),
+    );
     const { FirstTouchCapture } = await import("./FirstTouchCapture");
     const { root } = await renderElement(document, createElement(FirstTouchCapture));
     try {

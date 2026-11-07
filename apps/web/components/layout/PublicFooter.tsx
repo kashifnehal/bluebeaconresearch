@@ -1,6 +1,6 @@
 "use client";
 
-import { CookieSettingsButton } from "@/components/ConsentBanner";
+import { CookieSettingsButton } from "@/components/CookieSettingsButton";
 
 export function PublicFooter() {
   return (

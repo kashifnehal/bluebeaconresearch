@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NEWSLETTER_CONSENT } from "@/lib/consent-copy";
-import { readFirstTouch } from "@/lib/first-touch";
+import { readSubmitAttribution } from "@/lib/first-touch";
 import { trackFunnelEvent } from "@/lib/funnel-events";
 
 type Status = "idle" | "submitting" | "success" | "error";
@@ -26,7 +26,7 @@ export function SubscribeForm() {
     setErrorText(null);
     trackFunnelEvent("subscribe_submitted");
     try {
-      const firstTouch = readFirstTouch();
+      const firstTouch = readSubmitAttribution();
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
