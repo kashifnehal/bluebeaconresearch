@@ -47,7 +47,7 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
     id: "accuracy-method",
     question: "How is the Accuracy page calculated?",
     answer:
-      "A daily worker records, for each signal and named asset, the closest market price at the event and at later checkpoints (1 hour, 4 hours, 24 hours, and 48 hours). The Accuracy page shows all four horizons. An up/down call is scored correct if that 48-hour direction matches; moves under 0.5% are treated as flat. Those outcome rows are stored permanently because live price history is only kept for about 90 days. Past performance is not a promise of future results — the Accuracy page’s own disclaimer says so.",
+      "A daily worker records, for each signal and named asset, the closest market price at the event and at later checkpoints (1 hour, 4 hours, 24 hours, and 48 hours). The Accuracy page shows all four horizons. An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss. Those outcome rows are stored permanently because live price history is only kept for about 90 days. Past performance is not a promise of future results — the Accuracy page’s own disclaimer says so.",
   },
   {
     id: "research-chat",
