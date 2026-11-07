@@ -10,8 +10,13 @@ import {
   HOMEPAGE_LATEST_SIGNAL_SCHEDULE,
 } from "./../lib/ingestion-interval";
 import { cachedHomepageSignalCount, loadHomepageSignalCount } from "./../lib/homepage-stats";
+import { SubscribeForm } from "./../components/marketing/SubscribeForm";
+import { getPublishedAssessments, type PublicAssessment } from "./../lib/public-assessments";
 
 export const dynamic = "force-dynamic";
+
+// Prices have no recorded source and the founder has not set them.
+export const SHOW_PLAN_PRICES = false;
 
 export const metadata: Metadata = {
   title: "Blue Beacon Research | Geopolitical Market Intelligence",
@@ -90,20 +95,14 @@ function utcStamp(value: string | null | undefined): string | null {
   return parsed.toUTCString();
 }
 
-export default async function Home(props: {
-  searchParams?: Promise<{ error?: string; error_description?: string }>;
+export function renderHomePage(input: {
+  signedIn: boolean;
+  latestSignal: LandingSignalPreview | null;
+  totalSignals: number | null;
+  assessments: PublicAssessment[];
 }) {
-  const searchParams = await props.searchParams;
-  if (searchParams?.error || searchParams?.error_description) {
-    const msg = encodeURIComponent(searchParams.error_description ?? searchParams.error ?? "Authentication failed");
-    redirect(`/login?error=${msg}`);
-  }
-
-  const supabase = await createClient();
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-  const signedIn = !claimsError && Boolean(claimsData?.claims?.sub);
-
-  const [latestSignal, homepageStats] = await Promise.all([getLatestSignal(), getHomepageStats()]);
+  const { signedIn, latestSignal, totalSignals, assessments } = input;
+  const hasPublishedAssessment = assessments.length > 0;
 
   return (
     <div className="bg-background text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen">
@@ -161,17 +160,24 @@ export default async function Home(props: {
             </p>
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
               <Link 
-                href="/signup"
+                href="/walkthrough"
                 className="w-full md:w-auto px-10 py-5 bg-primary text-black font-label font-extrabold uppercase tracking-widest rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20"
               >
-                Sign up
+                Request a walkthrough
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </Link>
-              <a className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 hover:text-on-surface flex items-center gap-2 transition-colors group" href="#live">
-                View recent signals
-                <span className="material-symbols-outlined text-sm group-hover:translate-y-1 transition-transform">south</span>
-              </a>
+              <Link className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 hover:text-on-surface flex items-center gap-2 transition-colors group" href="/signup">
+                Create a free account
+              </Link>
             </div>
+            {hasPublishedAssessment ? (
+              <Link
+                href="/assessments"
+                className="mt-6 inline-flex font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/40 hover:text-primary transition-colors"
+              >
+                Read a sample assessment
+              </Link>
+            ) : null}
           </div>
         </section>
 
@@ -185,9 +191,9 @@ export default async function Home(props: {
                 <p className="text-on-surface-variant max-w-lg font-medium text-sm md:text-base">{HOMEPAGE_LATEST_SIGNAL_SCHEDULE}</p>
                 <p className="text-on-surface-variant/70 max-w-lg font-medium text-sm md:text-base mt-2">Unlike a headline-only feed, each signal here comes with a written summary and lists the named sources it came from.</p>
               </div>
-              {homepageStats.totalSignals != null ? (
+              {totalSignals != null ? (
                 <div className="text-right hidden md:block">
-                  <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/40 font-bold uppercase tracking-widest">{formatSignalsTracked(homepageStats.totalSignals)}</span>
+                  <span className="font-mono text-[12px] md:text-[9px] text-on-surface-variant/40 font-bold uppercase tracking-widest">{formatSignalsTracked(totalSignals)}</span>
                 </div>
               ) : null}
             </div>
@@ -352,37 +358,83 @@ export default async function Home(props: {
           <div className="max-w-[1440px] mx-auto">
             <div className="text-center mb-10 md:mb-20">
               <h2 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tight text-white mb-6">Pricing</h2>
-              <p className="text-on-surface-variant font-medium max-w-xl mx-auto text-sm">Three plans. Same research feed; more access as you go up.</p>
+              <p className="text-on-surface-variant font-medium max-w-xl mx-auto text-sm">A free account, or professional access arranged with you.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {[
-                { title: "Monitor", price: "$0", features: ["Research feed with sources and timestamps", "Limited Map Access", "Base Analytics"] },
-                { title: "Analyst", price: "$49", features: ["Signals with checkable sources", "Full Map Layers", "Alerts", "Market Impact Assessment"], featured: true },
-                { title: "Pro", price: "$199", features: ["Full REST/WS API", "5-year price history", "Backtesting Lab", "Multi-user access"] }
-              ].map((tier, i) => (
+                {
+                  title: "Monitor",
+                  price: "$0",
+                  freeLabel: "Free",
+                  features: [
+                    "Research feed with sources and timestamps",
+                    "Signals with checkable sources",
+                    "Full Map Layers",
+                    "Alerts",
+                    "Market Impact Assessment",
+                  ],
+                  href: "/signup",
+                  cta: "Create a free account",
+                  featured: false,
+                  note: null as string | null,
+                },
+                {
+                  title: "Professional access",
+                  price: null as string | null,
+                  freeLabel: null as string | null,
+                  features: [] as string[],
+                  href: "/walkthrough?type=professional",
+                  cta: "Request professional access",
+                  featured: true,
+                  note: "A fixed-scope paid pilot. Scope, term and price are agreed with you before anything starts.",
+                },
+              ].map((tier, i) => {
+                const priceLabel = SHOW_PLAN_PRICES ? tier.price : tier.freeLabel;
+                return (
                 <div key={i} className={`p-6 md:p-10 rounded-3xl border ${tier.featured ? 'bg-surface-container border-primary/40 shadow-2xl shadow-primary/10' : 'bg-surface-container-high border-outline-variant/10'}`}>
                   <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-on-surface/40 mb-4">{tier.title}</p>
-                  <div className="text-3xl mb-4 md:text-4xl font-mono text-white md:mb-8 font-extrabold">{tier.price}<span className="text-sm font-label text-on-surface/40 lowercase">/mo</span></div>
-                  <ul className="space-y-3 mb-6 md:space-y-4 md:mb-10">
-                    {tier.features.map((f, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-[12px] md:text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
-                        <span className="material-symbols-outlined text-primary text-xs">check</span> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/signup" className={`w-full block py-4 text-center rounded-xl font-label text-[12px] md:text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
-                    {tier.title === "Monitor" ? "Get started" : "Paid plans opening soon"}
+                  {priceLabel ? (
+                    <div className="text-3xl mb-4 md:text-4xl font-mono text-white md:mb-8 font-extrabold">
+                      {priceLabel}
+                      {SHOW_PLAN_PRICES && tier.price ? <span className="text-sm font-label text-on-surface/40 lowercase">/mo</span> : null}
+                    </div>
+                  ) : null}
+                  {tier.note ? (
+                    <p className="text-on-surface/60 text-sm font-medium mb-6 md:mb-8">{tier.note}</p>
+                  ) : null}
+                  {tier.features.length > 0 ? (
+                    <ul className="space-y-3 mb-6 md:space-y-4 md:mb-10">
+                      {tier.features.map((f, idx) => (
+                        <li key={idx} className="flex items-center gap-3 text-[12px] md:text-[10px] font-bold text-on-surface/60 uppercase tracking-widest">
+                          <span className="material-symbols-outlined text-primary text-xs">check</span> {f}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <Link href={tier.href} className={`w-full block py-4 text-center rounded-xl font-label text-[12px] md:text-[10px] font-black uppercase tracking-widest transition-all ${tier.featured ? 'bg-primary text-black' : 'border border-outline-variant/30 text-white'}`}>
+                    {tier.cta}
                   </Link>
                 </div>
-              ))}
+                );
+              })}
             </div>
             <p className="text-on-surface-variant font-medium max-w-xl mx-auto text-sm text-center mt-10">
-              Paid plans are not open for purchase yet. Create a free Monitor account today; we will update this page when Analyst and Pro open.
+              Self-serve paid plans are not open yet. Professional access is arranged by conversation.
             </p>
           </div>
         </section>
       </main>
+
+      <section className="px-5 py-16 md:px-10 md:py-24 bg-surface-container-lowest border-t border-outline-variant/10">
+        <div className="max-w-[1440px] mx-auto">
+          <h2 className="text-2xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-4">The Beacon Weekly</h2>
+          <p className="text-on-surface/60 leading-relaxed font-medium max-w-2xl text-sm md:text-base mb-8">
+            A short weekly research email: one assessment, the markets it touches, and what to watch.
+          </p>
+          <SubscribeForm />
+        </div>
+      </section>
 
       <footer className="bg-surface-container-lowest border-t border-outline-variant/10 px-5 py-12 md:px-10 md:py-24">
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-20">
@@ -391,6 +443,9 @@ export default async function Home(props: {
               <Logo variant="icon" className="h-6" />
               <span className="text-lg font-extrabold tracking-tighter uppercase font-headline text-white">Blue Beacon</span>
             </div>
+            <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/40 leading-relaxed font-bold tracking-[0.2em] mb-4">
+              Informational research, not investment advice. Sources and dates are shown on each item.
+            </p>
             <p className="text-[12px] md:text-[9px] font-mono text-on-surface-variant/40 leading-relaxed uppercase font-bold tracking-[0.2em]">
               © {new Date().getFullYear()} Blue Beacon Research.
             </p>
@@ -409,6 +464,8 @@ export default async function Home(props: {
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/accuracy">Accuracy</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/how-it-works">How It Works</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/about">About</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/assessments">Assessments</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/walkthrough">Request a walkthrough</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/backtesting">Backtesting Lab</Link></li>
               <li>
                 <Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] flex items-center gap-1" href="/terms">
@@ -430,4 +487,31 @@ export default async function Home(props: {
       </footer>
     </div>
   );
+}
+
+export default async function Home(props: {
+  searchParams?: Promise<{ error?: string; error_description?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  if (searchParams?.error || searchParams?.error_description) {
+    const msg = encodeURIComponent(searchParams.error_description ?? searchParams.error ?? "Authentication failed");
+    redirect(`/login?error=${msg}`);
+  }
+
+  const supabase = await createClient();
+  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
+  const signedIn = !claimsError && Boolean(claimsData?.claims?.sub);
+
+  const [latestSignal, homepageStats, assessments] = await Promise.all([
+    getLatestSignal(),
+    getHomepageStats(),
+    getPublishedAssessments(),
+  ]);
+
+  return renderHomePage({
+    signedIn,
+    latestSignal,
+    totalSignals: homepageStats.totalSignals,
+    assessments,
+  });
 }
