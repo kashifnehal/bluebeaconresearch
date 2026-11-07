@@ -13,11 +13,18 @@ export const metadata = {
     "Blue Beacon Research's historical signal accuracy, computed automatically from recorded price changes.",
 };
 
-export const ACCURACY_HORIZON_CAPTION =
-  "The longer the wait, the higher the hit rate. Short horizons are weak. This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
+const ACCURACY_HISTORICAL_NOTE =
+  "This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
+
+export function accuracyHorizonCaption(flatThresholdPct: unknown): string {
+  if (typeof flatThresholdPct !== "number" || !Number.isFinite(flatThresholdPct)) {
+    return ACCURACY_HISTORICAL_NOTE;
+  }
+  return `A call counts as correct only when the price moves at least ${flatThresholdPct}% in the called direction. A smaller move counts as flat and is scored as a miss, so short horizons show lower hit rates partly because prices rarely move that far in an hour. ${ACCURACY_HISTORICAL_NOTE}`;
+}
 
 type DirectionScore = {
-  total: number;
+  total: number | null;
   correct: number;
   hit_rate: number | null;
   not_enough_history: boolean;
@@ -46,12 +53,13 @@ export type CheckpointSummary = AssetSummary & {
 
 export type AccuracyPayload = {
   overall: AssetSummary;
-  by_asset: Record<string, AssetSummary>;
-  by_asset_checkpoint_hours: number;
-  checkpoints: CheckpointSummary[];
+  by_asset?: Record<string, AssetSummary>;
+  by_asset_checkpoint_hours?: number;
+  checkpoints?: CheckpointSummary[];
   date_range: { earliest: string; latest: string } | null;
   min_sample_size: number;
   volatility_threshold_pct: number;
+  flat_threshold_pct?: number;
   generated_at: string;
 };
 
@@ -64,7 +72,9 @@ async function loadAccuracy(): Promise<AccuracyPayload | { error: string }> {
   try {
     const res = await fetch(`${apiBase}/v1/accuracy`, { cache: "no-store" });
     const json = (await res.json().catch(() => null)) as AccuracyPayload | null;
-    if (!res.ok || !json || !Array.isArray(json.checkpoints)) {
+    const hasCheckpoints = !!json && Array.isArray(json.checkpoints);
+    const hasOverall = !!json && json.overall != null && typeof json.overall.total_scored === "number";
+    if (!res.ok || !json || (!hasCheckpoints && !hasOverall)) {
       const detail = `Upstream ${res.status}`;
       console.error("[accuracy] load failed:", detail);
       return { error: detail };
@@ -96,6 +106,10 @@ export function horizonLabel(hours: number): string {
 
 function horizonAdjective(hours: number): string {
   return `${hours}-hour`;
+}
+
+function countText(total: number | null): string {
+  return total === null ? "—" : String(total);
 }
 
 function rateText(
@@ -190,11 +204,11 @@ function HorizonCards({
             {rateText(checkpoint.hit_rate, checkpoint.not_enough_history, minSampleSize)}
           </p>
           <p className="font-mono text-[11px] text-[#6b7a72]">
-            Up calls {checkpoint.up.total}. Up hit rate for this horizon:{" "}
+            Up calls {countText(checkpoint.up.total)}. Up hit rate for this horizon:{" "}
             {rateText(checkpoint.up.hit_rate, checkpoint.up.not_enough_history, minSampleSize)}
           </p>
           <p className="font-mono text-[11px] text-[#6b7a72]">
-            Down calls {checkpoint.down.total}. Down hit rate for this horizon:{" "}
+            Down calls {countText(checkpoint.down.total)}. Down hit rate for this horizon:{" "}
             {rateText(checkpoint.down.hit_rate, checkpoint.down.not_enough_history, minSampleSize)}
           </p>
         </div>
@@ -232,11 +246,11 @@ function HorizonTable({
               <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
                 {rateText(checkpoint.hit_rate, checkpoint.not_enough_history, minSampleSize)}
               </td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{checkpoint.up.total}</td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(checkpoint.up.total)}</td>
               <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
                 {rateText(checkpoint.up.hit_rate, checkpoint.up.not_enough_history, minSampleSize)}
               </td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{checkpoint.down.total}</td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(checkpoint.down.total)}</td>
               <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
                 {rateText(checkpoint.down.hit_rate, checkpoint.down.not_enough_history, minSampleSize)}
               </td>
@@ -248,11 +262,33 @@ function HorizonTable({
   );
 }
 
+const OVERALL_HORIZON_HOURS = 48;
+
+function directionUnavailable(): DirectionScore {
+  return { total: null, correct: 0, hit_rate: null, not_enough_history: true };
+}
+
+function checkpointsFor(data: AccuracyPayload): CheckpointSummary[] {
+  if (Array.isArray(data.checkpoints)) {
+    return [...data.checkpoints].sort((a, b) => a.checkpoint_hours - b.checkpoint_hours);
+  }
+  const hours =
+    typeof data.by_asset_checkpoint_hours === "number" ? data.by_asset_checkpoint_hours : OVERALL_HORIZON_HOURS;
+  return [
+    {
+      checkpoint_hours: hours,
+      ...data.overall,
+      up: directionUnavailable(),
+      down: directionUnavailable(),
+    },
+  ];
+}
+
 export function AccuracyReport({ data }: { data: AccuracyPayload | { error: string } }) {
-  const ready = !("error" in data) && Array.isArray(data.checkpoints) ? data : null;
-  const checkpoints = ready
-    ? [...ready.checkpoints].sort((a, b) => a.checkpoint_hours - b.checkpoint_hours)
-    : [];
+  const ready = !("error" in data) && (Array.isArray(data.checkpoints) || data.overall != null) ? data : null;
+  const checkpoints = ready ? checkpointsFor(ready) : [];
+  const assetHorizonHours = ready?.by_asset_checkpoint_hours ?? OVERALL_HORIZON_HOURS;
+  const assets = ready?.by_asset ?? {};
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -291,7 +327,7 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
               <HorizonCards checkpoints={checkpoints} minSampleSize={ready.min_sample_size} />
               <HorizonTable checkpoints={checkpoints} minSampleSize={ready.min_sample_size} />
               <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]" data-testid="accuracy-caption">
-                {ACCURACY_HORIZON_CAPTION}
+                {accuracyHorizonCaption(ready.flat_threshold_pct)}
               </p>
             </section>
 
@@ -316,10 +352,10 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
 
             <section className="space-y-3 mb-10">
               <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                {horizonAdjective(ready.by_asset_checkpoint_hours)} results by asset
+                {horizonAdjective(assetHorizonHours)} results by asset
               </h2>
               <div className="md:hidden rounded-lg border border-[var(--border)] divide-y divide-[#2a2a2a] px-4">
-                {Object.entries(ready.by_asset).map(([asset, summary]) => (
+                {Object.entries(assets).map(([asset, summary]) => (
                   <AssetCard key={asset} asset={asset} summary={summary} minSampleSize={ready.min_sample_size} />
                 ))}
               </div>
@@ -329,12 +365,12 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
                     <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
                       <th className="px-4 py-2 font-medium">Asset</th>
                       <th className="px-4 py-2 text-right font-medium">Sample size</th>
-                      <th className="px-4 py-2 text-right font-medium">{horizonAdjective(ready.by_asset_checkpoint_hours)} hit rate</th>
+                      <th className="px-4 py-2 text-right font-medium">{horizonAdjective(assetHorizonHours)} hit rate</th>
                       <th className="px-4 py-2 text-right font-medium">Avg move when correct</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(ready.by_asset).map(([asset, summary]) => (
+                    {Object.entries(assets).map(([asset, summary]) => (
                       <AssetRow key={asset} asset={asset} summary={summary} minSampleSize={ready.min_sample_size} />
                     ))}
                   </tbody>
@@ -342,7 +378,7 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
               </div>
               <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
                 Assets with fewer than {ready.min_sample_size} scored calls at the{" "}
-                {horizonAdjective(ready.by_asset_checkpoint_hours)} horizon show &ldquo;not enough history yet&rdquo; instead of a percentage.
+                {horizonAdjective(assetHorizonHours)} horizon show &ldquo;not enough history yet&rdquo; instead of a percentage.
               </p>
             </section>
 

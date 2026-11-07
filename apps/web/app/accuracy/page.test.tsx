@@ -5,12 +5,13 @@ import { readFileSync } from "node:fs";
 import { act, createElement } from "react";
 
 import { setupDom, renderElement, visibleText } from "@/lib/test-render";
-import {
-  ACCURACY_HORIZON_CAPTION,
-  AccuracyReport,
-  type AccuracyPayload,
-  type CheckpointSummary,
-} from "./page";
+import { AccuracyReport, type AccuracyPayload, type CheckpointSummary } from "./page";
+
+const CAPTION_WITH_THRESHOLD =
+  "A call counts as correct only when the price moves at least 0.5% in the called direction. A smaller move counts as flat and is scored as a miss, so short horizons show lower hit rates partly because prices rarely move that far in an hour. This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
+
+const CAPTION_WITHOUT_THRESHOLD =
+  "This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
 
 const document = setupDom();
 
@@ -61,7 +62,11 @@ function checkpoint(
   };
 }
 
-function payload(checkpoints: CheckpointSummary[], publishAsset: boolean): AccuracyPayload {
+function payload(
+  checkpoints: CheckpointSummary[],
+  publishAsset: boolean,
+  flatThresholdPct?: number,
+): AccuracyPayload {
   return {
     overall: {
       total_scored: checkpoints[3]?.total_scored ?? 0,
@@ -94,6 +99,7 @@ function payload(checkpoints: CheckpointSummary[], publishAsset: boolean): Accur
     min_sample_size: 20,
     volatility_threshold_pct: 2,
     generated_at: "2026-11-07T12:00:00.000Z",
+    ...(typeof flatThresholdPct === "number" ? { flat_threshold_pct: flatThresholdPct } : {}),
   };
 }
 
@@ -105,6 +111,7 @@ const aboveFloor = payload(
     checkpoint(48, 52, 26, 26, 13, 26, 13, true),
   ],
   true,
+  0.5,
 );
 
 const belowFloor = payload(
@@ -149,7 +156,7 @@ async function main() {
       assert.match(visibleText(html), /Down calls 26/);
       assert.match(visibleText(html), /never counted toward the hit rate for any horizon/);
       const caption = document.querySelector('[data-testid="accuracy-caption"]');
-      assert.equal(caption?.textContent?.replace(/\s+/g, " ").trim(), ACCURACY_HORIZON_CAPTION);
+      assert.equal(caption?.textContent?.replace(/\s+/g, " ").trim(), CAPTION_WITH_THRESHOLD);
     } finally {
       await act(async () => {
         root.unmount();
@@ -178,7 +185,7 @@ async function main() {
       assert.match(text, /Not enough history yet \(min 20\)/);
       assert.equal(
         document.querySelector('[data-testid="accuracy-caption"]')?.textContent?.replace(/\s+/g, " ").trim(),
-        ACCURACY_HORIZON_CAPTION,
+        CAPTION_WITHOUT_THRESHOLD,
       );
     } finally {
       await act(async () => {
@@ -192,6 +199,51 @@ async function main() {
     assert.equal(/\d+(?:\.\d+)?\s*%/.test(source), false);
     for (const figure of ["46.8", "49.2", "47.1", "published track record", "Overall hit rate"]) {
       assert.equal(source.includes(figure), false, figure);
+    }
+    assert.equal(source.includes("The longer the wait, the higher the hit rate."), false);
+    assert.equal(source.includes("Short horizons are weak."), false);
+  });
+
+  await runTest("missing checkpoints still render one 48-hour overall row under the sample floor", async () => {
+    const legacy: AccuracyPayload = {
+      overall: {
+        total_scored: 12,
+        correct: 7,
+        hit_rate: null,
+        not_enough_history: true,
+        avg_move_when_correct: null,
+        sample_size_note: 12,
+        volatile_neutral_summary: null,
+        date_range: null,
+      },
+      date_range: {
+        earliest: "2026-07-01T00:00:00.000Z",
+        latest: "2026-11-01T00:00:00.000Z",
+      },
+      min_sample_size: 20,
+      volatility_threshold_pct: 2,
+      generated_at: "2026-11-07T12:00:00.000Z",
+    };
+    const { html, root } = await renderReport(legacy);
+    try {
+      const text = visibleText(html);
+      assert.equal(text.includes("couldn't load the accuracy data"), false);
+      const table = document.querySelector('[data-testid="horizon-table"]');
+      const rows = [...(table?.querySelectorAll("tbody tr") ?? [])];
+      assert.equal(rows.length, 1);
+      const rowText = visibleText(rows[0]?.innerHTML ?? "");
+      assert.match(rowText, /48 hours/);
+      assert.match(rowText, /\b12\b/);
+      assert.match(rowText, /Not enough history yet \(min 20\)/);
+      assert.equal(/\d+(?:\.\d+)?%/.test(rowText), false);
+      assert.equal(
+        document.querySelector('[data-testid="accuracy-caption"]')?.textContent?.replace(/\s+/g, " ").trim(),
+        CAPTION_WITHOUT_THRESHOLD,
+      );
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
     }
   });
 }
