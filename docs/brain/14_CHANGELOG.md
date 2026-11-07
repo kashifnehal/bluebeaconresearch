@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-11-07 — Analytics stays off until the visitor accepts (`33bce9b`, `45deef4`, `f80b8e8`)
+
+`apps/web` only. Visitors see a banner until they accept or decline. The choice is stored locally. PostHog does not start until the choice allows it and a key is set; a later decline opts out and resets. Cookie settings in the homepage footer and the shared public footer reopens the banner. Campaign tags are stored only after acceptance. Lead and sign-up forms still read tags on the current page address. `/privacy` names PostHog, the EU region, page visits and sign-up steps, the accept gate, and Cookie settings. No retention period. No live analytics event was seen; the key is not set yet. Full detail: `LIVE_TODO.md`.
+
 ### 2026-11-07 — Accuracy page shows every stored horizon (`1010e80`)
 
 `apps/web` + `apps/backend`. `/accuracy` had one unnamed hit rate, computed only from 48-hour rows. It now lists 1 hour, 4 hours, 24 hours, and 48 hours, each with the number scored, and up and down calls separately. Below 20 scored calls the count is shown and the percentage is not. Volatile and neutral calls stay out of every hit rate. The caption under the table says a longer wait has a higher hit rate, short horizons are weak, and a later move does not show the assessment caused it. `GET /v1/accuracy` reads those four checkpoints from the existing `signal_outcomes` table (no migration) and still sets no Cache-Control header. `overall` and `by_asset` remain the 48-hour rollup. No figure is hard-coded on the page. The strings 46.8, 49.2, and 47.1 were not in the page. Web `tsc --noEmit` exit 0, web test exit 0 (729 ✔ before the rendered test), `next build` exit 0. Backend `tsc --noEmit` exit 0, backend test exit 0 (607 ✔, 4 new). Not verified: no live page was opened. Full detail: `LIVE_TODO.md`, `05_API.md`, `06_COMPONENTS.md`.

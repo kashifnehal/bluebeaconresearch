@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-07 (accuracy page shows 1h, 4h, 24h, and 48h separately)
+Last updated: 2026-11-07 (analytics stays off until the visitor accepts)
+
+> ⚠️ NEW 2026-11-07 (analytics consent, `apps/web` only, `33bce9b`, `45deef4`, `f80b8e8`) — a banner stores accept or decline locally. PostHog starts only after accept and only when a key is set. A later decline opts out and resets. Cookie settings in the homepage footer and the public footer reopens the banner. `/privacy` names PostHog, the EU region, page visits and sign-up steps, and the accept gate. No retention period is stated. Not verified: no live analytics event; the key is not set. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-07 (accuracy page shows every stored horizon, `apps/web` + `apps/backend`, `1010e80`) — `/accuracy` lists 1 hour, 4 hours, 24 hours, and 48 hours with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral stay out of the hit rate. `GET /v1/accuracy` reads those four checkpoints from `signal_outcomes` (no migration, no new cache header). `overall` and `by_asset` remain the 48-hour rollup. Not verified in a browser. See `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

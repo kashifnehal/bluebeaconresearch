@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — React & React Native Component Inventory
 
-> **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-11-07** for the analytics consent banner. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-07 — `ConsentBanner` asks every visitor to accept or decline before analytics runs. `CookieSettingsButton` in the homepage footer and `PublicFooter` reopens it. `FirstTouchCapture` stores campaign tags only after acceptance. Full detail: `LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-28 (live-check follow-up) — Three overflow fixes found live after the `PageShell` rollout below shipped: the dashboard stream row's single-line layout now starts at `lg:` (1024px) instead of `md:` (768px), so it no longer fights the sidebar for width; `SignalTable.tsx`'s Event/Type/Topic cells are now capped with `truncate`+`title` and Summary has a `min-w-[240px]` floor, so the table fits a 1118px box without Type/Topic eating Summary's space; `PulseTiles.tsx`'s grid is `grid-cols-[repeat(auto-fit,minmax(150px,1fr))]` instead of `md:grid-cols-5`, sized to its own container rather than the window. No prop, test id, or behavior changed. Full detail: `LIVE_TODO.md`, `14_CHANGELOG.md` (2026-10-28 entry).
 

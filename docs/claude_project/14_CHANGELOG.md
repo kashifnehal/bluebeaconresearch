@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-07 — Analytics stays off until the visitor accepts
+
+`apps/web` only, `33bce9b`, `45deef4`, `f80b8e8`. Analytics does not run until a visitor accepts. The tool is PostHog, described on the privacy page as hosted in the EU region. It counts page visits and sign-up steps, and it is off until that choice. Cookie settings in the footer changes the choice. No live event was seen; the key is not set yet. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-07 — Accuracy page shows every stored horizon
 
 `apps/web` + `apps/backend`, `1010e80`. The public accuracy page listed one unnamed 48-hour hit rate. It now shows 1 hour, 4 hours, 24 hours, and 48 hours, with the number scored and separate up and down rates. Below 20 scored calls the percentage is withheld. Volatile and neutral calls stay out of the rate. No live page was opened. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

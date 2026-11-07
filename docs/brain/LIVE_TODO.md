@@ -5,6 +5,15 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Analytics stays off until the visitor accepts (TASK WEB-CONSENT1), `apps/web` only, 2026-11-07, `33bce9b` / `45deef4` / `f80b8e8`
+
+- A banner asks every visitor to accept or decline analytics. The choice is stored in the browser under `bbr.consent` as `{v:1, analytics, at}`. Cookie settings in the homepage footer and the shared public footer reopens the banner. Storage failures are ignored and the page still renders.
+- PostHog `init` runs only when that choice has `analytics: true` and `NEXT_PUBLIC_POSTHOG_KEY` is set. The host is `NEXT_PUBLIC_POSTHOG_HOST` (fallback `https://app.posthog.com` when unset). `person_profiles` stays `identified_only`. A later decline calls `opt_out_capturing` and `reset`. No key is set, so nothing is sent.
+- Campaign tags are written to session storage only after acceptance. Lead and sign-up forms still read tags on the current page address when nothing is stored. Whether first-party attribution needs consent is a design choice, not a researched legal conclusion.
+- `/privacy` says PostHog, hosted in the EU region, counts page visits and sign-up steps, is off until the visitor accepts, and that Cookie settings in the footer changes the choice. No retention period is stated. No counsel review is claimed. The privacy page also shows the public footer.
+- **Verification:** web `tsc --noEmit` exit 0; web test exit 0 (756 ✔, 0 ✖, including the privacy-page render); `next build` exit 0. **Not verified:** no live analytics event was seen; the key is not set yet. No browser walkthrough.
+- Docs: this entry; both trees' `06_COMPONENTS.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`, `10_DECISIONS.md`; `09_BACKLOG.md` notes the key is still unset. Skipped `05_API.md`, `04_DATABASE.md`, `18_AI_ENGINE.md` — no new route, table, or prompt.
+
 ## ✅ Honest accuracy page, all four horizons (TASK WEB-M5), `apps/web` + `apps/backend`, 2026-11-07, `1010e80`
 
 - `/accuracy` no longer shows one unnamed 48-hour hit rate. It lists 1 hour, 4 hours, 24 hours, and 48 hours, each with the number scored, and up and down calls separately. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral calls stay out of every hit rate. The caption under the table is the fixed sentence: a longer wait has a higher hit rate, short horizons are weak, a later move does not show the assessment caused it, informational research, not investment advice. No figure is hard-coded on the page.

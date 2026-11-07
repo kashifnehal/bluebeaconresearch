@@ -1,3 +1,5 @@
+import { PublicFooter } from "@/components/layout/PublicFooter";
+
 export const metadata = {
   title: "Privacy — Blue Beacon Research",
   description: "Blue Beacon Research privacy policy.",
@@ -125,10 +127,11 @@ export default function PrivacyPage() {
               <span className="text-text-primary">@anthropic-ai/sdk</span>).
             </li>
             <li>
-              <span className="text-text-primary">PostHog</span> receives page views and named events when{" "}
+              <span className="text-text-primary">PostHog</span>, hosted in the EU region, counts page visits and
+              sign-up steps after you accept, and only when{" "}
               <span className="text-text-primary">NEXT_PUBLIC_POSTHOG_KEY</span> is set (
-              <span className="text-text-primary">posthog-js</span>). The application does not call PostHog&apos;s
-              identify method.
+              <span className="text-text-primary">posthog-js</span>). It is off until then. Cookie settings in the
+              footer changes the choice. The application does not call PostHog&apos;s identify method.
             </li>
             <li>
               <span className="text-text-primary">Voyage AI</span> receives the text of a search query at{" "}
@@ -167,17 +170,18 @@ export default function PrivacyPage() {
             when the value is split into chunks.
           </p>
           <p>
-            PostHog runs in the browser only when <span className="text-text-primary">NEXT_PUBLIC_POSTHOG_KEY</span> is
-            set, and then it records page views. Named events (sign-up, viewing a signal, creating an alert rule) are
-            also sent to PostHog when that key is set, to Vercel Analytics through its{" "}
-            <span className="text-text-primary">track</span> call, and, once you are signed in, to the{" "}
-            <span className="text-text-primary">events</span> table. This application does not set an analytics cookie
-            by name.
+            PostHog, hosted in the EU region, counts page visits and sign-up steps. It is off until you accept. Cookie
+            settings in the footer changes the choice. It runs in the browser only when the analytics key is set.
+            Viewing a signal and creating an alert rule are sent to PostHog only after you accept. Those named events
+            can also go to Vercel Analytics through its <span className="text-text-primary">track</span> call and, once
+            you are signed in, to the <span className="text-text-primary">events</span> table. This application does not
+            call PostHog&apos;s identify method, and it does not set an analytics cookie by name.
           </p>
           <p>
-            When you arrive from a link that carries campaign tags (utm parameters) or from another website, the
-            campaign tags and the referring site's host name are kept in your browser for that visit, and are
-            saved with your account if you sign up. No cookie is set for this.
+            Campaign tags on a link (utm parameters) and the referring site&apos;s host name are stored in the browser
+            for that visit only after you accept analytics, and are saved with your account if you sign up. A lead or
+            sign-up form still sends campaign tags that are on the page address when you submit, even if you have not
+            accepted. No cookie is set for this.
           </p>
 
           <h2 className="pt-4 text-base font-semibold text-text-primary">Data sent to Anthropic</h2>
@@ -241,6 +245,7 @@ export default function PrivacyPage() {
           </p>
         </div>
       </div>
+      <PublicFooter />
     </div>
   );
 }

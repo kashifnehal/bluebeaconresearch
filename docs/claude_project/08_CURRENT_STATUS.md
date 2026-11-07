@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-07 (accuracy page shows 1h, 4h, 24h, and 48h separately — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-07 (analytics stays off until the visitor accepts — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-07 (analytics consent, `apps/web` only, `33bce9b`, `45deef4`, `f80b8e8`) — analytics does not run until a visitor accepts. The privacy page names PostHog, the EU region, page visits and sign-up steps, and Cookie settings in the footer. No live event was seen; the key is not set. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-07 (accuracy page shows every stored horizon, `apps/web` + `apps/backend`, `1010e80`) — `/accuracy` lists 1 hour, 4 hours, 24 hours, and 48 hours with the number scored and separate up and down hit rates. Below 20 scored calls the count stays and the percentage does not. Volatile and neutral stay out of the hit rate. `GET /v1/accuracy` reads those four checkpoints. Not verified in a browser. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 

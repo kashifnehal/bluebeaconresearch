@@ -398,7 +398,7 @@ The MoSCoW tables below are the historical record. This section is the current p
 | C13 | PostGIS enable + shipping proximity calculation | 1 day | Map pins near chokepoints |
 | C14 | Economic calendar → auto-generate signal when actual ≠ forecast | 2 days | Calendar intelligence integration |
 | C15 | Sentry error monitoring | 2 hr | Catch production crashes |
-| C16 | PostHog analytics | 2 hr | User behavior tracking |
+| C16 | PostHog analytics | 2 hr | Consent gate shipped 2026-11-07. Still open: no key is set, so no events are sent. |
 | C17 | 40-year intel archive (historical signal search) | 2 weeks | Pro tier feature. **Still open** — 2026-09-29 shipped a current-table `/archive` lookup (v0.126.0), not this 40-year GDELT product. |
 | C18 | Webhook test delivery button | 1 day | Developer UX |
 | C19 | Multi-seat team feature (Pro tier, 3 seats) | 3 days | Pro tier requirement |

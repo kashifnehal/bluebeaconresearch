@@ -1001,3 +1001,13 @@ The thresholds above are working rules from BBR's own data, not published standa
 **Rationale:** Money limits how long collection runs, never how well one article is judged.
 
 **Cross-tree mapping:** Recorded as **ADR 049** in `docs/brain/10_DECISIONS.md`.
+
+## Analytics stays off until the visitor accepts (2026-11-07)
+
+**Context:** PostHog initialized whenever an analytics key was set. Visitors had no way to refuse it, and campaign tags were stored on arrival.
+
+**Decision:** PostHog stays off until the visitor accepts. The privacy page names PostHog, hosted in the EU region. It counts page visits and sign-up steps. A later decline opts out and resets. Cookie settings in the footer changes the choice. Campaign tags are stored in the browser only after acceptance. Lead and sign-up forms still read tags on the current page address. No retention period is set. The key is not configured, so nothing is sent.
+
+**Rationale:** The founder set this on 2026-11-07. Whether first-party attribution needs consent is a design choice, not a researched legal conclusion.
+
+**Cross-tree mapping:** The same entry is in `docs/brain/10_DECISIONS.md`.

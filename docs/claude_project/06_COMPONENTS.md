@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
-> **📍 Doc status — current as of 2026-10-15** for signal clocks (UTC Clock values, price timeline, FreshTag `eventDate`). `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-11-07** for the analytics consent banner. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-07 — Visitors choose before analytics runs. Cookie settings in the public footer reopens that choice. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-28 (live-check follow-up) — Three overflow fixes found live after the `PageShell` rollout below shipped: dashboard stream row single-line breakpoint moved from `md:` to `lg:`, `SignalTable` column widths tightened so the table fits a 1118px box, `PulseTiles` grid now auto-fits its container instead of keying off window width. Full detail: `docs/brain/06_COMPONENTS.md`.
 
