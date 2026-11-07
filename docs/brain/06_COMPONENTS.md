@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — React & React Native Component Inventory
 
-> **📍 Doc status — current as of 2026-11-08** for the accuracy caption and PostHog limits. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-11-08** for the Research Standard and Corrections pages. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-08 (`2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`) — `/research-standard` and `/corrections` use the About page layout (`PublicHeader`, dark tokens, `PublicFooter`). The homepage Research list links both. How It Works adds one sentence under the claims table. Full detail: `LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-08 (`faeeed5`) — after consent, `initAnalytics` still starts PostHog only when the visitor has accepted and a key is set. The init call keeps `person_profiles: "identified_only"` and `capture_pageview: true`, and sets `disable_session_recording: true`, `autocapture: false`, `capture_dead_clicks: false`, `capture_heatmaps: false`, `disable_surveys: true`, `capture_performance: false`. Consent gating is unchanged. Full detail: `LIVE_TODO.md`.
 

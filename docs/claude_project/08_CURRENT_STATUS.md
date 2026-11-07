@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-08 (public accuracy leftovers — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-08 (Research Standard and Corrections pages — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-08 (Research Standard and Corrections, `apps/web` only, `2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`) — `/research-standard` and `/corrections` are public. Published-assessment corrections show as none. Not verified: the live pages. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-08 (public accuracy leftovers, `d44812a`, `ba1d33a`, `300cb39`, `81b8f3c`, `602e775`) — the public claim, homepage link, and help scoring sentence now describe the later price move. Not verified: live pages and the Railway deploy. See `docs/brain/LIVE_TODO.md`.
 

@@ -10,6 +10,8 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+2026-11-08 — Public pages `/research-standard` and `/corrections` (`2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`). Eight written checks, one logged accuracy-caption correction dated 2026-11-08, and published-assessment corrections shown as none. The homepage footer and How It Works link both. Sitemap entries are monthly at priority 0.3. Neither route is protected. Web tsc 0, web test 768 ✔, next build 0. Not verified: the live pages.
+
 2026-11-08 — How It Works, the homepage accuracy link, and the help scoring sentence now describe the later price move, including a weak result (`d44812a`, `ba1d33a`, `300cb39`, `81b8f3c`, `602e775`). Web tsc 0, web test 761 ✔, next build 0. Backend tsc 0, backend test 608 ✔. Not verified: live pages and the Railway deploy.
 
 ### 2026-11-08 — Accuracy wording matches the flat-move rule (`f12c123`, `7f75e55`, `7c46fb5`, `faeeed5`)

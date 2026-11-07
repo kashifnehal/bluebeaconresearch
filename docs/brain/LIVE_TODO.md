@@ -5,6 +5,14 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Public Research Standard and Corrections pages, `apps/web` only, 2026-11-08, `2002140` / `a3f866f` / `4e2887a` / `3d4faa8` / `ca54a87`
+
+- `/research-standard` states eight checks a reader can make on a published assessment: linked sources, two UTC times, one wire story counted once, source statements kept apart from the reading, exposure named as a reading rather than a price forecast, unchecked data sets named, no position advice, and corrections logged. It links to How It Works and Corrections. The fine print is "Informational research, not investment advice. Sources and dates are shown on each item."
+- `/corrections` asks readers to write to support@bluebeaconresearch.com. Published assessment corrections as of 8 November 2026 render as none. The log has one entry, dated 2026-11-08, for the accuracy caption under the horizon table.
+- The homepage Research footer links both, with the same classes as Assessments. How It Works adds one sentence under the claims table. Sitemap entries are monthly at priority 0.3. Neither path is in `proxy.ts` `PROTECTED`.
+- **Verification:** web `tsc --noEmit` exit 0; web test exit 0 (768 ✔, 0 ✖); `next build` exit 0 (`/research-standard` and `/corrections` are static). **Not verified:** the live pages.
+- Docs: this entry; both trees' `06_COMPONENTS.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`; `docs/claude_project/09_BACKLOG.md` (no prior numbered line). Skipped `05_API.md`, `04_DATABASE.md`, `18_AI_ENGINE.md`, and both `10_DECISIONS.md` files — no new route, table, prompt, or standing rule.
+
 ## ✅ Public accuracy leftovers (TASK WEB-WORDING2), `apps/web` plus the help search catalog, 2026-11-08, `d44812a` / `ba1d33a` / `300cb39` / `81b8f3c` / `602e775`
 
 - How It Works claim: "We publish how often our calls matched the later price move, including when the result is weak." The check text is unchanged.

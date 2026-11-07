@@ -1,6 +1,8 @@
 # 09_BACKLOG.md — Complete Product Backlog
 
-> **📍 Doc status — live numbered-ticket queue as of 2026-10-18.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live numbered-ticket queue as of 2026-11-08.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-08 — Public Research Standard and Corrections pages (`2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`). No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-17 — Daily ingestion budget stays at $2 until go-live; no monthly-limit variable; gate shadow stays off. Admin ingestion status returns `newestStoredArticleAt` (`ab91e372c219f350167c03dcea0ef0d82574785c`, docs `14d8fbe13bd36e47371401628238c826a5bcd478`). Public pages show no collection time (2026-10-16 rule). No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

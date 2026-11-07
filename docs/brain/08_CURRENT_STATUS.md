@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-08 (public accuracy leftovers)
+Last updated: 2026-11-08 (Research Standard and Corrections pages)
+
+> ⚠️ NEW 2026-11-08 (Research Standard and Corrections, `apps/web` only, `2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`) — `/research-standard` lists eight checks on a published assessment. `/corrections` logs the 2026-11-08 accuracy-caption change and shows published-assessment corrections as none. Both are linked from the homepage footer and How It Works, and both are static sitemap entries. Not verified: the live pages. See `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-08 (public accuracy leftovers, `apps/web` plus the help search catalog, `d44812a`, `ba1d33a`, `300cb39`, `81b8f3c`, `602e775`) — How It Works says calls are compared with the later price move, including a weak result. The homepage link says "View the accuracy page". Help scoring uses the 0.5% flat rule at each checkpoint. Not verified: live pages and the Railway deploy. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
