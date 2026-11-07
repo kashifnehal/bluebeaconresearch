@@ -96,7 +96,7 @@ const CLAIM_ROWS: ClaimRow[] = [
     proof: "The reports count increments on every merged report, regardless of whether the outlet repeats.",
   },
   {
-    claim: "We publish our track record.",
+    claim: "We publish how often our calls matched the later price move, including when the result is weak.",
     proof: "See the Accuracy page — including when the number is not flattering.",
   },
   {
