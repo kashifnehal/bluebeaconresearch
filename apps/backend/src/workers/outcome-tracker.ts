@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
 /**
- * #121 backend half — permanent outcome tracking for signal_outcomes.
+ * Permanent outcome tracking for signal_outcomes.
  *
  * commodity_prices only retains 90 days (retention.ts), so an /accuracy page
  * cannot recompute historical accuracy on demand — this worker is what makes
@@ -12,8 +12,9 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
  * checkpoint once it is actually that many hours old (1h rows are written at
  * >=1h, not held until 48h). 48 stays in the list and keeps the same
  * thresholds / findClosestPoint() / MAX_PRICE_POINT_DISTANCE_MS guard as
- * before — GET /v1/accuracy still aggregates only those 48h rows. Never
- * live-recomputed; never touches signals or commodity_prices.
+ * before. GET /v1/accuracy aggregates 1h, 4h, 24h, and 48h separately
+ * (2026-11-07). Rows are never live-recomputed, and this worker never
+ * touches signals or commodity_prices.
  */
 const CHECKPOINT_HOURS_LIST = [1, 4, 24, 48] as const;
 const SHORTEST_CHECKPOINT_HOURS = CHECKPOINT_HOURS_LIST[0];

@@ -3,52 +3,40 @@ import type { FastifyInstance } from "fastify";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 
 /**
- * #121 frontend half — public GET /v1/accuracy. Reads only from `signal_outcomes`
- * (written once, daily, by `outcome-tracker.ts`; this route reads only the 48h
- * checkpoint rows) — never live-recomputes against
- * `commodity_prices`, which only retains 90 days. No auth: this is the same public
- * "informational, not personal" class of data as `/v1/prices` / `/v1/prices/history-5y`.
- * Sample size is scored pipeline rows, not users (`signal_outcomes` has no user_id);
- * `profiles.is_test_account` cannot inflate it and is not filtered here.
- *
- * Follows the same plain-async-function Fastify-plugin pattern as price-history.ts /
- * signal-chat.routes.ts (registered in app.ts via `app.register(..., { prefix })`).
+ * Public GET /v1/accuracy. Reads only from signal_outcomes (written once, daily,
+ * by outcome-tracker.ts). As of 2026-11-07 the response includes every stored
+ * checkpoint (1, 4, 24, and 48 hours), each scored on its own. It never
+ * live-recomputes against commodity_prices, which only retains 90 days.
+ * No auth: this is the same public informational class of data as the price
+ * routes. Sample size is scored pipeline rows, not users (signal_outcomes has
+ * no user_id). This handler sets no Cache-Control header, same as before.
  */
 
-// Below this many scored (up/down) predictions, a headline hit-rate percentage is
-// more misleading than informative (e.g. "100% (1/1)"). 20 is a judgment call, not
-// a hard requirement from any spec — easy to tune up/down as real history accrues;
-// flagged here rather than picked silently.
-const MIN_SAMPLE_SIZE = 20;
+// Below this many scored (up/down) calls, a hit-rate percentage is more
+// misleading than informative. 20 is a judgment call, kept from the previous
+// page, not a figure copied from an outside source.
+export const MIN_SAMPLE_SIZE = 20;
 
-// 'volatile'/'neutral' predictions are never scored true/false (there is no single
-// actual_direction that validates or invalidates "expect volatility" or "expect no
-// clear move"), but the page still wants a fair way to describe whether that
-// volatility call played out. 2% over the 48h checkpoint window is a deliberately
-// chosen (not guessed-and-forgotten) threshold: it's roughly 4x the 0.5% "flat"
-// noise floor `outcome-tracker.ts` already uses for actual_direction, so it
-// separates "the price actually moved a lot" from "normal day-to-day chop" without
-// needing a separate volatility calibration per asset. Kept fully separate from
-// hit_rate — never blended into the up/down accuracy number.
-const VOLATILITY_THRESHOLD_PCT = 2;
+// volatile/neutral calls are never scored true/false. 2% over the checkpoint
+// window is the separate "the price actually moved" mark, about 4x the 0.5%
+// flat noise floor outcome-tracker.ts uses for actual_direction. Kept fully
+// separate from hit_rate.
+export const VOLATILITY_THRESHOLD_PCT = 2;
 
-// #121 headline numbers stay on the original 48h checkpoint. The worker also
-// writes 1h/4h/24h rows into the same table; those must not enter this
-// aggregation unless a future prompt adds an explicit time-horizon selector.
-const ACCURACY_CHECKPOINT_HOURS = 48;
+// Horizons the worker writes. The page shows each of these, not a blend.
+export const ACCURACY_CHECKPOINT_HOURS = [1, 4, 24, 48] as const;
+
+// Per-asset rows stay on the longest stored horizon so the older by_asset
+// field does not mix checkpoints. The hours travel with the payload.
+export const BY_ASSET_CHECKPOINT_HOURS = 48;
 
 const PAGE_SIZE = 1000;
-// Root-caused during verification: `.in("id", chunk)` with a real ~36-char UUID
-// list starts throwing `TypeError: fetch failed` once the chunk hits ~400 items
-// (reproduced deterministically: 380 always succeeds, 400 always fails) — a URL-
-// length limit somewhere in the request chain, not transient network flakiness.
-// This is also why `outcome-tracker.ts`'s existing-outcomes lookup (same 500-chunk
-// pattern) silently dropped some chunks during the #121 backend-half backfill.
-// 200 leaves real margin under the ~380-item breakpoint.
+// `.in("id", chunk)` with a real ~36-char UUID list starts throwing
+// `TypeError: fetch failed` once the chunk hits ~400 items (380 succeeds,
+// 400 fails) — a URL-length limit, not transient network flakiness.
+// 200 leaves real margin under that breakpoint.
 const SIGNAL_LOOKUP_CHUNK = 200;
 
-/** Cheap insurance for genuine transient network blips; the real "fetch failed"
- * cause above is a chunk-size bug, now fixed at the source (SIGNAL_LOOKUP_CHUNK). */
 async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
@@ -62,17 +50,20 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
   throw lastErr;
 }
 
-type OutcomeRow = {
+export type OutcomeRow = {
   signal_id: string;
   asset: string;
+  checkpoint_hours: number;
   predicted_direction: string;
   actual_pct_change: number;
   is_directionally_correct: boolean | null;
 };
 
 type Bucket = {
-  totalScored: number;
-  correct: number;
+  upTotal: number;
+  upCorrect: number;
+  downTotal: number;
+  downCorrect: number;
   sumAbsMoveWhenCorrect: number;
   volatileNeutralTotal: number;
   volatileNeutralAboveThreshold: number;
@@ -82,8 +73,10 @@ type Bucket = {
 
 function newBucket(): Bucket {
   return {
-    totalScored: 0,
-    correct: 0,
+    upTotal: 0,
+    upCorrect: 0,
+    downTotal: 0,
+    downCorrect: 0,
     sumAbsMoveWhenCorrect: 0,
     volatileNeutralTotal: 0,
     volatileNeutralAboveThreshold: 0,
@@ -92,45 +85,75 @@ function newBucket(): Bucket {
   };
 }
 
+function noteDate(bucket: Bucket, eventDate: string | null) {
+  if (!eventDate) return;
+  if (!bucket.earliest || eventDate < bucket.earliest) bucket.earliest = eventDate;
+  if (!bucket.latest || eventDate > bucket.latest) bucket.latest = eventDate;
+}
+
 function applyToBucket(bucket: Bucket, row: OutcomeRow, eventDate: string | null) {
-  if (eventDate) {
-    if (!bucket.earliest || eventDate < bucket.earliest) bucket.earliest = eventDate;
-    if (!bucket.latest || eventDate > bucket.latest) bucket.latest = eventDate;
-  }
+  noteDate(bucket, eventDate);
 
   if (row.predicted_direction === "volatile" || row.predicted_direction === "neutral") {
     bucket.volatileNeutralTotal += 1;
     if (Math.abs(row.actual_pct_change) >= VOLATILITY_THRESHOLD_PCT) {
       bucket.volatileNeutralAboveThreshold += 1;
     }
-    return; // never blended into hit_rate/correct below
+    return;
   }
 
-  // Only 'up'/'down' predictions are scored (is_directionally_correct is non-null
-  // for those, NULL for volatile/neutral — already handled above, this is defensive).
+  // Only up/down calls are scored. is_directionally_correct is null for
+  // volatile/neutral (already returned) and for anything else we do not score.
+  if (row.predicted_direction !== "up" && row.predicted_direction !== "down") return;
   if (row.is_directionally_correct === null) return;
-  bucket.totalScored += 1;
-  if (row.is_directionally_correct) {
-    bucket.correct += 1;
-    bucket.sumAbsMoveWhenCorrect += Math.abs(row.actual_pct_change);
+
+  const correct = row.is_directionally_correct === true;
+  if (row.predicted_direction === "up") {
+    bucket.upTotal += 1;
+    if (correct) {
+      bucket.upCorrect += 1;
+      bucket.sumAbsMoveWhenCorrect += Math.abs(row.actual_pct_change);
+    }
+  } else {
+    bucket.downTotal += 1;
+    if (correct) {
+      bucket.downCorrect += 1;
+      bucket.sumAbsMoveWhenCorrect += Math.abs(row.actual_pct_change);
+    }
   }
 }
 
+function directionScore(total: number, correct: number) {
+  const enoughHistory = total >= MIN_SAMPLE_SIZE;
+  const hitRate = total > 0 ? correct / total : null;
+  return {
+    total,
+    correct,
+    hit_rate: enoughHistory ? hitRate : null,
+    not_enough_history: !enoughHistory,
+  };
+}
+
+function dateRange(bucket: Bucket) {
+  return bucket.earliest && bucket.latest
+    ? { earliest: bucket.earliest, latest: bucket.latest }
+    : null;
+}
+
 function summarize(bucket: Bucket) {
-  const enoughHistory = bucket.totalScored >= MIN_SAMPLE_SIZE;
-  const hitRate = bucket.totalScored > 0 ? bucket.correct / bucket.totalScored : null;
-  const avgMoveWhenCorrect = bucket.correct > 0 ? bucket.sumAbsMoveWhenCorrect / bucket.correct : null;
+  const totalScored = bucket.upTotal + bucket.downTotal;
+  const correct = bucket.upCorrect + bucket.downCorrect;
+  const enoughHistory = totalScored >= MIN_SAMPLE_SIZE;
+  const hitRate = totalScored > 0 ? correct / totalScored : null;
+  const avgMoveWhenCorrect = correct > 0 ? bucket.sumAbsMoveWhenCorrect / correct : null;
 
   return {
-    total_scored: bucket.totalScored,
-    correct: bucket.correct,
-    // Gated per the spec: below MIN_SAMPLE_SIZE, hit_rate is null and
-    // not_enough_history is true instead of a misleadingly small-sample number.
-    // sample_size_note is always present alongside it either way.
+    total_scored: totalScored,
+    correct,
     hit_rate: enoughHistory ? hitRate : null,
     not_enough_history: !enoughHistory,
     avg_move_when_correct: avgMoveWhenCorrect,
-    sample_size_note: bucket.totalScored,
+    sample_size_note: totalScored,
     volatile_neutral_summary:
       bucket.volatileNeutralTotal > 0
         ? {
@@ -140,10 +163,69 @@ function summarize(bucket: Bucket) {
             threshold_pct: VOLATILITY_THRESHOLD_PCT,
           }
         : null,
-    date_range:
-      bucket.earliest && bucket.latest
-        ? { earliest: bucket.earliest, latest: bucket.latest }
-        : null,
+    date_range: dateRange(bucket),
+  };
+}
+
+function summarizeCheckpoint(checkpointHours: number, bucket: Bucket) {
+  return {
+    checkpoint_hours: checkpointHours,
+    ...summarize(bucket),
+    up: directionScore(bucket.upTotal, bucket.upCorrect),
+    down: directionScore(bucket.downTotal, bucket.downCorrect),
+  };
+}
+
+function spanDates(buckets: Bucket[]) {
+  let earliest: string | null = null;
+  let latest: string | null = null;
+  for (const bucket of buckets) {
+    if (bucket.earliest && (!earliest || bucket.earliest < earliest)) earliest = bucket.earliest;
+    if (bucket.latest && (!latest || bucket.latest > latest)) latest = bucket.latest;
+  }
+  return earliest && latest ? { earliest, latest } : null;
+}
+
+export function buildAccuracyPayload(
+  rows: OutcomeRow[],
+  eventDateBySignal: Map<string, string> = new Map(),
+) {
+  const allowed = new Set<number>(ACCURACY_CHECKPOINT_HOURS);
+  const byCheckpoint = new Map<number, Bucket>();
+  for (const hours of ACCURACY_CHECKPOINT_HOURS) byCheckpoint.set(hours, newBucket());
+  const byAsset = new Map<string, Bucket>();
+
+  for (const row of rows) {
+    if (!allowed.has(row.checkpoint_hours)) continue;
+    const eventDate = eventDateBySignal.get(row.signal_id) ?? null;
+    const checkpointBucket = byCheckpoint.get(row.checkpoint_hours) ?? newBucket();
+    applyToBucket(checkpointBucket, row, eventDate);
+    byCheckpoint.set(row.checkpoint_hours, checkpointBucket);
+
+    if (row.checkpoint_hours === BY_ASSET_CHECKPOINT_HOURS) {
+      const assetBucket = byAsset.get(row.asset) ?? newBucket();
+      applyToBucket(assetBucket, row, eventDate);
+      byAsset.set(row.asset, assetBucket);
+    }
+  }
+
+  const checkpoints = ACCURACY_CHECKPOINT_HOURS.map((hours) =>
+    summarizeCheckpoint(hours, byCheckpoint.get(hours) ?? newBucket()),
+  );
+  const byAssetSummary = Object.fromEntries(
+    [...byAsset.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([asset, bucket]) => [asset, summarize(bucket)]),
+  );
+
+  return {
+    overall: summarize(byCheckpoint.get(BY_ASSET_CHECKPOINT_HOURS) ?? newBucket()),
+    by_asset: byAssetSummary,
+    by_asset_checkpoint_hours: BY_ASSET_CHECKPOINT_HOURS,
+    checkpoints,
+    date_range: spanDates([...byCheckpoint.values()]),
+    min_sample_size: MIN_SAMPLE_SIZE,
+    volatility_threshold_pct: VOLATILITY_THRESHOLD_PCT,
   };
 }
 
@@ -155,8 +237,10 @@ async function fetchAllOutcomes(
     const { data, error } = await withRetry(async () =>
       supabase
         .from("signal_outcomes")
-        .select("signal_id, asset, predicted_direction, actual_pct_change, is_directionally_correct")
-        .eq("checkpoint_hours", ACCURACY_CHECKPOINT_HOURS)
+        .select(
+          "signal_id, asset, checkpoint_hours, predicted_direction, actual_pct_change, is_directionally_correct",
+        )
+        .in("checkpoint_hours", [...ACCURACY_CHECKPOINT_HOURS])
         .range(from, from + PAGE_SIZE - 1),
     );
     if (error) throw new Error(error.message);
@@ -202,33 +286,11 @@ export async function accuracyRoutes(app: FastifyInstance) {
       const distinctSignalIds = [...new Set(outcomeRows.map((r) => r.signal_id))];
       eventDateBySignal = await fetchEventDates(supabase, distinctSignalIds);
     } catch (err) {
-      // date_range degrading to null is acceptable; the hit-rate numbers below do
-      // not depend on it, so don't fail the whole endpoint over this lookup.
       app.log.warn({ err }, "[accuracy] event_date lookup failed — date_range will be null");
     }
 
-    const overall = newBucket();
-    const byAsset = new Map<string, Bucket>();
-
-    for (const row of outcomeRows) {
-      const eventDate = eventDateBySignal.get(row.signal_id) ?? null;
-      applyToBucket(overall, row, eventDate);
-      const assetBucket = byAsset.get(row.asset) ?? newBucket();
-      applyToBucket(assetBucket, row, eventDate);
-      byAsset.set(row.asset, assetBucket);
-    }
-
-    const byAssetSummary = Object.fromEntries(
-      [...byAsset.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([asset, bucket]) => [asset, summarize(bucket)]),
-    );
-
     return reply.send({
-      overall: summarize(overall),
-      by_asset: byAssetSummary,
-      min_sample_size: MIN_SAMPLE_SIZE,
-      volatility_threshold_pct: VOLATILITY_THRESHOLD_PCT,
+      ...buildAccuracyPayload(outcomeRows, eventDateBySignal),
       generated_at: new Date().toISOString(),
     });
   });

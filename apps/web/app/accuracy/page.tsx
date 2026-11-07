@@ -2,16 +2,24 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { ACCURACY_LOAD_ERROR } from "@/lib/user-error-copy";
 
-// #121 frontend half — public track-record page. Reads only the pre-computed
-// `signal_outcomes` aggregates from GET /v1/accuracy (backend never live-
-// recomputes against commodity_prices, which only retains 90 days). Real numbers
-// per request — not statically prerendered.
+// Public accuracy page. Reads the pre-computed aggregates from GET /v1/accuracy.
+// Every figure on the page comes from that response. Real numbers per request.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Accuracy | Blue Beacon Research",
   description:
-    "Blue Beacon Research's historical signal accuracy, computed automatically from real market price data.",
+    "Blue Beacon Research's historical signal accuracy, computed automatically from recorded price changes.",
+};
+
+export const ACCURACY_HORIZON_CAPTION =
+  "The longer the wait, the higher the hit rate. Short horizons are weak. This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
+
+type DirectionScore = {
+  total: number;
+  correct: number;
+  hit_rate: number | null;
+  not_enough_history: boolean;
 };
 
 type AssetSummary = {
@@ -29,9 +37,18 @@ type AssetSummary = {
   date_range: { earliest: string; latest: string } | null;
 };
 
-type AccuracyPayload = {
+export type CheckpointSummary = AssetSummary & {
+  checkpoint_hours: number;
+  up: DirectionScore;
+  down: DirectionScore;
+};
+
+export type AccuracyPayload = {
   overall: AssetSummary;
   by_asset: Record<string, AssetSummary>;
+  by_asset_checkpoint_hours: number;
+  checkpoints: CheckpointSummary[];
+  date_range: { earliest: string; latest: string } | null;
   min_sample_size: number;
   volatility_threshold_pct: number;
   generated_at: string;
@@ -46,7 +63,7 @@ async function loadAccuracy(): Promise<AccuracyPayload | { error: string }> {
   try {
     const res = await fetch(`${apiBase}/v1/accuracy`, { cache: "no-store" });
     const json = (await res.json().catch(() => null)) as AccuracyPayload | null;
-    if (!res.ok || !json) {
+    if (!res.ok || !json || !Array.isArray(json.checkpoints)) {
       const detail = `Upstream ${res.status}`;
       console.error("[accuracy] load failed:", detail);
       return { error: detail };
@@ -63,9 +80,8 @@ function fmtDate(iso: string): string {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
-function fmtPct(v: number | null, digits = 1): string {
-  if (v === null) return "—";
-  return `${(v * 100).toFixed(digits)}%`;
+function fmtPct(v: number): string {
+  return `${(v * 100).toFixed(1)}%`;
 }
 
 function fmtMove(v: number | null): string {
@@ -73,14 +89,23 @@ function fmtMove(v: number | null): string {
   return `${v.toFixed(2)}%`;
 }
 
-function HeadlineStat({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] p-5">
-      <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)]">{label}</p>
-      <p className="mt-2 font-mono text-3xl font-semibold text-[#e5e2e1]">{value}</p>
-      {hint ? <p className="mt-1 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">{hint}</p> : null}
-    </div>
-  );
+export function horizonLabel(hours: number): string {
+  return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+}
+
+function horizonAdjective(hours: number): string {
+  return `${hours}-hour`;
+}
+
+function rateText(
+  hitRate: number | null,
+  notEnoughHistory: boolean,
+  minSampleSize: number,
+): string {
+  if (notEnoughHistory || hitRate === null) {
+    return `Not enough history yet (min ${minSampleSize})`;
+  }
+  return fmtPct(hitRate);
 }
 
 function AssetRow({
@@ -98,7 +123,7 @@ function AssetRow({
       <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
         {summary.sample_size_note}
       </td>
-      {summary.not_enough_history ? (
+      {summary.not_enough_history || summary.hit_rate === null ? (
         <td colSpan={2} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-[var(--text-muted)]">
           Not enough history yet (min {minSampleSize})
         </td>
@@ -116,10 +141,6 @@ function AssetRow({
   );
 }
 
-// Mobile: a 520px-wide, horizontally-scrolling table hides the "not enough history"
-// message and the 4th column off-screen by default (same root cause as the old
-// /calendar bug — real content sitting outside a table's default scroll position).
-// Stacked cards instead; desktop table below is untouched.
 function AssetCard({
   asset,
   summary,
@@ -132,7 +153,7 @@ function AssetCard({
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <span className="font-mono text-sm text-[#e5e2e1]">{asset}</span>
-      {summary.not_enough_history ? (
+      {summary.not_enough_history || summary.hit_rate === null ? (
         <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)] text-right">
           Not enough history yet (min {minSampleSize})
         </span>
@@ -151,120 +172,181 @@ function AssetCard({
   );
 }
 
-export default async function AccuracyPage() {
-  const data = await loadAccuracy();
+function HorizonCards({
+  checkpoints,
+  minSampleSize,
+}: {
+  checkpoints: CheckpointSummary[];
+  minSampleSize: number;
+}) {
+  return (
+    <div className="md:hidden rounded-lg border border-[var(--border)] divide-y divide-[#2a2a2a] px-4" data-testid="horizon-cards">
+      {checkpoints.map((checkpoint) => (
+        <div key={checkpoint.checkpoint_hours} className="py-3" data-testid={`horizon-${checkpoint.checkpoint_hours}`}>
+          <p className="font-mono text-sm text-[#e5e2e1]">{horizonLabel(checkpoint.checkpoint_hours)}</p>
+          <p className="mt-1 font-mono text-[11px] text-[#6b7a72]">
+            Scored {checkpoint.total_scored}. Hit rate for this horizon:{" "}
+            {rateText(checkpoint.hit_rate, checkpoint.not_enough_history, minSampleSize)}
+          </p>
+          <p className="font-mono text-[11px] text-[#6b7a72]">
+            Up calls {checkpoint.up.total}. Up hit rate for this horizon:{" "}
+            {rateText(checkpoint.up.hit_rate, checkpoint.up.not_enough_history, minSampleSize)}
+          </p>
+          <p className="font-mono text-[11px] text-[#6b7a72]">
+            Down calls {checkpoint.down.total}. Down hit rate for this horizon:{" "}
+            {rateText(checkpoint.down.hit_rate, checkpoint.down.not_enough_history, minSampleSize)}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HorizonTable({
+  checkpoints,
+  minSampleSize,
+}: {
+  checkpoints: CheckpointSummary[];
+  minSampleSize: number;
+}) {
+  return (
+    <div className="hidden md:block overflow-x-auto rounded-lg border border-[var(--border)]">
+      <table className="w-full min-w-[720px] font-mono text-[13px]" data-testid="horizon-table">
+        <thead>
+          <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+            <th className="px-4 py-2 font-medium">Horizon</th>
+            <th className="px-4 py-2 text-right font-medium">Scored</th>
+            <th className="px-4 py-2 text-right font-medium">Hit rate for this horizon</th>
+            <th className="px-4 py-2 text-right font-medium">Up calls</th>
+            <th className="px-4 py-2 text-right font-medium">Up hit rate for this horizon</th>
+            <th className="px-4 py-2 text-right font-medium">Down calls</th>
+            <th className="px-4 py-2 text-right font-medium">Down hit rate for this horizon</th>
+          </tr>
+        </thead>
+        <tbody>
+          {checkpoints.map((checkpoint) => (
+            <tr key={checkpoint.checkpoint_hours} className="border-t border-[#2a2a2a]" data-testid={`horizon-${checkpoint.checkpoint_hours}`}>
+              <td className="px-4 py-3 font-mono text-sm text-[#e5e2e1]">{horizonLabel(checkpoint.checkpoint_hours)}</td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{checkpoint.total_scored}</td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
+                {rateText(checkpoint.hit_rate, checkpoint.not_enough_history, minSampleSize)}
+              </td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{checkpoint.up.total}</td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
+                {rateText(checkpoint.up.hit_rate, checkpoint.up.not_enough_history, minSampleSize)}
+              </td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{checkpoint.down.total}</td>
+              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
+                {rateText(checkpoint.down.hit_rate, checkpoint.down.not_enough_history, minSampleSize)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function AccuracyReport({ data }: { data: AccuracyPayload | { error: string } }) {
+  const ready = !("error" in data) && Array.isArray(data.checkpoints) ? data : null;
+  const checkpoints = ready
+    ? [...ready.checkpoints].sort((a, b) => a.checkpoint_hours - b.checkpoint_hours)
+    : [];
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <PublicHeader badge="TRACK RECORD" />
+      <PublicHeader badge="ACCURACY" />
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-8 py-16">
         <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           Signal Accuracy
         </h1>
         <p className="text-xs text-[var(--text-muted)] mb-8 font-mono">
-          Computed automatically from real commodity/forex price data, checked 48 hours after each signal.
+          Computed automatically from recorded price changes at each checkpoint.
         </p>
 
-        {/* Permanent, non-dismissible past-performance disclaimer */}
         <div className="p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg mb-10">
           <p className="text-xs text-[#e5e2e1] leading-relaxed">
-            Historical accuracy of BBR&apos;s signals, computed automatically from real price data.
-            Past results do not predict future performance. This is not investment advice.
+            Historical record of direction calls, computed automatically from recorded price changes.
           </p>
         </div>
 
-        {"error" in data ? (
+        {ready === null ? (
           <div className="rounded-lg border border-[#7a3c3c] bg-[#1a1010] px-4 py-3 font-mono text-[12px] text-[#e0a0a0]">
             {ACCURACY_LOAD_ERROR}
           </div>
         ) : (
           <>
-            {/* Date range — plainly stated */}
             <p className="text-xs font-mono text-[var(--text-muted)] mb-6">
-              {data.overall.date_range
-                ? `Based on ${data.overall.sample_size_note} signals scored between ${fmtDate(
-                    data.overall.date_range.earliest,
-                  )} and ${fmtDate(data.overall.date_range.latest)} (UTC).`
-                : `Based on ${data.overall.sample_size_note} signals scored — date range unavailable.`}
+              {ready.date_range
+                ? `Recorded from ${fmtDate(ready.date_range.earliest)} to ${fmtDate(ready.date_range.latest)} (UTC).`
+                : "Date range unavailable."}
             </p>
 
-            {/* Overall: hit rate + avg move + sample size, always together */}
-            <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-              <HeadlineStat
-                label="Overall hit rate"
-                value={data.overall.not_enough_history ? "—" : fmtPct(data.overall.hit_rate)}
-                hint={
-                  data.overall.not_enough_history
-                    ? `Not enough history yet (min ${data.min_sample_size})`
-                    : `${data.overall.correct} / ${data.overall.total_scored} scored up/down calls`
-                }
-              />
-              <HeadlineStat
-                label="Avg move when correct"
-                value={fmtMove(data.overall.avg_move_when_correct)}
-                hint="Average |% change| on correctly-called signals"
-              />
-              <HeadlineStat
-                label="Sample size"
-                value={String(data.overall.sample_size_note)}
-                hint="Scored up/down predictions (excludes volatile/neutral)"
-              />
+            <section className="space-y-3 mb-6">
+              <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                By horizon
+              </h2>
+              <HorizonCards checkpoints={checkpoints} minSampleSize={ready.min_sample_size} />
+              <HorizonTable checkpoints={checkpoints} minSampleSize={ready.min_sample_size} />
+              <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]" data-testid="accuracy-caption">
+                {ACCURACY_HORIZON_CAPTION}
+              </p>
             </section>
 
-            {/* Volatile/neutral — kept separate, never blended into hit rate */}
-            {data.overall.volatile_neutral_summary ? (
-              <section className="mb-10 p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg">
-                <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">
-                  Volatile / neutral predictions (not scored as correct/incorrect)
-                </p>
-                <p className="text-sm text-[#e5e2e1] font-mono">
-                  {data.overall.volatile_neutral_summary.total} predictions called &ldquo;volatile&rdquo; or &ldquo;neutral&rdquo; — {fmtPct(data.overall.volatile_neutral_summary.fraction_above_threshold)} of those saw an actual move of {data.overall.volatile_neutral_summary.threshold_pct}% or more in either direction within 48h.
-                </p>
-                <p className="mt-2 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
-                  These predictions have no single &ldquo;correct&rdquo; direction, so they are never counted
-                  toward the hit rate above.
-                </p>
-              </section>
-            ) : null}
+            <section className="mb-10 p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg">
+              <p className="text-[12px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">
+                Volatile / neutral calls (not scored as correct or incorrect)
+              </p>
+              {checkpoints.map((checkpoint) =>
+                checkpoint.volatile_neutral_summary ? (
+                  <p key={checkpoint.checkpoint_hours} className="text-sm text-[#e5e2e1] font-mono mb-2">
+                    {checkpoint.volatile_neutral_summary.total} calls labeled volatile or neutral at the{" "}
+                    {horizonAdjective(checkpoint.checkpoint_hours)} horizon —{" "}
+                    {fmtPct(checkpoint.volatile_neutral_summary.fraction_above_threshold)} of those saw an actual move of{" "}
+                    {checkpoint.volatile_neutral_summary.threshold_pct}% or more in either direction.
+                  </p>
+                ) : null,
+              )}
+              <p className="mt-2 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
+                These calls have no single correct direction, so they are never counted toward the hit rate for any horizon in the table above.
+              </p>
+            </section>
 
-            {/* Per-asset breakdown table */}
             <section className="space-y-3 mb-10">
               <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                By asset
+                {horizonAdjective(ready.by_asset_checkpoint_hours)} results by asset
               </h2>
               <div className="md:hidden rounded-lg border border-[var(--border)] divide-y divide-[#2a2a2a] px-4">
-                {Object.entries(data.by_asset).map(([asset, summary]) => (
-                  <AssetCard key={asset} asset={asset} summary={summary} minSampleSize={data.min_sample_size} />
+                {Object.entries(ready.by_asset).map(([asset, summary]) => (
+                  <AssetCard key={asset} asset={asset} summary={summary} minSampleSize={ready.min_sample_size} />
                 ))}
               </div>
               <div className="hidden md:block overflow-x-auto rounded-lg border border-[var(--border)]">
                 <table className="w-full min-w-[520px] font-mono text-[13px]">
                   <thead>
-                    <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[10px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                    <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
                       <th className="px-4 py-2 font-medium">Asset</th>
                       <th className="px-4 py-2 text-right font-medium">Sample size</th>
-                      <th className="px-4 py-2 text-right font-medium">Hit rate</th>
+                      <th className="px-4 py-2 text-right font-medium">{horizonAdjective(ready.by_asset_checkpoint_hours)} hit rate</th>
                       <th className="px-4 py-2 text-right font-medium">Avg move when correct</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(data.by_asset).map(([asset, summary]) => (
-                      <AssetRow key={asset} asset={asset} summary={summary} minSampleSize={data.min_sample_size} />
+                    {Object.entries(ready.by_asset).map(([asset, summary]) => (
+                      <AssetRow key={asset} asset={asset} summary={summary} minSampleSize={ready.min_sample_size} />
                     ))}
                   </tbody>
                 </table>
               </div>
               <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
-                Assets with fewer than {data.min_sample_size}
-                {" "}
-                scored predictions show &ldquo;not enough history yet&rdquo; instead of a headline percentage, to
-                avoid a misleadingly small sample.
+                Assets with fewer than {ready.min_sample_size} scored calls at the{" "}
+                {horizonAdjective(ready.by_asset_checkpoint_hours)} horizon show &ldquo;not enough history yet&rdquo; instead of a percentage.
               </p>
             </section>
 
-            <p className="text-[12px] md:text-[10px] font-mono text-[#6b7a72]">
-              Generated {new Date(data.generated_at).toISOString()} (UTC)
+            <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
+              Generated {new Date(ready.generated_at).toISOString()} (UTC)
             </p>
           </>
         )}
@@ -276,4 +358,9 @@ export default async function AccuracyPage() {
       <LegalDisclaimerFooter />
     </div>
   );
+}
+
+export default async function AccuracyPage() {
+  const data = await loadAccuracy();
+  return <AccuracyReport data={data} />;
 }
