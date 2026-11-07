@@ -477,6 +477,8 @@ export function renderHomePage(input: {
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/how-it-works">How It Works</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/about">About</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/assessments">Assessments</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/research-standard">Research Standard</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/corrections">Corrections</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/walkthrough">Request a walkthrough</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/backtesting">Backtesting Lab</Link></li>
               <li>

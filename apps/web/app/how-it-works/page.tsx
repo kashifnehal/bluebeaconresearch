@@ -129,6 +129,22 @@ async function getLimits(): Promise<string[]> {
   return limits;
 }
 
+export function HowItWorksStandardLine() {
+  return (
+    <p className="text-sm text-[#e5e2e1] mb-10">
+      Our written standard is on the{" "}
+      <Link href="/research-standard" className="text-[var(--accent)] hover:underline">
+        Research Standard
+      </Link>{" "}
+      page. Errors are logged on the{" "}
+      <Link href="/corrections" className="text-[var(--accent)] hover:underline">
+        Corrections
+      </Link>{" "}
+      page.
+    </p>
+  );
+}
+
 export function HowItWorksClaimList() {
   return (
     <div className="divide-y divide-[#2a2a2a] rounded-lg border border-[var(--border)]">
@@ -197,6 +213,8 @@ export default async function HowItWorksPage() {
           </h2>
           <HowItWorksClaimList />
         </section>
+
+        <HowItWorksStandardLine />
 
         <section className="space-y-3 mb-10">
           <h2

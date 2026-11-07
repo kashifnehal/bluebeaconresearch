@@ -119,6 +119,22 @@ async function main() {
     }
   });
 
+  await runTest("research footer links Research Standard and Corrections", async () => {
+    const { root } = await renderHome([]);
+    try {
+      const researchStandard = [...document.querySelectorAll("a")].find(
+        (a) => a.getAttribute("href") === "/research-standard" && (a.textContent ?? "").includes("Research Standard"),
+      );
+      const corrections = [...document.querySelectorAll("a")].find(
+        (a) => a.getAttribute("href") === "/corrections" && (a.textContent ?? "").includes("Corrections"),
+      );
+      assert.ok(researchStandard, "expected a Research Standard footer link");
+      assert.ok(corrections, "expected a Corrections footer link");
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
   await runTest("SHOW_PLAN_PRICES false: pricing section has no dollar sign", async () => {
     assert.equal(SHOW_PLAN_PRICES, false);
     const { root } = await renderHome([]);

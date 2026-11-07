@@ -22,6 +22,8 @@ export async function buildSitemap(deps?: Partial<Deps>): Promise<MetadataRoute.
     { url: `${base}/accuracy`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/status`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/assessments`, lastModified: new Date(), changeFrequency: "daily", priority: 0.4 },
+    { url: `${base}/research-standard`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
+    { url: `${base}/corrections`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
     { url: `${base}/login`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
     { url: `${base}/signup`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
     { url: `${base}/walkthrough`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },

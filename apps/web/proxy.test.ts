@@ -211,6 +211,11 @@ async function main() {
     assert.equal(PROTECTED.includes("/assessments"), false);
   });
 
+  await runTest("/research-standard and /corrections are not in PROTECTED", () => {
+    assert.equal(PROTECTED.includes("/research-standard"), false);
+    assert.equal(PROTECTED.includes("/corrections"), false);
+  });
+
   await runTest("/api/calendar/feed is not in PROTECTED", () => {
     assert.equal(PROTECTED.includes("/api/calendar/feed"), false);
   });

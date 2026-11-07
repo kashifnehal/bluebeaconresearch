@@ -56,6 +56,16 @@ async function main() {
     assert.ok(entries.some((e) => e.url === `${SITE_ORIGIN}/assessments`));
   });
 
+  await runTest("sitemap includes /research-standard and /corrections monthly at priority 0.3", async () => {
+    const entries = await sitemap(NO_ASSESSMENTS);
+    for (const path of ["/research-standard", "/corrections"]) {
+      const entry = entries.find((e) => e.url === `${SITE_ORIGIN}${path}`);
+      assert.ok(entry, `expected a ${path} entry, got: ${entries.map((e) => e.url).join(", ")}`);
+      assert.equal(entry.changeFrequency, "monthly");
+      assert.equal(entry.priority, 0.3);
+    }
+  });
+
   await runTest("sitemap adds one entry per published assessment, using its updated_at", async () => {
     const updatedAt = "2026-11-02T00:00:00.000Z";
     const entries = await sitemap({
