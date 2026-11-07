@@ -88,6 +88,28 @@ runTest("materiality does not claim the keyword fallback only passes on a valida
   );
 });
 
+runTest("accuracy method does not use the old 48-hour-only scoring sentence", () => {
+  const answer = HELP_FAQ_ITEMS.find((item) => item.id === "accuracy-method")?.answer ?? "";
+  const oldSentence =
+    "An up/down call is scored correct if that 48-hour direction matches; moves under 0.5% are treated as flat.";
+  assert.equal(answer.includes(oldSentence), false);
+  assert.equal(
+    answer.includes(
+      "An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss.",
+    ),
+    true,
+  );
+  assert.equal(answer.startsWith("A daily worker records, for each signal and named asset"), true);
+  assert.equal(answer.includes("The Accuracy page shows all four horizons."), true);
+  const byAsset = HELP_FAQ_ITEMS.find((item) => item.id === "accuracy-history")?.answer ?? "";
+  assert.equal(
+    byAsset.startsWith(
+      "The by-asset table on the Accuracy page uses the 48-hour horizon and needs at least 20 scored outcomes at that horizon.",
+    ),
+    true,
+  );
+});
+
 runTest("no FAQ answer claims buy/sell or human verification", () => {
   const blob = HELP_FAQ_ITEMS.map((i) => `${i.question} ${i.answer}`).join("\n").toLowerCase();
   assert.equal(blob.includes("buy or sell"), true);

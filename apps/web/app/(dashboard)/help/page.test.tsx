@@ -34,6 +34,32 @@ async function main() {
     assert.match(html, /max-w-3xl/);
     await act(async () => root.unmount());
   });
+
+  await runTest("rendered help answer does not use the old 48-hour-only scoring sentence", async () => {
+    const { PathnameContext } = await import(
+      "next/dist/shared/lib/hooks-client-context.shared-runtime.js"
+    );
+    const { html, root } = await renderElement(
+      document,
+      createElement(PathnameContext.Provider, { value: "/help" }, createElement(HelpPage)),
+    );
+    try {
+      assert.equal(
+        html.includes(
+          "An up/down call is scored correct if that 48-hour direction matches; moves under 0.5% are treated as flat.",
+        ),
+        false,
+      );
+      assert.equal(
+        html.includes(
+          "An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss.",
+        ),
+        true,
+      );
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
 }
 
 main();

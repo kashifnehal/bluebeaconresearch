@@ -103,6 +103,22 @@ async function main() {
     }
   });
 
+  await runTest("accuracy link says View the accuracy page and keeps the hero line", async () => {
+    const { root } = await renderHome([]);
+    try {
+      const link = [...document.querySelectorAll("a")].find((a) =>
+        (a.textContent ?? "").includes("View the accuracy page"),
+      );
+      assert.ok(link, "expected the accuracy page link");
+      assert.equal(link?.getAttribute("href"), "/accuracy");
+      const text = document.body.textContent ?? "";
+      assert.equal(text.includes("View the live track record"), false);
+      assert.equal(text.includes("Geopolitical intelligence for markets that matter."), true);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
   await runTest("SHOW_PLAN_PRICES false: pricing section has no dollar sign", async () => {
     assert.equal(SHOW_PLAN_PRICES, false);
     const { root } = await renderHome([]);

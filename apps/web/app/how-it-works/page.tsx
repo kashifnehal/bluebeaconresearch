@@ -73,7 +73,7 @@ type ClaimRow = {
   proof: string;
 };
 
-const CLAIM_ROWS: ClaimRow[] = [
+export const CLAIM_ROWS: ClaimRow[] = [
   {
     claim: "Every signal has a Sources tab listing the reports it was built from, linking out to the original article where the publisher's URL is available.",
     proof: "Open any signal and check its Sources tab.",
@@ -129,6 +129,29 @@ async function getLimits(): Promise<string[]> {
   return limits;
 }
 
+export function HowItWorksClaimList() {
+  return (
+    <div className="divide-y divide-[#2a2a2a] rounded-lg border border-[var(--border)]">
+      {CLAIM_ROWS.map((row) => (
+        <div key={row.claim} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 p-4 md:p-5">
+          <div>
+            <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">
+              Claim
+            </p>
+            <p className="text-sm text-[#e5e2e1] leading-relaxed">{row.claim}</p>
+          </div>
+          <div>
+            <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">
+              How you can check it
+            </p>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{row.proof}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function HowItWorksPage() {
   const [stats, limits] = await Promise.all([getStats(), getLimits()]);
 
@@ -172,24 +195,7 @@ export default async function HowItWorksPage() {
           >
             What we claim, and how you can check it
           </h2>
-          <div className="divide-y divide-[#2a2a2a] rounded-lg border border-[var(--border)]">
-            {CLAIM_ROWS.map((row) => (
-              <div key={row.claim} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 p-4 md:p-5">
-                <div>
-                  <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">
-                    Claim
-                  </p>
-                  <p className="text-sm text-[#e5e2e1] leading-relaxed">{row.claim}</p>
-                </div>
-                <div>
-                  <p className="text-[12px] md:text-[10px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-1">
-                    How you can check it
-                  </p>
-                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{row.proof}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <HowItWorksClaimList />
         </section>
 
         <section className="space-y-3 mb-10">
