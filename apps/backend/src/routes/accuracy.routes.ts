@@ -10,6 +10,8 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
  * No auth: this is the same public informational class of data as the price
  * routes. Sample size is scored pipeline rows, not users (signal_outcomes has
  * no user_id). This handler sets no Cache-Control header, same as before.
+ * GET /v1/accuracy returns overall and by_asset for the 48-hour checkpoint
+ * and a checkpoints list for the 1, 4, 24 and 48 hour checkpoints.
  */
 
 // Below this many scored (up/down) calls, a hit-rate percentage is more
