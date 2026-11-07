@@ -5,12 +5,14 @@ export const SITE_ORIGIN = "https://www.bluebeaconresearch.com";
 
 export const SHARE_TITLE = "Blue Beacon Research";
 
-export const SHARE_DESCRIPTION = "Geopolitical events, structured for the commodity markets you follow.";
+export const SHARE_DESCRIPTION =
+  "Geopolitical and economic research for commodity markets. Event, exposure, evidence, with sources and dates.";
 
 export const rootMetadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: "Blue Beacon Research",
-  description: "Geopolitical intelligence for markets that matter.",
+  description:
+    "Geopolitical and economic research for commodity markets. Event, exposure, evidence, with sources and dates.",
   openGraph: {
     title: SHARE_TITLE,
     description: SHARE_DESCRIPTION,

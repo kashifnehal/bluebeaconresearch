@@ -4,7 +4,7 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 export const metadata: Metadata = {
   title: "About | Blue Beacon Research",
   description:
-    "Blue Beacon Research is an AI-powered research platform that converts geopolitical events into structured market signals for commodity traders.",
+    "Blue Beacon Research publishes geopolitical and economic research for commodity markets. We turn events such as conflicts, sanctions and policy shifts into dated, sourced assessments of the markets they may affect, for traders, analysts and businesses with commodity exposure.",
 };
 
 // Same three steps as the homepage feature grid (app/page.tsx).
@@ -39,9 +39,7 @@ export default function AboutPage() {
           About
         </h1>
         <p className="text-xs text-[var(--text-muted)] mb-8 font-mono leading-relaxed">
-          Blue Beacon Research is an AI-powered research platform. It converts global events — conflicts,
-          sanctions, and policy shifts — into structured market signals scored by severity and commodity market
-          impact, for commodity traders, analysts, and businesses with market exposure.
+          Blue Beacon Research publishes geopolitical and economic research for commodity markets. We turn events such as conflicts, sanctions and policy shifts into dated, sourced assessments of the markets they may affect, for traders, analysts and businesses with commodity exposure.
         </p>
 
         <section className="space-y-3 mb-10">

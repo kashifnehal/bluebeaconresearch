@@ -19,13 +19,13 @@ export const dynamic = "force-dynamic";
 export const SHOW_PLAN_PRICES = false;
 
 export const metadata: Metadata = {
-  title: "Blue Beacon Research | Geopolitical Market Intelligence",
+  title: "Blue Beacon Research | Geopolitical and economic research for commodity markets",
   description:
-    "Source-first geopolitical research, structured as market signals. Evidence, uncertainty, and a published track record — not a generic news feed.",
+    "Assessments of geopolitical and economic events and the commodity markets they may touch, with sources, uncertainty and dates.",
   openGraph: {
-    title: "Blue Beacon Research | Geopolitical Market Intelligence",
+    title: "Blue Beacon Research | Geopolitical and economic research for commodity markets",
     description:
-      "Source-first geopolitical research, structured as market signals. Evidence, uncertainty, and a published track record — not a generic news feed.",
+      "Assessments of geopolitical and economic events and the commodity markets they may touch, with sources, uncertainty and dates.",
     type: "website",
   },
 };
@@ -294,7 +294,18 @@ export function renderHomePage(input: {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">
               {[
                 { icon: "radar", title: "01. Event Detection", desc: "Public news sources (publisher RSS feeds, GNews and GDELT) are scanned and turned into structured events." },
-                { icon: "psychology", title: "02. Research Assessment", desc: "Each event is classified for market relevance and mapped to the commodities and currency pairs it may affect — with uncertainty stated. On this AI-powered research platform, classification is done with Anthropic's Claude models, and a basic keyword fallback runs only when no Claude client is configured — if Claude is unavailable, classification waits." },
+                {
+                  icon: "psychology",
+                  title: "02. Research Assessment",
+                  desc: (
+                    <>
+                      Each event is assessed for market relevance and mapped to the commodities and currency pairs it may affect, with uncertainty stated.{" "}
+                      <Link href="/how-it-works" className="underline hover:text-primary">
+                        How we produce assessments is explained on the How It Works page.
+                      </Link>
+                    </>
+                  ),
+                },
                 { icon: "notifications_active", title: "03. Alerts", desc: "Optional notifications when a new signal matches the markets and regions you follow." }
               ].map((f, i) => (
                 <div key={i} className="group">

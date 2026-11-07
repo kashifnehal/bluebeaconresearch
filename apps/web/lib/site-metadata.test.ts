@@ -19,7 +19,11 @@ runTest("root metadata has openGraph, twitter, and metadataBase", () => {
   assert.ok(rootMetadata.metadataBase);
   assert.equal(rootMetadata.metadataBase?.toString(), `${SITE_ORIGIN}/`);
   assert.equal(rootMetadata.title, "Blue Beacon Research");
-  assert.equal(rootMetadata.description, "Geopolitical intelligence for markets that matter.");
+  assert.equal(
+    rootMetadata.description,
+    "Geopolitical and economic research for commodity markets. Event, exposure, evidence, with sources and dates.",
+  );
+  assert.equal(SHARE_DESCRIPTION, rootMetadata.description);
   assert.equal(rootMetadata.openGraph && "title" in rootMetadata.openGraph ? rootMetadata.openGraph.title : null, SHARE_TITLE);
   assert.equal(
     rootMetadata.openGraph && "description" in rootMetadata.openGraph ? rootMetadata.openGraph.description : null,

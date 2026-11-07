@@ -26,8 +26,10 @@ export default function PrivacyPage() {
 
           <h2 className="pt-4 text-base font-semibold text-text-primary">What we collect</h2>
           <p>
-            Blue Beacon Research is an AI-powered research platform. These are the user-linked records the application
-            actually writes. Each name is a table in our database.
+            Blue Beacon Research publishes geopolitical and economic research for commodity markets. Assessments are
+            produced with automated language-model classification. Anthropic is the processor for those model requests,
+            as described below. These are the user-linked records the application actually writes. Each name is a table
+            in our database.
           </p>
           <ul className="list-disc space-y-2 pl-5">
             <li>
@@ -210,6 +212,24 @@ export default function PrivacyPage() {
               Search assist sends your query text and one retrieved page&apos;s title, URL, and text.
             </li>
           </ul>
+
+          <h2 className="pt-4 text-base font-semibold text-text-primary">Weekly email and enquiries</h2>
+          <p>
+            If you sign up for the weekly email, we store your email address, the consent wording you agreed to, the
+            date of that consent, and the page you signed up from. We use that record to send the weekly research email.
+            You can unsubscribe at any time.
+          </p>
+          <p>
+            If you send an enquiry, we store the enquiry details you submit, the consent wording, and the date. We use
+            that record to reply to the enquiry.
+          </p>
+          <p>
+            You can ask for deletion of either record by emailing{" "}
+            <a className="text-text-primary underline" href="mailto:support@bluebeaconresearch.com">
+              support@bluebeaconresearch.com
+            </a>
+            .
+          </p>
 
           <h2 className="pt-4 text-base font-semibold text-text-primary">Your rights</h2>
           <p>

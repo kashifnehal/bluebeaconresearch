@@ -7,11 +7,18 @@ import { useUIStore } from "@/store/useUIStore";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { WelcomeTourStep } from "@/components/onboarding/WelcomeTourStep";
 
+export const PRODUCT_TOUR_CONFIDENCE_COPY =
+  "Confidence reflects how certain the assessment is of its read of this event, not how likely a market move is.";
+
+export function ProductTourConfidenceStep() {
+  return <p>{PRODUCT_TOUR_CONFIDENCE_COPY}</p>;
+}
+
 const DASHBOARD_STEPS: Step[] = [
   {
     target: '[data-tour="feed-header"]',
     content:
-      "This is your signal feed. New geopolitical and macro events that could affect markets you care about show up here as our AI-powered research platform classifies them.",
+      "This is your signal feed. New geopolitical and macro events that could affect markets you care about show up here.",
     disableBeacon: true,
     placement: "bottom",
   },
@@ -23,8 +30,7 @@ const DASHBOARD_STEPS: Step[] = [
   },
   {
     target: '[data-tour="confidence-score"]',
-    content:
-      "Confidence reflects how certain our AI-powered research platform is in its read of this event — not how many sources reported it, and not a guess dressed up as a number.",
+    content: <ProductTourConfidenceStep />,
     placement: "bottom",
   },
   {

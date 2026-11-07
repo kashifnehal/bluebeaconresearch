@@ -68,7 +68,8 @@ runTest("homepage and dashboard render the shared copy", () => {
   assert.ok(page.includes("Flagged {flagged}"));
   assert.equal(page.includes("every 30 minutes"), false);
   assert.equal(page.includes("not in real time"), false);
-  assert.ok(page.includes("AI-powered research platform"));
+  assert.equal(page.includes("AI-powered"), false);
+  assert.ok(page.includes("How we produce assessments is explained on the How It Works page."));
   assert.equal(page.includes("Live signal feed"), false);
   assert.ok(page.includes("Signals with checkable sources"));
   const prompt = readFileSync(join(here, "../components/NotificationConnectPrompt.tsx"), "utf8");

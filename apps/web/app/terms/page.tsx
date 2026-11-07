@@ -16,7 +16,7 @@ export default function TermsPage() {
             About the service
           </h2>
           <p className="text-on-surface/60 leading-relaxed font-medium">
-            Blue Beacon Research is an AI-powered research platform. It publishes
+            Blue Beacon Research publishes geopolitical and economic research for commodity markets. It publishes
             informational geopolitical intelligence signals drawn from public
             reporting.
           </p>
@@ -82,6 +82,7 @@ export default function TermsPage() {
             Automated analysis
           </h2>
           <p className="text-on-surface/60 leading-relaxed font-medium">
+            Assessments are produced with automated language-model classification.
             Signals come from public news sources and are classified by
             automated systems, including Anthropic&apos;s Claude models. They can
             be wrong or late.
