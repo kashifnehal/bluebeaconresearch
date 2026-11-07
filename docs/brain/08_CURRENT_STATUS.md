@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-08 (accuracy wording matches the flat-move rule)
+Last updated: 2026-11-08 (public accuracy leftovers)
+
+> ⚠️ NEW 2026-11-08 (public accuracy leftovers, `apps/web` plus the help search catalog, `d44812a`, `ba1d33a`, `300cb39`, `81b8f3c`, `602e775`) — How It Works says calls are compared with the later price move, including a weak result. The homepage link says "View the accuracy page". Help scoring uses the 0.5% flat rule at each checkpoint. Not verified: live pages and the Railway deploy. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-08 (accuracy wording, `apps/backend` + `apps/web`, `f12c123`, `7f75e55`, `7c46fb5`, `faeeed5`) — `GET /v1/accuracy` returns `flat_threshold_pct` 0.5. The accuracy caption is built from that field. A missing checkpoint list still shows the 48-hour overall row. Homepage and help text describe all four horizons. After consent, PostHog init disables session recording, autocapture, heatmaps, surveys, and performance capture. Not verified: Railway deploy and the live pages. See `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

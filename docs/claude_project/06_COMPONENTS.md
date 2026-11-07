@@ -444,7 +444,7 @@ No separate `components/landing/*` files exist. The public homepage is this serv
 - `dynamic = "force-dynamic"`. `getLatestSignal()` still reads the newest active `signals` row. Public reads use `getRouteSupabaseClients().supabase` (service role when the key is set). Live RLS is `signals_select_authenticated` only; the cookie/anon client returns 0 rows to a logged-out visitor.
 - `getHomepageStats()` counts signals with `select("id", { count: "exact", head: true })` in `apps/web/lib/homepage-stats.ts` (`loadHomepageSignalCount`) and renders "N signals tracked". Failures log the Postgrest error.
 - CTA overlay: "Sign up to read the full assessment" → `/signup`. Empty state is "Loading the latest signal…" (no Beacon-Alpha / hardcoded example card).
-- New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point). As of 2026-11-08 (`7c46fb5`) the heading is "See the accuracy record" and the paragraph names four checkpoints. The link text is unchanged.
+- New track-record section + header/footer links to the existing public `/accuracy` page. **No homepage hit-rate percentage** (deliberate; the page is the proof point). As of 2026-11-08 (`7c46fb5`) the heading is "See the accuracy record" and the paragraph names four checkpoints. As of 2026-11-08 (`ba1d33a`) the link text is "View the accuracy page".
 - Removed fabricated lines: 42ms, 100% Verified, 40yr Intel Archive, Encrypted Support, sub-second synthesis.
 - Hero `<p>` (#174, 2026-09-20): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.
 
@@ -684,7 +684,7 @@ is 30, counted 2026-10-16 from code, not a query — 28 objects in `RSS_FEEDS`
 
 **Claim/proof table**: 7 claims (sources-tab links, pause-instead-of-guessing
 disclosure, zero headline-placement bonus, confidence-vs-report-count copy,
-reports-not-outlets counting, published track record, and — added 2026-10-09 —
+reports-not-outlets counting, how often calls matched the later price move (2026-11-08, `d44812a`), and — added 2026-10-09 —
 what Claude does and does not do: market-impact classification, including an
 up/down/volatile reading, and no position, size, or entry/exit recommendation).
 The original six were checked against code or live data before being written;

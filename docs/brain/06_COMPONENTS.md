@@ -213,7 +213,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 
 - Inline public homepage (no `components/landing/` split). `getLatestSignal()` + `getHomepageStats()`. The signal count is `loadHomepageSignalCount` in `apps/web/lib/homepage-stats.ts`: `select("id", { count: "exact", head: true })`. RLS is authenticated-only, so reads go through `getRouteSupabaseClients()`.
 - Copy integrity: fabricated 42ms / 100% Verified / 40yr / Encrypted Support / sub-second lines removed; research-register CTAs.
-- Links to `/accuracy` without displaying a hit-rate percentage. As of 2026-11-08 (`7c46fb5`) the section heading is "See the accuracy record". The paragraph names the 1, 4, 24, and 48 hour checkpoints and says past results are a historical statistic, not a forecast. The link text is still "View the live track record".
+- Links to `/accuracy` without displaying a hit-rate percentage. As of 2026-11-08 (`7c46fb5`) the section heading is "See the accuracy record". The paragraph names the 1, 4, 24, and 48 hour checkpoints and says past results are a historical statistic, not a forecast. As of 2026-11-08 (`ba1d33a`) the link text is "View the accuracy page".
 - Hero `<p>` (#174): "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders". Headline unchanged.
 
 ### 3.5c Map page Tension Index tooltip (`app/(dashboard)/map/page.tsx`) (#175)

@@ -5,6 +5,14 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Public accuracy leftovers (TASK WEB-WORDING2), `apps/web` plus the help search catalog, 2026-11-08, `d44812a` / `ba1d33a` / `300cb39` / `81b8f3c` / `602e775`
+
+- How It Works claim: "We publish how often our calls matched the later price move, including when the result is weak." The check text is unchanged.
+- Homepage link text: "View the accuracy page". Href stays `/accuracy`. Hero line unchanged.
+- Help answer and `search-catalog.ts`: an up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is flat and counts as a miss. The by-asset answer was not edited.
+- **Verification:** web `tsc --noEmit` exit 0; web test exit 0 (761 ✔, 0 ✖); `next build` exit 0. Backend `tsc --noEmit` exit 0; backend test exit 0 (608 ✔, 0 ✖). **Not verified:** live pages and the Railway deploy. `81b8f3c` changes `apps/backend`, so a build of current main includes the catalog sentence.
+- Docs: this entry; both live `14_CHANGELOG.md` files; both `08_CURRENT_STATUS.md` files; the current link-text lines in both `06_COMPONENTS.md` files. Skipped `05_API.md`, `04_DATABASE.md`, `18_AI_ENGINE.md`, both `10_DECISIONS.md` files, and `09_BACKLOG.md` — no route, table, prompt, standing rule, or backlog ticket.
+
 ## ✅ Accuracy wording matches how calls are scored (TASK WEB-WORDING1), `apps/backend` then `apps/web`, 2026-11-08, `f12c123` / `7f75e55` / `7c46fb5` / `faeeed5`
 
 - Part 1 (`f12c123`): `FLAT_THRESHOLD_PCT` is 0.5 in `apps/backend/src/lib/outcome-threshold.ts`. The outcome tracker imports it. `GET /v1/accuracy` adds top-level `flat_threshold_pct`. No other response field changed. No migration.

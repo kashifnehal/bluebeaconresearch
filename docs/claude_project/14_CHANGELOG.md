@@ -8,6 +8,8 @@
 
 ---
 
+2026-11-08 — How It Works, the homepage accuracy link, and the help scoring sentence now describe the later price move, including a weak result (`d44812a`, `ba1d33a`, `300cb39`, `81b8f3c`, `602e775`). Not verified: live pages and the Railway deploy.
+
 ## 2026-11-08 — Accuracy wording matches the flat-move rule
 
 `apps/backend` and `apps/web`, `f12c123`, `7f75e55`, `7c46fb5`, `faeeed5`. The accuracy response now includes the 0.5% flat-move threshold the scorer already uses. The public page explains that rule from the API value, and a response without checkpoint rows still shows the 48-hour overall figures. Homepage and help text describe all four horizons. PostHog, after a visitor accepts, does not record sessions or autocapture. Railway deploy and the live pages were not opened. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
