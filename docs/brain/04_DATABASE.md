@@ -252,6 +252,9 @@ Weekly CFTC Disaggregated Futures Only positioning. `public.cot_positions`. Prim
 ### Table 13h: `economic_event_values` (written, not applied, 2026-10-27)
 Periodic economic series values (currently EIA weekly petroleum stocks and natural-gas storage). `public.economic_event_values`. Columns: `id` (uuid pk), `series_id`, `period` (date), `value` (numeric), `unit`, `source_url`, nullable `released_at`, `fetched_at`. Unique `(series_id, period)`. RLS on, no policy, `anon`/`authenticated` revoked, `service_role` select+insert+update. `20261018000000_economic_event_values.sql`. Not applied. Filled by `apps/backend/src/workers/eia-weekly.ts` (series ids `WCESTUS1`, `NW2_EPG0_SWO_R48_BCF`); already read by `apps/web`'s `GET /api/calendar/values` (shipped ahead of this table, degrades to `{values:[]}` until it exists) — column names and series ids match what that route selects.
 
+### Table 13i: `weekly_send_log` (written, not applied, 2026-11-08)
+One row per confirmed subscriber per edition of The Beacon Weekly. `public.weekly_send_log`. Columns: `id` (uuid pk), `edition` (integer), `subscriber_id` (uuid, FK `newsletter_subscribers.id` on delete cascade), `status` (`sent`/`failed`), nullable `resend_id`, nullable `error`, `created_at`. Unique `(edition, subscriber_id)`. RLS on, no policy, `anon`/`authenticated` revoked, `service_role` select+insert+update. `20261108120000_weekly_send_log.sql`. Not applied. A failed row can be retried; a sent row is not sent again. Depends on `newsletter_subscribers`, whose migration is also still unapplied.
+
 ### View: `feed_gap_p95` (written, not applied, 2026-10-15)
 `20261015130000_feed_gap_p95.sql` (`5a04fcb`). Read-only view `public.feed_gap_p95`. Not in the applied migration list checked 2026-10-15.
 
@@ -412,6 +415,7 @@ CREATE UNIQUE INDEX idx_signals_raw_event_ids_unique ON public.signals (raw_even
     - `id`, `slug` (unique, `^[a-z0-9-]{3,80}$`), `headline`, `summary` (max 400 chars, BBR-written), `event_time` (nullable), `assessed_at`, `markets text[]`, `body jsonb` (what happened / exposure / evidence / uncertainty / what to watch), `sources jsonb` (publisher/title/url/published_at — `url` must be `https://`), `status` (`draft`/`published`), `published_at`, `created_at`, `updated_at`.
     - Stores BBR-written text only — never a news article's own text, since the news feed licence is non-commercial. No row seeded by this task.
     - **Written, NOT yet applied to the live DB** — no `apply_migration` call was made this session, per the task's own instruction. See `16_MIGRATION_CHECKLIST.md`.
+16. **`20261108120000_weekly_send_log.sql`** (2026-11-08): `public.weekly_send_log`, one row per subscriber per edition (`sent` or `failed`), unique on `(edition, subscriber_id)`, foreign key to `newsletter_subscribers`. RLS on, no policy, `service_role` select/insert/update only. **Written, NOT yet applied.** See `16_MIGRATION_CHECKLIST.md`.
 
 ## 5. Data Retention & Archival — planned, not yet built
 

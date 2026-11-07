@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-08 (Research Standard and Corrections pages)
+Last updated: 2026-11-08 (weekly send tool, sending off)
+
+> ⚠️ NEW 2026-11-08 (weekly send tool, `apps/backend` plus one migration, `0604027`, `4823f82`, `2fad5b1`, `b6537a1`) — Weekly send tool exists; sending is off until WEEKLY_SEND_ENABLED is set and the migration is applied. `public.weekly_send_log` is written, not applied. A dry run is the default and sends nothing. Not verified: the migration is not applied, nothing was sent, and the Railway deploy was not checked. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-08 (Research Standard and Corrections, `apps/web` only, `2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`) — `/research-standard` lists eight checks on a published assessment. `/corrections` logs the 2026-11-08 accuracy-caption change and shows published-assessment corrections as none. Both are linked from the homepage footer and How It Works, and both are static sitemap entries. Not verified: the live pages. See `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

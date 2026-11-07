@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-08 (Research Standard and Corrections pages — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-08 (weekly send tool, sending off — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-08 (weekly send tool, `apps/backend` plus one migration, `0604027`, `4823f82`, `2fad5b1`, `b6537a1`) — Weekly send tool exists; sending is off until WEEKLY_SEND_ENABLED is set and the migration is applied. The send log table is written, not applied. Nothing was sent. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-08 (Research Standard and Corrections, `apps/web` only, `2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`) — `/research-standard` and `/corrections` are public. Published-assessment corrections show as none. Not verified: the live pages. See `docs/brain/LIVE_TODO.md`.
 

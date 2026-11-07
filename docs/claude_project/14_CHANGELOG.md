@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-08 — Weekly send tool, sending off
+
+`apps/backend` plus one migration, `0604027`, `4823f82`, `2fad5b1`, `b6537a1`. A command can build The Beacon Weekly for confirmed subscribers. It dry-runs unless several switches are set, and it writes `public.weekly_send_log` only when it actually tries to send. That migration is written, not applied. Nothing was sent. The Railway deploy was not checked. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 2026-11-08 — Public pages `/research-standard` and `/corrections` (`2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`). Eight written checks, one logged accuracy-caption correction, published-assessment corrections shown as none. Not verified: the live pages. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 2026-11-08 — How It Works, the homepage accuracy link, and the help scoring sentence now describe the later price move, including a weak result (`d44812a`, `ba1d33a`, `300cb39`, `81b8f3c`, `602e775`). Not verified: live pages and the Railway deploy.

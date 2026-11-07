@@ -4,6 +4,8 @@
 
 > ⚠️ UPDATED 2026-11-08 — Public Research Standard and Corrections pages (`2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`). No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
+> ⚠️ UPDATED 2026-11-08 — The Beacon Weekly send tool exists (`0604027`, `4823f82`, `2fad5b1`, `b6537a1`). Sending is off until `WEEKLY_SEND_ENABLED` is set and `weekly_send_log` is applied. Nothing was sent. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-10-17 — Daily ingestion budget stays at $2 until go-live; no monthly-limit variable; gate shadow stays off. Admin ingestion status returns `newestStoredArticleAt` (`ab91e372c219f350167c03dcea0ef0d82574785c`, docs `14d8fbe13bd36e47371401628238c826a5bcd478`). Public pages show no collection time (2026-10-16 rule). No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-10-18 — Alerts badge sync (`apps/web`) is `useSyncUnreadBadge`, same behaviour as before. A rendered probe fails above 4 renders. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
