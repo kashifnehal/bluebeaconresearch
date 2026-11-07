@@ -38,10 +38,22 @@ async function main() {
 
   const posthog = (await import("posthog-js")).default;
   const calls = { init: 0, optOut: 0, reset: 0 };
-  let initOptions: { api_host?: string; person_profiles?: string } | undefined;
+  let initOptions:
+    | {
+        api_host?: string;
+        person_profiles?: string;
+        capture_pageview?: boolean;
+        disable_session_recording?: boolean;
+        autocapture?: boolean;
+        capture_dead_clicks?: boolean;
+        capture_heatmaps?: boolean;
+        disable_surveys?: boolean;
+        capture_performance?: boolean;
+      }
+    | undefined;
   posthog.init = ((...args: unknown[]) => {
     calls.init += 1;
-    initOptions = args[1] as { api_host?: string; person_profiles?: string } | undefined;
+    initOptions = args[1] as typeof initOptions;
   }) as typeof posthog.init;
   posthog.opt_out_capturing = (() => {
     calls.optOut += 1;
@@ -78,8 +90,17 @@ async function main() {
     setConsent(true);
     initAnalytics();
     assert.equal(calls.init, 1);
-    assert.equal(initOptions?.api_host, "https://eu.example.test");
-    assert.equal(initOptions?.person_profiles, "identified_only");
+    assert.deepEqual(initOptions, {
+      api_host: "https://eu.example.test",
+      person_profiles: "identified_only",
+      capture_pageview: true,
+      disable_session_recording: true,
+      autocapture: false,
+      capture_dead_clicks: false,
+      capture_heatmaps: false,
+      disable_surveys: true,
+      capture_performance: false,
+    });
     initAnalytics();
     assert.equal(calls.init, 1);
   });

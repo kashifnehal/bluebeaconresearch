@@ -25,6 +25,12 @@ export function initAnalytics() {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://app.posthog.com",
       person_profiles: "identified_only",
       capture_pageview: true,
+      disable_session_recording: true,
+      autocapture: false,
+      capture_dead_clicks: false,
+      capture_heatmaps: false,
+      disable_surveys: true,
+      capture_performance: false,
     });
     initialized = true;
   } catch {
