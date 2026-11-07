@@ -4,7 +4,7 @@ This file is auto-loaded at the start of every Cursor Pro Agent session in this 
 
 ## What this project is
 
-Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts global events (conflicts, sanctions, policy shifts) into structured market signals for commodity traders, import/export SMBs, and boutique fund analysts. Pitch: an AI-powered research platform that turns geopolitical events into dated, sourced assessments of which commodity markets they may touch and why.
+Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts global events (conflicts, sanctions, policy shifts) into structured market signals for commodity traders, import/export SMBs, and boutique fund analysts. Pitch: geopolitical and economic research for commodity markets. It turns geopolitical events into dated, sourced assessments of which commodity markets they may touch and why.
 
 **Read first, in order:**
 1. [`docs/claude_project/21_PROJECT_BRIEFING.md`](docs/claude_project/21_PROJECT_BRIEFING.md) — the *why*: vision, target users, positioning, competitors, pricing, standing product decisions. This is the canonical onboarding doc; it says so explicitly ("paste this file FIRST").
@@ -47,7 +47,7 @@ Blue Beacon Research (BBR) is a geopolitical intelligence SaaS: it converts glob
 
 ## Standing rules (do not re-litigate)
 
-- **Never call it "an AI tool."** Always "AI-powered research platform". Never write "analyst team", "our analysts", "our research team", "institutional-grade", "Bloomberg-grade", "real-time", "before markets open", "predicts", "accuracy" claims, "signals to trade", "edge" or "profit" in product copy, ads or posts. Each one conflicts with the public-claims rule or with a legal line (substantiation, no claim of human review, no trade timing). Say "research assessment", "brief" or "note" instead. Add a short footer where needed: "Research, not investment advice. Sources and timestamps on each item."
+- **Wording.** Do not use "AI-powered" or "an AI tool" in public marketing copy (site, share images, ads, posts, emails). Truthful method disclosure stays on the How It Works, Terms and Privacy pages: say that assessments are produced with automated language-model classification, and never claim human review that does not happen. The company describes itself as "geopolitical and economic research for commodity markets" and may describe itself as an institutional-grade research firm only once the public Research Standard and corrections log exist. Never state, as a present fact, that a research team, named analysts, reviewers, customers or a user count exist unless the database or a signed record shows it. Vision statements are allowed when they are written as "built to…" and labelled as vision or roadmap. Never use "real-time", "instant", "predicts", "edge", "profit" or "signals to trade". No buy or sell wording. Disclaimer text is fine print only (website footer, public assessment pages, email footer). Never in bios, posts, captions or share images.
 - **Global positioning, not India-specific.**
 - **No buy/sell recommendations** in signal copy or UI — informational only, not financial advice.
 - **Never suggest rewriting the stack.** Tech stack (Turborepo/pnpm, Next.js 16, Fastify, Supabase, BullMQ+Upstash Redis, Yahoo Finance for prices) is settled; extend it, don't replace it.

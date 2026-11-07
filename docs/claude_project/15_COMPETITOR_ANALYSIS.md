@@ -87,7 +87,7 @@ Bloomberg's price is stated differently in two places in our docs. Re-read it fr
 - Compliance and audit trail features
 
 ### Why BBR references Bloomberg in marketing:
-- Blue Beacon Research is an AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
+- Blue Beacon Research publishes geopolitical and economic research for commodity markets. It turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
 - BBR users are specifically those who can't access Bloomberg
 - Bloomberg's $24K price creates a massive gap in the market that BBR fills
 - Bloomberg's price is stated differently in two places in our docs. Re-read it from Bloomberg's published page before any public use. Not used on any public page as of 2026-10-16.

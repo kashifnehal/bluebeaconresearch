@@ -11,7 +11,7 @@
 **Name:** Blue Beacon Research
 **Tagline:** "Geopolitical intelligence for markets that matter." (updated 2026-09-25, was "High-fidelity geopolitical intelligence → actionable trading signals.")
 **Subheadline (landing hero `<p>`, 2026-09-20 / #174):** "Blue Beacon Research — Geopolitical Intelligence for Commodity Traders"
-**Elevator pitch:** "Blue Beacon Research is an AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
+**Elevator pitch:** "Blue Beacon Research publishes geopolitical and economic research for commodity markets. It turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
 
 **Tone of voice:**
 - Direct, confident, institutional — never hype-driven
@@ -159,7 +159,7 @@ Real-time alerts → bluebeaconresearch.com
 ### Phase 2: Community Launch (Week 2-4)
 - Product Hunt: Tuesday 12:01am PST
   - Title: "Blue Beacon Research — Geopolitical alerts before markets move"
-  - Tagline: "An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
+  - Tagline: "Geopolitical and economic research for commodity markets. It turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
   - Screenshots: 5 real signal cards, map view, backtesting results
   - Video: 60-second Loom walkthrough
   - First-day goal: 300+ upvotes → #1 or #2 Product of the Day
@@ -251,7 +251,7 @@ Earthian AI: enterprise contract
 
 Blue Beacon Research: $49/month
 
-An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
+Geopolitical and economic research for commodity markets. It turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
 No sales call. No annual contract.
 
 Self-serve. Live in 5 minutes.

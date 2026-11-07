@@ -36,7 +36,7 @@ The platform deliberately avoids showing everything. At peak, GDELT processes 50
 BBR is legally and philosophically positioned as an **intelligence layer**, not a trading advisory. Every signal says "here is what happened, here is what it historically means for markets, here is the confidence level." It never says "buy" or "sell." This is both a legal protection and a product philosophy — users are professionals who can draw their own conclusions.
 
 ### 3.3 Research Firm Framing
-BBR presents itself as an AI-powered research platform, not an "AI tool." Say "research assessment", "brief", or "note". Do not write "analyst team", "our analysts", or "our research team".
+BBR describes itself as geopolitical and economic research for commodity markets. Do not use "AI-powered" or call it "an AI tool" in public marketing copy. On the How It Works, Terms and Privacy pages, say that assessments are produced with automated language-model classification. Do not state, as a present fact, that an analyst team, named analysts, or a research team exists.
 
 ### 3.4 Speed Over Completeness
 A signal card that arrives in 2 minutes with 80% accuracy is worth more than a 20-minute deep report. The platform optimizes for first-mover advantage: users need to know about the Houthi strike before markets open, not after CNBC covers it.
@@ -148,7 +148,7 @@ These were explicitly discussed and rejected or deferred:
 ## 7. PRODUCT POSITIONING
 
 **Against Bloomberg/Stratfor/Palantir:**
-"An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
+"Geopolitical and economic research for commodity markets. It turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."
 
 **Against WorldMonitor (closest free competitor):**
 "WorldMonitor shows you the world. Blue Beacon Research tells your specific position what to expect next."
@@ -169,7 +169,7 @@ They give you headlines in seconds. BBR gives you analysis in 2 minutes. We are 
 
 ## 8. ONE-SENTENCE ELEVATOR PITCH
 
-**"Blue Beacon Research is an AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."**
+**"Blue Beacon Research publishes geopolitical and economic research for commodity markets. It turns published news into structured, source-linked commodity signals, with the time reported and the time flagged."**
 
 ---
 
@@ -207,7 +207,7 @@ They give you headlines in seconds. BBR gives you analysis in 2 minutes. We are 
 These guardrails were established and must be maintained by any future CTO:
 
 1. Must never make buy/sell recommendations
-2. Must never position as "an AI tool" — always "AI-powered research platform"
+2. Must never position as "an AI tool" or use "AI-powered" in public marketing copy. Describe the company as geopolitical and economic research for commodity markets. On the How It Works, Terms and Privacy pages, say that assessments are produced with automated language-model classification.
 3. Must never focus only on India — global positioning is non-negotiable
 4. Must never clutter the UI with data layers — simplicity is the product
 5. Must never compete on breadth against WorldMonitor — compete on depth and personalization. This bans a race for the longest asset list. It does not ban adding assets inside our domain when users need them and coverage-state evidence exists.

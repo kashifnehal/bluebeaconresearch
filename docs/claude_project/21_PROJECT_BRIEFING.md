@@ -122,16 +122,16 @@ Mobile:       Expo React Native (scaffolded, not submitted to stores)
 11. **Google OAuth fully implemented** — PKCE flow in `/auth/callback/route.ts`, `handle_new_user()` trigger captures Google display name from `raw_user_meta_data`
 12. **Stripe fully stubbed** — All users = 'pro'. Implement only when first person asks to pay.
 13. **Global positioning, not India-specific** — Bigger TAM, better brand
-14. **"Research firm", not "AI tool"** — Never call it "an AI tool." Always "AI-powered research platform"
+14. **"Research firm", not "AI tool"** — Do not use "AI-powered" or "an AI tool" in public marketing copy. The company describes itself as geopolitical and economic research for commodity markets. On the How It Works, Terms and Privacy pages, say that assessments are produced with automated language-model classification.
 15. **"Established research company" — never reveal data-history recency** — Product copy, UI, and methodology/about pages must never state or imply how recently BBR's real data history began (D19 / ADR 015). Framing rule only — does not relax "no unsourced precision" or "build it before you claim it."
 
 ---
 
 ## PRODUCT POSITIONING (MEMORISE)
 
-**What it is:** An AI-powered research platform that turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
+**What it is:** Geopolitical and economic research for commodity markets. It turns published news into structured, source-linked commodity signals, with the time reported and the time flagged.
 
-**Domain (2026-10-09):** BBR is an AI-powered research platform that turns geopolitical and economic events into commodity- and currency-relevant signals. Breadth means more markets and event channels within that domain; it does not mean general news, equities research or crypto. Domain unchanged: geopolitical and economic events turned into commodity and currency signals.
+**Domain (2026-10-09):** BBR publishes geopolitical and economic research for commodity markets. It turns geopolitical and economic events into commodity- and currency-relevant signals. Breadth means more markets and event channels within that domain; it does not mean general news, equities research or crypto. Domain unchanged: geopolitical and economic events turned into commodity and currency signals.
 
 **Who it's for:** Commodity traders (oil, gold, wheat futures), import/export SMBs, boutique fund analysts, quant/algo builders.
 - **Forex traders — shipped.** Currency-pair signals, personalization, and alert/digest matching for the 6 majors (EUR/USD, GBP/USD, USD/JPY, USD/CHF, USD/RUB, USD/CNY) are live end-to-end (#87, all 3 phases, 2026-09-09).
