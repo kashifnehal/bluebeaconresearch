@@ -77,8 +77,7 @@ async function getLatestSignal(): Promise<LandingSignalPreview | null> {
 
 async function getHomepageStats(): Promise<{ totalSignals: number | null }> {
   try {
-    const supabase = await getHomepageDataClient();
-    return await loadHomepageSignalCount(supabase);
+    return await loadHomepageSignalCount();
   } catch (err) {
     console.error("[getHomepageStats] count query threw:", err);
     return cachedHomepageSignalCount();

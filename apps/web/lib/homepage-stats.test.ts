@@ -4,7 +4,6 @@ import {
   cachedHomepageSignalCount,
   loadHomepageSignalCount,
   resetHomepageStatsCacheForTests,
-  type HomepageCountClient,
 } from "./homepage-stats";
 
 function runTest(name: string, fn: () => void | Promise<void>) {
@@ -20,22 +19,17 @@ function runTest(name: string, fn: () => void | Promise<void>) {
     });
 }
 
-function fakeClient(responses: Array<{ count: number | null; error: unknown }>) {
-  const selects: Array<{ table: string; columns: string; options: unknown }> = [];
+function fakeGetCount(responses: Array<number | Error>) {
   let i = 0;
-  const client: HomepageCountClient = {
-    from(table: string) {
-      return {
-        select(columns: string, options: { count: "exact"; head: true }) {
-          selects.push({ table, columns, options });
-          const next = responses[i] ?? responses[responses.length - 1];
-          i += 1;
-          return Promise.resolve(next);
-        },
-      };
-    },
+  let calls = 0;
+  const getCount = async () => {
+    calls += 1;
+    const next = responses[i] ?? responses[responses.length - 1];
+    i += 1;
+    if (next instanceof Error) throw next;
+    return next;
   };
-  return { client, selects };
+  return { getCount, callCount: () => calls };
 }
 
 const realError = console.error;
@@ -43,25 +37,19 @@ const realError = console.error;
 async function main() {
   console.error = () => {};
   try {
-    await runTest("homepage count uses head: true", async () => {
+    await runTest("homepage count uses the shared getCount", async () => {
       resetHomepageStatsCacheForTests();
-      const { client, selects } = fakeClient([{ count: 1280, error: null }]);
-      const result = await loadHomepageSignalCount(client, 1_000);
+      const { getCount, callCount } = fakeGetCount([1280]);
+      const result = await loadHomepageSignalCount(1_000, getCount);
       assert.deepEqual(result, { totalSignals: 1280 });
-      assert.equal(selects.length, 1);
-      assert.equal(selects[0].table, "signals");
-      assert.equal(selects[0].columns, "id");
-      assert.deepEqual(selects[0].options, { count: "exact", head: true });
+      assert.equal(callCount(), 1);
     });
 
     await runTest("a cached value is returned when the second read fails", async () => {
       resetHomepageStatsCacheForTests();
-      const { client } = fakeClient([
-        { count: 1280, error: null },
-        { count: null, error: { message: "canceling statement due to statement timeout" } },
-      ]);
-      const first = await loadHomepageSignalCount(client, 2_000);
-      const second = await loadHomepageSignalCount(client, 2_500);
+      const { getCount } = fakeGetCount([1280, new Error("canceling statement due to statement timeout")]);
+      const first = await loadHomepageSignalCount(2_000, getCount);
+      const second = await loadHomepageSignalCount(2_500, getCount);
       assert.deepEqual(first, { totalSignals: 1280 });
       assert.deepEqual(second, { totalSignals: 1280 });
       assert.deepEqual(cachedHomepageSignalCount(2_500), { totalSignals: 1280 });
@@ -69,8 +57,8 @@ async function main() {
 
     await runTest("a failed first read with no cache returns null", async () => {
       resetHomepageStatsCacheForTests();
-      const { client } = fakeClient([{ count: null, error: { message: "timeout" } }]);
-      const result = await loadHomepageSignalCount(client, 3_000);
+      const { getCount } = fakeGetCount([new Error("timeout")]);
+      const result = await loadHomepageSignalCount(3_000, getCount);
       assert.deepEqual(result, { totalSignals: null });
     });
   } finally {

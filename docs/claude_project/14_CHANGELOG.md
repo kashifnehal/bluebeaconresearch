@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Shared, cross-instance cache for the public signal-count queries
+
+`apps/web` only. `pg_stat_statements` showed one query (`select id from signals`, exact count, no filter) running 9,422 times for 2,181s total, by far the largest load — the homepage and how-it-works pages each ran it, unfiltered, on every request. New `lib/signal-count-cache.ts` wraps it in Next's `unstable_cache` (revalidate 600s, tag `signal-count`), shared by both pages, so one Postgres read covers every serverless instance for up to 10 minutes instead of each instance querying on every request. A query error or an unusable 0/null count is never cached. Neither page's rendered output changed. Web `tsc` 0, web test 775 ✔, `next build` 0. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-08 — Weekly send tool, sending off
 
 `apps/backend` plus one migration, `0604027`, `4823f82`, `2fad5b1`, `b6537a1`. A command can build The Beacon Weekly for confirmed subscribers. It dry-runs unless several switches are set, and it writes `public.weekly_send_log` only when it actually tries to send. That migration is written, not applied. Nothing was sent. The Railway deploy was not checked. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

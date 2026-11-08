@@ -119,6 +119,16 @@ function fakeClient(responses: Array<{ count: number | null; error: unknown }>) 
   return { client, selects };
 }
 
+function fakeGetCount(responses: Array<number | Error>) {
+  let i = 0;
+  return async () => {
+    const next = responses[i] ?? responses[responses.length - 1];
+    i += 1;
+    if (next instanceof Error) throw next;
+    return next;
+  };
+}
+
 async function runAsync(name: string, fn: () => Promise<void>) {
   try {
     await fn();
@@ -135,29 +145,21 @@ async function main() {
   const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   await runAsync("how-it-works counts use head: true", async () => {
-    const { client, selects } = fakeClient([
-      { count: 1200, error: null },
-      { count: 40, error: null },
-    ]);
-    const result = await loadHowItWorksSignalCounts(async () => client, now);
+    const { client, selects } = fakeClient([{ count: 40, error: null }]);
+    const getCount = fakeGetCount([1200]);
+    const result = await loadHowItWorksSignalCounts(async () => client, now, getCount);
     assert.deepEqual(result, { total: 1200, last7Days: 40 });
-    assert.equal(selects.length, 2);
+    assert.equal(selects.length, 1);
     assert.equal(selects[0].table, "signals");
-    assert.equal(selects[1].table, "signals");
     assert.equal(selects[0].columns, "id");
-    assert.equal(selects[1].columns, "id");
     assert.deepEqual(selects[0].options, { count: "exact", head: true });
-    assert.deepEqual(selects[1].options, { count: "exact", head: true });
-    assert.equal(selects[0].gte, undefined);
-    assert.deepEqual(selects[1].gte, { column: "created_at", value: sevenDaysAgo });
+    assert.deepEqual(selects[0].gte, { column: "created_at", value: sevenDaysAgo });
   });
 
-  await runAsync("a zero total stays hidden and a zero 7-day count is kept", async () => {
-    const { client } = fakeClient([
-      { count: 0, error: null },
-      { count: 0, error: null },
-    ]);
-    const result = await loadHowItWorksSignalCounts(async () => client, now);
+  await runAsync("a failing shared count falls back to null total, and a zero 7-day count is kept", async () => {
+    const { client } = fakeClient([{ count: 0, error: null }]);
+    const getCount = fakeGetCount([new Error("unusable signal count (0 or null)")]);
+    const result = await loadHowItWorksSignalCounts(async () => client, now, getCount);
     assert.deepEqual(result, { total: null, last7Days: 0 });
   });
 

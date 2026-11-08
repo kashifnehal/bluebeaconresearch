@@ -1,4 +1,5 @@
 import { CONFIGURED_RSS_FEED_COUNT } from "@blue-beacon-research/shared";
+import { getCachedTotalSignalCount } from "./signal-count-cache";
 
 /**
  * Non-RSS ingestion collectors that ACTUALLY INGEST today: GDELT
@@ -42,24 +43,22 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
  * `head: true` asks Postgres for the count only, so the response does not
  * include one row per signal. A total of 0 is treated as the anon client
  * hiding every row and is returned as null so the page can omit that stat.
+ * `total` comes from the shared, cross-instance signal-count cache
+ * (signal-count-cache.ts) rather than its own query — the same unfiltered
+ * count the homepage stats bar needs.
  */
 export async function loadHowItWorksSignalCounts(
   getClient: () => Promise<HowItWorksCountClient>,
   now: number = Date.now(),
+  getCount: () => Promise<number> = getCachedTotalSignalCount,
 ): Promise<{ total: number | null; last7Days: number | null }> {
   let total: number | null = null;
   let last7Days: number | null = null;
 
   try {
-    const supabase = await getClient();
-    const { count, error } = await supabase.from("signals").select("id", { count: "exact", head: true });
-    if (!error && count != null && count > 0) {
-      total = count;
-    } else if (error) {
-      console.error("[how-it-works] total signals query failed:", error);
-    }
+    total = await getCount();
   } catch (err) {
-    console.error("[how-it-works] total signals query threw:", err);
+    console.error("[how-it-works] total signals query failed:", err);
   }
 
   try {

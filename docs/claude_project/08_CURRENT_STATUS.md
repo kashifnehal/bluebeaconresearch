@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-08 (weekly send tool, sending off — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-09 (shared signal-count cache — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-09 (shared signal-count cache, `apps/web` only) — the homepage and how-it-works pages' unfiltered signal-count query, by far the largest load in `pg_stat_statements`, now shares one cached read instead of running on every request. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-08 (weekly send tool, `apps/backend` plus one migration, `0604027`, `4823f82`, `2fad5b1`, `b6537a1`) — Weekly send tool exists; sending is off until WEEKLY_SEND_ENABLED is set and the migration is applied. The send log table is written, not applied. Nothing was sent. See `docs/brain/LIVE_TODO.md`.
 
