@@ -258,8 +258,8 @@ One row per confirmed subscriber per edition of The Beacon Weekly. `public.weekl
 ### View: `feed_gap_p95` (written, not applied, 2026-10-15)
 `20261015130000_feed_gap_p95.sql` (`5a04fcb`). Read-only view `public.feed_gap_p95`. Not in the applied migration list checked 2026-10-15.
 
-### `service_health_events` retention (2026-10-16)
-Sunday 03:00 UTC deletes rows with `created_at` older than 45 days, 5000 ids at a time, at most 20 batches. Engineering choice: the longest described reader is the month-to-date spend check (31 days) plus a weekly job gap (7 days), rounded up to 45. Readers checked 2026-10-16 look back less than that.
+### `service_health_events` retention (2026-11-09)
+Sunday 03:00 UTC calls `prune_service_health_events(cutoff, batch, dry_run)` in a loop — at most 10 batches of 2000 rows, 1 second between batches — for rows with `created_at` older than 45 days (engineering choice: the longest described reader is the month-to-date spend check, 31 days, plus a weekly job gap, 7 days, rounded up to 45). A row is kept regardless of age if its service is `materiality_gate`, `gate-drift`, `feed-volume`, `category-guard`, `anthropic-monthly`, or `sanctions_sync` (tiny audit/status rows, and `materiality_gate` is the only stored copy of rejection reasons, read by the replay script and the audit samples), or if it is the newest row of its `(service, status)` pair (some readers need only the newest row of a service). Every deleted row is rolled into `service_health_daily` (one row per day/service/status, with a count, the first and last `created_at`, and a 300-character sample of the newest row's `detail`) before it is removed, in the same statement as the delete. Replaces the previous `delete().in("id", ids)` approach, which had been failing with "Bad Request" since the job was added — an id list that long doesn't fit in one request address — so nothing had actually been pruned.
 
 ### `service_health_events.raw_event_id` (written, not applied, 2026-10-15)
 `20261015140000_service_health_raw_event_id.sql` (`3339434`). Nullable column. Not in the applied migration list checked 2026-10-15. The writer retries the insert without the column when it is missing.
@@ -416,6 +416,7 @@ CREATE UNIQUE INDEX idx_signals_raw_event_ids_unique ON public.signals (raw_even
     - Stores BBR-written text only — never a news article's own text, since the news feed licence is non-commercial. No row seeded by this task.
     - **Written, NOT yet applied to the live DB** — no `apply_migration` call was made this session, per the task's own instruction. See `16_MIGRATION_CHECKLIST.md`.
 16. **`20261108120000_weekly_send_log.sql`** (2026-11-08): `public.weekly_send_log`, one row per subscriber per edition (`sent` or `failed`), unique on `(edition, subscriber_id)`, foreign key to `newsletter_subscribers`. RLS on, no policy, `service_role` select/insert/update only. **Written, NOT yet applied.** See `16_MIGRATION_CHECKLIST.md`.
+17. **`20261109090000_prune_service_health_events.sql`** (2026-11-09): `public.service_health_daily` (day/service/status roll-up, PK `(day, service, status)`), RLS on, no policy, `service_role` select/insert/update only; and `public.prune_service_health_events(p_cutoff, p_batch, p_dry_run)`, a `security invoker` function (execute granted to `service_role` only) that deletes a batch of eligible `service_health_events` rows and rolls them into the daily table in one statement. Fixes the weekly job's "Bad Request" failure — see §5 below. **Written, NOT yet applied.** See `16_MIGRATION_CHECKLIST.md`.
 
 ## 5. Data Retention & Archival — planned, not yet built
 
