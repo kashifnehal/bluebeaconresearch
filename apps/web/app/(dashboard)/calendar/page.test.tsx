@@ -80,7 +80,8 @@ type Fixture = {
   actual: string | null;
   sourceUrl: string;
   sourceLabel: string;
-  status?: "confirmed" | "tentative";
+  scheduleStatus: "confirmed" | "tentative" | "unpublished" | "cancelled";
+  lastCheckedAt: string;
 };
 
 function fixtureEvent(overrides: Partial<Fixture> = {}): Fixture {
@@ -99,6 +100,8 @@ function fixtureEvent(overrides: Partial<Fixture> = {}): Fixture {
     actual: null,
     sourceUrl: "https://www.eia.gov/petroleum/supply/weekly/schedule.php",
     sourceLabel: "eia.gov",
+    scheduleStatus: "confirmed",
+    lastCheckedAt: "2026-10-27",
     ...overrides,
   };
 }
@@ -112,6 +115,7 @@ async function main() {
     NextEventChip,
     MyCommoditiesToggle,
     OfficialFiguresPanel,
+    HistoricalContextPanels,
   } = await import("./page");
   const { weeklyRhythm } = await import("@/lib/calendar-rhythm");
   const { eventMatchesSymbols } = await import("@/lib/calendar-filters");
@@ -138,7 +142,6 @@ async function main() {
       createElement(EventTable, {
         events: visible,
         timeZone: "utc",
-        marketImpact: null,
         highlightAllMarkets: onlyMine,
         visibleColumns: { forecast: false, previous: false, actual: false },
       }),
@@ -332,7 +335,6 @@ async function main() {
         createElement(EventTable, {
           events,
           timeZone: "utc",
-          marketImpact: null,
           visibleColumns: { forecast: false, previous: false, actual: false },
         }),
       );
@@ -373,7 +375,7 @@ async function main() {
   await runTest("every event row's source label links to its sourceUrl, opening in a new tab", async () => {
     const events = [fixtureEvent({ sourceUrl: "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", sourceLabel: "federalreserve.gov" })];
     const { html, root } = await mount(
-      createElement(EventTable, { events, timeZone: "utc", marketImpact: null }),
+      createElement(EventTable, { events, timeZone: "utc" }),
     );
     try {
       assert.match(html, /href="https:\/\/www\.federalreserve\.gov\/monetarypolicy\/fomccalendars\.htm"/);
@@ -384,17 +386,38 @@ async function main() {
     }
   });
 
-  await runTest("a 'tentative' status shows the Tentative tag; a confirmed/unset row does not", async () => {
+  await runTest("a 'tentative' scheduleStatus shows the Tentative tag; a confirmed row does not", async () => {
     const events = [
-      fixtureEvent({ id: "evt-tentative", status: "tentative" }),
-      fixtureEvent({ id: "evt-confirmed" }),
+      fixtureEvent({ id: "evt-tentative", scheduleStatus: "tentative" }),
+      fixtureEvent({ id: "evt-confirmed", scheduleStatus: "confirmed" }),
     ];
     const { html, root } = await mount(
-      createElement(EventTable, { events, timeZone: "utc", marketImpact: null }),
+      createElement(EventTable, { events, timeZone: "utc" }),
     );
     try {
-      const tags = html.match(/data-testid="calendar-tentative-tag"/g) ?? [];
+      const tags = html.match(/data-testid="calendar-schedule-status-tag"/g) ?? [];
       assert.equal(tags.length, 2); // one per layout (mobile card + desktop row) for the single tentative event
+      assert.match(html, /data-status="tentative"/);
+      assert.doesNotMatch(html, /data-status="confirmed"/); // confirmed rows render no tag at all
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("every scheduleStatus value renders a row with the right tag (or no tag for confirmed)", async () => {
+    const events = (["confirmed", "tentative", "unpublished", "cancelled"] as const).map((scheduleStatus) =>
+      fixtureEvent({ id: `evt-${scheduleStatus}`, scheduleStatus }),
+    );
+    const { html, root } = await mount(createElement(EventTable, { events, timeZone: "utc" }));
+    try {
+      assert.match(html, /data-status="tentative"/);
+      assert.match(html, /data-status="unpublished"/);
+      assert.match(html, /data-status="cancelled"/);
+      const rows = html.match(/data-testid="calendar-event-row"/g) ?? [];
+      assert.equal(rows.length, 4);
+      // "Checked <date>" line renders for every row regardless of status
+      const checkedLines = html.match(/data-testid="calendar-last-checked"/g) ?? [];
+      assert.equal(checkedLines.length, 8); // mobile card + desktop row per event
     } finally {
       await act(async () => root.unmount());
     }
@@ -489,7 +512,6 @@ async function main() {
       createElement(EventTable, {
         events,
         timeZone: "utc",
-        marketImpact: null,
         visibleColumns: { forecast: false, previous: false, actual: false },
       }),
     );
@@ -506,7 +528,7 @@ async function main() {
   await runTest("no impact bar renders — a plain category tag shows instead", async () => {
     const events = [fixtureEvent()];
     const { html, root } = await mount(
-      createElement(EventTable, { events, timeZone: "utc", marketImpact: null }),
+      createElement(EventTable, { events, timeZone: "utc" }),
     );
     try {
       assert.match(html, /data-testid="calendar-category-tag"/);
@@ -685,7 +707,6 @@ async function main() {
       createElement(EventTable, {
         events,
         timeZone: "utc",
-        marketImpact: null,
         visibleColumns: { forecast: true, previous: false, actual: false },
       }),
     );
@@ -699,7 +720,10 @@ async function main() {
     }
   });
 
-  await runTest("magnitude line drops the sample size; it only shows behind 'View historical pattern'", async () => {
+  // 2026-11-09 (TASK W-CALENDAR Part 4): magnitude/method-note rendering moved
+  // out of EventTable entirely and into the section-level HistoricalContextPanels
+  // component, so it renders once per category instead of once per row.
+  await runTest("HistoricalContextPanels: magnitude line drops the sample size; it only shows behind 'View historical pattern'", async () => {
     const events = [fixtureEvent({ id: "evt-energy", category: "Energy" })];
     const marketImpact = {
       USOIL: {
@@ -711,7 +735,7 @@ async function main() {
       },
     };
     const { html, root } = await mount(
-      createElement(EventTable, { events, timeZone: "utc", marketImpact }),
+      createElement(HistoricalContextPanels, { events, marketImpact }),
     );
     try {
       assert.match(html, /data-testid="calendar-magnitude-line"/);
@@ -728,14 +752,43 @@ async function main() {
     }
   });
 
-  await runTest("no method-note toggle renders when the category has no magnitude data", async () => {
+  await runTest("HistoricalContextPanels: no panel renders when the category has no magnitude data", async () => {
     const events = [fixtureEvent({ id: "evt-energy", category: "Energy" })];
     const { html, root } = await mount(
-      createElement(EventTable, { events, timeZone: "utc", marketImpact: {} }),
+      createElement(HistoricalContextPanels, { events, marketImpact: {} }),
     );
     try {
       assert.equal(html.includes("data-testid=\"calendar-method-note-toggle\""), false);
       assert.equal(html.includes("data-testid=\"calendar-magnitude-line\""), false);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  // Part 4's core requirement: one panel per event TYPE, not per row — this is
+  // the regression test for the reported bug ("the same stats block repeats 22
+  // times"). 3 Energy-category rows must still produce exactly 1 panel.
+  await runTest("HistoricalContextPanels renders exactly one panel per category, regardless of how many rows share that category", async () => {
+    const events = [
+      fixtureEvent({ id: "evt-energy-1", category: "Energy" }),
+      fixtureEvent({ id: "evt-energy-2", category: "Energy" }),
+      fixtureEvent({ id: "evt-energy-3", category: "Energy" }),
+      fixtureEvent({ id: "evt-growth-1", category: "Growth" }),
+    ];
+    const marketImpact = {
+      USOIL: {
+        magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+        timeHorizonLabel: "multi-day" as const,
+        baselines: [
+          { windowHours: 24, medianMovePct: 1.46, windowCount: 1204, eventRowsMatched: 1232, spanDays: 88 },
+        ],
+      },
+    };
+    const { html, root } = await mount(createElement(HistoricalContextPanels, { events, marketImpact }));
+    try {
+      const panels = html.match(/data-testid="calendar-historical-panel"/g) ?? [];
+      assert.equal(panels.length, 1); // only Energy has magnitude data mapped above; still 1, not 3
+      assert.doesNotMatch(html, /BBR importance/i); // Part 4: no BBR importance tag added
     } finally {
       await act(async () => root.unmount());
     }
@@ -788,6 +841,102 @@ async function main() {
     } finally {
       await act(async () => root.unmount());
       g.fetch = originalFetch;
+    }
+  });
+
+  // Part 5 (TASK W-CALENDAR, 2026-11-09): the reported bug happened on a
+  // Sunday, so the regression test mocks the clock to Sunday 8 Nov 2026
+  // 10:00 UTC and renders the real page against the real data file. A
+  // Sunday-dated event (opec-plus-2026-11-01, the Sunday *before* this
+  // fixture's week) must NOT show in This Week, and the Mon-Sun week
+  // containing the fixture's Sunday must.
+  await runTest("renders correctly on a Sunday fixture (8 Nov 2026 10:00 UTC): current week is Mon 2 Nov - Sun 8 Nov", async () => {
+    const { AppRouterContext } = await import(
+      "next/dist/shared/lib/app-router-context.shared-runtime.js"
+    );
+    const originalFetch = g.fetch;
+    g.fetch = async () => new Response(JSON.stringify({ magnitudes: {} }), { status: 200 });
+    const fakeRouter = {
+      push: () => {},
+      replace: () => {},
+      back: () => {},
+      forward: () => {},
+      refresh: () => {},
+      prefetch: async () => {},
+    };
+
+    const FIXED_NOW = new Date("2026-11-08T10:00:00.000Z").getTime();
+    const OriginalDate = Date;
+    class MockDate extends OriginalDate {
+      constructor(...args: ConstructorParameters<typeof Date> | []) {
+        if (args.length === 0) {
+          super(FIXED_NOW);
+        } else {
+          super(...args);
+        }
+      }
+      static now() {
+        return FIXED_NOW;
+      }
+    }
+    g.Date = MockDate as unknown as typeof Date;
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const { default: CalendarPage } = await import("./page");
+
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    try {
+      await act(async () => {
+        root.render(
+          createElement(
+            AppRouterContext.Provider,
+            { value: fakeRouter },
+            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+          ),
+        );
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+
+      const html = document.body.innerHTML as string;
+
+      const thisWeekSection = document.querySelector('[data-testid="calendar-this-week"]');
+      assert.ok(thisWeekSection, "This Week section not found");
+      // eia-petroleum-2026-11-04 (Wed) and us-nfp-2026-11-06 (Fri) are inside
+      // the Mon 2 Nov - Sun 8 Nov week and must appear in This Week. (The EIA
+      // report recurs weekly with an identical title/sourceUrl, so the date
+      // text "Nov 4" — not the title — is what distinguishes this week's row
+      // from every other week's.)
+      assert.match(thisWeekSection!.innerHTML, /Nov 4<\/span>/); // eia-petroleum-2026-11-04
+      assert.match(thisWeekSection!.innerHTML, /Nov 6<\/span>/); // us-nfp-2026-11-06
+      // opec-plus-2026-11-01 is dated the *previous* Sunday (1 Nov) — the
+      // week before this fixture's week — and must NOT show as this week's
+      // (it must not appear anywhere at all, since dt < start for both lists).
+      assert.doesNotMatch(thisWeekSection!.innerHTML, /Nov 1<\/span>/);
+      // Next week's dates (the actual bug: these used to leak into "this
+      // week" on a Sunday) must not appear in This Week either.
+      assert.doesNotMatch(thisWeekSection!.innerHTML, /Nov 10<\/span>/);
+      assert.doesNotMatch(thisWeekSection!.innerHTML, /Nov 12<\/span>/);
+
+      const upcomingSection = document.querySelector('[data-testid="calendar-upcoming"]');
+      assert.ok(upcomingSection, "Upcoming section not found");
+      // us-cpi-2026-11-10 is in the following week (Mon 9 Nov - Sun 15 Nov)
+      // and must show as upcoming, not this week.
+      assert.match(upcomingSection!.innerHTML, /US Consumer Price Index/);
+      assert.match(upcomingSection!.innerHTML, /Nov 10<\/span>/);
+      // This week's own dates must not also leak into Upcoming.
+      assert.doesNotMatch(upcomingSection!.innerHTML, /Nov 4<\/span>/);
+      assert.doesNotMatch(upcomingSection!.innerHTML, /Nov 6<\/span>/);
+      // opec-plus-2026-11-01 (the previous week) must not be in Upcoming either.
+      assert.doesNotMatch(upcomingSection!.innerHTML, /Nov 1<\/span>/);
+    } finally {
+      await act(async () => root.unmount());
+      g.fetch = originalFetch;
+      g.Date = OriginalDate;
     }
   });
 }

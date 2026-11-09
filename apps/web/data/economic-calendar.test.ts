@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import calendarData from "./economic-calendar.json";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function runTest(name: string, fn: () => void) {
   try {
@@ -22,7 +27,8 @@ type CalendarEvent = {
   sourceUrl: string;
   sourceLabel: string;
   creditLine?: string;
-  status?: "confirmed" | "tentative";
+  scheduleStatus: "confirmed" | "tentative" | "unpublished" | "cancelled";
+  lastCheckedAt: string;
 };
 
 const events = calendarData.events as CalendarEvent[];
@@ -108,12 +114,40 @@ runTest("every event has a real source URL and label — nothing invented with a
   }
 });
 
-runTest("every row with status 'tentative' has timeApprox true — an unconfirmed date is never shown as a firm time", () => {
+runTest("every row with scheduleStatus 'tentative' has timeApprox true — an unconfirmed date is never shown as a firm time", () => {
   for (const e of events) {
-    if (e.status === "tentative") {
+    if (e.scheduleStatus === "tentative") {
       assert.equal(e.timeApprox, true, `${e.id} is tentative but timeApprox is not true`);
     }
   }
+});
+
+const VALID_SCHEDULE_STATUSES = new Set(["confirmed", "tentative", "unpublished", "cancelled"]);
+
+runTest("every event has a valid scheduleStatus and a real lastCheckedAt date", () => {
+  for (const e of events) {
+    assert.ok(VALID_SCHEDULE_STATUSES.has(e.scheduleStatus), `${e.id}: invalid scheduleStatus ${e.scheduleStatus}`);
+    assert.match(e.lastCheckedAt, /^\d{4}-\d{2}-\d{2}$/, `${e.id}: ${e.lastCheckedAt}`);
+    const d = new Date(`${e.lastCheckedAt}T00:00:00Z`);
+    assert.ok(!Number.isNaN(d.getTime()), `${e.id}: lastCheckedAt ${e.lastCheckedAt} does not parse`);
+  }
+});
+
+// Part 2 (TASK W-CALENDAR, 2026-11-09): this file is now a generated copy of
+// apps/backend/src/data/economic-calendar.json (see
+// apps/web/scripts/sync-calendar-data.mjs, run via predev/prebuild/pretest).
+// This test fails loudly if someone edits this copy by hand (or edits the
+// backend file and forgets to re-run the sync script) instead of treating the
+// backend file as the single source of truth.
+runTest("this file is byte-for-byte identical to the backend source of truth (apps/backend/src/data/economic-calendar.json)", () => {
+  const backendPath = resolve(__dirname, "../../backend/src/data/economic-calendar.json");
+  const backendRaw = readFileSync(backendPath, "utf8");
+  const backendData = JSON.parse(backendRaw);
+  assert.deepEqual(
+    calendarData,
+    backendData,
+    "apps/web/data/economic-calendar.json has drifted from apps/backend/src/data/economic-calendar.json — run `pnpm --filter web run sync:calendar` (or just `pnpm --filter web dev`/`build`, which run it automatically)",
+  );
 });
 
 runTest("forecast/previous/actual stay null — no fabricated placeholder numbers", () => {

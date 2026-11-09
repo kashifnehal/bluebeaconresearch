@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Calendar fixed for Sundays, one data source, schedule status, fewer repeated stats, TASK W-CALENDAR
+
+`apps/web` + `apps/backend`. On Sunday the calendar had shown last week's events under "This Week" — the week-boundary math is now a small tested function instead of untested inline code. The two copies of the calendar's data file are now one source of truth (`apps/backend`) plus an auto-generated copy, checked by a new test that fails if they ever drift. Every event now carries a real status (confirmed/tentative/unpublished/cancelled) and the date it was last checked, shown on the page. 6 new rows were added, each with a real official source link (UK ONS, Australia ABS, India RBI, IEA x2, OPEC+); China's monthly release could not be verified from this environment, so no row was added for it. The old OPEC+ Nov 1 row is now marked confirmed since its official page loads again. The same historical-pattern numbers that used to repeat on every row of a given type now show once per type. Web tsc 0, web test 806 ✔, next build 0; the backend's own calendar test passes standalone but could not run inside the full backend test chain because an unrelated pre-existing test earlier in that chain fails on a database-permissions error in this environment. Not verified in a browser — Playwright is not installed in this repo. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — Same-point map clusters open a list
 
 `apps/web` only. A cluster whose points share one coordinate opens a list of title, severity, and time, and does not zoom. The sidebar still lists those signals. Spread-out clusters still zoom. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
@@ -19,7 +23,6 @@
 ## 2026-11-09 — MapLibre worker and CSS load from the installed package
 
 `apps/web` only. The map and the event-location map no longer request MapLibre's worker or CSS from unpkg. The worker is served from the installed package at `/vendor/maplibre/maplibre-gl-worker.mjs`. Basemap URL and attribution unchanged. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
-
 ## 2026-11-09 — One shared auth check per dashboard page load, TASK W-AUTH
 
 `apps/web` only, `68b92ea`. Supabase auth logs had shown 399 `/auth/v1/user` calls in 24 hours. A new `AuthProvider` calls `getSession()` once and loads the profile row once per dashboard page load, replacing five separate client-side `getUser()` calls. `getUser()` stays server-side only. The sign-in button stays in a full-screen "Signing you in..." state through the redirect, and the OAuth callback now defers its signup/session-bookkeeping instrumentation past the redirect. A missing code or a failed exchange both show a fixed message instead of the vendor's own error text. Fixed two existing tests that broke because they rendered a watchlist/dashboard component without the new provider in place. Not verified: no live browser pass, no live Supabase auth-log check. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

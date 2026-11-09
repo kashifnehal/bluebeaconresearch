@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import calendarData from "@/data/economic-calendar.json";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { SITE_ORIGIN } from "@/lib/site-metadata";
@@ -25,6 +25,7 @@ import {
 } from "@/lib/market-impact-assessment";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { weeklyRhythm, type WeeklyRhythmEntry } from "@/lib/calendar-rhythm";
+import { getWeekRangeUTC } from "@/lib/calendar-week";
 import {
   formatOfficialFigures,
   type FormattedOfficialFigure,
@@ -49,9 +50,15 @@ type CalendarEvent = {
   actual: string | null;
   sourceUrl: string;
   sourceLabel: string;
-  // Optional, not set on any existing row today — "tentative" shows a small
-  // badge next to the event name when a date isn't yet confirmed by its source.
-  status?: "confirmed" | "tentative";
+  // Required since 2026-11-09 (replaces the old optional `status` field):
+  // whether the row's own official source still stands behind this date.
+  // "confirmed" shows no badge; the other three show a small badge next to
+  // the event name.
+  scheduleStatus: "confirmed" | "tentative" | "unpublished" | "cancelled";
+  // The date this row's date/time/sourceUrl were last actually read off the
+  // official source page — rendered as a small "Checked <date>" per row, not
+  // today's date for every row.
+  lastCheckedAt: string;
   // Visible attribution shown under the event name — only set on EIA rows
   // today (the task's explicit ask), not a general-purpose field for every
   // source.
@@ -149,6 +156,52 @@ function MagnitudeMethodNotes({ notes }: { notes: string[] }) {
         ))}
       </div>
     </details>
+  );
+}
+
+/** One collapsed panel per unique event category present in `events` — not
+ * one per row. Replaces the old per-row magnitude line + method note (each
+ * of which repeated byte-for-byte across every same-category row in a
+ * section, e.g. 22 times for 22 EIA rows) with a single panel per category,
+ * rendered once below the section's table. No BBR "importance" tag — this
+ * panel is purely the existing observed-move numbers, same as before. */
+export function HistoricalContextPanels({
+  events,
+  marketImpact,
+}: {
+  events: CalendarEvent[];
+  marketImpact: Record<string, CalendarMarketImpactEntry> | null;
+}) {
+  const categories = Array.from(new Set(events.map((e) => e.category)));
+  const panels = categories
+    .map((category) => ({
+      category,
+      lines: magnitudeLinesForEvent(category, marketImpact),
+      notes: magnitudeMethodNotesForEvent(category, marketImpact),
+    }))
+    .filter((p) => p.lines.length > 0 || p.notes.length > 0);
+  if (panels.length === 0) return null;
+  return (
+    <div data-testid="calendar-historical-context" className="px-3 pb-3 space-y-2">
+      {panels.map((p) => (
+        <details key={p.category} className="group" data-testid="calendar-historical-panel">
+          <summary
+            data-testid="calendar-method-note-toggle"
+            className="cursor-pointer select-none text-[11px] font-bold uppercase tracking-wide text-accent"
+          >
+            View historical pattern — {p.category}
+          </summary>
+          <div className="mt-1 space-y-1">
+            <MagnitudeLines lines={p.lines} />
+            {p.notes.map((note) => (
+              <p key={note} data-testid="calendar-method-note" className="text-[11px] leading-snug text-on-surface/50 italic">
+                {note}
+              </p>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
   );
 }
 
@@ -298,15 +351,6 @@ function downloadEventsAsIcs(events: CalendarEvent[]) {
   URL.revokeObjectURL(url);
 }
 
-/** Monday 00:00 UTC through the following Monday 00:00 UTC containing `now`. */
-function getWeekRangeUTC(now: Date): { start: Date; end: Date } {
-  const day = now.getUTCDay(); // 0 = Sunday
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + mondayOffset));
-  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-  return { start, end };
-}
-
 /** Local time + zone abbreviation for the Next chip, or the date alone when
  * the event has no announced time (e.g. the OPEC report). */
 function nextEventChipTimeText(e: CalendarEvent): string {
@@ -354,14 +398,47 @@ function CategoryTag({ category }: { category: string }) {
   );
 }
 
-function TentativeTag() {
+const SCHEDULE_STATUS_LABEL: Record<CalendarEvent["scheduleStatus"], string> = {
+  confirmed: "Confirmed",
+  tentative: "Tentative",
+  unpublished: "Unpublished",
+  cancelled: "Cancelled",
+};
+
+const SCHEDULE_STATUS_CLASSES: Record<CalendarEvent["scheduleStatus"], string> = {
+  confirmed: "border-outline-variant/30 text-on-surface/40",
+  tentative: "border-[#ffb340]/50 text-[#ffb340]",
+  unpublished: "border-outline-variant/40 text-on-surface/50",
+  cancelled: "border-red-500/50 text-red-400",
+};
+
+/** Confirmed rows show no badge at all — only the other three statuses are
+ * worth flagging next to the event name. */
+function ScheduleStatusTag({ status }: { status: CalendarEvent["scheduleStatus"] }) {
+  if (status === "confirmed") return null;
   return (
     <span
-      data-testid="calendar-tentative-tag"
-      className="inline-flex items-center px-1.5 py-0.5 text-[10px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border border-[#ffb340]/50 text-[#ffb340]"
+      data-testid="calendar-schedule-status-tag"
+      data-status={status}
+      className={`inline-flex items-center px-1.5 py-0.5 text-[10px] md:text-[9px] label font-bold uppercase tracking-widest rounded-sm border ${SCHEDULE_STATUS_CLASSES[status]}`}
     >
-      Tentative
+      {SCHEDULE_STATUS_LABEL[status]}
     </span>
+  );
+}
+
+function formatLastChecked(lastCheckedAt: string): string {
+  const d = new Date(`${lastCheckedAt}T00:00:00Z`);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}
+
+/** Small "Checked <date>" line shown under each row — when the row's own
+ * official source was last actually read, not today's date for every row. */
+function LastCheckedLine({ lastCheckedAt }: { lastCheckedAt: string }) {
+  return (
+    <p data-testid="calendar-last-checked" className="text-[10px] md:text-[9px] text-on-surface/35 mt-0.5">
+      Checked {formatLastChecked(lastCheckedAt)}
+    </p>
   );
 }
 
@@ -405,13 +482,11 @@ export function MyCommoditiesToggle({
 export function EventTable({
   events,
   timeZone,
-  marketImpact,
   visibleColumns = VISIBLE_VALUE_COLUMNS,
   highlightAllMarkets = false,
 }: {
   events: CalendarEvent[];
   timeZone: TimeZoneMode;
-  marketImpact: Record<string, CalendarMarketImpactEntry> | null;
   visibleColumns?: { forecast: boolean; previous: boolean; actual: boolean };
   // Only meaningful while the "My commodities" filter is on — see
   // eventMatchesSymbols/CATEGORY_ASSET_MAP: an unmapped-category event always
@@ -439,8 +514,6 @@ export function EventTable({
           as the heading, everything else as supporting rows. Desktop keeps the unchanged table below. */}
       <div className="md:hidden divide-y divide-outline-variant/10">
         {events.map((e) => {
-          const magnitudeLines = magnitudeLinesForEvent(e.category, marketImpact);
-          const magnitudeMethodNotes = magnitudeMethodNotesForEvent(e.category, marketImpact);
           return (
           <div key={e.id} data-testid="calendar-event-card" className="py-3 px-1">
             <a
@@ -454,12 +527,13 @@ export function EventTable({
               {e.event}
               <span className="material-symbols-outlined text-[13px] text-on-surface/30 mt-0.5 shrink-0">open_in_new</span>
             </a>
-            {e.status === "tentative" && <TentativeTag />}
+            <ScheduleStatusTag status={e.scheduleStatus} />
             {e.creditLine && (
               <p data-testid="calendar-credit-line" className="text-[11px] text-on-surface/40 mt-0.5">
                 {e.creditLine}
               </p>
             )}
+            <LastCheckedLine lastCheckedAt={e.lastCheckedAt} />
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
               <span className="text-[12px] text-on-surface/70">{e.country}</span>
               <CategoryTag category={e.category} />
@@ -489,16 +563,6 @@ export function EventTable({
                 )}
               </div>
             )}
-            {magnitudeLines.length > 0 && (
-              <div className="mt-2 space-y-1">
-                <MagnitudeLines lines={magnitudeLines} />
-              </div>
-            )}
-            {magnitudeMethodNotes.length > 0 && (
-              <div className="mt-1">
-                <MagnitudeMethodNotes notes={magnitudeMethodNotes} />
-              </div>
-            )}
           </div>
           );
         })}
@@ -521,11 +585,9 @@ export function EventTable({
           </thead>
           <tbody className="divide-y divide-outline-variant/10">
             {events.map((e) => {
-              const magnitudeLines = magnitudeLinesForEvent(e.category, marketImpact);
-              const magnitudeMethodNotes = magnitudeMethodNotesForEvent(e.category, marketImpact);
               return (
-              <Fragment key={e.id}>
                 <tr
+                  key={e.id}
                   data-testid="calendar-event-row"
                   className="hover:bg-surface-bright/10 transition-colors"
                 >
@@ -548,12 +610,13 @@ export function EventTable({
                       {e.event}
                       <span className="material-symbols-outlined text-[13px] text-on-surface/30">open_in_new</span>
                     </a>
-                    {e.status === "tentative" && <TentativeTag />}
+                    <ScheduleStatusTag status={e.scheduleStatus} />
                     {e.creditLine && (
                       <p data-testid="calendar-credit-line" className="text-[11px] font-normal text-on-surface/40 mt-0.5">
                         {e.creditLine}
                       </p>
                     )}
+                    <LastCheckedLine lastCheckedAt={e.lastCheckedAt} />
                   </td>
                   <td className="py-3 px-3 flex items-center gap-1.5">
                     <CategoryTag category={e.category} />
@@ -569,21 +632,6 @@ export function EventTable({
                     <td className="py-3 px-3 mono text-[12px] md:text-[11px] text-on-surface/40">{e.actual ?? "—"}</td>
                   )}
                 </tr>
-                {magnitudeLines.length > 0 && (
-                  <tr className="bg-surface-bright/5">
-                    <td colSpan={headers.length} className="px-3 pb-3 -mt-1 space-y-1">
-                      <MagnitudeLines lines={magnitudeLines} />
-                    </td>
-                  </tr>
-                )}
-                {magnitudeMethodNotes.length > 0 && (
-                  <tr className="bg-surface-bright/5">
-                    <td colSpan={headers.length} className="px-3 pb-3 -mt-1">
-                      <MagnitudeMethodNotes notes={magnitudeMethodNotes} />
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
               );
             })}
           </tbody>
@@ -1043,8 +1091,9 @@ export default function CalendarPage() {
             </button>
           </div>
           <div className="p-2">
-            <EventTable events={selectedDayEvents} timeZone={timeZone} marketImpact={marketImpact} highlightAllMarkets={onlyMine} />
+            <EventTable events={selectedDayEvents} timeZone={timeZone} highlightAllMarkets={onlyMine} />
           </div>
+          <HistoricalContextPanels events={selectedDayEvents} marketImpact={marketImpact} />
         </section>
       ) : (
         <>
@@ -1058,8 +1107,9 @@ export default function CalendarPage() {
               <span className="label text-[12px] md:text-[10px] tracking-widest text-outline font-bold uppercase">This Week</span>
             </div>
             <div className="p-2">
-              <EventTable events={thisWeek} timeZone={timeZone} marketImpact={marketImpact} highlightAllMarkets={onlyMine} />
+              <EventTable events={thisWeek} timeZone={timeZone} highlightAllMarkets={onlyMine} />
             </div>
+            <HistoricalContextPanels events={thisWeek} marketImpact={marketImpact} />
           </section>
 
           {/* Upcoming (rest of the calendar's window) */}
@@ -1074,8 +1124,9 @@ export default function CalendarPage() {
               </span>
             </div>
             <div className="p-2">
-              <EventTable events={upcoming} timeZone={timeZone} marketImpact={marketImpact} highlightAllMarkets={onlyMine} />
+              <EventTable events={upcoming} timeZone={timeZone} highlightAllMarkets={onlyMine} />
             </div>
+            <HistoricalContextPanels events={upcoming} marketImpact={marketImpact} />
           </section>
         </>
       )}

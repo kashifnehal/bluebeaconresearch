@@ -25,7 +25,7 @@ type CalendarEvent = {
   id: string;
   date: string;
   time: string | null;
-  status?: string;
+  scheduleStatus?: string;
   sourceUrl: string;
 };
 type CalendarFile = { events: CalendarEvent[] };
@@ -50,7 +50,7 @@ runTest("backend calendar copy is identical to the web copy", () => {
     assert.ok(match, `${COPY_MESSAGE} (missing: ${ev.id})`);
     assert.equal(match!.date, ev.date, `${COPY_MESSAGE} (date mismatch: ${ev.id})`);
     assert.equal(match!.time, ev.time, `${COPY_MESSAGE} (time mismatch: ${ev.id})`);
-    assert.equal(match!.status, ev.status, `${COPY_MESSAGE} (status mismatch: ${ev.id})`);
+    assert.equal(match!.scheduleStatus, ev.scheduleStatus, `${COPY_MESSAGE} (scheduleStatus mismatch: ${ev.id})`);
     assert.equal(match!.sourceUrl, ev.sourceUrl, `${COPY_MESSAGE} (sourceUrl mismatch: ${ev.id})`);
   }
 });
