@@ -329,6 +329,15 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
                 <>
                   <HorizonCards checkpoints={checkpoints} />
                   <HorizonTable checkpoints={checkpoints} />
+                  <p
+                    className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]"
+                    data-testid="accuracy-baseline-rows-caption"
+                  >
+                    Up right and Market rose (baseline) do not count the same rows: Up right is
+                    scored only against the windows this page called up; Market rose (baseline)
+                    is the share of every scored window at this horizon — including down,
+                    volatile, and neutral calls — where the price actually rose.
+                  </p>
                 </>
               ) : (
                 <p

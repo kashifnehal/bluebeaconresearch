@@ -186,6 +186,16 @@ async function main() {
 
         const flatCaption = document.querySelector('[data-testid="accuracy-flat-caption"]');
         assert.match(flatCaption?.textContent ?? "", /at least 0\.5% in the called direction/);
+
+        const baselineRowsCaption = document.querySelector(
+          '[data-testid="accuracy-baseline-rows-caption"]',
+        );
+        assert.match(
+          baselineRowsCaption?.textContent ?? "",
+          /do not count the same rows/,
+        );
+        assert.match(baselineRowsCaption?.textContent ?? "", /scored only against the windows this page called up/);
+        assert.match(baselineRowsCaption?.textContent ?? "", /including down,\s*volatile, and neutral calls/);
         void html;
       } finally {
         await act(async () => {
@@ -209,6 +219,10 @@ async function main() {
         // share percentages — the by-asset section below uses counts, not %,
         // so the page overall still has no percentage anywhere in this state.
         assert.equal(/\d+(?:\.\d+)?%/.test(text), false);
+        const baselineRowsCaption = document.querySelector(
+          '[data-testid="accuracy-baseline-rows-caption"]',
+        );
+        assert.equal(baselineRowsCaption, null, "no comparison caption without a rendered comparison");
       } finally {
         await act(async () => {
           root.unmount();
