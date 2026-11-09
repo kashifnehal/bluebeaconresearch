@@ -245,6 +245,8 @@ Returns 5 most recent signals. Used by landing page live preview and dashboard r
 
 > ⚠️ UPDATED 2026-10-14 (faster outcome reads) — `signal_outcomes` pages after the first are read together, a successful read is cached 5 minutes, and the commodity-price read starts before the outcome wait. Response shape and the 3s baseline limit are unchanged. Full detail: `docs/brain/05_API.md`.
 
+> ⚠️ UPDATED 2026-11-09 — `GET /api/signals/:id` also returns `ownOutcomes` (this signal's own stored move per asset once an outcome exists). Full detail: `docs/brain/05_API.md`.
+
 > ⚠️ UPDATED 2026-09-28 (dead default-window filter + severity-primary sort fix) — `GET /api/signals` list: (1) the default (no `window` param) time filter is now a real `event_date >= 24h` cutoff — was `event_date >= 24h OR is_active = true`, a no-op since `is_active` is true on 100% of rows; (2) the default `sort` (`"severity"`) now reuses the same recency+severity blended rank as `sort=relevance` instead of pure `severity DESC`, so an old high-severity signal can no longer permanently outrank a fresh lower-severity one; (3) `signal-filters.ts`'s feed-visibility floor `DEFAULT_FILTERS.minSeverity` dropped 6 → 4. Full detail: `docs/brain/05_API.md`, `docs/brain/15_INGESTION_PIPELINE.md` §5.1/§5.4.
 > ⚠️ UPDATED 2026-09-29 (tiered feed-fill fallback + "Just In" zone) — `GET /api/signals` list, default (no `window` param) path only: the fixed 24h cutoff above now widens to 72h then 7d if the candidate count is below 12, and stops there. Response gains `resolvedWindow: "24h"|"72h"|"7d"` and `justIn: Signal[]` (top 5 of that candidate set by `event_date` DESC, ids excluded from `signals`), both fields present only on this path. Dashboard's featured-card pick (`app/(dashboard)/dashboard/page.tsx`) now uses `justIn[0]`, replacing the old hardcoded `severity >= 8` hunt. Full detail: `docs/brain/05_API.md`, `docs/brain/15_INGESTION_PIPELINE.md` §5.1/§5.4.
 >
@@ -445,7 +447,11 @@ direction to score against.
 >
 > Updated 2026-11-08 (`f12c123`). Top-level `flat_threshold_pct` is 0.5, shared with
 > outcome scoring. A smaller absolute move is flat and is not a correct up or down call.
-> No other response field changed.
+>
+> Updated 2026-11-09. Each checkpoint and `overall` also return `flat_share` and
+> `market_rose_share`. The public `/accuracy` page no longer prints a hit-rate
+> headline; it shows scored counts, flat share, up/down right/wrong counts, and the
+> baseline. Read-only audit script: `apps/backend/scripts/accuracy-audit.ts`.
 
 ---
 

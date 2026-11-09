@@ -211,6 +211,7 @@ export default function EventDetailPage() {
   const relatedEventsHasMore = visibleRelatedCount < relatedEventsAll.length;
   const pricesAtSignal = data.pricesAtSignal ?? [];
   const marketImpactMagnitudes = data.marketImpactMagnitudes ?? {};
+  const ownOutcomes = data.ownOutcomes ?? {};
   const alertCta = eventAlertCta(signal.severity);
   const showLastUpdated = shouldShowLastUpdated(
     signal.sourcesCount,
@@ -445,6 +446,7 @@ export default function EventDetailPage() {
                   showPriceSubtext
                   headingIcon={<Target size={14} className="text-accent" />}
                   marketImpactMagnitudes={marketImpactMagnitudes}
+                  ownOutcomes={ownOutcomes}
                 />
               </div>
 

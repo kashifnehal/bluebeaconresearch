@@ -136,6 +136,12 @@ function makeSupabase(
     rpcMode?: "missing" | "missing-message" | "error" | "ok";
     rpcPayload?: unknown;
     rpcCalls?: Array<{ fn: string; args: Record<string, unknown> }>;
+    outcomeRows?: Array<{
+      signalId: string;
+      asset: string;
+      checkpoint_hours: number;
+      actual_pct_change: number | null;
+    }>;
   },
 ) {
   const signal = options?.signal ?? signalRow;
@@ -308,7 +314,7 @@ function makeDeps(
       observation?: OutcomeRowsObservation,
     ) => {
       if (observation) observation.cacheStatus = "miss";
-      return [];
+      return options?.outcomeRows ?? [];
     },
     prefetchAssetPricePoints: (
       _supabase: unknown,
@@ -501,6 +507,37 @@ async function main() {
     assert.ok(Array.isArray(body.relatedEvents));
     assert.ok(Array.isArray(body.pricesAtSignal));
     assert.ok(Array.isArray(body.sources));
+  });
+
+  await runTest(
+    "ownOutcomes picks this signal's own 24h USOIL row out of the fetched outcome rows",
+    async () => {
+      const res = await callGet(
+        makeDeps(
+          { executions: 0 },
+          {
+            outcomeRows: [
+              // Another signal's row for the same asset — must not leak in.
+              { signalId: "sig-other", asset: "USOIL", checkpoint_hours: 24, actual_pct_change: 9 },
+              { signalId: SIGNAL_ID, asset: "USOIL", checkpoint_hours: 1, actual_pct_change: 0.2 },
+              { signalId: SIGNAL_ID, asset: "USOIL", checkpoint_hours: 24, actual_pct_change: -0.6 },
+            ],
+          },
+        ),
+      );
+      assert.equal(res.status, 200);
+      const body = await res.json();
+      assert.deepEqual(body.ownOutcomes, {
+        USOIL: { checkpointHours: 24, actualPctChange: -0.6 },
+      });
+    },
+  );
+
+  await runTest("ownOutcomes is empty when no outcome row exists yet for this signal", async () => {
+    const res = await callGet(makeDeps({ executions: 0 }, { outcomeRows: [] }));
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.deepEqual(body.ownOutcomes, {});
   });
 
   await runTest("a slow signal row is not skipped", async () => {

@@ -24,12 +24,14 @@ import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
   computeMarketImpactCheckpoints,
   computeMarketImpactMagnitude,
+  deriveOwnOutcomes,
   deriveTimeHorizonLabel,
   parseEventCategory,
   parseNovelty,
   parseSourceConfirmation,
   type MarketImpactCheckpointPoint,
   type MarketImpactMagnitude,
+  type OwnOutcomeEntry,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
 
@@ -95,6 +97,10 @@ export type EventDetailResponse = {
   relatedEventsTotal: number;
   pricesAtSignal: PriceAtSignal[];
   marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry>;
+  // 2026-11-09: this signal's own signal_outcomes row per asset, once one
+  // exists — the real move beside the predicted-direction chip. Derived from
+  // the same rows already fetched for marketImpactMagnitudes, no extra query.
+  ownOutcomes: Record<string, OwnOutcomeEntry>;
   degraded: string[];
 };
 
@@ -666,10 +672,12 @@ export async function GET(
   const eventDate = row.event_date ?? row.created_at;
 
   let marketImpactMagnitudes: Record<string, MarketImpactAssessmentEntry> = {};
+  let ownOutcomes: Record<string, OwnOutcomeEntry> = {};
   let responseMs = 0;
   if (outcomeRowsPromise) {
     const rows = await outcomeRowsPromise;
     const outcomesMs = timingOn ? performance.now() - outcomesStarted : 0;
+    ownOutcomes = deriveOwnOutcomes(rows, id, magnitudeAssets);
 
     const baselinesStarted = started();
     const baselinesByAsset = baselineTiming
@@ -790,6 +798,7 @@ export async function GET(
     relatedEventsTotal,
     pricesAtSignal,
     marketImpactMagnitudes,
+    ownOutcomes,
     degraded,
   };
 

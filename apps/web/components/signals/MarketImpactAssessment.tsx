@@ -15,6 +15,7 @@ import {
   collectMarketImpacts,
   eventCategoryLabel,
   formatImpactDirections,
+  formatOwnOutcomeLine,
   isGrainAsset,
   marketImpactMethodNote,
   noveltyLabel,
@@ -22,6 +23,7 @@ import {
   usesGprFallback,
   type MarketImpactCheckpointPoint,
   type MarketImpactMagnitude,
+  type OwnOutcomeEntry,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
@@ -103,12 +105,15 @@ export function MarketImpactAssessment({
   showPriceSubtext = false,
   headingIcon,
   marketImpactMagnitudes = {},
+  ownOutcomes = {},
 }: {
   signal: Signal;
   pricesAtSignal?: MarketImpactPriceRow[];
   showPriceSubtext?: boolean;
   headingIcon?: ReactNode;
   marketImpactMagnitudes?: Record<string, MarketImpactAssessmentEntry>;
+  /** This signal's own signal_outcomes row per asset, once one exists. */
+  ownOutcomes?: Record<string, OwnOutcomeEntry>;
 }) {
   const mechanism =
     typeof signal.marketMechanism === "string" && signal.marketMechanism.trim()
@@ -203,6 +208,7 @@ export function MarketImpactAssessment({
                   const baseline = entry?.baselines?.find(
                     (b) => b.windowHours === MARKET_IMPACT_CHECKPOINT_HOURS,
                   );
+                  const ownOutcome = ownOutcomes[c.asset];
                   return (
                     <div key={`${c.asset}-${c.direction}`} className="space-y-1">
                       <CommodityChip
@@ -212,6 +218,14 @@ export function MarketImpactAssessment({
                         size="md"
                         label="Predicted"
                       />
+                      {ownOutcome ? (
+                        <p
+                          data-testid="market-impact-own-outcome"
+                          className="pl-1 text-[11px] leading-snug text-muted"
+                        >
+                          {formatOwnOutcomeLine(c.direction, ownOutcome)}
+                        </p>
+                      ) : null}
                       {showPriceSubtext ? (
                         <PriceTimeline asset={c.asset} priceInfo={priceInfo} />
                       ) : null}

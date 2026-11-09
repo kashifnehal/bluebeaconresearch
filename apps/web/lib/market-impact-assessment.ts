@@ -118,11 +118,83 @@ export const MARKET_IMPACT_MIN_SAMPLE_SIZE = 20;
 export const MARKET_IMPACT_CHECKPOINT_HOURS = 24;
 
 export type SignalOutcomeRow = {
+  /** 2026-11-09. Optional: callers that never need per-signal matching (e.g.
+   * the backend's own accuracy aggregate) can omit it. */
+  signalId?: string;
   asset: string;
   checkpoint_hours: number;
   actual_pct_change: number | null;
   eventDate?: string | null;
 };
+
+// The checkpoint the real-move line prefers when a signal has outcome rows
+// at more than one horizon — same horizon the magnitude sentence uses, so
+// the two numbers on the page are always talking about the same window.
+export const OWN_OUTCOME_PREFERRED_CHECKPOINT_HOURS = MARKET_IMPACT_CHECKPOINT_HOURS;
+
+export type OwnOutcomeEntry = {
+  checkpointHours: number;
+  actualPctChange: number;
+};
+
+/**
+ * Picks, per asset, this one signal's own signal_outcomes row(s) out of the
+ * full rows array already fetched for the asset-wide magnitude aggregate
+ * (fetchSignalOutcomeRows) — no second query. Prefers
+ * OWN_OUTCOME_PREFERRED_CHECKPOINT_HOURS when that checkpoint has scored;
+ * otherwise falls back to whichever checkpoint has scored for that asset,
+ * preferring the longest (most time for the price to move) so an early
+ * partial result (e.g. only the 1h checkpoint has aged in yet) still shows
+ * something rather than nothing.
+ */
+export function deriveOwnOutcomes(
+  rows: SignalOutcomeRow[],
+  signalId: string,
+  assets: string[],
+): Record<string, OwnOutcomeEntry> {
+  const assetSet = new Set(assets);
+  const byAsset = new Map<string, SignalOutcomeRow[]>();
+  for (const row of rows) {
+    if (row.signalId !== signalId) continue;
+    if (!assetSet.has(row.asset)) continue;
+    if (typeof row.actual_pct_change !== "number" || !Number.isFinite(row.actual_pct_change)) continue;
+    const list = byAsset.get(row.asset) ?? [];
+    list.push(row);
+    byAsset.set(row.asset, list);
+  }
+
+  const result: Record<string, OwnOutcomeEntry> = {};
+  for (const [asset, assetRows] of byAsset) {
+    const preferred = assetRows.find(
+      (r) => r.checkpoint_hours === OWN_OUTCOME_PREFERRED_CHECKPOINT_HOURS,
+    );
+    const chosen =
+      preferred ??
+      [...assetRows].sort((a, b) => b.checkpoint_hours - a.checkpoint_hours)[0];
+    if (chosen) {
+      result[asset] = {
+        checkpointHours: chosen.checkpoint_hours,
+        actualPctChange: chosen.actual_pct_change as number,
+      };
+    }
+  }
+  return result;
+}
+
+/**
+ * "Called up. Market: -0.6% after 24 h." — the one-line real-move display
+ * next to a predicted-direction chip once that signal's own outcome exists.
+ * direction is the raw predicted Direction value (already lowercase: "up" /
+ * "down" / "volatile" / "neutral"), not the capitalized DIRECTION_LABELS —
+ * matches the lowercase wording in the format this was specified with.
+ */
+export function formatOwnOutcomeLine(
+  direction: Direction | string,
+  entry: OwnOutcomeEntry,
+): string {
+  const sign = entry.actualPctChange > 0 ? "+" : "";
+  return `Called ${direction}. Market: ${sign}${entry.actualPctChange.toFixed(1)}% after ${entry.checkpointHours} h.`;
+}
 
 export type MarketImpactMagnitude = {
   medianMovePct: number;

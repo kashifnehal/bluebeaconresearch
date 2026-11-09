@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Honest accuracy page + outcome price offsets, TASK W-ACCURACY
+
+`apps/backend` + `apps/web` + one migration. Nullable price timestamp/offset columns on `signal_outcomes` (written, not applied). Outcome tracker stores them on new rows. Read-only accuracy-audit script added (not run on production). `/accuracy` drops hit-rate headlines and shows scored/flat-share/right-wrong counts plus the market-rose baseline. Event detail shows this signal's own later move beside the call once the outcome exists. Playwright against local `next start` confirmed the baseline column and no `%` headline. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — Calendar fixed for Sundays, one data source, schedule status, fewer repeated stats, TASK W-CALENDAR
 
 `apps/web` + `apps/backend`. On Sunday the calendar had shown last week's events under "This Week" — the week-boundary math is now a small tested function instead of untested inline code. The two copies of the calendar's data file are now one source of truth (`apps/backend`) plus an auto-generated copy, checked by a new test that fails if they ever drift. Every event now carries a real status (confirmed/tentative/unpublished/cancelled) and the date it was last checked, shown on the page. 6 new rows were added, each with a real official source link (UK ONS, Australia ABS, India RBI, IEA x2, OPEC+); China's monthly release could not be verified from this environment, so no row was added for it. The old OPEC+ Nov 1 row is now marked confirmed since its official page loads again. The same historical-pattern numbers that used to repeat on every row of a given type now show once per type. Web tsc 0, web test 806 ✔, next build 0; the backend's own calendar test passes standalone but could not run inside the full backend test chain because an unrelated pre-existing test earlier in that chain fails on a database-permissions error in this environment. Not verified in a browser — Playwright is not installed in this repo. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

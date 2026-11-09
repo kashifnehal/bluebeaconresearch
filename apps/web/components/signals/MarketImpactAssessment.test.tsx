@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { createElement } from "react";
+import { act, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Signal } from "@blue-beacon-research/shared";
 
+import { setupDom, renderElement, visibleText as clientVisibleText } from "@/lib/test-render";
 import { MarketImpactAssessment } from "./MarketImpactAssessment";
 import {
   GPR_FALLBACK_SENTENCE,
@@ -391,3 +392,76 @@ runTest("is_preview shows the calendar note and link", () => {
   assert.equal(text.includes(PREVIEW_NOTE), true);
   assert.match(html, /href="\/calendar"/);
 });
+
+// 2026-11-09 (TASK W-ACCURACY part 5): the real-move line next to a
+// predicted-direction chip, once this signal's own outcome exists. Rendered
+// with react-dom/client (lib/test-render.ts's linkedom harness, same as
+// components/signals/SignalQuickView.test.tsx) per the rendered-test rule —
+// everything above this point in the file predates that rule and still uses
+// renderToStaticMarkup.
+const clientDocument = setupDom();
+
+async function clientRunTest(name: string, fn: () => Promise<void> | void) {
+  try {
+    await fn();
+    console.log(`✔ ${name}`);
+  } catch (err) {
+    console.error(`✖ ${name}`);
+    console.error(err);
+    process.exitCode = 1;
+  }
+}
+
+async function ownOutcomeTests() {
+  await clientRunTest(
+    "own-outcome line renders beside the chip in the exact proposed format, neutral colour",
+    async () => {
+      const { html, root } = await renderElement(
+        clientDocument,
+        createElement(MarketImpactAssessment, {
+          signal: baseSignal({
+            marketMechanism: "Threat to tanker traffic through the Strait of Hormuz.",
+            commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.88 }],
+          }),
+          ownOutcomes: { USOIL: { checkpointHours: 24, actualPctChange: -0.6 } },
+        }),
+      );
+      try {
+        const line = clientDocument.querySelector('[data-testid="market-impact-own-outcome"]');
+        assert.equal(line?.textContent, "Called up. Market: -0.6% after 24 h.");
+        // Neutral colour: the shared muted-text class, not a price-up/down class.
+        assert.equal(line?.className.includes("text-muted"), true);
+        assert.equal(line?.className.includes("text-price-up"), false);
+        assert.equal(line?.className.includes("text-price-down"), false);
+        void html;
+      } finally {
+        await act(async () => {
+          root.unmount();
+        });
+      }
+    },
+  );
+
+  await clientRunTest("no own-outcome line renders when the outcome does not exist yet", async () => {
+    const { html, root } = await renderElement(
+      clientDocument,
+      createElement(MarketImpactAssessment, {
+        signal: baseSignal({
+          marketMechanism: "Threat to tanker traffic through the Strait of Hormuz.",
+          commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.88 }],
+        }),
+        ownOutcomes: {},
+      }),
+    );
+    try {
+      assert.equal(clientDocument.querySelector('[data-testid="market-impact-own-outcome"]'), null);
+      assert.equal(clientVisibleText(html).includes("Called"), false);
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
+    }
+  });
+}
+
+void ownOutcomeTests();

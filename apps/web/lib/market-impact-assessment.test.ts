@@ -9,9 +9,11 @@ import {
   SOURCE_CONFIRMATION_LABELS,
   computeMarketImpactCheckpoints,
   computeMarketImpactMagnitude,
+  deriveOwnOutcomes,
   deriveTimeHorizonLabel,
   eventCategoryLabel,
   formatImpactDirections,
+  formatOwnOutcomeLine,
   isGrainAsset,
   noveltyLabel,
   parseEventCategory,
@@ -300,6 +302,76 @@ runTest("novelty labels are UI buckets, not raw decimals", () => {
   assert.equal(noveltyLabel(0.29), "Mostly a repeat/reminder");
   assert.equal(noveltyLabel(0), "Mostly a repeat/reminder");
   assert.equal(noveltyLabel(null), null);
+});
+
+function ownOutcomeRow(
+  overrides: Partial<SignalOutcomeRow> & { signalId: string },
+): SignalOutcomeRow {
+  return {
+    asset: "USOIL",
+    checkpoint_hours: 24,
+    actual_pct_change: -0.6,
+    ...overrides,
+  };
+}
+
+runTest("deriveOwnOutcomes picks only this signal's own rows for the named assets", () => {
+  const rows: SignalOutcomeRow[] = [
+    ownOutcomeRow({ signalId: "sig-this", asset: "USOIL", checkpoint_hours: 24, actual_pct_change: -0.6 }),
+    ownOutcomeRow({ signalId: "sig-other", asset: "USOIL", checkpoint_hours: 24, actual_pct_change: 5 }),
+    ownOutcomeRow({ signalId: "sig-this", asset: "GOLD", checkpoint_hours: 24, actual_pct_change: 1.1 }),
+    ownOutcomeRow({ signalId: "sig-this", asset: "WHEAT", checkpoint_hours: 24, actual_pct_change: 0.4 }),
+  ];
+  const result = deriveOwnOutcomes(rows, "sig-this", ["USOIL", "GOLD"]);
+  assert.deepEqual(Object.keys(result).sort(), ["GOLD", "USOIL"]);
+  assert.equal(result.USOIL.actualPctChange, -0.6);
+  assert.equal(result.USOIL.checkpointHours, 24);
+  // WHEAT was not in the requested assets list, so it is left out even
+  // though it belongs to the same signal.
+  assert.equal("WHEAT" in result, false);
+});
+
+runTest(
+  "deriveOwnOutcomes prefers the 24h checkpoint, falling back to the longest available",
+  () => {
+    const rows: SignalOutcomeRow[] = [
+      ownOutcomeRow({ signalId: "sig-1", asset: "USOIL", checkpoint_hours: 1, actual_pct_change: 0.2 }),
+      ownOutcomeRow({ signalId: "sig-1", asset: "USOIL", checkpoint_hours: 4, actual_pct_change: 0.3 }),
+      ownOutcomeRow({ signalId: "sig-1", asset: "USOIL", checkpoint_hours: 24, actual_pct_change: -0.6 }),
+      ownOutcomeRow({ signalId: "sig-1", asset: "USOIL", checkpoint_hours: 48, actual_pct_change: 1.9 }),
+    ];
+    assert.equal(deriveOwnOutcomes(rows, "sig-1", ["USOIL"]).USOIL.checkpointHours, 24);
+
+    // No 24h row yet — falls back to the longest one that exists (48h here).
+    const partial = rows.filter((r) => r.checkpoint_hours !== 24);
+    assert.equal(deriveOwnOutcomes(partial, "sig-1", ["USOIL"]).USOIL.checkpointHours, 48);
+
+    // Neither 24h nor 48h has scored yet — falls back to 4h (longer than 1h).
+    const earlier = rows.filter((r) => r.checkpoint_hours === 1 || r.checkpoint_hours === 4);
+    assert.equal(deriveOwnOutcomes(earlier, "sig-1", ["USOIL"]).USOIL.checkpointHours, 4);
+  },
+);
+
+runTest("deriveOwnOutcomes skips a null actual_pct_change (not yet scored)", () => {
+  const rows: SignalOutcomeRow[] = [
+    ownOutcomeRow({ signalId: "sig-1", asset: "USOIL", checkpoint_hours: 24, actual_pct_change: null as unknown as number }),
+  ];
+  assert.deepEqual(deriveOwnOutcomes(rows, "sig-1", ["USOIL"]), {});
+});
+
+runTest("formatOwnOutcomeLine matches the proposed format exactly, including the sign", () => {
+  assert.equal(
+    formatOwnOutcomeLine("up", { checkpointHours: 24, actualPctChange: -0.6 }),
+    "Called up. Market: -0.6% after 24 h.",
+  );
+  assert.equal(
+    formatOwnOutcomeLine("down", { checkpointHours: 48, actualPctChange: 2.34 }),
+    "Called down. Market: +2.3% after 48 h.",
+  );
+  assert.equal(
+    formatOwnOutcomeLine("up", { checkpointHours: 1, actualPctChange: 0 }),
+    "Called up. Market: 0.0% after 1 h.",
+  );
   assert.equal(parseNovelty(1.2), null);
   assert.equal(parseNovelty("0.8"), 0.8);
   assert.equal(parseNovelty("nope"), null);

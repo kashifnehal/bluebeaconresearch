@@ -5,6 +5,16 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Honest accuracy page + outcome price offsets (TASK W-ACCURACY), `apps/backend` + `apps/web` + one migration, 2026-11-09, `9dfde7f` / `8f1501d` / `ba211e7` / `798f488` / `this commit`
+
+- Part 1 (`9dfde7f`): migration `20261109100000_signal_outcomes_price_offsets.sql` adds nullable `price_before_at` / `price_after_at` / `price_before_offset_seconds` / `price_after_offset_seconds` on `signal_outcomes`. Written, not applied. No backfill.
+- Part 2 (`8f1501d`): `outcome-tracker.ts` stores those four fields on new rows. 24h price-point tolerance unchanged. No existing text/JSON column to flag a large offset — when an absolute offset exceeds 25% of the checkpoint horizon the worker increments `largeOffsetRows` and logs a warning only. Shared `actualDirectionFromPct` extracted to `outcome-threshold.ts`.
+- Part 3 (`ba211e7`): read-only `apps/backend/scripts/accuracy-audit.ts` (+ pure `src/lib/accuracy-audit.ts`) prints per-horizon aggregates to `scripts/out/` (gitignored). Not run against production.
+- Part 4 (`798f488`): `GET /v1/accuracy` adds `flat_share` and `market_rose_share`. `/accuracy` headline is "Every assessment is dated, sourced and scored against what the market did next. The misses are shown." Table columns: scored, flat share, up/down right/wrong, market-rose baseline. Horizons below the sample floor are hidden. No hit-rate headline; "published track record" wording removed.
+- Part 5 (this commit): `GET /api/signals/:id` returns `ownOutcomes`; `MarketImpactAssessment` shows a muted "Called up. Market: -0.6% after 24 h." line once that signal's own outcome exists.
+- **Verification:** backend `tsc` exit 0; accuracy-audit / accuracy.routes / outcome-tracker tests pass; full backend test chain fails only on pre-existing unrelated `digest-send-log.test.ts` (no diff vs `origin/main`). Web `tsc` exit 0; `pnpm --filter web test` exit 0 (804 ✔, 0 ✖); `next build` exit 0. Playwright against `next start` `/accuracy`: baseline column present, no `%` in the headline (the only `95%` substring on the page is `2.95%` avg-move for TTF_GAS). **Not verified:** migration apply; production audit script run; event-detail own-outcome line in a browser.
+- Docs: this entry; both trees' `04_DATABASE.md`, `05_API.md`, `06_COMPONENTS.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`; `docs/brain/16_MIGRATION_CHECKLIST.md`; `docs/claude_project/09_BACKLOG.md` (#121 note). Skipped both `10_DECISIONS.md` (no new standing rule) and `18_AI_ENGINE.md` (no prompt change).
+
 ## ✅ Calendar fixed for Sundays, one data source, schedule status + last-checked, stats dedup (TASK W-CALENDAR), `apps/web` + `apps/backend`, 2026-11-09, `a4c616e`
 
 - Why: on Sunday 8 Nov 2026 the live `/calendar` page showed last week's events under "This Week" — the Mon-Sun week-boundary math lived only inline in `page.tsx`, untested. The 39-event calendar JSON also existed as two hand-maintained duplicates (`apps/backend/src/data/economic-calendar.json` and `apps/web/data/economic-calendar.json`), and the per-row "historical pattern" stats block repeated identically up to 22 times per section.

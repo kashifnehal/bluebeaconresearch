@@ -3,13 +3,18 @@ import type { SignalOutcomeRow } from "@/lib/market-impact-assessment";
 
 const OUTCOME_ROWS_PAGE_SIZE = 1000;
 
+// signal_id is included (2026-11-09) so a caller can also pick out this one
+// signal's own outcome row(s) — e.g. the real move beside its predicted
+// direction on the event page — from the same already-fetched rows used for
+// the asset-wide magnitude aggregate, with no second query.
 const OUTCOME_COLUMNS =
-  "asset, checkpoint_hours, actual_pct_change, signals(event_date)";
+  "signal_id, asset, checkpoint_hours, actual_pct_change, signals(event_date)";
 
 // BBR working value. No published source.
 export const OUTCOME_ROWS_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type RawOutcomeRow = {
+  signal_id: string;
   asset: string;
   checkpoint_hours: number;
   actual_pct_change: number | null;
@@ -39,6 +44,7 @@ function outcomeRowsCacheKey(assets: string[]): string {
 
 function mapOutcomePage(page: RawOutcomeRow[]): SignalOutcomeRow[] {
   return page.map((row) => ({
+    signalId: row.signal_id,
     asset: row.asset,
     checkpoint_hours: row.checkpoint_hours,
     actual_pct_change: row.actual_pct_change,
