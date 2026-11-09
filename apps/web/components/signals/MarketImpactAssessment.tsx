@@ -16,6 +16,7 @@ import {
   eventCategoryLabel,
   formatImpactDirections,
   isGrainAsset,
+  marketImpactMethodNote,
   noveltyLabel,
   sourceConfirmationLabel,
   usesGprFallback,
@@ -216,16 +217,6 @@ export function MarketImpactAssessment({
                       ) : null}
                       {magnitude ? (
                         <>
-                          <p
-                            data-testid="market-impact-magnitude"
-                            className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-text-secondary"
-                          >
-                            Across {magnitude.sampleSize} tracked BBR signals that
-                            listed {c.asset}, the price {MARKET_IMPACT_CHECKPOINT_HOURS}{" "}
-                            hours after the event time differed from the price at the
-                            event time by a median of ~{magnitude.medianMovePct.toFixed(2)}%
-                            (up or down).
-                          </p>
                           {magnitude.unchangedCount > 0 ? (
                             <p
                               data-testid="market-impact-unchanged-note"
@@ -257,7 +248,7 @@ export function MarketImpactAssessment({
                         </p>
                       ) : (
                         <p className="pl-1 text-[12px] md:text-[11px] leading-relaxed text-muted">
-                          Not enough tracked history for {c.asset} yet.
+                          BBR has not built a history for {c.asset} yet.
                         </p>
                       )}
                       {magnitude && entry?.checkpoints && entry.checkpoints.length > 0 ? (
@@ -268,8 +259,14 @@ export function MarketImpactAssessment({
                           >
                             View historical pattern
                           </summary>
-                          <div className="mt-2">
+                          <div className="mt-2 space-y-1.5">
                             <MarketImpactChart checkpoints={entry.checkpoints} />
+                            <p
+                              data-testid="market-impact-method-note"
+                              className="text-[11px] leading-snug text-muted"
+                            >
+                              {marketImpactMethodNote(c.asset, magnitude.sampleSize)}
+                            </p>
                           </div>
                         </details>
                       ) : null}

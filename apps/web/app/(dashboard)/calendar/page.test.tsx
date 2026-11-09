@@ -699,6 +699,48 @@ async function main() {
     }
   });
 
+  await runTest("magnitude line drops the sample size; it only shows behind 'View historical pattern'", async () => {
+    const events = [fixtureEvent({ id: "evt-energy", category: "Energy" })];
+    const marketImpact = {
+      USOIL: {
+        magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+        timeHorizonLabel: "multi-day" as const,
+        baselines: [
+          { windowHours: 24, medianMovePct: 1.46, windowCount: 1204, eventRowsMatched: 1232, spanDays: 88 },
+        ],
+      },
+    };
+    const { html, root } = await mount(
+      createElement(EventTable, { events, timeZone: "utc", marketImpact }),
+    );
+    try {
+      assert.match(html, /data-testid="calendar-magnitude-line"/);
+      const text = visibleText(html);
+      assert.equal(text.includes("Across 1232 tracked BBR signals"), false);
+      assert.match(text, /For comparison, across 1204 USOIL price windows/);
+
+      assert.match(html, /data-testid="calendar-method-note-toggle"/);
+      // <details> with no `open` attribute renders collapsed by default.
+      assert.equal(/<details(?![^>]*\sopen)[^>]*class="group"/.test(html), true);
+      assert.match(text, /Method: 1232 tracked BBR signals that listed USOIL/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("no method-note toggle renders when the category has no magnitude data", async () => {
+    const events = [fixtureEvent({ id: "evt-energy", category: "Energy" })];
+    const { html, root } = await mount(
+      createElement(EventTable, { events, timeZone: "utc", marketImpact: {} }),
+    );
+    try {
+      assert.equal(html.includes("data-testid=\"calendar-method-note-toggle\""), false);
+      assert.equal(html.includes("data-testid=\"calendar-magnitude-line\""), false);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
   await runTest("subscribe-feed link exists with a webcal href, alongside the export button", async () => {
     const { AppRouterContext } = await import(
       "next/dist/shared/lib/app-router-context.shared-runtime.js"

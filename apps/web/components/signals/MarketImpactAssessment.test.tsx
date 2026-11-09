@@ -155,7 +155,7 @@ runTest("source confirmation and novelty render only when set, never as N/A", ()
   assert.equal(withoutGateText.includes("N/A"), false);
 });
 
-runTest("magnitude line renders when the asset clears the sample-size gate, no horizon line", () => {
+runTest("magnitude sentence no longer renders inline; sample size moved behind the toggle", () => {
   const html = renderToStaticMarkup(
     createElement(MarketImpactAssessment, {
       signal: baseSignal({
@@ -166,17 +166,18 @@ runTest("magnitude line renders when the asset clears the sample-size gate, no h
         USOIL: {
           magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
           timeHorizonLabel: "multi-day",
+          checkpoints: [
+            { checkpointHours: 24, medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+          ],
         },
       },
     }),
   );
   const text = visibleText(html);
-  assert.match(html, /data-testid="market-impact-magnitude"/);
+  assert.equal(html.includes('data-testid="market-impact-magnitude"'), false);
   assert.equal(html.includes('data-testid="market-impact-horizon"'), false);
-  assert.match(
-    text,
-    /Across 1232 tracked BBR signals that listed USOIL, the price 24 hours after the event time differed from the price at the event time by a median of ~0\.97% \(up or down\)\./,
-  );
+  assert.equal(text.includes("Across 1232 tracked BBR signals"), false);
+  assert.match(text, /Method: 1232 tracked BBR signals that listed USOIL, median move measured 24h after the event time\./);
   assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
   assert.equal(text.includes("Events like this have historically moved"), false);
   assert.equal(text.includes("within 24h"), false);
@@ -244,9 +245,13 @@ runTest("historical-pattern chart is collapsed by default behind a toggle, discl
   );
   assert.match(html, /data-testid="market-impact-chart-toggle"/);
   assert.match(html, /data-testid="market-impact-chart"/);
+  assert.match(html, /data-testid="market-impact-chart-title"/);
+  assert.match(html, /data-testid="market-impact-method-note"/);
   // <details> with no `open` attribute renders collapsed by default.
   assert.equal(/<details(?![^>]*\sopen)[^>]*class="group[^"]*"/.test(html), true);
   const text = visibleText(html);
+  assert.match(text, /Typical size of move after similar signals, up or down/);
+  assert.match(text, /Method: 1232 tracked BBR signals that listed USOIL/);
   assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
 });
 
@@ -283,7 +288,8 @@ runTest("not-enough-history fallback renders for a non-grain asset with no magni
   const text = visibleText(html);
   assert.equal(html.includes('data-testid="market-impact-magnitude"'), false);
   assert.equal(html.includes('data-testid="market-impact-horizon"'), false);
-  assert.match(text, /Not enough tracked history for USDRUB yet\./);
+  assert.match(text, /BBR has not built a history for USDRUB yet\./);
+  assert.equal(text.includes("Not enough tracked history"), false);
 });
 
 runTest("grain fallback sentence renders for WHEAT/CORN with no magnitude entry, not the generic fallback", () => {

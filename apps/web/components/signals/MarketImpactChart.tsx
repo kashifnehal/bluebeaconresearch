@@ -1,7 +1,7 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import type { MarketImpactCheckpointPoint } from "@/lib/market-impact-assessment";
+import { MARKET_IMPACT_CHART_TITLE, type MarketImpactCheckpointPoint } from "@/lib/market-impact-assessment";
 
 /**
  * Event-time chart of the same per-checkpoint median moves the magnitude
@@ -23,48 +23,59 @@ export function MarketImpactChart({
   }));
 
   return (
-    <div data-testid="market-impact-chart" className="h-28 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 16, right: 4, bottom: 0, left: 4 }}>
-          <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.06)" />
-          <XAxis
-            dataKey="label"
-            tickLine={false}
-            axisLine={{ stroke: "rgba(255,255,255,0.3)" }}
-            tick={{ fontSize: 10, fontFamily: "monospace", fill: "var(--text-muted)" }}
-          />
-          <Tooltip
-            cursor={{ fill: "rgba(255,255,255,0.04)" }}
-            formatter={(value, _name, item) => {
-              const payload = item?.payload as
-                | { sampleSize?: number; unchangedCount?: number }
-                | undefined;
-              const sampleSize = payload?.sampleSize;
-              const unchangedCount = payload?.unchangedCount;
-              return [
-                `${Number(value).toFixed(2)}% (n=${sampleSize ?? "?"}; ${unchangedCount ?? 0} unchanged left out)`,
-                "Median move",
-              ];
-            }}
-            contentStyle={{
-              background: "var(--bg-primary)",
-              border: "1px solid var(--border)",
-              borderRadius: 4,
-              fontSize: 11,
-            }}
-            labelStyle={{ color: "var(--text-muted)" }}
-            itemStyle={{ color: "var(--accent)" }}
-          />
-          <Bar dataKey="medianMovePct" fill="var(--accent)" radius={[2, 2, 0, 0]}>
-            <LabelList
-              dataKey="medianMovePct"
-              position="top"
-              formatter={(value: unknown) => `${Number(value).toFixed(1)}%`}
-              style={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "monospace" }}
+    <div>
+      <p
+        data-testid="market-impact-chart-title"
+        className="mb-1 text-[11px] font-bold uppercase tracking-wide text-text-secondary"
+      >
+        {MARKET_IMPACT_CHART_TITLE}
+      </p>
+      <div data-testid="market-impact-chart" className="h-28 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 16, right: 4, bottom: 0, left: 4 }}>
+            <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.06)" />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={{ stroke: "rgba(255,255,255,0.3)" }}
+              tick={{ fontSize: 10, fontFamily: "monospace", fill: "var(--text-muted)" }}
             />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            <Tooltip
+              cursor={{ fill: "rgba(255,255,255,0.04)" }}
+              formatter={(value, _name, item) => {
+                const payload = item?.payload as
+                  | { sampleSize?: number; unchangedCount?: number }
+                  | undefined;
+                const sampleSize = payload?.sampleSize;
+                const unchangedCount = payload?.unchangedCount;
+                return [
+                  `${Number(value).toFixed(2)}% (n=${sampleSize ?? "?"}; ${unchangedCount ?? 0} unchanged left out)`,
+                  "Median move",
+                ];
+              }}
+              contentStyle={{
+                background: "var(--bg-primary)",
+                border: "1px solid var(--border)",
+                borderRadius: 4,
+                fontSize: 11,
+              }}
+              labelStyle={{ color: "var(--text-muted)" }}
+              itemStyle={{ color: "var(--text-muted)" }}
+            />
+            {/* Neutral fill regardless of predicted direction — the chip above
+                already carries direction, labelled on its own; this bar only
+                shows typical move size. */}
+            <Bar dataKey="medianMovePct" fill="var(--text-muted)" radius={[2, 2, 0, 0]}>
+              <LabelList
+                dataKey="medianMovePct"
+                position="top"
+                formatter={(value: unknown) => `${Number(value).toFixed(1)}%`}
+                style={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "monospace" }}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

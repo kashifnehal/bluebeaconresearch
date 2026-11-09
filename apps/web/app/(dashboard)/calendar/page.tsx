@@ -19,6 +19,7 @@ import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { logUsageEvent } from "@/lib/funnel-events";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
+  marketImpactMethodNote,
   type MarketImpactMagnitude,
   type TimeHorizonLabel,
 } from "@/lib/market-impact-assessment";
@@ -77,9 +78,6 @@ function magnitudeLinesForEvent(
   for (const asset of assets) {
     const entry = marketImpact[asset];
     if (entry?.magnitude) {
-      lines.push(
-        `Across ${entry.magnitude.sampleSize} tracked BBR signals that listed ${asset}, the price ${MARKET_IMPACT_CHECKPOINT_HOURS} hours after the event time differed from the price at the event time by a median of ~${entry.magnitude.medianMovePct.toFixed(2)}% (up or down).`,
-      );
       const baseline = entry.baselines?.find(
         (b) => b.windowHours === MARKET_IMPACT_CHECKPOINT_HOURS,
       );
@@ -91,6 +89,25 @@ function magnitudeLinesForEvent(
     }
   }
   return lines;
+}
+
+// The sample-size count that used to lead every row's magnitude sentence now
+// lives only here, inside the collapsed "View historical pattern" note, so
+// it stays checkable without repeating per row.
+function magnitudeMethodNotesForEvent(
+  category: string,
+  marketImpact: Record<string, CalendarMarketImpactEntry> | null,
+): string[] {
+  const assets = CATEGORY_ASSET_MAP[category];
+  if (!assets || !marketImpact) return [];
+  const notes: string[] = [];
+  for (const asset of assets) {
+    const entry = marketImpact[asset];
+    if (entry?.magnitude) {
+      notes.push(marketImpactMethodNote(asset, entry.magnitude.sampleSize));
+    }
+  }
+  return notes;
 }
 
 function MagnitudeLines({ lines }: { lines: string[] }) {
@@ -107,6 +124,31 @@ function MagnitudeLines({ lines }: { lines: string[] }) {
         </p>
       ))}
     </>
+  );
+}
+
+function MagnitudeMethodNotes({ notes }: { notes: string[] }) {
+  if (notes.length === 0) return null;
+  return (
+    <details className="group">
+      <summary
+        data-testid="calendar-method-note-toggle"
+        className="cursor-pointer select-none text-[11px] font-bold uppercase tracking-wide text-accent"
+      >
+        View historical pattern
+      </summary>
+      <div className="mt-1 space-y-1">
+        {notes.map((note) => (
+          <p
+            key={note}
+            data-testid="calendar-method-note"
+            className="text-[11px] leading-snug text-on-surface/50 italic"
+          >
+            {note}
+          </p>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -398,6 +440,7 @@ export function EventTable({
       <div className="md:hidden divide-y divide-outline-variant/10">
         {events.map((e) => {
           const magnitudeLines = magnitudeLinesForEvent(e.category, marketImpact);
+          const magnitudeMethodNotes = magnitudeMethodNotesForEvent(e.category, marketImpact);
           return (
           <div key={e.id} data-testid="calendar-event-card" className="py-3 px-1">
             <a
@@ -451,6 +494,11 @@ export function EventTable({
                 <MagnitudeLines lines={magnitudeLines} />
               </div>
             )}
+            {magnitudeMethodNotes.length > 0 && (
+              <div className="mt-1">
+                <MagnitudeMethodNotes notes={magnitudeMethodNotes} />
+              </div>
+            )}
           </div>
           );
         })}
@@ -474,6 +522,7 @@ export function EventTable({
           <tbody className="divide-y divide-outline-variant/10">
             {events.map((e) => {
               const magnitudeLines = magnitudeLinesForEvent(e.category, marketImpact);
+              const magnitudeMethodNotes = magnitudeMethodNotesForEvent(e.category, marketImpact);
               return (
               <Fragment key={e.id}>
                 <tr
@@ -524,6 +573,13 @@ export function EventTable({
                   <tr className="bg-surface-bright/5">
                     <td colSpan={headers.length} className="px-3 pb-3 -mt-1 space-y-1">
                       <MagnitudeLines lines={magnitudeLines} />
+                    </td>
+                  </tr>
+                )}
+                {magnitudeMethodNotes.length > 0 && (
+                  <tr className="bg-surface-bright/5">
+                    <td colSpan={headers.length} className="px-3 pb-3 -mt-1">
+                      <MagnitudeMethodNotes notes={magnitudeMethodNotes} />
                     </td>
                   </tr>
                 )}

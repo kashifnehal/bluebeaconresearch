@@ -90,6 +90,16 @@ export const MARKET_IMPACT_DISCLAIMER =
 export const MARKET_IMPACT_BASELINE_NOTE =
   "These are observed price moves, not a test of cause.";
 
+export const MARKET_IMPACT_CHART_TITLE =
+  "Typical size of move after similar signals, up or down";
+
+// The sample-size number used to live inline on every row ("Across N tracked
+// BBR signals..."). It now lives once, here, inside the collapsed historical
+// pattern view, so it stays checkable without repeating on every asset row.
+export function marketImpactMethodNote(asset: string, sampleSize: number): string {
+  return `Method: ${sampleSize} tracked BBR signals that listed ${asset}, median move measured ${MARKET_IMPACT_CHECKPOINT_HOURS}h after the event time.`;
+}
+
 const GRAIN_ASSETS = new Set(["WHEAT", "CORN"]);
 
 export function isGrainAsset(asset: string): boolean {
