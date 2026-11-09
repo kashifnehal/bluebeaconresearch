@@ -852,17 +852,25 @@ apps/web/app/api/
 │                              writes `feedback_submissions` (RLS own-row insert). `{ ok: true }`.
 │                              401 if signed out. Not live chat. Not Resend.
 ├── auth/
-│   └── register-session/route.ts → fresh task, no ticket number, 2026-09-27. Authenticated
-│                              POST called after password login (also inlined in
-│                              auth/callback/route.ts for Google OAuth). Session-cap
-│                              bookkeeping: decodes the JWT's session_id claim, derives a
-│                              device_label from User-Agent, deletes user_sessions rows
-│                              >30 days stale, evicts the single oldest row if already at
-│                              MAX_SESSIONS_PER_USER (2), inserts the new row. Row-only
-│                              eviction — cannot force-revoke the evicted JWT (Supabase's
-│                              documented lazy-enforcement lag, up to its ~1h access-token
-│                              lifetime). **user_sessions migration not yet applied to the
-│                              live DB** — see `docs/brain/16_MIGRATION_CHECKLIST.md`.
+│   ├── register-session/route.ts → fresh task, no ticket number, 2026-09-27. Authenticated
+│   │                          POST called after password login (the Google OAuth equivalent
+│   │                          is auth/callback/route.ts's own recordSessionBookkeeping, now
+│   │                          deferred via next/server's after() — 2026-11-09). Session-cap
+│   │                          bookkeeping: decodes the JWT's session_id claim, derives a
+│   │                          device_label from User-Agent, deletes user_sessions rows
+│   │                          >30 days stale, evicts the single oldest row if already at
+│   │                          MAX_SESSIONS_PER_USER (2), inserts the new row. Row-only
+│   │                          eviction — cannot force-revoke the evicted JWT (Supabase's
+│   │                          documented lazy-enforcement lag, up to its ~1h access-token
+│   │                          lifetime). **user_sessions migration not yet applied to the
+│   │                          live DB** — see `docs/brain/16_MIGRATION_CHECKLIST.md`.
+│   └── callback/route.ts → 2026-11-09. Exchanges the OAuth code, reads onboarding status,
+│                              redirects; signup_completed tracking and the session
+│                              bookkeeping above run after the redirect via after(), not
+│                              inline. A missing code or a failed exchange both redirect to
+│                              /login?error=signin_failed (a short code, never the vendor
+│                              error message) — login/page.tsx shows "Sign-in did not
+│                              complete. Please try again."
 ├── subscribe/
 │   ├── route.ts              → public POST, no auth. Newsletter sign-up: validates, inserts a
 │   │                              `pending` `newsletter_subscribers` row, sends a confirmation

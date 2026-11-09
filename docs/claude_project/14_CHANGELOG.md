@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — One shared auth check per dashboard page load, TASK W-AUTH
+
+`apps/web` only, `68b92ea`. Supabase auth logs had shown 399 `/auth/v1/user` calls in 24 hours. A new `AuthProvider` calls `getSession()` once and loads the profile row once per dashboard page load, replacing five separate client-side `getUser()` calls. `getUser()` stays server-side only. The sign-in button stays in a full-screen "Signing you in..." state through the redirect, and the OAuth callback now defers its signup/session-bookkeeping instrumentation past the redirect. A missing code or a failed exchange both show a fixed message instead of the vendor's own error text. Fixed two existing tests that broke because they rendered a watchlist/dashboard component without the new provider in place. Not verified: no live browser pass, no live Supabase auth-log check. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — Explicit `private, no-store` on the three auth-gated API routes
 
 `apps/web` only. `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` all read the requester's own session and return a different response depending on it (empty/narrowed feed, user-scoped rows, or a 401), so none can carry a shared/public cache header. Each route's `GET` export is now a thin wrapper that sets `Cache-Control: private, no-store` on every response. `GET /api/calendar/values`/`feed` and `GET /api/prices` were checked and are unchanged — already correctly public. Web tsc 0, web test 779 ✔, next build 0. Verified live with `next start` for the changed routes; `/api/prices` and `/api/calendar/values` stalled against the real Supabase project partway through the same run (pre-existing, not from this change — see `docs/brain/14_CHANGELOG.md`). Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

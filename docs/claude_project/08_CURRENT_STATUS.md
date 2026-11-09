@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-09 (private, no-store on three auth-gated API routes — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-09 (one shared auth check per dashboard page load — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-09 (TASK W-AUTH, `apps/web` only, `68b92ea`) — one shared sign-in check per dashboard page load: a new `AuthProvider` calls `getSession()` once and loads the profile row once, replacing five separate client-side `getUser()` calls. `getUser()` stays server-side only. The sign-in button stays in a full-screen "Signing you in..." state through the redirect instead of resetting early, and the OAuth callback defers its instrumentation past the redirect. Not verified: no live browser pass and no live check that the Supabase auth-log call count dropped. See `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (private, no-store on three auth-gated routes, `apps/web` only) — `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` now send `Cache-Control: private, no-store` on every response — each reads the requester's own session and returns a different response depending on it. `GET /api/calendar/values`/`feed` and `GET /api/prices` checked, unchanged. See `docs/brain/05_API.md`, `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
