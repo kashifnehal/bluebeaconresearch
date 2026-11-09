@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
-import { FLAT_THRESHOLD_PCT } from "../lib/outcome-threshold.js";
+import { actualDirectionFromPct } from "../lib/outcome-threshold.js";
 
 /**
  * Permanent outcome tracking for signal_outcomes.
@@ -16,6 +16,15 @@ import { FLAT_THRESHOLD_PCT } from "../lib/outcome-threshold.js";
  * before. GET /v1/accuracy aggregates 1h, 4h, 24h, and 48h separately
  * (2026-11-07). Rows are never live-recomputed, and this worker never
  * touches signals or commodity_prices.
+ *
+ * 2026-11-09: each written row also records price_before_at/price_after_at
+ * (the real timestamp of the two picked commodity_prices rows) and
+ * price_before_offset_seconds/price_after_offset_seconds (how far each one
+ * sat from the event/checkpoint time it was matched to, signed seconds).
+ * The 24h MAX_PRICE_POINT_DISTANCE_MS tolerance is unchanged; rows whose
+ * offset exceeds 25% of the checkpoint horizon are only counted
+ * (largeOffsetRows) and logged, not flagged in the row itself — see
+ * LARGE_OFFSET_FRACTION's comment for why.
  */
 const CHECKPOINT_HOURS_LIST = [1, 4, 24, 48] as const;
 const SHORTEST_CHECKPOINT_HOURS = CHECKPOINT_HOURS_LIST[0];
@@ -41,6 +50,23 @@ const EXISTING_OUTCOMES_CHUNK = 200;
 // 2026-10-05 — same clamping risk applies to any pre-existing USDINR mentions.
 const MAX_PRICE_POINT_DISTANCE_MS = 24 * 3_600_000;
 
+// 2026-11-09: signal_outcomes gained price_before_at/price_after_at/
+// price_before_offset_seconds/price_after_offset_seconds (nullable, not yet
+// backfilled — see supabase/migrations/20261109100000_signal_outcomes_price_offsets.sql,
+// not applied by that migration itself). This worker now fills them going
+// forward. The 24h MAX_PRICE_POINT_DISTANCE_MS tolerance above is unchanged.
+// Separately: when either picked price sits further from its target than
+// 25% of the checkpoint's own horizon, that is worth flagging as a lower-
+// quality match even though it is still inside the 24h tolerance — e.g. a 10h
+// offset is unremarkable for a 48h checkpoint but is nearly the whole window
+// for a 1h one. There is no existing free-form text/JSON column on
+// signal_outcomes to carry that flag (predicted_direction/actual_direction
+// both have CHECK constraints restricting their values, and every other
+// column is a typed number or timestamp), so this worker does not add one —
+// it only counts and logs these rows; see runOutcomeTrackerOnce's returned
+// largeOffsetRows.
+const LARGE_OFFSET_FRACTION = 0.25;
+
 type Direction = "up" | "down" | "volatile" | "neutral";
 
 type CommodityImpact = {
@@ -56,11 +82,6 @@ type EligibleSignal = {
 };
 
 type PricePoint = { price: number; fetchedAtMs: number };
-
-function actualDirectionFromPct(pctChange: number): "up" | "down" | "flat" {
-  if (Math.abs(pctChange) < FLAT_THRESHOLD_PCT) return "flat";
-  return pctChange > 0 ? "up" : "down";
-}
 
 function isDirectionallyCorrect(
   predicted: Direction,
@@ -265,7 +286,13 @@ export async function runOutcomeTrackerOnce(
     console.log(
       `[outcome-tracker] no signals >= ${SHORTEST_CHECKPOINT_HOURS}h old with non-empty commodity_impacts`,
     );
-    return { signalsProcessed: 0, outcomesWritten: 0, pairsSkipped: 0, skipReasons: {} as Record<string, number> };
+    return {
+      signalsProcessed: 0,
+      outcomesWritten: 0,
+      pairsSkipped: 0,
+      skipReasons: {} as Record<string, number>,
+      largeOffsetRows: 0,
+    };
   }
 
   const existingBySignal = await fetchExistingOutcomeAssets(
@@ -281,6 +308,7 @@ export async function runOutcomeTrackerOnce(
 
   let outcomesWritten = 0;
   let pairsSkipped = 0;
+  let largeOffsetRows = 0;
   const skipReasons: Record<string, number> = {};
   const bumpSkip = (reason: string) => {
     pairsSkipped += 1;
@@ -317,6 +345,24 @@ export async function runOutcomeTrackerOnce(
       const actualDirection = actualDirectionFromPct(actualPctChange);
       const correct = isDirectionallyCorrect(impact.direction, actualDirection);
 
+      // Signed seconds: positive means the picked price is later than the
+      // target it was matched to. Still within the unchanged 24h
+      // MAX_PRICE_POINT_DISTANCE_MS tolerance (findClosestPoint already
+      // enforced that) — this is a finer-grained distance for anyone reading
+      // the row later, not a new gate.
+      const beforeOffsetSeconds = Math.round((eventPoint.fetchedAtMs - eventMs) / 1000);
+      const afterOffsetSeconds = Math.round((checkpointPoint.fetchedAtMs - checkpointMs) / 1000);
+      const offsetThresholdSeconds = checkpointHours * 3_600 * LARGE_OFFSET_FRACTION;
+      const hasLargeOffset =
+        Math.abs(beforeOffsetSeconds) > offsetThresholdSeconds ||
+        Math.abs(afterOffsetSeconds) > offsetThresholdSeconds;
+      if (hasLargeOffset) {
+        largeOffsetRows += 1;
+        console.warn(
+          `[outcome-tracker] signal=${signal.id} asset=${asset} checkpoint=${checkpointHours}h price offset exceeds ${LARGE_OFFSET_FRACTION * 100}% of the checkpoint horizon (before=${beforeOffsetSeconds}s after=${afterOffsetSeconds}s, threshold=${offsetThresholdSeconds}s) — no existing text/JSON column to flag this row, writing it unflagged`,
+        );
+      }
+
       rows.push({
         signal_id: signal.id,
         asset,
@@ -328,6 +374,10 @@ export async function runOutcomeTrackerOnce(
         actual_pct_change: actualPctChange,
         actual_direction: actualDirection,
         is_directionally_correct: correct,
+        price_before_at: new Date(eventPoint.fetchedAtMs).toISOString(),
+        price_after_at: new Date(checkpointPoint.fetchedAtMs).toISOString(),
+        price_before_offset_seconds: beforeOffsetSeconds,
+        price_after_offset_seconds: afterOffsetSeconds,
       });
     }
 
@@ -351,9 +401,9 @@ export async function runOutcomeTrackerOnce(
   }
 
   console.log(
-    `[outcome-tracker] DONE signalsProcessed=${signalsProcessed} outcomesWritten=${outcomesWritten} pairsSkipped=${pairsSkipped}` +
+    `[outcome-tracker] DONE signalsProcessed=${signalsProcessed} outcomesWritten=${outcomesWritten} pairsSkipped=${pairsSkipped} largeOffsetRows=${largeOffsetRows}` +
       (Object.keys(skipReasons).length ? ` skipReasons=${JSON.stringify(skipReasons)}` : ""),
   );
 
-  return { signalsProcessed, outcomesWritten, pairsSkipped, skipReasons };
+  return { signalsProcessed, outcomesWritten, pairsSkipped, skipReasons, largeOffsetRows };
 }

@@ -180,4 +180,98 @@ await runTest("outcome writes use upsert with ignoreDuplicates", async () => {
   assert.equal((upserts[0].rows as unknown[]).length, 4);
   assert.equal(result.outcomesWritten, 4);
   assert.equal(result.signalsProcessed, 1);
+  assert.equal(result.largeOffsetRows, 0);
 });
+
+await runTest(
+  "each written row stores the real price timestamps and signed offset seconds",
+  async () => {
+    const eventMs = Date.now() - 72 * HOUR;
+    const eventDate = new Date(eventMs).toISOString();
+    // Prices every 2h, so the nearest point to a 1h-checkpoint target can sit
+    // up to 1h away — comfortably inside the 24h tolerance, but for the 1h
+    // checkpoint that is already 100% of the horizon, well past the 25%
+    // (15-minute) large-offset line this test checks for.
+    const prices = Array.from({ length: 30 }, (_, i) => ({
+      price: 80 + i,
+      fetched_at: new Date(eventMs + i * 2 * HOUR).toISOString(),
+    }));
+    const upserts: Array<{ rows: Array<Record<string, unknown>> }> = [];
+
+    const client = {
+      from(table: string) {
+        const api = {
+          select() {
+            return api;
+          },
+          lte() {
+            return api;
+          },
+          eq() {
+            return api;
+          },
+          in() {
+            return api;
+          },
+          order() {
+            return api;
+          },
+          range(from: number) {
+            if (table === "signals" && from === 0) {
+              return Promise.resolve({
+                data: [
+                  {
+                    id: "sig-offsets",
+                    event_date: eventDate,
+                    commodity_impacts: [{ asset: "USOIL", direction: "up" }],
+                  },
+                ],
+                error: null,
+              });
+            }
+            if (table === "commodity_prices" && from === 0) {
+              return Promise.resolve({ data: prices, error: null });
+            }
+            return Promise.resolve({ data: [], error: null });
+          },
+          upsert(rows: Array<Record<string, unknown>>) {
+            upserts.push({ rows });
+            return Promise.resolve({ error: null });
+          },
+        };
+        return api;
+      },
+    };
+
+    const result = await runOutcomeTrackerOnce(client as never as Admin);
+    const rows = upserts[0].rows;
+    assert.equal(rows.length, 4);
+
+    const oneHourRow = rows.find((r) => r.checkpoint_hours === 1);
+    assert.ok(oneHourRow);
+    // Nearest price to the event itself (t=0) is the t=0 sample — exact match.
+    assert.equal(oneHourRow.price_before_at, prices[0].fetched_at);
+    assert.equal(oneHourRow.price_before_offset_seconds, 0);
+    // Nearest price to the 1h checkpoint target is the t=0 or t=2h sample;
+    // both are 1h away, so the offset is +/-3600s either way.
+    assert.equal(Math.abs(oneHourRow.price_after_offset_seconds as number), 3_600);
+    assert.ok(typeof oneHourRow.price_after_at === "string");
+
+    // 1h horizon * 25% = 900s (15 min). A 3,600s offset on the after-price
+    // clears that, and on the 1h row specifically there is no row-level flag
+    // field to check (signal_outcomes has none) — only the aggregate count.
+    assert.ok(result.largeOffsetRows >= 1);
+
+    const fortyEightHourRow = rows.find((r) => r.checkpoint_hours === 48);
+    assert.ok(fortyEightHourRow);
+    // 48h horizon * 25% = 43,200s (12h); every sample here is within 1h of
+    // its target, so the 48h row should not count toward largeOffsetRows.
+    assert.ok(Math.abs(fortyEightHourRow.price_before_offset_seconds as number) < 43_200);
+    assert.ok(Math.abs(fortyEightHourRow.price_after_offset_seconds as number) < 43_200);
+
+    for (const row of rows) {
+      assert.equal("price_flag" in row, false);
+      assert.equal("offset_flag" in row, false);
+    }
+  },
+);
