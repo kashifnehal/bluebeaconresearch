@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Explicit `private, no-store` on the three auth-gated API routes
+
+`apps/web` only. `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` all read the requester's own session and return a different response depending on it (empty/narrowed feed, user-scoped rows, or a 401), so none can carry a shared/public cache header. Each route's `GET` export is now a thin wrapper that sets `Cache-Control: private, no-store` on every response. `GET /api/calendar/values`/`feed` and `GET /api/prices` were checked and are unchanged — already correctly public. Web tsc 0, web test 779 ✔, next build 0. Verified live with `next start` for the changed routes; `/api/prices` and `/api/calendar/values` stalled against the real Supabase project partway through the same run (pre-existing, not from this change — see `docs/brain/14_CHANGELOG.md`). Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — Shared, cross-instance cache for the public signal-count queries
 
 `apps/web` only. `pg_stat_statements` showed one query (`select id from signals`, exact count, no filter) running 9,422 times for 2,181s total, by far the largest load — the homepage and how-it-works pages each ran it, unfiltered, on every request. New `lib/signal-count-cache.ts` wraps it in Next's `unstable_cache` (revalidate 600s, tag `signal-count`), shared by both pages, so one Postgres read covers every serverless instance for up to 10 minutes instead of each instance querying on every request. A query error or an unusable 0/null count is never cached. Neither page's rendered output changed. Web `tsc` 0, web test 775 ✔, `next build` 0. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

@@ -8,7 +8,10 @@ export type AlertSignalSource = {
   sourceLabel: string | null;
 };
 
-export async function GET(req: NextRequest) {
+// Per-user (scoped to the requesting user's own alerts_sent rows via
+// supabaseAuth) — never cached by a shared proxy/CDN. The working
+// s-maxage=30 value used on the shared routes below does not apply here.
+async function handleGet(req: NextRequest) {
   const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (!clients) {
     return apiError(500, "config_error");
@@ -111,4 +114,10 @@ export async function GET(req: NextRequest) {
   });
 
   return NextResponse.json({ alerts, total, hasMore });
+}
+
+export async function GET(req: NextRequest) {
+  const res = await handleGet(req);
+  res.headers.set("Cache-Control", "private, no-store");
+  return res;
 }

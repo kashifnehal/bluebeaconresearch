@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-09 (shared signal-count cache)
+Last updated: 2026-11-09 (private, no-store on three auth-gated API routes)
+
+> ⚠️ NEW 2026-11-09 (private, no-store on three auth-gated routes, `apps/web` only) — `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` now send `Cache-Control: private, no-store` on every response; each reads the requester's own session and returns a different response depending on it, so none is safe for a shared/public cache. `GET /api/calendar/values`/`feed` and `GET /api/prices` checked, unchanged — already correctly public. Verified live with `next start` for the changed routes (two requests each, header present). Not verified beyond that: `/api/prices` and `/api/calendar/values` stalled against the real Supabase project later in the same local run — pre-existing, not from this change. See `05_API.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (shared signal-count cache, `apps/web` only) — the homepage and how-it-works pages' unfiltered `signals` row-count query (9,422 calls / 2,181s in `pg_stat_statements`, the largest entry) now shares one `unstable_cache`-backed read (`lib/signal-count-cache.ts`, 600s, tag `signal-count`) instead of each serverless instance querying on every request. A query error or an unusable 0/null count is never cached. Not verified: a real multi-instance deployment actually sharing the cache. See `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

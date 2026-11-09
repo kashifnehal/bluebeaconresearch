@@ -10,7 +10,9 @@ export const revalidate = 0;
 const PAGE = 1000;
 const IN_CHUNK = 100;
 
-export async function GET() {
+// Gated on the requesting user's own session (401 when logged out in
+// production) — never cached by a shared proxy/CDN.
+async function handleGet() {
   const clients = await getRouteSupabaseClients({ verify: "claims" });
   if (!clients) {
     return apiError(500, "supabase-unconfigured");
@@ -71,4 +73,10 @@ export async function GET() {
   } catch (err) {
     return apiErrorLogged(500, "coverage-query-failed", err);
   }
+}
+
+export async function GET() {
+  const res = await handleGet();
+  res.headers.set("Cache-Control", "private, no-store");
+  return res;
 }

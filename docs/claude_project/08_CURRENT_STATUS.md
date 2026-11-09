@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-09 (shared signal-count cache — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-09 (private, no-store on three auth-gated API routes — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-09 (private, no-store on three auth-gated routes, `apps/web` only) — `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` now send `Cache-Control: private, no-store` on every response — each reads the requester's own session and returns a different response depending on it. `GET /api/calendar/values`/`feed` and `GET /api/prices` checked, unchanged. See `docs/brain/05_API.md`, `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (shared signal-count cache, `apps/web` only) — the homepage and how-it-works pages' unfiltered signal-count query, by far the largest load in `pg_stat_statements`, now shares one cached read instead of running on every request. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 

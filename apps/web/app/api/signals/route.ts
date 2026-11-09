@@ -127,7 +127,10 @@ function decodeFeedCursor(raw: string): FeedCursor | null {
   }
 }
 
-export async function GET(req: NextRequest) {
+// Per-user: production requires a session (empty result when logged out),
+// and `?personalized=true` narrows results to the requesting user's own
+// saved preferences — never cached by a shared proxy/CDN.
+async function handleGet(req: NextRequest) {
   try {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -893,4 +896,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(emptySignalsErrorBody(), { status: 200 });
   }
+}
+
+export async function GET(req: NextRequest) {
+  const res = await handleGet(req);
+  res.headers.set("Cache-Control", "private, no-store");
+  return res;
 }
