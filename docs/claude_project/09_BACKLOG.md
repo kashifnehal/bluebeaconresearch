@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-11-08.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-11-09 — same-coordinate map clusters open a list instead of zooming. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-09 — `/map` keeps a loading chip until the first payload, fixing the server/client loading-text mismatch. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — MapLibre on `/map` loads from the installed package. The unpkg worker and stylesheet are gone. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

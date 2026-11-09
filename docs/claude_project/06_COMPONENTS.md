@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-11-08** for the Research Standard and Corrections pages. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-11-09 — a same-coordinate cluster opens a list and does not zoom. The sidebar still lists those signals. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-09 — `/map` shows a "Loading events" chip and a dimmed canvas until the first payload. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — the map imports MapLibre and its CSS from the installed package. The worker is served by this app. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.

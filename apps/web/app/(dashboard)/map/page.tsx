@@ -8,6 +8,7 @@ import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+import { CoincidentClusterPopup } from "@/components/map/CoincidentClusterPopup";
 import { MapLoadingChip } from "@/components/map/MapLoadingChip";
 import { MapSignalPopup } from "@/components/map/MapSignalPopup";
 import { LocationList } from "@/components/map/LocationList";
@@ -25,6 +26,7 @@ import {
   DEFAULT_MAP_ZOOM,
 } from "@/lib/map-config";
 import { MAPLIBRE_WORKER_URL } from "@/lib/maplibre-worker-url";
+import { leafCoordinates, pointsShareCoordinate } from "@/lib/map-clusters";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
@@ -270,6 +272,7 @@ export default function MapPage() {
   // Intelligence Stream sidebar to just that cluster/point's signals instead
   // of the full filtered feed. `null` means "showing the normal feed."
   const [clusterStreamSignals, setClusterStreamSignals] = useState<GeoSignal[] | null>(null);
+  const [coincidentCluster, setCoincidentCluster] = useState<GeoSignal[] | null>(null);
   const liveItems = clusterStreamSignals ?? geolocatedSignals.slice(0, sidebarCount);
   const canLoadMoreSidebar =
     clusterStreamSignals == null &&
@@ -314,7 +317,10 @@ export default function MapPage() {
     setSelectedSignalId(null);
   };
 
-  const clearClusterStream = () => setClusterStreamSignals(null);
+  const clearClusterStream = () => {
+    setClusterStreamSignals(null);
+    setCoincidentCluster(null);
+  };
 
   // Same mousedown-outside pattern as TopBar's avatar dropdown: click the "i"
   // to pin the tooltip; click anywhere else (not the button or tooltip) to close.
@@ -684,54 +690,71 @@ export default function MapPage() {
               () => (map.getCanvas().style.cursor = "default"),
             );
 
-            // Click handlers: clusters -> zoom + populate Intelligence Stream, points -> popup + populate Intelligence Stream
+            // Click handlers: clusters -> zoom or a same-point list, plus the
+            // Intelligence Stream. Points -> popup + the stream.
             map.on("click", "clusters", (e: any) => {
               const features = map.queryRenderedFeatures(e.point, {
                 layers: ["clusters"],
               });
               const cluster = features[0];
+              if (!cluster) return;
               const clusterId = cluster.properties.cluster_id;
               const coords = (cluster.geometry as any).coordinates;
               const source: any = map.getSource("signals");
 
-              // Populate the Intelligence Stream sidebar with every signal in
-              // this cluster, not just the zoomed-to viewport.
-              if (source && typeof source.getClusterLeaves === "function") {
-                source.getClusterLeaves(
-                  clusterId,
-                  Infinity,
-                  0,
-                  (leafErr: any, leaves: any[]) => {
-                    if (leafErr || !leaves) return;
-                    const ids = new Set(
-                      leaves
-                        .map((f: any) => f.properties?.id)
-                        .filter(Boolean),
-                    );
-                    setClusterStreamSignals(
-                      geolocatedSignalsRef.current.filter((s) => ids.has(s.id)),
-                    );
-                  },
-                );
+              const zoomCluster = () => {
+                if (source && typeof source.getClusterExpansionZoom === "function") {
+                  source.getClusterExpansionZoom(
+                    clusterId,
+                    (err: any, zoom: number) => {
+                      if (err) return;
+                      refineClusterZoom(source, clusterId, zoom, (finalZoom) => {
+                        map.easeTo({ center: coords, zoom: finalZoom });
+                      });
+                    },
+                  );
+                  return;
+                }
+                map.easeTo({ center: coords, zoom: map.getZoom() + 2 });
+              };
+
+              if (!source || typeof source.getClusterLeaves !== "function") {
+                zoomCluster();
+                return;
               }
 
-              if (
-                source &&
-                typeof source.getClusterExpansionZoom === "function"
-              ) {
-                source.getClusterExpansionZoom(
-                  clusterId,
-                  (err: any, zoom: number) => {
-                    if (err) return;
-                    refineClusterZoom(source, clusterId, zoom, (finalZoom) => {
-                      map.easeTo({ center: coords, zoom: finalZoom });
-                    });
-                  },
-                );
-              } else {
-                // Fallback: zoom in a couple of levels
-                map.easeTo({ center: coords, zoom: map.getZoom() + 2 });
-              }
+              source.getClusterLeaves(
+                clusterId,
+                Infinity,
+                0,
+                (leafErr: any, leaves: any[]) => {
+                  if (leafErr || !leaves || leaves.length === 0) {
+                    setCoincidentCluster(null);
+                    zoomCluster();
+                    return;
+                  }
+                  const matched: GeoSignal[] = [];
+                  for (const leaf of leaves) {
+                    const props = leaf.properties || {};
+                    const live = geolocatedSignalsRef.current.find((s) => s.id === props.id);
+                    if (live) {
+                      matched.push(live);
+                      continue;
+                    }
+                    const built = signalFromMapProps(props);
+                    if (!built) continue;
+                    const [lng, lat] = getSignalCoordinates(built);
+                    matched.push({ ...built, lat, lng });
+                  }
+                  setClusterStreamSignals(matched);
+                  if (pointsShareCoordinate(leafCoordinates(leaves))) {
+                    setCoincidentCluster(matched);
+                    return;
+                  }
+                  setCoincidentCluster(null);
+                  zoomCluster();
+                },
+              );
             });
 
             map.on("click", "unclustered-point", (e: any) => {
@@ -832,6 +855,7 @@ export default function MapPage() {
   // writer to the map source, so there's no race between this fetch and the live feed.
   useEffect(() => {
     setClusterStreamSignals(null);
+    setCoincidentCluster(null);
     setLocationCountry(null);
   }, [filters]);
 
@@ -1065,6 +1089,12 @@ export default function MapPage() {
           <div className="absolute top-16 left-1/2 z-40 -translate-x-1/2">
             <MapLoadingChip />
           </div>
+        )}
+        {coincidentCluster && coincidentCluster.length > 0 && (
+          <CoincidentClusterPopup
+            signals={coincidentCluster}
+            onClose={() => setCoincidentCluster(null)}
+          />
         )}
         <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />
 

@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-11-08** for the Research Standard and Corrections pages. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-11-09 — a same-coordinate cluster on `/map` opens `CoincidentClusterPopup` (title, severity, time, links) and does not zoom. The Intelligence Stream still lists those signals. Full detail: `LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-09 — `/map` shows `MapLoadingChip` ("Loading events") and dims the canvas until the first signal payload. The hydration mismatch was the feed loading flag, not a random value. Full detail: `LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — `/map` and the event-detail location map import `maplibre-gl` and its CSS from the npm package (dynamic import, so other pages do not load it). The worker script is requested from this app (`/vendor/maplibre/maplibre-gl-worker.mjs`), not from unpkg. Full detail: `LIVE_TODO.md`.

@@ -5,6 +5,10 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Same-point map clusters open a list (TASK W-MAP part 4), `apps/web` only, 2026-11-09
+
+- A cluster click still fills the Intelligence Stream with that cluster's signals. If every child point shares one coordinate (`lib/map-clusters.ts` `pointsShareCoordinate`), the map does not zoom. `components/map/CoincidentClusterPopup.tsx` lists title, severity, and time, each title linking to `/events/[id]`. Clusters whose points are apart still zoom. Rendered test: `components/map/CoincidentClusterPopup.test.tsx`.
+
 ## ✅ Map loading chip and hydration (TASK W-MAP part 3), `apps/web` only, 2026-11-09
 
 - `/map` showed React hydration error #418 because TanStack Query v5's `isLoading` is false on the server render (the query has not started) and true on the client's first paint. The server HTML said the count was ready and "No stream data"; the client HTML said "Loading" and drew skeletons. `map/page.tsx` now treats "no payload yet" (`dataUpdatedAt === 0`, no signals, no failed filter fetch) as loading on both sides.

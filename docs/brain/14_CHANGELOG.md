@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-11-09 — Same-point clusters open a list (TASK W-MAP part 4)
+
+`apps/web` only. Cluster clicks on `/map` still put that cluster's signals in the Intelligence Stream. `lib/map-clusters.ts` checks whether the Supercluster children share one coordinate. When they do, `components/map/CoincidentClusterPopup.tsx` lists title, severity, and time, with a link on each title, and the camera does not move. When they do not, the existing zoom path runs. Rendered test: `components/map/CoincidentClusterPopup.test.tsx`. See `LIVE_TODO.md`.
+
 ### 2026-11-09 — Map loading chip; hydration error on /map (TASK W-MAP part 3)
 
 `apps/web` only. React hydration error #418 on `/map` was the feed loading flag: TanStack Query v5 reports `isLoading` false during the server render and true on the client's first paint, so the server HTML showed a finished count and "No stream data" while the client showed "Loading" and skeletons. `app/(dashboard)/map/page.tsx` now keeps the loading branch until a payload exists (`dataUpdatedAt`, signals, or a failed filter fetch). Until then the map canvas is dimmed and `components/map/MapLoadingChip.tsx` shows "Loading events". No placeholder dots. Rendered test: `components/map/MapLoadingChip.test.tsx`. See `LIVE_TODO.md`.

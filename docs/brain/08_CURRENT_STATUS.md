@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-09 (map loading chip; hydration #418 on /map)
+Last updated: 2026-11-09 (same-point map clusters open a list)
+
+> ⚠️ NEW 2026-11-09 (TASK W-MAP part 4, `apps/web` only) — clicking a map cluster whose points share one coordinate opens a list (title, severity, time, links) and does not zoom. The Intelligence Stream still lists those signals. Spread-out clusters still zoom. See `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (TASK W-MAP part 3, `apps/web` only) — `/map` hydration error #418 was `isLoading` from TanStack Query v5: false on the server render, true on the client's first paint, so the count and the stream text differed. Both sides now stay on the loading branch until the first payload. A "Loading events" chip and a dimmed map show until then. No placeholder dots. See `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

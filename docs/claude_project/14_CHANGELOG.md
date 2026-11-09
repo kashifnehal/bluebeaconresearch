@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Same-point map clusters open a list
+
+`apps/web` only. A cluster whose points share one coordinate opens a list of title, severity, and time, and does not zoom. The sidebar still lists those signals. Spread-out clusters still zoom. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — Map loading chip and the /map hydration mismatch
 
 `apps/web` only. The `/map` hydration mismatch was the feed loading flag differing between the server render and the client's first paint. Both sides now stay on loading until the first payload. A "Loading events" chip and a dimmed map show until then. No placeholder dots. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
