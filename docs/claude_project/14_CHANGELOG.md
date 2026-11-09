@@ -10,7 +10,7 @@
 
 ## 2026-11-09 — Event page renders the signal row in the first HTML
 
-`apps/web` only, `this commit`. `/events/[id]` renders the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream from the existing event API handler. Side calls start on idle. `SERVER_TIMING=true` adds `signal_row` and `stream_rest`. Web tsc 0, web test 817 ✔, next build 0. Not verified in a browser. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+`apps/web` only, `7141b32`. `/events/[id]` renders the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream from the existing event API handler. Side calls start on idle. `SERVER_TIMING=true` adds `signal_row` and `stream_rest`. Web tsc 0, web test 846 ✔, next build 0. Not verified in a browser. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 ## 2026-11-09 — Honest accuracy page + outcome price offsets, TASK W-ACCURACY
 

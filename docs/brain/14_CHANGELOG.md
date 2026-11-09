@@ -10,9 +10,9 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### 2026-11-09 — Event page renders the signal row in the first HTML (`this commit`)
+### 2026-11-09 — Event page renders the signal row in the first HTML (`7141b32`)
 
-`apps/web` only. `/events/[id]` is a server component. The title, summary, severity, clocks, and the earliest outlet (a link only when a stored URL exists) are in the first HTML. Market impact, related events, historical comparisons, the map, chat, and outcomes stream inside Suspense by calling the existing `GET /api/signals/:id` handler on the server. The 6000 ms optional-read budget is unchanged. A missing signal calls `notFound()`. In production a missing user redirects to `/login`, matching that route's 401. Alerts, Telegram status, the dashboard source-stats fetch, and the two event-page `/api/events` posts start on idle. When `SERVER_TIMING` is `true`, the document records `signal_row` and the API 200 path also records `signal_row` and `stream_rest`. Web `tsc --noEmit` exit 0, web test exit 0 (817 ✔, 0 ✖), `next build` exit 0. Not verified in a browser (Playwright is not installed). See `LIVE_TODO.md`, `05_API.md`, `06_COMPONENTS.md`.
+`apps/web` only. `/events/[id]` is a server component. The title, summary, severity, clocks, and the earliest outlet (a link only when a stored URL exists) are in the first HTML. Market impact, related events, historical comparisons, the map, chat, and outcomes stream inside Suspense by calling the existing `GET /api/signals/:id` handler on the server. The 6000 ms optional-read budget is unchanged. A missing signal calls `notFound()`. In production a missing user redirects to `/login`, matching that route's 401. Alerts, Telegram status, the dashboard source-stats fetch, and the two event-page `/api/events` posts start on idle. When `SERVER_TIMING` is `true`, the document records `signal_row` and the API 200 path also records `signal_row` and `stream_rest`. Web `tsc --noEmit` exit 0, web test exit 0 (846 ✔, 0 ✖), `next build` exit 0. Not verified in a browser (Playwright is not installed). See `LIVE_TODO.md`, `05_API.md`, `06_COMPONENTS.md`.
 
 ### 2026-11-09 — Honest accuracy page + outcome price offsets, TASK W-ACCURACY
 
