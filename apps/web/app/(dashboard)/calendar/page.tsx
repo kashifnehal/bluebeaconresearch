@@ -246,12 +246,36 @@ const VISIBLE_VALUE_COLUMNS = visibleValueColumns(EVENTS);
 
 const WEEKLY_RHYTHM = weeklyRhythm();
 
-const sourcedAtFormatted = new Date(`${calendarData._meta.sourcedAt}T00:00:00Z`).toLocaleDateString("en-US", {
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-});
+/** The oldest per-row lastCheckedAt across a list — never today's date — so
+ * a footer quoting it can never claim a more recent check than some row
+ * actually shows. ISO YYYY-MM-DD strings sort lexicographically. */
+export function oldestLastChecked(events: { lastCheckedAt: string }[]): string {
+  return events.reduce(
+    (oldest, e) => (e.lastCheckedAt < oldest ? e.lastCheckedAt : oldest),
+    events[0].lastCheckedAt,
+  );
+}
+
+/** Bottom-of-page sourcing note. Quotes the oldest per-row check date, not
+ * today's date, so it cannot contradict a row's own "Checked <date>" line. */
+export function CalendarSourcingFooter({ events }: { events: { lastCheckedAt: string }[] }) {
+  const sourcedAtFormatted = new Date(`${oldestLastChecked(events)}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  return (
+    <p
+      className="text-[12px] md:text-[10px] text-on-surface/35 leading-relaxed max-w-3xl"
+      data-testid="calendar-sourcing-footer"
+    >
+      Dates come from each institution's own published schedule, linked on each row, last checked on{" "}
+      {sourcedAtFormatted}. Official figures are shown only where an official source supplies them. Blue Beacon
+      never fills in placeholder numbers.
+    </p>
+  );
+}
 
 /** Event date+time as a real UTC Date, for sorting/countdown/week-filtering. Events with no
  * announced time (e.g. the OPEC report) sort/compare as start-of-day UTC. */
@@ -1131,11 +1155,7 @@ export default function CalendarPage() {
         </>
       )}
 
-      <p className="text-[12px] md:text-[10px] text-on-surface/35 leading-relaxed max-w-3xl">
-        Dates come from each institution's own published schedule, linked on each row, last checked on{" "}
-        {sourcedAtFormatted}. Official figures are shown only where an official source supplies them. Blue Beacon
-        never fills in placeholder numbers.
-      </p>
+      <CalendarSourcingFooter events={EVENTS} />
     </div>
   );
 }

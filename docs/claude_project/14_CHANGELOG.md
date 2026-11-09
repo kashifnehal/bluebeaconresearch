@@ -16,6 +16,10 @@
 
 `apps/web` only; backend logic read, not changed. The "Up right" / "Market rose (baseline)" comparison on `/accuracy` does not use the same rows: the baseline counts every scored window at that horizon regardless of what was called, while "Up right" counts only the windows called up. Both treat a flat move (under 0.5%) the same unfavorable way. A new plain line now says this under the comparison, shown only when the comparison itself renders. Web tsc 0, web test 848 ✔, next build 0. Not Playwright-checked. Full detail: `docs/brain/14_CHANGELOG.md`.
 
+## 2026-11-09 — Calendar footer quotes the oldest row's check date, not today's, TASK W2-COPY Part 3
+
+`apps/web` only. The `/calendar` footer used to quote the data file's own last-edited date (effectively today), which could say "last checked on November 9" while rows on the page showed older dates — a contradiction. It now quotes the oldest per-row check date across the list instead, via a new `CalendarSourcingFooter` component, so the footer can never claim a fresher check than any row shown. New rendered test covers two rows with different dates. Web tsc 0, web test 848 ✔, next build 0. Not Playwright-checked. Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-09 — Event page renders the signal row in the first HTML
 
 `apps/web` only, `7141b32`. `/events/[id]` renders the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream from the existing event API handler. Side calls start on idle. `SERVER_TIMING=true` adds `signal_row` and `stream_rest`. Web tsc 0, web test 846 ✔, next build 0. Not verified in a browser. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

@@ -300,13 +300,20 @@ async function main() {
         text,
         /The scheduled releases that move the commodities Blue Beacon tracks: central bank decisions, official energy and farm reports, and policy meetings\./,
       );
-      const sourcedAtFormatted = new Date(`${calendarData._meta.sourcedAt}T00:00:00Z`).toLocaleDateString("en-US", {
+      const oldestLastCheckedAt = calendarData.events.reduce(
+        (oldest, e) => (e.lastCheckedAt < oldest ? e.lastCheckedAt : oldest),
+        calendarData.events[0].lastCheckedAt,
+      );
+      const sourcedAtFormatted = new Date(`${oldestLastCheckedAt}T00:00:00Z`).toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
         year: "numeric",
         timeZone: "UTC",
       });
       assert.match(text, new RegExp(`last checked on ${sourcedAtFormatted}`));
+      // The footer must never claim a check as recent as today's sourcedAt
+      // when an older row exists — that is exactly the contradiction being fixed.
+      assert.notEqual(oldestLastCheckedAt, calendarData._meta.sourcedAt);
       assert.doesNotMatch(text, /Forecast/);
       const breadcrumbs = document.querySelector('[data-testid="breadcrumbs"]')!;
       const breadcrumbText = visibleText(breadcrumbs.innerHTML);
@@ -939,6 +946,25 @@ async function main() {
       g.Date = OriginalDate;
     }
   });
+
+  await runTest(
+    "CalendarSourcingFooter shows the oldest of two rows' check dates, never the newer one",
+    async () => {
+      const { CalendarSourcingFooter } = await import("./page");
+      const { root } = await mount(
+        createElement(CalendarSourcingFooter, {
+          events: [{ lastCheckedAt: "2026-10-27" }, { lastCheckedAt: "2026-10-17" }],
+        }),
+      );
+      try {
+        const footer = document.querySelector('[data-testid="calendar-sourcing-footer"]');
+        assert.match(footer?.textContent ?? "", /last checked on October 17, 2026/);
+        assert.doesNotMatch(footer?.textContent ?? "", /October 27, 2026/);
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
 }
 
 main();
