@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { logFunnelEventOnce } from "@/lib/funnel-events";
 import { readFirstTouch, type FirstTouch } from "@/lib/first-touch";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 let loggedThisPageLoad = false;
 
@@ -25,22 +25,14 @@ function asFirstTouch(value: unknown): FirstTouch | null {
  * same tab, so the value is still in sessionStorage.
  */
 export function FirstTouchLogger() {
+  const { user, isLoading } = useAuth();
   useEffect(() => {
-    if (loggedThisPageLoad) return;
+    if (loggedThisPageLoad || isLoading) return;
     loggedThisPageLoad = true;
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-    void supabase.auth
-      .getUser()
-      .then(({ data }) => {
-        const fromAccount = asFirstTouch(data.user?.user_metadata?.first_touch);
-        const touch = fromAccount ?? readFirstTouch();
-        if (!touch) return;
-        logFunnelEventOnce("first_touch_recorded", { ...touch });
-      })
-      .catch(() => {
-        // Instrumentation must not surface on the dashboard.
-      });
-  }, []);
+    const fromAccount = asFirstTouch(user?.user_metadata?.first_touch);
+    const touch = fromAccount ?? readFirstTouch();
+    if (!touch) return;
+    logFunnelEventOnce("first_touch_recorded", { ...touch });
+  }, [user, isLoading]);
   return null;
 }

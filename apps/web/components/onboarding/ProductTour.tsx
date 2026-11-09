@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useUIStore } from "@/store/useUIStore";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { WelcomeTourStep } from "@/components/onboarding/WelcomeTourStep";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export const PRODUCT_TOUR_CONFIDENCE_COPY =
   "Confidence reflects how certain the assessment is of its read of this event, not how likely a market move is.";
@@ -103,19 +104,17 @@ const TOUR_STYLES = {
   },
 };
 
-async function markTourCompleted() {
+async function markTourCompleted(userId: string | undefined) {
+  if (!userId) return;
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase.from("profiles").update({ product_tour_completed: true }).eq("id", user.id);
+  await supabase.from("profiles").update({ product_tour_completed: true }).eq("id", userId);
 }
 
 export function ProductTour() {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
   const {
     tourActive,
     tourPhase,
@@ -171,7 +170,7 @@ export function ProductTour() {
 
     if (status === STATUS.SKIPPED) {
       endTour();
-      void markTourCompleted();
+      void markTourCompleted(user?.id);
       return;
     }
 
@@ -184,7 +183,7 @@ export function ProductTour() {
         router.push(`/events/${tourEventId}`);
       } else {
         endTour();
-        void markTourCompleted();
+        void markTourCompleted(user?.id);
       }
       return;
     }
@@ -204,7 +203,7 @@ export function ProductTour() {
         }}
         onSkip={() => {
           endTour();
-          void markTourCompleted();
+          void markTourCompleted(user?.id);
         }}
       />
     );

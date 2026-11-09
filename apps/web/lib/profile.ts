@@ -1,6 +1,7 @@
 "use client";
 
 import type { PlanTier } from "@blue-beacon-research/shared";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { isProjectReady } from "@/lib/flags";
 
@@ -20,15 +21,13 @@ type ProfileRow = {
   full_name: string | null;
 };
 
-export async function fetchMyProfile(): Promise<Profile | null> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return null;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
+// Split out of fetchMyProfile() so a caller that already has a `user` (e.g.
+// AuthProvider, from its one getSession() call) can load the profile row
+// without triggering a second supabase.auth.getUser() round trip.
+export async function fetchProfileForUser(
+  supabase: SupabaseClient,
+  user: User,
+): Promise<Profile> {
   const { data } = await supabase
     .from("profiles")
     .select("id, onboarding_completed, product_tour_completed, plan_tier, full_name")
@@ -44,6 +43,18 @@ export async function fetchMyProfile(): Promise<Profile | null> {
     planTier: (row?.plan_tier ?? "free") as PlanTier,
     fullName: row?.full_name ?? null,
   };
+}
+
+export async function fetchMyProfile(): Promise<Profile | null> {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return null;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  return fetchProfileForUser(supabase, user);
 }
 
 // A same-origin path only — never a protocol-relative ("//evil.com") or

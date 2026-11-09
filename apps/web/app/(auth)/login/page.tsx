@@ -49,6 +49,16 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
+  // "signin_failed" is a short code, not display text — the auth callback
+  // route never puts vendor/provider error text in the redirect URL (see
+  // app/auth/callback/route.ts). Any other value is already human-readable
+  // text from an existing caller (e.g. Google's own error_description).
+  const urlErrorMessage =
+    urlError === "signin_failed"
+      ? "Sign-in did not complete. Please try again."
+      : urlError
+        ? decodeURIComponent(urlError)
+        : null;
   const justConfirmed = searchParams.get("confirmed") === "1";
   const prefillEmail = searchParams.get("email") ?? "";
   // Set by a gated action's "sign in and come back here" link (e.g. the
@@ -102,6 +112,7 @@ function LoginForm() {
             form.setError(field as any, { message: issue.message });
           }
         }
+        setIsLoading(false);
         return;
       }
       const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
@@ -115,6 +126,7 @@ function LoginForm() {
         // this reuses it inline instead of leaving the raw error as a dead end.
         if ((signInError as { code?: string }).code === "email_not_confirmed") {
           setUnconfirmedEmail(values.email);
+          setIsLoading(false);
           return;
         }
         throw signInError;
@@ -133,9 +145,13 @@ function LoginForm() {
       // already applied to the post-signup redirect.
       const profile = isProjectReady ? await fetchMyProfile() : null;
       window.location.href = resolvePostAuthRedirect(profile, redirectedFrom);
+      // Deliberately no setIsLoading(false) here — isLoading (and the
+      // full-screen "Signing you in" state below) stays on until the browser
+      // paints the next page. Resetting it here used to flash the form back
+      // for the gap between setting window.location.href and the actual
+      // navigation.
     } catch (e: unknown) {
       setError(userFacingCaughtError(e, "Failed to sign in."));
-    } finally {
       setIsLoading(false);
     }
   }
@@ -200,6 +216,44 @@ function LoginForm() {
     color: C.onSurfaceVariant,
     marginBottom: "8px",
   };
+
+  // Full-screen cover from click until the next page paints — isLoading
+  // stays true through the window.location.href navigation in onSubmit, so
+  // this is what the user sees for that entire gap instead of the form
+  // flashing back to its idle state.
+  if (isLoading) {
+    return (
+      <div
+        data-testid="signing-in-overlay"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 100,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "16px",
+          backgroundColor: C.bg,
+          color: C.onSurface,
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        <img src="/brand/mark-white.png" alt="" aria-hidden="true" width={28} height={28} />
+        <p
+          style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: "12px",
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+            color: C.onSurfaceVariant,
+          }}
+        >
+          Signing you in...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -553,7 +607,7 @@ function LoginForm() {
                   textAlign: "center",
                 }}
               >
-                {decodeURIComponent(urlError)}
+                {urlErrorMessage}
               </p>
             </div>
           )}

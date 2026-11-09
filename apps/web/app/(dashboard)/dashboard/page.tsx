@@ -27,7 +27,7 @@ import {
 import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { sourceConfirmationLabel } from "@/lib/market-impact-assessment";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
-import { fetchMyProfile } from "@/lib/profile";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { signalsToCsv, downloadCsv } from "@/lib/signal-csv";
 import { countryToFlagEmoji } from "@/lib/country-flags";
 import { logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
@@ -354,21 +354,15 @@ export default function DashboardPage() {
   // tour flips tourActive back to false, which would re-run this effect and
   // race the async completion write, restarting the tour it just ended.
   const hasCheckedTourRef = useRef(false);
+  const { profile: authProfile, isLoading: authLoading } = useAuth();
   useEffect(() => {
-    if (hasCheckedTourRef.current || isLoading || !featured || tourActive) return;
+    if (hasCheckedTourRef.current || isLoading || authLoading || !featured || tourActive) return;
     hasCheckedTourRef.current = true;
-    let cancelled = false;
-    (async () => {
-      const profile = await fetchMyProfile();
-      if (cancelled || !profile || profile.productTourCompleted) return;
-      setTourEventId(featured.id);
-      startTour();
-    })();
-    return () => {
-      cancelled = true;
-    };
+    if (!authProfile || authProfile.productTourCompleted) return;
+    setTourEventId(featured.id);
+    startTour();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, featured?.id]);
+  }, [isLoading, authLoading, featured?.id]);
 
   // dashboard_viewed — recurring usage event (once per page-session), feeds
   // DAU/WAU and 7-day usage counts on /admin/metrics.

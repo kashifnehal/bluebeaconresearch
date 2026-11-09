@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUIStore } from "@/store/useUIStore";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 /** After this many signal-detail mounts in the session, offer Telegram connect. */
 export const NOTIFICATION_PROMPT_AFTER_SIGNALS = 3;
@@ -12,6 +13,7 @@ type TelegramStatus = {
 };
 
 export function NotificationConnectPrompt() {
+  const { user } = useAuth();
   const signalsViewedThisSession = useUIStore((s) => s.signalsViewedThisSession);
   const setNotificationConnectOpen = useUIStore((s) => s.setNotificationConnectOpen);
 
@@ -23,18 +25,7 @@ export function NotificationConnectPrompt() {
     let cancelled = false;
     async function loadEligibility() {
       const supabase = getSupabaseBrowserClient();
-      if (!supabase) {
-        if (!cancelled) {
-          setDismissed(true);
-          setConnected(true);
-        }
-        return;
-      }
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+      if (!supabase || !user) {
         if (!cancelled) {
           setDismissed(true);
           setConnected(true);
@@ -66,7 +57,7 @@ export function NotificationConnectPrompt() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   const visible =
     signalsViewedThisSession >= NOTIFICATION_PROMPT_AFTER_SIGNALS &&
@@ -76,16 +67,11 @@ export function NotificationConnectPrompt() {
 
   async function dismissForGood() {
     const supabase = getSupabaseBrowserClient();
-    if (supabase) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from("profiles")
-          .update({ notification_prompt_dismissed_at: new Date().toISOString() })
-          .eq("id", user.id);
-      }
+    if (supabase && user) {
+      await supabase
+        .from("profiles")
+        .update({ notification_prompt_dismissed_at: new Date().toISOString() })
+        .eq("id", user.id);
     }
     setDismissed(true);
     setSessionHidden(true);

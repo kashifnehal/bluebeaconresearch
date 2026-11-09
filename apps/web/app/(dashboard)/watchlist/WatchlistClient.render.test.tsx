@@ -17,8 +17,9 @@ import { createElement } from "react";
 import { act } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { setupDom, renderElement } from "@/lib/test-render";
+import { setupDom, renderElement, setupSignedInSupabase } from "@/lib/test-render";
 import type { WatchlistClient as WatchlistClientType } from "./WatchlistClient";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 const document = setupDom();
 
@@ -93,7 +94,7 @@ async function renderWatchlist(pricesBySymbol: Record<string, { change_pct_24h: 
       createElement(
         SearchParamsContext.Provider,
         { value: new URLSearchParams() },
-        createElement(WatchlistClient),
+        createElement(AuthProvider, null, createElement(WatchlistClient)),
       ),
     ),
   );
@@ -113,6 +114,12 @@ async function renderWatchlist(pricesBySymbol: Record<string, { change_pct_24h: 
 }
 
 async function main() {
+  // WatchlistClient uses useMyPreferences(), which now reads the signed-in
+  // user from AuthProvider's context instead of calling supabase.auth.getUser()
+  // itself (TASK W-AUTH) — needs a mocked signed-in session so that hook's
+  // query is enabled at all, same as production always rendering this inside
+  // app/(dashboard)/layout.tsx's <AuthProvider>.
+  await setupSignedInSupabase(document);
   ({ WatchlistClient, WATCHLIST_ASSETS, DEFAULT_WATCHLIST } = await import("./WatchlistClient"));
 
   await runTest("renders inside page-shell, wide, with no md:fixed element", async () => {
@@ -339,4 +346,9 @@ async function main() {
   });
 }
 
-main();
+main().then(() => {
+  // setupSignedInSupabase() now creates a real browser auth client, which
+  // starts a token-refresh timer — exit so the test chain continues (same
+  // fix as components/FirstTouchCapture.test.tsx).
+  process.exit(process.exitCode ?? 0);
+});

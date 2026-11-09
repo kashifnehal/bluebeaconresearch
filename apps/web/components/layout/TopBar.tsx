@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUIStore } from "@/store/useUIStore";
 import { NotificationPanel } from "@/components/NotificationPanel";
 import { HelpModal } from "@/components/HelpModal";
 import { CommandPalette } from "@/components/CommandPalette";
 import { NotificationConnectModal } from "@/components/NotificationConnectModal";
-import { getSupabaseBrowserClient, signOutAndRedirect } from "@/lib/supabase";
+import { signOutAndRedirect } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export function TopBar() {
   const router = useRouter();
+  const { user: authUser } = useAuth();
   const {
     notifOpen,
     setNotifOpen,
@@ -22,41 +24,20 @@ export function TopBar() {
   } = useUIStore();
 
   const [avatarOpen, setAvatarOpen] = useState(false);
-  const [user, setUser] = useState<{
-    name: string;
-    email: string;
-    initials: string;
-  } | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch current user details for dropdown
-  useEffect(() => {
-    async function loadUser() {
-      const supabase = getSupabaseBrowserClient();
-      if (!supabase) return;
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      if (currentUser) {
-        const name =
-          currentUser.user_metadata?.full_name ||
-          currentUser.email?.split("@")[0] ||
-          "Terminal User";
-        const email = currentUser.email || "";
-        const parts = name.trim().split(" ");
-        const initials = (parts[0]?.[0] || "G") + (parts[1]?.[0] || "S");
-        setUser({ name, email, initials: initials.toUpperCase() });
-      } else {
-        setUser({
-          name: "Account",
-          email: "",
-          initials: "GS",
-        });
-      }
-    }
-    loadUser();
-  }, []);
+  // Derived from the shared auth context (one getSession() per page load, not
+  // a dedicated getUser() call per TopBar mount).
+  const user = useMemo(() => {
+    if (!authUser) return { name: "Account", email: "", initials: "GS" };
+    const name =
+      authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "Terminal User";
+    const email = authUser.email || "";
+    const parts = name.trim().split(" ");
+    const initials = (parts[0]?.[0] || "G") + (parts[1]?.[0] || "S");
+    return { name, email, initials: initials.toUpperCase() };
+  }, [authUser]);
 
   // Close avatar dropdown on outside click
   useEffect(() => {

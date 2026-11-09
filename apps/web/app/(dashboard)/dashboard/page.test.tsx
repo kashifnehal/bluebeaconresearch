@@ -7,6 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { signalPriceMovePct, SignalRowPriceChip, ExportCsvButton } from "./page";
 import type { Signal } from "@blue-beacon-research/shared";
+import { setupSignedInSupabase } from "@/lib/test-render";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 // Same linkedom + react-dom/client harness as apps/web/app/(dashboard)/calendar/page.test.tsx
 // and components/signals/PulseTiles.test.tsx — see those files for why this setup is needed.
@@ -138,7 +140,7 @@ async function runAsyncTest(name: string, fn: () => Promise<void>) {
 // the single-asset watchlist page. A rendered mount (not a source-text match)
 // is the only way to be sure the tiles' own labels never reach this page's
 // output, independent of whether the import/mount happen to still be wired.
-void runAsyncTest(
+runAsyncTest(
   "dashboard home no longer renders the pulse tiles (removed 2026-10-27)",
   async () => {
     const { AppRouterContext } = await import(
@@ -155,6 +157,12 @@ void runAsyncTest(
       prefetch: async () => {},
     };
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    // DashboardPage reads the signed-in user from AuthProvider's context (via
+    // useAuth()/useMyPreferences()) instead of calling supabase.auth.getUser()
+    // itself (TASK W-AUTH) — mock a signed-in session so that's actually
+    // populated, same as production always rendering this page inside
+    // app/(dashboard)/layout.tsx's <AuthProvider>.
+    await setupSignedInSupabase(document);
     const { default: DashboardPage } = await import("./page");
 
     document.body.replaceChildren();
@@ -167,7 +175,11 @@ void runAsyncTest(
           createElement(
             AppRouterContext.Provider,
             { value: fakeRouter },
-            createElement(QueryClientProvider, { client }, createElement(DashboardPage)),
+            createElement(
+              QueryClientProvider,
+              { client },
+              createElement(AuthProvider, null, createElement(DashboardPage)),
+            ),
           ),
         );
       });
@@ -191,4 +203,9 @@ void runAsyncTest(
       g.fetch = originalFetch;
     }
   },
-);
+).then(() => {
+  // setupSignedInSupabase() creates a real browser auth client, which starts
+  // a token-refresh timer — exit so the test chain continues (same fix as
+  // components/FirstTouchCapture.test.tsx).
+  process.exit(process.exitCode ?? 0);
+});

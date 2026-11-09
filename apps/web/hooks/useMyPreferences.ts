@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { COMMODITIES, FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { KNOWN_WATCHLIST, NEWS_ONLY_SYMBOLS } from "@/lib/news-only-assets";
 
 export type MyPreferences = {
@@ -53,18 +54,15 @@ function parseWatchlistSymbols(raw: string[] | null | undefined): string[] | nul
  * retired symbols are filtered out against the shared constants.
  */
 export function useMyPreferences() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ["my-preferences"],
     queryFn: async (): Promise<MyPreferences> => {
+      if (!user) return EMPTY;
       const supabase = getSupabaseBrowserClient();
       if (!supabase) return EMPTY;
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return EMPTY;
 
       const { data } = await supabase
         .from("user_preferences")
@@ -98,18 +96,15 @@ export function useMyPreferences() {
         watchlistSuggested: Boolean(data?.watchlist_suggested),
       };
     },
+    enabled: Boolean(user),
     staleTime: 5 * 60_000,
   });
 
   const persistWatchlist = useCallback(
     async (symbols: string[], suggested: boolean) => {
+      if (!user) return;
       const supabase = getSupabaseBrowserClient();
       if (!supabase) return;
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
 
       const nextSymbols = symbols.filter((s) => KNOWN_WATCHLIST.has(s));
       // onConflict: "user_id" — same constraint the onboarding upsert uses.
@@ -137,7 +132,7 @@ export function useMyPreferences() {
           : old,
       );
     },
-    [queryClient],
+    [queryClient, user],
   );
 
   return { ...query, persistWatchlist };
