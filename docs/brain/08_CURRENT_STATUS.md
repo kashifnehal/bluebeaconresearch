@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-09 (map loads MapLibre from the installed package)
+Last updated: 2026-11-09 (map loading chip; hydration #418 on /map)
+
+> ⚠️ NEW 2026-11-09 (TASK W-MAP part 3, `apps/web` only) — `/map` hydration error #418 was `isLoading` from TanStack Query v5: false on the server render, true on the client's first paint, so the count and the stream text differed. Both sides now stay on the loading branch until the first payload. A "Loading events" chip and a dimmed map show until then. No placeholder dots. See `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (TASK W-MAP part 2, `apps/web` only) — `/map` and the event-location map no longer request `maplibre-gl` CSS or the worker from unpkg. Both still dynamically import the npm package (`maplibre-gl` 6.3.0) and its CSS. The worker URL is `/vendor/maplibre/maplibre-gl-worker.mjs`, read from the installed package. ArcGIS basemap URL and attribution unchanged. Part 1 the same day: markers rendered, a cluster click zoomed, the sidebar did not list the cluster, no hydration error text in the console, and three unpkg requests returned 200. See `05_API.md`, `06_COMPONENTS.md`, `14_CHANGELOG.md`, `LIVE_TODO.md`.
 

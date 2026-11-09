@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-11-08** for the Research Standard and Corrections pages. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-11-09 — `/map` shows a "Loading events" chip and a dimmed canvas until the first payload. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-09 — the map imports MapLibre and its CSS from the installed package. The worker is served by this app. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-08 (`2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`) — two public text pages, `/research-standard` and `/corrections`, use the About page layout. The homepage footer and How It Works link both. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.

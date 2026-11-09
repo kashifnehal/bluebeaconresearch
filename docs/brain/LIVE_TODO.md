@@ -5,6 +5,12 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Map loading chip and hydration (TASK W-MAP part 3), `apps/web` only, 2026-11-09
+
+- `/map` showed React hydration error #418 because TanStack Query v5's `isLoading` is false on the server render (the query has not started) and true on the client's first paint. The server HTML said the count was ready and "No stream data"; the client HTML said "Loading" and drew skeletons. `map/page.tsx` now treats "no payload yet" (`dataUpdatedAt === 0`, no signals, no failed filter fetch) as loading on both sides.
+- Until that first payload, the map canvas is dimmed (`opacity-40`) and a "Loading events" chip (`components/map/MapLoadingChip.tsx`, `data-testid="map-loading-chip"`) is shown. No placeholder dots are added.
+- New rendered test: `components/map/MapLoadingChip.test.tsx`.
+
 ## ✅ Map loads MapLibre from the installed package (TASK W-MAP part 2), `apps/web` only, 2026-11-09
 
 - Part 1 (read-only, same day, before this change): signed-in Playwright against local `next dev` on `/map`. Markers rendered (numbered cluster circles). A click on a cluster changed the zoom and opened a point popup. The Intelligence Stream did not switch to "Showing N signals from map selection". Console on `/map` had no hydration error text. Network: `https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl.css`, `maplibre-gl-worker.mjs`, and `maplibre-gl-shared.mjs` all returned 200. Basemap tiles were already the ArcGIS World_Dark_Gray_Base URL.

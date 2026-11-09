@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-11-09 — Map loading chip; hydration error on /map (TASK W-MAP part 3)
+
+`apps/web` only. React hydration error #418 on `/map` was the feed loading flag: TanStack Query v5 reports `isLoading` false during the server render and true on the client's first paint, so the server HTML showed a finished count and "No stream data" while the client showed "Loading" and skeletons. `app/(dashboard)/map/page.tsx` now keeps the loading branch until a payload exists (`dataUpdatedAt`, signals, or a failed filter fetch). Until then the map canvas is dimmed and `components/map/MapLoadingChip.tsx` shows "Loading events". No placeholder dots. Rendered test: `components/map/MapLoadingChip.test.tsx`. See `LIVE_TODO.md`.
+
 ### 2026-11-09 — MapLibre worker and CSS load from the installed package (TASK W-MAP part 2)
 
 `apps/web` only. `app/(dashboard)/map/page.tsx` and `components/signals/EventLocationMap.tsx` already imported `maplibre-gl` dynamically and imported `maplibre-gl/dist/maplibre-gl.css`. They also set the worker URL and injected a stylesheet from `unpkg.com` at runtime. Those two unpkg URLs are gone. `setWorkerUrl` is now `/vendor/maplibre/maplibre-gl-worker.mjs`. New `GET /vendor/maplibre/:file` (`app/vendor/maplibre/[file]/route.ts`, `lib/maplibre-asset.ts`) reads `maplibre-gl-worker.mjs` and `maplibre-gl-shared.mjs` from the installed package and 404s anything else. `lib/map-config.ts` basemap URL and attribution were not changed. Same-day read-only check before this change: markers rendered, a cluster click zoomed, the sidebar did not switch to the cluster's signals, the `/map` console had no hydration error text, and the three unpkg requests returned 200. New `lib/maplibre-asset.test.ts`. See `LIVE_TODO.md`.

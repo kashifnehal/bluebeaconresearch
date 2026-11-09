@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Map loading chip and the /map hydration mismatch
+
+`apps/web` only. The `/map` hydration mismatch was the feed loading flag differing between the server render and the client's first paint. Both sides now stay on loading until the first payload. A "Loading events" chip and a dimmed map show until then. No placeholder dots. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — MapLibre worker and CSS load from the installed package
 
 `apps/web` only. The map and the event-location map no longer request MapLibre's worker or CSS from unpkg. The worker is served from the installed package at `/vendor/maplibre/maplibre-gl-worker.mjs`. Basemap URL and attribution unchanged. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

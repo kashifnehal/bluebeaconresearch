@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-09 (map loads MapLibre from the installed package — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-09 (map loading chip — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-09 (TASK W-MAP part 3, `apps/web` only) — `/map` hydration error #418 came from the feed's loading flag differing between the server render and the client's first paint. Both sides now show loading until the first payload, with a "Loading events" chip and a dimmed map. No placeholder dots. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (TASK W-MAP part 2, `apps/web` only) — the map no longer loads MapLibre's worker or CSS from unpkg. Both come from the installed package; the worker is served by this app. Basemap URL and attribution unchanged. See `docs/brain/LIVE_TODO.md`.
 

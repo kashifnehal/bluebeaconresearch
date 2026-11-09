@@ -8,6 +8,7 @@ import { feedDegradedCopy } from "@/lib/user-error-copy";
 import { safeFormatDistanceToNow, formatDataAsOf } from "@/lib/utils";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+import { MapLoadingChip } from "@/components/map/MapLoadingChip";
 import { MapSignalPopup } from "@/components/map/MapSignalPopup";
 import { LocationList } from "@/components/map/LocationList";
 import { MobileTensionSheet } from "@/components/map/MobileTensionSheet";
@@ -835,6 +836,19 @@ export default function MapPage() {
   }, [filters]);
 
   const [filterFetchFailed, setFilterFetchFailed] = useState(false);
+  // TanStack Query v5's `isLoading` is false during the server render (the
+  // query has not started fetching yet) and true on the client's first
+  // paint. That text mismatch is React hydration error #418 on /map: the
+  // server painted the empty count and "No stream data" while the client
+  // painted "Loading" and the skeletons. Treat "no payload yet" as loading
+  // on both sides until the first response arrives.
+  const awaitingFirstFeed =
+    !isError &&
+    !filterFetchFailed &&
+    dataUpdatedAt === 0 &&
+    signals.length === 0 &&
+    serverFilteredSignals.length === 0;
+  const showFeedLoading = isLoading || awaitingFirstFeed;
   const [filterRetry, setFilterRetry] = useState(0);
 
   useEffect(() => {
@@ -1045,8 +1059,13 @@ export default function MapPage() {
         <div
           ref={mapContainerRef}
           data-testid="map-cluster-click"
-          className="absolute inset-0 w-full h-full"
+          className={`absolute inset-0 w-full h-full ${showFeedLoading ? "opacity-40" : ""}`}
         />
+        {showFeedLoading && (
+          <div className="absolute top-16 left-1/2 z-40 -translate-x-1/2">
+            <MapLoadingChip />
+          </div>
+        )}
         <div className="absolute inset-0 map-vignette pointer-events-none opacity-40" />
 
         {mapError && (
@@ -1144,7 +1163,7 @@ export default function MapPage() {
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              {isLoading ? (
+              {showFeedLoading ? (
                 <span
                   className="font-mono text-[12px] md:text-[11px] text-on-surface-variant/70"
                   data-testid="map-signal-count"
@@ -1235,7 +1254,7 @@ export default function MapPage() {
                 setFilterRetry((n) => n + 1);
               }}
             />
-          ) : isLoading ? (
+          ) : showFeedLoading ? (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
                 <Skeleton
@@ -1301,7 +1320,7 @@ export default function MapPage() {
               </span>
             </div>
           )}
-          {!isLoading && !isError && (
+          {!showFeedLoading && !isError && (
             <LoadMoreButton
               hasMore={canLoadMoreSidebar}
               isLoading={isFetchingNextPage}
@@ -1354,7 +1373,7 @@ export default function MapPage() {
         onOpenFilters={() => setMobileFiltersOpen(true)}
         tensionMetrics={tensionMetrics}
         liveItems={liveItems}
-        isLoading={isLoading}
+        isLoading={showFeedLoading}
         isError={isError}
         selectedSignalId={selectedSignalId}
         onSelectSignal={handleFeedSelect}
