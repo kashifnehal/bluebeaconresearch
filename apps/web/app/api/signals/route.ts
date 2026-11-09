@@ -13,6 +13,7 @@ import {
 import { loadMediaImpactCaveats } from "@/lib/media-impact-watchlist";
 import { parseEventCategory, parseNovelty, parseSourceConfirmation } from "@/lib/market-impact-assessment";
 import { sortByRelevance } from "@/lib/signal-relevance-rank";
+import { searchWindowAgreement } from "@/lib/search-window";
 import { emptySignalsErrorBody } from "@/lib/fetch-with-timeout";
 
 export const dynamic = "force-dynamic";
@@ -750,6 +751,7 @@ async function handleGet(req: NextRequest) {
     }
 
     let total: number;
+    let olderMatches = 0;
     let hasMore: boolean;
     let nextCursorValue: string | null;
     let oldestEventDate: string | null = null;
@@ -769,6 +771,19 @@ async function handleGet(req: NextRequest) {
               id: last.id,
             })
           : null;
+    } else if (useCursorPagination && searchQ && searchQ.length >= 3 && !decodedCursor) {
+      // Search rows came from the tiered default window. The dashboard's
+      // unbounded total would count older hits that this response did not
+      // return. Keep `total` on that same window and report the rest.
+      const { count: allCountRaw } = await buildFilteredQuery().limit(1);
+      const agreed = searchWindowAgreement(
+        typeof count === "number" ? count : rows.length,
+        allCountRaw ?? 0,
+      );
+      total = agreed.total;
+      olderMatches = agreed.olderMatches;
+      hasMore = false;
+      nextCursorValue = null;
     } else if (useCursorPagination) {
       // Full is_active + severity(+other filters) count, unbounded by the
       // tiered window or this request's own floorDate bound — this is the
@@ -839,6 +854,7 @@ async function handleGet(req: NextRequest) {
       resolvedWindow?: "24h" | "72h" | "7d";
       justIn?: Signal[];
       oldestEventDate?: string | null;
+      olderMatches?: number;
     } = {
       signals: pagedSignals,
       nextCursor: nextCursorValue,
@@ -854,6 +870,7 @@ async function handleGet(req: NextRequest) {
       payload.resolvedWindow = resolvedWindow;
       payload.justIn = justIn;
     }
+    if (olderMatches > 0) payload.olderMatches = olderMatches;
     // Only present once pagination has genuinely exhausted the full
     // is_active + severity(+filters) set — lets the UI say "you've reached
     // the earliest signal on record" instead of implying there's no more news.

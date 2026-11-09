@@ -36,7 +36,7 @@ runTest("the message only shows for the 503 case, not for a normal 'nothing matc
 runTest("page and signal search are untouched by the 503 path — same queries, same results list", () => {
   // The assist fetch failing never short-circuits the deterministic
   // signals/pages/watchlist/alert-rules search above it.
-  assert.match(source, /queryKey: \["command-palette-signals", debouncedQuery\]/);
+  assert.match(source, /queryKey: \["command-palette-signals", debouncedQuery, widenSearch\]/);
   assert.match(source, /const results = useMemo<ResultItem\[\]>/);
 });
 
@@ -206,6 +206,8 @@ async function main() {
           false,
         );
         assert.equal(html.includes('data-testid="command-palette-assist-unavailable"'), false);
+        assert.equal(html.includes("No matches. Try fewer words."), true);
+        assert.equal(html.includes("Not sure? Try"), false);
       } finally {
         await act(async () => {
           root.unmount();

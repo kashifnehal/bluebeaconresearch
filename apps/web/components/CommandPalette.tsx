@@ -41,11 +41,16 @@ type ResultItem = {
 
 const GROUP_ORDER: ResultGroup[] = ["Pages", "Signals", "Watchlist", "Alert Rules"];
 
+function isNoConfidentAnswer(data: AssistResponse | undefined): boolean {
+  return data?.status === "no_confident_answer";
+}
+
 export function CommandPalette() {
   const router = useRouter();
   const { commandPaletteOpen: open, setCommandPaletteOpen: setOpen } = useUIStore();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [widenSearch, setWidenSearch] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +66,7 @@ export function CommandPalette() {
         if (next) {
           setQuery("");
           setDebouncedQuery("");
+          setWidenSearch(false);
           setActiveIndex(0);
         }
         setOpen(next);
@@ -74,6 +80,7 @@ export function CommandPalette() {
     if (!open) return;
     setQuery("");
     setDebouncedQuery("");
+    setWidenSearch(false);
     setActiveIndex(0);
     const t = setTimeout(() => inputRef.current?.focus(), 20);
     return () => clearTimeout(t);
@@ -86,21 +93,27 @@ export function CommandPalette() {
     return () => clearTimeout(t);
   }, [query]);
 
+  useEffect(() => {
+    setWidenSearch(false);
+  }, [debouncedQuery]);
+
   const trimmedQuery = query.trim();
   const hasQuery = trimmedQuery.length >= 2;
   const hasDebouncedQuery = debouncedQuery.length >= 2;
 
   const { data: signalsData, isFetching: signalsFetching } = useQuery({
-    queryKey: ["command-palette-signals", debouncedQuery],
+    queryKey: ["command-palette-signals", debouncedQuery, widenSearch],
     queryFn: async () => {
       // sort=relevance (recency+severity ranked, not severity-only) — see
       // apps/web/app/api/signals/route.ts. Command-palette search only; the
       // main Intelligence Feed page keeps its own default sort unchanged.
+      // window=all drops the default time window so older matches are listed.
+      const windowParam = widenSearch ? "&window=all" : "";
       const res = await fetch(
-        `/api/signals?search=${encodeURIComponent(debouncedQuery)}&limit=5&sort=relevance`,
+        `/api/signals?search=${encodeURIComponent(debouncedQuery)}&limit=5&sort=relevance${windowParam}`,
       );
       if (!res.ok) throw new Error("Failed to search signals");
-      return (await res.json()) as { signals: Signal[] };
+      return (await res.json()) as { signals: Signal[]; olderMatches?: number };
     },
     enabled: open && hasDebouncedQuery,
     staleTime: 15_000,
@@ -208,9 +221,12 @@ export function CommandPalette() {
   // No extra network call; always the Intelligence Feed, clearly labeled as a guess.
   const querySettled = debouncedQuery === trimmedQuery;
   const stillFetching = signalsFetching || assistFetching;
+  const olderMatches = widenSearch ? 0 : (signalsData?.olderMatches ?? 0);
+
   const fallback: ResultItem[] =
     hasQuery &&
     results.length === 0 &&
+    !isNoConfidentAnswer(assistData) &&
     (assistEnabled === false || assistData?.status !== "ok") &&
     querySettled &&
     !stillFetching
@@ -272,6 +288,7 @@ export function CommandPalette() {
     results.length === 0 &&
     suggested.length === 0 &&
     fallback.length === 0 &&
+    olderMatches === 0 &&
     !assistFetching;
 
   // 503 is a known, expected state (today's AI budget is closed) — never
@@ -324,11 +341,21 @@ export function CommandPalette() {
             <div className="flex flex-col items-center gap-3 py-12 text-center">
               <span className="material-symbols-outlined text-3xl text-[var(--border)]">search_off</span>
               <p className="text-xs font-medium text-[var(--text-muted)]">
-                No results for &ldquo;{trimmedQuery}&rdquo;
+                No matches. Try fewer words.
               </p>
             </div>
           ) : (
             <>
+              {olderMatches > 0 && (
+                <button
+                  type="button"
+                  data-testid="older-matches"
+                  onClick={() => setWidenSearch(true)}
+                  className="mb-2 block w-full px-2 py-1.5 text-left text-[12px] text-primary"
+                >
+                  {olderMatches} older matches
+                </button>
+              )}
               {groupedResults.map(({ group, items }) => (
                 <div key={group} className="mb-2 last:mb-0">
                   <div

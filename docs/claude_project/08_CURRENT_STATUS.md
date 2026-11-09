@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-09 (same-point map clusters — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-09 (search window/count agreement — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-09 (TASK W-MAP part 5, `apps/web` only) — relevance search keeps `total` on the same default window as the rows; the command palette shows "No matches. Try fewer words." and can widen older matches; assist `no_confident_answer` adds no error text. See `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (TASK W-MAP part 4, `apps/web` only) — a cluster whose points share one coordinate opens a list and does not zoom. The sidebar still lists those signals. Spread-out clusters still zoom. See `docs/brain/LIVE_TODO.md`.
 

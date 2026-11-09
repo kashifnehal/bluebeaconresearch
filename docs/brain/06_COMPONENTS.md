@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-11-08** for the Research Standard and Corrections pages. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-11-09 — command palette empty copy is "No matches. Try fewer words."; older matches outside the default search window show a widen link; `no_confident_answer` from assist adds no error text. Full detail: `LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-09 — a same-coordinate cluster on `/map` opens `CoincidentClusterPopup` (title, severity, time, links) and does not zoom. The Intelligence Stream still lists those signals. Full detail: `LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — `/map` shows `MapLoadingChip` ("Loading events") and dims the canvas until the first signal payload. The hydration mismatch was the feed loading flag, not a random value. Full detail: `LIVE_TODO.md`.
