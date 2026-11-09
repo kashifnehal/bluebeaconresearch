@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-09 (search window/count agreement — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-09 (event page renders the signal row in the first HTML — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-09 (event page first HTML, `apps/web` only, `this commit`) — `/events/[id]` renders the title, summary, and clocks on the server. Heavier sections stream after that. Side calls start on idle. Not verified in a browser. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (TASK W-MAP part 5, `apps/web` only) — relevance search keeps `total` on the same default window as the rows; the command palette shows "No matches. Try fewer words." and can widen older matches; assist `no_confident_answer` adds no error text. See `docs/brain/LIVE_TODO.md`.
 

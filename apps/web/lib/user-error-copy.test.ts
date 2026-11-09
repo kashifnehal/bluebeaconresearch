@@ -128,7 +128,7 @@ runTest("user-facing copy never contains the technical supabase string", () => {
 runTest("alerts / events / DiscordConnect no longer throw the technical string", () => {
   const files = [
     join(webRoot, "app/(dashboard)/alerts/page.tsx"),
-    join(webRoot, "app/(dashboard)/events/[id]/page.tsx"),
+    join(webRoot, "app/(dashboard)/events/[id]/EventDetailClient.tsx"),
     join(webRoot, "components/DiscordConnect.tsx"),
   ];
   for (const file of files) {

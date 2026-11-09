@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUIStore } from "@/store/useUIStore";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { deferToIdle } from "@/lib/idle-defer";
 
 /** After this many signal-detail mounts in the session, offer Telegram connect. */
 export const NOTIFICATION_PROMPT_AFTER_SIGNALS = 3;
@@ -53,9 +54,15 @@ export function NotificationConnectPrompt() {
         setConnected(telegramConnected);
       }
     }
-    loadEligibility();
+    // Deferred to idle (2026-11-09). This eligibility check, including
+    // GET /api/telegram/status, is background work. It waits until the main
+    // thread is idle so it does not start with the page's own content.
+    const cancelIdle = deferToIdle(() => {
+      void loadEligibility();
+    });
     return () => {
       cancelled = true;
+      cancelIdle();
     };
   }, [user]);
 

@@ -2,10 +2,12 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-11-09 — `GET /api/signals/:id` records `signal_row` and `stream_rest` on a 200 when `SERVER_TIMING` is `true`. The event page no longer fetches this route from the browser for its main payload. Full detail: `docs/brain/05_API.md`.
+
 > ⚠️ UPDATED 2026-11-09 — `GET /api/signals` search + relevance keeps `total` on the same default window as the rows and may include `olderMatches`. Full detail: `docs/brain/05_API.md`.
 
 > ⚠️ UPDATED 2026-11-09 — `GET /vendor/maplibre/:file` serves the MapLibre worker and its shared chunk from the installed package. The map no longer loads those files from unpkg. Basemap URL and attribution unchanged. Full detail: `docs/brain/05_API.md`.
->
+
 > ⚠️ UPDATED 2026-11-09 — `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` now explicitly send `Cache-Control: private, no-store` on every response — all three read the requester's own session and branch on it (empty/narrowed feed, user-scoped alert rows, or a 401), so none is safe for a shared cache. `GET /api/calendar/values` and `GET /api/calendar/feed` were checked and already send their own correct public cache headers. `GET /api/prices` unchanged. Full detail: `docs/brain/05_API.md`.
 
 > ⚠️ UPDATED 2026-10-17 — `GET /api/health` is public, unauthenticated, and unmetered. It returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. No database, Upstash, or other service call. Full detail: `docs/brain/05_API.md`.

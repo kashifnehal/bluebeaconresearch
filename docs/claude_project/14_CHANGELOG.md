@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Event page renders the signal row in the first HTML
+
+`apps/web` only, `this commit`. `/events/[id]` renders the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream from the existing event API handler. Side calls start on idle. `SERVER_TIMING=true` adds `signal_row` and `stream_rest`. Web tsc 0, web test 817 ✔, next build 0. Not verified in a browser. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — Honest accuracy page + outcome price offsets, TASK W-ACCURACY
 
 `apps/backend` + `apps/web` + one migration. Nullable price timestamp/offset columns on `signal_outcomes` (written, not applied). Outcome tracker stores them on new rows. Read-only accuracy-audit script added (not run on production). `/accuracy` drops hit-rate headlines and shows scored/flat-share/right-wrong counts plus the market-rose baseline. Event detail shows this signal's own later move beside the call once the outcome exists. Playwright against local `next start` confirmed the baseline column and no `%` headline. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
@@ -22,7 +26,6 @@
 ## 2026-11-09 — Same-point map clusters open a list
 
 `apps/web` only. A cluster whose points share one coordinate opens a list of title, severity, and time, and does not zoom. The sidebar still lists those signals. Spread-out clusters still zoom. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
-
 ## 2026-11-09 — Map loading chip and the /map hydration mismatch
 
 `apps/web` only. The `/map` hydration mismatch was the feed loading flag differing between the server render and the client's first paint. Both sides now stay on loading until the first payload. A "Loading events" chip and a dimmed map show until then. No placeholder dots. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

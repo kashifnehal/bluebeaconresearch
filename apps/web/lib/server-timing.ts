@@ -13,6 +13,17 @@ export function serverTimingEnabled(): boolean {
  * Server-Timing header value. Durations are whole milliseconds.
  * Descriptions are short status words (hit, miss, timeout). No ids or account data.
  */
+/**
+ * One Server-Timing mark, or null when the flag is off. Server Components
+ * cannot set response headers (`headers()` is read-only), so the event page
+ * prints this string inside an HTML comment in the streamed document.
+ * 2026-11-09.
+ */
+export function serverTimingComment(name: string, durMs: number): string | null {
+  if (!serverTimingEnabled()) return null;
+  return `<!-- Server-Timing: ${formatServerTiming([{ name, durMs }])} -->`;
+}
+
 export function formatServerTiming(steps: readonly ServerTimingStep[]): string {
   return steps
     .map((step) => {

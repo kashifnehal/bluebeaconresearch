@@ -2,10 +2,12 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase. `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ UPDATED 2026-11-09 — `GET /api/signals/:id` (`apps/web`), on a 200, also records Server-Timing steps `signal_row` (same clock as `signal`) and `stream_rest` (from just after the signal row until the response), still only when `SERVER_TIMING` is exactly `true`. The earlier step list is otherwise unchanged. The event page no longer calls this route from the browser for its main payload; a server component reads the signal row for the first HTML and calls this handler in-process for the rest. Body, status codes, and the 6000 ms optional-read budget are unchanged.
+
 > ⚠️ UPDATED 2026-11-09 — `GET /api/signals` with a search string and `sort=relevance` (no explicit `window`) keeps `total` on the same default time window as the rows and may include `olderMatches` for hits outside that window. The command palette uses that field.
 
 > ⚠️ UPDATED 2026-11-09 — `GET /vendor/maplibre/:file` serves `maplibre-gl-worker.mjs` and `maplibre-gl-shared.mjs` from the installed `maplibre-gl` package. Any other name is 404. The map page and the event-location map set the worker URL to `/vendor/maplibre/maplibre-gl-worker.mjs`. The ArcGIS basemap URL and attribution are unchanged.
->
+
 > ⚠️ UPDATED 2026-11-09 — `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` (`apps/web`) now all send `Cache-Control: private, no-store` on every response (every branch, via a thin `GET` wrapper around each route's existing handler, now renamed `handleGet`). Superseds the 2026-10-16 line below that just said these were "not edge-cached" — they had no explicit header before this. All three read the requester's own session (`getRouteSupabaseClients`) and branch on it: `/api/signals` returns an empty feed when logged out in production and narrows results per user with `?personalized=true`; `/api/alerts/recent` is filtered to that user's own `alerts_sent` rows; `/api/signals/source-stats` returns 401 when logged out in production. None of the three are safe for a shared/public cache. `GET /api/calendar/values` and `GET /api/calendar/feed` were checked and already send their own correct `public, s-maxage=...` headers — unchanged. `GET /api/prices` unchanged.
 
 > ⚠️ UPDATED 2026-10-17 — `GET /api/health` (`apps/web`) is public, unauthenticated, and unmetered. It returns HTTP 200 and `{"status":"ok"}` with `Cache-Control: no-store`. No database, Upstash, or other service call. `apps/web/proxy.ts` lists `/api/health` in `PUBLIC_UNMETERED` and does not send it to login.

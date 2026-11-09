@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useUIStore } from "@/store/useUIStore";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { formatDistanceToNowStrict } from "date-fns";
+import { deferToIdle } from "@/lib/idle-defer";
 
 type AlertItem = {
   id: string;
@@ -60,6 +61,12 @@ export function NotificationPanel() {
   const { notifOpen, setNotifOpen, resetUnread } = useUIStore();
   const [readItems, setReadItems] = useState<Record<string, boolean>>({});
 
+  // Deferred to idle (2026-11-09). The bell mounts on every dashboard page
+  // and otherwise calls GET /api/alerts/recent immediately. The call is
+  // unchanged; it waits until the main thread is idle.
+  const [idleReady, setIdleReady] = useState(false);
+  useEffect(() => deferToIdle(() => setIdleReady(true)), []);
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["alerts", "recent"],
     queryFn: async () => {
@@ -69,6 +76,7 @@ export function NotificationPanel() {
       if (!res.ok) throw new Error(`Failed to load alerts (${res.status})`);
       return (await res.json()) as { alerts: AlertItem[] };
     },
+    enabled: idleReady,
     refetchInterval: 30_000,
     retry: 1,
   });

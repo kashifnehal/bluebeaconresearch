@@ -19,7 +19,14 @@ import { OPTIONAL_READ_BUDGET_MS, withBudget } from "@/lib/with-budget";
 import type { WindowMoveBaseline } from "@/lib/price-baseline";
 import { fetchAllRangedRows } from "@/lib/paged-range-fetch";
 import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
-import { sourceHostname } from "@/lib/source-host";
+import {
+  buildEventSources,
+  computeFirstReportInfo,
+  earliestRawStamp,
+  validIso,
+  type EventSource as SharedEventSource,
+  type FirstReportKind as SharedFirstReportKind,
+} from "@/lib/event-sources";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
   computeMarketImpactCheckpoints,
@@ -38,13 +45,10 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export type EventSource = {
-  title: string;
-  url: string | null;
-  sourceLabel: string | null;
-  domain: string | null;
-  publishedAt: string | null;
-};
+// Re-exported for existing external imports (the old client event-detail page
+// imported `EventSource` from here) — the real definition now lives in
+// @/lib/event-sources, shared with the page's server-rendered hero. 2026-11-09.
+export type EventSource = SharedEventSource;
 
 export type HistoricalComparison = {
   id: string;
@@ -77,7 +81,7 @@ export type PriceAtSignal = {
   currentPriceDate: string | null;
 };
 
-export type FirstReportKind = "publisher" | "gdelt_seen";
+export type FirstReportKind = SharedFirstReportKind;
 
 export type MarketImpactAssessmentEntry = {
   magnitude: MarketImpactMagnitude | null;
@@ -109,38 +113,6 @@ export type EventDetailResponse = {
 // real traffic. See signal-merge.ts's SIMILARITY_THRESHOLD comment for the same
 // pattern applied to a value that *does* have real backtest evidence behind it.
 const RELATED_EVENTS_WINDOW_DAYS = 7;
-
-function validIso(value: unknown): string | null {
-  if (typeof value !== "string" || !value) return null;
-  const t = new Date(value).getTime();
-  return Number.isFinite(t) ? value : null;
-}
-
-function earliestRawStamp(
-  rows: Array<{ event_date?: unknown; created_at?: unknown; source?: unknown }>,
-  field: "event_date" | "created_at",
-): { at: string; source: string | null } | null {
-  let best: { at: string; t: number; source: string | null } | null = null;
-  for (const row of rows) {
-    const at = validIso(row[field]);
-    if (!at) continue;
-    const t = new Date(at).getTime();
-    if (!best || t < best.t) {
-      best = {
-        at,
-        t,
-        source: typeof row.source === "string" ? row.source : null,
-      };
-    }
-  }
-  return best ? { at: best.at, source: best.source } : null;
-}
-
-function kindForRawSource(source: string | null): FirstReportKind | null {
-  if (source === "rss" || source === "newsapi") return "publisher";
-  if (source === "gdelt") return "gdelt_seen";
-  return null;
-}
 
 type PriceBundleError = { code?: string; message?: string };
 
@@ -284,14 +256,6 @@ type RelatedCandidateRow = {
   raw_event_ids: string[] | null;
 };
 
-function seendateToIso(seendate: unknown): string | null {
-  // GDELT's raw_data.seendate is "20260905T160000Z" (no separators), not ISO-8601.
-  if (typeof seendate !== "string" || seendate.length < 15) return null;
-  const iso = `${seendate.slice(0, 4)}-${seendate.slice(4, 6)}-${seendate.slice(6, 8)}T${seendate.slice(9, 11)}:${seendate.slice(11, 13)}:${seendate.slice(13, 15)}Z`;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : iso;
-}
-
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -353,6 +317,8 @@ export async function GET(
     return withTiming(apiError(404, "not_found"));
   }
   note("signal", signalStarted);
+  note("signal_row", signalStarted);
+  const restStarted = started();
 
   const rawEventIds: string[] = row.raw_event_ids ?? [];
   const commodityImpacts = (row.commodity_impacts ?? []) as Signal["commodityImpacts"];
@@ -571,30 +537,17 @@ export async function GET(
     });
   }
 
-  const sources: EventSource[] = (rawEventsRes.data ?? [])
-    .map((re: any) => ({
-      title: re.title ?? "Untitled source",
-      url: re.raw_data?.url ?? null,
-      sourceLabel: re.raw_data?.source ?? null,
-      domain: re.raw_data?.domain ?? sourceHostname(re.raw_data?.url) ?? null,
-      publishedAt: re.event_date ?? seendateToIso(re.raw_data?.seendate) ?? re.created_at ?? null,
-    }))
-    // Timeline is oldest-first; entries with no resolvable date sort last.
-    .sort((a: EventSource, b: EventSource) => {
-      const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : Infinity;
-      const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : Infinity;
-      return ta - tb;
-    });
+  const sources: EventSource[] = buildEventSources(rawEventsRes.data ?? []);
 
   const rawRows = (rawEventsRes.data ?? []) as Array<{
     event_date?: unknown;
     created_at?: unknown;
     source?: unknown;
   }>;
-  const earliestReport = earliestRawStamp(rawRows, "event_date");
-  const firstReportAt = earliestReport?.at ?? validIso(row.event_date);
-  const firstReportKind = earliestReport ? kindForRawSource(earliestReport.source) : null;
-  const firstFetchedAt = earliestRawStamp(rawRows, "created_at")?.at ?? null;
+  const { firstReportAt, firstReportKind, firstFetchedAt } = computeFirstReportInfo(
+    rawRows,
+    row.event_date,
+  );
 
   function matchLabelFor(direction: string, otherDirection: string): RelatedEventMatchLabel {
     if (direction === otherDirection && (direction === "up" || direction === "down")) return "reinforcing";
@@ -805,5 +758,6 @@ export async function GET(
   const response = NextResponse.json(payload);
   if (timingOn) responseMs += performance.now() - assembleStarted;
   if (steps) steps.push({ name: "response", durMs: responseMs });
+  note("stream_rest", restStarted);
   return withTiming(response);
 }

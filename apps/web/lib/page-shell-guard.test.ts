@@ -13,6 +13,7 @@ const ALLOW_LIST: Record<string, string> = {
   "calendar/page.tsx": "out of scope for TASK UI-ALL (HARD LIMITS: do not touch the calendar page)",
   "map/page.tsx": "out of scope for TASK UI-ALL (HARD LIMITS: do not touch the map page)",
   "events/[id]/page.tsx": "out of scope except the one label change in PART 5; not moved onto PageShell",
+  "events/[id]/EventDetailClient.tsx": "streamed half of the event page; that page was not moved onto PageShell",
   "watchlist/page.tsx": "thin wrapper around WatchlistClient.tsx, which imports PageShell",
   "archive/page.tsx": "thin wrapper around ArchiveClient.tsx, which imports PageShell",
 };

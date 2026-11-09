@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { deferToIdle } from "@/lib/idle-defer";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { useUIStore } from "@/store/useUIStore";
@@ -205,17 +206,22 @@ export default function DashboardPage() {
   useEffect(() => {
     let cancelled = false;
     setCoverageFailed(false);
-    fetchJsonWithTimeout<{ sourcesLast24h?: number }>("/api/signals/source-stats")
-      .then((d) => {
-        if (cancelled || !d) return;
-        if (typeof d.sourcesLast24h !== "number") return;
-        setCoverageLine(`Last 24h: signals from ${d.sourcesLast24h} sources.`);
-      })
-      .catch(() => {
-        if (!cancelled) setCoverageFailed(true);
-      });
+    // Waits until the main thread is idle (2026-11-09) so this count does not
+    // start in the same burst as the page's own feed.
+    const cancelIdle = deferToIdle(() => {
+      fetchJsonWithTimeout<{ sourcesLast24h?: number }>("/api/signals/source-stats")
+        .then((d) => {
+          if (cancelled || !d) return;
+          if (typeof d.sourcesLast24h !== "number") return;
+          setCoverageLine(`Last 24h: signals from ${d.sourcesLast24h} sources.`);
+        })
+        .catch(() => {
+          if (!cancelled) setCoverageFailed(true);
+        });
+    });
     return () => {
       cancelled = true;
+      cancelIdle();
     };
   }, [coverageRetry]);
 

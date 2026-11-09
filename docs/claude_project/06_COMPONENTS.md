@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — Frontend Component Reference
 
-> **📍 Doc status — current as of 2026-11-08** for the Research Standard and Corrections pages. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-11-09** for the event page's server-rendered hero. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-09 (`this commit`) — the event page shows the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream after. The outlet is a link only when a URL is stored. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — command palette empty copy is "No matches. Try fewer words."; older matches can widen the window; assist `no_confident_answer` adds no error text. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 

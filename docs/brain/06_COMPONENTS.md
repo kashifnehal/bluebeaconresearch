@@ -1,6 +1,8 @@
 # 06_COMPONENTS.md — React & React Native Component Inventory
 
-> **📍 Doc status — current as of 2026-11-08** for the Research Standard and Corrections pages. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — current as of 2026-11-09** for the event page's server-rendered hero. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-09 (`this commit`) — `/events/[id]` is a server component. `EventHero` renders the title, summary, severity, country, the Published / Fetched by BBR / Flagged by BBR clocks, and the earliest outlet. The outlet name is a link (`rel="noopener noreferrer"`) only when a URL is stored; otherwise it is plain text. `EventDetailRest` streams market impact, related events, historical comparisons, the map, the sources timeline, chat, and outcomes inside Suspense. `EventDetailClient` is the client half of that stream. `NotificationPanel` and `NotificationConnectPrompt` start their fetches on idle (`lib/idle-defer.ts`). The event page's two `/api/events` posts do the same. Full detail: `LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — command palette empty copy is "No matches. Try fewer words."; older matches outside the default search window show a widen link; `no_confident_answer` from assist adds no error text. Full detail: `LIVE_TODO.md`.
 
