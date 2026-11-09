@@ -5,23 +5,20 @@ import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 import { ACCOUNT_CONNECT_ERROR, GENERIC_REQUEST_ERROR } from "@/lib/user-error-copy";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export function FeedbackForm() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-    void supabase.auth.getUser().then(({ data }) => {
-      const sessionEmail = data.user?.email;
-      if (sessionEmail) setEmail((current) => current || sessionEmail);
-    });
-  }, []);
+    const sessionEmail = user?.email;
+    if (sessionEmail) setEmail((current) => current || sessionEmail);
+  }, [user]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -45,6 +45,12 @@ export async function fetchProfileForUser(
   };
 }
 
+// Kept on getUser() rather than the auth context (TASK W2-AUTH Part 2): every
+// caller (login, confirm, reset-password) calls this immediately after its own
+// sign-in action, to get an Auth-server-verified confirmation that the new
+// session is actually valid before deciding where to redirect — the one case
+// that genuinely needs the server round trip getUser() makes, not the local
+// session getSession() (and AuthProvider's context) reads from storage.
 export async function fetchMyProfile(): Promise<Profile | null> {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return null;

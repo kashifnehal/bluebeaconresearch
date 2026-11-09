@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Auth consolidation finished, Parts 1-2, TASK W2-AUTH
+
+`apps/web` only, `this commit`. Finishes TASK W-AUTH's auth consolidation. `<AuthProvider>` moved to the root (`app/providers.tsx`, mounted once for every route). Six more client-side `supabase.auth.getUser()` calls replaced with the shared context user (`EventDetailClient.tsx`, `alerts/page.tsx`, `settings/page.tsx`, `onboarding/page.tsx`, `DiscordConnect.tsx`, `FeedbackForm.tsx`). `lib/profile.ts`'s `fetchMyProfile()` keeps its own `getUser()` for its three post-sign-in callers, which need an Auth-server-verified check. Web tsc 0, web test 855 ✔ 0 ✖ (rebased onto TASK W2-COPY Parts 1-3 below, unrelated files), next build 0. Not verified in a browser. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — Accuracy page: plain not-enough-data sentence for a below-floor asset, TASK W2-COPY Part 1
 
 `apps/web` only. The by-asset table's "NOT ENOUGH HISTORY YET (MIN 20)" label is now the plain sentence "There are not enough checked assessments yet to show a result for this group." with no number shown. The Help/FAQ answer describing this label was updated to match (kept "min 20" as background explanation of the threshold only, not a quote of on-page text). New rendered test added. Web tsc 0, web test 848 ✔, next build 0. Not Playwright-checked (not installed in this repo). Full detail: `docs/brain/14_CHANGELOG.md`.

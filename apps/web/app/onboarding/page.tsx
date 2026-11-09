@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { throwIfNoSupabase } from "@/lib/user-error-copy";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { FOREX_PAIRS, REGIONS } from "@blue-beacon-research/shared";
 import { followMarketOptions } from "@/lib/news-only-assets";
 import { logUsageEvent } from "@/lib/funnel-events";
@@ -13,6 +14,7 @@ import Image from "next/image";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState("");
   const [useCase, setUseCase] = useState("trader");
@@ -27,13 +29,11 @@ export default function OnboardingPage() {
 
   // Pre-fill name from OAuth metadata; redirect to /dashboard if already onboarded
   useEffect(() => {
+    if (authLoading) return;
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
+    if (!supabase || !user) return;
 
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, onboarding_completed")
@@ -54,7 +54,7 @@ export default function OnboardingPage() {
 
       setName(defaultName);
     })();
-  }, [router]);
+  }, [router, authLoading, user]);
 
   const toggle = (
     list: string[],
@@ -73,7 +73,6 @@ export default function OnboardingPage() {
 
     try {
       const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
-      const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
         const finalName = name.trim() || user.user_metadata?.full_name || user.email?.split("@")[0] || "Operator";

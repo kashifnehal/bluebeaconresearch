@@ -31,6 +31,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useUIStore } from "@/store/useUIStore";
 import { generateAlertRuleName, formatRegionLabel, safeFormatDistanceToNow } from "@/lib/utils";
 import { getSignalCoordinates } from "@/lib/geo-coords";
@@ -75,6 +76,7 @@ function eventTypeLabel(eventType?: string | null): string {
 
 export function EventDetailClient({ data }: { data: EventDetailResponse }) {
   const router = useRouter();
+  const { user } = useAuth();
   const signal = data.signal;
   const incrementSignalsViewed = useUIStore((s) => s.incrementSignalsViewed);
 
@@ -146,9 +148,6 @@ export function EventDetailClient({ data }: { data: EventDetailResponse }) {
   const createAlertRule = async () => {
     try {
       const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
       if (!user) throw new Error(AUTH_SESSION_ERROR);
 
       if (modalMinSeverity < 1 || modalMinSeverity > 10) {

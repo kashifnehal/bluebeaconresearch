@@ -160,8 +160,8 @@ runAsyncTest(
     // DashboardPage reads the signed-in user from AuthProvider's context (via
     // useAuth()/useMyPreferences()) instead of calling supabase.auth.getUser()
     // itself (TASK W-AUTH) — mock a signed-in session so that's actually
-    // populated, same as production always rendering this page inside
-    // app/(dashboard)/layout.tsx's <AuthProvider>.
+    // populated, same as production always rendering this page inside the
+    // root <AuthProvider> (app/providers.tsx, as of TASK W2-AUTH).
     await setupSignedInSupabase(document);
     const { default: DashboardPage } = await import("./page");
 

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-09 (event page renders the signal row in the first HTML — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-09 (TASK W2-AUTH Parts 1-2, auth consolidation finished — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-09 (TASK W2-AUTH Parts 1-2, `apps/web` only, `this commit`) — finishes the TASK W-AUTH auth consolidation. `<AuthProvider>` now mounts once, at the root (`app/providers.tsx`), covering every route instead of just the dashboard group. Six more client-side `supabase.auth.getUser()` calls replaced with the shared context user. `lib/profile.ts`'s `fetchMyProfile()` keeps its own `getUser()` for its three post-sign-in callers (login/confirm/reset-password), which need an Auth-server-verified check. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/06_COMPONENTS.md` §3.17, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-09 (event page first HTML, `apps/web` only, `7141b32`) — `/events/[id]` renders the title, summary, and clocks on the server. Heavier sections stream after that. Side calls start on idle. Not verified in a browser. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { SELECT_CLASSES } from "@/lib/utils";
 import { DiscordConnect } from "@/components/DiscordConnect";
 import { TelegramConnect } from "@/components/TelegramConnect";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
@@ -26,6 +27,7 @@ const TABS = [
 ] as const;
 
 export default function SettingsPage() {
+  const { user, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("ACCOUNT");
 
   const [loading, setLoading] = useState(true);
@@ -46,16 +48,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function loadProfile() {
+      if (authLoading) return;
       const supabase = getSupabaseBrowserClient();
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+      if (!supabase || !user) {
         setLoading(false);
         return;
       }
@@ -92,7 +87,7 @@ export default function SettingsPage() {
       setLoading(false);
     }
     loadProfile();
-  }, []);
+  }, [authLoading, user]);
 
   const handleSaveChanges = async () => {
     if (!profile) return;

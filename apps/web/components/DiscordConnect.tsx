@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { isDiscordWebhookUrl } from "@/lib/discord-webhook";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 /**
  * Webhook-URL-paste connect for Discord alerts. No bot, no OAuth — a one-shot
@@ -16,6 +17,7 @@ import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/
  */
 export function DiscordConnect() {
   const queryClient = useQueryClient();
+  const { user, isLoading: authLoading } = useAuth();
   const [webhookUrl, setWebhookUrl] = useState("");
   const [connectedAt, setConnectedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,15 +32,9 @@ export function DiscordConnect() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      if (authLoading) return;
       const supabase = getSupabaseBrowserClient();
-      if (!supabase) {
-        if (!cancelled) setLoading(false);
-        return;
-      }
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+      if (!supabase || !user) {
         if (!cancelled) setLoading(false);
         return;
       }
@@ -56,17 +52,14 @@ export function DiscordConnect() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authLoading, user]);
 
   const upsertDiscord = async (payload: {
     discord_webhook_url: string | null;
     discord_connected_at: string | null;
   }) => {
-    const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     if (!user) throw new Error(AUTH_SESSION_ERROR);
+    const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
     const { error } = await supabase.from("user_channels").upsert(
       {
         user_id: user.id,

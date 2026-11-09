@@ -6,39 +6,38 @@ import { FeatureHints } from "@/components/onboarding/FeatureHints";
 import { NotificationConnectPrompt } from "@/components/NotificationConnectPrompt";
 import { LegalDisclaimerFooter } from "@/components/layout/LegalDisclaimerFooter";
 import { FirstTouchLogger } from "@/components/FirstTouchLogger";
-import { AuthProvider } from "@/components/auth/AuthProvider";
 
+// AuthProvider is mounted once, at the root (app/providers.tsx) — every page,
+// including this layout's children, already has it as an ancestor.
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <AuthProvider>
-      <div className="min-h-screen" style={{ backgroundColor: "#0e0e0e" }}>
-        <FirstTouchLogger />
-        <ProductTour />
-        <FeatureHints />
-        <NotificationConnectPrompt />
-        <Sidebar />
-        {/* Full-width below md (sidebar is off-canvas). 256px left inset at md+
-            matches the fixed sidebar, same as the previous inline marginLeft. */}
-        <div
-          data-testid="dashboard-main-shell"
-          className="flex flex-col min-h-screen md:ml-[256px]"
-        >
-          <TopBar />
-          {/* Children manage their own padding/overflow. pb-[60px] below md
-              keeps content clear of the fixed MobileTabBar (same height). */}
-          <main className="flex-1 pb-[60px] md:pb-0" style={{ backgroundColor: "#0e0e0e" }}>
-            {children}
-          </main>
-          <div className="pb-[60px] md:pb-0">
-            <LegalDisclaimerFooter />
-          </div>
+    <div className="min-h-screen" style={{ backgroundColor: "#0e0e0e" }}>
+      <FirstTouchLogger />
+      <ProductTour />
+      <FeatureHints />
+      <NotificationConnectPrompt />
+      <Sidebar />
+      {/* Full-width below md (sidebar is off-canvas). 256px left inset at md+
+          matches the fixed sidebar, same as the previous inline marginLeft. */}
+      <div
+        data-testid="dashboard-main-shell"
+        className="flex flex-col min-h-screen md:ml-[256px]"
+      >
+        <TopBar />
+        {/* Children manage their own padding/overflow. pb-[60px] below md
+            keeps content clear of the fixed MobileTabBar (same height). */}
+        <main className="flex-1 pb-[60px] md:pb-0" style={{ backgroundColor: "#0e0e0e" }}>
+          {children}
+        </main>
+        <div className="pb-[60px] md:pb-0">
+          <LegalDisclaimerFooter />
         </div>
-        <MobileTabBar />
       </div>
-    </AuthProvider>
+      <MobileTabBar />
+    </div>
   );
 }

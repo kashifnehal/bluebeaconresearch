@@ -16,6 +16,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { AUTH_SESSION_ERROR, safeMutationError, throwIfNoSupabase } from "@/lib/user-error-copy";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { track } from "@/lib/analytics";
 import { logFunnelEventOnce, logUsageEvent, signalEventMetadata } from "@/lib/funnel-events";
 import { AlertRuleTrendChart, AlertRuleTrendEmptyState, isTrendSparse, type DailyCount } from "@/components/alerts/AlertRuleTrendChart";
@@ -75,19 +76,19 @@ export function alertsEmptyStateHeading(unreadCount: number): string {
     : "No alert rules configured";
 }
 
-async function fetchConnectedChannels(): Promise<ConnectedChannels> {
+// Takes the already-resolved context user id (from useAuth()) rather than
+// calling supabase.auth.getUser() itself — this is a plain async function, not
+// a hook, so it can't read the auth context directly.
+async function fetchConnectedChannels(userId: string | null): Promise<ConnectedChannels> {
   const empty = { telegram: false, discord: false, slack: false };
+  if (!userId) return empty;
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return empty;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return empty;
   const { data } = await Promise.race([
     supabase
       .from("user_channels")
       .select("telegram_chat_id, discord_webhook_url, slack_webhook_url")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle(),
     new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), FETCH_TIMEOUT_MS)),
   ]);
@@ -202,6 +203,7 @@ function CardSection({
 
 export default function AlertsPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { unreadCount } = useUIStore();
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [modalRegion, setModalRegion] = useState("middle-east");
@@ -256,8 +258,8 @@ export default function AlertsPage() {
     isError: channelsError,
     refetch: refetchChannels,
   } = useQuery({
-    queryKey: ["user-channels", "connected"],
-    queryFn: fetchConnectedChannels,
+    queryKey: ["user-channels", "connected", user?.id ?? null],
+    queryFn: () => fetchConnectedChannels(user?.id ?? null),
   });
 
   // Per-rule 14-day match-count trend for the small chart under each rule's name —
@@ -367,8 +369,8 @@ export default function AlertsPage() {
       setModalEventType(undefined);
     }
     const connected = await queryClient.fetchQuery({
-      queryKey: ["user-channels", "connected"],
-      queryFn: fetchConnectedChannels,
+      queryKey: ["user-channels", "connected", user?.id ?? null],
+      queryFn: () => fetchConnectedChannels(user?.id ?? null),
     });
     setModalChannels(defaultChannelsFrom(connected));
     setModalForexPairs([]);
@@ -391,9 +393,8 @@ export default function AlertsPage() {
         throw new Error("Severity must be between 1 and 10");
       }
 
-      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(AUTH_SESSION_ERROR);
+      const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
 
       const { error } = await supabase.from("alert_rules").insert({
         user_id: user.id,

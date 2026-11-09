@@ -1,26 +1,22 @@
 "use client";
 
 import { useEffect } from "react";
-import { fetchMyProfile } from "@/lib/profile";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { useAuthStore } from "@/store/useAuthStore";
 
+// Reads the already-resolved AuthProvider context instead of calling
+// supabase.auth.getUser() itself (TASK W2-AUTH Part 1) — AuthProvider is the
+// one place a page load's single getSession()/getUser() round trip happens.
 export function useMe() {
   const setUser = useAuthStore((s) => s.setUser);
+  const { profile, isLoading } = useAuth();
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const profile = await fetchMyProfile();
-      if (cancelled) return;
-      if (!profile) {
-        setUser(null, "free");
-        return;
-      }
-      setUser(profile.id, profile.planTier);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [setUser]);
+    if (isLoading) return;
+    if (!profile) {
+      setUser(null, "free");
+      return;
+    }
+    setUser(profile.id, profile.planTier);
+  }, [isLoading, profile, setUser]);
 }
-

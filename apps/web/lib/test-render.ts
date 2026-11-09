@@ -106,11 +106,12 @@ export type SignedInAuthOptions = {
  * resolves to a signed-in user with no network call, and stubs the
  * "user_preferences" table to the same empty-row shape hooks/useMyPreferences.ts's
  * EMPTY fallback already produced. Needed by any rendered test for a dashboard
- * page/component that calls useAuth() or useMyPreferences() — as of TASK W-AUTH,
- * both require a real <AuthProvider> ancestor instead of their own
- * supabase.auth.getUser() call, and every such page is always rendered inside
- * one in production (app/(dashboard)/layout.tsx), so a test rendering the bare
- * component needs to reconstruct that same ancestor.
+ * page/component that calls useAuth() or useMyPreferences() — as of TASK W-AUTH
+ * and TASK W2-AUTH, both require a real <AuthProvider> ancestor instead of
+ * their own supabase.auth.getUser() call, and every page is always rendered
+ * inside one in production (mounted once, at the root, in app/providers.tsx),
+ * so a test rendering the bare component needs to reconstruct that same
+ * ancestor.
  */
 export async function setupSignedInSupabase(document: Document, options: SignedInAuthOptions = {}) {
   process.env.NEXT_PUBLIC_SUPABASE_URL ||= "https://example.supabase.co";
