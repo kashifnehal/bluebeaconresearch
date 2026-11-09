@@ -5,22 +5,30 @@ import { ACCURACY_LOAD_ERROR } from "@/lib/user-error-copy";
 
 // Public accuracy page. Reads the pre-computed aggregates from GET /v1/accuracy.
 // Every figure on the page comes from that response. Real numbers per request.
+//
+// 2026-11-09 rewrite (honest, checkable accuracy data): no hit-rate headline
+// and no confidence-band figure anywhere on this page. The horizon table
+// shows the scored count, the flat share, right/wrong counts for up and down
+// calls separately (not a hit-rate percentage), and the plain baseline share
+// of windows where the market rose, next to those counts. A horizon with
+// fewer scored calls than min_sample_size is left out of the table entirely
+// rather than shown with a placeholder row.
 export const dynamic = "force-dynamic";
+
+const ACCURACY_HEADLINE =
+  "Every assessment is dated, sourced and scored against what the market did next. The misses are shown.";
 
 export const metadata = {
   title: "Accuracy | Blue Beacon Research",
-  description:
-    "Blue Beacon Research's historical signal accuracy, computed automatically from recorded price changes.",
+  description: ACCURACY_HEADLINE,
 };
 
 const ACCURACY_HISTORICAL_NOTE =
-  "This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
+  "This is a historical statistic, not a forecast. A move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
 
-export function accuracyHorizonCaption(flatThresholdPct: unknown): string {
-  if (typeof flatThresholdPct !== "number" || !Number.isFinite(flatThresholdPct)) {
-    return ACCURACY_HISTORICAL_NOTE;
-  }
-  return `A call counts as correct only when the price moves at least ${flatThresholdPct}% in the called direction. A smaller move counts as flat and is scored as a miss, so short horizons show lower hit rates partly because prices rarely move that far in an hour. ${ACCURACY_HISTORICAL_NOTE}`;
+export function flatThresholdCaption(flatThresholdPct: unknown): string | null {
+  if (typeof flatThresholdPct !== "number" || !Number.isFinite(flatThresholdPct)) return null;
+  return `A call counts as right only when the price moved at least ${flatThresholdPct}% in the called direction. A smaller move is flat and counts as a miss either way.`;
 }
 
 type DirectionScore = {
@@ -36,6 +44,8 @@ type AssetSummary = {
   hit_rate: number | null;
   not_enough_history: boolean;
   avg_move_when_correct: number | null;
+  flat_share?: number | null;
+  market_rose_share?: number | null;
   sample_size_note: number;
   volatile_neutral_summary: {
     total: number;
@@ -91,7 +101,8 @@ function fmtDate(iso: string): string {
   return new Date(iso).toISOString().slice(0, 10);
 }
 
-function fmtPct(v: number): string {
+function fmtShare(v: number | null | undefined): string {
+  if (typeof v !== "number" || !Number.isFinite(v)) return "—";
   return `${(v * 100).toFixed(1)}%`;
 }
 
@@ -108,19 +119,20 @@ function horizonAdjective(hours: number): string {
   return `${hours}-hour`;
 }
 
-function countText(total: number | null): string {
-  return total === null ? "—" : String(total);
+function countText(total: number | null | undefined): string {
+  return typeof total === "number" ? String(total) : "—";
 }
 
-function rateText(
-  hitRate: number | null,
-  notEnoughHistory: boolean,
-  minSampleSize: number,
-): string {
-  if (notEnoughHistory || hitRate === null) {
-    return `Not enough history yet (min ${minSampleSize})`;
-  }
-  return fmtPct(hitRate);
+function wrongCount(total: number | null | undefined, correct: number): number | null {
+  return typeof total === "number" ? total - correct : null;
+}
+
+function NotEnoughHistory({ minSampleSize }: { minSampleSize: number }) {
+  return (
+    <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
+      Not enough history yet (min {minSampleSize})
+    </span>
+  );
 }
 
 function AssetRow({
@@ -132,21 +144,21 @@ function AssetRow({
   summary: AssetSummary;
   minSampleSize: number;
 }) {
+  const wrong = wrongCount(summary.total_scored, summary.correct);
   return (
     <tr className="border-t border-[#2a2a2a]">
       <td className="px-4 py-3 font-mono text-sm text-[#e5e2e1]">{asset}</td>
       <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
         {summary.sample_size_note}
       </td>
-      {summary.not_enough_history || summary.hit_rate === null ? (
-        <td colSpan={2} className="px-4 py-3 text-right font-mono text-xs uppercase tracking-wider text-[var(--text-muted)]">
-          Not enough history yet (min {minSampleSize})
+      {summary.not_enough_history ? (
+        <td colSpan={3} className="px-4 py-3 text-right">
+          <NotEnoughHistory minSampleSize={minSampleSize} />
         </td>
       ) : (
         <>
-          <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
-            {fmtPct(summary.hit_rate)}
-          </td>
+          <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{summary.correct}</td>
+          <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{wrong}</td>
           <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
             {fmtMove(summary.avg_move_when_correct)}
           </td>
@@ -165,17 +177,16 @@ function AssetCard({
   summary: AssetSummary;
   minSampleSize: number;
 }) {
+  const wrong = wrongCount(summary.total_scored, summary.correct);
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <span className="font-mono text-sm text-[#e5e2e1]">{asset}</span>
-      {summary.not_enough_history || summary.hit_rate === null ? (
-        <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)] text-right">
-          Not enough history yet (min {minSampleSize})
-        </span>
+      {summary.not_enough_history ? (
+        <NotEnoughHistory minSampleSize={minSampleSize} />
       ) : (
         <div className="text-right">
           <div className="font-mono text-sm text-[#e5e2e1]">
-            {fmtPct(summary.hit_rate)}{" "}
+            Right {summary.correct} · Wrong {wrong}{" "}
             <span className="text-[#6b7a72] text-xs">· {summary.sample_size_note} scored</span>
           </div>
           <div className="font-mono text-[11px] text-[#6b7a72]">
@@ -187,75 +198,67 @@ function AssetCard({
   );
 }
 
-function HorizonCards({
-  checkpoints,
-  minSampleSize,
-}: {
-  checkpoints: CheckpointSummary[];
-  minSampleSize: number;
-}) {
+function HorizonCards({ checkpoints }: { checkpoints: CheckpointSummary[] }) {
   return (
     <div className="md:hidden rounded-lg border border-[var(--border)] divide-y divide-[#2a2a2a] px-4" data-testid="horizon-cards">
-      {checkpoints.map((checkpoint) => (
-        <div key={checkpoint.checkpoint_hours} className="py-3" data-testid={`horizon-${checkpoint.checkpoint_hours}`}>
-          <p className="font-mono text-sm text-[#e5e2e1]">{horizonLabel(checkpoint.checkpoint_hours)}</p>
-          <p className="mt-1 font-mono text-[11px] text-[#6b7a72]">
-            Scored {checkpoint.total_scored}. Hit rate for this horizon:{" "}
-            {rateText(checkpoint.hit_rate, checkpoint.not_enough_history, minSampleSize)}
-          </p>
-          <p className="font-mono text-[11px] text-[#6b7a72]">
-            Up calls {countText(checkpoint.up.total)}. Up hit rate for this horizon:{" "}
-            {rateText(checkpoint.up.hit_rate, checkpoint.up.not_enough_history, minSampleSize)}
-          </p>
-          <p className="font-mono text-[11px] text-[#6b7a72]">
-            Down calls {countText(checkpoint.down.total)}. Down hit rate for this horizon:{" "}
-            {rateText(checkpoint.down.hit_rate, checkpoint.down.not_enough_history, minSampleSize)}
-          </p>
-        </div>
-      ))}
+      {checkpoints.map((checkpoint) => {
+        const upWrong = wrongCount(checkpoint.up.total, checkpoint.up.correct);
+        const downWrong = wrongCount(checkpoint.down.total, checkpoint.down.correct);
+        return (
+          <div key={checkpoint.checkpoint_hours} className="py-3" data-testid={`horizon-${checkpoint.checkpoint_hours}`}>
+            <p className="font-mono text-sm text-[#e5e2e1]">{horizonLabel(checkpoint.checkpoint_hours)}</p>
+            <p className="mt-1 font-mono text-[11px] text-[#6b7a72]">
+              Scored {checkpoint.total_scored}. Flat share: {fmtShare(checkpoint.flat_share)}.
+            </p>
+            <p className="font-mono text-[11px] text-[#6b7a72]">
+              Up calls — right {countText(checkpoint.up.correct)}, wrong {countText(upWrong)}.
+            </p>
+            <p className="font-mono text-[11px] text-[#6b7a72]">
+              Down calls — right {countText(checkpoint.down.correct)}, wrong {countText(downWrong)}.
+            </p>
+            <p className="font-mono text-[11px] text-[#6b7a72]">
+              Market rose (baseline): {fmtShare(checkpoint.market_rose_share)}.
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function HorizonTable({
-  checkpoints,
-  minSampleSize,
-}: {
-  checkpoints: CheckpointSummary[];
-  minSampleSize: number;
-}) {
+function HorizonTable({ checkpoints }: { checkpoints: CheckpointSummary[] }) {
   return (
     <div className="hidden md:block overflow-x-auto rounded-lg border border-[var(--border)]">
-      <table className="w-full min-w-[720px] font-mono text-[13px]" data-testid="horizon-table">
+      <table className="w-full min-w-[820px] font-mono text-[13px]" data-testid="horizon-table">
         <thead>
           <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
             <th className="px-4 py-2 font-medium">Horizon</th>
             <th className="px-4 py-2 text-right font-medium">Scored</th>
-            <th className="px-4 py-2 text-right font-medium">Hit rate for this horizon</th>
-            <th className="px-4 py-2 text-right font-medium">Up calls</th>
-            <th className="px-4 py-2 text-right font-medium">Up hit rate for this horizon</th>
-            <th className="px-4 py-2 text-right font-medium">Down calls</th>
-            <th className="px-4 py-2 text-right font-medium">Down hit rate for this horizon</th>
+            <th className="px-4 py-2 text-right font-medium">Flat share</th>
+            <th className="px-4 py-2 text-right font-medium">Up right</th>
+            <th className="px-4 py-2 text-right font-medium">Up wrong</th>
+            <th className="px-4 py-2 text-right font-medium">Down right</th>
+            <th className="px-4 py-2 text-right font-medium">Down wrong</th>
+            <th className="px-4 py-2 text-right font-medium">Market rose (baseline)</th>
           </tr>
         </thead>
         <tbody>
-          {checkpoints.map((checkpoint) => (
-            <tr key={checkpoint.checkpoint_hours} className="border-t border-[#2a2a2a]" data-testid={`horizon-${checkpoint.checkpoint_hours}`}>
-              <td className="px-4 py-3 font-mono text-sm text-[#e5e2e1]">{horizonLabel(checkpoint.checkpoint_hours)}</td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{checkpoint.total_scored}</td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
-                {rateText(checkpoint.hit_rate, checkpoint.not_enough_history, minSampleSize)}
-              </td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(checkpoint.up.total)}</td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
-                {rateText(checkpoint.up.hit_rate, checkpoint.up.not_enough_history, minSampleSize)}
-              </td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(checkpoint.down.total)}</td>
-              <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">
-                {rateText(checkpoint.down.hit_rate, checkpoint.down.not_enough_history, minSampleSize)}
-              </td>
-            </tr>
-          ))}
+          {checkpoints.map((checkpoint) => {
+            const upWrong = wrongCount(checkpoint.up.total, checkpoint.up.correct);
+            const downWrong = wrongCount(checkpoint.down.total, checkpoint.down.correct);
+            return (
+              <tr key={checkpoint.checkpoint_hours} className="border-t border-[#2a2a2a]" data-testid={`horizon-${checkpoint.checkpoint_hours}`}>
+                <td className="px-4 py-3 font-mono text-sm text-[#e5e2e1]">{horizonLabel(checkpoint.checkpoint_hours)}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{checkpoint.total_scored}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{fmtShare(checkpoint.flat_share)}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(checkpoint.up.correct)}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(upWrong)}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(checkpoint.down.correct)}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{countText(downWrong)}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[#e5e2e1]">{fmtShare(checkpoint.market_rose_share)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -286,9 +289,14 @@ function checkpointsFor(data: AccuracyPayload): CheckpointSummary[] {
 
 export function AccuracyReport({ data }: { data: AccuracyPayload | { error: string } }) {
   const ready = !("error" in data) && (Array.isArray(data.checkpoints) || data.overall != null) ? data : null;
-  const checkpoints = ready ? checkpointsFor(ready) : [];
+  const allCheckpoints = ready ? checkpointsFor(ready) : [];
+  const minSampleSize = ready?.min_sample_size ?? 0;
+  // Hide any horizon with fewer scored rows than the sample floor — it is
+  // left out of the table entirely, not shown with a placeholder row.
+  const checkpoints = allCheckpoints.filter((c) => c.total_scored >= minSampleSize);
   const assetHorizonHours = ready?.by_asset_checkpoint_hours ?? OVERALL_HORIZON_HOURS;
   const assets = ready?.by_asset ?? {};
+  const flatCaption = ready ? flatThresholdCaption(ready.flat_threshold_pct) : null;
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -298,13 +306,10 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
         <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           Signal Accuracy
         </h1>
-        <p className="text-xs text-[var(--text-muted)] mb-8 font-mono">
-          Computed automatically from recorded price changes at each checkpoint.
-        </p>
 
         <div className="p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg mb-10">
-          <p className="text-xs text-[#e5e2e1] leading-relaxed">
-            Historical record of direction calls, computed automatically from recorded price changes.
+          <p className="text-sm text-[#e5e2e1] leading-relaxed" data-testid="accuracy-headline">
+            {ACCURACY_HEADLINE}
           </p>
         </div>
 
@@ -324,29 +329,45 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
               <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 By horizon
               </h2>
-              <HorizonCards checkpoints={checkpoints} minSampleSize={ready.min_sample_size} />
-              <HorizonTable checkpoints={checkpoints} minSampleSize={ready.min_sample_size} />
+              {checkpoints.length > 0 ? (
+                <>
+                  <HorizonCards checkpoints={checkpoints} />
+                  <HorizonTable checkpoints={checkpoints} />
+                </>
+              ) : (
+                <p
+                  className="font-mono text-[12px] text-[var(--text-muted)]"
+                  data-testid="horizon-below-floor"
+                >
+                  Not enough history yet at any horizon (min {minSampleSize} scored calls).
+                </p>
+              )}
+              {flatCaption ? (
+                <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]" data-testid="accuracy-flat-caption">
+                  {flatCaption}
+                </p>
+              ) : null}
               <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]" data-testid="accuracy-caption">
-                {accuracyHorizonCaption(ready.flat_threshold_pct)}
+                {ACCURACY_HISTORICAL_NOTE}
               </p>
             </section>
 
             <section className="mb-10 p-5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg">
               <p className="text-[12px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[var(--text-muted)] mb-2">
-                Volatile / neutral calls (not scored as correct or incorrect)
+                Volatile / neutral calls (not scored right or wrong)
               </p>
               {checkpoints.map((checkpoint) =>
                 checkpoint.volatile_neutral_summary ? (
                   <p key={checkpoint.checkpoint_hours} className="text-sm text-[#e5e2e1] font-mono mb-2">
                     {checkpoint.volatile_neutral_summary.total} calls labeled volatile or neutral at the{" "}
                     {horizonAdjective(checkpoint.checkpoint_hours)} horizon —{" "}
-                    {fmtPct(checkpoint.volatile_neutral_summary.fraction_above_threshold)} of those saw an actual move of{" "}
+                    {fmtShare(checkpoint.volatile_neutral_summary.fraction_above_threshold)} of those saw an actual move of{" "}
                     {checkpoint.volatile_neutral_summary.threshold_pct}% or more in either direction.
                   </p>
                 ) : null,
               )}
               <p className="mt-2 text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
-                These calls have no single correct direction, so they are never counted toward the hit rate for any horizon in the table above.
+                These calls have no single correct direction, so they are not scored right or wrong at any horizon above.
               </p>
             </section>
 
@@ -360,13 +381,14 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
                 ))}
               </div>
               <div className="hidden md:block overflow-x-auto rounded-lg border border-[var(--border)]">
-                <table className="w-full min-w-[520px] font-mono text-[13px]">
+                <table className="w-full min-w-[560px] font-mono text-[13px]" data-testid="asset-table">
                   <thead>
                     <tr className="bg-[var(--bg-primary)] text-left text-[12px] md:text-[11px] uppercase tracking-[0.2em] text-[var(--text-muted)]">
                       <th className="px-4 py-2 font-medium">Asset</th>
-                      <th className="px-4 py-2 text-right font-medium">Sample size</th>
-                      <th className="px-4 py-2 text-right font-medium">{horizonAdjective(assetHorizonHours)} hit rate</th>
-                      <th className="px-4 py-2 text-right font-medium">Avg move when correct</th>
+                      <th className="px-4 py-2 text-right font-medium">Scored</th>
+                      <th className="px-4 py-2 text-right font-medium">Right</th>
+                      <th className="px-4 py-2 text-right font-medium">Wrong</th>
+                      <th className="px-4 py-2 text-right font-medium">Avg move when right</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -378,7 +400,7 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
               </div>
               <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
                 Assets with fewer than {ready.min_sample_size} scored calls at the{" "}
-                {horizonAdjective(assetHorizonHours)} horizon show &ldquo;not enough history yet&rdquo; instead of a percentage.
+                {horizonAdjective(assetHorizonHours)} horizon show &ldquo;not enough history yet&rdquo; instead of counts.
               </p>
             </section>
 

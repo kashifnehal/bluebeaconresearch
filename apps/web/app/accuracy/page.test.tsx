@@ -1,17 +1,17 @@
 // Rendered coverage for the public accuracy page. Same linkedom + react-dom/client
 // harness as components/signals/SignalQuickView.test.tsx, via lib/test-render.ts.
+//
+// 2026-11-09 rewrite: the page no longer shows a hit-rate percentage or any
+// 95%/confidence-band figure anywhere. It shows scored counts, flat share,
+// right/wrong counts for up and down calls separately, and the baseline
+// share of windows where the market rose. A horizon below the sample floor
+// is left out of the table entirely rather than shown with a placeholder row.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { act, createElement } from "react";
 
 import { setupDom, renderElement, visibleText } from "@/lib/test-render";
 import { AccuracyReport, type AccuracyPayload, type CheckpointSummary } from "./page";
-
-const CAPTION_WITH_THRESHOLD =
-  "A call counts as correct only when the price moves at least 0.5% in the called direction. A smaller move counts as flat and is scored as a miss, so short horizons show lower hit rates partly because prices rarely move that far in an hour. This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
-
-const CAPTION_WITHOUT_THRESHOLD =
-  "This is a historical statistic, not a forecast, and a move after an assessment does not show the assessment caused it. Informational research, not investment advice.";
 
 const document = setupDom();
 
@@ -28,12 +28,12 @@ function runTest(name: string, fn: () => void | Promise<void>) {
     });
 }
 
-function direction(total: number, correct: number, publish: boolean) {
+function direction(total: number, correct: number) {
   return {
     total,
     correct,
-    hit_rate: publish && total > 0 ? correct / total : null,
-    not_enough_history: !publish,
+    hit_rate: total > 0 ? correct / total : null,
+    not_enough_history: total < 20,
   };
 }
 
@@ -45,20 +45,23 @@ function checkpoint(
   upCorrect: number,
   downTotal: number,
   downCorrect: number,
-  publish: boolean,
+  flatShare: number,
+  marketRoseShare: number,
 ): CheckpointSummary {
   return {
     checkpoint_hours: hours,
     total_scored: scored,
     correct,
-    hit_rate: publish && scored > 0 ? correct / scored : null,
-    not_enough_history: !publish,
+    hit_rate: scored >= 20 ? correct / scored : null,
+    not_enough_history: scored < 20,
     avg_move_when_correct: null,
+    flat_share: flatShare,
+    market_rose_share: marketRoseShare,
     sample_size_note: scored,
     volatile_neutral_summary: null,
     date_range: null,
-    up: direction(upTotal, upCorrect, publish && upTotal >= 20),
-    down: direction(downTotal, downCorrect, publish && downTotal >= 20),
+    up: direction(upTotal, upCorrect),
+    down: direction(downTotal, downCorrect),
   };
 }
 
@@ -84,7 +87,7 @@ function payload(
         correct: publishAsset ? 10 : 2,
         hit_rate: publishAsset ? 0.5 : null,
         not_enough_history: !publishAsset,
-        avg_move_when_correct: publishAsset ? 1.25 : 1.25,
+        avg_move_when_correct: 1.25,
         sample_size_note: publishAsset ? 20 : 4,
         volatile_neutral_summary: null,
         date_range: null,
@@ -105,10 +108,10 @@ function payload(
 
 const aboveFloor = payload(
   [
-    checkpoint(1, 40, 15, 20, 10, 20, 5, true),
-    checkpoint(4, 44, 22, 22, 11, 22, 11, true),
-    checkpoint(24, 48, 24, 24, 18, 24, 6, true),
-    checkpoint(48, 52, 26, 26, 13, 26, 13, true),
+    checkpoint(1, 40, 15, 20, 10, 20, 5, 0.1, 0.4),
+    checkpoint(4, 44, 22, 22, 11, 22, 11, 0.12, 0.45),
+    checkpoint(24, 48, 24, 24, 18, 24, 6, 0.08, 0.5),
+    checkpoint(48, 52, 26, 26, 13, 26, 13, 0.15, 0.482),
   ],
   true,
   0.5,
@@ -116,10 +119,10 @@ const aboveFloor = payload(
 
 const belowFloor = payload(
   [
-    checkpoint(1, 3, 1, 1, 1, 2, 0, false),
-    checkpoint(4, 4, 2, 2, 1, 2, 1, false),
-    checkpoint(24, 5, 2, 2, 1, 3, 1, false),
-    checkpoint(48, 6, 3, 3, 2, 3, 1, false),
+    checkpoint(1, 3, 1, 1, 1, 2, 0, 0, 0.3),
+    checkpoint(4, 4, 2, 2, 1, 2, 1, 0, 0.3),
+    checkpoint(24, 5, 2, 2, 1, 3, 1, 0, 0.3),
+    checkpoint(48, 6, 3, 3, 2, 3, 1, 0, 0.3),
   ],
   false,
 );
@@ -129,64 +132,21 @@ async function renderReport(data: AccuracyPayload) {
 }
 
 async function main() {
-  await runTest("four checkpoints show scored counts, the up and down split, and the exact caption", async () => {
+  await runTest("the headline and the below-table note use the exact proposed copy", async () => {
     const { html, root } = await renderReport(aboveFloor);
     try {
-      const table = document.querySelector('[data-testid="horizon-table"]');
-      assert.ok(table, "horizon table should render");
-      const rows = [...table.querySelectorAll("tbody tr")];
-      assert.equal(rows.length, 4);
-      const rowText = rows.map((row) => visibleText(row.innerHTML));
-      assert.match(rowText[0], /1 hour/);
-      assert.match(rowText[0], /40/);
-      assert.match(rowText[0], /37\.5%/);
-      assert.match(rowText[0], /20/);
-      assert.match(rowText[0], /50\.0%/);
-      assert.match(rowText[0], /25\.0%/);
-      assert.match(visibleText(table.innerHTML), /Up hit rate for this horizon/);
-      assert.match(visibleText(table.innerHTML), /Down hit rate for this horizon/);
-      assert.match(rowText[1], /4 hours/);
-      assert.match(rowText[1], /44/);
-      assert.match(rowText[2], /24 hours/);
-      assert.match(rowText[2], /48/);
-      assert.match(rowText[2], /75\.0%/);
-      assert.match(rowText[3], /48 hours/);
-      assert.match(rowText[3], /52/);
-      assert.match(visibleText(html), /Up calls 20/);
-      assert.match(visibleText(html), /Down calls 26/);
-      assert.match(visibleText(html), /never counted toward the hit rate for any horizon/);
-      const caption = document.querySelector('[data-testid="accuracy-caption"]');
-      assert.equal(caption?.textContent?.replace(/\s+/g, " ").trim(), CAPTION_WITH_THRESHOLD);
-    } finally {
-      await act(async () => {
-        root.unmount();
-      });
-    }
-  });
-
-  await runTest("below the sample-size floor the counts render and no percentage does", async () => {
-    const { html, root } = await renderReport(belowFloor);
-    try {
-      const text = visibleText(html);
-      const table = document.querySelector('[data-testid="horizon-table"]');
-      const rows = [...(table?.querySelectorAll("tbody tr") ?? [])];
-      assert.equal(rows.length, 4);
-      const rowText = rows.map((row) => visibleText(row.innerHTML)).join(" ");
-      for (const count of ["3", "4", "5", "6"]) {
-        assert.match(rowText, new RegExp(`\\b${count}\\b`));
-      }
-      assert.match(rowText, /1 hour/);
-      assert.match(rowText, /4 hours/);
-      assert.match(rowText, /24 hours/);
-      assert.match(rowText, /48 hours/);
-      assert.match(text, /Up calls 1/);
-      assert.match(text, /Down calls 3/);
-      assert.equal(/\d+(?:\.\d+)?%/.test(text), false);
-      assert.match(text, /Not enough history yet \(min 20\)/);
+      const headline = document.querySelector('[data-testid="accuracy-headline"]');
       assert.equal(
-        document.querySelector('[data-testid="accuracy-caption"]')?.textContent?.replace(/\s+/g, " ").trim(),
-        CAPTION_WITHOUT_THRESHOLD,
+        headline?.textContent,
+        "Every assessment is dated, sourced and scored against what the market did next. The misses are shown.",
       );
+      const caption = document.querySelector('[data-testid="accuracy-caption"]');
+      assert.equal(
+        caption?.textContent,
+        "This is a historical statistic, not a forecast. A move after an assessment does not show the assessment caused it. Informational research, not investment advice.",
+      );
+      assert.equal(/\d+(?:\.\d+)?\s*%/.test(headline?.textContent ?? ""), false);
+      void html;
     } finally {
       await act(async () => {
         root.unmount();
@@ -194,17 +154,102 @@ async function main() {
     }
   });
 
-  await runTest("the page source has no hard-coded percentage", () => {
+  await runTest(
+    "four checkpoints show scored counts, flat share, right/wrong counts, and the baseline — never a hit-rate percentage",
+    async () => {
+      const { html, root } = await renderReport(aboveFloor);
+      try {
+        const table = document.querySelector('[data-testid="horizon-table"]');
+        assert.ok(table, "horizon table should render");
+        const rows = [...table.querySelectorAll("tbody tr")];
+        assert.equal(rows.length, 4);
+        const rowText = rows.map((row) => visibleText(row.innerHTML));
+
+        assert.match(rowText[0], /1 hour/);
+        assert.match(rowText[0], /40/);
+        assert.match(rowText[0], /10\.0%/); // flat share
+        assert.match(rowText[0], /10\b/); // up correct
+        assert.match(rowText[0], /10\b/); // up wrong (20-10)
+        assert.match(rowText[0], /5\b/); // down correct
+        assert.match(rowText[0], /15\b/); // down wrong (20-5)
+        assert.match(rowText[0], /40\.0%/); // baseline
+
+        assert.match(visibleText(table.innerHTML), /Up right/);
+        assert.match(visibleText(table.innerHTML), /Up wrong/);
+        assert.match(visibleText(table.innerHTML), /Down right/);
+        assert.match(visibleText(table.innerHTML), /Down wrong/);
+        assert.match(visibleText(table.innerHTML), /Market rose \(baseline\)/);
+        assert.equal(visibleText(table.innerHTML).includes("Hit rate"), false);
+
+        assert.match(rowText[3], /48 hours/);
+        assert.match(rowText[3], /48\.2%/); // baseline at 48h, matching the "no-skill" evidence figure
+
+        const flatCaption = document.querySelector('[data-testid="accuracy-flat-caption"]');
+        assert.match(flatCaption?.textContent ?? "", /at least 0\.5% in the called direction/);
+        void html;
+      } finally {
+        await act(async () => {
+          root.unmount();
+        });
+      }
+    },
+  );
+
+  await runTest(
+    "below the sample floor every horizon is hidden and no percentage from a horizon prints",
+    async () => {
+      const { html, root } = await renderReport(belowFloor);
+      try {
+        const table = document.querySelector('[data-testid="horizon-table"]');
+        assert.equal(table, null, "horizon table should not render below the floor");
+        const fallback = document.querySelector('[data-testid="horizon-below-floor"]');
+        assert.match(fallback?.textContent ?? "", /Not enough history yet at any horizon \(min 20/);
+        const text = visibleText(html);
+        // Nothing from any (hidden) horizon prints, including its baseline/flat
+        // share percentages — the by-asset section below uses counts, not %,
+        // so the page overall still has no percentage anywhere in this state.
+        assert.equal(/\d+(?:\.\d+)?%/.test(text), false);
+      } finally {
+        await act(async () => {
+          root.unmount();
+        });
+      }
+    },
+  );
+
+  await runTest("the by-asset table shows right/wrong counts, never a hit-rate percentage", async () => {
+    const { root } = await renderReport(aboveFloor);
+    try {
+      const text = visibleText(
+        document.querySelector('[data-testid="asset-table"]')?.innerHTML ?? "",
+      );
+      assert.match(text, /Right/);
+      assert.match(text, /Wrong/);
+      assert.equal(text.includes("hit rate"), false);
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
+    }
+  });
+
+  await runTest("the page source has no hard-coded percentage or forbidden phrase", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
     assert.equal(/\d+(?:\.\d+)?\s*%/.test(source), false);
-    for (const figure of ["46.8", "49.2", "47.1", "published track record", "Overall hit rate"]) {
+    for (const figure of [
+      "46.8",
+      "49.2",
+      "47.1",
+      "published track record",
+      "Overall hit rate",
+      "Hit rate for this horizon",
+      "95%",
+    ]) {
       assert.equal(source.includes(figure), false, figure);
     }
-    assert.equal(source.includes("The longer the wait, the higher the hit rate."), false);
-    assert.equal(source.includes("Short horizons are weak."), false);
   });
 
-  await runTest("missing checkpoints still render one 48-hour overall row under the sample floor", async () => {
+  await runTest("missing checkpoints (legacy payload) below the floor also hides the horizon", async () => {
     const legacy: AccuracyPayload = {
       overall: {
         total_scored: 12,
@@ -229,17 +274,9 @@ async function main() {
       const text = visibleText(html);
       assert.equal(text.includes("couldn't load the accuracy data"), false);
       const table = document.querySelector('[data-testid="horizon-table"]');
-      const rows = [...(table?.querySelectorAll("tbody tr") ?? [])];
-      assert.equal(rows.length, 1);
-      const rowText = visibleText(rows[0]?.innerHTML ?? "");
-      assert.match(rowText, /48 hours/);
-      assert.match(rowText, /\b12\b/);
-      assert.match(rowText, /Not enough history yet \(min 20\)/);
-      assert.equal(/\d+(?:\.\d+)?%/.test(rowText), false);
-      assert.equal(
-        document.querySelector('[data-testid="accuracy-caption"]')?.textContent?.replace(/\s+/g, " ").trim(),
-        CAPTION_WITHOUT_THRESHOLD,
-      );
+      assert.equal(table, null);
+      const fallback = document.querySelector('[data-testid="horizon-below-floor"]');
+      assert.ok(fallback);
     } finally {
       await act(async () => {
         root.unmount();

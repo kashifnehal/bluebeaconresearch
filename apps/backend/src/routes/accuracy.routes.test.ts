@@ -215,3 +215,35 @@ runTest("flat_threshold_pct equals the scoring constant", () => {
   const payload = buildAccuracyPayload([]);
   assert.equal(payload.flat_threshold_pct, FLAT_THRESHOLD_PCT);
 });
+
+runTest(
+  "flat_share counts only scored up/down calls; market_rose_share counts every row",
+  () => {
+    const rows: OutcomeRow[] = [
+      // Scored calls: 2 flat (miss regardless of direction), 1 real up, 1 real down.
+      row({ signal_id: "flat-up", checkpoint_hours: 4, predicted_direction: "up", actual_pct_change: 0.1, is_directionally_correct: false }),
+      row({ signal_id: "flat-down", checkpoint_hours: 4, predicted_direction: "down", actual_pct_change: -0.2, is_directionally_correct: false }),
+      row({ signal_id: "real-up", checkpoint_hours: 4, predicted_direction: "up", actual_pct_change: 2, is_directionally_correct: true }),
+      row({ signal_id: "real-down-wrong", checkpoint_hours: 4, predicted_direction: "down", actual_pct_change: 1.5, is_directionally_correct: false }),
+      // volatile/neutral rows are not "scored calls" (excluded from flat_share's
+      // denominator) but still count toward market_rose_share's denominator.
+      row({ signal_id: "vol", checkpoint_hours: 4, predicted_direction: "volatile", actual_pct_change: 3, is_directionally_correct: null }),
+    ];
+    const hour = buildAccuracyPayload(rows).checkpoints.find((c) => c.checkpoint_hours === 4);
+    assert.ok(hour);
+    // 2 flat out of 4 scored calls (flat-up, flat-down).
+    assert.equal(hour.flat_share, 0.5);
+    // Rows that actually rose: real-up (2%), real-down-wrong (1.5%), and vol
+    // (3%, baseline counts every row's actual direction regardless of what
+    // was predicted) = 3 of 5 rows.
+    assert.equal(hour.market_rose_share, 3 / 5);
+  },
+);
+
+runTest("flat_share and market_rose_share are null with no rows at that checkpoint", () => {
+  const payload = buildAccuracyPayload([]);
+  const hour = payload.checkpoints.find((c) => c.checkpoint_hours === 1);
+  assert.ok(hour);
+  assert.equal(hour.flat_share, null);
+  assert.equal(hour.market_rose_share, null);
+});

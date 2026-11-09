@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 
 import { getSupabaseAdmin } from "../clients/supabase.js";
-import { FLAT_THRESHOLD_PCT } from "../lib/outcome-threshold.js";
+import { FLAT_THRESHOLD_PCT, actualDirectionFromPct } from "../lib/outcome-threshold.js";
 
 /**
  * Public GET /v1/accuracy. Reads only from signal_outcomes (written once, daily,
@@ -70,6 +70,15 @@ type Bucket = {
   sumAbsMoveWhenCorrect: number;
   volatileNeutralTotal: number;
   volatileNeutralAboveThreshold: number;
+  // 2026-11-09, honest-accuracy-data task. scoredFlatCount: of up/down-predicted
+  // rows only, how many had an actual move under FLAT_THRESHOLD_PCT (a miss,
+  // regardless of which way the price barely moved). allRowsTotal/allRowsUpTotal:
+  // over EVERY row at this checkpoint (any predicted_direction, since this is
+  // describing the market, not our calls) — the baseline "share of windows
+  // where the market rose".
+  scoredFlatCount: number;
+  allRowsTotal: number;
+  allRowsUpTotal: number;
   earliest: string | null;
   latest: string | null;
 };
@@ -83,6 +92,9 @@ function newBucket(): Bucket {
     sumAbsMoveWhenCorrect: 0,
     volatileNeutralTotal: 0,
     volatileNeutralAboveThreshold: 0,
+    scoredFlatCount: 0,
+    allRowsTotal: 0,
+    allRowsUpTotal: 0,
     earliest: null,
     latest: null,
   };
@@ -97,6 +109,12 @@ function noteDate(bucket: Bucket, eventDate: string | null) {
 function applyToBucket(bucket: Bucket, row: OutcomeRow, eventDate: string | null) {
   noteDate(bucket, eventDate);
 
+  // Baseline tally over every row at this checkpoint, any predicted_direction
+  // — this is what the market actually did, independent of what we called.
+  bucket.allRowsTotal += 1;
+  const actualDirection = actualDirectionFromPct(row.actual_pct_change, FLAT_THRESHOLD_PCT);
+  if (actualDirection === "up") bucket.allRowsUpTotal += 1;
+
   if (row.predicted_direction === "volatile" || row.predicted_direction === "neutral") {
     bucket.volatileNeutralTotal += 1;
     if (Math.abs(row.actual_pct_change) >= VOLATILITY_THRESHOLD_PCT) {
@@ -109,6 +127,8 @@ function applyToBucket(bucket: Bucket, row: OutcomeRow, eventDate: string | null
   // volatile/neutral (already returned) and for anything else we do not score.
   if (row.predicted_direction !== "up" && row.predicted_direction !== "down") return;
   if (row.is_directionally_correct === null) return;
+
+  if (actualDirection === "flat") bucket.scoredFlatCount += 1;
 
   const correct = row.is_directionally_correct === true;
   if (row.predicted_direction === "up") {
@@ -149,6 +169,12 @@ function summarize(bucket: Bucket) {
   const enoughHistory = totalScored >= MIN_SAMPLE_SIZE;
   const hitRate = totalScored > 0 ? correct / totalScored : null;
   const avgMoveWhenCorrect = correct > 0 ? bucket.sumAbsMoveWhenCorrect / correct : null;
+  // Of scored (up/down) calls only — a flat actual move counts as a miss.
+  const flatShare = totalScored > 0 ? bucket.scoredFlatCount / totalScored : null;
+  // Of EVERY row at this checkpoint (any predicted_direction) — the plain
+  // baseline "share of windows where the market rose", independent of the call.
+  const marketRoseShare =
+    bucket.allRowsTotal > 0 ? bucket.allRowsUpTotal / bucket.allRowsTotal : null;
 
   return {
     total_scored: totalScored,
@@ -156,6 +182,8 @@ function summarize(bucket: Bucket) {
     hit_rate: enoughHistory ? hitRate : null,
     not_enough_history: !enoughHistory,
     avg_move_when_correct: avgMoveWhenCorrect,
+    flat_share: flatShare,
+    market_rose_share: marketRoseShare,
     sample_size_note: totalScored,
     volatile_neutral_summary:
       bucket.volatileNeutralTotal > 0
