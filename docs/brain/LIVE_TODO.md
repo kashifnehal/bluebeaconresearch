@@ -5,6 +5,12 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Map loads MapLibre from the installed package (TASK W-MAP part 2), `apps/web` only, 2026-11-09
+
+- Part 1 (read-only, same day, before this change): signed-in Playwright against local `next dev` on `/map`. Markers rendered (numbered cluster circles). A click on a cluster changed the zoom and opened a point popup. The Intelligence Stream did not switch to "Showing N signals from map selection". Console on `/map` had no hydration error text. Network: `https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl.css`, `maplibre-gl-worker.mjs`, and `maplibre-gl-shared.mjs` all returned 200. Basemap tiles were already the ArcGIS World_Dark_Gray_Base URL.
+- Part 2: `map/page.tsx` and `EventLocationMap.tsx` still dynamically `import("maplibre-gl")` and import `maplibre-gl/dist/maplibre-gl.css` from the package (`maplibre-gl` ^6.3.0 was already in `apps/web/package.json`). Removed the runtime unpkg script URL and the injected unpkg stylesheet. `setWorkerUrl` now points at `/vendor/maplibre/maplibre-gl-worker.mjs`, served by `app/vendor/maplibre/[file]/route.ts` from the installed package (worker plus `maplibre-gl-shared.mjs` only). `BASEMAP_TILE_URLS` and `BASEMAP_ATTRIBUTION` in `lib/map-config.ts` were not edited.
+- Docs: this entry; `05_API.md`, `06_COMPONENTS.md`, `08_CURRENT_STATUS.md`, `14_CHANGELOG.md` in both trees. Skipped `04_DATABASE.md`, `18_AI_ENGINE.md`, both `10_DECISIONS.md` (no table, prompt, or standing rule).
+
 ## ✅ One shared auth check per dashboard page load (TASK W-AUTH), `apps/web` only, 2026-11-09, `68b92ea`
 
 - Why: Supabase auth logs showed 399 `/auth/v1/user` calls in 24 hours (11 timeouts, 16 token-refresh 409 conflicts) and the browser console showed gotrue-js lock messages — six dashboard components/hooks (`TopBar.tsx`, `NotificationConnectPrompt.tsx`, `FirstTouchLogger.tsx`, `ProductTour.tsx`, `useMyPreferences.ts`, `lib/profile.ts`) each called `supabase.auth.getUser()` on their own mount.

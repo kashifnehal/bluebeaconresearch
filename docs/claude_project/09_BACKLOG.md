@@ -2,6 +2,8 @@
 
 > **📍 Doc status — live numbered-ticket queue as of 2026-11-08.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-11-09 — MapLibre on `/map` loads from the installed package. The unpkg worker and stylesheet are gone. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-08 — Public Research Standard and Corrections pages (`2002140`, `a3f866f`, `4e2887a`, `3d4faa8`, `ca54a87`). No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-08 — The Beacon Weekly send tool exists (`0604027`, `4823f82`, `2fad5b1`, `b6537a1`). Sending is off until `WEEKLY_SEND_ENABLED` is set and `weekly_send_log` is applied. Nothing was sent. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.

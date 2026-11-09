@@ -23,6 +23,7 @@ import {
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
 } from "@/lib/map-config";
+import { MAPLIBRE_WORKER_URL } from "@/lib/maplibre-worker-url";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
@@ -392,25 +393,12 @@ export default function MapPage() {
         const module = await import("maplibre-gl");
         const maplib = module;
 
-        // Root-cause fix (found via live browser verification, not visible from code review):
-        // under Next.js/Turbopack's bundling of a dynamic `import("maplibre-gl")`, MapLibre's
-        // internal worker URL resolves to an empty string, so the Worker construction fails
-        // immediately (silently — no console error). Every GeoJSON source (heatmap, clusters,
-        // unclustered points) depends on that worker for parsing, so signals never rendered as
-        // markers even though the source/layers were added without error. Pointing at the
-        // prebuilt worker bundle explicitly fixes it. Must run before any `new maplib.Map(...)`.
-        maplib.setWorkerUrl(
-          "https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl-worker.mjs",
-        );
-
-        // H1 fix: inject MapLibre CSS matching package.json version 6.3.0
-        if (!document.querySelector('link[data-maplibre-css]')) {
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = 'https://unpkg.com/maplibre-gl@6.3.0/dist/maplibre-gl.css';
-          link.setAttribute('data-maplibre-css', '1');
-          document.head.appendChild(link);
-        }
+        // Turbopack bundles the dynamic import, so MapLibre's own worker URL
+        // (derived from import.meta.url) is empty and the worker never starts.
+        // Point at the copy served from this app's own origin, from the
+        // installed maplibre-gl package. CSS is the package import at the top
+        // of this file. Must run before any `new maplib.Map(...)`.
+        maplib.setWorkerUrl(MAPLIBRE_WORKER_URL);
 
         if (canceled || !mapContainerRef.current) return;
 

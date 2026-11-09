@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — MapLibre worker and CSS load from the installed package
+
+`apps/web` only. The map and the event-location map no longer request MapLibre's worker or CSS from unpkg. The worker is served from the installed package at `/vendor/maplibre/maplibre-gl-worker.mjs`. Basemap URL and attribution unchanged. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-09 — One shared auth check per dashboard page load, TASK W-AUTH
 
 `apps/web` only, `68b92ea`. Supabase auth logs had shown 399 `/auth/v1/user` calls in 24 hours. A new `AuthProvider` calls `getSession()` once and loads the profile row once per dashboard page load, replacing five separate client-side `getUser()` calls. `getUser()` stays server-side only. The sign-in button stays in a full-screen "Signing you in..." state through the redirect, and the OAuth callback now defers its signup/session-bookkeeping instrumentation past the redirect. A missing code or a failed exchange both show a fixed message instead of the vendor's own error text. Fixed two existing tests that broke because they rendered a watchlist/dashboard component without the new provider in place. Not verified: no live browser pass, no live Supabase auth-log check. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
