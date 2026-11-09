@@ -1257,32 +1257,21 @@ export default function DashboardPage() {
                           "transparent";
                       }}
                     >
-                      <a
-                        href={`/events/${item.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      {/* Card body: opens quick view on click. The title below is
+                          its own anchor to the full event page, so a click there
+                          navigates instead (stopPropagation keeps this body click
+                          from also firing). */}
+                      <div
                         data-testid="signal-stream-row"
-                        onClick={() =>
-                          logUsageEvent(
-                            "signal_viewed",
-                            signalEventMetadata(item),
-                            false,
-                          )
-                        }
-                        className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:gap-6"
+                        onClick={() => setQuickViewSignal(item)}
+                        className="flex min-w-0 flex-1 flex-col gap-2 lg:flex-row lg:items-center lg:gap-6 cursor-pointer"
                       >
                         {/* Metadata: its own row on mobile so it never competes with the headline for width.
                             flex-wrap so MediaImpactTag (previously hidden below md) drops to its own line
-                            on narrow screens instead of being cut off — dot/timestamp/FreshTag are shrink-0
+                            on narrow screens instead of being cut off — severity/timestamp/FreshTag are shrink-0
                             and always stay on the first line. */}
                         <div className="flex flex-wrap items-center gap-2 lg:gap-6 lg:shrink-0">
-                          <div
-                            className="w-2 h-2 rounded-full shrink-0"
-                            style={{
-                              backgroundColor:
-                                item.severity >= 8 ? "#ee7d77" : "var(--accent)",
-                            }}
-                          />
+                          <SeverityBadge score={item.severity} />
                           <div
                             className="w-16 md:w-20 text-[12px] shrink-0"
                             style={{
@@ -1305,20 +1294,31 @@ export default function DashboardPage() {
                             entity={item.mediaImpactEntity}
                             caveat={item.mediaImpactCaveat}
                           />
-                          <SignalRowPriceChip signal={item} prices={latestPrices} />
                         </div>
 
                         {/* Headline: full row width on mobile (2-line clamp); single-line truncate at md+, unchanged */}
                         <div className="flex items-center gap-2 lg:min-w-0 lg:flex-1 lg:gap-6">
-                          <div
-                            className="flex-1 min-w-0 line-clamp-2 lg:truncate lg:line-clamp-none font-semibold transition-colors group-hover:text-[var(--accent)]"
+                          <a
+                            href={`/events/${item.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              logUsageEvent(
+                                "signal_viewed",
+                                signalEventMetadata(item),
+                                false,
+                              );
+                            }}
+                            className="flex-1 min-w-0 line-clamp-2 lg:truncate lg:line-clamp-none font-semibold transition-colors hover:text-[var(--accent)] hover:underline"
                             style={{
                               color: "#e5e2e1",
                               fontFamily: "'Inter', sans-serif",
                             }}
                           >
                             {item.title}
-                          </div>
+                          </a>
+                          <SignalRowPriceChip signal={item} prices={latestPrices} />
                           {sourceConfirmationLabel(item.sourceConfirmation) != null && (
                             <div
                               className="text-[12px] px-2 py-0.5 border shrink-0"
@@ -1339,7 +1339,7 @@ export default function DashboardPage() {
                             chevron_right
                           </span>
                         </div>
-                      </a>
+                      </div>
                       <button
                         type="button"
                         data-tour={index === 0 ? "quick-view" : undefined}

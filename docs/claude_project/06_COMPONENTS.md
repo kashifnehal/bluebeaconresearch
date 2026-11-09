@@ -297,12 +297,14 @@ interface SignalCardProps {
 - Entire card clickable → /events/[signal.id] (new tab; #123 remainder 2026-09-19)
 
 **Compact variant** (Recent Signal Stream):
-- Severity colored dot
+- SeverityBadge (number + label; was a plain colored dot until 2026-11-09)
 - Timestamp (font-mono)
-- Title (flex-1, truncated)
-- Confidence badge
+- Title — its own `<a href="/events/[id]" target="_blank">` since 2026-11-09 (was the whole row)
+- Price-move chip, now right after the title (was before it)
 - Chevron →
-- Entire row clickable → /events/[signal.id] (new tab; #123 remainder 2026-09-19). Live feed is inline in `dashboard/page.tsx`, not this component. Quick-view "View full details" already opened a new tab (`ef73885`). Remaining event-detail clicks (map popup, watchlist Correlated Signals, alerts Recent Matches, NotificationPanel, CommandPalette Signals, event Historical tab) now use the same `<a target="_blank" rel="noopener noreferrer">` pattern.
+- Live feed is inline in `dashboard/page.tsx`, not this component. Quick-view "View full details" already opened a new tab (`ef73885`). Remaining event-detail clicks (map popup, watchlist Correlated Signals, alerts Recent Matches, NotificationPanel, CommandPalette Signals, event Historical tab) use the same `<a target="_blank" rel="noopener noreferrer">` pattern.
+
+> ⚠️ UPDATED 2026-11-09 (TASK W-COPY Part 6) — the row's title is now the only element that navigates (its own anchor); the rest of the row opens Quick View on click instead of navigating, so Quick View no longer needs a separate affordance click to reach (the pre-existing preview-icon button still works too, as a second path to the same action). Full detail: `docs/brain/06_COMPONENTS.md` §3.1.
 
 **Breaking state** (is_breaking = true):
 - Left border: border-l-4 border-danger

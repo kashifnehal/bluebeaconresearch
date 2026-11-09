@@ -73,7 +73,10 @@ function changeSelect(select: Element, value: string) {
   select.dispatchEvent(event);
 }
 
-async function renderDashboard(signals = Array.from({ length: 5 }, (_, i) => makeSignal(i))) {
+async function renderDashboard(
+  signals = Array.from({ length: 5 }, (_, i) => makeSignal(i)),
+  prices: { symbol: string; change_pct_24h?: number }[] = [],
+) {
   // This file shares one `document`/localStorage across tests (setupDom is
   // called once per module) — clear persisted view/sort state so each test
   // starts from the real first-visit defaults instead of a previous test's.
@@ -94,7 +97,7 @@ async function renderDashboard(signals = Array.from({ length: 5 }, (_, i) => mak
       return new Response(JSON.stringify({ signals, total: signals.length }), { status: 200 });
     }
     if (url.startsWith("/api/prices")) {
-      return new Response(JSON.stringify({ prices: [] }), { status: 200 });
+      return new Response(JSON.stringify({ prices }), { status: 200 });
     }
     return new Response(JSON.stringify({}), { status: 200 });
   }) as typeof fetch;
@@ -399,6 +402,81 @@ async function main() {
         renderCount < 30,
         `expected a bounded render count for mount + 3 interactions, got ${renderCount}`,
       );
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("every stream row shows a SeverityBadge, with its score and label visible", async () => {
+    const signals = [makeSignal(0, { severity: 9 }), makeSignal(1, { severity: 5 })];
+    const { root, client, restoreFetch } = await renderDashboard(signals);
+    try {
+      const rows = [...document.querySelectorAll('[data-testid="signal-stream-row"]')];
+      assert.equal(rows.length, 2);
+      const highText = rows[0].textContent ?? "";
+      assert.equal(highText.includes("9"), true);
+      assert.equal(highText.includes("Extreme"), true);
+      const lowText = rows[1].textContent ?? "";
+      assert.equal(lowText.includes("5"), true);
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("stream row title is its own link to the full event page; the asset chip sits right after it", async () => {
+    const signals = [makeSignal(0, { commodityImpacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }] })];
+    const { root, client, restoreFetch } = await renderDashboard(signals, [{ symbol: "USOIL", change_pct_24h: 1.2 }]);
+    try {
+      const row = document.querySelector('[data-testid="signal-stream-row"]')!;
+      const titleLink = row.querySelector(`a[href="/events/${signals[0].id}"]`);
+      assert.ok(titleLink, "expected the title itself to be an anchor to the event page");
+      assert.equal(titleLink!.textContent, "Signal 0");
+
+      const titleIndex = row.innerHTML.indexOf(`href="/events/${signals[0].id}"`);
+      const chipIndex = row.innerHTML.indexOf("USOIL");
+      assert.ok(titleIndex > -1 && chipIndex > -1 && titleIndex < chipIndex, "asset chip should render after the title, not before it");
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("clicking the card body does not navigate/log signal_viewed; clicking the title link does, and stops there", async () => {
+    // base-ui's Dialog portal doesn't observably mount under this
+    // linkedom + react-dom/client harness (true even for the pre-existing
+    // signal-quick-view-open button, not something this change affects), so
+    // this asserts the part that IS observable here: the title anchor is the
+    // one thing on the row that fires navigation/log, and a body click does
+    // not also fire it (which is what "quick-view click stays on the card
+    // body, title is its own link" actually requires).
+    const signals = [makeSignal(0)];
+    const { root, client, restoreFetch } = await renderDashboard(signals);
+    try {
+      const eventsSent: { eventType: string; metadata?: unknown }[] = [];
+      const baseFetch = globalThis.fetch;
+      globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.includes("/api/events") && init?.method === "POST") {
+          eventsSent.push(JSON.parse(String(init.body)));
+          return new Response(JSON.stringify({ inserted: true }), { status: 200 });
+        }
+        return baseFetch(input, init);
+      }) as typeof fetch;
+
+      const row = document.querySelector('[data-testid="signal-stream-row"]')!;
+      await act(async () => click(row));
+      assert.equal(eventsSent.filter((e) => e.eventType === "signal_viewed").length, 0);
+
+      const titleLink = row.querySelector(`a[href="/events/${signals[0].id}"]`)!;
+      await act(async () => click(titleLink));
+      const viewedCalls = eventsSent.filter((e) => e.eventType === "signal_viewed");
+      assert.equal(viewedCalls.length, 1);
+      assert.deepEqual((viewedCalls[0].metadata as { signal_id: string }).signal_id, "sig-0");
     } finally {
       restoreFetch();
       await act(async () => root.unmount());
