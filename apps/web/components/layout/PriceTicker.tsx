@@ -3,6 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 
 type Price = {
   symbol: string;
@@ -25,13 +27,18 @@ function isStale(fetchedAt?: string): boolean {
 
 export function PriceTicker() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isVisible = useDocumentVisible();
   const { data, isLoading } = useQuery({
     queryKey: ["prices"],
     queryFn: async () => {
       const res = await fetch("/api/prices");
       return (await res.json()) as { prices: Price[] };
     },
-    refetchInterval: 60_000,
+    enabled: Boolean(user),
+    // Paused while the tab is hidden; react-query's default
+    // refetchOnWindowFocus already refetches once it becomes visible again.
+    refetchInterval: isVisible ? 60_000 : false,
   });
 
   if (isLoading) {

@@ -72,6 +72,13 @@ type SignalRow = {
   invalidation_condition: string | null;
 };
 
+// Explicit column list mirroring SignalRow above — every field the feed
+// response actually maps into a Signal. `select("*")` was pulling 6 columns
+// this route never reads (classification_method, classification_method_
+// inferred, is_backfilled, relevance, materiality_pass, region_raw).
+const SIGNAL_COLUMNS =
+  "id, title, summary, ai_analysis, severity, confidence, event_type, country, region, lat, lng, sources_count, commodity_impacts, currency_pair_impacts, sanctions_matches, is_breaking, is_active, raw_event_ids, created_at, updated_at, event_date, media_impact_entity, event_category, market_mechanism, is_preview, novelty, source_confirmation, materiality_reasoning, invalidation_condition";
+
 // Opaque pagination cursor for the default (no explicit `window`) feed view,
 // beyond its first page (#259 follow-up). This is a real DB-level keyset on
 // (event_date, id) — NOT the relevance score itself: score decays with age
@@ -128,10 +135,21 @@ function decodeFeedCursor(raw: string): FeedCursor | null {
   }
 }
 
+// Injectable for tests only (same pattern as ./[id]/route.ts) — real traffic
+// never passes `deps`, so this always resolves to the real supabase-server
+// call. Lets a route test exercise buildFilteredQuery()'s actual select/count
+// shape with a fake client instead of only reaching the no-env-vars branch.
+type SignalsRouteDeps = {
+  getRouteSupabaseClients: typeof getRouteSupabaseClients;
+};
+
 // Per-user: production requires a session (empty result when logged out),
 // and `?personalized=true` narrows results to the requesting user's own
 // saved preferences — never cached by a shared proxy/CDN.
-async function handleGet(req: NextRequest) {
+async function handleGet(
+  req: NextRequest,
+  deps: SignalsRouteDeps = { getRouteSupabaseClients },
+) {
   try {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -209,7 +227,7 @@ async function handleGet(req: NextRequest) {
       // otherwise continue and try to query DB — we prefer to keep the API available
     }
 
-    const clients = await getRouteSupabaseClients({ verify: "claims" });
+    const clients = await deps.getRouteSupabaseClients({ verify: "claims" });
     if (!clients) {
       return NextResponse.json({ signals: [], nextCursor: null, total: 0 });
     }
@@ -361,10 +379,22 @@ async function handleGet(req: NextRequest) {
     // below) so the default view can re-run the identical filter set at
     // successive event_date cutoffs without the accumulated-mutation bugs of
     // reusing one chained builder across attempts.
-    function buildFilteredQuery() {
+    //
+    // `count` and `columns` are opt-in (both default to "don't ask for it") —
+    // callers that never read a count (the archive/cursor-chunk row fetches
+    // below) no longer request one just to discard it, and callers that only
+    // need a number (archiveCountQ / allCountRaw / fullTotalRaw below) select
+    // just `id` with `head: true` instead of pulling every signals column to
+    // read one header. See the Part 1 audit table (2026-11-09) for why
+    // count:"exact" specifically, not "planned"/"estimated", stays the mode
+    // for every total actually shown to a user.
+    function buildFilteredQuery(
+      opts: { count?: "exact"; columns?: string; head?: boolean } = {},
+    ) {
+      const { count, columns = SIGNAL_COLUMNS, head = false } = opts;
       let q = supabase
         .from("signals")
-        .select("*, event_date", { count: "exact" });
+        .select(columns, count ? { count, head } : undefined);
       if (severity) q = q.gte("severity", Number(severity));
       if (minSources) q = q.gte("sources_count", minSources);
       if (eventCategory === "uncategorized") {
@@ -475,6 +505,8 @@ async function handleGet(req: NextRequest) {
 
     if (isArchive) {
       const decodedArchive = decodeArchiveCursor(url.searchParams.get("page"));
+      // No count here — archiveCountQ below is the one source of the
+      // displayed total for this view, in a cheap head:true call.
       let q = buildFilteredQuery();
       if (fromIso) q = q.gte("event_date", fromIso);
       if (toIso) q = q.lte("event_date", toIso);
@@ -496,23 +528,26 @@ async function handleGet(req: NextRequest) {
         data = (data as SignalRow[]).slice(0, rowLimit);
       }
     } else if (window === "active") {
-      ({ data, error, count } = await runQuery(buildFilteredQuery().eq("is_active", true)));
+      // count:"exact" here feeds `total` in the final "else" branch below,
+      // which the dashboard/archive UI displays directly — one round trip,
+      // data and count together, not a separate query.
+      ({ data, error, count } = await runQuery(buildFilteredQuery({ count: "exact" }).eq("is_active", true)));
     } else if (window === "7d") {
-      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", sevenDaysAgo)));
+      ({ data, error, count } = await runQuery(buildFilteredQuery({ count: "exact" }).gte("event_date", sevenDaysAgo)));
     } else if (window === "30d") {
-      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", thirtyDaysAgo)));
+      ({ data, error, count } = await runQuery(buildFilteredQuery({ count: "exact" }).gte("event_date", thirtyDaysAgo)));
     } else if (window === "24h") {
-      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", twentyFourHoursAgo)));
+      ({ data, error, count } = await runQuery(buildFilteredQuery({ count: "exact" }).gte("event_date", twentyFourHoursAgo)));
     } else if (window === "all") {
       // Explicit "show everything" — no date restriction at all. Distinct from
       // omitting `window` entirely (the tiered default below), which callers
       // that don't pass a window param hit instead.
-      ({ data, error, count } = await runQuery(buildFilteredQuery()));
+      ({ data, error, count } = await runQuery(buildFilteredQuery({ count: "exact" })));
     } else if (genericDaysMatch) {
       const cutoff = new Date(
         Date.now() - Number(genericDaysMatch[1]) * 24 * 60 * 60 * 1000,
       ).toISOString();
-      ({ data, error, count } = await runQuery(buildFilteredQuery().gte("event_date", cutoff)));
+      ({ data, error, count } = await runQuery(buildFilteredQuery({ count: "exact" }).gte("event_date", cutoff)));
     } else if (decodedCursor) {
       // Cursor continuation beyond page 1 of the default view — the full
       // is_active + severity(+other filters) set, no time cutoff. `is_active`
@@ -534,6 +569,9 @@ async function handleGet(req: NextRequest) {
       // checks `d` parses as a date and `id` is UUID-shaped, but this keeps
       // the interpolated value itself in a known-safe, fixed format.
       const cursorEventDate = new Date(decodedCursor.d).toISOString();
+      // No count here either — it was requested and immediately discarded
+      // (set to null below); fullTotal further down is the real source for
+      // this branch's total/hasMore.
       const { data: chunkData, error: chunkError } = await buildFilteredQuery()
         .eq("is_active", true)
         .or(
@@ -567,7 +605,15 @@ async function handleGet(req: NextRequest) {
         { label: "7d", cutoff: sevenDaysAgo },
       ];
       for (const tier of tiers) {
-        const res = await runQuery(buildFilteredQuery().gte("event_date", tier.cutoff));
+        // count:"exact" is genuinely needed here (not display — the
+        // MIN_FEED_FILL widen-or-stop decision right below), same single
+        // round trip as the data fetch. It's set on `count` for bookkeeping
+        // but never reused for the response's own `total` — on the common
+        // relevance-sort path, useCursorPagination is true and the final
+        // total comes from the dedicated fullTotal query further down
+        // instead (a real-count request scoped to a different, unbounded
+        // set, not a duplicate of this one).
+        const res = await runQuery(buildFilteredQuery({ count: "exact" }).gte("event_date", tier.cutoff));
         data = res.data as SignalRow[] | null;
         error = res.error;
         count = res.count ?? null;
@@ -757,10 +803,12 @@ async function handleGet(req: NextRequest) {
     let oldestEventDate: string | null = null;
 
     if (isArchive) {
-      let archiveCountQ = buildFilteredQuery();
+      // head:true, id-only: this is a pure count read (the archive page's
+      // displayed total), so no row payload is fetched at all.
+      let archiveCountQ = buildFilteredQuery({ count: "exact", columns: "id", head: true });
       if (fromIso) archiveCountQ = archiveCountQ.gte("event_date", fromIso);
       if (toIso) archiveCountQ = archiveCountQ.lte("event_date", toIso);
-      const { count: archiveTotalRaw } = await archiveCountQ.limit(1);
+      const { count: archiveTotalRaw } = await archiveCountQ;
       total = archiveTotalRaw ?? pagedSignals.length;
       hasMore = archiveHasMore && pagedSignals.length > 0;
       const last = rows[rows.length - 1];
@@ -775,7 +823,7 @@ async function handleGet(req: NextRequest) {
       // Search rows came from the tiered default window. The dashboard's
       // unbounded total would count older hits that this response did not
       // return. Keep `total` on that same window and report the rest.
-      const { count: allCountRaw } = await buildFilteredQuery().limit(1);
+      const { count: allCountRaw } = await buildFilteredQuery({ count: "exact", columns: "id", head: true });
       const agreed = searchWindowAgreement(
         typeof count === "number" ? count : rows.length,
         allCountRaw ?? 0,
@@ -790,9 +838,8 @@ async function handleGet(req: NextRequest) {
       // honest "how many signals are really out there" number for the Load
       // More count and the earliest-signal terminal copy, and it's the same
       // set page 2+ actually draws from.
-      const { count: fullTotalRaw } = await buildFilteredQuery()
-        .eq("is_active", true)
-        .limit(1);
+      const { count: fullTotalRaw } = await buildFilteredQuery({ count: "exact", columns: "id", head: true })
+        .eq("is_active", true);
       const fullTotal = fullTotalRaw ?? 0;
       const shownBefore = decodedCursor?.n ?? 0;
       const shownNow = shownBefore + justIn.length + pagedSignals.length;
@@ -828,7 +875,9 @@ async function handleGet(req: NextRequest) {
         });
       } else {
         nextCursorValue = null;
-        const { data: oldestRows } = await buildFilteredQuery()
+        // Only event_date is read below — no count, and no need for the
+        // full column set either.
+        const { data: oldestRows } = await buildFilteredQuery({ columns: "id, event_date" })
           .eq("is_active", true)
           .order("event_date", { ascending: true })
           .limit(1);
@@ -915,8 +964,12 @@ async function handleGet(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
-  const res = await handleGet(req);
+export async function GET(
+  req: NextRequest,
+  _context?: { params: Promise<Record<string, never>> },
+  deps?: SignalsRouteDeps,
+) {
+  const res = await handleGet(req, deps);
   res.headers.set("Cache-Control", "private, no-store");
   return res;
 }

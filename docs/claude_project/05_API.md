@@ -10,6 +10,8 @@
 
 > ⚠️ UPDATED 2026-11-09 — `GET /api/signals`, `GET /api/alerts/recent`, and `GET /api/signals/source-stats` now explicitly send `Cache-Control: private, no-store` on every response — all three read the requester's own session and branch on it (empty/narrowed feed, user-scoped alert rows, or a 401), so none is safe for a shared cache. `GET /api/calendar/values` and `GET /api/calendar/feed` were checked and already send their own correct public cache headers. `GET /api/prices` unchanged. Full detail: `docs/brain/05_API.md`.
 
+> ⚠️ UPDATED 2026-11-09 (TASK W2-DB) — `GET /api/signals` selects an explicit column list instead of `"*"` and only requests an exact row count where the result is actually used (a real widen/stop decision or a number shown to the user), not on every internal query. Response shape and every query param are unchanged. Full detail: `docs/brain/05_API.md`.
+
 > ⚠️ UPDATED 2026-10-17 — `GET /api/health` is public, unauthenticated, and unmetered. It returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. No database, Upstash, or other service call. Full detail: `docs/brain/05_API.md`.
 
 > ⚠️ UPDATED 2026-10-17 — `GET /api/ingestion/status` adds `newestStoredArticleAt` for an admin. Full detail: `docs/brain/05_API.md`.

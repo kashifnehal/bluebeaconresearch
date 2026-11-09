@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Database/function waste cut on the signals feed, polling, and anonymous events (TASK W2-DB)
+
+`apps/web` only. `/api/signals` now selects an explicit column list instead of `"*"`, and only requests an exact row count where one is actually needed (display total or a real widen-or-stop decision) instead of on every call. Dashboard/watchlist/alerts/notification polling now pauses while a browser tab is hidden and stops entirely for a signed-out visitor. Usage-event logging (`logUsageEvent`) and the calendar page's market-impact fetch no longer call their APIs when signed out (those routes 401 without a session). A companion read-only table audits nine similar `apps/backend` query sites — no backend files changed. Rebased onto the concurrent TASK W2-AUTH commits below (`AuthProvider.tsx` picked up both sets of changes). Web tsc 0, web test 0 ✖, next build 0. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/05_API.md`.
+
 ## 2026-11-09 — Profile-fetch retry fix + Auth-outage handling, Parts 3-4, TASK W2-AUTH
 
 `apps/web` only, `this commit`. Fixed a profile-fetch retry bug in `AuthProvider.tsx` (a failed fetch used to leave its dedup ref set and never retry; now retries up to 3 times with a fixed backoff). Added outage handling: a 5xx/HTML `getSession()` failure retries once, with no vendor/code text on screen and no session cleared — matches the 2026-11-09 incident (a 504, and separately a Cloudflare 522 + `AuthUnknownError`). GAP: the outage's root cause is not fixed. Web tsc 0, web test 857 ✔ 0 ✖ (after rebasing onto TASK W2-COPY Parts 1-3), next build 0. Not verified in a browser. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

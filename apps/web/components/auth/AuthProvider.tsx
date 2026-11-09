@@ -40,10 +40,42 @@ const DEFAULT_VALUE: AuthContextValue = {
   isLoading: true,
 };
 
-const AuthContext = createContext<AuthContextValue>(DEFAULT_VALUE);
+// Exported so tests can wrap a tree in `AuthContext.Provider` directly with a
+// fake signed-in/out value instead of driving the real async getSession()
+// resolution below.
+export const AuthContext = createContext<AuthContextValue>(DEFAULT_VALUE);
 
 export function useAuth(): AuthContextValue {
   return useContext(AuthContext);
+}
+
+// Mirrors AuthProvider's own already-resolved state (set below, never a new
+// auth/network call) for plain functions outside React — e.g.
+// lib/funnel-events.ts's logUsageEvent, which has no hook access of its own
+// and must not call supabase.auth.getUser() itself (2026-11-09, TASK W2-DB
+// Part 4: signed-out visitors were causing 401s on every POST /api/events).
+let signedInSnapshot = false;
+
+export function hasSignedInUser(): boolean {
+  return signedInSnapshot;
+}
+
+// A caller firing on its own mount effect (e.g. logUsageEvent("dashboard_viewed")
+// in a top-level `useEffect(() => {...}, [])`) runs before this provider's own
+// effect below has resolved anything — child effects fire before parent
+// effects on initial mount — so hasSignedInUser() would read a permanently
+// stale `false` for every page load, signed in or not. This resolves once,
+// the first time AuthProvider settles either way, so a caller can await it
+// to cross that one race; waitForAuthResolved() never calls out to auth
+// itself, just the module-level flag this file already maintains.
+let authResolvedOnce = false;
+let resolveAuthResolvedOnce: () => void;
+const authResolvedOncePromise = new Promise<void>((resolve) => {
+  resolveAuthResolvedOnce = resolve;
+});
+
+export function waitForAuthResolved(): Promise<void> {
+  return authResolvedOnce ? Promise.resolve() : authResolvedOncePromise;
 }
 
 /**
@@ -59,8 +91,21 @@ export function useAuth(): AuthContextValue {
  * retries once rather than showing an error or clearing the session.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AuthContextValue>(DEFAULT_VALUE);
+  const [state, setStateRaw] = useState<AuthContextValue>(DEFAULT_VALUE);
   const profileLoadedForUserId = useRef<string | null>(null);
+  // Every state update also mirrors `user` into the module-level snapshot
+  // above, so it never drifts from what this provider actually resolved.
+  const setState: typeof setStateRaw = (value) => {
+    setStateRaw((prev) => {
+      const next = typeof value === "function" ? (value as (s: AuthContextValue) => AuthContextValue)(prev) : value;
+      signedInSnapshot = Boolean(next.user);
+      if (!next.isLoading && !authResolvedOnce) {
+        authResolvedOnce = true;
+        resolveAuthResolvedOnce();
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;

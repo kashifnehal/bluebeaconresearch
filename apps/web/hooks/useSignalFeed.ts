@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import type { Signal } from "@blue-beacon-research/shared";
 import { fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 import {
   symbolsForCommodityFilter,
   type FeedWindow,
@@ -33,6 +35,8 @@ export function useSignalFeed({
   minSources = 1,
   eventCategory = null,
 }: Options = {}) {
+  const { user } = useAuth();
+  const isVisible = useDocumentVisible();
   const {
     data,
     dataUpdatedAt,
@@ -89,7 +93,7 @@ export function useSignalFeed({
     // `nextCursor` is an opaque page token from /api/signals ("2", "3", …) or
     // null at the end. Returning undefined tells react-query there's no next page.
     getNextPageParam: (last) => last.nextCursor ?? undefined,
-    enabled,
+    enabled: enabled && Boolean(user),
     placeholderData: keepPreviousData,
     // Sole source of "live" updates as of 2026-09-03 (was previously a fallback
     // alongside an SSE connection — see git history / project memory
@@ -100,7 +104,11 @@ export function useSignalFeed({
     // active work. 90s±10s jitter avoids synchronized bursts across concurrent
     // clients; it was already the fallback path so this is a delay-only change
     // (new signals now surface within ~90s instead of near-instantly), not new code.
+    // Paused while the tab is hidden (no one can see the result); react-query's
+    // default refetchOnWindowFocus already refetches once when it becomes
+    // visible again, so no extra "catch up" logic is needed here.
     refetchInterval: () => {
+      if (!isVisible) return false;
       const base = 90_000;
       const jitter = Math.floor(Math.random() * 20_000) - 10_000; // ±10s
       return base + jitter;

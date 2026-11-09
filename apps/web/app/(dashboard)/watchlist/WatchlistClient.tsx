@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { COMMODITIES, FOREX_PAIRS, NEWS_ONLY_COMMODITIES } from "@blue-beacon-research/shared";
 import { SELECT_CLASSES, formatDataAsOf, safeFormatDistanceToNow } from "@/lib/utils";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 import { logUsageEvent } from "@/lib/funnel-events";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
@@ -372,6 +374,8 @@ export function sortWatchlistSymbols(
 export function WatchlistClient() {
   const params = useSearchParams();
   const preselect = params.get("symbol");
+  const { user } = useAuth();
+  const isVisible = useDocumentVisible();
   // Deterministic initial values — must match server-rendered HTML exactly, so
   // localStorage (only available client-side) cannot be read here (React error
   // #418 hydration mismatch). The real list is read inside the hydration effect
@@ -474,8 +478,10 @@ export function WatchlistClient() {
   const { data, refetch, dataUpdatedAt, isError: pricesError } = useQuery({
     queryKey: ["prices"],
     queryFn: () => fetchJsonWithTimeout<{ prices: Price[] }>("/api/prices"),
-    enabled: hydrated && hasPricedSymbol,
-    refetchInterval: 15_000,
+    enabled: hydrated && hasPricedSymbol && Boolean(user),
+    // Paused while the tab is hidden; react-query's default
+    // refetchOnWindowFocus already refetches once it becomes visible again.
+    refetchInterval: isVisible ? 15_000 : false,
   });
 
   const lastFetchAt = dataUpdatedAt || null;

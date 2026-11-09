@@ -1,4 +1,5 @@
 import { track as trackVercelAnalytics } from "@vercel/analytics";
+import { hasSignedInUser, waitForAuthResolved } from "@/components/auth/AuthProvider";
 
 // Minimal funnel tracking (2026-08-27) — CTO-directed, additive alongside the
 // existing PostHog wiring in lib/analytics.ts (NOT a replacement; PostHog is
@@ -136,6 +137,8 @@ export function logUsageEvent(
   dedupe: "type" | "entity" | false = "type",
 ): void {
   safeTrackVercel(eventType, metadata);
+  // Dedupe bookkeeping stays synchronous (unchanged) so two calls in the same
+  // tick still collapse correctly — only the network call below waits.
   if (dedupe === false) {
     const k = `${eventType}|${Date.now()}`;
     if (usageEventsFiredThisSession.has(k)) return;
@@ -149,16 +152,32 @@ export function logUsageEvent(
     if (usageEventsFiredThisSession.has(key)) return;
     usageEventsFiredThisSession.add(key);
   }
-  try {
-    fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventType, metadata }),
-      keepalive: true,
-    }).catch(() => {
-      // Fire-and-forget — see module doc comment.
-    });
-  } catch {
-    // Instrumentation must never throw into the caller's control flow.
-  }
+  // POST /api/events requires a session and 401s without one (2026-11-09,
+  // TASK W2-DB Part 4: a signed-out visitor was generating one of these per
+  // "viewed" event on every public-reachable dashboard-group page). Vercel
+  // Analytics above still records the anonymous pageview; the `events` table
+  // row — and anything that reads it (DAU/WAU on /admin/metrics) — simply
+  // does not see anonymous usage. That's a real gap, not a bug: see the
+  // task report for which event types are affected.
+  //
+  // Most callers fire this from their own component's mount effect, which
+  // runs before AuthProvider's own effect has resolved anything (child
+  // effects run before parent effects on initial mount) — waiting for that
+  // one-time resolution here avoids reading hasSignedInUser() too early and
+  // silently dropping every "viewed" event for a signed-in user too.
+  void waitForAuthResolved().then(() => {
+    if (!hasSignedInUser()) return;
+    try {
+      fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventType, metadata }),
+        keepalive: true,
+      }).catch(() => {
+        // Fire-and-forget — see module doc comment.
+      });
+    } catch {
+      // Instrumentation must never throw into the caller's control flow.
+    }
+  });
 }

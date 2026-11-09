@@ -9,6 +9,7 @@ import { act } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { setupDom, renderElement } from "@/lib/test-render";
+import { AuthContext } from "@/components/auth/AuthProvider";
 import AlertsPage from "./page";
 
 const document = setupDom();
@@ -105,6 +106,104 @@ async function main() {
       client.clear();
     }
   });
+
+  await runTest(
+    "signed out: none of the 3 pollers (alert-rules, alerts/recent, rule-stats) fetch (2026-11-09, TASK W2-DB)",
+    async () => {
+      let fetches = 0;
+      const original = globalThis.fetch;
+      globalThis.fetch = (async () => {
+        fetches += 1;
+        return new Response(JSON.stringify({}), { status: 200 });
+      }) as typeof fetch;
+      const client = new QueryClient();
+      const { root } = await renderElement(
+        document,
+        createElement(
+          QueryClientProvider,
+          { client },
+          createElement(
+            AuthContext.Provider,
+            { value: { user: null, session: null, profile: null, isLoading: false } },
+            createElement(AlertsPage),
+          ),
+        ),
+      );
+      try {
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        });
+        assert.equal(fetches, 0, "a signed-out render must not poll any of the 3 alert endpoints");
+      } finally {
+        globalThis.fetch = original;
+        await act(async () => root.unmount());
+        client.clear();
+      }
+    },
+  );
+
+  await runTest(
+    "signed in + hidden tab: none of the 3 pollers' 30s refetch timers are scheduled (2026-11-09, TASK W2-DB)",
+    async () => {
+      const trackedDelays: number[] = [];
+      const realSetTimeout = globalThis.setTimeout;
+      (globalThis as any).setTimeout = ((fn: TimerHandler, ms?: number, ...args: unknown[]) => {
+        if (ms === 30_000) trackedDelays.push(ms);
+        return realSetTimeout(fn as never, ms, ...(args as []));
+      }) as unknown as typeof setTimeout;
+      const realDescriptor = Object.getOwnPropertyDescriptor(document, "visibilityState");
+      Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+      const original = globalThis.fetch;
+      globalThis.fetch = (async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.startsWith("/api/alert-rules")) {
+          return new Response(JSON.stringify({ rules: [] }), { status: 200 });
+        }
+        if (url.startsWith("/api/alerts/recent")) {
+          return new Response(JSON.stringify({ alerts: [], total: 0, hasMore: false }), { status: 200 });
+        }
+        if (url.startsWith("/api/alerts/rule-stats")) {
+          return new Response(JSON.stringify({ stats: [] }), { status: 200 });
+        }
+        return new Response(JSON.stringify({}), { status: 200 });
+      }) as typeof fetch;
+      try {
+        const client = new QueryClient();
+        const { root } = await renderElement(
+          document,
+          createElement(
+            QueryClientProvider,
+            { client },
+            createElement(
+              AuthContext.Provider,
+              {
+                value: {
+                  user: { id: "user-1" } as never,
+                  session: null,
+                  profile: null,
+                  isLoading: false,
+                },
+              },
+              createElement(AlertsPage),
+            ),
+          ),
+        );
+        try {
+          await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 20));
+          });
+          assert.equal(trackedDelays.length, 0, "no 30s poll timer should be scheduled while the tab is hidden");
+        } finally {
+          await act(async () => root.unmount());
+          client.clear();
+        }
+      } finally {
+        globalThis.fetch = original;
+        globalThis.setTimeout = realSetTimeout;
+        if (realDescriptor) Object.defineProperty(document, "visibilityState", realDescriptor);
+      }
+    },
+  );
 }
 
 main();

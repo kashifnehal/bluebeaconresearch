@@ -23,6 +23,8 @@ import { AlertRuleTrendChart, AlertRuleTrendEmptyState, isTrendSparse, type Dail
 import { useUIStore } from "@/store/useUIStore";
 import { FETCH_TIMEOUT_MS, fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 
 type AlertRule = {
   id: string;
@@ -205,6 +207,11 @@ export default function AlertsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { unreadCount } = useUIStore();
+  const { user } = useAuth();
+  const isVisible = useDocumentVisible();
+  // Paused while the tab is hidden; react-query's default refetchOnWindowFocus
+  // already refetches once it becomes visible again.
+  const pollInterval = isVisible ? 30_000 : false;
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [modalRegion, setModalRegion] = useState("middle-east");
   const [modalMinSeverity, setModalMinSeverity] = useState(7);
@@ -224,7 +231,8 @@ export default function AlertsPage() {
   const { data: rulesData, isLoading: rulesLoading, isError: rulesError, refetch: refetchRules } = useQuery({
     queryKey: ["alert-rules"],
     queryFn: () => fetchJsonWithTimeout<{ rules: AlertRule[] }>("/api/alert-rules"),
-    refetchInterval: 30_000,
+    enabled: Boolean(user),
+    refetchInterval: pollInterval,
   });
 
   const {
@@ -244,7 +252,8 @@ export default function AlertsPage() {
       ),
     getNextPageParam: (lastPage, allPages) =>
       lastPage.hasMore ? allPages.flatMap((p) => p.alerts).length : undefined,
-    refetchInterval: 30_000,
+    enabled: Boolean(user),
+    refetchInterval: pollInterval,
   });
 
   const alertRows = useMemo(
@@ -271,7 +280,8 @@ export default function AlertsPage() {
       fetchJsonWithTimeout<{ stats: { ruleId: string; totalMatches: number; dailyCounts: DailyCount[] }[] }>(
         "/api/alerts/rule-stats",
       ),
-    refetchInterval: 30_000,
+    enabled: Boolean(user),
+    refetchInterval: pollInterval,
   });
 
   const ruleStatsById = useMemo(() => {

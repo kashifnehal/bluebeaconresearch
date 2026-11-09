@@ -78,6 +78,9 @@ import { createElement } from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { parseHTML } from "linkedom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthContext } from "./auth/AuthProvider";
+import { NotificationPanel } from "./NotificationPanel";
 
 const { window: domWindow, document } = parseHTML("<!doctype html><html><body></body></html>");
 const g = globalThis as any;
@@ -88,6 +91,11 @@ for (const key of ["window", "document", "HTMLElement", "Element", "Node", "Docu
   });
 }
 g.IS_REACT_ACT_ENVIRONMENT = true;
+// next/link's internal useIntersection() hook reads `self` (requestIdleCallback
+// feature-detection) — needed once this file renders the real NotificationPanel
+// component (it has a <Link>), not just the pure helpers above.
+if (typeof g.self === "undefined") g.self = g;
+if (typeof (domWindow as any).self === "undefined") (domWindow as any).self = domWindow;
 
 const MAX_RENDERS = 4;
 
@@ -134,6 +142,101 @@ async function runRender(name: string, fn: () => Promise<void>) {
   }
 }
 
+// Full render coverage for the Part 3 polling changes in TASK W2-DB
+// (2026-11-09): NotificationPanel itself (not just useSyncUnreadBadge) must
+// stop polling /api/alerts/recent when signed out, and must not schedule its
+// 30s refetch timer while the tab is hidden.
+async function renderNotificationPanelCoverage() {
+  async function render(user: { id: string } | null) {
+    useUIStore.setState({ notifOpen: true });
+    const client = new QueryClient();
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    await act(async () => {
+      root.render(
+        createElement(
+          QueryClientProvider,
+          { client },
+          createElement(
+            AuthContext.Provider,
+            { value: { user: user as never, session: null, profile: null, isLoading: false } },
+            createElement(NotificationPanel),
+          ),
+        ),
+      );
+    });
+    return { root, client };
+  }
+
+  await runRender("signed out: never fetches /api/alerts/recent", async () => {
+    let fetches = 0;
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      fetches += 1;
+      return new Response(JSON.stringify({ alerts: [] }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      const { root, client } = await render(null);
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      assert.equal(fetches, 0, "a signed-out bell must not poll /api/alerts/recent");
+      await act(async () => root.unmount());
+      client.clear();
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
+  await runRender("signed in: fetches /api/alerts/recent once idle", async () => {
+    let fetches = 0;
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () => {
+      fetches += 1;
+      return new Response(JSON.stringify({ alerts: [] }), { status: 200 });
+    }) as typeof fetch;
+    try {
+      const { root, client } = await render({ id: "user-1" });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      assert.ok(fetches > 0, "a signed-in bell should fetch /api/alerts/recent");
+      await act(async () => root.unmount());
+      client.clear();
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
+  await runRender("signed in + hidden tab: no 30s refetch timer is scheduled", async () => {
+    const trackedDelays: number[] = [];
+    const realSetTimeout = globalThis.setTimeout;
+    (globalThis as any).setTimeout = ((fn: TimerHandler, ms?: number, ...args: unknown[]) => {
+      if (ms === 30_000) trackedDelays.push(ms);
+      return realSetTimeout(fn as never, ms, ...(args as []));
+    }) as unknown as typeof setTimeout;
+    const realDescriptor = Object.getOwnPropertyDescriptor(document, "visibilityState");
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () => new Response(JSON.stringify({ alerts: [] }), { status: 200 })) as typeof fetch;
+    try {
+      const { root, client } = await render({ id: "user-1" });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      });
+      assert.equal(trackedDelays.length, 0, "no 30s poll timer should be scheduled while the tab is hidden");
+      await act(async () => root.unmount());
+      client.clear();
+    } finally {
+      globalThis.fetch = original;
+      globalThis.setTimeout = realSetTimeout;
+      if (realDescriptor) Object.defineProperty(document, "visibilityState", realDescriptor);
+    }
+  });
+}
+
 void (async () => {
   const readItems = {};
   await runRender("empty alerts settle the badge without a render loop", async () => {
@@ -164,4 +267,6 @@ void (async () => {
     assert.ok(result.renders <= MAX_RENDERS, `rendered ${result.renders}`);
     useUIStore.setState({ unreadCount: 0 });
   });
+
+  await renderNotificationPanelCoverage();
 })();

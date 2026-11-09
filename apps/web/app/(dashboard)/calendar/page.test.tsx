@@ -107,6 +107,14 @@ function fixtureEvent(overrides: Partial<Fixture> = {}): Fixture {
 }
 
 async function main() {
+  // CalendarPage's market-impact effect and logUsageEvent (TASK W2-DB Part 4,
+  // 2026-11-09) now both read the signed-in user — the full-page render tests
+  // below expect calendar_viewed/calendar_values_shown/market-impact to fire,
+  // same signed-in-ancestor need as WatchlistClient.render.test.tsx. Run once
+  // up front so it applies to every test in this file.
+  const { setupSignedInSupabase } = await import("@/lib/test-render");
+  const { AuthProvider } = await import("@/components/auth/AuthProvider");
+  await setupSignedInSupabase(document);
   const {
     EventTable,
     OptionsIvNote,
@@ -234,7 +242,11 @@ async function main() {
           createElement(
             AppRouterContext.Provider,
             { value: fakeRouter },
-            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+            createElement(
+              QueryClientProvider,
+              { client },
+              createElement(AuthProvider, null, createElement(CalendarPage)),
+            ),
           ),
         );
       });
@@ -258,6 +270,69 @@ async function main() {
       g.fetch = originalFetch;
     }
   });
+
+  await runTest(
+    "signed out: no /api/market-impact fetch (2026-11-09, TASK W2-DB Part 4 — the route 401s without a session)",
+    async () => {
+      const { AppRouterContext } = await import(
+        "next/dist/shared/lib/app-router-context.shared-runtime.js"
+      );
+      const { AuthContext } = await import("@/components/auth/AuthProvider");
+
+      let marketImpactCalls = 0;
+      const originalFetch = g.fetch;
+      g.fetch = async (input: RequestInfo | URL) => {
+        if (String(input).includes("/api/market-impact")) marketImpactCalls += 1;
+        return new Response("{}", { status: 200 });
+      };
+
+      const fakeRouter = {
+        push: () => {},
+        replace: () => {},
+        back: () => {},
+        forward: () => {},
+        refresh: () => {},
+        prefetch: async () => {},
+      };
+      const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const { default: CalendarPage } = await import("./page");
+
+      document.body.replaceChildren();
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      const root = createRoot(host);
+      try {
+        await act(async () => {
+          root.render(
+            createElement(
+              AppRouterContext.Provider,
+              { value: fakeRouter },
+              createElement(
+                QueryClientProvider,
+                { client },
+                // A fake signed-out context overrides the file's ambient
+                // signed-in AuthProvider for just this render — reliable
+                // regardless of setupSignedInSupabase() having already run
+                // for other tests in this file.
+                createElement(
+                  AuthContext.Provider,
+                  { value: { user: null, session: null, profile: null, isLoading: false } },
+                  createElement(CalendarPage),
+                ),
+              ),
+            ),
+          );
+        });
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        });
+        assert.equal(marketImpactCalls, 0, "a signed-out visitor must not fetch /api/market-impact");
+      } finally {
+        await act(async () => root.unmount());
+        g.fetch = originalFetch;
+      }
+    },
+  );
 
   await runTest("page copy: new description, sourced-footer date, and 'Week Ahead' breadcrumb", async () => {
     const { AppRouterContext } = await import(
@@ -287,7 +362,11 @@ async function main() {
           createElement(
             AppRouterContext.Provider,
             { value: fakeRouter },
-            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+            createElement(
+              QueryClientProvider,
+              { client },
+              createElement(AuthProvider, null, createElement(CalendarPage)),
+            ),
           ),
         );
       });
@@ -645,7 +724,11 @@ async function main() {
           createElement(
             AppRouterContext.Provider,
             { value: fakeRouter },
-            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+            createElement(
+              QueryClientProvider,
+              { client },
+              createElement(AuthProvider, null, createElement(CalendarPage)),
+            ),
           ),
         );
       });
@@ -690,7 +773,11 @@ async function main() {
           createElement(
             AppRouterContext.Provider,
             { value: fakeRouter },
-            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+            createElement(
+              QueryClientProvider,
+              { client },
+              createElement(AuthProvider, null, createElement(CalendarPage)),
+            ),
           ),
         );
       });
@@ -828,7 +915,11 @@ async function main() {
           createElement(
             AppRouterContext.Provider,
             { value: fakeRouter },
-            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+            createElement(
+              QueryClientProvider,
+              { client },
+              createElement(AuthProvider, null, createElement(CalendarPage)),
+            ),
           ),
         );
       });
@@ -901,7 +992,11 @@ async function main() {
           createElement(
             AppRouterContext.Provider,
             { value: fakeRouter },
-            createElement(QueryClientProvider, { client }, createElement(CalendarPage)),
+            createElement(
+              QueryClientProvider,
+              { client },
+              createElement(AuthProvider, null, createElement(CalendarPage)),
+            ),
           ),
         );
       });
@@ -967,4 +1062,10 @@ async function main() {
   );
 }
 
-main();
+main().then(() => {
+  // setupSignedInSupabase() creates a real browser auth client with a
+  // token-refresh timer — exit so the test chain continues (same fix as
+  // components/FirstTouchCapture.test.tsx and
+  // WatchlistClient.render.test.tsx).
+  process.exit(process.exitCode ?? 0);
+});

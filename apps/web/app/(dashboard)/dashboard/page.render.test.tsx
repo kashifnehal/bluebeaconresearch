@@ -9,7 +9,8 @@ import { createElement } from "react";
 import { act } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { setupDom, renderElement } from "@/lib/test-render";
+import { setupDom, renderElement, setupSignedInSupabase } from "@/lib/test-render";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import DashboardPage from "./page";
 
 const document = setupDom();
@@ -105,7 +106,11 @@ async function renderDashboard(
   const client = new QueryClient();
   const { root } = await renderElement(
     document,
-    createElement(QueryClientProvider, { client }, createElement(DashboardPage)),
+    createElement(
+      QueryClientProvider,
+      { client },
+      createElement(AuthProvider, null, createElement(DashboardPage)),
+    ),
   );
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
@@ -114,6 +119,13 @@ async function renderDashboard(
 }
 
 async function main() {
+  // DashboardPage's own /api/prices poll and useSignalFeed() both now read
+  // the signed-in user from AuthProvider's context and stay disabled without
+  // one (2026-11-09, TASK W2-DB Part 3) — every existing assertion here
+  // expects signals/prices to actually load, so this needs the same signed-in
+  // ancestor production always provides via app/(dashboard)/layout.tsx, same
+  // pattern as WatchlistClient.render.test.tsx.
+  await setupSignedInSupabase(document);
   await runTest("renders inside page-shell, wide, with no h-screen/overflow-y-auto on the root", async () => {
     const { root, client, restoreFetch } = await renderDashboard();
     try {
@@ -380,7 +392,11 @@ async function main() {
       const client = new QueryClient();
       const { root } = await renderElement(
         document,
-        createElement(QueryClientProvider, { client }, createElement(CountingDashboard)),
+        createElement(
+          QueryClientProvider,
+          { client },
+          createElement(AuthProvider, null, createElement(CountingDashboard)),
+        ),
       );
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 30));
@@ -485,4 +501,10 @@ async function main() {
   });
 }
 
-main();
+main().then(() => {
+  // setupSignedInSupabase() now creates a real browser auth client, which
+  // starts a token-refresh timer — exit so the test chain continues (same
+  // fix as components/FirstTouchCapture.test.tsx and
+  // WatchlistClient.render.test.tsx).
+  process.exit(process.exitCode ?? 0);
+});

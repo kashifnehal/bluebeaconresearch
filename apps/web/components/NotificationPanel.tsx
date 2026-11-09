@@ -7,6 +7,8 @@ import { useUIStore } from "@/store/useUIStore";
 import { safeFormatDistanceToNow } from "@/lib/utils";
 import { formatDistanceToNowStrict } from "date-fns";
 import { deferToIdle } from "@/lib/idle-defer";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 
 type AlertItem = {
   id: string;
@@ -60,6 +62,8 @@ export function useSyncUnreadBadge<T extends Pick<AlertItem, "id" | "is_read">>(
 export function NotificationPanel() {
   const { notifOpen, setNotifOpen, resetUnread } = useUIStore();
   const [readItems, setReadItems] = useState<Record<string, boolean>>({});
+  const { user } = useAuth();
+  const isVisible = useDocumentVisible();
 
   // Deferred to idle (2026-11-09). The bell mounts on every dashboard page
   // and otherwise calls GET /api/alerts/recent immediately. The call is
@@ -76,8 +80,10 @@ export function NotificationPanel() {
       if (!res.ok) throw new Error(`Failed to load alerts (${res.status})`);
       return (await res.json()) as { alerts: AlertItem[] };
     },
-    enabled: idleReady,
-    refetchInterval: 30_000,
+    enabled: idleReady && Boolean(user),
+    // Paused while the tab is hidden; react-query's default
+    // refetchOnWindowFocus already refetches once it becomes visible again.
+    refetchInterval: isVisible ? 30_000 : false,
     retry: 1,
   });
 

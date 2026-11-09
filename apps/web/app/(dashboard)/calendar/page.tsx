@@ -16,6 +16,7 @@ import {
   type CalendarImpact,
 } from "@/lib/calendar-filters";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
+import { useAuth } from "@/components/auth/AuthProvider";
 import { logUsageEvent } from "@/lib/funnel-events";
 import {
   MARKET_IMPACT_CHECKPOINT_HOURS,
@@ -907,6 +908,7 @@ export default function CalendarPage() {
     logUsageEvent("calendar_viewed");
   }, []);
 
+  const { user } = useAuth();
   const { data: myPreferences } = useMyPreferences();
   const mySymbols = useMemo(
     () => Array.from(new Set([...(myPreferences?.commodities ?? []), ...(myPreferences?.watchlistSymbols ?? [])])),
@@ -929,6 +931,10 @@ export default function CalendarPage() {
   }
 
   useEffect(() => {
+    // /api/market-impact requires a session and 401s without one (2026-11-09,
+    // TASK W2-DB Part 4) — skip the call entirely for a signed-out visitor
+    // rather than firing it and discarding the 401.
+    if (!user) return;
     let cancelled = false;
     fetch(`/api/market-impact?assets=${MAGNITUDE_ASSETS.join(",")}`)
       .then((res) => (res.ok ? res.json() : null))
@@ -942,7 +948,7 @@ export default function CalendarPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     let cancelled = false;

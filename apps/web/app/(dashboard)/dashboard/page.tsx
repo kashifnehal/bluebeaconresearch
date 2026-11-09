@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { deferToIdle } from "@/lib/idle-defer";
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 import { useSignalFeed } from "@/hooks/useSignalFeed";
 import { useMyPreferences } from "@/hooks/useMyPreferences";
 import { useUIStore } from "@/store/useUIStore";
@@ -187,13 +188,18 @@ export default function DashboardPage() {
     eventCategory: filters.eventCategory,
   });
   const { tourActive, tourPhase, startTour, setTourEventId } = useUIStore();
+  const { user: pricesPollUser } = useAuth();
+  const pricesPollVisible = useDocumentVisible();
 
   // Per-row price-impact chip (dashboard-only addition) — reuses the same
   // /api/prices 24h-change endpoint PriceTicker/watchlist already fetch.
   const { data: pricesData } = useQuery({
     queryKey: ["prices"],
     queryFn: () => fetchJsonWithTimeout<{ prices: LatestPrice[] }>("/api/prices"),
-    refetchInterval: 60_000,
+    enabled: Boolean(pricesPollUser),
+    // Paused while the tab is hidden; react-query's default
+    // refetchOnWindowFocus already refetches once it becomes visible again.
+    refetchInterval: pricesPollVisible ? 60_000 : false,
   });
   const latestPrices = pricesData?.prices ?? [];
 

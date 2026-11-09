@@ -19,7 +19,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { setupDom, renderElement, setupSignedInSupabase } from "@/lib/test-render";
 import type { WatchlistClient as WatchlistClientType } from "./WatchlistClient";
-import { AuthProvider } from "@/components/auth/AuthProvider";
+import { AuthProvider, AuthContext } from "@/components/auth/AuthProvider";
 
 const document = setupDom();
 
@@ -342,6 +342,70 @@ async function main() {
       restoreFetch();
       await act(async () => root.unmount());
       client.clear();
+    }
+  });
+
+  await runTest("signed out: the /api/prices poll never fetches (2026-11-09, TASK W2-DB)", async () => {
+    const { SearchParamsContext } = await import(
+      "next/dist/shared/lib/hooks-client-context.shared-runtime.js"
+    );
+    const original = globalThis.fetch;
+    let priceFetches = 0;
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.startsWith("/api/prices") && !url.includes("/history")) priceFetches += 1;
+      return new Response(JSON.stringify({ prices: [], points: [] }), { status: 200 });
+    }) as typeof fetch;
+    const client = new QueryClient();
+    const { root } = await renderElement(
+      document,
+      createElement(
+        QueryClientProvider,
+        { client },
+        createElement(
+          SearchParamsContext.Provider,
+          { value: new URLSearchParams() },
+          createElement(
+            AuthContext.Provider,
+            { value: { user: null, session: null, profile: null, isLoading: false } },
+            createElement(WatchlistClient),
+          ),
+        ),
+      ),
+    );
+    try {
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      });
+      assert.equal(priceFetches, 0, "a signed-out render must never call /api/prices");
+    } finally {
+      globalThis.fetch = original;
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("hidden tab: the 15s /api/prices refetch timer is not scheduled (2026-11-09, TASK W2-DB)", async () => {
+    const trackedDelays: number[] = [];
+    const realSetTimeout = globalThis.setTimeout;
+    (globalThis as any).setTimeout = ((fn: TimerHandler, ms?: number, ...args: unknown[]) => {
+      if (ms === 15_000) trackedDelays.push(ms);
+      return realSetTimeout(fn as never, ms, ...(args as []));
+    }) as unknown as typeof setTimeout;
+    const realDescriptor = Object.getOwnPropertyDescriptor(document, "visibilityState");
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    try {
+      const { root, client, restoreFetch } = await renderWatchlist({ USOIL: { change_pct_24h: 1 } });
+      try {
+        assert.equal(trackedDelays.length, 0, "no 15s poll timer should be scheduled while the tab is hidden");
+      } finally {
+        restoreFetch();
+        await act(async () => root.unmount());
+        client.clear();
+      }
+    } finally {
+      globalThis.setTimeout = realSetTimeout;
+      if (realDescriptor) Object.defineProperty(document, "visibilityState", realDescriptor);
     }
   });
 }
