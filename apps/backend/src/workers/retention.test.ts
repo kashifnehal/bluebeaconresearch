@@ -95,16 +95,35 @@ await runTest("does nothing when the first batch is already empty", async () => 
   assert.equal(calls.length, 1);
 });
 
+function newestPruneServiceHealthEventsMigration(migrationsDir: string): string {
+  const candidates = readdirSync(migrationsDir)
+    .filter((f) => f.endsWith(".sql"))
+    .filter((f) => readFileSync(join(migrationsDir, f), "utf8").includes("function public.prune_service_health_events("))
+    .sort();
+  const file = candidates[candidates.length - 1];
+  assert.ok(file, "expected a migration file that defines public.prune_service_health_events");
+  return file as string;
+}
+
 await runTest("the migration keeps the same service list as SERVICE_HEALTH_KEEP_SERVICES", async () => {
   const here = fileURLToPath(import.meta.url);
   const migrationsDir = join(here, "..", "..", "..", "..", "..", "supabase", "migrations");
-  const file = readdirSync(migrationsDir).find((f) => f.endsWith("_prune_service_health_events.sql"));
-  assert.ok(file, "expected a *_prune_service_health_events.sql migration file");
-  const sql = readFileSync(join(migrationsDir, file as string), "utf8");
+  const file = newestPruneServiceHealthEventsMigration(migrationsDir);
+  const sql = readFileSync(join(migrationsDir, file), "utf8");
   const keepListMatch = sql.match(/and e\.service not in \(([\s\S]*?)\)/);
   assert.ok(keepListMatch, "expected a keep-list `not in (...)` clause in the migration");
   const namesInSql = Array.from((keepListMatch as RegExpMatchArray)[1].matchAll(/'([^']+)'/g)).map((m) => m[1]);
   assert.deepEqual(new Set(namesInSql), new Set(SERVICE_HEALTH_KEEP_SERVICES));
+});
+
+await runTest("the newest prune_service_health_events migration keeps the newest row, not the one being deleted", async () => {
+  const here = fileURLToPath(import.meta.url);
+  const migrationsDir = join(here, "..", "..", "..", "..", "..", "supabase", "migrations");
+  const file = newestPruneServiceHealthEventsMigration(migrationsDir);
+  const sql = readFileSync(join(migrationsDir, file), "utf8");
+  const existsCount = Array.from(sql.matchAll(/and exists \(/g)).length;
+  assert.equal(existsCount, 2, `expected exactly two "and exists (" blocks in ${file}`);
+  assert.ok(!sql.includes("not exists ("), `expected no "not exists (" in ${file}`);
 });
 
 if (failed) process.exitCode = 1;
