@@ -282,6 +282,61 @@ async function main() {
       client.clear();
     }
   });
+
+  await runTest("desktop quick-add chip grid shows every default commodity as active, grouped by category", async () => {
+    const { root, client, restoreFetch } = await renderWatchlist({});
+    try {
+      const grid = document.querySelector('[data-testid="watchlist-commodity-chips"]');
+      assert.ok(grid, "expected the restored desktop chip grid");
+      assert.match(grid!.getAttribute("class") ?? "", /\bhidden\b/);
+      assert.match(grid!.getAttribute("class") ?? "", /\bmd:block\b/);
+
+      const wtiChip = document.querySelector('[aria-label="Remove WTI Crude from watchlist"]');
+      assert.ok(wtiChip, "expected WTI Crude to render as an active chip (seeded in DEFAULT_WATCHLIST)");
+      assert.equal(wtiChip!.getAttribute("aria-pressed"), "true");
+
+      const moreAssets = document.querySelector('[data-testid="watchlist-more-assets"]');
+      assert.ok(moreAssets, "expected a 'More assets' button alongside the chip grid");
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("clicking a chip removes it from the watchlist; clicking again re-adds it", async () => {
+    const { root, client, restoreFetch } = await renderWatchlist({});
+    try {
+      const wtiChip = document.querySelector('[aria-label="Remove WTI Crude from watchlist"]')!;
+      await act(async () => click(wtiChip));
+
+      const afterRemove = document.querySelector('[aria-label="Add WTI Crude to watchlist"]');
+      assert.ok(afterRemove, "expected the chip to flip to 'Add' after removal");
+      assert.equal(afterRemove!.getAttribute("aria-pressed"), "false");
+
+      await act(async () => click(afterRemove!));
+      const afterReadd = document.querySelector('[aria-label="Remove WTI Crude from watchlist"]');
+      assert.ok(afterReadd, "expected the chip to flip back to 'Remove' after re-adding");
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
+
+  await runTest("'More assets' opens the same Add Asset dialog as the header button", async () => {
+    const { root, client, restoreFetch } = await renderWatchlist({});
+    try {
+      assert.equal(document.querySelector('[data-testid="watchlist-add-search"]'), null);
+      const moreAssets = document.querySelector('[data-testid="watchlist-more-assets"]')!;
+      await act(async () => click(moreAssets));
+      assert.ok(document.querySelector('[data-testid="watchlist-add-search"]'), "expected the Add assets dialog to open");
+    } finally {
+      restoreFetch();
+      await act(async () => root.unmount());
+      client.clear();
+    }
+  });
 }
 
 main();

@@ -44,10 +44,16 @@ function LocationListBody({
   onSelectChokepoint: (chokepoint: Chokepoint) => void;
 }) {
   const [order, setOrder] = useState<LocationOrder>("recent");
+  const [filterText, setFilterText] = useState("");
   const grouping = useMemo(
     () => groupSignalsByLocation(signals, order),
     [signals, order],
   );
+  const filteredGroups = useMemo(() => {
+    const q = filterText.trim().toLowerCase();
+    if (!q) return grouping.groups;
+    return grouping.groups.filter((g) => g.country.toLowerCase().includes(q));
+  }, [grouping.groups, filterText]);
   const chokepointRows = useMemo(
     () =>
       CHOKEPOINTS.map((cp) => {
@@ -93,32 +99,47 @@ function LocationListBody({
           Show all
         </button>
       )}
+      <input
+        type="text"
+        data-testid="location-filter"
+        value={filterText}
+        onChange={(e) => setFilterText(e.target.value)}
+        placeholder="Filter locations"
+        aria-label="Filter locations"
+        className="bg-surface-container border border-outline-variant/40 rounded-md px-2 py-1.5 text-[12px] text-on-surface placeholder:text-on-surface-variant"
+      />
       <ul className="space-y-1 overflow-y-auto">
-        {grouping.groups.map((group) => {
-          const selected = selectedCountry === group.country;
-          return (
-            <li key={group.country}>
-              <button
-                type="button"
-                data-testid="location-row"
-                data-country={group.country}
-                aria-pressed={selected}
-                onClick={() => onSelectCountry(group.country)}
-                className={`w-full text-left px-2 py-1.5 rounded-md text-[12px] md:text-[11px] hover:bg-white/10 transition-colors ${
-                  selected ? "bg-primary/15 ring-1 ring-primary/40" : ""
-                }`}
-              >
-                <span className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{group.country}</span>
-                  <span className="font-mono text-on-surface-variant">{group.count}</span>
-                </span>
-                <span className="text-on-surface-variant text-[11px] md:text-[11px]">
-                  Up {group.up} · Down {group.down}
-                </span>
-              </button>
-            </li>
-          );
-        })}
+        {filteredGroups.length === 0 ? (
+          <li data-testid="location-filter-empty" className="px-2 py-1.5 text-[12px] text-on-surface-variant">
+            No matching locations.
+          </li>
+        ) : (
+          filteredGroups.map((group) => {
+            const selected = selectedCountry === group.country;
+            return (
+              <li key={group.country}>
+                <button
+                  type="button"
+                  data-testid="location-row"
+                  data-country={group.country}
+                  aria-pressed={selected}
+                  onClick={() => onSelectCountry(group.country)}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-[12px] md:text-[11px] hover:bg-white/10 transition-colors ${
+                    selected ? "bg-primary/15 ring-1 ring-primary/40" : ""
+                  }`}
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{group.country}</span>
+                    <span className="font-mono text-on-surface-variant">{group.count}</span>
+                  </span>
+                  <span className="text-on-surface-variant text-[11px] md:text-[11px]">
+                    Up {group.up} · Down {group.down}
+                  </span>
+                </button>
+              </li>
+            );
+          })
+        )}
       </ul>
       <div>
         <h3 className="label text-[11px] tracking-[0.16em] uppercase text-on-surface-variant mb-1">

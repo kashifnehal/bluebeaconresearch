@@ -51,6 +51,11 @@ export const WATCHLIST_ASSETS = [
 // once they load. Forex and news-only assets stay addable via the dropdown.
 export const DEFAULT_WATCHLIST = COMMODITIES.map((c) => c.symbol);
 
+// Desktop-only quick-add grid, restored under md: so it stops short of the
+// phone layout (which keeps the single Add Asset dialog as its one add
+// mechanism). Grouped by the shared COMMODITIES category.
+const COMMODITY_CATEGORY_ORDER = ["energy", "metals", "agriculture"] as const;
+
 const WATCHLIST_STORAGE_KEY = "bbr.watchlist.v1";
 
 type StoredWatchlist = {
@@ -520,6 +525,12 @@ export function WatchlistClient() {
     setWatch((w) => w.filter((x) => x !== sym));
   };
 
+  const handleToggleChip = (sym: string) => {
+    touchedRef.current = true;
+    setIsSuggested(false);
+    setWatch((p) => (p.includes(sym) ? p.filter((x) => x !== sym) : [...p, sym]));
+  };
+
   // Shared by the header "+ Add Asset" button and the desktop FAB — both
   // open the one add mechanism, now a dialog (the old select's
   // scrollIntoView+focus had no real target once the picker stopped being a
@@ -627,6 +638,57 @@ export function WatchlistClient() {
               </p>
             )}
           </div>
+        </div>
+
+        {/* Desktop quick-add chip grid — the phone layout keeps the single
+            Add Asset dialog above as its only add mechanism. */}
+        <div className="hidden md:block mb-8" data-testid="watchlist-commodity-chips">
+          {COMMODITY_CATEGORY_ORDER.map((category) => {
+            const chips = COMMODITIES.filter((c) => c.category === category);
+            if (chips.length === 0) return null;
+            return (
+              <div key={category} className="mb-3 last:mb-0">
+                <p className="font-label text-[12px] md:text-[11px] text-on-surface-variant tracking-widest uppercase mb-2">
+                  {category}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {chips.map((c) => {
+                    const active = watch.includes(c.symbol);
+                    return (
+                      <button
+                        key={c.symbol}
+                        type="button"
+                        aria-pressed={active}
+                        aria-label={
+                          active
+                            ? `Remove ${c.label} from watchlist`
+                            : `Add ${c.label} to watchlist`
+                        }
+                        onClick={() => handleToggleChip(c.symbol)}
+                        className="px-3 py-1 rounded-sm font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase border transition-colors cursor-pointer inline-flex items-center min-h-[44px] md:min-h-0"
+                        style={{
+                          backgroundColor: active ? "#4edea3" : "transparent",
+                          color: active ? "#003824" : "#bbcac0",
+                          borderColor: active ? "#4edea3" : "#3c4a42",
+                        }}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          <button
+            type="button"
+            onClick={openAddCommodityPicker}
+            data-testid="watchlist-more-assets"
+            className="mt-1 px-3 py-1 rounded-sm font-label text-[12px] md:text-[11px] font-bold tracking-widest uppercase border border-dashed border-outline-variant/50 text-on-surface-variant cursor-pointer inline-flex items-center gap-1 hover:text-on-surface transition-colors"
+          >
+            <span className="material-symbols-outlined text-[14px]">add</span>
+            More assets
+          </button>
         </div>
 
         </div>
