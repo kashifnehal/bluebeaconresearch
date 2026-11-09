@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-09 — Accuracy page: plain not-enough-data sentence for a below-floor asset, TASK W2-COPY Part 1
+
+`apps/web` only. The by-asset table's "NOT ENOUGH HISTORY YET (MIN 20)" label is now the plain sentence "There are not enough checked assessments yet to show a result for this group." with no number shown. The Help/FAQ answer describing this label was updated to match (kept "min 20" as background explanation of the threshold only, not a quote of on-page text). New rendered test added. Web tsc 0, web test 848 ✔, next build 0. Not Playwright-checked (not installed in this repo). Full detail: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-09 — Event page renders the signal row in the first HTML
 
 `apps/web` only, `7141b32`. `/events/[id]` renders the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream from the existing event API handler. Side calls start on idle. `SERVER_TIMING=true` adds `signal_row` and `stream_rest`. Web tsc 0, web test 846 ✔, next build 0. Not verified in a browser. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

@@ -30,7 +30,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "Why do some assets show not enough history yet on the Accuracy page?",
     url: "/help#accuracy-history",
     content:
-      "The by-asset table on the Accuracy page uses the 48-hour horizon and needs at least 20 scored outcomes at that horizon. Below that, it shows not enough history yet (min 20) instead of a percentage, so a handful of calls cannot look like a track record. Only up/down predictions are scored. Calls labeled volatile or neutral are counted in a separate box and never enter the headline rate.",
+      "The by-asset table on the Accuracy page uses the 48-hour horizon and needs at least 20 scored outcomes at that horizon. Below that minimum (min 20), it shows there are not enough checked assessments yet to show a result for this group, instead of a percentage, so a handful of calls cannot look like a track record. Only up/down predictions are scored. Calls labeled volatile or neutral are counted in a separate box and never enter the headline rate.",
     sourceKind: "faq",
   },
   {

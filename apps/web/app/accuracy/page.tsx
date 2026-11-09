@@ -127,10 +127,10 @@ function wrongCount(total: number | null | undefined, correct: number): number |
   return typeof total === "number" ? total - correct : null;
 }
 
-function NotEnoughHistory({ minSampleSize }: { minSampleSize: number }) {
+function NotEnoughHistory() {
   return (
     <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
-      Not enough history yet (min {minSampleSize})
+      There are not enough checked assessments yet to show a result for this group.
     </span>
   );
 }
@@ -138,11 +138,9 @@ function NotEnoughHistory({ minSampleSize }: { minSampleSize: number }) {
 function AssetRow({
   asset,
   summary,
-  minSampleSize,
 }: {
   asset: string;
   summary: AssetSummary;
-  minSampleSize: number;
 }) {
   const wrong = wrongCount(summary.total_scored, summary.correct);
   return (
@@ -153,7 +151,7 @@ function AssetRow({
       </td>
       {summary.not_enough_history ? (
         <td colSpan={3} className="px-4 py-3 text-right">
-          <NotEnoughHistory minSampleSize={minSampleSize} />
+          <NotEnoughHistory />
         </td>
       ) : (
         <>
@@ -171,18 +169,16 @@ function AssetRow({
 function AssetCard({
   asset,
   summary,
-  minSampleSize,
 }: {
   asset: string;
   summary: AssetSummary;
-  minSampleSize: number;
 }) {
   const wrong = wrongCount(summary.total_scored, summary.correct);
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <span className="font-mono text-sm text-[#e5e2e1]">{asset}</span>
       {summary.not_enough_history ? (
-        <NotEnoughHistory minSampleSize={minSampleSize} />
+        <NotEnoughHistory />
       ) : (
         <div className="text-right">
           <div className="font-mono text-sm text-[#e5e2e1]">
@@ -377,7 +373,7 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
               </h2>
               <div className="md:hidden rounded-lg border border-[var(--border)] divide-y divide-[#2a2a2a] px-4">
                 {Object.entries(assets).map(([asset, summary]) => (
-                  <AssetCard key={asset} asset={asset} summary={summary} minSampleSize={ready.min_sample_size} />
+                  <AssetCard key={asset} asset={asset} summary={summary} />
                 ))}
               </div>
               <div className="hidden md:block overflow-x-auto rounded-lg border border-[var(--border)]">
@@ -393,7 +389,7 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
                   </thead>
                   <tbody>
                     {Object.entries(assets).map(([asset, summary]) => (
-                      <AssetRow key={asset} asset={asset} summary={summary} minSampleSize={ready.min_sample_size} />
+                      <AssetRow key={asset} asset={asset} summary={summary} />
                     ))}
                   </tbody>
                 </table>

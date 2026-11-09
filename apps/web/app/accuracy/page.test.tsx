@@ -233,6 +233,27 @@ async function main() {
     }
   });
 
+  await runTest(
+    "an asset below the sample floor shows the plain not-enough-data sentence, never the number 20",
+    async () => {
+      const { root } = await renderReport(belowFloor);
+      try {
+        const text = visibleText(
+          document.querySelector('[data-testid="asset-table"]')?.innerHTML ?? "",
+        );
+        assert.match(
+          text,
+          /There are not enough checked assessments yet to show a result for this group\./,
+        );
+        assert.equal(text.includes("20"), false);
+      } finally {
+        await act(async () => {
+          root.unmount();
+        });
+      }
+    },
+  );
+
   await runTest("the page source has no hard-coded percentage or forbidden phrase", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
     assert.equal(/\d+(?:\.\d+)?\s*%/.test(source), false);
