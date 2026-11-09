@@ -5,7 +5,7 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
-## ✅ Calendar fixed for Sundays, one data source, schedule status + last-checked, stats dedup (TASK W-CALENDAR), `apps/web` + `apps/backend`, 2026-11-09, `3728e66`
+## ✅ Calendar fixed for Sundays, one data source, schedule status + last-checked, stats dedup (TASK W-CALENDAR), `apps/web` + `apps/backend`, 2026-11-09, `a4c616e`
 
 - Why: on Sunday 8 Nov 2026 the live `/calendar` page showed last week's events under "This Week" — the Mon-Sun week-boundary math lived only inline in `page.tsx`, untested. The 39-event calendar JSON also existed as two hand-maintained duplicates (`apps/backend/src/data/economic-calendar.json` and `apps/web/data/economic-calendar.json`), and the per-row "historical pattern" stats block repeated identically up to 22 times per section.
 - Part 1 (week logic): week-boundary math extracted to new pure `apps/web/lib/calendar-week.ts` (`getWeekRangeUTC`/`isInCurrentWeekUTC`), unit-tested at Monday, Wednesday, Sunday 23:59 UTC, and Monday 00:00 UTC (new `calendar-week.test.ts`, 7 tests). `page.tsx` now imports it instead of defining it locally. Checked whether any backend route needed the same fix — no: the only backend week-like function (`week-ahead.ts`'s `weekAheadFor`) is an intentionally different rolling-7-day window for the Monday digest, correctly unchanged.
