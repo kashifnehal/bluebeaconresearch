@@ -23,7 +23,6 @@ import { AlertRuleTrendChart, AlertRuleTrendEmptyState, isTrendSparse, type Dail
 import { useUIStore } from "@/store/useUIStore";
 import { FETCH_TIMEOUT_MS, fetchJsonWithTimeout } from "@/lib/fetch-with-timeout";
 import { SlowDataNotice } from "@/components/SlowDataNotice";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 
 type AlertRule = {
