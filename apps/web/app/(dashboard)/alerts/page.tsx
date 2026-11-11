@@ -207,7 +207,6 @@ export default function AlertsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { unreadCount } = useUIStore();
-  const { user } = useAuth();
   const isVisible = useDocumentVisible();
   // Paused while the tab is hidden; react-query's default refetchOnWindowFocus
   // already refetches once it becomes visible again.
