@@ -67,6 +67,8 @@ The AI classifier considers these factors in severity scoring:
 
 signal-merge.ts increments sources_count but does not change severity from it (apps/backend/src/workers/signal-merge.ts).
 
+> ⚠️ UPDATED 2026-11-14 — a read-only, descriptive-only audit script was added: `apps/backend/src/scripts/measure-merge-effects.ts` (test: `measure-merge-effects.test.ts`, pure-function fixtures, no live query). Over the last 14 days of signals it prints, per day, signals created vs. signals with `sources_count > 1`; the severity distribution for `sources_count = 1` vs. `> 1`; story-group counts via `story-threads.ts`'s `buildGroups`/`jaccard`, including how many groups of 2+ signals have two signals naming the same asset with opposite `up`/`down` directions; and per-asset direction counts. Writes a markdown report to `scripts/out/` (git-ignored). Labeled in its own output: "Descriptive counts, not a validation. Merge history is not stored, so severity before merging is unknown" — there is no stored record of a signal's severity before `signal-merge.ts`'s escalation branch overwrote it, so this cannot validate the merge rule's effect over time, only describe current state. Not run against production from this task.
+
 **Factor 3: Chokepoint proximity — planned, not built**
 - Event within 50km of Hormuz/Suez/Malacca/Bab-el-Mandeb: +1 to severity
 - Event within 50-200km: +0.5
