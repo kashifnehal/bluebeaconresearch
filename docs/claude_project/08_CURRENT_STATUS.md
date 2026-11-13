@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-09 (TASK W2-DB — database/function waste cut — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-14 (TASK W3 Part 1 — credit-balance retry storm stopped — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-14 (TASK W3 Part 1, `apps/backend` only, `this commit`) — a credit-balance error from Anthropic (evidence 2026-11-11: 3,847 failed `classifyEvent()` calls in 39 hours) was being treated as a one-off bad request, so every event in every batch kept re-hitting the live API and failing again. A new in-process circuit breaker now pauses live classification calls for 30 minutes (arbitrary, not researched) after the first such failure, logging one health event for the pause start and one for the resume, not one per skipped call. Existing alert emails unchanged. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 
 > ⚠️ NEW 2026-11-09 (TASK W2-DB, `apps/web` only) — `/api/signals` now selects an explicit column list instead of `"*"` and only requests an exact row count where the result is actually used, not on every call. Dashboard/watchlist/alerts/notification polling pauses while a tab is hidden and stops when signed out. Usage-event logging and the calendar page's market-impact fetch no longer call their session-only APIs when signed out. A read-only companion audit covers 9 similar `apps/backend` query sites; no backend files changed. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/05_API.md`.
 

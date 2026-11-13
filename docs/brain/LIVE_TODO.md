@@ -5,6 +5,13 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Credit-balance retry storm stopped with a circuit breaker (TASK W3 Part 1), `apps/backend` only, 2026-11-14, `this commit`
+
+- Why: evidence 2026-11-11 — 3,847 failed `classifyEvent()` calls in 39 hours, all "Your credit balance is too low" (HTTP 400). That error was treated as a request-specific 400 (`shouldStopBatch` let the batch continue past it), so every remaining event in every batch kept hitting the live Anthropic API and failing again, each writing a `service_health_events` row.
+- Fix: new `apps/backend/src/lib/credit-balance-breaker.ts` — an in-process breaker that opens a fixed 30-minute pause (arbitrary choice, not researched) on the first such failure; `classifyEvent()` skips the live API call entirely while open instead of retrying per event. New `DeferReason` value `credit_balance_paused` stops the batch. One health event logged for the pause start, one for the resume — not one per skipped call. Existing alert emails unchanged.
+- Verified: confirmed no code path retries a 400 (`classifyEvent()` never has; `isRetryableAnthropicError` excludes 400/401/403). New test in `claude.service.test.ts` (fake client, asserts one call in the pause window, resumes after it elapses). Backend `tsc --noEmit` exit 0; full backend test suite exit 0.
+- See `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`.
+
 ## ✅ Database/function waste cut on the signals feed, polling, and anonymous events (TASK W2-DB), `apps/web` only, 2026-11-09
 
 - Why: `pg_stat_statements` since the 01:43 UTC restart showed the feed's `select signals.*, event_date ... count exact` as the heaviest app query despite `signals` being only 4,279 rows (7.4 MB) — the cost was column/count waste and polling frequency, not table size. Dashboard polling calls `/api/signals` roughly every 60-90s per open tab.

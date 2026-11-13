@@ -15,6 +15,10 @@ import {
   type MediaImpactWatchlistEntry,
 } from "../lib/media-impact-watchlist.js";
 import { buildClassifierSnippet } from "../lib/classifier-snippet.js";
+import {
+  resetCreditBalanceBreakerForTests,
+  setCreditBalanceBreakerPauseMsForTests,
+} from "../lib/credit-balance-breaker.js";
 
 const TEST_WATCHLIST: MediaImpactWatchlistEntry[] = [
   {
@@ -1822,6 +1826,65 @@ async function main() {
     assert.strictEqual(classification.deferReason, "json_parse");
     assert.deepEqual(classification.commodityImpacts, [], "no keyword-regex impacts — heuristicClassify never ran");
     assert.equal(shouldStopBatch(classification.deferReason, classification.deferHttpStatus), false);
+  },
+  );
+
+  await runTest(
+  "classifyEvent circuit breaker: a credit-balance error pauses live calls until the window elapses, then resumes",
+  async () => {
+    resetCreditBalanceBreakerForTests();
+    setCreditBalanceBreakerPauseMsForTests(50);
+    try {
+      let callCount = 0;
+      const breakerService = new ClaudeService();
+      (breakerService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            const err: any = new Error("Your credit balance is too low to access the Claude API.");
+            err.status = 400;
+            throw err;
+          },
+        },
+      };
+
+      const event = {
+        title: "War erupts as crude pipeline explosion halts oil exports",
+        summary: "Escalating conflict disrupts Red Sea crude shipments.",
+        event_type: "news",
+        country: "SA",
+        event_date: new Date().toISOString(),
+      };
+
+      const first = await breakerService.classifyEvent(event);
+      assert.strictEqual(callCount, 1, "first call hits the live API and fails");
+      assert.strictEqual(first.deferReason, "credit_balance_paused");
+      assert.strictEqual(shouldStopBatch(first.deferReason, first.deferHttpStatus), true);
+
+      const second = await breakerService.classifyEvent(event);
+      assert.strictEqual(
+        callCount,
+        1,
+        "second call within the pause window is skipped, not retried against the API",
+      );
+      assert.strictEqual(second.deferReason, "credit_balance_paused");
+
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      const third = await breakerService.classifyEvent(event);
+      assert.strictEqual(
+        callCount,
+        2,
+        "call after the pause window elapses resumes hitting the live API",
+      );
+      assert.strictEqual(
+        third.deferReason,
+        "credit_balance_paused",
+        "it fails again with the same error, reopening the breaker",
+      );
+    } finally {
+      resetCreditBalanceBreakerForTests();
+    }
   },
   );
 

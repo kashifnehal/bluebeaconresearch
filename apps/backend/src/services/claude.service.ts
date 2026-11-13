@@ -20,6 +20,11 @@ import {
 } from "../lib/pipeline-status.js";
 import { maybeSendAnthropicAlert, maybeSendSpendLimitAlert } from "../lib/spend-limit-alert.js";
 import {
+  closeCreditBalanceBreakerIfExpired,
+  isCreditBalanceBreakerOpen,
+  openCreditBalanceBreaker,
+} from "../lib/credit-balance-breaker.js";
+import {
   formatWatchlistPromptBlock,
   getActiveWatchlist,
   matchWatchlistEntity,
@@ -92,7 +97,12 @@ export function isAnthropicAuthError(err: { status?: unknown }): boolean {
   return err?.status === 401 || err?.status === 403;
 }
 
-export type DeferReason = "budget_closed" | "spend_limit" | "api_error" | "json_parse";
+export type DeferReason =
+  | "budget_closed"
+  | "spend_limit"
+  | "credit_balance_paused"
+  | "api_error"
+  | "json_parse";
 
 // HTTP meanings: Anthropic API "Errors" documentation
 // (https://docs.anthropic.com/en/api/errors) — 400 invalid_request_error,
@@ -106,7 +116,12 @@ export function shouldStopBatch(
   deferReason: DeferReason | undefined,
   httpStatus?: number,
 ): boolean {
-  if (deferReason === "budget_closed" || deferReason === "spend_limit") return true;
+  if (
+    deferReason === "budget_closed" ||
+    deferReason === "spend_limit" ||
+    deferReason === "credit_balance_paused"
+  )
+    return true;
   if (deferReason === "json_parse") return false;
   if (deferReason === "api_error") {
     if (httpStatus === 400 || httpStatus === 404 || httpStatus === 413) return false;
@@ -477,6 +492,28 @@ export class ClaudeService {
     const similarStoryLast48h = options?.similarStoryLast48h ?? false;
     const headlinePlacement = options?.headlinePlacement;
     const callStartedAt = Date.now();
+
+    // TASK W3 Part 1 circuit breaker — see lib/credit-balance-breaker.ts. Skips
+    // the live API call entirely while a prior call's credit-balance error is
+    // still within its pause window, instead of hitting the API again on every
+    // event. Exactly one health event is logged for the resume (not one per
+    // skipped call below).
+    if (client) {
+      if (closeCreditBalanceBreakerIfExpired()) {
+        await recordServiceHealth(
+          "anthropic",
+          "ok",
+          "classifyEvent: credit-balance circuit breaker pause ended — resuming live calls",
+          Date.now() - callStartedAt,
+        );
+      } else if (isCreditBalanceBreakerOpen()) {
+        console.log(
+          `[classify-fallback] reason=credit_balance_paused rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
+        );
+        return this.deferredClassification("credit_balance_paused");
+      }
+    }
+
     const watchlist = await getActiveWatchlist();
 
     // Tracks why this call is about to fall back to heuristicClassify() (if it does) —
@@ -766,6 +803,31 @@ export class ClaudeService {
           }
         }
 
+        // TASK W3 Part 1 circuit breaker — a credit-balance/usage-limit error is an
+        // account-level condition, not a request-specific one, so it must stop
+        // calling the live API for a pause instead of falling through to the
+        // generic api_error path below (whose httpStatus===400 branch lets the
+        // batch continue — that was the retry storm: every remaining event in
+        // every batch kept hitting the API and failing again). The alert emails
+        // above still fire exactly as before; this only changes what happens
+        // after. openCreditBalanceBreaker() returns true only the first time the
+        // breaker opens, so only one extra health event is logged for the pause
+        // start, not one per failed call while the breaker stays open.
+        if (isAnthropicUsageLimitError(err?.message)) {
+          if (openCreditBalanceBreaker()) {
+            await recordServiceHealth(
+              "anthropic",
+              "rate_limited",
+              "classifyEvent: credit-balance circuit breaker opened — pausing live calls",
+              Date.now() - callStartedAt,
+            );
+          }
+          console.log(
+            `[classify-fallback] reason=credit_balance_paused rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
+          );
+          return this.deferredClassification("credit_balance_paused");
+        }
+
         // W5-SPEND-ALERT — the fallback decision is already made (fallbackReason is
         // set above); this only sends the at-most-once-per-UTC-day admin email once
         // that decision is "spend_limit". No extra Anthropic call here (nothing above
@@ -835,6 +897,8 @@ export class ClaudeService {
         "deferred: anthropic ingestion daily budget closed (ADR 035) — no classification attempted",
       spend_limit:
         "deferred: anthropic spend limit reached (ADR 035) — no classification attempted",
+      credit_balance_paused:
+        "deferred: anthropic credit-balance circuit breaker is open — no classification attempted",
       api_error: "deferred: anthropic api error — no classification attempted",
       json_parse: "deferred: anthropic response was not parseable JSON — no classification attempted",
     };
