@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-14 — Anonymous /api/events call skipped; one hydration mismatch fixed (TASK W3 Part 4, `this commit`)
+
+`apps/web` only. `FirstTouchLogger.tsx` no longer POSTs `/api/events` while signed out (it 401ed every time). One confirmed cause of React error #418 on signed-in pages — `/onboarding`'s decorative TIMESTAMP line computing `new Date()` directly in render with no mount-gate — fixed with `suppressHydrationWarning`; everything else the grep turned up was either a Server Component (never hydrated) or gated behind query data with no SSR prefetch, so not a real mismatch. `/watchlist`'s "Market Signal Forecast" placeholder location reported, not changed. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
+
 ## 2026-11-14 — /accuracy by-asset footnote fixed (TASK W3 Part 3, `this commit`)
 
 `apps/web` only. The footnote under `/accuracy`'s by-asset table had a typo and described a placeholder string the page no longer shows. Replaced with "Assets with too few scored calls at the 48-hour horizon show a short note instead of counts." Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.

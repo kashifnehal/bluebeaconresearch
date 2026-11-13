@@ -663,7 +663,7 @@ export default function OnboardingPage() {
             color: "#e5e2e1",
           }}
         >
-          TIMESTAMP: {new Date().toISOString()}<br />
+          TIMESTAMP: <span suppressHydrationWarning>{new Date().toISOString()}</span><br />
           COORDS: 40.7128° N, 74.0060° W
         </div>
       </div>

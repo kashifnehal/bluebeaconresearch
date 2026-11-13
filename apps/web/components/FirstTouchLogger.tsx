@@ -27,7 +27,12 @@ function asFirstTouch(value: unknown): FirstTouch | null {
 export function FirstTouchLogger() {
   const { user, isLoading } = useAuth();
   useEffect(() => {
-    if (loggedThisPageLoad || isLoading) return;
+    // TASK W3 Part 4a — POST /api/events requires a session and 401s without
+    // one (same gap logUsageEvent had, see funnel-events.ts). Skip entirely
+    // while signed out instead of just setting the flag and firing anyway;
+    // `user` stays in the dependency array so a sign-in later in the same
+    // page session still gets exactly one first_touch_recorded call.
+    if (loggedThisPageLoad || isLoading || !user) return;
     loggedThisPageLoad = true;
     const fromAccount = asFirstTouch(user?.user_metadata?.first_touch);
     const touch = fromAccount ?? readFirstTouch();

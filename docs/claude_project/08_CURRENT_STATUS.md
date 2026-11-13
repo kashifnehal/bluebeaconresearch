@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-14 (TASK W3 Part 3 — /accuracy by-asset footnote fixed — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-14 (TASK W3 Part 4 — anonymous events call skipped; one hydration mismatch fixed — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-14 (TASK W3 Part 4, `apps/web` only, `this commit`) — (a) `FirstTouchLogger.tsx` no longer POSTs `/api/events` while signed out (it 401ed every time). (b) One confirmed cause of React error #418 on signed-in pages: `/onboarding`'s decorative `TIMESTAMP` line computed `new Date()` directly in render with no mount-gate; fixed with `suppressHydrationWarning` on that text node. Everything else `git grep` turned up was either a Server Component (never hydrated) or gated behind a `useQuery` with no SSR prefetch anywhere in this app, so no real mismatch. (c) `/watchlist`'s "Market Signal Forecast" placeholder text location reported, not changed. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 
 > ⚠️ NEW 2026-11-14 (TASK W3 Part 3, `apps/web` only, `this commit`) — `/accuracy`'s by-asset footnote had a typo and described a placeholder string the page no longer shows. Replaced with "Assets with too few scored calls at the 48-hour horizon show a short note instead of counts." Web `tsc`/test/`next build` all exit 0. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 

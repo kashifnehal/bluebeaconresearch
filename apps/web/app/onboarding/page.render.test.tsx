@@ -89,6 +89,38 @@ async function main() {
       await act(async () => root.unmount());
     }
   });
+
+  await runTest(
+    "TASK W3 Part 4b: OnboardingPage still renders a real ISO TIMESTAMP in the decorative panel",
+    async () => {
+      document.body.replaceChildren();
+      const host = document.createElement("div");
+      document.body.appendChild(host);
+      const root = createRoot(host);
+      try {
+        await act(async () => {
+          root.render(
+            createElement(
+              AppRouterContext.Provider,
+              { value: fakeRouter },
+              createElement(AuthProvider, null, createElement(OnboardingPage)),
+            ),
+          );
+        });
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 30));
+        });
+        assert.match(
+          document.body.innerHTML,
+          /TIMESTAMP: <span>\d{4}-\d{2}-\d{2}T[\d:.]+Z<\/span>/,
+          "the decorative TIMESTAMP text still renders a real ISO date",
+        );
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
+
 }
 
 main().then(() => {
