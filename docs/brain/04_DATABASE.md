@@ -432,3 +432,17 @@ No archival or pruning strategy currently exists for `raw_events`, `signals`, or
 - Whichever of the above is chosen, implement as a scheduled job in `workers.ts` (same pattern as the existing daily sanctions sync `cron.schedule("0 4 * * *", ...)`), not a one-off manual script — so it doesn't require remembering to run it.
 
 2026-11-09: prune function corrected to keep the newest row of each (service, status) pair (it had selected only that row); 17,480 rows older than 45 days pruned and rolled up into `service_health_daily`.
+
+## 6. Timestamp audit — what's actually stored (2026-11-14, read-only audit, no migration)
+
+Four timestamps asked for: when the source published the item, when BBR first fetched it, when the classifier ran, when the first user alert/email was sent. What's actually there, by table:
+
+| table | source published | BBR first fetched | classifier ran | first alert/email sent |
+| --- | --- | --- | --- | --- |
+| `raw_events` | `event_date` (nullable timestamptz) — written explicitly by each collector from the parsed article/event date: `gdelt-collector.ts` (~line 264/320), `rss-collector.ts` (~line 411), `gnews-collector.ts`, `acled-collector.ts` | `created_at` (timestamptz, column default `now()`) — set by Postgres at insert, not written explicitly in collector code | not stored, except indirectly: `materiality_checked_at` (migration `20260926053739`) is stamped only on a confirmed materiality-gate **rejection** (`materiality-gate.ts` `logMaterialityRejection`, ~line 57) or a title-prefilter skip (`title-prefilter.ts` ~line 180) — never on a classification that produces a signal | not stored |
+| `signals` | `event_date` (nullable timestamptz, migration `009_signals_event_date.sql`) — copied from the originating `raw_events.event_date` when the row is written | not stored directly; only reachable via `raw_event_ids` → `raw_events.created_at` | not stored as its own column. `created_at` (default `now()`) is written the moment the row is inserted right after a successful first classification, so it's a usable proxy for *that* run only — a later merge contribution's classification time is never recorded (`signal-merge.ts`'s escalation/duplicate branches only touch `updated_at`, `severity`, `raw_event_ids`, `sources_count`) | not stored on this table |
+| `alerts_sent` (the per-user alert-send record) | n/a | n/a | n/a | `created_at` (default `now()`) = queued time, written by `alert-dispatcher.ts`'s insert (and the `telegram.ts`/`alerts.ts`/`digest-sender.ts` equivalents); `delivered_at` (nullable timestamptz) = set to `now()` only when delivery actually succeeds (`alert-dispatcher.ts` `.update({ status, delivered_at: ... })`), stays null on queued/failed — this is the real "sent" timestamp |
+
+`digest_send_log` / `weekly_send_log` also exist but record a run/edition, not a per-signal send time (`run_at` is one row per daily digest run; `weekly_send_log.created_at` is one row per subscriber per edition) — not a substitute for `alerts_sent.delivered_at` above.
+
+No columns added.
