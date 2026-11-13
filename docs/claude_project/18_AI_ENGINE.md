@@ -6,6 +6,8 @@
 
 > ⚠️ UPDATED 2026-11-14 — the classify return spec is now built by `buildClassifyReturnSpec(v2: boolean)` in `claude.service.ts`, gated on env flag `CLASSIFIER_PROMPT_V2` (default off, exactly `"true"` to turn on). Off, the string is byte-identical to the spec described below. On, three fields' wording changes: `severity` is reframed as the size of the reported event itself, explicitly not a certainty score (certainty stays in `confidence`); `title` adds an instruction to keep attribution in the title for a disputed claim; `summary` adds attribution for a claim from a party to the event or unnamed sources, bars stating casualties/damage/military results as fact unless `sourceConfirmation` is `"official"` or the article itself reports independent confirmation, and bars using a stronger stage word than the article itself uses. `gate-shadow.ts`'s shadow call reuses the exact same return-spec string, so it moves on the same flag. Built, not turned on anywhere; no replay comparison has been run yet.
 
+> ⚠️ UPDATED 2026-11-14 — the heuristic fallback's commodity-impact `direction` is now `"neutral"` for every regex-triggered asset (oil/gas/gold/wheat), replacing a hard-coded `"up"`. This path has no real read of the article, so a keyword hit is evidence an asset is relevant, not evidence of which way it moves. Every consumer of `commodity_impacts[].direction` (web and backend) was checked first — none drop, hide, or error on `"neutral"`.
+
 **Classification: Internal — CTO Level**
 
 ---

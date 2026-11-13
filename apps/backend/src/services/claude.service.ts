@@ -1074,15 +1074,23 @@ export class ClaudeService {
       );
     const wheatSignal = grainKeywordSignal || cornWithMarketContext;
 
+    // 2026-11-14 — these were hard-coded "up", but this path has
+    // no real read of the article: a regex hit on "oil"/"gas"/"gold"/"wheat"
+    // vocabulary is evidence an asset is relevant, not evidence of which way
+    // it moves. "neutral" keeps the asset tagged without asserting a
+    // direction this function cannot actually support (git-grepped consumers
+    // confirmed: CommodityChip, DIRECTION_ARROW, accuracy.routes.ts and
+    // outcome-tracker.ts's isDirectionallyCorrect all already handle "neutral"
+    // without dropping, hiding, or erroring on it).
     if (oilSignal) {
       commodityImpacts.push({
         asset: "USOIL",
-        direction: "up",
+        direction: "neutral",
         confidence: 0.85,
       });
       commodityImpacts.push({
         asset: "UKOIL",
-        direction: "up",
+        direction: "neutral",
         confidence: 0.82,
       });
     }
@@ -1090,7 +1098,7 @@ export class ClaudeService {
     if (gasSignal) {
       commodityImpacts.push({
         asset: "NGAS",
-        direction: "up",
+        direction: "neutral",
         confidence: 0.8,
       });
     }
@@ -1098,7 +1106,7 @@ export class ClaudeService {
     if (isSafeHaven) {
       commodityImpacts.push({
         asset: "XAUUSD",
-        direction: "up",
+        direction: "neutral",
         confidence: 0.88,
       });
     }
@@ -1106,7 +1114,7 @@ export class ClaudeService {
     if (wheatSignal) {
       commodityImpacts.push({
         asset: "WHEAT",
-        direction: "up",
+        direction: "neutral",
         confidence: 0.75,
       });
     }

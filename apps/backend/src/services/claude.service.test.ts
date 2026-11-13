@@ -421,6 +421,39 @@ async function main() {
     );
   });
 
+  // 2026-11-14 — heuristicClassify() has no real read of the
+  // article, so a keyword hit tags an asset as relevant without asserting
+  // which way it moves. Covers every regex-triggered commodity path
+  // (oil/gas/gold/wheat) plus the currency-pair paths (ruble/yuan, already
+  // "volatile" before this task).
+  await runTest("heuristic fallback never returns 'up' or 'down' for any asset", async () => {
+    const titles = [
+      "Pipeline explosion halts crude export from Saudi refinery",
+      "Nord Stream gas supply disruption hits European prices",
+      "Gold gains as investors seek safe haven after missile strike",
+      "Wheat exports disrupted by Black Sea shipment blockade",
+      "Russia hit with new sanctions and SWIFT asset freeze",
+      "China faces new tariffs amid trade war escalation with Taiwan tensions",
+    ];
+    for (const title of titles) {
+      const classification = await service.classifyEvent({
+        title,
+        summary: title,
+        event_type: "news",
+        country: "US",
+        event_date: new Date().toISOString(),
+      });
+      const allImpacts = [
+        ...classification.commodityImpacts,
+        ...(classification.currencyPairImpacts ?? []),
+      ];
+      for (const impact of allImpacts) {
+        assert.notStrictEqual(impact.direction, "up", `${title} -> ${impact.asset} should not be "up"`);
+        assert.notStrictEqual(impact.direction, "down", `${title} -> ${impact.asset} should not be "down"`);
+      }
+    }
+  });
+
   await runTest(
     "geopolitical conflict with safe-haven mention should only map defensible assets",
     async () => {
