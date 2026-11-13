@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-14 (TASK W3 Part 2 — outcome-tracker upsert safe on a missing price-offset column — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-14 (TASK W3 Part 3 — /accuracy by-asset footnote fixed — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-14 (TASK W3 Part 3, `apps/web` only, `this commit`) — `/accuracy`'s by-asset footnote had a typo and described a placeholder string the page no longer shows. Replaced with "Assets with too few scored calls at the 48-hour horizon show a short note instead of counts." Web `tsc`/test/`next build` all exit 0. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 
 > ⚠️ NEW 2026-11-14 (TASK W3 Part 2, `apps/backend` only, `this commit`) — the outcome-tracker worker writes four price-offset columns on `signal_outcomes` that an earlier migration added but that is still unapplied on some environments, so every row in its upsert failed there. It now retries once with those four fields stripped specifically on a "column not found" error, logging one warning rather than failing every row outright. No migration applied by this fix. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 

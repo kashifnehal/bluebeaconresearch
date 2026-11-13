@@ -318,6 +318,28 @@ async function main() {
       });
     }
   });
+
+  await runTest(
+    "the by-asset footnote uses the fixed TASK W3 Part 3 copy, with no number and no old phrase",
+    async () => {
+      const { html, root } = await renderReport(aboveFloor);
+      try {
+        const footnote = document.querySelector('[data-testid="accuracy-by-asset-footnote"]');
+        assert.equal(
+          footnote?.textContent,
+          "Assets with too few scored calls at the 48-hour horizon show a short note instead of counts.",
+        );
+        assert.equal(/not enough history yet/i.test(footnote?.textContent ?? ""), false);
+        assert.equal(/48-hourhorizon/i.test(footnote?.textContent ?? ""), false);
+        assert.equal(/\d+\s*scored calls/.test(footnote?.textContent ?? ""), false);
+        void html;
+      } finally {
+        await act(async () => {
+          root.unmount();
+        });
+      }
+    },
+  );
 }
 
 void main();

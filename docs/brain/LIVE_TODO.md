@@ -5,6 +5,13 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ /accuracy by-asset footnote fixed (TASK W3 Part 3), `apps/web` only, 2026-11-14, `this commit`
+
+- Why: the footnote under `/accuracy`'s by-asset table had a typo ("48-hourhorizon") and claimed assets below the sample floor show the literal "not enough history yet" — stale; `AssetRow` has rendered the dynamic `summary.sample_size_note` instead for a while.
+- Fix: replaced with "Assets with too few scored calls at the 48-hour horizon show a short note instead of counts." — fixes the typo, drops the number and the stale phrase, per the task's exact wording.
+- Verified: new `data-testid="accuracy-by-asset-footnote"` and a rendered test asserting the exact copy and the absence of the old phrase/typo/number. Web `tsc --noEmit` exit 0; web test exit 0; `next build` exit 0. Not verified in a browser (Playwright not installed) — manual check: open `/accuracy`, scroll to the by-asset table, read the footnote.
+- See `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`.
+
 ## ✅ Outcome-tracker upsert safe on a missing price-offset column (TASK W3 Part 2), `apps/backend` only, 2026-11-14, `this commit`
 
 - Why: `workers/outcome-tracker.ts` writes `price_before_at`/`price_after_at`/`price_before_offset_seconds`/`price_after_offset_seconds` on every `signal_outcomes` row, but migration `20261109100000_signal_outcomes_price_offsets.sql` (TASK W-ACCURACY, 2026-11-09) adding those columns is still written, not applied — so on any environment missing it, every row in the upsert failed outright.

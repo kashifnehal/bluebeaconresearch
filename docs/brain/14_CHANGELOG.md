@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-11-14 — /accuracy by-asset footnote fixed (TASK W3 Part 3, `this commit`)
+
+`apps/web` only. The footnote under `/accuracy`'s by-asset table had a typo ("48-hourhorizon") and described stale behaviour — it claimed assets below the sample floor show the literal string "not enough history yet", but `AssetRow` has rendered the dynamic `summary.sample_size_note` instead for a while. Replaced with "Assets with too few scored calls at the 48-hour horizon show a short note instead of counts." — no hard-coded number, no stale phrase. New `data-testid="accuracy-by-asset-footnote"` plus a rendered test. Web `tsc --noEmit` exit 0; web test exit 0; `next build` exit 0. Not verified in a browser (Playwright not installed). See `LIVE_TODO.md`, `08_CURRENT_STATUS.md`.
+
 ### 2026-11-14 — Outcome-tracker upsert safe on a missing price-offset column (TASK W3 Part 2, `this commit`)
 
 `apps/backend` only. `workers/outcome-tracker.ts` writes `price_before_at`/`price_after_at`/`price_before_offset_seconds`/`price_after_offset_seconds` on every `signal_outcomes` row, but the migration adding those columns (`20261109100000_signal_outcomes_price_offsets.sql`, TASK W-ACCURACY, 2026-11-09) is still written, not applied — so on any environment missing it, every row in the upsert failed outright. New `isMissingColumnError()` detects PostgREST's "Could not find the ... column" schema-cache error specifically; on that error the upsert retries once with the four fields stripped, logging exactly one warning per failed batch. No migration applied by this fix (none of TASK W3's parts touch the database). New tests in `outcome-tracker.test.ts`. Backend `tsc --noEmit` exit 0; full backend test suite exit 0 (637 ✔). See `LIVE_TODO.md`, `08_CURRENT_STATUS.md`.

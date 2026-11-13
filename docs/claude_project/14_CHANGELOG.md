@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-14 — /accuracy by-asset footnote fixed (TASK W3 Part 3, `this commit`)
+
+`apps/web` only. The footnote under `/accuracy`'s by-asset table had a typo and described a placeholder string the page no longer shows. Replaced with "Assets with too few scored calls at the 48-hour horizon show a short note instead of counts." Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
+
 ## 2026-11-14 — Outcome-tracker upsert safe on a missing price-offset column (TASK W3 Part 2, `this commit`)
 
 `apps/backend` only. The outcome-tracker worker writes four price-offset columns on `signal_outcomes` that an earlier migration (TASK W-ACCURACY, 2026-11-09) added but that is still unapplied on some environments, so every row in its upsert failed there. It now retries once with those four fields stripped specifically on a "column not found" error, logging one warning rather than failing every row outright. No migration applied by this fix. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.

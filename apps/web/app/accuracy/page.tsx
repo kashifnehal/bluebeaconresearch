@@ -403,9 +403,11 @@ export function AccuracyReport({ data }: { data: AccuracyPayload | { error: stri
                   </tbody>
                 </table>
               </div>
-              <p className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]">
-                Assets with fewer than {ready.min_sample_size} scored calls at the{" "}
-                {horizonAdjective(assetHorizonHours)} horizon show &ldquo;not enough history yet&rdquo; instead of counts.
+              <p
+                className="text-[12px] md:text-[11px] font-mono text-[#6b7a72]"
+                data-testid="accuracy-by-asset-footnote"
+              >
+                Assets with too few scored calls at the 48-hour horizon show a short note instead of counts.
               </p>
             </section>
 
