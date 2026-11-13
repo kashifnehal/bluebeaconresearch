@@ -71,6 +71,10 @@ const envSchema = z.object({
   ANTHROPIC_DAILY_BUDGET_USD_SHADOW: z.string().optional(),
   // Off by default — the shadow gate call only ever fires when this is exactly "true".
   GATE_SHADOW_ENABLED: z.string().optional(),
+  // 2026-11-14 — swaps in safer-claim wording for the classifier's
+  // severity/title/summary return-spec fields (claude.service.ts buildClassifyReturnSpec).
+  // Off by default. Turned on only after a replay comparison has been read.
+  CLASSIFIER_PROMPT_V2: z.string().optional(),
   GATE_SHADOW_MAX_REJECTS_PER_DAY: z.string().optional(),
   GATE_SHADOW_MAX_PASSES_PER_DAY: z.string().optional(),
   // Probability (0..1) that a live-gate reject is sampled for the shadow trial. Default 0.25

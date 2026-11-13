@@ -9,6 +9,7 @@ import {
   HEADLINE_PLACEMENT_SEVERITY_BONUS,
   MATERIALITY_GATE_INSTRUCTION,
   shouldStopBatch,
+  buildClassifyReturnSpec,
 } from "./claude.service.js";
 import {
   setWatchlistCacheForTests,
@@ -2160,6 +2161,84 @@ async function main() {
     },
   );
 }
+
+// ── 2026-11-14 — buildClassifyReturnSpec() / CLASSIFIER_PROMPT_V2 ─────────
+
+// Stored copy of today's return spec (flag off), independent of
+// buildClassifyReturnSpec's own source so a future accidental edit to the
+// false-branch is caught here, not just by re-reading the same file.
+const STORED_RETURN_SPEC_V2_OFF =
+  `Return ONLY valid JSON (no markdown):\n` +
+  `{\n` +
+  `  "severity": integer between 1 and 10,\n` +
+  `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
+  `  "commodityImpacts": [{ "asset": one of exactly ${[...ALLOWED_COMMODITY_ASSETS].map((a) => `"${a}"`).join("|")} (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+  `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY"|"USDINR" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+  `  "isBreaking": boolean,\n` +
+  `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n` +
+  `  "summary": string (max 120 chars),\n` +
+  `  "region": one of exactly "middle-east"|"eastern-europe"|"europe"|"north-america"|"south-america"|"asia-pacific"|"africa"|"global",\n` +
+  `  "country": the specific country where this event physically happened, based on reading the article — a real country name (e.g. "Iran", "Ukraine"), never a region bucket or the name of the outlet/publication reporting it. Return null if the article's own text genuinely doesn't make the location clear.,\n` +
+  `  "relevance": a float 0.0-1.0 — how central is the named commodity/currency/entity/geography to what actually happened in this story (not just mentioned in passing)? A story about "World Trade Center" mentioning "trade" in the name only should score near 0; a story where a named commodity is the actual subject of the event should score high.,\n` +
+  `  "novelty": a float 0.0-1.0 — does this story contain information a market participant would not already know? Score LOW (near 0) for a story that only reminds the reader of an already-public, previously-known schedule, date, or routine recurring event, with no new claim, statement, or data attached (e.g. "the Fed meets next Wednesday," "USDA releases its report on the 12th," with nothing else reported). Score HIGH for a story that reports a new fact, statement, data point, or claim — including an unconfirmed or rumored one — that a reader could not already have known. Do not score this based on whether the underlying event has already happened or is confirmed — an unconfirmed but newly-reported claim about a future event scores HIGH on novelty; a reminder about a known future event scores LOW, regardless of how big that event will be.,\n` +
+  `  "eventCategory": one of exactly "armed_conflict_security"|"supply_disruption_logistics"|"sanctions_trade_policy"|"production_output_decision"|"central_bank_monetary_policy"|"scheduled_economic_data"|"official_statement_commentary"|"elections_political_transition"|"other_market_relevant",\n` +
+  `  "marketMechanism": a short string (max ~140 chars) explaining, in plain language, how this event could plausibly reach a commodity, currency, or broad market — or null if no real mechanism exists. Do not invent a mechanism that isn't actually supported by the story's own content.,\n` +
+  `  "isPreview": boolean — true ONLY if this story exclusively reminds the reader of a previously-known, already-scheduled event or date, with no new claim, statement, or data attached (a pure "week ahead" or "don't forget, X happens on date Y" story). False for any story that reports a new fact, statement, or claim — even an unconfirmed one — about an event that hasn't happened yet. A scheduled event's actual release/decision is always false. Most stories about a not-yet-happened event will be false here; true is reserved for the narrow, information-free reminder case.,\n` +
+  `  "sourceConfirmation": one of exactly "official"|"reported"|"speculative". "official" — a named official, institution, or government body making a direct, on-the-record statement, or an actual official release/decision. "reported" — a sourced claim attributed to named or unnamed sources ("sources say," "people familiar with the matter," a named outlet's own original reporting of a claim). "speculative" — commentary, analysis, or opinion guessing about a possible future event with no sourced claim behind it. Base this only on what the article itself states about its own sourcing — do not use this field to judge whether the claim is true, only what kind of claim it is.,\n` +
+  `  "materialityPass": boolean — the outcome of the MATERIALITY GATE instruction above,\n` +
+  `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important",\n` +
+  `  "mediaImpactEntity": the matched entity_name string from BBR's watchlist above if this story's statement or commentary is attributable to one of those entities, or null if not applicable. Return the exact entity_name from the list (never an alias, never a name that is not on the list). This field describes a sourced historical reaction pattern; it is not a forecast and not a trading recommendation.,\n` +
+  `  "invalidationCondition": a single plain-language sentence naming the SPECIFIC fact this story reports that, if it turned out to be false, unconfirmed, or different, would undercut this event's market-impact assessment — grounded in a concrete claim the article itself makes (e.g. "if the reported drone strike on the refinery is not independently confirmed by a second source" or "if the ministry's denial of the ceasefire breach is verified"). Not a generic disclaimer ("if new information emerges") and not a probability or confidence score — name the actual fact at stake. Null only if the story makes no falsifiable factual claim to hang this on.\n` +
+  `}`;
+
+async function partOneTests() {
+  await runTest("buildClassifyReturnSpec(false) is byte-identical to the stored current spec", () => {
+    assert.strictEqual(buildClassifyReturnSpec(false), STORED_RETURN_SPEC_V2_OFF);
+  });
+
+  await runTest(
+    "buildClassifyReturnSpec(true) changes only the severity/title/summary lines, nothing else",
+    () => {
+      const off = buildClassifyReturnSpec(false).split("\n");
+      const on = buildClassifyReturnSpec(true).split("\n");
+      assert.strictEqual(on.length, off.length, "line count must not change");
+
+      const changedIndexes: number[] = [];
+      for (let i = 0; i < off.length; i++) {
+        if (off[i] !== on[i]) changedIndexes.push(i);
+      }
+
+      const changedLines = changedIndexes.map((i) => on[i]);
+      assert.strictEqual(changedLines.length, 3, `expected exactly 3 changed lines, got ${changedLines.length}`);
+      assert.ok(changedLines.some((l) => l.startsWith(`  "severity":`)), "severity line must change");
+      assert.ok(changedLines.some((l) => l.startsWith(`  "title":`)), "title line must change");
+      assert.ok(changedLines.some((l) => l.startsWith(`  "summary":`)), "summary line must change");
+    },
+  );
+
+  await runTest("buildClassifyReturnSpec(true) severity line is about event size, not certainty", () => {
+    const on = buildClassifyReturnSpec(true);
+    assert.ok(on.includes("the size of the reported event itself"));
+    assert.ok(on.includes("NOT a measure of how certain the report is"));
+  });
+
+  await runTest("buildClassifyReturnSpec(true) title line keeps attribution for a disputed claim", () => {
+    const on = buildClassifyReturnSpec(true);
+    assert.ok(on.includes(`For a disputed claim, keep the attribution in the title ("X says ...")`));
+  });
+
+  await runTest(
+    "buildClassifyReturnSpec(true) summary line requires attribution and bars unconfirmed casualty/damage claims",
+    () => {
+      const on = buildClassifyReturnSpec(true);
+      assert.ok(on.includes(`name who says it ("X says ...")`));
+      assert.ok(on.includes(`Do not state casualties, damage or military results as fact unless sourceConfirmation is "official"`));
+      assert.ok(on.includes(`never use a stronger one than the article uses`));
+    },
+  );
+}
+
+await partOneTests();
 
 main().catch((err) => {
   console.error(err);

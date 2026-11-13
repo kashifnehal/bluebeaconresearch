@@ -371,6 +371,48 @@ export const COMMODITY_ASSET_ALIASES: Record<string, string> = Object.fromEntrie
 // adding a commodity to COMMODITY_REGISTRY now flows into the prompt automatically.
 const COMMODITY_ASSET_PROMPT_OPTIONS = COMMODITY_REGISTRY.map((c) => `"${c.symbol}"`).join("|");
 
+// 2026-11-14 — the JSON return spec sent to Claude, factored into
+// a function so the CLASSIFIER_PROMPT_V2 flag (env.ts) can swap in safer-claim
+// wording for severity/title/summary without duplicating the other ~15 fields.
+// v2=false must stay BYTE-IDENTICAL to the pre-flag string (see
+// claude.service.test.ts) — this is also what gate-shadow.ts receives via the
+// `returnSpec` param, so both call sites move together on the same flag.
+export function buildClassifyReturnSpec(v2: boolean): string {
+  const severityLine = v2
+    ? `  "severity": integer between 1 and 10 — the size of the reported event itself (what happened, how large it is, how long it may last, how directly it touches the supply chain of an asset). It is NOT a measure of how certain the report is; certainty belongs in "confidence".,\n`
+    : `  "severity": integer between 1 and 10,\n`;
+  const titleLine = v2
+    ? `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation. For a disputed claim, keep the attribution in the title ("X says ...").,\n`
+    : `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n`;
+  const summaryLine = v2
+    ? `  "summary": string (max 120 chars). Keep attribution: if the claim comes from a party to the event or from unnamed sources, name who says it ("X says ..."). Do not state casualties, damage or military results as fact unless sourceConfirmation is "official" or the article itself reports independent confirmation. Use the article's own stage word (attempted, intercepted, launched, hit, damaged, destroyed) and never use a stronger one than the article uses.,\n`
+    : `  "summary": string (max 120 chars),\n`;
+  return (
+    `Return ONLY valid JSON (no markdown):\n` +
+    `{\n` +
+    severityLine +
+    `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
+    `  "commodityImpacts": [{ "asset": one of exactly ${COMMODITY_ASSET_PROMPT_OPTIONS} (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+    `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY"|"USDINR" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
+    `  "isBreaking": boolean,\n` +
+    titleLine +
+    summaryLine +
+    `  "region": one of exactly "middle-east"|"eastern-europe"|"europe"|"north-america"|"south-america"|"asia-pacific"|"africa"|"global",\n` +
+    `  "country": the specific country where this event physically happened, based on reading the article — a real country name (e.g. "Iran", "Ukraine"), never a region bucket or the name of the outlet/publication reporting it. Return null if the article's own text genuinely doesn't make the location clear.,\n` +
+    `  "relevance": a float 0.0-1.0 — how central is the named commodity/currency/entity/geography to what actually happened in this story (not just mentioned in passing)? A story about "World Trade Center" mentioning "trade" in the name only should score near 0; a story where a named commodity is the actual subject of the event should score high.,\n` +
+    `  "novelty": a float 0.0-1.0 — does this story contain information a market participant would not already know? Score LOW (near 0) for a story that only reminds the reader of an already-public, previously-known schedule, date, or routine recurring event, with no new claim, statement, or data attached (e.g. "the Fed meets next Wednesday," "USDA releases its report on the 12th," with nothing else reported). Score HIGH for a story that reports a new fact, statement, data point, or claim — including an unconfirmed or rumored one — that a reader could not already have known. Do not score this based on whether the underlying event has already happened or is confirmed — an unconfirmed but newly-reported claim about a future event scores HIGH on novelty; a reminder about a known future event scores LOW, regardless of how big that event will be.,\n` +
+    `  "eventCategory": one of exactly "armed_conflict_security"|"supply_disruption_logistics"|"sanctions_trade_policy"|"production_output_decision"|"central_bank_monetary_policy"|"scheduled_economic_data"|"official_statement_commentary"|"elections_political_transition"|"other_market_relevant",\n` +
+    `  "marketMechanism": a short string (max ~140 chars) explaining, in plain language, how this event could plausibly reach a commodity, currency, or broad market — or null if no real mechanism exists. Do not invent a mechanism that isn't actually supported by the story's own content.,\n` +
+    `  "isPreview": boolean — true ONLY if this story exclusively reminds the reader of a previously-known, already-scheduled event or date, with no new claim, statement, or data attached (a pure "week ahead" or "don't forget, X happens on date Y" story). False for any story that reports a new fact, statement, or claim — even an unconfirmed one — about an event that hasn't happened yet. A scheduled event's actual release/decision is always false. Most stories about a not-yet-happened event will be false here; true is reserved for the narrow, information-free reminder case.,\n` +
+    `  "sourceConfirmation": one of exactly "official"|"reported"|"speculative". "official" — a named official, institution, or government body making a direct, on-the-record statement, or an actual official release/decision. "reported" — a sourced claim attributed to named or unnamed sources ("sources say," "people familiar with the matter," a named outlet's own original reporting of a claim). "speculative" — commentary, analysis, or opinion guessing about a possible future event with no sourced claim behind it. Base this only on what the article itself states about its own sourcing — do not use this field to judge whether the claim is true, only what kind of claim it is.,\n` +
+    `  "materialityPass": boolean — the outcome of the MATERIALITY GATE instruction above,\n` +
+    `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important",\n` +
+    `  "mediaImpactEntity": the matched entity_name string from BBR's watchlist above if this story's statement or commentary is attributable to one of those entities, or null if not applicable. Return the exact entity_name from the list (never an alias, never a name that is not on the list). This field describes a sourced historical reaction pattern; it is not a forecast and not a trading recommendation.,\n` +
+    `  "invalidationCondition": a single plain-language sentence naming the SPECIFIC fact this story reports that, if it turned out to be false, unconfirmed, or different, would undercut this event's market-impact assessment — grounded in a concrete claim the article itself makes (e.g. "if the reported drone strike on the refinery is not independently confirmed by a second source" or "if the ministry's denial of the ceasefire breach is verified"). Not a generic disclaimer ("if new information emerges") and not a probability or confidence score — name the actual fact at stake. Null only if the story makes no falsifiable factual claim to hang this on.\n` +
+    `}`
+  );
+}
+
 export class ClaudeService {
   private client: Anthropic | null = null;
 
@@ -565,29 +607,9 @@ export class ClaudeService {
               : `No similar recent signal in the last 48 hours.`
             : `A similar-looking story (same country/event-type combination) was already logged in the last 48 hours: ${similarStoryLast48h ? "yes" : "no"} (a coarse hint, not a verdict — weigh it, don't rely on it alone for novelty).`;
         // JSON return spec — also passed to gate-shadow.ts so the shadow call returns the same fields.
-        const returnSpec =
-          `Return ONLY valid JSON (no markdown):\n` +
-          `{\n` +
-          `  "severity": integer between 1 and 10,\n` +
-          `  "confidence": a float between 0.0 and 1.0 representing certainty,\n` +
-          `  "commodityImpacts": [{ "asset": one of exactly ${COMMODITY_ASSET_PROMPT_OPTIONS} (ticker symbols only, omit any commodity/asset that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
-          `  "currencyPairImpacts": [{ "asset": one of exactly "EURUSD"|"GBPUSD"|"USDJPY"|"USDCHF"|"USDRUB"|"USDCNY"|"USDINR" (currency-pair symbols only, omit any pair that doesn't map to one of these), "direction": "up"|"down"|"volatile"|"neutral", "confidence": number }],\n` +
-          `  "isBreaking": boolean,\n` +
-          `  "title": a short English title (max ~80 chars) in plain language a commodity trader would read naturally — active voice, no unexplained jargon, no stiff or overly literal translated phrasing. If the source article is in English, lightly tighten its own title rather than rewriting it; if the source is in another language, write a natural English title conveying the same news, not a word-for-word translation.,\n` +
-          `  "summary": string (max 120 chars),\n` +
-          `  "region": one of exactly "middle-east"|"eastern-europe"|"europe"|"north-america"|"south-america"|"asia-pacific"|"africa"|"global",\n` +
-          `  "country": the specific country where this event physically happened, based on reading the article — a real country name (e.g. "Iran", "Ukraine"), never a region bucket or the name of the outlet/publication reporting it. Return null if the article's own text genuinely doesn't make the location clear.,\n` +
-          `  "relevance": a float 0.0-1.0 — how central is the named commodity/currency/entity/geography to what actually happened in this story (not just mentioned in passing)? A story about "World Trade Center" mentioning "trade" in the name only should score near 0; a story where a named commodity is the actual subject of the event should score high.,\n` +
-          `  "novelty": a float 0.0-1.0 — does this story contain information a market participant would not already know? Score LOW (near 0) for a story that only reminds the reader of an already-public, previously-known schedule, date, or routine recurring event, with no new claim, statement, or data attached (e.g. "the Fed meets next Wednesday," "USDA releases its report on the 12th," with nothing else reported). Score HIGH for a story that reports a new fact, statement, data point, or claim — including an unconfirmed or rumored one — that a reader could not already have known. Do not score this based on whether the underlying event has already happened or is confirmed — an unconfirmed but newly-reported claim about a future event scores HIGH on novelty; a reminder about a known future event scores LOW, regardless of how big that event will be.,\n` +
-          `  "eventCategory": one of exactly "armed_conflict_security"|"supply_disruption_logistics"|"sanctions_trade_policy"|"production_output_decision"|"central_bank_monetary_policy"|"scheduled_economic_data"|"official_statement_commentary"|"elections_political_transition"|"other_market_relevant",\n` +
-          `  "marketMechanism": a short string (max ~140 chars) explaining, in plain language, how this event could plausibly reach a commodity, currency, or broad market — or null if no real mechanism exists. Do not invent a mechanism that isn't actually supported by the story's own content.,\n` +
-          `  "isPreview": boolean — true ONLY if this story exclusively reminds the reader of a previously-known, already-scheduled event or date, with no new claim, statement, or data attached (a pure "week ahead" or "don't forget, X happens on date Y" story). False for any story that reports a new fact, statement, or claim — even an unconfirmed one — about an event that hasn't happened yet. A scheduled event's actual release/decision is always false. Most stories about a not-yet-happened event will be false here; true is reserved for the narrow, information-free reminder case.,\n` +
-          `  "sourceConfirmation": one of exactly "official"|"reported"|"speculative". "official" — a named official, institution, or government body making a direct, on-the-record statement, or an actual official release/decision. "reported" — a sourced claim attributed to named or unnamed sources ("sources say," "people familiar with the matter," a named outlet's own original reporting of a claim). "speculative" — commentary, analysis, or opinion guessing about a possible future event with no sourced claim behind it. Base this only on what the article itself states about its own sourcing — do not use this field to judge whether the claim is true, only what kind of claim it is.,\n` +
-          `  "materialityPass": boolean — the outcome of the MATERIALITY GATE instruction above,\n` +
-          `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important",\n` +
-          `  "mediaImpactEntity": the matched entity_name string from BBR's watchlist above if this story's statement or commentary is attributable to one of those entities, or null if not applicable. Return the exact entity_name from the list (never an alias, never a name that is not on the list). This field describes a sourced historical reaction pattern; it is not a forecast and not a trading recommendation.,\n` +
-          `  "invalidationCondition": a single plain-language sentence naming the SPECIFIC fact this story reports that, if it turned out to be false, unconfirmed, or different, would undercut this event's market-impact assessment — grounded in a concrete claim the article itself makes (e.g. "if the reported drone strike on the refinery is not independently confirmed by a second source" or "if the ministry's denial of the ceasefire breach is verified"). Not a generic disclaimer ("if new information emerges") and not a probability or confidence score — name the actual fact at stake. Null only if the story makes no falsifiable factual claim to hang this on.\n` +
-          `}`;
+        // Both this live call and the gate-shadow call move together on CLASSIFIER_PROMPT_V2
+        // (env.ts) since they both consume the same buildClassifyReturnSpec() output.
+        const returnSpec = buildClassifyReturnSpec(getEnv().CLASSIFIER_PROMPT_V2 === "true");
         const user =
           `Event: ${title}\n` +
           `Country: ${String(rawEvent.country ?? "")}\n` +

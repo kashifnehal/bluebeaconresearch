@@ -4,6 +4,8 @@
 
 > ⚠️ UPDATED 2026-10-15 (P12) — the classify JSON schema's `region` field is one of exactly `middle-east` | `eastern-europe` | `europe` | `north-america` | `south-america` | `asia-pacific` | `africa` | `global`. After parse, `region` is `canonicalizeRegion(parsed.region, parsed.country)`. No other prompt text changed. The heuristic block is unchanged.
 
+> ⚠️ UPDATED 2026-11-14 — the classify return spec is now built by `buildClassifyReturnSpec(v2: boolean)` in `claude.service.ts`, gated on env flag `CLASSIFIER_PROMPT_V2` (default off, exactly `"true"` to turn on). Off, the string is byte-identical to the spec described below. On, three fields' wording changes: `severity` is reframed as the size of the reported event itself, explicitly not a certainty score (certainty stays in `confidence`); `title` adds an instruction to keep attribution in the title for a disputed claim; `summary` adds attribution for a claim from a party to the event or unnamed sources, bars stating casualties/damage/military results as fact unless `sourceConfirmation` is `"official"` or the article itself reports independent confirmation, and bars using a stronger stage word than the article itself uses. `gate-shadow.ts`'s shadow call reuses the exact same return-spec string, so it moves on the same flag. Built, not turned on anywhere; no replay comparison has been run yet.
+
 **Classification: Internal — CTO Level**
 
 ---
