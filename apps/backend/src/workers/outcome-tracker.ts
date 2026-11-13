@@ -203,6 +203,35 @@ function outcomeKey(asset: string, checkpointHours: number): string {
   return `${asset}::${checkpointHours}`;
 }
 
+// TASK W3 Part 2 — signal_outcomes.price_before_at/price_after_at/
+// price_before_offset_seconds/price_after_offset_seconds exist in the
+// migration (20261109100000_signal_outcomes_price_offsets.sql) but that
+// migration has not been applied everywhere this worker runs against, so the
+// upsert below can fail on every row with PostgREST's "column not found in
+// schema cache" error (PGRST204). No migration is applied here (rule 6) —
+// instead, that specific error retries the same upsert once with the four
+// new fields stripped, so the worker keeps writing the columns that do exist.
+const PRICE_OFFSET_FIELDS = [
+  "price_before_at",
+  "price_after_at",
+  "price_before_offset_seconds",
+  "price_after_offset_seconds",
+] as const;
+
+export function isMissingColumnError(message: string | null | undefined): boolean {
+  return /Could not find the .* column/i.test(message ?? "");
+}
+
+function withoutPriceOffsetFields(
+  rows: Array<Record<string, unknown>>,
+): Array<Record<string, unknown>> {
+  return rows.map((row) => {
+    const next = { ...row };
+    for (const field of PRICE_OFFSET_FIELDS) delete next[field];
+    return next;
+  });
+}
+
 export async function fetchExistingOutcomeAssets(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   signalIds: string[],
@@ -383,10 +412,22 @@ export async function runOutcomeTrackerOnce(
 
     if (rows.length === 0) continue;
 
-    const { error: upsertErr } = await supabase.from("signal_outcomes").upsert(rows, {
+    let { error: upsertErr } = await supabase.from("signal_outcomes").upsert(rows, {
       onConflict: "signal_id,asset,checkpoint_hours",
       ignoreDuplicates: true,
     });
+    let writtenRows = rows;
+    if (upsertErr && isMissingColumnError(upsertErr.message)) {
+      console.warn(
+        `[outcome-tracker] upsert for asset=${asset} failed on a missing column (${upsertErr.message}) — retrying ${rows.length} row(s) without price_before_at/price_after_at/price_before_offset_seconds/price_after_offset_seconds`,
+      );
+      writtenRows = withoutPriceOffsetFields(rows);
+      const retry = await supabase.from("signal_outcomes").upsert(writtenRows, {
+        onConflict: "signal_id,asset,checkpoint_hours",
+        ignoreDuplicates: true,
+      });
+      upsertErr = retry.error;
+    }
     if (upsertErr) {
       console.error(
         `[outcome-tracker] upsert failed for asset=${asset} (${rows.length} row(s)):`,
@@ -397,7 +438,7 @@ export async function runOutcomeTrackerOnce(
         (skipReasons[`${asset}: upsert failed (${upsertErr.message})`] ?? 0) + rows.length;
       continue;
     }
-    outcomesWritten += rows.length;
+    outcomesWritten += writtenRows.length;
   }
 
   console.log(

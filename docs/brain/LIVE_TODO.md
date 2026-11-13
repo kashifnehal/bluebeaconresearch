@@ -5,6 +5,13 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Outcome-tracker upsert safe on a missing price-offset column (TASK W3 Part 2), `apps/backend` only, 2026-11-14, `this commit`
+
+- Why: `workers/outcome-tracker.ts` writes `price_before_at`/`price_after_at`/`price_before_offset_seconds`/`price_after_offset_seconds` on every `signal_outcomes` row, but migration `20261109100000_signal_outcomes_price_offsets.sql` (TASK W-ACCURACY, 2026-11-09) adding those columns is still written, not applied — so on any environment missing it, every row in the upsert failed outright.
+- Fix: new `isMissingColumnError()` matches PostgREST's "Could not find the ... column" schema-cache error specifically; on that error the upsert retries once with the four fields stripped, logging exactly one warning per failed batch. No migration applied (rule: do not apply migrations unless asked).
+- Verified: new tests in `outcome-tracker.test.ts` (the error matcher, and a fake-client retry round-trip asserting exactly 2 upsert calls and 1 warning). Backend `tsc --noEmit` exit 0; full backend test suite exit 0 (637 ✔).
+- See `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`.
+
 ## ✅ Credit-balance retry storm stopped with a circuit breaker (TASK W3 Part 1), `apps/backend` only, 2026-11-14, `this commit`
 
 - Why: evidence 2026-11-11 — 3,847 failed `classifyEvent()` calls in 39 hours, all "Your credit balance is too low" (HTTP 400). That error was treated as a request-specific 400 (`shouldStopBatch` let the batch continue past it), so every remaining event in every batch kept hitting the live Anthropic API and failing again, each writing a `service_health_events` row.

@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-14 (TASK W3 Part 1 — credit-balance retry storm stopped — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-14 (TASK W3 Part 2 — outcome-tracker upsert safe on a missing price-offset column — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-14 (TASK W3 Part 2, `apps/backend` only, `this commit`) — the outcome-tracker worker writes four price-offset columns on `signal_outcomes` that an earlier migration added but that is still unapplied on some environments, so every row in its upsert failed there. It now retries once with those four fields stripped specifically on a "column not found" error, logging one warning rather than failing every row outright. No migration applied by this fix. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 
 > ⚠️ NEW 2026-11-14 (TASK W3 Part 1, `apps/backend` only, `this commit`) — a credit-balance error from Anthropic (evidence 2026-11-11: 3,847 failed `classifyEvent()` calls in 39 hours) was being treated as a one-off bad request, so every event in every batch kept re-hitting the live API and failing again. A new in-process circuit breaker now pauses live classification calls for 30 minutes (arbitrary, not researched) after the first such failure, logging one health event for the pause start and one for the resume, not one per skipped call. Existing alert emails unchanged. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 

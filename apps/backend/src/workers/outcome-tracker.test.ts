@@ -3,6 +3,7 @@ import type { getSupabaseAdmin } from "../clients/supabase.js";
 import {
   collectPendingPairs,
   fetchExistingOutcomeAssets,
+  isMissingColumnError,
   runOutcomeTrackerOnce,
 } from "./outcome-tracker.js";
 
@@ -273,5 +274,110 @@ await runTest(
       assert.equal("price_flag" in row, false);
       assert.equal("offset_flag" in row, false);
     }
+  },
+);
+
+await runTest("isMissingColumnError matches PostgREST's schema-cache column error, not other errors", () => {
+  assert.equal(
+    isMissingColumnError(
+      "Could not find the 'price_before_at' column of 'signal_outcomes' in the schema cache",
+    ),
+    true,
+  );
+  assert.equal(isMissingColumnError("duplicate key value violates unique constraint"), false);
+  assert.equal(isMissingColumnError(null), false);
+  assert.equal(isMissingColumnError(undefined), false);
+});
+
+await runTest(
+  "a missing-column upsert error retries once without the four price-offset fields, logging one warning",
+  async () => {
+    const eventMs = Date.now() - 72 * HOUR;
+    const eventDate = new Date(eventMs).toISOString();
+    const prices = Array.from({ length: 49 }, (_, hour) => ({
+      price: 80 + hour,
+      fetched_at: new Date(eventMs + hour * HOUR).toISOString(),
+    }));
+    const upserts: Array<{ rows: Array<Record<string, unknown>> }> = [];
+
+    const client = {
+      from(table: string) {
+        const api = {
+          select() {
+            return api;
+          },
+          lte() {
+            return api;
+          },
+          eq() {
+            return api;
+          },
+          in() {
+            return api;
+          },
+          order() {
+            return api;
+          },
+          range(from: number) {
+            if (table === "signals" && from === 0) {
+              return Promise.resolve({
+                data: [
+                  {
+                    id: "sig-missing-column",
+                    event_date: eventDate,
+                    commodity_impacts: [{ asset: "USOIL", direction: "up" }],
+                  },
+                ],
+                error: null,
+              });
+            }
+            if (table === "commodity_prices" && from === 0) {
+              return Promise.resolve({ data: prices, error: null });
+            }
+            return Promise.resolve({ data: [], error: null });
+          },
+          upsert(rows: Array<Record<string, unknown>>) {
+            upserts.push({ rows });
+            if (upserts.length === 1) {
+              return Promise.resolve({
+                error: {
+                  message:
+                    "Could not find the 'price_before_at' column of 'signal_outcomes' in the schema cache",
+                },
+              });
+            }
+            return Promise.resolve({ error: null });
+          },
+        };
+        return api;
+      },
+    };
+
+    const originalWarn = console.warn;
+    let warnCount = 0;
+    console.warn = (...args: unknown[]) => {
+      warnCount += 1;
+      originalWarn(...args);
+    };
+    let result;
+    try {
+      result = await runOutcomeTrackerOnce(client as never as Admin);
+    } finally {
+      console.warn = originalWarn;
+    }
+
+    assert.equal(upserts.length, 2, "the failed upsert is retried exactly once");
+    for (const field of [
+      "price_before_at",
+      "price_after_at",
+      "price_before_offset_seconds",
+      "price_after_offset_seconds",
+    ]) {
+      assert.equal(field in upserts[0].rows[0], true, `first attempt still includes ${field}`);
+      assert.equal(field in upserts[1].rows[0], false, `retry strips ${field}`);
+    }
+    assert.equal(result.outcomesWritten, 4);
+    assert.equal(result.pairsSkipped, 0);
+    assert.equal(warnCount, 1, "exactly one warning is logged for the retry");
   },
 );
