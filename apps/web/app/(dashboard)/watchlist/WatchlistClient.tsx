@@ -883,14 +883,11 @@ export function WatchlistClient() {
                   </span>
                 </div>
                 <h3 className="font-label text-xs font-bold tracking-widest text-on-surface uppercase">
-                  Market Signal Forecast
+                  Events for this asset
                 </h3>
               </div>
               <p className="text-sm font-body leading-relaxed text-on-surface/80 mb-6 italic border-l-2 border-outline-variant/20 pl-4 font-medium">
-                Predictions have been removed from this view. To avoid
-                displaying unauthenticated or fabricated model outputs, this
-                feature will be restored once a validated prediction pipeline is
-                available.
+                Open any item to see its sources and timeline.
               </p>
             </div>
 

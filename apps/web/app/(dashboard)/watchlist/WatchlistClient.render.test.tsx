@@ -408,6 +408,23 @@ async function main() {
       if (realDescriptor) Object.defineProperty(document, "visibilityState", realDescriptor);
     }
   });
+
+  await runTest(
+    "TASK NQ-2 Part 4: the old fabricated/validated-prediction-pipeline sentences are gone from the analytics card",
+    async () => {
+      const { html, root, client, restoreFetch } = await renderWatchlist({});
+      try {
+        assert.doesNotMatch(html, /fabricated/i);
+        assert.doesNotMatch(html, /validated prediction pipeline/i);
+        assert.match(html, /Events for this asset/);
+        assert.match(html, /Open any item to see its sources and timeline\./);
+      } finally {
+        restoreFetch();
+        await act(async () => root.unmount());
+        client.clear();
+      }
+    },
+  );
 }
 
 main().then(() => {
