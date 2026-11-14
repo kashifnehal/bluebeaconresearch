@@ -114,7 +114,7 @@ export function renderHomePage(input: {
         <nav className="hidden md:flex items-center gap-10">
           <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#features">How it works</Link>
           <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="#pricing">Pricing</Link>
-          <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="/accuracy">Accuracy</Link>
+          <Link className="font-label text-[12px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface/60 hover:text-primary transition-colors" href="/accuracy">Method</Link>
         </nav>
         <div className="flex items-center gap-8">
           {signedIn ? (
@@ -342,14 +342,14 @@ export function renderHomePage(input: {
           </div>
         </section>
 
-        {/* Accuracy record — link only, no homepage hit-rate number */}
+        {/* Check it — link only, no homepage hit-rate number */}
         <section className="px-5 py-12 md:px-10 md:py-24 bg-surface-container-lowest border-b border-outline-variant/10" id="track-record">
           <div className="max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-12 items-center">
             <div className="lg:col-span-8">
               <p className="font-label text-[12px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-3">Source Verification</p>
-              <h2 className="text-2xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-4">See the accuracy record</h2>
+              <h2 className="text-2xl md:text-4xl font-headline font-extrabold tracking-tight text-white mb-4">Check how every item is built</h2>
               <p className="text-on-surface/60 leading-relaxed font-medium max-w-2xl text-sm md:text-base">
-                Directional outcomes are scored from recorded price changes at four checkpoints: 1, 4, 24 and 48 hours. The method and sample sizes are on a public page. Past results are a historical statistic, not a forecast.
+                Each item links to its source and shows when the source published it, when BBR fetched it and when BBR flagged it. The method and our publication standard are on one public page.
               </p>
             </div>
             <div className="lg:col-span-4 flex lg:justify-end">
@@ -357,7 +357,7 @@ export function renderHomePage(input: {
                 href="/accuracy"
                 className="px-8 py-4 bg-primary text-black font-label font-extrabold uppercase tracking-widest rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all"
               >
-                View the accuracy page
+                See the method
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </Link>
             </div>
@@ -472,7 +472,7 @@ export function renderHomePage(input: {
           <div className="space-y-4 md:space-y-8">
             <h6 className="font-label text-[12px] md:text-[10px] uppercase font-black tracking-widest text-on-surface/40">Research</h6>
             <ul className="space-y-2 md:space-y-4">
-              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/accuracy">Accuracy</Link></li>
+              <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/accuracy">Method</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/how-it-works">How It Works</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/about">About</Link></li>
               <li><Link className="text-[12px] md:text-[11px] font-bold text-on-surface/60 hover:text-primary transition-colors uppercase min-h-[44px] inline-flex items-center" href="/assessments">Assessments</Link></li>

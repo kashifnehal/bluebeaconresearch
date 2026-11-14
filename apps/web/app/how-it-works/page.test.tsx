@@ -4,7 +4,7 @@ import { createElement } from "react";
 import { act } from "react";
 
 import { setupDom, renderElement } from "@/lib/test-render";
-import { HowItWorksClaimList, HowItWorksStandardLine } from "./page";
+import { HowItWorksClaimList, HowItWorksStandardLine, metadata } from "./page";
 
 const document = setupDom();
 
@@ -58,6 +58,11 @@ async function main() {
     } finally {
       await act(async () => root.unmount());
     }
+  });
+
+  await runTest("metadata description says public method page, not accuracy page", () => {
+    assert.equal(metadata.description?.includes("a public method page"), true);
+    assert.equal(metadata.description?.includes("a public accuracy page"), false);
   });
 }
 

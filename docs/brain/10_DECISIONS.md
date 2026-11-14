@@ -14,11 +14,27 @@ The accuracy endpoint previously aggregated only the 48-hour rows. The stored ta
 
 ### Decision
 
-The public accuracy page and `GET /v1/accuracy` show 1 hour, 4 hours, 24 hours, and 48 hours separately. Up and down calls are counted separately. Volatile and neutral calls stay out of the hit rate. Below 20 scored calls, the count is shown and the percentage is not. Horizons are not blended into one rate. A move after an assessment is not described as caused by the assessment.
+`GET /v1/accuracy` still shows 1 hour, 4 hours, 24 hours, and 48 hours separately, with up/down counted separately and volatile/neutral calls out of the hit rate — that part of this decision is unchanged in the backend. **Superseded for the page itself (2026-11-15, TASK NQ-2 Part 1):** the public `/accuracy` page no longer reads this endpoint or shows any horizon, by-asset, hit-rate, or baseline figure at all — see "No performance percentage on the public surface" below.
 
 ### Rationale
 
 The founder confirmed this on 2026-11-07. The longer wait has the higher hit rate, and short horizons are weak. Publishing only the 48-hour figure made the record look stronger than the shorter checks.
+
+---
+
+## No performance percentage on the public surface (2026-11-15)
+
+### Context
+
+The public `/accuracy` page (and the homepage section pointing to it) printed horizon tables, by-asset tables, and a "Market rose (baseline)" comparison — real, sourced numbers, but still a performance claim on a public page without a published sample/period/threshold/baseline standard stated alongside it.
+
+### Decision
+
+The public `/accuracy` page shows no percentage, hit rate, track record, or baseline figure. It states what BBR records on every item (source+link, source-published time, BBR-fetched time, BBR-flagged time) and the standard BBR requires before publishing any performance statistic (sample, period, thresholds, and baseline stated; a pre-declared test beating the plain baseline). It links to `/how-it-works` for method and `/corrections` for the errors log. The homepage nav/footer label for this link reads "Method", not "Accuracy"; the homepage section heading is "Check how every item is built". `GET /v1/accuracy` and `apps/backend/src/routes/accuracy.routes.ts` are untouched — this is a page-display decision, not a data-removal one.
+
+### Rationale
+
+TASK NQ-2 (2026-11-15): the public surface should show no performance percentage and no claim the site does not back, and should show how every item is built, until a published performance statistic can carry its own stated sample/period/threshold/baseline standard next to it.
 
 ---
 

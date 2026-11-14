@@ -103,17 +103,34 @@ async function main() {
     }
   });
 
-  await runTest("accuracy link says View the accuracy page and keeps the hero line", async () => {
+  await runTest("track-record section says See the method and keeps the hero line", async () => {
     const { root } = await renderHome([]);
     try {
       const link = [...document.querySelectorAll("a")].find((a) =>
-        (a.textContent ?? "").includes("View the accuracy page"),
+        (a.textContent ?? "").includes("See the method"),
       );
-      assert.ok(link, "expected the accuracy page link");
+      assert.ok(link, "expected the See the method link");
       assert.equal(link?.getAttribute("href"), "/accuracy");
       const text = document.body.textContent ?? "";
+      assert.equal(text.includes("View the accuracy page"), false);
+      assert.equal(text.includes("See the accuracy record"), false);
       assert.equal(text.includes("View the live track record"), false);
+      assert.equal(text.includes("Check how every item is built"), true);
       assert.equal(text.includes("Geopolitical intelligence for markets that matter."), true);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("nav and footer label the /accuracy link Method", async () => {
+    const { root } = await renderHome([]);
+    try {
+      const accuracyLinks = [...document.querySelectorAll('a[href="/accuracy"]')];
+      assert.ok(accuracyLinks.length > 0, "expected at least one link to /accuracy");
+      for (const link of accuracyLinks) {
+        if ((link.textContent ?? "").includes("See the method")) continue;
+        assert.equal(link.textContent, "Method");
+      }
     } finally {
       await act(async () => root.unmount());
     }

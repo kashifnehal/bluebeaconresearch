@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "How It Works | Blue Beacon Research",
   description:
-    "What Blue Beacon Research does and how you can check it: source links on every signal, disclosed classification method, and a public accuracy page.",
+    "What Blue Beacon Research does and how you can check it: source links on every signal, disclosed classification method, and a public method page.",
 };
 
 // signals RLS is `signals_select_authenticated` only — the cookie/anon client
@@ -238,7 +238,7 @@ export default async function HowItWorksPage() {
         <p className="text-sm text-[#e5e2e1]">
           See the full history on the{" "}
           <Link href="/accuracy" className="text-[var(--accent)] hover:underline">
-            Accuracy
+            Method
           </Link>{" "}
           page.
         </p>
