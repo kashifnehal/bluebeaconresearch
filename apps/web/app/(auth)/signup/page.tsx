@@ -16,6 +16,7 @@ import { isProjectReady } from "@/lib/flags";
 import { track } from "@/lib/analytics";
 import { trackFunnelEvent, logFunnelEventOnce } from "@/lib/funnel-events";
 import { readSubmitAttribution } from "@/lib/first-touch";
+import { getSiteOrigin } from "@/lib/site-origin";
 
 type FormValues = z.infer<typeof signupSchema>;
 
@@ -72,7 +73,7 @@ function SignupForm() {
 
   const [redirectTo, setRedirectTo] = useState("");
   useEffect(() => {
-    setRedirectTo(`${window.location.origin}/auth/callback`);
+    setRedirectTo(`${getSiteOrigin()}/auth/callback`);
   }, []);
 
   // Redirect already-logged-in users away from /signup
@@ -105,7 +106,7 @@ function SignupForm() {
       // has Gmail in, not necessarily this one. Must match confirm/page.tsx. See
       // lib/supabase-email-auth.ts.
       const supabase = throwIfNoSupabase(getSupabaseEmailAuthClient());
-      const confirmUrl = `${window.location.origin}/confirm`;
+      const confirmUrl = `${getSiteOrigin()}/confirm`;
       const firstTouch = readSubmitAttribution();
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: values.email,
@@ -186,7 +187,7 @@ function SignupForm() {
     setIsLoading(true);
     try {
       const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
-      const callbackUrl = redirectTo || `${window.location.origin}/auth/callback`;
+      const callbackUrl = redirectTo || `${getSiteOrigin()}/auth/callback`;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: callbackUrl },

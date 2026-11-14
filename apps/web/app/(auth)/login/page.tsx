@@ -13,6 +13,7 @@ import { throwIfNoSupabase, userFacingCaughtError } from "@/lib/user-error-copy"
 import { loginSchema } from "@/lib/validators";
 import { fetchMyProfile, resolvePostAuthRedirect } from "@/lib/profile";
 import { isProjectReady } from "@/lib/flags";
+import { getSiteOrigin } from "@/lib/site-origin";
 
 type FormValues = z.infer<typeof loginSchema>;
 
@@ -75,10 +76,10 @@ function LoginForm() {
   const form = useForm<FormValues>({ defaultValues: { email: prefillEmail, password: "" } });
   const emailValue = form.watch("email");
 
-  // Capture window.location.origin safely — only available on client after mount
+  // Capture the site origin safely — only available on client after mount
   const [origin, setOrigin] = useState("");
   useEffect(() => {
-    setOrigin(window.location.origin);
+    setOrigin(getSiteOrigin());
   }, []);
 
 
@@ -178,7 +179,7 @@ function LoginForm() {
     setIsLoading(true);
     try {
       const supabase = throwIfNoSupabase(getSupabaseBrowserClient());
-      const callbackUrl = new URL("/auth/callback", origin || window.location.origin);
+      const callbackUrl = new URL("/auth/callback", origin || getSiteOrigin());
       if (redirectedFrom) callbackUrl.searchParams.set("redirectedFrom", redirectedFrom);
       const redirectTo = callbackUrl.toString();
       const { error: oauthError } = await supabase.auth.signInWithOAuth({

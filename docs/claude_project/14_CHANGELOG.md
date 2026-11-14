@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-15 — Single site origin for Supabase auth redirects (TASK W4 Part 1, `this commit`)
+
+`apps/web` only. Auth `redirectTo`/`emailRedirectTo` URLs were built three different, inconsistent ways across the login, signup, and forgot-password pages — one of them (`forgot-password`) used an env-var fallback that never actually tracked the real host, so a preview deploy's password-reset link could point at production instead of itself. New `lib/site-origin.ts` is now the single helper all three pages call: the two production hostnames resolve to the canonical `https://www.bluebeaconresearch.com`, every other host (localhost, Vercel previews) is unchanged. No Supabase dashboard setting touched. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
+
 ## 2026-11-14 — Anonymous /api/events call skipped; one hydration mismatch fixed (TASK W3 Part 4, `this commit`)
 
 `apps/web` only. `FirstTouchLogger.tsx` no longer POSTs `/api/events` while signed out (it 401ed every time). One confirmed cause of React error #418 on signed-in pages — `/onboarding`'s decorative TIMESTAMP line computing `new Date()` directly in render with no mount-gate — fixed with `suppressHydrationWarning`; everything else the grep turned up was either a Server Component (never hydrated) or gated behind query data with no SSR prefetch, so not a real mismatch. `/watchlist`'s "Market Signal Forecast" placeholder location reported, not changed. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
