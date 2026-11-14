@@ -676,20 +676,23 @@ Lookup tool, not a priority feed. Filters: date range, `#125` Oil/Grain/Metals d
 
 Each row is a name and a state: Operational, Degraded, or Unknown. The detail string is not rendered. Alert Delivery is labeled Alerts. Price History is labeled Prices. Classifier is labeled Analysis. Data Pipeline is labeled Data Sources. A closed daily budget does not by itself mark Classifier, Data Pipeline, or Intelligence Feed Degraded.
 
-### AccuracyPage (apps/web/app/accuracy/page.tsx) (2026-11-07, `1010e80`)
+### AccuracyPage (apps/web/app/accuracy/page.tsx) (2026-11-15, TASK NQ-2 Part 1)
 
-Reads stored outcome rows only. `GET /v1/accuracy` returns 1 hour, 4 hours, 24 hours, and 48 hours separately. As of 2026-11-09 the page no longer prints a hit-rate headline or a confidence-band figure. Headline: "Every assessment is dated, sourced and scored against what the market did next. The misses are shown." Per horizon (only when scored ≥ sample floor): scored count, flat share, up/down right and wrong counts, and "Market rose (baseline)". Horizons below the floor are hidden entirely. Below the table: "This is a historical statistic, not a forecast. A move after an assessment does not show the assessment caused it. Informational research, not investment advice." The by-asset table shows Right/Wrong counts, not a hit-rate percentage. "Published track record" wording is gone. As of 2026-11-08 (`7f75e55`) the caption uses `flat_threshold_pct` from the response when that field is a number.
+Rebuilt as a static page: no fetch of `GET /v1/accuracy`, no horizon table, no by-asset
+table, no hit-rate/percentage/baseline figure anywhere. The backend route
+(`apps/backend/src/routes/accuracy.routes.ts`) is unchanged and still live — this page
+simply no longer reads it.
 
-Homepage (2026-09-20) links here from nav, footer, and a dedicated track-record section and does **not** reprint `hit_rate` on `/`.
+Content, in order: H1 "How BBR works and how to check it"; intro; "What we record on
+every item" (source+link, source publish time, BBR fetch time, BBR flag time);
+"Our publication standard" (prose rule about sample/period/thresholds/baseline being
+stated and a pre-declared test beating the plain baseline — no actual figures); "Method"
+(links to `/how-it-works`); "Corrections" (links to `/corrections`).
 
-Server component, `dynamic = "force-dynamic"`. Fetches `GET /v1/accuracy` directly
-server-side (`process.env.API_URL`, `cache: "no-store"`). Dark-terminal styling matches
-`/status`.
-
-As of 2026-11-07 the horizon table replaces the old three headline cards. Desktop is a
-table; mobile is stacked cards of the same rows. The per-asset table is still desktop-only
-with stacked cards on small screens, and a row below 20 scored calls says "not enough
-history yet" instead of a percentage. Contains **no** "top signals"/"best calls" list.
+Server component, same `PublicHeader`/`PublicFooter`/`LegalDisclaimerFooter` shell and
+dark-terminal styling as before. No longer `dynamic = "force-dynamic"` (no async data
+fetch left on the page). Homepage's track-record section (see below) links here. Built,
+not browser-verified.
 
 ### HowItWorksPage (apps/web/app/how-it-works/page.tsx) (W2-TRUST, 2026-10-01)
 
