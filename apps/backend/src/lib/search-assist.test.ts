@@ -37,7 +37,7 @@ runTest("faq:live matches the help answer for how current the feed is", () => {
   assert.equal(live.url, "/help#live");
   assert.equal(
     live.content,
-    "New stories appear as our sources publish them. Every signal shows when the story was reported and when we flagged it.",
+    "Each item shows when the source published it and when BBR flagged it.",
   );
 });
 

@@ -201,6 +201,8 @@ Close: X button or click outside overlay.
 ### Help page (`apps/web/app/(dashboard)/help/page.tsx`) + `FeedbackForm.tsx` (#155)
 Logged-in `/help` (middleware-protected). 10 FAQ answers from `lib/help-faq.ts` (current classifier / materiality / accuracy / LIVE behavior). Form fields: message, optional email, read-only page context. POST `/api/feedback` → `feedback_submissions`. No live chat.
 
+**2026-11-15 (TASK NQ-2 Part 3):** the `accuracy-history` and `live` FAQ answers no longer describe the removed by-asset table or the removed 48-hour horizon. `accuracy-history` now reads "BBR publishes a performance statistic only when it meets the publication standard described on the Method page." `live` now reads "Each item shows when the source published it and when BBR flagged it." `accuracy-method`'s answer no longer claims "The Accuracy page shows all four horizons." — it now says the page does not display these figures and states the publication standard instead. Mirrored in `apps/backend/src/lib/search-catalog.ts`'s `SEARCH_FAQ_ENTRIES` (kept in sync per #155).
+
 ### Breadcrumbs (apps/web/components/layout/Breadcrumbs.tsx) — added 2026-09-26 (claude/230)
 Chevron-separated trail (`{label, href?}[]`), last segment non-clickable and truncates on mobile instead of overflowing. On all 10 `(dashboard)` pages; on `/map` it's an absolutely-positioned overlay pill (full-bleed canvas page, no chrome header) instead of inline content. Replaced a plain "Back to X" button on `events/[id]`/`watchlist/[symbol]`. See `docs/brain/06_COMPONENTS.md` §2.5 for the pre-existing header-overlap layout bug this surfaced and fixed on `events/[id]`.
 

@@ -30,7 +30,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "Why do some assets show not enough history yet on the Accuracy page?",
     url: "/help#accuracy-history",
     content:
-      "The by-asset table on the Accuracy page uses the 48-hour horizon and needs at least 20 scored outcomes at that horizon. Below that minimum (min 20), it shows there are not enough checked assessments yet to show a result for this group, instead of a percentage, so a handful of calls cannot look like a track record. Only up/down predictions are scored. Calls labeled volatile or neutral are counted in a separate box and never enter the headline rate.",
+      "BBR publishes a performance statistic only when it meets the publication standard described on the Method page.",
     sourceKind: "faq",
   },
   {
@@ -38,7 +38,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "How current is the feed?",
     url: "/help#live",
     content:
-      "New stories appear as our sources publish them. Every signal shows when the story was reported and when we flagged it.",
+      "Each item shows when the source published it and when BBR flagged it.",
     sourceKind: "faq",
   },
   {
@@ -62,7 +62,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     title: "How is the Accuracy page calculated?",
     url: "/help#accuracy-method",
     content:
-      "A daily worker records, for each signal and named asset, the closest market price at the event and at later checkpoints (1 hour, 4 hours, 24 hours, and 48 hours). The Accuracy page shows all four horizons. An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss. Those outcome rows are stored permanently because live price history is only kept for about 90 days.",
+      "A daily worker records, for each signal and named asset, the closest market price at the event and at later checkpoints (1 hour, 4 hours, 24 hours, and 48 hours). An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss. Those outcome rows are stored permanently because live price history is only kept for about 90 days. The Accuracy page does not display these figures; it states the publication standard BBR requires before any of them is published.",
     sourceKind: "faq",
   },
   {

@@ -17,7 +17,7 @@ runTest("feed cadence answer names report time and flag time only", () => {
   assert.equal(item?.question, "How current is the feed?");
   assert.equal(
     item?.answer,
-    "New stories appear as our sources publish them. Every signal shows when the story was reported and when we flagged it.",
+    "Each item shows when the source published it and when BBR flagged it.",
   );
 });
 
@@ -88,7 +88,7 @@ runTest("materiality does not claim the keyword fallback only passes on a valida
   );
 });
 
-runTest("accuracy method does not use the old 48-hour-only scoring sentence", () => {
+runTest("accuracy method does not use the old 48-hour-only scoring sentence, and no longer claims the page shows horizons", () => {
   const answer = HELP_FAQ_ITEMS.find((item) => item.id === "accuracy-method")?.answer ?? "";
   const oldSentence =
     "An up/down call is scored correct if that 48-hour direction matches; moves under 0.5% are treated as flat.";
@@ -100,13 +100,16 @@ runTest("accuracy method does not use the old 48-hour-only scoring sentence", ()
     true,
   );
   assert.equal(answer.startsWith("A daily worker records, for each signal and named asset"), true);
-  assert.equal(answer.includes("The Accuracy page shows all four horizons."), true);
+  // TASK NQ-2: the Accuracy page no longer displays any horizon figures.
+  assert.equal(answer.includes("The Accuracy page shows all four horizons."), false);
+  assert.equal(
+    answer.includes("The Accuracy page does not display these figures"),
+    true,
+  );
   const byAsset = HELP_FAQ_ITEMS.find((item) => item.id === "accuracy-history")?.answer ?? "";
   assert.equal(
-    byAsset.startsWith(
-      "The by-asset table on the Accuracy page uses the 48-hour horizon and needs at least 20 scored outcomes at that horizon.",
-    ),
-    true,
+    byAsset,
+    "BBR publishes a performance statistic only when it meets the publication standard described on the Method page.",
   );
 });
 
@@ -116,5 +119,4 @@ runTest("no FAQ answer claims buy/sell or human verification", () => {
   assert.equal(/human[- ]verified/.test(blob), true);
   assert.equal(blob.includes("not financial advice"), true);
   assert.equal(blob.includes("tsc/basic"), true);
-  assert.equal(blob.includes("min 20"), true);
 });

@@ -128,6 +128,7 @@ Server component, no props, `data-testid="legal-disclaimer-footer"`. Renders the
 ### 2.4 `FeedbackForm.tsx` (#155)
 - **Purpose**: Help-page bug/feedback form (message, optional email, read-only page context). POST `/api/feedback`. Not live chat.
 - **Parent**: `(dashboard)/help/page.tsx`
+- **2026-11-15 (TASK NQ-2 Part 3)**: `lib/help-faq.ts`'s `accuracy-history` and `live` answers no longer describe the removed by-asset table or horizon display. `accuracy-history`: "BBR publishes a performance statistic only when it meets the publication standard described on the Method page." `live`: "Each item shows when the source published it and when BBR flagged it." `accuracy-method` no longer claims "The Accuracy page shows all four horizons." — it says the page states the publication standard instead of displaying figures. Mirrored in `apps/backend/src/lib/search-catalog.ts`.
 
 ### 2.5 `Breadcrumbs.tsx` — added 2026-09-26 (claude/230 Task 9)
 - **Purpose**: Chevron-separated navigation trail (`{label, href?}[]`), last segment non-clickable and `truncate`/`min-w-0` so a long event title ellipsizes on mobile instead of overflowing. `data-testid="breadcrumbs"`.
