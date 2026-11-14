@@ -8,7 +8,11 @@
 
 ---
 
-## 2026-11-15 — Playwright added for apps/web public-page smoke checks (TASK W4 Part 2, `this commit`)
+## 2026-11-15 — Credit-balance breaker follows the real "regain access on" date (TASK W4 Part 3, `this commit`)
+
+`apps/backend` only. A fixed 30-minute breaker pause (TASK W3 Part 1) meant hitting the live Anthropic API every ~30 minutes for 17 days straight against a dated usage-limit error ("You will regain access on 2026-12-01..."). The breaker now parses that date and opens until it, capped at a 6-hour re-check window so an early-raised limit is still noticed; an undated "credit balance is too low" message keeps the original 30-minute pause. Gap found, not fixed: `generateAnalysis()` (briefing generation) doesn't check the breaker before its own live call. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
+
+## 2026-11-15 — Playwright added for apps/web public-page smoke checks (TASK W4 Part 2, `b2565b5`)
 
 `apps/web` only — first Playwright setup in this repo. New `@playwright/test` dev dependency (apps/web only), `playwright.config.ts`, and `e2e/public-pages.spec.ts` covering four public pages (no sign-in) for a clean load, zero console errors, zero 401s, and no leaked file path or raw HTTP status code in the rendered text. New `test:e2e` script, deliberately outside `pnpm test` and the Vercel build. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
 

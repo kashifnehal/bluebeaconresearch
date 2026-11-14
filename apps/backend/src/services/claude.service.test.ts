@@ -19,6 +19,7 @@ import { buildClassifierSnippet } from "../lib/classifier-snippet.js";
 import {
   resetCreditBalanceBreakerForTests,
   setCreditBalanceBreakerPauseMsForTests,
+  setCreditBalanceBreakerRecheckMsForTests,
 } from "../lib/credit-balance-breaker.js";
 
 const TEST_WATCHLIST: MediaImpactWatchlistEntry[] = [
@@ -1916,6 +1917,63 @@ async function main() {
         "credit_balance_paused",
         "it fails again with the same error, reopening the breaker",
       );
+    } finally {
+      resetCreditBalanceBreakerForTests();
+    }
+  },
+  );
+
+  await runTest(
+  "classifyEvent circuit breaker: a dated usage-limit message re-checks on a fixed cap, not the full remaining duration",
+  async () => {
+    resetCreditBalanceBreakerForTests();
+    // The real cap is 6 hours; shortened here so the test doesn't sleep for
+    // hours. The error's own "regain access on" date is set far beyond this
+    // window (17 days out) to prove the breaker re-checks on the (test-
+    // shortened) cap, not the much longer real remaining duration.
+    setCreditBalanceBreakerRecheckMsForTests(50);
+    try {
+      let callCount = 0;
+      const breakerService = new ClaudeService();
+      const farFuture = new Date(Date.now() + 17 * 24 * 60 * 60 * 1000);
+      const dated = `regain access on ${farFuture.toISOString().slice(0, 10)} at 00:00 UTC`;
+      (breakerService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            const err: any = new Error(
+              `You have reached your specified API usage limits. You will ${dated}.`,
+            );
+            err.status = 400;
+            throw err;
+          },
+        },
+      };
+
+      const event = {
+        title: "War erupts as crude pipeline explosion halts oil exports",
+        summary: "Escalating conflict disrupts Red Sea crude shipments.",
+        event_type: "news",
+        country: "SA",
+        event_date: new Date().toISOString(),
+      };
+
+      const first = await breakerService.classifyEvent(event);
+      assert.strictEqual(callCount, 1, "first call hits the live API and fails");
+      assert.strictEqual(first.deferReason, "credit_balance_paused");
+
+      const second = await breakerService.classifyEvent(event);
+      assert.strictEqual(
+        callCount,
+        1,
+        "no calls until the re-check window elapses, even though the regain-access date is 17 days out",
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 60));
+
+      const third = await breakerService.classifyEvent(event);
+      assert.strictEqual(callCount, 2, "exactly one re-check call once the (shortened) re-check window elapses");
+      assert.strictEqual(third.deferReason, "credit_balance_paused", "still failing, so the breaker reopens");
     } finally {
       resetCreditBalanceBreakerForTests();
     }

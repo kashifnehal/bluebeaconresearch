@@ -21,6 +21,7 @@ import {
 import { maybeSendAnthropicAlert, maybeSendSpendLimitAlert } from "../lib/spend-limit-alert.js";
 import {
   closeCreditBalanceBreakerIfExpired,
+  getCreditBalanceBreakerResumeAt,
   isCreditBalanceBreakerOpen,
   openCreditBalanceBreaker,
 } from "../lib/credit-balance-breaker.js";
@@ -836,11 +837,13 @@ export class ClaudeService {
         // breaker opens, so only one extra health event is logged for the pause
         // start, not one per failed call while the breaker stays open.
         if (isAnthropicUsageLimitError(err?.message)) {
-          if (openCreditBalanceBreaker()) {
+          if (openCreditBalanceBreaker(err?.message)) {
+            const resumeAt = getCreditBalanceBreakerResumeAt();
+            const resumeAtText = resumeAt !== null ? new Date(resumeAt).toISOString() : "unknown";
             await recordServiceHealth(
               "anthropic",
               "rate_limited",
-              "classifyEvent: credit-balance circuit breaker opened — pausing live calls",
+              `classifyEvent: credit-balance circuit breaker opened — pausing live calls until ${resumeAtText}`,
               Date.now() - callStartedAt,
             );
           }
