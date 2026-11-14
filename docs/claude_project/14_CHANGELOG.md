@@ -8,7 +8,11 @@
 
 ---
 
-## 2026-11-15 — Single site origin for Supabase auth redirects (TASK W4 Part 1, `this commit`)
+## 2026-11-15 — Playwright added for apps/web public-page smoke checks (TASK W4 Part 2, `this commit`)
+
+`apps/web` only — first Playwright setup in this repo. New `@playwright/test` dev dependency (apps/web only), `playwright.config.ts`, and `e2e/public-pages.spec.ts` covering four public pages (no sign-in) for a clean load, zero console errors, zero 401s, and no leaked file path or raw HTTP status code in the rendered text. New `test:e2e` script, deliberately outside `pnpm test` and the Vercel build. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
+
+## 2026-11-15 — Single site origin for Supabase auth redirects (TASK W4 Part 1, `95bac27`)
 
 `apps/web` only. Auth `redirectTo`/`emailRedirectTo` URLs were built three different, inconsistent ways across the login, signup, and forgot-password pages — one of them (`forgot-password`) used an env-var fallback that never actually tracked the real host, so a preview deploy's password-reset link could point at production instead of itself. New `lib/site-origin.ts` is now the single helper all three pages call: the two production hostnames resolve to the canonical `https://www.bluebeaconresearch.com`, every other host (localhost, Vercel previews) is unchanged. No Supabase dashboard setting touched. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
 
