@@ -5,6 +5,14 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Repo matches production's db_io_samples pg_cron recorder (TASK BE-DB-IO2), migration + docs only, 2026-11-15, `5102be4` / `this commit`
+
+- Why: on 2026-11-15 the founder applied a small database IO recorder directly to production with the Supabase tool (migration name `db_io_sampler_pg_cron`) because the Supabase Free plan only keeps 24 hours of its own dashboard charts. The repo didn't have it.
+- Fix: new `supabase/migrations/20261115010000_db_io_sampler_pg_cron.sql` (`5102be4`), not applied by this task (already live in production).
+- Verified: backend `tsc --noEmit` exit 0 (no code changed).
+- Not verified: the migration was not applied by this task (already applied to production).
+- See `04_DATABASE.md`, `16_MIGRATION_CHECKLIST.md`.
+
 ## 🟡 TASK W4 — six-part auth/Playwright/breaker/UI-honesty/docs sweep, `apps/web` + `apps/backend`, 2026-11-15, `this commit` (Part 1 landed; Parts 2-6 in progress)
 
 - Part 1 (`this commit`): single site origin for Supabase auth redirects. New `apps/web/lib/site-origin.ts` (`getSiteOrigin()`) resolves `bluebeaconresearch.com`/`www.bluebeaconresearch.com` to the canonical `https://www.bluebeaconresearch.com`, and returns `window.location.origin` as-is for every other host (localhost, Vercel previews). Replaces raw `window.location.origin` reads in `app/(auth)/login/page.tsx` (Google OAuth `redirectTo`) and `app/(auth)/signup/page.tsx` (`emailRedirectTo`/OAuth `redirectTo`), and replaces `forgot-password/page.tsx`'s `process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"` fallback (which never varied by host — Vercel previews would have always pointed the reset link at whatever `NEXT_PUBLIC_APP_URL` was set to, usually production) with the same helper. No Supabase setting changed. Unit test `lib/site-origin.test.ts` (4 cases: www host, bare apex host, localhost, a Vercel preview host), added to the web test chain.

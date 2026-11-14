@@ -448,3 +448,5 @@ Four timestamps asked for: when the source published the item, when BBR first fe
 `digest_send_log` / `weekly_send_log` also exist but record a run/edition, not a per-signal send time (`run_at` is one row per daily digest run; `weekly_send_log.created_at` is one row per subscriber per edition) — not a substitute for `alerts_sent.delivered_at` above.
 
 No columns added.
+
+2026-11-15: public.db_io_samples is filled every 5 minutes by pg_cron job db-io-sample (cumulative WAL, checkpoint, IO and row counters plus connections); a second job prunes rows older than 14 days. RLS on, no policies (server only).
