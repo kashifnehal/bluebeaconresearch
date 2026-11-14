@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 
 import {
   ACCOUNT_CONNECT_ERROR,
-  ACCURACY_LOAD_ERROR,
   AUTH_SESSION_ERROR,
   COLLECTOR_HEALTH_UNAVAILABLE,
   FEED_DEGRADED_COPY,
@@ -112,7 +111,6 @@ runTest("feed degraded copy never interpolates the internal reason code", () => 
 runTest("user-facing copy never contains the technical supabase string", () => {
   for (const text of [
     ACCOUNT_CONNECT_ERROR,
-    ACCURACY_LOAD_ERROR,
     METRICS_LOAD_ERROR,
     COLLECTOR_HEALTH_UNAVAILABLE,
     SETTINGS_SAVE_ERROR,
@@ -142,15 +140,19 @@ runTest("alerts / events / DiscordConnect no longer throw the technical string",
   }
 });
 
-runTest("accuracy and metrics pages do not interpolate raw error.message", () => {
-  const accuracy = readFileSync(join(webRoot, "app/accuracy/page.tsx"), "utf8");
+runTest("metrics page does not interpolate raw error.message", () => {
   const metrics = readFileSync(join(webRoot, "app/admin/metrics/page.tsx"), "utf8");
-  assert.equal(accuracy.includes("Failed to load accuracy data:"), false);
-  assert.equal(accuracy.includes("{data.error}"), false);
-  assert.match(accuracy, /ACCURACY_LOAD_ERROR/);
   assert.equal(metrics.includes("Failed to load metrics:"), false);
   assert.equal(metrics.includes("{metrics.error}"), false);
   assert.match(metrics, /METRICS_LOAD_ERROR/);
+});
+
+runTest("TASK NQ-2: the accuracy page is static — no fetch, no error.message interpolation at all", () => {
+  const accuracy = readFileSync(join(webRoot, "app/accuracy/page.tsx"), "utf8");
+  assert.equal(accuracy.includes("Failed to load accuracy data:"), false);
+  assert.equal(accuracy.includes("{data.error}"), false);
+  assert.equal(accuracy.includes("ACCURACY_LOAD_ERROR"), false);
+  assert.equal(accuracy.includes("fetch("), false);
 });
 
 runTest("settings / feed / auth no longer show raw internals", () => {

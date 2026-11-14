@@ -16,9 +16,6 @@ export const AUTH_SESSION_ERROR = "Sign in again and try that again.";
 export const SETTINGS_SAVE_ERROR =
   "We couldn't save that change — please try again shortly.";
 
-export const ACCURACY_LOAD_ERROR =
-  "We couldn't load the accuracy data right now — please try again shortly.";
-
 export const METRICS_LOAD_ERROR =
   "We couldn't load usage metrics right now — please try again shortly.";
 
