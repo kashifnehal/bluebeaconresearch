@@ -433,6 +433,8 @@ No archival or pruning strategy currently exists for `raw_events`, `signals`, or
 
 2026-11-09: prune function corrected to keep the newest row of each (service, status) pair (it had selected only that row); 17,480 rows older than 45 days pruned and rolled up into `service_health_daily`.
 
+2026-11-14: upsert_sanctions_entities skips unchanged rows (ON CONFLICT DO UPDATE locks conflicting rows even when its WHERE is false); measured on 2,000 unchanged rows: 3.78 MB WAL before, 0 after. service_health_events autovacuum scale factor 0.05.
+
 ## 6. Timestamp audit — what's actually stored (2026-11-14, read-only audit, no migration)
 
 Four timestamps asked for: when the source published the item, when BBR first fetched it, when the classifier ran, when the first user alert/email was sent. What's actually there, by table:

@@ -5,6 +5,14 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Repo matches production's sanctions-upsert + autovacuum fix (TASK BE-DB-IO1), `apps/backend` + migration only, 2026-11-14/2026-11-15, `654d742` / `ac5b79a` / `this commit`
+
+- Why: on 2026-11-14 two changes were applied directly to production: `public.upsert_sanctions_entities` filters out unchanged rows before the insert (`ON CONFLICT DO UPDATE ... WHERE` locks every conflicting row even when that `WHERE` is false — the daily sync, ~19,563 rows, usually 0 changed, was dirtying the whole table and writing ~0.7-1.9 KB of WAL/row), and `service_health_events` autovacuum was tuned (`autovacuum_vacuum_scale_factor = 0.05`, `autovacuum_vacuum_threshold = 500`). The repo didn't have either change.
+- Fix: new `supabase/migrations/20261115000000_sanctions_upsert_skip_unchanged_and_health_autovacuum.sql` (`654d742`), not applied by this task (already live in production). New `sanctions-upsert-migration.test.ts` asserts the newest migration defining the function still has the unchanged-row filter, the `ON CONFLICT` clause, and the `raw_data` comparison; appended to the backend test chain (`ac5b79a`).
+- Verified: backend `tsc --noEmit` exit 0; full backend test chain exit 0 (653 ✔, 0 ✖, including the new test).
+- Not verified: the migration was not applied by this task (already applied to production).
+- See `04_DATABASE.md`, `16_MIGRATION_CHECKLIST.md`.
+
 ## ✅ Anonymous /api/events call skipped; one hydration mismatch fixed (TASK W3 Part 4), `apps/web` only, 2026-11-14, `this commit`
 
 - (a) Why: `FirstTouchLogger.tsx` fired `logFunnelEventOnce("first_touch_recorded", ...)` — and so `POST /api/events` — even while signed out, 401ing every time (same gap TASK W2-DB Part 4 already fixed for `logUsageEvent`, 2026-11-09).
