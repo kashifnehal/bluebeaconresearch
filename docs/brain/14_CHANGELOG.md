@@ -10,7 +10,11 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-### 2026-11-15 — Event-page source-link report, no reproducible bug found (TASK W4 Part 5, `this commit`)
+### 2026-11-15 — Country search in the map Locations panel already exists (TASK W4 Part 6, `this commit`)
+
+`apps/web`, read-only — no code built. Asked to report whether the map's Locations panel has a country search box, and where it would go if not. It already exists: `components/map/LocationList.tsx`'s `<input data-testid="location-filter">` (built 2026-11-09, TASK W-COPY Part 5a, `2020672`), case-insensitive-contains filtering the country list in both desktop and mobile layouts. Gap found, not fixed: `06_COMPONENTS.md` claims `LocationList.test.tsx` is wired into `package.json`'s test chain; it isn't — the test still passes when run directly (3/3 ✔), it just never runs under `pnpm test`. See `LIVE_TODO.md`.
+
+### 2026-11-15 — Event-page source-link report, no reproducible bug found (TASK W4 Part 5, `bced15f`)
 
 `apps/web`, read-only — no code changed. Investigated a 2026-11-11 live-check finding ("outlet name but no link" on event `dc7142ce-436c-448a-a062-859eb3cee433`). `EventHero.tsx` and `EventDetailClient.tsx`'s Sources tab both already render the outlet name as a link when `raw_events.raw_data.url` is set (shared `buildEventSources()` in `lib/event-sources.ts`), falling back to plain text (Hero) or a dead `href="#"` row that still looks clickable (Sources tab — flagged, not fixed, different problem than reported). Queried the flagged event directly against the live Supabase project: its `raw_data.url` is set, so current code already links it correctly — the reported gap isn't reproducible against current code/data (most likely a pre-fix or pre-backfill snapshot). No fix made; full table in `LIVE_TODO.md`. See `08_CURRENT_STATUS.md`.
 

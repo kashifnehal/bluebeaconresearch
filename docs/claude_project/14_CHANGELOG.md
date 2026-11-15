@@ -8,7 +8,11 @@
 
 ---
 
-## 2026-11-15 — Event-page source-link report, no reproducible bug found (TASK W4 Part 5, `this commit`)
+## 2026-11-15 — Country search in the map Locations panel already exists (TASK W4 Part 6, `this commit`)
+
+`apps/web`, read-only. Asked whether the map's Locations panel has a country search box: it already does, built on an earlier task. No code built. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
+## 2026-11-15 — Event-page source-link report, no reproducible bug found (TASK W4 Part 5, `bced15f`)
 
 `apps/web`, read-only. Investigated a report that an event page showed the outlet name without a clickable link. Both render sites already link out when the source has a stored URL; the one flagged event does have a stored URL today, so the gap wasn't reproducible. No code changed. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
