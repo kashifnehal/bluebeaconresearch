@@ -4,6 +4,8 @@
 
 > ⚠️ UPDATED 2026-11-09 (`this commit`) — the event page shows the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream after. The outlet is a link only when a URL is stored. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
+> ⚠️ UPDATED 2026-11-15 (TASK W5 Part 2) — the event page's Sources/"timeline" tab now matches the hero: a source with no URL renders as plain text, not a link to `#`. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-09 — command palette empty copy is "No matches. Try fewer words."; older matches can widen the window; assist `no_confident_answer` adds no error text. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — a same-coordinate cluster opens a list and does not zoom. The sidebar still lists those signals. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.

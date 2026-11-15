@@ -10,6 +10,10 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
+### 2026-11-15 — Event-page Sources tab no longer fakes a link with no URL (TASK W5 Part 2, `this commit`)
+
+`apps/web` only. Closes the gap TASK W4 Part 5 (below) flagged: `EventDetailClient.tsx`'s Sources/"timeline" tab rendered `<a href={s.url ?? "#"}>` for every source row, so a source with no real URL still looked clickable (hover state, `ExternalLink` icon) — `EventHero.tsx` already handled the same missing-URL case correctly, falling back to plain text. The row now renders as an anchor only when `s.url` is set, otherwise a plain `<div>` with the same layout and no icon. New rendered tests in `EventDetailClient.render.test.tsx` cover both cases, clicking the "timeline" tab trigger first since `TabsContent` unmounts when inactive (base-ui tabs, no `keepMounted`). Web `tsc --noEmit` exit 0; `pnpm --filter web test` 893 ✔, 0 ✖; `next build` exit 0. Not browser-verified. See `LIVE_TODO.md`, `08_CURRENT_STATUS.md`.
+
 ### 2026-11-15 — Test chain now matches every tracked apps/web test file (TASK W5 Part 1, `this commit`)
 
 `apps/web` only. Closes the gap TASK W4 Part 6 (below) flagged: `LocationList.test.tsx` passed standalone but was never in `package.json`'s `test` chain. Checking every tracked test file the same way (`git ls-files apps/web | grep -E '\.test\.(ts|tsx)$'`, 156 files) against the chain's own file list (153) found two more unreachable files: `components/signals/MarketImpactChart.test.tsx`, `lib/copy-guard.test.ts`. All three passed standalone (3/3, 2/2, 1/1 ✔) before being added to the chain; none failed, so none needed fixing or leaving out. Full `pnpm --filter web test`: 891 ✔, 0 ✖, exit 0. See `LIVE_TODO.md`, `08_CURRENT_STATUS.md`.

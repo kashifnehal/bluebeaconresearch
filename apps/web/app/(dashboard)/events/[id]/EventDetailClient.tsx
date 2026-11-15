@@ -477,26 +477,41 @@ export function EventDetailClient({ data }: { data: EventDetailResponse }) {
             </p>
             {sources.length > 0 ? (
               <div className="space-y-3">
-                {sources.map((s, i) => (
-                  <a
-                    key={i}
-                    href={s.url ?? "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group hover:bg-surface/40 cursor-pointer transition-all"
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-text-primary">
-                        {s.title}
-                      </span>
-                      <span className="text-[12px] md:text-[11px] font-mono text-muted uppercase">
-                        {s.domain ?? s.sourceLabel ?? "Unknown source"}
-                        {s.publishedAt ? ` · ${safeFormatDistanceToNow(s.publishedAt, { addSuffix: true })}` : ""}
-                      </span>
+                {sources.map((s, i) => {
+                  const rowClassName =
+                    "p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group transition-all";
+                  const content = (
+                    <>
+                      <div className="flex flex-col">
+                        <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-text-primary">
+                          {s.title}
+                        </span>
+                        <span className="text-[12px] md:text-[11px] font-mono text-muted uppercase">
+                          {s.domain ?? s.sourceLabel ?? "Unknown source"}
+                          {s.publishedAt ? ` · ${safeFormatDistanceToNow(s.publishedAt, { addSuffix: true })}` : ""}
+                        </span>
+                      </div>
+                      {s.url ? (
+                        <ExternalLink className="text-muted group-hover:text-accent transition-colors" size={16} />
+                      ) : null}
+                    </>
+                  );
+                  return s.url ? (
+                    <a
+                      key={i}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${rowClassName} hover:bg-surface/40 cursor-pointer`}
+                    >
+                      {content}
+                    </a>
+                  ) : (
+                    <div key={i} className={rowClassName}>
+                      {content}
                     </div>
-                    <ExternalLink className="text-muted group-hover:text-accent transition-colors" size={16} />
-                  </a>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="max-w-2xl p-20 rounded-lg border-2 border-dashed border-border/40 flex flex-col items-center justify-center text-center">

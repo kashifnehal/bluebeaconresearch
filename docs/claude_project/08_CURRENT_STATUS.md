@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-15 (TASK W5 Part 1 — test chain now matches every tracked apps/web test file — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-15 (TASK W5 Part 2 — event-page Sources tab no longer fakes a link with no URL — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-15 (TASK W5 Part 2, `apps/web` only, `this commit`) — `EventDetailClient.tsx`'s Sources/"timeline" tab no longer renders `<a href="#">` for a source with no URL; it now matches `EventHero.tsx`'s plain-text fallback. New rendered tests for both cases. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-15 (TASK W5 Part 1, `apps/web` only, `this commit`) — `apps/web/package.json`'s `test` chain was missing 3 of 156 tracked test files (`LocationList.test.tsx`, flagged by TASK W4 Part 6 below; plus `MarketImpactChart.test.tsx` and `copy-guard.test.ts`, found checking every other file the same way). All three passed standalone and are now in the chain. Full `pnpm --filter web test`: 891 ✔, 0 ✖. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 

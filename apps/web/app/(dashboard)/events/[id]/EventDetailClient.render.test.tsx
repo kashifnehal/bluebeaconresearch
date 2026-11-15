@@ -187,6 +187,99 @@ async function main() {
       }
     },
   );
+
+  async function renderSourcesTab(sources: EventDetailResponse["sources"]) {
+    const sourcesData: EventDetailResponse = {
+      signal: fakeSignal(),
+      sources,
+      historicalComparisons: [],
+      relatedEvents: [],
+      relatedEventsTotal: 0,
+      pricesAtSignal: [],
+      marketImpactMagnitudes: {},
+      ownOutcomes: {},
+      degraded: [],
+    } as unknown as EventDetailResponse;
+
+    const queryClient = new QueryClient();
+    document.body.replaceChildren();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    await act(async () => {
+      root.render(
+        createElement(
+          AppRouterContext.Provider,
+          { value: fakeRouter },
+          createElement(
+            QueryClientProvider,
+            { client: queryClient },
+            createElement(
+              AuthProvider,
+              null,
+              createElement(TooltipProvider, null, createElement(EventDetailClient, { data: sourcesData })),
+            ),
+          ),
+        ),
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+    });
+
+    const sourcesTabButton = [...document.querySelectorAll("button")].find(
+      (b) => (b.textContent ?? "").trim().toLowerCase() === "timeline",
+    );
+    assert.ok(sourcesTabButton, "expected the 'timeline' tab trigger (value=\"sources\")");
+    await act(async () => {
+      sourcesTabButton!.dispatchEvent(new (globalThis as any).window.Event("click", { bubbles: true }));
+    });
+
+    return { root, queryClient };
+  }
+
+  await runTest("a source with a url renders a clickable row that links out", async () => {
+    const { root, queryClient } = await renderSourcesTab([
+      {
+        title: "Tankers delayed near strait",
+        url: "https://example.com/strait-delay",
+        sourceLabel: "Example Wire",
+        domain: "example.com",
+        publishedAt: "2026-11-01T08:00:00.000Z",
+      },
+    ] as unknown as EventDetailResponse["sources"]);
+    try {
+      const link = document.querySelector('a[href="https://example.com/strait-delay"]') as HTMLAnchorElement;
+      assert.ok(link, "expected an anchor linking to the source url");
+      assert.equal(link.getAttribute("target"), "_blank");
+      assert.equal(link.getAttribute("rel"), "noopener noreferrer");
+      assert.match(link.textContent ?? "", /example\.com/);
+    } finally {
+      await act(async () => root.unmount());
+      queryClient.clear();
+    }
+  });
+
+  await runTest("a source with no url renders the outlet name as plain text, never href=\"#\"", async () => {
+    const { root, queryClient } = await renderSourcesTab([
+      {
+        title: "Wire report, no link",
+        url: null,
+        sourceLabel: "Reuters",
+        domain: null,
+        publishedAt: "2026-11-01T08:00:00.000Z",
+      },
+    ] as unknown as EventDetailResponse["sources"]);
+    try {
+      assert.equal(document.querySelector('a[href="#"]'), null, "must not render href=\"#\"");
+      const anyAnchor = document.querySelector("a");
+      assert.equal(anyAnchor, null, "a source with no url must not render inside an anchor at all");
+      assert.match(document.body.textContent ?? "", /Reuters/);
+    } finally {
+      await act(async () => root.unmount());
+      queryClient.clear();
+    }
+  });
 }
 
 main().then(() => {
