@@ -95,6 +95,51 @@ await runTest("does nothing when the first batch is already empty", async () => 
   assert.equal(calls.length, 1);
 });
 
+await runTest("a statement timeout (code 57014) retries once in 10 minutes, then succeeds", async () => {
+  const { client, calls } = makeClient((i) =>
+    i === 0 ? { data: null, error: { message: "canceling statement due to statement timeout", code: "57014" } } : { data: 10, error: null },
+  );
+  const { sleep, waits } = makeSleep();
+  const result = await runServiceHealthRetentionOnce(client, sleep);
+  assert.equal(result.ok, true);
+  assert.equal(result.deleted, 10);
+  assert.equal(calls.length, 2);
+  assert.deepEqual(waits, [600_000]);
+});
+
+await runTest("two statement timeouts in a row: ok false, sleep (retry) called once", async () => {
+  const { client, calls } = makeClient(() => ({
+    data: null,
+    error: { message: "canceling statement due to statement timeout", code: "57014" },
+  }));
+  const { sleep, waits } = makeSleep();
+  const result = await runServiceHealthRetentionOnce(client, sleep);
+  assert.equal(result.ok, false);
+  assert.equal(result.deleted, 0);
+  assert.equal(calls.length, 2);
+  assert.deepEqual(waits, [600_000]);
+});
+
+await runTest("a non-timeout error does not retry: ok false, no sleep", async () => {
+  const { client, calls } = makeClient(() => ({ data: null, error: { message: "connection reset" } }));
+  const { sleep, waits } = makeSleep();
+  const result = await runServiceHealthRetentionOnce(client, sleep);
+  assert.equal(result.ok, false);
+  assert.equal(result.deleted, 0);
+  assert.equal(calls.length, 1);
+  assert.deepEqual(waits, []);
+});
+
+await runTest("PGRST202 does not retry: ok false, no sleep", async () => {
+  const { client, calls } = makeClient(() => ({ data: null, error: { message: "not found", code: "PGRST202" } }));
+  const { sleep, waits } = makeSleep();
+  const result = await runServiceHealthRetentionOnce(client, sleep);
+  assert.equal(result.ok, false);
+  assert.equal(result.error, "prune function missing");
+  assert.equal(calls.length, 1);
+  assert.deepEqual(waits, []);
+});
+
 function newestPruneServiceHealthEventsMigration(migrationsDir: string): string {
   const candidates = readdirSync(migrationsDir)
     .filter((f) => f.endsWith(".sql"))

@@ -162,6 +162,16 @@ function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Engineering choice with no outside source. The first weekly run on 2026-11-15
+// 03:00 UTC failed with a statement timeout while the database was slow; a manual
+// run minutes later worked. 10 minutes is a guess at how long a slow spell lasts.
+// It is not measured.
+const SERVICE_HEALTH_RETRY_PAUSE_MS = 10 * 60 * 1000;
+
+function isStatementTimeout(error: { message: string; code?: string }): boolean {
+  return error.code === "57014" || /statement timeout/i.test(error.message);
+}
+
 export async function runServiceHealthRetentionOnce(
   supabase?: HealthRetentionClient,
   sleep: (ms: number) => Promise<void> = defaultSleep,
@@ -170,13 +180,25 @@ export async function runServiceHealthRetentionOnce(
   const cutoff = daysAgoIso(SERVICE_HEALTH_RETENTION_DAYS);
   let deleted = 0;
   let batches = 0;
+  let retriedThisRun = false;
 
   for (let i = 0; i < SERVICE_HEALTH_MAX_BATCHES; i++) {
     batches = i + 1;
-    const { data, error } = await client.rpc("prune_service_health_events", {
+    let { data, error } = await client.rpc("prune_service_health_events", {
       p_cutoff: cutoff,
       p_batch: SERVICE_HEALTH_BATCH,
     });
+
+    if (error && !retriedThisRun && isStatementTimeout(error)) {
+      retriedThisRun = true;
+      console.error("[retention] service_health_events prune timed out; retrying once in 10 minutes");
+      await sleep(SERVICE_HEALTH_RETRY_PAUSE_MS);
+      ({ data, error } = await client.rpc("prune_service_health_events", {
+        p_cutoff: cutoff,
+        p_batch: SERVICE_HEALTH_BATCH,
+      }));
+    }
+
     if (error) {
       if (error.code === "PGRST202") {
         console.error("[retention] prune_service_health_events function missing (PGRST202)");

@@ -384,7 +384,7 @@ async function main() {
   // #67 data retention — weekly, Sunday 03:00 UTC (ahead of the 04:00 sanctions
   // sync). commodity_prices >90d deleted outright; raw_events >180d deleted only
   // when a signal already references them. signals are never touched.
-  // service_health_events older than 45 days are deleted in the same window.
+  // service_health_events retention runs separately, at 03:17 UTC (see below).
   cron.schedule("0 3 * * 0", async () => {
     try {
       const res = await runRetentionJobsOnce();
@@ -393,6 +393,15 @@ async function main() {
       app.log.error({ err: e }, "retention-jobs failed");
       Sentry.captureException(e);
     }
+  });
+
+  // service_health_events retention — weekly, Sunday 03:17 UTC. Split out of the
+  // 03:00 job on 2026-11-15 after the first run hit a statement timeout; this job
+  // now retries once after a 10 minute pause (see retention.ts).
+  // Engineering choice with no outside source: minute 17 avoids :00 and :30 (the
+  // ingestion cycle) and multiples of 5 (the 5 minute database health check). Not
+  // measured.
+  cron.schedule("17 3 * * 0", async () => {
     try {
       const res = await runServiceHealthRetentionOnce();
       app.log.info({ res }, "service-health retention complete");
