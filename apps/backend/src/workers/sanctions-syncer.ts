@@ -113,6 +113,9 @@ export async function runSanctionsSyncOnce(deps: SanctionsSyncDeps = {}) {
   // only when raw_data or source_url differs, then returns how many changed.
   let changed = 0;
   let useRowUpsert = false;
+  let failedChunks = 0;
+  let failedRows = 0;
+  const totalChunks = Math.ceil(rows.length / UPSERT_CHUNK_SIZE);
   for (let i = 0; i < rows.length; i += UPSERT_CHUNK_SIZE) {
     const chunk = rows.slice(i, i + UPSERT_CHUNK_SIZE);
     const chunkIndex = i / UPSERT_CHUNK_SIZE;
@@ -133,6 +136,8 @@ export async function runSanctionsSyncOnce(deps: SanctionsSyncDeps = {}) {
           `[Sanctions] upsert chunk ${chunkIndex} (${chunk.length} rows) failed:`,
           error.message,
         );
+        failedChunks += 1;
+        failedRows += chunk.length;
         continue;
       }
     }
@@ -144,18 +149,29 @@ export async function runSanctionsSyncOnce(deps: SanctionsSyncDeps = {}) {
         `[Sanctions] upsert chunk ${chunkIndex} (${chunk.length} rows) failed:`,
         error.message,
       );
+      failedChunks += 1;
+      failedRows += chunk.length;
       continue;
     }
     changed += chunk.length;
   }
 
-  await recordHealth(
-    SANCTIONS_SYNC_SERVICE,
-    "ok",
-    `fetched ${arr.length}, changed ${changed}`,
-    now() - startedAt,
-  );
+  if (failedChunks === 0) {
+    await recordHealth(
+      SANCTIONS_SYNC_SERVICE,
+      "ok",
+      `fetched ${arr.length}, changed ${changed}`,
+      now() - startedAt,
+    );
+  } else {
+    await recordHealth(
+      SANCTIONS_SYNC_SERVICE,
+      "degraded",
+      `fetched ${arr.length}, changed ${changed}, failed ${failedChunks} of ${totalChunks} chunks (${failedRows} rows)`,
+      now() - startedAt,
+    );
+  }
 
-  return { ok: true as const, list, upserted: changed, changed };
+  return { ok: true as const, list, upserted: changed, changed, failedChunks };
 }
 

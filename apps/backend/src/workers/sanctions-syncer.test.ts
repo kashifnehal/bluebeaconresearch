@@ -182,7 +182,18 @@ await runTest("PGRST202 falls back to row upsert for the rest of the run", async
   }
 });
 
-await runTest("an rpc error on one chunk is logged and the run continues", async () => {
+await runTest("all chunks succeed: status ok, detail unchanged", async () => {
+  const h = makeHarness();
+  h.setXml(async () => xmlWithEntries(501));
+  const result = await runSanctionsSyncOnce(h.deps());
+  assert.equal(result.ok, true);
+  assert.equal(result.failedChunks, 0);
+  assert.equal(h.health.length, 1);
+  assert.equal(h.health[0].status, "ok");
+  assert.match(h.health[0].detail ?? "", /^fetched 501, changed 501$/);
+});
+
+await runTest("an rpc error (not PGRST202) on one chunk is logged, the run continues, and health is degraded", async () => {
   const h = makeHarness();
   h.setXml(async () => xmlWithEntries(501));
   h.setRpc((_rows, callIndex) =>
@@ -199,13 +210,58 @@ await runTest("an rpc error on one chunk is logged and the run continues", async
     const result = await runSanctionsSyncOnce(h.deps());
     assert.equal(result.ok, true);
     assert.equal(result.changed, 1);
+    assert.equal(result.failedChunks, 1);
     assert.equal(h.rpcCalls.length, 2);
     assert.equal(h.upserted.length, 0);
     assert.equal(lines.length, 1);
     assert.match(lines[0] ?? "", /chunk timed out/);
     assert.equal(h.health.length, 1);
-    assert.equal(h.health[0].status, "ok");
+    assert.equal(h.health[0].status, "degraded");
     assert.match(h.health[0].detail ?? "", /fetched 501, changed 1/);
+    assert.match(h.health[0].detail ?? "", /failed 1 of/);
+  } finally {
+    console.error = orig;
+  }
+});
+
+await runTest("PGRST202 fallback path where one row-upsert chunk fails: status degraded", async () => {
+  const h = makeHarness();
+  h.setXml(async () => xmlWithEntries(501));
+  h.setRpc(() => ({ data: null, error: { code: "PGRST202", message: "function not found" } }));
+  let upsertCallIndex = 0;
+  const fakeSupabase: any = {
+    from(table: string) {
+      if (table !== "sanctions_entities") throw new Error(`unexpected table ${table}`);
+      return {
+        upsert(rows: Record<string, unknown>[]) {
+          const idx = upsertCallIndex++;
+          if (idx === 0) return Promise.resolve({ error: { message: "row upsert failed" } });
+          h.upserted.push(rows);
+          return Promise.resolve({ error: null });
+        },
+      };
+    },
+    rpc(name: string, args: { p_rows: Record<string, unknown>[] }) {
+      if (name !== "upsert_sanctions_entities") throw new Error(`unexpected rpc ${name}`);
+      h.rpcCalls.push(args.p_rows);
+      return Promise.resolve({ data: null, error: { code: "PGRST202", message: "function not found" } });
+    },
+  };
+  const lines: string[] = [];
+  const orig = console.error;
+  console.error = (...args: unknown[]) => {
+    lines.push(args.map(String).join(" "));
+  };
+  try {
+    const result = await runSanctionsSyncOnce({ ...h.deps(), supabase: fakeSupabase });
+    assert.equal(result.ok, true);
+    assert.equal(result.failedChunks, 1);
+    assert.equal(h.rpcCalls.length, 1);
+    assert.equal(h.upserted.length, 1);
+    assert.equal(h.upserted[0].length, 1);
+    assert.equal(h.health.length, 1);
+    assert.equal(h.health[0].status, "degraded");
+    assert.match(h.health[0].detail ?? "", /failed 1 of/);
   } finally {
     console.error = orig;
   }
