@@ -5,6 +5,16 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
+## ✅ Sanctions sync reports degraded on chunk failure; service-health prune retries once and moved off the 03:00 job (TASK BE-DB-IO3), `apps/backend` only, 2026-11-15, `4617879` / `84523d3` / `this commit`
+
+- Why: on 2026-11-15 the first weekly service_health_events prune (03:00 UTC) failed with a statement timeout while the database was slow and nothing retried it. Separately, the daily sanctions sync (04:00 UTC) was logging a failed upsert chunk and still writing an "ok" health row, so a partial run looked healthy. Both were silent failures.
+- Fix Part 1 (`4617879`): `sanctions-syncer.ts`'s `runSanctionsSyncOnce` now counts `failedChunks`/`failedRows` across both failure branches in the chunk loop and writes health status `"degraded"` (an existing status, already used by `category-guard.ts`, `feed-volume-alarm.ts`, `monthly-spend-warning.ts`) with detail `fetched N, changed M, failed X of Y chunks (Z rows)` when any chunk fails; unchanged `"ok"`/`fetched N, changed M` otherwise. `defaultGetLastSuccessfulRunAt` already filtered `status = "ok"` only, so a degraded run already cannot satisfy the 20h guard — no change needed there.
+- Fix Part 2 (`84523d3`): `retention.ts`'s `runServiceHealthRetentionOnce` retries the same batch once after a 10 minute pause (`SERVICE_HEALTH_RETRY_PAUSE_MS`) when `prune_service_health_events` returns a statement-timeout error (code `57014` or a message matching `/statement timeout/i`); a second timeout or any other error still returns `ok:false` as before, and the PGRST202 branch is unchanged and never retried. `workers.ts` moved it off the shared `0 3 * * 0` callback onto its own `17 3 * * 0` cron so a slow prune no longer shares a window with `runRetentionJobsOnce`.
+- Report-only finding: neither `apps/web/lib/status-checks.ts` nor `apps/backend/src/routes/admin.ts` reads the `sanctions_sync` service specifically today — `status-checks.ts`'s `INGESTION_COLLECTOR_SERVICES` list is `["gdelt", "gnews", "rss", "acled"]` and does not include it, and `admin.ts`'s `/v1/admin/service-health` just passes every service's last status through verbatim. `apps/web/app/admin/service-status/ServiceStatusClient.tsx`'s `statusColor()` would render any non-`"ok"`/`"rate_limited"` status (including the new `"degraded"`) in the same red text as `"error"`, but `sanctions_sync` is not currently wired into any of that page's displayed groups, so this has no visible effect yet.
+- Verified: `apps/backend` `tsc --noEmit` exit 0; `sanctions-syncer.test.ts` 9/9 ✔; `retention.test.ts` 10/10 ✔; full `npm test` chain exit 0, 0 ✖.
+- Not verified: no deploy and no production run (Claude checks Railway and runs the prune by hand).
+- See `04_DATABASE.md`.
+
 ## ✅ Test chain now matches every tracked apps/web test file (TASK W5 Part 1), `apps/web` only, 2026-11-15, `this commit`
 
 - Why: TASK W4 Part 6 (above) flagged that `components/map/LocationList.test.tsx` passes standalone but was never wired into `apps/web/package.json`'s `test` chain, contradicting `06_COMPONENTS.md`'s own "registered in package.json" note.
