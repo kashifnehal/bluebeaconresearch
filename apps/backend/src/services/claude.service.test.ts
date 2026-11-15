@@ -20,6 +20,7 @@ import {
   resetCreditBalanceBreakerForTests,
   setCreditBalanceBreakerPauseMsForTests,
   setCreditBalanceBreakerRecheckMsForTests,
+  openCreditBalanceBreaker,
 } from "../lib/credit-balance-breaker.js";
 
 const TEST_WATCHLIST: MediaImpactWatchlistEntry[] = [
@@ -1976,6 +1977,47 @@ async function main() {
       assert.strictEqual(third.deferReason, "credit_balance_paused", "still failing, so the breaker reopens");
     } finally {
       resetCreditBalanceBreakerForTests();
+    }
+  },
+  );
+
+  await runTest(
+  "generateAnalysis respects the open credit-balance breaker and makes zero API calls",
+  async () => {
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    resetCreditBalanceBreakerForTests();
+    try {
+      openCreditBalanceBreaker("Your credit balance is too low to access the Claude API.");
+
+      let callCount = 0;
+      const breakerBriefingService = new ClaudeService();
+      (breakerBriefingService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            throw new Error("must not be called while the breaker is open");
+          },
+        },
+      };
+
+      const briefing = await breakerBriefingService.generateAnalysis(
+        {
+          id: "signal-1",
+          region: "Middle East",
+          commodity_impacts: [{ asset: "USOIL", direction: "up", confidence: 0.8 }],
+        },
+        { contextNotes: [] },
+      );
+
+      assert.strictEqual(callCount, 0, "generateAnalysis must not call the Anthropic client while the breaker is open");
+      assert.strictEqual(
+        briefing,
+        "AI intelligence briefing generated via Blue Beacon heuristic analysis engine.",
+        "returns the same template fallback the no-client/budget-closed path already uses",
+      );
+    } finally {
+      resetCreditBalanceBreakerForTests();
+      delete process.env.ANTHROPIC_API_KEY;
     }
   },
   );

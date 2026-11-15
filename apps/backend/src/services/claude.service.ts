@@ -1372,6 +1372,32 @@ export class ClaudeService {
     _context: { contextNotes: string[] },
   ) {
     const client = this.getClient();
+    const callStartedAt = Date.now();
+
+    // TASK W5 Part 3 — same credit-balance circuit breaker classifyEvent() uses
+    // (lib/credit-balance-breaker.ts). Before this, generateAnalysis() had no
+    // breaker check at all, so every briefing call during an open breaker
+    // window still hit the live API and failed the same way (flagged by TASK
+    // W4 Part 3, see LIVE_TODO.md). Returns the same template-string fallback
+    // already used below for "no client"/"budget closed" — signal-generator.ts
+    // just writes whatever string comes back to signals.ai_analysis, so this
+    // never throws and never marks the signal failed.
+    if (client) {
+      if (closeCreditBalanceBreakerIfExpired()) {
+        await recordServiceHealth(
+          "anthropic",
+          "ok",
+          "generateAnalysis: credit-balance circuit breaker pause ended — resuming live calls",
+          Date.now() - callStartedAt,
+        );
+      } else if (isCreditBalanceBreakerOpen()) {
+        console.log(
+          `[briefing-fallback] reason=credit_balance_paused signalId=${_signal.id ?? "unknown"} deferred=true`,
+        );
+        return "AI intelligence briefing generated via Blue Beacon heuristic analysis engine.";
+      }
+    }
+
     if (!client || !(await isAnthropicBudgetAvailable("ingestion")))
       return "AI intelligence briefing generated via Blue Beacon heuristic analysis engine.";
 

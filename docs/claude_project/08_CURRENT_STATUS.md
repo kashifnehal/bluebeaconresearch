@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-15 (TASK W5 Part 2 — event-page Sources tab no longer fakes a link with no URL — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-15 (TASK W5 Part 3 — generateAnalysis() now behind the same credit-balance breaker as classifyEvent() — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-15 (TASK W5 Part 3, `apps/backend` only, `this commit`) — `generateAnalysis()` (briefing generation) now checks the same credit-balance circuit breaker `classifyEvent()` uses; returns the existing template fallback string (zero API calls) while the breaker is open, same as its "no client"/"budget closed" path already does. Other Anthropic call sites not behind this breaker reported, not fixed: `classifyChatRelevance()`, `chatAboutSignal()`, `answerSearchAssist()`, `lib/gate-shadow.ts`, `scripts/replay-gate.ts`. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-15 (TASK W5 Part 2, `apps/web` only, `this commit`) — `EventDetailClient.tsx`'s Sources/"timeline" tab no longer renders `<a href="#">` for a source with no URL; it now matches `EventHero.tsx`'s plain-text fallback. New rendered tests for both cases. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
