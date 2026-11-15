@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-15 — Event-page source-link report, no reproducible bug found (TASK W4 Part 5, `this commit`)
+
+`apps/web`, read-only. Investigated a report that an event page showed the outlet name without a clickable link. Both render sites already link out when the source has a stored URL; the one flagged event does have a stored URL today, so the gap wasn't reproducible. No code changed. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-15 — No performance percentage on the public surface (TASK NQ-2, `fee7543`/`715b4ea`/`5d100f4`/`ffe732e`/`be8aaa4`)
 
 `apps/web` + `apps/backend/src/lib/search-catalog.ts`. `/accuracy` rebuilt as a static page: no fetch, no horizon/by-asset table, no percentage anywhere — states what BBR records per item and the publication standard, links to `/how-it-works`/`/corrections`. Homepage track-record section and nav/footer/`how-it-works` links to `/accuracy` relabeled "Method" (was "Accuracy"/"See the accuracy record"). `help-faq.ts`/`search-catalog.ts` FAQ answers no longer describe the removed tables or claim the page shows horizons. `/watchlist`'s "Market Signal Forecast" card relabeled "Events for this asset" (closes the TASK W3 Part 4 (c) leftover below — kept rather than removed to avoid a lopsided 2-up grid). New `app/surface-wording.guard.test.ts` fails the test chain if 5 removed phrases reappear outside test files; this part also removed the now-dead `ACCURACY_LOAD_ERROR` export, fixing the gap the TASK W4 Part 1 entry below flagged as pre-existing/out-of-scope. New decision recorded in `10_DECISIONS.md`: "No performance percentage on the public surface." Web+backend `tsc`/test/`next build` all exit 0 (web 884 ✔ after merging TASK W4's additions, backend 653 ✔). Not browser-verified. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
