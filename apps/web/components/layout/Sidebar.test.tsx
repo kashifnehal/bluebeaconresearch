@@ -126,6 +126,8 @@ async function main() {
       const text = document.body.textContent ?? "";
       assert.match(text, /WEEK AHEAD/);
       assert.doesNotMatch(text, /\bCALENDAR\b/);
+      // TASK W4 Part 4: the fabricated "Node: BB-ALPHA-09" footer label is removed.
+      assert.doesNotMatch(text, /BB-ALPHA/);
     } finally {
       await act(async () => root.unmount());
     }

@@ -67,6 +67,10 @@ async function main() {
       assert.equal(push!.getAttribute("aria-checked"), "false");
       await act(async () => click(push!));
       assert.equal(push!.getAttribute("aria-checked"), "true");
+
+      // TASK W4 Part 4: the fabricated "ACCESS_POINT"/"ENCRYPTION"/"SESSION_ID"
+      // decorative footer is removed.
+      assert.doesNotMatch(document.body.innerHTML, /ACCESS_POINT|SESSION_ID: 88F9|BB-ALPHA/);
     } finally {
       globalThis.fetch = original;
       await act(async () => root?.unmount());

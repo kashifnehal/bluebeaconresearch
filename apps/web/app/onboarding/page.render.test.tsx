@@ -115,6 +115,23 @@ async function main() {
           /TIMESTAMP: <span>\d{4}-\d{2}-\d{2}T[\d:.]+Z<\/span>/,
           "the decorative TIMESTAMP text still renders a real ISO date",
         );
+        const text = document.body.textContent ?? "";
+        for (const fabricated of [
+          "NODE STATUS",
+          "BB-ALPHA",
+          "ENCRYPTION",
+          "AES-256",
+          "LATENCY:",
+          "UPTIME:",
+          "SOCKET:",
+          "COORDS:",
+        ]) {
+          assert.doesNotMatch(
+            text,
+            new RegExp(fabricated),
+            `TASK W4 Part 4: fabricated "${fabricated}" text must be removed`,
+          );
+        }
       } finally {
         await act(async () => root.unmount());
       }

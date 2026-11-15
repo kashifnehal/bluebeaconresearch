@@ -439,17 +439,6 @@ function SignupForm() {
             </Link>
           </p>
         </footer>
-
-        {/* System meta */}
-        <div style={{ marginTop: "32px", display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", opacity: 0.3 }}>
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
-            Secure Node: BB-ALPHA-09
-          </span>
-          <span style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: C.primaryContainer, display: "block" }} className="animate-pulse" />
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "10px", color: C.onSurfaceVariant, textTransform: "uppercase", letterSpacing: "0.3em" }}>
-            v4.22.0
-          </span>
-        </div>
       </main>
     </div>
   );

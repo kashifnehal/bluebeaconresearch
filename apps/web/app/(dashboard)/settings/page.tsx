@@ -443,20 +443,6 @@ export default function SettingsPage() {
             </section>
           )}
         </div>
-
-      {/* Footer — purely decorative terminal chrome (no real data). Hidden from
-          assistive tech per 07_DESIGN_SYSTEM.md §12, which also resolves the
-          low-contrast axe finding on these cosmetic strings. */}
-      <footer
-        aria-hidden="true"
-        className="mt-auto pt-10 border-t border-outline-variant/10 flex justify-between items-center text-[12px] md:text-[11px] font-mono text-outline uppercase tracking-[0.2em] font-bold"
-      >
-        <div>ACCESS_POINT: BB-ALPHA-09</div>
-        <div className="flex gap-8">
-          <span>ENCRYPTION: AES-256</span>
-          <span>SESSION_ID: 88F9-AX21</span>
-        </div>
-      </footer>
     </PageShell>
   );
 }

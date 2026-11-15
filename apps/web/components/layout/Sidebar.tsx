@@ -142,9 +142,6 @@ export function Sidebar() {
         className="mt-auto p-6 border-t space-y-2"
         style={{ borderColor: "var(--border)", backgroundColor: "#0e0e0e" }}
       >
-        <div className="text-[12px] md:text-[11px] mb-4" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--accent)" }}>
-          Node: BB-ALPHA-09
-        </div>
         <Link
           href="/help"
           className="flex items-center gap-2 w-full text-left transition-colors"

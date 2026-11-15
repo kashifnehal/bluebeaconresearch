@@ -556,99 +556,8 @@ export default function OnboardingPage() {
               </div>
             </div>
           )}
-
-          {/* Footer */}
-          <footer
-            style={{
-              marginTop: "32px",
-              paddingTop: "32px",
-              borderTop: "1px solid rgba(60,74,66,0.2)",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontSize: "10px",
-                  color: "var(--text-muted)",
-                }}
-              >
-                NODE STATUS
-              </div>
-              <div
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: "10px",
-                  color: "var(--accent)",
-                }}
-              >
-                BB-ALPHA-ONLINE
-              </div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div
-                style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontSize: "10px",
-                  color: "var(--text-muted)",
-                }}
-              >
-                ENCRYPTION
-              </div>
-              <div
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: "10px",
-                  color: "#e5e2e1",
-                }}
-              >
-                AES-256 ACTIVE
-              </div>
-            </div>
-          </footer>
         </div>
       </main>
-
-      {/* Bottom-left status */}
-      <div
-        className="fixed bottom-10 left-10 hidden xl:flex flex-col gap-1 z-0"
-        style={{ opacity: 0.4 }}
-      >
-        {[
-          { label: "LATENCY: 14MS", pulse: false },
-          { label: "UPTIME: 99.998%", pulse: false },
-          { label: "SOCKET: CONNECTED", pulse: true },
-        ].map(({ label, pulse }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span
-              style={{
-                height: "4px",
-                width: "4px",
-                backgroundColor: "var(--accent)",
-                borderRadius: "50%",
-                display: "block",
-              }}
-              className={pulse ? "animate-pulse" : ""}
-            />
-            <span
-              style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: "10px",
-                color: "#e5e2e1",
-              }}
-            >
-              {label}
-            </span>
-          </div>
-        ))}
-      </div>
 
       {/* Top-right timestamp */}
       <div
@@ -663,8 +572,7 @@ export default function OnboardingPage() {
             color: "#e5e2e1",
           }}
         >
-          TIMESTAMP: <span suppressHydrationWarning>{new Date().toISOString()}</span><br />
-          COORDS: 40.7128° N, 74.0060° W
+          TIMESTAMP: <span suppressHydrationWarning>{new Date().toISOString()}</span>
         </div>
       </div>
     </div>

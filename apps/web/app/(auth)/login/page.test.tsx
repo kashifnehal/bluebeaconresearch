@@ -135,6 +135,10 @@ async function main() {
         const form = document.querySelector("form");
         assert.ok(email && password && form, "expected the login form to render");
 
+        // TASK W4 Part 4: the fabricated "Secure Node: BB-ALPHA-09" / "v4.22.0"
+        // decorative footer is removed.
+        assert.doesNotMatch(document.body.innerHTML, /BB-ALPHA|Secure Node/);
+
         await act(async () => {
           typeInto(email, "ada@example.com");
           typeInto(password, "correct-horse");

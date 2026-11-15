@@ -8,11 +8,15 @@
 
 ---
 
-## 2026-11-15 — No performance percentage on the public surface (TASK NQ-2, `fee7543`/`715b4ea`/`5d100f4`/`ffe732e`/`this commit`)
+## 2026-11-15 — No performance percentage on the public surface (TASK NQ-2, `fee7543`/`715b4ea`/`5d100f4`/`ffe732e`/`be8aaa4`)
 
 `apps/web` + `apps/backend/src/lib/search-catalog.ts`. `/accuracy` rebuilt as a static page: no fetch, no horizon/by-asset table, no percentage anywhere — states what BBR records per item and the publication standard, links to `/how-it-works`/`/corrections`. Homepage track-record section and nav/footer/`how-it-works` links to `/accuracy` relabeled "Method" (was "Accuracy"/"See the accuracy record"). `help-faq.ts`/`search-catalog.ts` FAQ answers no longer describe the removed tables or claim the page shows horizons. `/watchlist`'s "Market Signal Forecast" card relabeled "Events for this asset" (closes the TASK W3 Part 4 (c) leftover below — kept rather than removed to avoid a lopsided 2-up grid). New `app/surface-wording.guard.test.ts` fails the test chain if 5 removed phrases reappear outside test files; this part also removed the now-dead `ACCURACY_LOAD_ERROR` export, fixing the gap the TASK W4 Part 1 entry below flagged as pre-existing/out-of-scope. New decision recorded in `10_DECISIONS.md`: "No performance percentage on the public surface." Web+backend `tsc`/test/`next build` all exit 0 (web 884 ✔ after merging TASK W4's additions, backend 653 ✔). Not browser-verified. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
 
-## 2026-11-15 — Credit-balance breaker follows the real "regain access on" date (TASK W4 Part 3, `this commit`)
+## 2026-11-15 — Fabricated live-looking status/number strings removed from the UI (TASK W4 Part 4, `this commit`)
+
+`apps/web` only. Removed decorative "system status" strings (fake node IDs, fake latency/uptime/socket numbers, a fake encryption/session chrome) from the onboarding page, the login and signup pages, settings, and the sidebar — each was a made-up value with no real data behind it, flagged as a gap in an earlier task and closed here. No real content (the live TIMESTAMP clock, the real Help link, etc.) was touched. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
+
+## 2026-11-15 — Credit-balance breaker follows the real "regain access on" date (TASK W4 Part 3, `10c0ef4`)
 
 `apps/backend` only. A fixed 30-minute breaker pause (TASK W3 Part 1) meant hitting the live Anthropic API every ~30 minutes for 17 days straight against a dated usage-limit error ("You will regain access on 2026-12-01..."). The breaker now parses that date and opens until it, capped at a 6-hour re-check window so an early-raised limit is still noticed; an undated "credit balance is too low" message keeps the original 30-minute pause. Gap found, not fixed: `generateAnalysis()` (briefing generation) doesn't check the breaker before its own live call. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/08_CURRENT_STATUS.md`.
 
