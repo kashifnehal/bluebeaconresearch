@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-15 (TASK NQ-2 — no performance percentage on the public surface — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-15 (TASK W5 Part 1 — test chain now matches every tracked apps/web test file — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-15 (TASK W5 Part 1, `apps/web` only, `this commit`) — `apps/web/package.json`'s `test` chain was missing 3 of 156 tracked test files (`LocationList.test.tsx`, flagged by TASK W4 Part 6 below; plus `MarketImpactChart.test.tsx` and `copy-guard.test.ts`, found checking every other file the same way). All three passed standalone and are now in the chain. Full `pnpm --filter web test`: 891 ✔, 0 ✖. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`.
 
 > ⚠️ NEW 2026-11-15 (TASK NQ-2, `apps/web` + `apps/backend/src/lib/search-catalog.ts`, `fee7543`/`715b4ea`/`5d100f4`/`ffe732e`/`this commit`) — `/accuracy` rebuilt static, no fetch, no horizon/by-asset table, no percentage; states what BBR records per item and the publication standard, links to `/how-it-works`/`/corrections`. Homepage/nav/footer/`how-it-works` links to `/accuracy` relabeled "Method" (was "Accuracy"/"See the accuracy record"). `help-faq.ts`/`search-catalog.ts` FAQ answers no longer describe the removed tables. `/watchlist`'s "Market Signal Forecast" card relabeled "Events for this asset" (closes the TASK W3 Part 4 (c) leftover below). New `app/surface-wording.guard.test.ts` fails the test chain on 5 banned phrases reappearing outside test files. Web+backend `tsc`/test/`next build` all exit 0 (web 880 ✔, backend 653 ✔, 0 ✖ either). Not browser-verified. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/brain/14_CHANGELOG.md`, `docs/claude_project/10_DECISIONS.md`.
 
