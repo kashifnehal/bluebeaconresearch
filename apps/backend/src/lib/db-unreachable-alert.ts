@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { EmailService } from "../services/email.service.js";
 import { getEnv } from "../env.js";
 import { describeError } from "./safe-error-text.js";
+import { requestSupabaseRestart } from "./supabase-restart.js";
 
 // BE-DBALERT1 — fired when the workers cannot reach Supabase at all, as opposed to a
 // single collector failing. Every existing ops alert (collection-stalled-alert.ts,
@@ -50,6 +51,18 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 const DB_PROBE_HISTORY_MAX_ENTRIES = 2016;
 const DB_PROBE_HISTORY_TTL_SECONDS = 8 * 24 * 3600;
 
+// Watchdog auto-restart (Part 4). 6 checks, the 3 hour cooldown and 3 restarts a
+// day are engineering choices with no outside source.
+const RESTART_AFTER_FAILURES = 6;
+const RESTART_COOLDOWN_KEY = "db-health:restart:cooldown";
+const RESTART_COOLDOWN_SECONDS = 3 * 60 * 60;
+const RESTART_DAY_TTL_SECONDS = 90_000;
+const RESTART_MAX_PER_DAY = 3;
+
+function restartDayKey(now: Date): string {
+  return `db-health:restart:day:${now.toISOString().slice(0, 10)}`;
+}
+
 function adminRecipients(): string[] {
   return (getEnv().ADMIN_EMAILS ?? "")
     .split(",")
@@ -66,7 +79,9 @@ export type DbUnreachableOutcome =
   | "redis_unavailable"
   | "redis_error"
   | "no_recipients"
-  | "send_failed";
+  | "send_failed"
+  | "restart_requested"
+  | "restart_failed";
 
 export type DbUnreachableDeps = {
   supabase?: DbProbeSupabase;
@@ -146,6 +161,79 @@ async function sendToAdmins(
   return anySent ? "sent" : "send_failed";
 }
 
+/**
+ * Only called once count >= RESTART_AFTER_FAILURES. Returns null (meaning: leave
+ * the caller's own outcome alone) whenever the feature is off, there's no token,
+ * the 3-hour cooldown is already claimed by an earlier attempt, the daily cap is
+ * hit, or Redis itself fails — a Redis failure here must never trigger a restart.
+ */
+async function maybeRequestAutoRestart(
+  redis: DbHealthRedis,
+  email: EmailSender | undefined,
+  now: Date,
+  failureCount: number,
+): Promise<DbUnreachableOutcome | null> {
+  if (failureCount < RESTART_AFTER_FAILURES) return null;
+
+  const env = getEnv();
+  if (env.SUPABASE_AUTO_RESTART !== "on") return null;
+  const token = env.SUPABASE_ACCESS_TOKEN;
+  if (!token) return null;
+
+  let cooldownClaimed: string | null;
+  try {
+    cooldownClaimed = await redis.set(RESTART_COOLDOWN_KEY, "1", "EX", RESTART_COOLDOWN_SECONDS, "NX");
+  } catch (err: any) {
+    console.warn(
+      `[db-unreachable-alert] Redis SET (restart cooldown) failed: ${err?.message ?? err} — not restarting.`,
+    );
+    return null;
+  }
+  if (!cooldownClaimed) {
+    return null;
+  }
+
+  const dayKey = restartDayKey(now);
+  let dayCount: number;
+  try {
+    dayCount = await redis.incr(dayKey);
+    await redis.expire(dayKey, RESTART_DAY_TTL_SECONDS);
+  } catch (err: any) {
+    console.warn(
+      `[db-unreachable-alert] Redis INCR (restart day count) failed: ${err?.message ?? err} — not restarting.`,
+    );
+    return null;
+  }
+  if (dayCount > RESTART_MAX_PER_DAY) {
+    return null;
+  }
+
+  const utcNow = now.toISOString();
+  const result = await requestSupabaseRestart();
+
+  if (result.ok) {
+    await sendToAdmins(
+      email,
+      "BBR: database restart requested automatically",
+      `${utcNow} (UTC)\n\nThe database failed ${failureCount} consecutive checks. An automatic restart ` +
+        "was requested via the Supabase Management API.",
+      `<p>${utcNow} (UTC)</p><p>The database failed ${failureCount} consecutive checks. An automatic ` +
+        "restart was requested via the Supabase Management API.</p>",
+    );
+    return "restart_requested";
+  }
+
+  const statusLine = result.status ? ` (HTTP ${result.status})` : "";
+  const reason = result.error ?? "unknown error";
+  await sendToAdmins(
+    email,
+    "BBR: automatic database restart failed",
+    `${utcNow} (UTC)\n\nThe automatic restart request failed${statusLine}: ${reason}.`,
+    `<p>${utcNow} (UTC)</p><p>The automatic restart request failed${statusLine}: ${reason}.</p>`,
+  );
+  return "restart_failed";
+}
+
 async function recordFailure(
   redis: DbHealthRedis,
   email: EmailSender | undefined,
@@ -169,31 +257,39 @@ async function recordFailure(
     }
   }
 
+  let baseOutcome: DbUnreachableOutcome;
   if (count < FAILURE_THRESHOLD) {
-    return "failure_recorded";
+    baseOutcome = "failure_recorded";
+  } else {
+    let claimed: string | null;
+    try {
+      claimed = await redis.set(SENT_KEY, "1", "EX", SENT_TTL_SECONDS, "NX");
+    } catch (err: any) {
+      console.warn(`[db-unreachable-alert] Redis SET NX failed: ${err?.message ?? err} — sending NO email.`);
+      return "redis_error";
+    }
+
+    if (!claimed) {
+      baseOutcome = "already_sent";
+    } else {
+      const utcNow = now.toISOString();
+      const subject = "BBR: database not reachable";
+      const body =
+        "The workers could not reach the database for 3 checks in a row. Prices, signals and digests may " +
+        "be missing for this window. Check the Supabase dashboard (Reports) and the project status." +
+        (lastError ? `\n\nLast error: ${lastError}` : "");
+      const text = `${utcNow} (UTC)\n\n${body}`;
+      const html = `<p>${utcNow} (UTC)</p><p>${body.replace(/\n/g, "<br/>")}</p>`;
+      baseOutcome = await sendToAdmins(email, subject, text, html);
+    }
   }
 
-  let claimed: string | null;
-  try {
-    claimed = await redis.set(SENT_KEY, "1", "EX", SENT_TTL_SECONDS, "NX");
-  } catch (err: any) {
-    console.warn(`[db-unreachable-alert] Redis SET NX failed: ${err?.message ?? err} — sending NO email.`);
-    return "redis_error";
-  }
-  if (!claimed) {
-    return "already_sent";
-  }
-
-  const utcNow = now.toISOString();
-  const subject = "BBR: database not reachable";
-  const body =
-    "The workers could not reach the database for 3 checks in a row. Prices, signals and digests may " +
-    "be missing for this window. Check the Supabase dashboard (Reports) and the project status." +
-    (lastError ? `\n\nLast error: ${lastError}` : "");
-  const text = `${utcNow} (UTC)\n\n${body}`;
-  const html = `<p>${utcNow} (UTC)</p><p>${body.replace(/\n/g, "<br/>")}</p>`;
-
-  return sendToAdmins(email, subject, text, html);
+  // Independent of the above: once the run of failures is long enough, try an
+  // automatic restart. This can override baseOutcome (e.g. "already_sent" ->
+  // "restart_requested") because the restart attempt is the more significant
+  // event on this particular call.
+  const restartOutcome = await maybeRequestAutoRestart(redis, email, now, count);
+  return restartOutcome ?? baseOutcome;
 }
 
 async function recordSuccess(

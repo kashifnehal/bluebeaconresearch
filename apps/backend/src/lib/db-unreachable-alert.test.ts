@@ -378,6 +378,156 @@ async function main() {
     const pushed = redis.lists.get("db-health:history") ?? [];
     assert.equal(pushed.length, 2016);
   });
+
+  // BE-DB-RES1 Part 4 — watchdog auto-restart. All of these set
+  // SUPABASE_AUTO_RESTART/SUPABASE_ACCESS_TOKEN and globalThis.fetch for the
+  // duration of the test only, then restore them (checkDatabaseReachable calls
+  // requestSupabaseRestart() with no deps, so the real global fetch is what it
+  // uses — faked here exactly like the PostgREST-shaped-error test elsewhere in
+  // this task, never a real network call).
+  async function withRestartEnv<T>(
+    opts: { flag?: string; token?: string; fetchImpl?: typeof fetch },
+    fn: () => Promise<T>,
+  ): Promise<T> {
+    const prevFlag = process.env.SUPABASE_AUTO_RESTART;
+    const prevToken = process.env.SUPABASE_ACCESS_TOKEN;
+    const prevFetch = globalThis.fetch;
+    if (opts.flag === undefined) delete process.env.SUPABASE_AUTO_RESTART;
+    else process.env.SUPABASE_AUTO_RESTART = opts.flag;
+    if (opts.token === undefined) delete process.env.SUPABASE_ACCESS_TOKEN;
+    else process.env.SUPABASE_ACCESS_TOKEN = opts.token;
+    if (opts.fetchImpl) globalThis.fetch = opts.fetchImpl;
+    try {
+      return await fn();
+    } finally {
+      if (prevFlag === undefined) delete process.env.SUPABASE_AUTO_RESTART;
+      else process.env.SUPABASE_AUTO_RESTART = prevFlag;
+      if (prevToken === undefined) delete process.env.SUPABASE_ACCESS_TOKEN;
+      else process.env.SUPABASE_ACCESS_TOKEN = prevToken;
+      globalThis.fetch = prevFetch;
+    }
+  }
+
+  const okFetch = (async () => new Response(null, { status: 200 })) as unknown as typeof fetch;
+  const TEST_TOKEN = "test-token-123456";
+
+  async function runToFailureCount(
+    redis: ReturnType<typeof fakeRedis>,
+    email: ReturnType<typeof fakeEmail>,
+    count: number,
+  ) {
+    let outcome = "";
+    for (let i = 0; i < count; i++) {
+      outcome = await checkDatabaseReachable({ redis, email, now: NOW, supabase: erroringSupabase() });
+    }
+    return outcome;
+  }
+
+  await runTest("flag off: 6 consecutive failures never attempt a restart", async () => {
+    await withRestartEnv({ flag: undefined, token: TEST_TOKEN, fetchImpl: okFetch }, async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const outcome = await runToFailureCount(redis, email, 6);
+      assert.equal(outcome, "already_sent");
+      assert.equal(redis.store.has("db-health:restart:cooldown"), false);
+      assert.equal(email.calls.some((c) => c.subject.includes("restart")), false);
+    });
+  });
+
+  await runTest("no token: 6 consecutive failures never attempt a restart", async () => {
+    await withRestartEnv({ flag: "on", token: undefined, fetchImpl: okFetch }, async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const outcome = await runToFailureCount(redis, email, 6);
+      assert.equal(outcome, "already_sent");
+      assert.equal(redis.store.has("db-health:restart:cooldown"), false);
+    });
+  });
+
+  await runTest("5 consecutive failures (below the 6-check threshold) never attempt a restart", async () => {
+    await withRestartEnv({ flag: "on", token: TEST_TOKEN, fetchImpl: okFetch }, async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const outcome = await runToFailureCount(redis, email, 5);
+      assert.equal(outcome, "already_sent");
+      assert.equal(redis.store.has("db-health:restart:cooldown"), false);
+    });
+  });
+
+  await runTest("the 6th consecutive failure requests an automatic restart exactly once", async () => {
+    await withRestartEnv({ flag: "on", token: TEST_TOKEN, fetchImpl: okFetch }, async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const outcome = await runToFailureCount(redis, email, 6);
+      assert.equal(outcome, "restart_requested");
+      assert.equal(redis.store.has("db-health:restart:cooldown"), true);
+      const restartEmails = email.calls.filter((c) => c.subject.includes("restart"));
+      assert.equal(restartEmails.length, 1);
+      assert.equal(restartEmails[0]?.subject, "BBR: database restart requested automatically");
+      for (const c of email.calls) {
+        assert.equal(c.text.includes(TEST_TOKEN), false);
+        assert.equal(c.html.includes(TEST_TOKEN), false);
+      }
+    });
+  });
+
+  await runTest("a 7th consecutive failure inside the 3-hour cooldown does not restart again", async () => {
+    await withRestartEnv({ flag: "on", token: TEST_TOKEN, fetchImpl: okFetch }, async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      await runToFailureCount(redis, email, 6);
+      const restartEmailsAfterSixth = email.calls.filter((c) => c.subject.includes("restart")).length;
+      const seventh = await checkDatabaseReachable({ redis, email, now: NOW, supabase: erroringSupabase() });
+      assert.equal(seventh, "already_sent");
+      const restartEmailsAfterSeventh = email.calls.filter((c) => c.subject.includes("restart")).length;
+      assert.equal(restartEmailsAfterSeventh, restartEmailsAfterSixth);
+    });
+  });
+
+  await runTest("a 4th restart attempt in the same UTC day is skipped (day cap)", async () => {
+    await withRestartEnv({ flag: "on", token: TEST_TOKEN, fetchImpl: okFetch }, async () => {
+      const redis = fakeRedis();
+      // Simulate 3 restarts already recorded today, with the cooldown already
+      // expired (cleared) so this call is eligible to attempt a 4th.
+      redis.store.set("db-health:restart:day:2026-11-02", "3");
+      const email = fakeEmail();
+      const outcome = await runToFailureCount(redis, email, 6);
+      assert.equal(outcome, "already_sent");
+      assert.equal(redis.store.get("db-health:restart:day:2026-11-02"), "4");
+      assert.equal(email.calls.some((c) => c.subject.includes("restart")), false);
+    });
+  });
+
+  for (const status of [401, 429]) {
+    await runTest(`a ${status} restart response gives restart_failed and never throws`, async () => {
+      const statusFetch = (async () => new Response(null, { status })) as unknown as typeof fetch;
+      await withRestartEnv({ flag: "on", token: TEST_TOKEN, fetchImpl: statusFetch }, async () => {
+        const redis = fakeRedis();
+        const email = fakeEmail();
+        const outcome = await runToFailureCount(redis, email, 6);
+        assert.equal(outcome, "restart_failed");
+        const failedEmail = email.calls.find((c) => c.subject === "BBR: automatic database restart failed");
+        assert.ok(failedEmail);
+        assert.match(failedEmail!.text, new RegExp(`HTTP ${status}`));
+      });
+    });
+  }
+
+  await runTest("a thrown restart fetch gives restart_failed and never throws", async () => {
+    const throwingFetch = (async () => {
+      throw new Error("network down");
+    }) as unknown as typeof fetch;
+    await withRestartEnv({ flag: "on", token: TEST_TOKEN, fetchImpl: throwingFetch }, async () => {
+      const redis = fakeRedis();
+      const email = fakeEmail();
+      const outcome = await runToFailureCount(redis, email, 6);
+      assert.equal(outcome, "restart_failed");
+      const failedEmail = email.calls.find((c) => c.subject === "BBR: automatic database restart failed");
+      assert.ok(failedEmail);
+      assert.match(failedEmail!.text, /network down/);
+      assert.equal(failedEmail!.text.includes(TEST_TOKEN), false);
+    });
+  });
 }
 
 main();

@@ -95,6 +95,15 @@ const envSchema = z.object({
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
 
+  // BE-DB-RES1 watchdog restart (db-unreachable-alert.ts). A Supabase Management
+  // API personal access token, scoped to this project, used only to request an
+  // automatic project restart after sustained outages. Unset => auto-restart is
+  // never attempted regardless of SUPABASE_AUTO_RESTART. Not set anywhere yet.
+  SUPABASE_ACCESS_TOKEN: z.string().min(10).optional(),
+  // Off unless exactly "on". Not set anywhere yet — this is the kill switch for
+  // the whole auto-restart feature, independent of whether the token exists.
+  SUPABASE_AUTO_RESTART: z.string().optional(),
+
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(10).optional(),
 
