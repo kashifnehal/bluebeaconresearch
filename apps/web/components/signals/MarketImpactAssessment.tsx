@@ -131,6 +131,20 @@ export function MarketImpactAssessment({
       (b) => b.windowHours === MARKET_IMPACT_CHECKPOINT_HOURS,
     ),
   );
+  // TASK W6 Part 3 — the method note used to render once per asset inside
+  // each asset's own "View historical pattern" toggle, so a signal with
+  // several assets repeated it several times. It now renders once for the
+  // whole block, using the first asset that actually has chart data.
+  const methodNoteAsset = impacts.find((c) => {
+    const entry = marketImpactMagnitudes[c.asset];
+    return Boolean(entry?.magnitude) && Boolean(entry?.checkpoints?.length);
+  });
+  const methodNote = methodNoteAsset
+    ? marketImpactMethodNote(
+        methodNoteAsset.asset,
+        (marketImpactMagnitudes[methodNoteAsset.asset]?.magnitude as MarketImpactMagnitude).sampleSize,
+      )
+    : null;
 
   return (
     <div data-testid="market-impact-assessment" className="relative space-y-4">
@@ -275,12 +289,14 @@ export function MarketImpactAssessment({
                           </summary>
                           <div className="mt-2 space-y-1.5">
                             <MarketImpactChart checkpoints={entry.checkpoints} />
-                            <p
-                              data-testid="market-impact-method-note"
-                              className="text-[11px] leading-snug text-muted"
-                            >
-                              {marketImpactMethodNote(c.asset, magnitude.sampleSize)}
-                            </p>
+                            {c.asset === methodNoteAsset?.asset ? (
+                              <p
+                                data-testid="market-impact-method-note"
+                                className="text-[11px] leading-snug text-muted"
+                              >
+                                {methodNote}
+                              </p>
+                            ) : null}
                           </div>
                         </details>
                       ) : null}

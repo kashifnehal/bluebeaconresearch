@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK W6 Part 2 — every other live Anthropic call site now behind the credit-balance breaker)
+Last updated: 2026-11-17 (TASK W6 Part 3 — market-impact method note no longer repeats once per asset)
+
+> ⚠️ NEW 2026-11-17 (TASK W6 Part 3, `apps/web` only, `this commit`) — `MarketImpactAssessment.tsx`'s `marketImpactMethodNote()` sentence used to render once per affected asset (inside each asset's own "View historical pattern" toggle); a multi-asset signal repeated it. It now renders once for the whole block, inside the first asset's toggle with chart data — same sentence text, nothing else changed. `tsc` 0, web test 908 ✔/0 ✖ (1 new test), `next build` 0. See `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W6 Part 2, `apps/backend` only, `this commit`) — closes the gap TASK W5 Part 3 flagged below: `classifyChatRelevance()`, `chatAboutSignal()`, `answerSearchAssist()` (user chat/search-assist requests) and `lib/gate-shadow.ts`'s `runGateShadow()` (background, fire-and-forget off `classifyEvent()`) now all check `closeCreditBalanceBreakerIfExpired()`/`isCreditBalanceBreakerOpen()` before their live call, same as `classifyEvent()`/`generateAnalysis()`. Each returns its own already-existing no-client fallback value while open (`"relevant"`, the "AI chat is temporarily unavailable..." string, `"NO_ANSWER"`, and a silent return respectively) — no new user-facing wording, no vendor error text. `scripts/replay-gate.ts` is manual/offline tooling, not touched. Backend `tsc` 0, test 665 ✔/0 ✖ (4 new breaker tests). See `LIVE_TODO.md`.
 

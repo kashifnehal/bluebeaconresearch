@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Market-impact method note no longer repeats once per asset (TASK W6 Part 3, tracker row I-10, `apps/web`, `this commit`)
+
+The method-note sentence ("Method: N tracked BBR signals that listed `<asset>`...") rendered once per affected asset inside `MarketImpactAssessment.tsx`; a multi-asset signal repeated it. It now renders once for the whole block, inside the first qualifying asset's own chart toggle — same sentence text, nothing reworded. New rendered test: 3 assets, sentence appears exactly once. Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 908 passed, 0 failed; `next build` exit 0. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Every other live Anthropic call site now behind the credit-balance breaker (TASK W6 Part 2, `apps/backend`, `this commit`)
 
 Closes the gap TASK W5 Part 3 flagged: 5 `messages.create` call sites besides `generateAnalysis()` weren't behind the breaker. `classifyChatRelevance()`, `chatAboutSignal()`, `answerSearchAssist()` (all user-triggered chat/search-assist) and `lib/gate-shadow.ts`'s `runGateShadow()` (background, fire-and-forget off `classifyEvent()`) now check it before their live call; each returns its own already-existing no-client fallback value while open (`"relevant"`, the exact "AI chat is temporarily unavailable..." text, `"NO_ANSWER"`, a silent return) — no new wording, no vendor error text. `scripts/replay-gate.ts` is manual tooling, not touched. Checked: backend `tsc --noEmit` exit 0; full backend test chain 665 ✔, 0 ✖ (4 new breaker tests). Full technical record: `docs/brain/14_CHANGELOG.md`.

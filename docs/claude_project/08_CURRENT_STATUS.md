@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK W6 Part 2 — every other live Anthropic call site now behind the credit-balance breaker — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK W6 Part 3 — market-impact method note no longer repeats once per asset — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-17 (TASK W6 Part 3, `apps/web` only, `this commit`) — `MarketImpactAssessment`'s method-note sentence (sample size/asset/checkpoint hours) now renders once per signal instead of once per affected asset, inside the first asset's own chart toggle. Same sentence text, no new wording. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W6 Part 2, `apps/backend` only, `this commit`) — `classifyChatRelevance()`, `chatAboutSignal()`, `answerSearchAssist()` (user chat/search-assist requests) and `lib/gate-shadow.ts`'s `runGateShadow()` (background, fire-and-forget off `classifyEvent()`) now also check the credit-balance breaker before their live call, same as `classifyEvent()`/`generateAnalysis()` already did. Each returns its own existing no-client fallback value while open — no new user-facing wording, no vendor error text. `scripts/replay-gate.ts` (manual tooling) not touched. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 

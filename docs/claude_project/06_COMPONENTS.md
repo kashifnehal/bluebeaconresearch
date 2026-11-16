@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-11-09** for the event page's server-rendered hero. `claude/23_TODO.md` is not in this repo.
 
+> ⚠️ UPDATED 2026-11-17 (TASK W6 Part 3, `this commit`) — `MarketImpactAssessment`'s method-note sentence (sample size/asset/checkpoint hours) now renders once per signal instead of once per affected asset. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
+
 > ⚠️ UPDATED 2026-11-09 (`this commit`) — the event page shows the title, summary, clocks, and the earliest outlet in the first HTML. Heavier sections stream after. The outlet is a link only when a URL is stored. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-15 (TASK W5 Part 2) — the event page's Sources/"timeline" tab now matches the hero: a source with no URL renders as plain text, not a link to `#`. Full detail: `docs/brain/06_COMPONENTS.md`, `docs/brain/LIVE_TODO.md`.

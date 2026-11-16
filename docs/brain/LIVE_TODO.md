@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Market-impact method note no longer repeats once per asset (TASK W6 Part 3, tracker row I-10), `apps/web` only, 2026-11-17, `this commit`
+
+- Why: `lib/market-impact-assessment.ts`'s `marketImpactMethodNote(asset, sampleSize)` ("Method: N tracked BBR signals that listed `<asset>`, median move measured 24h after the event time.") was called inside `MarketImpactAssessment.tsx`'s per-asset `.map()`, once inside each affected asset's own "View historical pattern" `<details>` — a signal with several affected assets showed the sentence once per asset. Founder spec: show the sample size once in a single method note for the block, not per row.
+- Fix: `MarketImpactAssessment.tsx` now precomputes the first asset in `impacts` that has both a `magnitude` and chart `checkpoints`, and only that asset's own `<details>` toggle renders the method-note paragraph (`data-testid="market-impact-method-note"`) — every other asset's toggle still shows its own chart, just not the sentence. No wording changed; the sentence text, the 24-hour wording, and `MARKET_IMPACT_DISCLAIMER` are exactly as they were.
+- New rendered test in `MarketImpactAssessment.test.tsx`: a signal with 3 affected assets (USOIL/UKOIL/COPPER, each with its own magnitude+checkpoints) renders the `Method: ...` sentence exactly once, using the first asset's (USOIL's) own numbers.
+- Verified: web `tsc --noEmit` exit 0; `pnpm --filter web test` 908 ✔, 0 ✖ (1 new test); `next build` exit 0. Not browser-verified.
+- See `06_COMPONENTS.md`.
+
 ## ✅ Every other live Anthropic call site now behind the credit-balance breaker (TASK W6 Part 2), `apps/backend` only, 2026-11-17, `this commit`
 
 - Why: TASK W5 Part 3 (below) put `generateAnalysis()` behind the same credit-balance breaker `classifyEvent()` uses, and reported (not fixed) 5 other `messages.create` call sites that still weren't: `classifyChatRelevance()` (629/1438/1497/1626/1695 line numbers from `git grep -n "messages.create" -- apps/backend/src`), `chatAboutSignal()`, `answerSearchAssist()`, `lib/gate-shadow.ts`, `scripts/replay-gate.ts`.

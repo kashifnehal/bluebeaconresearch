@@ -256,6 +256,43 @@ runTest("historical-pattern chart is collapsed by default behind a toggle, discl
   assert.equal(text.includes(MARKET_IMPACT_DISCLAIMER), true);
 });
 
+runTest("TASK W6 Part 3: a block with 3 assets shows the method-note sentence once, not three times", () => {
+  const html = renderToStaticMarkup(
+    createElement(MarketImpactAssessment, {
+      signal: baseSignal({
+        marketMechanism: "Sanctions widen across energy and metals exports.",
+        commodityImpacts: [
+          { asset: "USOIL", direction: "up", confidence: 0.8 },
+          { asset: "UKOIL", direction: "up", confidence: 0.75 },
+          { asset: "COPPER", direction: "down", confidence: 0.6 },
+        ],
+      }),
+      marketImpactMagnitudes: {
+        USOIL: {
+          magnitude: { medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 },
+          timeHorizonLabel: "multi-day",
+          checkpoints: [{ checkpointHours: 24, medianMovePct: 0.97, sampleSize: 1232, unchangedCount: 0 }],
+        },
+        UKOIL: {
+          magnitude: { medianMovePct: 1.1, sampleSize: 900, unchangedCount: 0 },
+          timeHorizonLabel: "multi-day",
+          checkpoints: [{ checkpointHours: 24, medianMovePct: 1.1, sampleSize: 900, unchangedCount: 0 }],
+        },
+        COPPER: {
+          magnitude: { medianMovePct: 0.5, sampleSize: 400, unchangedCount: 0 },
+          timeHorizonLabel: "multi-day",
+          checkpoints: [{ checkpointHours: 24, medianMovePct: 0.5, sampleSize: 400, unchangedCount: 0 }],
+        },
+      },
+    }),
+  );
+  const text = visibleText(html);
+  const occurrences = (text.match(/Method: \d+ tracked BBR signals that listed/g) ?? []).length;
+  assert.equal(occurrences, 1, `expected the method note exactly once, got ${occurrences}`);
+  assert.match(text, /Method: 1232 tracked BBR signals that listed USOIL, median move measured 24h after the event time\./);
+  assert.equal((html.match(/data-testid="market-impact-method-note"/g) ?? []).length, 1);
+});
+
 runTest("no chart toggle renders when the asset has no checkpoint data", () => {
   const html = renderToStaticMarkup(
     createElement(MarketImpactAssessment, {
