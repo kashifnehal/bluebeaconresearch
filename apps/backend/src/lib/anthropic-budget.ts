@@ -5,6 +5,7 @@ import {
   claimBudgetClosedAlertUtcDate,
   maybeSendBudgetClosedAlert,
 } from "./budget-closed-alert.js";
+import { describeError } from "./safe-error-text.js";
 
 // "shadow" added for gate-shadow.ts (the materiality-gate prompt experiment) —
 // shadow calls use this bucket exclusively, never "ingestion", so they can
@@ -156,7 +157,7 @@ export async function isAnthropicBudgetAvailable(
     }
     return open;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = describeError(err);
     console.warn(`[ANTHROPIC BUDGET] ${bucket} counter read failed: ${message}`);
     return process.env.NODE_ENV !== "production";
   }

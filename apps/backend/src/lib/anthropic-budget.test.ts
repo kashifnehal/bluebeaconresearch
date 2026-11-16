@@ -96,6 +96,41 @@ async function main() {
       }
     },
   );
+
+  // BE-DB-RES1 — a thrown PostgREST-shaped {message, code} error (what postgrest-js
+  // actually throws when the HTTP response body is a JSON error) must go through
+  // describeError(), not "[object Object]". Real network can't be used here, so
+  // global.fetch is swapped for a fake Response carrying that exact JSON body —
+  // still fully local, no live call — and restored immediately after.
+  await runTest(
+    "a thrown {message, code} PostgREST-shaped error logs '57014: x', never [object Object], and still fails closed in production",
+    async () => {
+      const prevFetch = globalThis.fetch;
+      const prevWarn = console.warn;
+      const prevEnv = process.env.NODE_ENV;
+      const warnings: string[] = [];
+      console.warn = ((...args: unknown[]) => {
+        warnings.push(args.map(String).join(" "));
+      }) as typeof console.warn;
+      globalThis.fetch = (async () =>
+        new Response(JSON.stringify({ message: "x", code: "57014" }), {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        })) as unknown as typeof fetch;
+      try {
+        process.env.NODE_ENV = "production";
+        const available = await isAnthropicBudgetAvailable("ingestion");
+        assert.equal(available, false);
+        const joined = warnings.join("\n");
+        assert.match(joined, /57014: x/);
+        assert.doesNotMatch(joined, /\[object Object\]/);
+      } finally {
+        globalThis.fetch = prevFetch;
+        console.warn = prevWarn;
+        process.env.NODE_ENV = prevEnv;
+      }
+    },
+  );
 }
 
 main();
