@@ -1494,6 +1494,22 @@ export class ClaudeService {
     if (!client) return "relevant";
 
     const started = Date.now();
+
+    // TASK W6 Part 2 — gates the live call the same way classifyEvent()'s
+    // original TASK W3 Part 1 breaker does. A user-triggered call (chat), so
+    // the fallback is the same conservative default already returned above
+    // when there's no client at all — never a new user-facing string.
+    if (closeCreditBalanceBreakerIfExpired()) {
+      await recordServiceHealth(
+        "anthropic",
+        "ok",
+        "classifyChatRelevance: credit-balance circuit breaker pause ended — resuming live calls",
+        Date.now() - started,
+      );
+    } else if (isCreditBalanceBreakerOpen()) {
+      return "relevant";
+    }
+
     const msg = await client.messages.create({
       model: HAIKU_MODEL,
       max_tokens: 20,
@@ -1546,6 +1562,19 @@ export class ClaudeService {
         "error",
         "chatAboutSignal: no ANTHROPIC_API_KEY configured",
       );
+      return "AI chat is temporarily unavailable — Blue Beacon's analysis engine is running in heuristic-only mode right now. Please try again shortly.";
+    }
+
+    // TASK W6 Part 2 — gates the live call the same way classifyEvent()'s
+    // original TASK W3 Part 1 breaker does. A user-triggered call (chat), so
+    // the fallback reuses the exact "no client" text above rather than a new string.
+    if (closeCreditBalanceBreakerIfExpired()) {
+      await recordServiceHealth(
+        "anthropic",
+        "ok",
+        "chatAboutSignal: credit-balance circuit breaker pause ended — resuming live calls",
+      );
+    } else if (isCreditBalanceBreakerOpen()) {
       return "AI chat is temporarily unavailable — Blue Beacon's analysis engine is running in heuristic-only mode right now. Please try again shortly.";
     }
 
@@ -1692,6 +1721,21 @@ export class ClaudeService {
     if (!client) return "NO_ANSWER";
 
     const started = Date.now();
+
+    // TASK W6 Part 2 — gates the live call the same way classifyEvent()'s
+    // original TASK W3 Part 1 breaker does. A user-triggered call (search
+    // assist), so the fallback reuses the existing "no client" sentinel above.
+    if (closeCreditBalanceBreakerIfExpired()) {
+      await recordServiceHealth(
+        "anthropic",
+        "ok",
+        "answerSearchAssist: credit-balance circuit breaker pause ended — resuming live calls",
+        Date.now() - started,
+      );
+    } else if (isCreditBalanceBreakerOpen()) {
+      return "NO_ANSWER";
+    }
+
     const msg = await client.messages.create({
       model: HAIKU_MODEL,
       max_tokens: 80,

@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Every other live Anthropic call site now behind the credit-balance breaker (TASK W6 Part 2, `apps/backend`, `this commit`)
+
+Closes the gap TASK W5 Part 3 flagged: 5 `messages.create` call sites besides `generateAnalysis()` weren't behind the breaker. `classifyChatRelevance()`, `chatAboutSignal()`, `answerSearchAssist()` (all user-triggered chat/search-assist) and `lib/gate-shadow.ts`'s `runGateShadow()` (background, fire-and-forget off `classifyEvent()`) now check it before their live call; each returns its own already-existing no-client fallback value while open (`"relevant"`, the exact "AI chat is temporarily unavailable..." text, `"NO_ANSWER"`, a silent return) — no new wording, no vendor error text. `scripts/replay-gate.ts` is manual tooling, not touched. Checked: backend `tsc --noEmit` exit 0; full backend test chain 665 ✔, 0 ✖ (4 new breaker tests). Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Assessments pages and sitemap no longer wait on a stalled database (TASK W6 Part 1, `apps/web`, `this commit`)
 
 An earlier task reported (not proven) that a build hit an `/assessments` static-export timeout against Supabase. `lib/public-assessments.ts`'s `getPublishedAssessments` now bounds its own read to 4 s (`withTimeoutOrFallback`); `app/assessments/page.tsx`, `app/sitemap.ts`, and `app/assessments/[slug]/page.tsx` each also bound their own call the same way. A stalled read gives the assessments list page and the sitemap an empty result, never a build error; for a single slug it renders a new plain not-available state (reusing the list page's existing empty-state text) instead of `notFound()`, so a timeout is never indexed as a permanent 404 — a genuinely missing/draft slug still 404s. Checked: `tsc --noEmit` exit 0; web `pnpm test` 907 passed, 0 failed; `next build` exit 0. Not checked: the live `/assessments` pages under a real database stall. Full technical record: `docs/brain/14_CHANGELOG.md`.

@@ -2023,6 +2023,105 @@ async function main() {
   );
 
   await runTest(
+  "TASK W6 Part 2: classifyChatRelevance respects the open credit-balance breaker and makes zero API calls",
+  async () => {
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    resetCreditBalanceBreakerForTests();
+    try {
+      openCreditBalanceBreaker("Your credit balance is too low to access the Claude API.");
+
+      let callCount = 0;
+      const breakerService = new ClaudeService();
+      (breakerService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            throw new Error("must not be called while the breaker is open");
+          },
+        },
+      };
+
+      const category = await breakerService.classifyChatRelevance("is this still relevant?", "Some signal");
+      assert.strictEqual(callCount, 0, "classifyChatRelevance must not call the Anthropic client while the breaker is open");
+      assert.strictEqual(category, "relevant", "same conservative default the no-client path already returns");
+    } finally {
+      resetCreditBalanceBreakerForTests();
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  },
+  );
+
+  await runTest(
+  "TASK W6 Part 2: chatAboutSignal respects the open credit-balance breaker and makes zero API calls",
+  async () => {
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    resetCreditBalanceBreakerForTests();
+    try {
+      openCreditBalanceBreaker("Your credit balance is too low to access the Claude API.");
+
+      let callCount = 0;
+      const breakerService = new ClaudeService();
+      (breakerService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            throw new Error("must not be called while the breaker is open");
+          },
+        },
+      };
+
+      const reply = await breakerService.chatAboutSignal(
+        { id: "signal-1", title: "t", summary: "s" },
+        [],
+        "what happened?",
+      );
+      assert.strictEqual(callCount, 0, "chatAboutSignal must not call the Anthropic client while the breaker is open");
+      assert.strictEqual(
+        reply,
+        "AI chat is temporarily unavailable — Blue Beacon's analysis engine is running in heuristic-only mode right now. Please try again shortly.",
+        "returns the same user-facing text the no-client path already uses, not a new string",
+      );
+    } finally {
+      resetCreditBalanceBreakerForTests();
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  },
+  );
+
+  await runTest(
+  "TASK W6 Part 2: answerSearchAssist respects the open credit-balance breaker and makes zero API calls",
+  async () => {
+    process.env.ANTHROPIC_API_KEY = "test-invalid-key-forces-client";
+    resetCreditBalanceBreakerForTests();
+    try {
+      openCreditBalanceBreaker("Your credit balance is too low to access the Claude API.");
+
+      let callCount = 0;
+      const breakerService = new ClaudeService();
+      (breakerService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            throw new Error("must not be called while the breaker is open");
+          },
+        },
+      };
+
+      const answer = await breakerService.answerSearchAssist("where is the map", {
+        title: "Map",
+        url: "https://example.com/map",
+        content: "The map page shows events.",
+      });
+      assert.strictEqual(callCount, 0, "answerSearchAssist must not call the Anthropic client while the breaker is open");
+      assert.strictEqual(answer, "NO_ANSWER", "same sentinel the no-client path already returns");
+    } finally {
+      resetCreditBalanceBreakerForTests();
+      delete process.env.ANTHROPIC_API_KEY;
+    }
+  },
+  );
+
+  await runTest(
   "classifyEvent still falls back to heuristicClassify (not deferred) when no client is configured",
   async () => {
     const noClientService = new ClaudeService();

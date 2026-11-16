@@ -3,6 +3,26 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Every other live Anthropic call site now behind the credit-balance breaker (TASK W6 Part 2), `apps/backend` only, 2026-11-17, `this commit`
+
+- Why: TASK W5 Part 3 (below) put `generateAnalysis()` behind the same credit-balance breaker `classifyEvent()` uses, and reported (not fixed) 5 other `messages.create` call sites that still weren't: `classifyChatRelevance()` (629/1438/1497/1626/1695 line numbers from `git grep -n "messages.create" -- apps/backend/src`), `chatAboutSignal()`, `answerSearchAssist()`, `lib/gate-shadow.ts`, `scripts/replay-gate.ts`.
+- Table — call site, function, trigger, gated before this part:
+
+| Call site | Function | Triggered by | Gated before |
+|---|---|---|---|
+| `claude.service.ts:629` | `classifyEvent()` | background ingestion | yes (TASK W3 Part 1, original breaker) |
+| `claude.service.ts:1438` | `generateAnalysis()` | background ingestion | yes (TASK W5 Part 3) |
+| `claude.service.ts:1497` | `classifyChatRelevance()` | user chat request | no → fixed this part |
+| `claude.service.ts:1626` | `chatAboutSignal()` | user chat request | no → fixed this part |
+| `claude.service.ts:1695` | `answerSearchAssist()` | user search-assist request | no → fixed this part |
+| `lib/gate-shadow.ts:282` | `runGateShadow()` (via `maybeScheduleGateShadow()`) | background ingestion, fire-and-forget off `classifyEvent()` | no → fixed this part |
+| `scripts/replay-gate.ts:452` | offline replay tooling | manual script, not fixed per the task (listed only) | n/a |
+
+- Fix: `classifyChatRelevance()`, `chatAboutSignal()`, `answerSearchAssist()` each now run `closeCreditBalanceBreakerIfExpired()`/`isCreditBalanceBreakerOpen()` before their live call, same as `classifyEvent()`. While open: `classifyChatRelevance()` returns `"relevant"` (the exact value its own no-client branch already returns); `chatAboutSignal()` returns the exact existing "AI chat is temporarily unavailable..." string its no-client branch already returns; `answerSearchAssist()` returns the exact existing `"NO_ANSWER"` sentinel its no-client branch already returns — no new user-facing wording anywhere, no vendor/error text ever shown. `lib/gate-shadow.ts`'s `runGateShadow()` got its own check (it sits behind its own fire-and-forget queue, so it can run after `classifyEvent()`'s own breaker check already passed) — returns silently (background call, nothing to show a user).
+- Not touched: `scripts/replay-gate.ts` — manual/offline tooling, listed only per the task.
+- Verified: backend `tsc --noEmit` exit 0; full backend test chain exit 0 (665 ✔, 0 ✖ — 3 new breaker tests in `claude.service.test.ts`, 1 new in `gate-shadow.test.ts`). Not browser-verified (backend-only change).
+- See `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`.
+
 ## ✅ Assessments pages and sitemap no longer wait on a stalled database (TASK W6 Part 1), `apps/web` only, 2026-11-17, `this commit`
 
 - Why: an earlier task reported (not proven) that a `next build` hit a `b2565b5` deploy ending ERROR with an `/assessments` static-export timeout after 3×60s retries against Supabase. `lib/public-assessments.ts`'s `getPublishedAssessments`/`getPublishedAssessmentBySlug` never throw on a DB error but had no time limit, so a database that never answers would hang the caller indefinitely.

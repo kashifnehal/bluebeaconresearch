@@ -8,9 +8,14 @@ import {
   utcUsageDate,
 } from "./anthropic-budget.js";
 import {
+  closeCreditBalanceBreakerIfExpired,
+  isCreditBalanceBreakerOpen,
+} from "./credit-balance-breaker.js";
+import {
   formatWatchlistPromptBlock,
   type MediaImpactWatchlistEntry,
 } from "./media-impact-watchlist.js";
+import { recordServiceHealth } from "./service-health.js";
 
 // Deliberately does NOT import from claude.service.ts (which imports this
 // module for the hook below) — that would be a circular import. Callers pass
@@ -241,6 +246,20 @@ async function runGateShadow(params: GateShadowCallParams): Promise<void> {
   // Shadow calls never count against (or share a ceiling with) "ingestion" —
   // its own bucket, checked and recorded independently.
   if (!(await isAnthropicBudgetAvailable("shadow"))) return;
+
+  // TASK W6 Part 2 — this call sits behind its own fire-and-forget queue
+  // (maybeScheduleGateShadow), so it can run well after classifyEvent()'s own
+  // breaker check passed; gate it here too, the same way classifyEvent()'s
+  // original TASK W3 Part 1 breaker does. Background call, no user-facing text.
+  if (closeCreditBalanceBreakerIfExpired()) {
+    await recordServiceHealth(
+      "anthropic",
+      "ok",
+      "gate-shadow: credit-balance circuit breaker pause ended — resuming live calls",
+    );
+  } else if (isCreditBalanceBreakerOpen()) {
+    return;
+  }
 
   if (params.liveVerdict) {
     passesProcessedToday += 1;

@@ -14,6 +14,10 @@ import {
 } from "./gate-shadow.js";
 import { MATERIALITY_GATE_INSTRUCTION } from "../services/claude.service.js";
 import { formatWatchlistPromptBlock } from "./media-impact-watchlist.js";
+import {
+  openCreditBalanceBreaker,
+  resetCreditBalanceBreakerForTests,
+} from "./credit-balance-breaker.js";
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   try {
@@ -258,6 +262,23 @@ async function main() {
     maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "m", rand: () => 0.26 });
     await __flushGateShadowQueueForTests();
     assert.equal(callCount(), 1);
+  });
+
+  await runTest("TASK W6 Part 2: an open credit-balance breaker makes zero shadow API calls", async () => {
+    process.env.GATE_SHADOW_ENABLED = "true";
+    process.env.GATE_SHADOW_REJECT_SAMPLE_RATE = "1";
+    __resetGateShadowCountersForTests();
+    resetCreditBalanceBreakerForTests();
+    try {
+      openCreditBalanceBreaker("Your credit balance is too low to access the Claude API.");
+      const { client, callCount } = makeMockClient();
+      maybeScheduleGateShadow({ ...baseParams({ liveVerdict: false }), client, model: "m", rand: () => 0 });
+      await __flushGateShadowQueueForTests();
+      assert.equal(callCount(), 0, "runGateShadow must not call the Anthropic client while the breaker is open");
+    } finally {
+      resetCreditBalanceBreakerForTests();
+      delete process.env.GATE_SHADOW_REJECT_SAMPLE_RATE;
+    }
   });
 
   await runTest("result write never uses .schema() and writes both mechanism columns", async () => {
