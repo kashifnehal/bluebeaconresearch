@@ -3,10 +3,13 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { getPublishedAssessments, type PublicAssessment } from "@/lib/public-assessments";
+import { HOMEPAGE_DB_TIMEOUT_MS, withTimeoutOrFallback } from "@/lib/with-timeout";
 
 export const revalidate = 300;
 
-type Deps = { getAssessments: typeof getPublishedAssessments };
+// timeoutMs defaults to the real DB read timeout; tests override it to a small
+// value so a "database never answers" case doesn't have to wait out 4 real seconds.
+type Deps = { getAssessments: typeof getPublishedAssessments; timeoutMs: number };
 
 function formatUTC(iso: string): string {
   return `${new Date(iso).toISOString().slice(0, 16).replace("T", " ")} UTC`;
@@ -22,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // framework-special exports themselves).
 export async function buildAssessmentsListMetadata(deps?: Partial<Deps>): Promise<Metadata> {
   const getAssessments = deps?.getAssessments ?? getPublishedAssessments;
-  const items = await getAssessments();
+  const items = await withTimeoutOrFallback(getAssessments(), deps?.timeoutMs ?? HOMEPAGE_DB_TIMEOUT_MS, []);
   return {
     title: "Assessments | Blue Beacon Research",
     description: "Public research assessments from Blue Beacon Research.",
@@ -36,7 +39,7 @@ export default async function AssessmentsPage() {
 
 export async function renderAssessmentsList(deps?: Partial<Deps>) {
   const getAssessments = deps?.getAssessments ?? getPublishedAssessments;
-  const items: PublicAssessment[] = await getAssessments();
+  const items: PublicAssessment[] = await withTimeoutOrFallback(getAssessments(), deps?.timeoutMs ?? HOMEPAGE_DB_TIMEOUT_MS, []);
 
   return (
     <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>

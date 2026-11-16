@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Assessments pages and sitemap no longer wait on a stalled database (TASK W6 Part 1, `apps/web`, `this commit`)
+
+An earlier task reported (not proven) that a build hit an `/assessments` static-export timeout against Supabase. `lib/public-assessments.ts`'s `getPublishedAssessments` now bounds its own read to 4 s (`withTimeoutOrFallback`); `app/assessments/page.tsx`, `app/sitemap.ts`, and `app/assessments/[slug]/page.tsx` each also bound their own call the same way. A stalled read gives the assessments list page and the sitemap an empty result, never a build error; for a single slug it renders a new plain not-available state (reusing the list page's existing empty-state text) instead of `notFound()`, so a timeout is never indexed as a permanent 404 — a genuinely missing/draft slug still 404s. Checked: `tsc --noEmit` exit 0; web `pnpm test` 907 passed, 0 failed; `next build` exit 0. Not checked: the live `/assessments` pages under a real database stall. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-16 — Homepage no longer waits on a stalled database (`apps/web`)
 
 `apps/web/app/page.tsx` read the database three ways on every request (latest signal, signal count, published assessments) with no time limit. On 2026-11-16 the Supabase host stopped answering (Vercel runtime logs: Cloudflare 522 from the Supabase host, `/` still revalidating the signal count) and the public homepage waited with it; a browser load did not finish in 50 s. New `lib/with-timeout.ts` (`withTimeoutOrFallback`, 4 s per read, a BBR working value with no published source) returns the fallback (no latest signal, last good in-process count or none, no assessments) so the page renders without those blocks. Checked: `tsc --noEmit` exit 0; web `pnpm test` 898 passed, 0 failed (new `lib/with-timeout.test.ts`: 5 cases); `next build` exit 0. Not checked: the live homepage under a real database stall.

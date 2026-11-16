@@ -1,8 +1,11 @@
 import type { MetadataRoute } from "next";
 import { SITE_ORIGIN } from "@/lib/site-metadata";
 import { getPublishedAssessments } from "@/lib/public-assessments";
+import { HOMEPAGE_DB_TIMEOUT_MS, withTimeoutOrFallback } from "@/lib/with-timeout";
 
-type Deps = { getAssessments: typeof getPublishedAssessments };
+// timeoutMs defaults to the real DB read timeout; tests override it to a small
+// value so a "database never answers" case doesn't have to wait out 4 real seconds.
+type Deps = { getAssessments: typeof getPublishedAssessments; timeoutMs: number };
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return buildSitemap();
@@ -34,7 +37,8 @@ export async function buildSitemap(deps?: Partial<Deps>): Promise<MetadataRoute.
 
   let assessmentEntries: MetadataRoute.Sitemap = [];
   try {
-    const items = await getAssessments();
+    // Bounded so a database that never answers still produces a sitemap, never a build hang.
+    const items = await withTimeoutOrFallback(getAssessments(), deps?.timeoutMs ?? HOMEPAGE_DB_TIMEOUT_MS, []);
     assessmentEntries = items.map((a) => ({
       url: `${base}/assessments/${a.slug}`,
       lastModified: new Date(a.updatedAt),

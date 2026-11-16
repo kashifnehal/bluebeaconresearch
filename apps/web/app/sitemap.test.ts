@@ -100,6 +100,17 @@ async function main() {
     assert.ok(entries.some((e) => e.url === `${SITE_ORIGIN}/`));
     assert.ok(entries.every((e) => !e.url.includes("/assessments/")));
   });
+
+  await runTest("a database that never answers still returns the static entries within the timeout", async () => {
+    const started = Date.now();
+    const entries = await sitemap({
+      getAssessments: () => new Promise(() => {}),
+      timeoutMs: 30,
+    });
+    assert.ok(Date.now() - started < 1000, "must not wait for the hung read");
+    assert.ok(entries.some((e) => e.url === `${SITE_ORIGIN}/`));
+    assert.ok(entries.every((e) => !e.url.includes("/assessments/")));
+  });
 }
 
 void main();

@@ -6,6 +6,7 @@
 // rather than throwing.
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { HOMEPAGE_DB_TIMEOUT_MS, withTimeoutOrFallback } from "./with-timeout";
 
 export const SLUG_REGEX = /^[a-z0-9-]{3,80}$/;
 
@@ -165,11 +166,18 @@ export async function getPublishedAssessments(
 ): Promise<PublicAssessment[]> {
   if (!client) return [];
   try {
-    const { data, error } = await client
+    const query = client
       .from("public_assessments")
       .select("*")
       .eq("status", "published")
       .order("assessed_at", { ascending: false });
+    // Bounded so a database that never answers degrades to an empty list rather than
+    // hanging the caller (the assessments page and the sitemap read this directly).
+    const { data, error } = await withTimeoutOrFallback(
+      Promise.resolve(query),
+      HOMEPAGE_DB_TIMEOUT_MS,
+      { data: null, error: null } as unknown as Awaited<typeof query>,
+    );
     if (error || !data) return [];
     return data.map(parseAssessmentRow).filter((a): a is PublicAssessment => a !== null);
   } catch {

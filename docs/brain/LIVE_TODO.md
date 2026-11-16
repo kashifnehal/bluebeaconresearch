@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Assessments pages and sitemap no longer wait on a stalled database (TASK W6 Part 1), `apps/web` only, 2026-11-17, `this commit`
+
+- Why: an earlier task reported (not proven) that a `next build` hit a `b2565b5` deploy ending ERROR with an `/assessments` static-export timeout after 3×60s retries against Supabase. `lib/public-assessments.ts`'s `getPublishedAssessments`/`getPublishedAssessmentBySlug` never throw on a DB error but had no time limit, so a database that never answers would hang the caller indefinitely.
+- Fix: `getPublishedAssessments` now bounds its own Supabase read to 4 s (`withTimeoutOrFallback`, `lib/with-timeout.ts`), falling back to an empty result. `app/assessments/page.tsx`, `app/sitemap.ts`, and `app/assessments/[slug]/page.tsx` each additionally wrap their own call to the lib function the same way (defense in depth, and the seam the rendered tests use): a stalled read gives the assessments list and the sitemap an empty list, never a build error. For a single slug, a stalled read now renders a new plain not-available state (`data-testid="assessment-not-available"`, reusing the assessments list's existing "No public assessments are published yet." text) instead of `notFound()`, so a timeout is never shown or indexed as a permanent 404 — a genuinely missing/draft slug still calls `notFound()` as before. `generateMetadata` on both pages and `sitemap.ts`'s build also apply the same bound.
+- Each of the three page/sitemap call sites takes an optional `timeoutMs` override (defaults to the real 4 s constant) purely so tests can exercise the "database never answers" case without waiting out 4 real seconds.
+- Verified: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` 907 ✔, 0 ✖ (new rejects/never-answers cases in `lib/public-assessments.test.ts`, `app/assessments/page.test.tsx`, `app/assessments/[slug]/page.test.tsx`, `app/sitemap.test.ts`); `pnpm --filter web exec next build` exit 0, `/assessments` and `/assessments/[slug]` both in the route table. Not verified: a live database stall (the earlier report was itself unproven/not reproduced).
+- See `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`.
+
 ## ✅ Homepage renders when the database stalls (`apps/web`, 2026-11-16)
 
 - Why: on 2026-11-16 the public homepage hung while the database host was unreachable (three unbounded database reads in `app/page.tsx`).

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-import { parseAssessmentRow, getPublishedAssessmentBySlug, SLUG_REGEX } from "./public-assessments";
+import { parseAssessmentRow, getPublishedAssessments, getPublishedAssessmentBySlug, SLUG_REGEX } from "./public-assessments";
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   return Promise.resolve()
@@ -147,6 +147,50 @@ async function main() {
 
   await runTest("getPublishedAssessmentBySlug with no client returns null", async () => {
     assert.equal(await getPublishedAssessmentBySlug("houthi-strait-traffic", null), null);
+  });
+
+  await runTest("getPublishedAssessments returns parsed rows when the database answers", async () => {
+    const fakeClient = {
+      from() {
+        const chain: any = {
+          select() {
+            return chain;
+          },
+          eq() {
+            return chain;
+          },
+          order: async () => ({ data: [goodRow()], error: null }),
+        };
+        return chain;
+      },
+    } as any;
+    const result = await getPublishedAssessments(fakeClient);
+    assert.equal(result.length, 1);
+    assert.equal(result[0].slug, "houthi-strait-traffic");
+  });
+
+  await runTest("getPublishedAssessments returns [] (never throws) when the database rejects", async () => {
+    const fakeClient = {
+      from() {
+        const chain: any = {
+          select() {
+            return chain;
+          },
+          eq() {
+            return chain;
+          },
+          order: async () => {
+            throw new Error("db down");
+          },
+        };
+        return chain;
+      },
+    } as any;
+    assert.deepEqual(await getPublishedAssessments(fakeClient), []);
+  });
+
+  await runTest("getPublishedAssessments with no client returns []", async () => {
+    assert.deepEqual(await getPublishedAssessments(null), []);
   });
 }
 

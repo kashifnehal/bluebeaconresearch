@@ -6,12 +6,19 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 import { getPublishedAssessmentBySlug, type PublicAssessment } from "@/lib/public-assessments";
 import { SITE_ORIGIN } from "@/lib/site-metadata";
+import { HOMEPAGE_DB_TIMEOUT_MS, withTimeoutOrFallback } from "@/lib/with-timeout";
 
 export const revalidate = 300;
 
 type Params = Promise<{ slug: string }>;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-type Deps = { getAssessment: typeof getPublishedAssessmentBySlug };
+// timeoutMs defaults to the real DB read timeout; tests override it to a small
+// value so a "database never answers" case doesn't have to wait out 4 real seconds.
+type Deps = { getAssessment: typeof getPublishedAssessmentBySlug; timeoutMs: number };
+
+// Distinguishes "the database didn't answer in time" from "this slug really doesn't
+// exist" — the former must not render a 404 for what may just be a stalled read.
+const TIMED_OUT = "TIMED_OUT" as const;
 
 function formatUTC(iso: string): string {
   return `${new Date(iso).toISOString().slice(0, 16).replace("T", " ")} UTC`;
@@ -37,7 +44,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 // off the framework-special exports themselves).
 export async function buildAssessmentMetadata(slug: string, deps?: Partial<Deps>): Promise<Metadata> {
   const getAssessment = deps?.getAssessment ?? getPublishedAssessmentBySlug;
-  const assessment = await getAssessment(slug);
+  const assessment = await withTimeoutOrFallback<PublicAssessment | null>(
+    getAssessment(slug),
+    deps?.timeoutMs ?? HOMEPAGE_DB_TIMEOUT_MS,
+    null,
+  );
   if (!assessment) return {};
 
   const url = `${SITE_ORIGIN}/assessments/${assessment.slug}`;
@@ -198,6 +209,22 @@ function AssessmentDetail({ assessment, searchParams }: { assessment: PublicAsse
   );
 }
 
+// Same wording and layout as the assessments index page's empty state (lib/public-assessments.ts
+// reads never throw, but a stalled database must not render as a permanent 404 for this slug).
+function AssessmentNotAvailable() {
+  return (
+    <div className="min-h-screen bg-[#0e0e0e] text-[#e5e2e1] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <PublicHeader badge="ASSESSMENT" />
+      <main className="flex-1 max-w-3xl w-full mx-auto p-5 md:p-8 py-12 md:py-16">
+        <p data-testid="assessment-not-available" className="text-sm text-[#e5e2e1] leading-relaxed">
+          No public assessments are published yet.
+        </p>
+      </main>
+      <PublicFooter />
+    </div>
+  );
+}
+
 export default async function AssessmentDetailPage({
   params,
   searchParams,
@@ -216,8 +243,13 @@ export async function renderAssessmentDetail(
   deps?: Partial<Deps>,
 ) {
   const getAssessment = deps?.getAssessment ?? getPublishedAssessmentBySlug;
-  const assessment = await getAssessment(slug);
-  if (!assessment) notFound();
+  const result = await withTimeoutOrFallback<PublicAssessment | null | typeof TIMED_OUT>(
+    getAssessment(slug),
+    deps?.timeoutMs ?? HOMEPAGE_DB_TIMEOUT_MS,
+    TIMED_OUT,
+  );
+  if (result === TIMED_OUT) return <AssessmentNotAvailable />;
+  if (!result) notFound();
 
-  return <AssessmentDetail assessment={assessment} searchParams={searchParams} />;
+  return <AssessmentDetail assessment={result} searchParams={searchParams} />;
 }

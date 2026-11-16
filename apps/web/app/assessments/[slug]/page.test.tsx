@@ -159,6 +159,50 @@ async function main() {
     assert.equal((metadata.openGraph as any)?.type, "article");
     assert.equal((metadata.twitter as any)?.card, "summary_large_image");
   });
+
+  await runTest("a database read that rejects renders the not-available state, not a 404 or a crash", async () => {
+    const element = await renderAssessmentDetail("houthi-strait-traffic", {}, {
+      getAssessment: async () => {
+        throw new Error("db down");
+      },
+    });
+    const { html, root } = await renderElement(document, element as any);
+    try {
+      assert.match(html, /data-testid="assessment-not-available"/);
+      assert.match(html, /No public assessments are published yet\./);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest(
+    "a database read that never answers renders the not-available state within the timeout, not a hang or a 404",
+    async () => {
+      const started = Date.now();
+      const element = await renderAssessmentDetail(
+        "houthi-strait-traffic",
+        {},
+        { getAssessment: () => new Promise(() => {}), timeoutMs: 30 },
+      );
+      const { html, root } = await renderElement(document, element as any);
+      try {
+        assert.ok(Date.now() - started < 1000, "must not wait for the hung read");
+        assert.match(html, /data-testid="assessment-not-available"/);
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
+
+  await runTest("buildAssessmentMetadata on a hung read returns {} within the timeout, not a hang", async () => {
+    const started = Date.now();
+    const metadata = await buildAssessmentMetadata("houthi-strait-traffic", {
+      getAssessment: () => new Promise(() => {}),
+      timeoutMs: 30,
+    });
+    assert.ok(Date.now() - started < 1000, "must not wait for the hung read");
+    assert.deepEqual(metadata, {});
+  });
 }
 
 void main();

@@ -70,6 +70,32 @@ async function main() {
     const metadata = await buildAssessmentsListMetadata({ getAssessments: async () => [fixture()] });
     assert.deepEqual(metadata.robots, { index: true, follow: true });
   });
+
+  await runTest("a database read that rejects renders the empty state, not a crash", async () => {
+    const getAssessments = async (): Promise<PublicAssessment[]> => {
+      throw new Error("db down");
+    };
+    const element = await renderAssessmentsList({ getAssessments });
+    const { html, root } = await renderElement(document, element as any);
+    try {
+      assert.match(html, /No public assessments are published yet\./);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("a database read that never answers renders the empty state within the timeout, not a hang", async () => {
+    const started = Date.now();
+    const getAssessments = (): Promise<PublicAssessment[]> => new Promise(() => {});
+    const element = await renderAssessmentsList({ getAssessments, timeoutMs: 30 });
+    const { html, root } = await renderElement(document, element as any);
+    try {
+      assert.ok(Date.now() - started < 1000, "must not wait for the hung read");
+      assert.match(html, /No public assessments are published yet\./);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
 }
 
 void main();
