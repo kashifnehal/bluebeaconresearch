@@ -26,9 +26,11 @@ function runTest(name: string, fn: () => void | Promise<void>) {
 
 function fakeRedis() {
   const store = new Map<string, string>();
+  const lists = new Map<string, string[]>();
   const sets: Array<{ key: string; value: string; exFlag: string; seconds: number; nxFlag: string }> = [];
   return {
     store,
+    lists,
     sets,
     async incr(key: string) {
       const current = Number(store.get(key) ?? "0") + 1;
@@ -56,6 +58,17 @@ function fakeRedis() {
     },
     async get(key: string) {
       return store.has(key) ? store.get(key)! : null;
+    },
+    async lpush(key: string, value: string) {
+      const list = lists.get(key) ?? [];
+      list.unshift(value);
+      lists.set(key, list);
+      return list.length;
+    },
+    async ltrim(key: string, start: number, stop: number) {
+      const list = lists.get(key) ?? [];
+      lists.set(key, list.slice(start, stop + 1));
+      return "OK" as const;
     },
   };
 }
@@ -287,7 +300,7 @@ async function main() {
     }
   });
 
-  await runTest("email body has no personal data", async () => {
+  await runTest("email body has no email-address-shaped personal data, but now carries the last error line (BE-DB-RES1)", async () => {
     const redis = fakeRedis();
     const email = fakeEmail();
     await checkDatabaseReachable({ redis, email, now: NOW, supabase: erroringSupabase() });
@@ -296,7 +309,74 @@ async function main() {
     assert.equal(email.calls.length, 1);
     assert.equal(EMAIL_IN_BODY.test(email.calls[0]?.text ?? ""), false);
     assert.equal(EMAIL_IN_BODY.test(email.calls[0]?.html ?? ""), false);
-    assert.equal((email.calls[0]?.text ?? "").includes("connection refused"), false);
+    // BE-DB-RES1 deliberately adds the last error as a debugging aid — this used
+    // to assert the opposite (error text withheld from the email); the task that
+    // added probe error text explicitly asked for it to be included.
+    assert.match(email.calls[0]?.text ?? "", /Last error: connection refused/);
+  });
+
+  // BE-DB-RES1 — probeDatabase's richer { ok, ms, error } result and the
+  // db-health:history Redis list it feeds.
+  await runTest("a successful probe pushes a history entry with ok:true and a numeric ms", async () => {
+    const redis = fakeRedis();
+    const email = fakeEmail();
+    await checkDatabaseReachable({ redis, email, now: NOW, supabase: okSupabase() });
+    const pushed = redis.lists.get("db-health:history") ?? [];
+    assert.equal(pushed.length, 1);
+    const entry = JSON.parse(pushed[0]!);
+    assert.equal(entry.ok, true);
+    assert.equal(typeof entry.ms, "number");
+    assert.equal(entry.error, undefined);
+  });
+
+  await runTest("a thrown-error probe pushes a history entry carrying the error text", async () => {
+    const redis = fakeRedis();
+    const email = fakeEmail();
+    await checkDatabaseReachable({ redis, email, now: NOW, supabase: erroringSupabase() });
+    const pushed = redis.lists.get("db-health:history") ?? [];
+    assert.equal(pushed.length, 1);
+    const entry = JSON.parse(pushed[0]!);
+    assert.equal(entry.ok, false);
+    assert.equal(entry.error, "connection refused");
+  });
+
+  await runTest("a timed-out probe pushes a history entry saying 'timeout after'", async () => {
+    const redis = fakeRedis();
+    const email = fakeEmail();
+    await checkDatabaseReachable({ redis, email, now: NOW, supabase: hangingSupabase(), timeoutMs: 20 });
+    const pushed = redis.lists.get("db-health:history") ?? [];
+    assert.equal(pushed.length, 1);
+    const entry = JSON.parse(pushed[0]!);
+    assert.equal(entry.ok, false);
+    assert.match(entry.error, /^timeout after 20 ms$/);
+  });
+
+  await runTest("a Redis history-push failure never changes the outcome", async () => {
+    const redis = fakeRedis();
+    const brokenRedis = {
+      ...redis,
+      async lpush(): Promise<number> {
+        throw new Error("history push boom");
+      },
+    };
+    const email = fakeEmail();
+    const outcome = await checkDatabaseReachable({
+      redis: brokenRedis,
+      email,
+      now: NOW,
+      supabase: okSupabase(),
+    });
+    assert.equal(outcome, "ok");
+  });
+
+  await runTest("LTRIM keeps the history list at 2016 entries", async () => {
+    const redis = fakeRedis();
+    const email = fakeEmail();
+    for (let i = 0; i < 2020; i++) {
+      await checkDatabaseReachable({ redis, email, now: NOW, supabase: okSupabase() });
+    }
+    const pushed = redis.lists.get("db-health:history") ?? [];
+    assert.equal(pushed.length, 2016);
   });
 }
 

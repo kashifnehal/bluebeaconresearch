@@ -2,6 +2,7 @@ import { getRedis } from "../clients/redis.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { EmailService } from "../services/email.service.js";
 import { getEnv } from "../env.js";
+import { describeError } from "./safe-error-text.js";
 
 // BE-DBALERT1 — fired when the workers cannot reach Supabase at all, as opposed to a
 // single collector failing. Every existing ops alert (collection-stalled-alert.ts,
@@ -26,6 +27,8 @@ type DbHealthRedis = {
   del(...keys: string[]): Promise<number>;
   exists(...keys: string[]): Promise<number>;
   get(key: string): Promise<string | null>;
+  lpush(key: string, value: string): Promise<number>;
+  ltrim(key: string, start: number, stop: number): Promise<"OK">;
 };
 
 export type DbProbeSupabase = {
@@ -35,12 +38,17 @@ export type DbProbeSupabase = {
 const FAILURES_KEY = "db-health:consecutive-failures";
 const FIRST_FAILURE_KEY = "db-health:first-failure-at";
 const SENT_KEY = "alert:db-unreachable:sent";
+export const DB_PROBE_HISTORY_KEY = "db-health:history";
 
 const FAILURES_TTL_SECONDS = 3600;
 const FIRST_FAILURE_TTL_SECONDS = 86400;
 const SENT_TTL_SECONDS = 21600;
 const FAILURE_THRESHOLD = 3;
 const DEFAULT_TIMEOUT_MS = 10_000;
+// DB-PROBE-HISTORY — 2016 is 7 days of 5-minute probes (288/day x 7). Keep one
+// extra slot of headroom (2015 as the LTRIM stop index keeps 2016 entries).
+const DB_PROBE_HISTORY_MAX_ENTRIES = 2016;
+const DB_PROBE_HISTORY_TTL_SECONDS = 8 * 24 * 3600;
 
 function adminRecipients(): string[] {
   return (getEnv().ADMIN_EMAILS ?? "")
@@ -73,9 +81,14 @@ export type DbUnreachableDeps = {
   onProbe?: (probe: { ok: boolean; ms: number }) => void;
 };
 
+const PROBE_TIMEOUT_SENTINEL = "__db_probe_timeout__";
+
 // One read, aborted after timeoutMs. A timeout, a thrown error, or a returned
 // Postgrest error all count as a failed probe.
-async function probeDatabase(supabase: DbProbeSupabase, timeoutMs: number): Promise<{ ok: boolean; ms: number }> {
+async function probeDatabase(
+  supabase: DbProbeSupabase,
+  timeoutMs: number,
+): Promise<{ ok: boolean; ms: number; error?: string }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const startedAt = Date.now();
@@ -85,12 +98,20 @@ async function probeDatabase(supabase: DbProbeSupabase, timeoutMs: number): Prom
       query = query.abortSignal(controller.signal);
     }
     const timedOut = new Promise<never>((_resolve, reject) => {
-      controller.signal.addEventListener("abort", () => reject(new Error("db probe timed out")));
+      controller.signal.addEventListener("abort", () => reject(new Error(PROBE_TIMEOUT_SENTINEL)));
     });
     const { error } = await Promise.race([query, timedOut]);
-    return { ok: !error, ms: Date.now() - startedAt };
-  } catch {
-    return { ok: false, ms: Date.now() - startedAt };
+    return {
+      ok: !error,
+      ms: Date.now() - startedAt,
+      error: error ? describeError(error) : undefined,
+    };
+  } catch (err: any) {
+    const ms = Date.now() - startedAt;
+    if (err instanceof Error && err.message === PROBE_TIMEOUT_SENTINEL) {
+      return { ok: false, ms, error: `timeout after ${timeoutMs} ms` };
+    }
+    return { ok: false, ms, error: describeError(err) };
   } finally {
     clearTimeout(timer);
   }
@@ -129,6 +150,7 @@ async function recordFailure(
   redis: DbHealthRedis,
   email: EmailSender | undefined,
   now: Date,
+  lastError?: string,
 ): Promise<DbUnreachableOutcome> {
   let count: number;
   try {
@@ -166,9 +188,10 @@ async function recordFailure(
   const subject = "BBR: database not reachable";
   const body =
     "The workers could not reach the database for 3 checks in a row. Prices, signals and digests may " +
-    "be missing for this window. Check the Supabase dashboard (Reports) and the project status.";
+    "be missing for this window. Check the Supabase dashboard (Reports) and the project status." +
+    (lastError ? `\n\nLast error: ${lastError}` : "");
   const text = `${utcNow} (UTC)\n\n${body}`;
-  const html = `<p>${utcNow} (UTC)</p><p>${body}</p>`;
+  const html = `<p>${utcNow} (UTC)</p><p>${body.replace(/\n/g, "<br/>")}</p>`;
 
   return sendToAdmins(email, subject, text, html);
 }
@@ -261,7 +284,19 @@ export async function checkDatabaseReachable(deps: DbUnreachableDeps = {}): Prom
       }
     }
 
-    return probe.ok ? await recordSuccess(redis, deps.email, now) : await recordFailure(redis, deps.email, now);
+    try {
+      const entry = JSON.stringify({ at: now.toISOString(), ok: probe.ok, ms: probe.ms, error: probe.error });
+      await redis.lpush(DB_PROBE_HISTORY_KEY, entry);
+      await redis.ltrim(DB_PROBE_HISTORY_KEY, 0, DB_PROBE_HISTORY_MAX_ENTRIES - 1);
+      await redis.expire(DB_PROBE_HISTORY_KEY, DB_PROBE_HISTORY_TTL_SECONDS);
+    } catch (err: any) {
+      // A Redis history-write failure must never change the alert logic below.
+      console.warn(`[db-unreachable-alert] Redis history push failed: ${err?.message ?? err}`);
+    }
+
+    return probe.ok
+      ? await recordSuccess(redis, deps.email, now)
+      : await recordFailure(redis, deps.email, now, probe.error);
   } catch (err: any) {
     console.warn(`[db-unreachable-alert] unexpected failure: ${err?.message ?? err} — doing nothing.`);
     return "redis_error";

@@ -2,7 +2,9 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { requireUser } from "../middleware/auth.middleware.js";
 import { getSupabaseAdmin } from "../clients/supabase.js";
+import { getRedis } from "../clients/redis.js";
 import { getEnv } from "../env.js";
+import { DB_PROBE_HISTORY_KEY } from "../lib/db-unreachable-alert.js";
 
 // Founder-internal admin routes. profiles has no `role` column (checked
 // 2026-09-04 — it has plan_tier only), so admin identity is an email allowlist in
@@ -49,6 +51,62 @@ async function fetchAllServiceHealthEvents(
     if (data.length < SERVICE_HEALTH_SUMMARY_PAGE_SIZE) break;
   }
   return rows;
+}
+
+// GET /v1/admin/db-probe-history backing data (BE-DB-RES1). Entries come from
+// db-unreachable-alert.ts's Redis LPUSH (newest first — LPUSH writes to the head,
+// so an LRANGE 0..N-1 read is already newest-first with no re-sort needed).
+const DB_PROBE_HISTORY_DEFAULT_LIMIT = 288;
+const DB_PROBE_HISTORY_MAX_LIMIT = 2016;
+
+export type DbProbeHistoryEntry = { at: string; ok: boolean; ms: number; error?: string };
+
+export type DbProbeHistorySummary = {
+  count: number;
+  failures: number;
+  p50_ms: number;
+  p95_ms: number;
+  longest_failure_streak: number;
+};
+
+/** Nearest-rank percentile (ceil(p/100 * N) - 1, clamped) over ms values. */
+function percentile(sortedMs: number[], p: number): number {
+  if (sortedMs.length === 0) return 0;
+  const rank = Math.ceil((p / 100) * sortedMs.length);
+  const idx = Math.min(sortedMs.length - 1, Math.max(0, rank - 1));
+  return sortedMs[idx]!;
+}
+
+/** `entries` is newest-first, matching the Redis LPUSH/LRANGE order. */
+export function summarizeDbProbeHistory(entries: DbProbeHistoryEntry[]): DbProbeHistorySummary {
+  const count = entries.length;
+  const failures = entries.filter((e) => !e.ok).length;
+  const sortedMs = entries.map((e) => e.ms).sort((a, b) => a - b);
+
+  let longestFailureStreak = 0;
+  let current = 0;
+  for (const entry of entries) {
+    if (entry.ok) {
+      current = 0;
+    } else {
+      current += 1;
+      longestFailureStreak = Math.max(longestFailureStreak, current);
+    }
+  }
+
+  return {
+    count,
+    failures,
+    p50_ms: percentile(sortedMs, 50),
+    p95_ms: percentile(sortedMs, 95),
+    longest_failure_streak: longestFailureStreak,
+  };
+}
+
+function parseDbProbeHistoryLimit(raw: unknown): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return DB_PROBE_HISTORY_DEFAULT_LIMIT;
+  return Math.min(Math.floor(n), DB_PROBE_HISTORY_MAX_LIMIT);
 }
 
 /** Returns the admin's email on success; sends a 403 and returns null otherwise. */
@@ -150,5 +208,41 @@ export async function adminRoutes(app: FastifyInstance) {
     return reply.send({
       data: { services: [...byService.values()].sort((a, b) => a.service.localeCompare(b.service)) },
     });
+  });
+
+  // GET /v1/admin/db-probe-history — BE-DB-RES1. Backing data for a future
+  // db-health chart: raw probe history and a few derived stats, read from
+  // Redis only (db-health:history, written by db-unreachable-alert.ts's
+  // checkDatabaseReachable). No database query — this must keep working even
+  // while the database itself is unreachable.
+  app.get("/db-probe-history", async (req, reply) => {
+    const email = await assertAdmin(req, reply);
+    if (!email) return;
+
+    const limit = parseDbProbeHistoryLimit((req.query as { limit?: string })?.limit);
+
+    const redis = getRedis();
+    if (!redis) {
+      return reply.send({ data: { entries: [], summary: summarizeDbProbeHistory([]) } });
+    }
+
+    let raw: string[];
+    try {
+      raw = await redis.lrange(DB_PROBE_HISTORY_KEY, 0, limit - 1);
+    } catch (err) {
+      req.log.error({ err }, "db-health:history lrange failed");
+      return reply.status(500).send({ error: "Query failed" });
+    }
+
+    const entries: DbProbeHistoryEntry[] = [];
+    for (const item of raw) {
+      try {
+        entries.push(JSON.parse(item));
+      } catch {
+        // skip a corrupted history entry rather than fail the whole response
+      }
+    }
+
+    return reply.send({ data: { entries, summary: summarizeDbProbeHistory(entries) } });
   });
 }
