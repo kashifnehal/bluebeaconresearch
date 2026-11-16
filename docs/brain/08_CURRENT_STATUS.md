@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK W6 Part 3 — market-impact method note no longer repeats once per asset)
+Last updated: 2026-11-17 (TASK W6 Part 4 — dashboard duplicate-API-call report: not reproducible in a single rendered mount)
+
+> ⚠️ NEW 2026-11-17 (TASK W6 Part 4, `apps/web` only, `this commit`) — a 2026-11-15 browser report of ~4x/2x/2x/2x duplicate calls to `/api/telegram/status`/`/api/signals`/`/api/alerts/recent`/`/api/signals/source-stats` on one `/dashboard` load did not reproduce: new `app/(dashboard)/layout.duplicate-fetches.render.test.tsx` mounts the real Sidebar/TopBar/NotificationConnectPrompt/MobileTabBar/DashboardPage tree with a counting fetch mock and measures exactly 1 call per route. `TelegramConnect` only mounts when the connect modal is open (closed by default, not persisted); `AuthProvider.tsx` already skips gotrue-js's redundant `INITIAL_SESSION` event. No fix applied (none proven needed); the test stays as a regression guard. `tsc` 0, web test 909 ✔/0 ✖ (1 new test), `next build` 0. See `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W6 Part 3, `apps/web` only, `this commit`) — `MarketImpactAssessment.tsx`'s `marketImpactMethodNote()` sentence used to render once per affected asset (inside each asset's own "View historical pattern" toggle); a multi-asset signal repeated it. It now renders once for the whole block, inside the first asset's toggle with chart data — same sentence text, nothing else changed. `tsc` 0, web test 908 ✔/0 ✖ (1 new test), `next build` 0. See `LIVE_TODO.md`.
 

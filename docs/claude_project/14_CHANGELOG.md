@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Dashboard duplicate-API-call report: not reproducible in a single rendered mount (TASK W6 Part 4, `apps/web`, `this commit`)
+
+A browser report of duplicate calls to `/api/telegram/status`/`/api/signals`/`/api/alerts/recent`/`/api/signals/source-stats` on one `/dashboard` load (roughly 4x/2x/2x/2x) did not reproduce. New `app/(dashboard)/layout.duplicate-fetches.render.test.tsx` mounts the real Sidebar/TopBar/NotificationConnectPrompt/MobileTabBar/DashboardPage tree with a counting fetch mock: measured exactly 1 call per route. The components that could have doubled it (`TelegramConnect`, gated behind a closed-by-default modal; `AuthProvider`'s own guard against gotrue-js's redundant `INITIAL_SESSION` event) already prevent it structurally; the likely remaining explanation is `next dev`'s React Strict Mode/Fast Refresh behavior, dev-only. No fix applied since none was proven needed; the test stays as a regression guard. Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 909 passed, 0 failed; `next build` exit 0. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Market-impact method note no longer repeats once per asset (TASK W6 Part 3, tracker row I-10, `apps/web`, `this commit`)
 
 The method-note sentence ("Method: N tracked BBR signals that listed `<asset>`...") rendered once per affected asset inside `MarketImpactAssessment.tsx`; a multi-asset signal repeated it. It now renders once for the whole block, inside the first qualifying asset's own chart toggle — same sentence text, nothing reworded. New rendered test: 3 assets, sentence appears exactly once. Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 908 passed, 0 failed; `next build` exit 0. Full technical record: `docs/brain/14_CHANGELOG.md`.

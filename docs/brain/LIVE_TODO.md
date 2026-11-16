@@ -3,6 +3,25 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Dashboard duplicate-API-call report: not reproducible in a single rendered mount (TASK W6 Part 4), `apps/web` only, 2026-11-17, `this commit`
+
+- Why: a 2026-11-15 browser observation reported roughly 4x `/api/telegram/status`, 2x `/api/signals`, 2x `/api/alerts/recent`, 2x `/api/signals/source-stats` on one `/dashboard` load, with candidate causes named: `NotificationConnectPrompt.tsx`/`TelegramConnect.tsx` both fetching telegram status; `NotificationPanel.tsx` (mounted via `TopBar.tsx`)/`alerts/page.tsx` both fetching alerts/recent.
+- Step 1 (measure): new `app/(dashboard)/layout.duplicate-fetches.render.test.tsx` mounts the real `Sidebar`, `TopBar` (which mounts `NotificationPanel` and the closed-by-default `NotificationConnectModal`/`TelegramConnect`), `NotificationConnectPrompt`, `MobileTabBar`, and the real `DashboardPage` together — same nesting `./layout.tsx` uses — with a counting fetch mock. `ProductTour`/`FeatureHints` (also part of the real layout) are left out only because they statically import a CSS file that doesn't resolve outside Next's webpack build; neither makes any network call, confirmed by `git grep`, so this does not change what's measured. Result: **every one of the four routes gets exactly 1 call on a single mount** — no duplicate reproduces.
+- Investigated why a live browser might still have shown more: `TelegramConnect` only mounts when `notificationConnectOpen` is true (default false, excluded from the persisted zustand state, forced back to false on every rehydrate — `store/useUIStore.ts`), so it isn't mounted on a fresh `/dashboard` load unless the user already opened the Connect modal in that session. `alerts/page.tsx`'s own `/api/alerts/recent` fetch is a different route (`/alerts`), not reachable from `/dashboard`. `AuthProvider.tsx` already explicitly skips gotrue-js's redundant `INITIAL_SESSION` event specifically to avoid a second resolve/render (see its own comment) — the one mechanism that could have produced a second, differently-referenced `user` object and re-triggered a `[user]`-keyed effect. Most likely remaining explanation: `next dev`'s React Strict Mode double-effect / Fast Refresh behavior, which is dev-only and does not affect what ships to production.
+- Step 2 (fix): none applied — the task says fix only the duplicates the test proves, and this test proves zero within a real single mount. No file was changed to "fix" this; no react-query key was changed.
+- Step 3 (regression guard): the new test asserts each of the 4 routes gets ≤1 call; it will fail if a future change reintroduces a real duplicate.
+- Before/after table — before = what the original browser observation reported (not reproduced by this task); after = what this task's rendered test measures on the current, unmodified code:
+
+| Route | Browser-observed (2026-11-15, unverified) | This test's measured count |
+|---|---|---|
+| `/api/telegram/status` | ~4x | 1x |
+| `/api/signals` | 2x | 1x |
+| `/api/alerts/recent` | 2x | 1x |
+| `/api/signals/source-stats` | 2x | 1x |
+
+- Verified: web `tsc --noEmit` exit 0; `pnpm --filter web test` 909 ✔, 0 ✖ (1 new test); `next build` exit 0. Not checked: a real `next dev` + Fast Refresh browser session (would need Playwright/live-browser verification this task didn't call for).
+- No `06_COMPONENTS.md`/`05_API.md`/`04_DATABASE.md`/`18_AI_ENGINE.md`/`10_DECISIONS.md` entry — no route, table, prompt, component, or standing rule changed. See `08_CURRENT_STATUS.md`.
+
 ## ✅ Market-impact method note no longer repeats once per asset (TASK W6 Part 3, tracker row I-10), `apps/web` only, 2026-11-17, `this commit`
 
 - Why: `lib/market-impact-assessment.ts`'s `marketImpactMethodNote(asset, sampleSize)` ("Method: N tracked BBR signals that listed `<asset>`, median move measured 24h after the event time.") was called inside `MarketImpactAssessment.tsx`'s per-asset `.map()`, once inside each affected asset's own "View historical pattern" `<details>` — a signal with several affected assets showed the sentence once per asset. Founder spec: show the sample size once in a single method note for the block, not per row.

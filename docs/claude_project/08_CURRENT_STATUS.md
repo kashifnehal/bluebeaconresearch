@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK W6 Part 3 — market-impact method note no longer repeats once per asset — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK W6 Part 4 — dashboard duplicate-API-call report: not reproducible in a single rendered mount — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-17 (TASK W6 Part 4, `apps/web` only, `this commit`) — a reported ~4x/2x/2x/2x duplicate-API-call pattern on one `/dashboard` load did not reproduce in a rendered test that mounts the real layout components + dashboard page together with a counting fetch mock (measured: 1 call per route). No fix applied — none proven needed; the test stays as a regression guard. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W6 Part 3, `apps/web` only, `this commit`) — `MarketImpactAssessment`'s method-note sentence (sample size/asset/checkpoint hours) now renders once per signal instead of once per affected asset, inside the first asset's own chart toggle. Same sentence text, no new wording. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
