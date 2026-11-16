@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-16 — Homepage no longer waits on a stalled database (`apps/web`)
+
+`apps/web/app/page.tsx` read the database three ways on every request (latest signal, signal count, published assessments) with no time limit. On 2026-11-16 the Supabase host stopped answering (Vercel runtime logs: Cloudflare 522 from the Supabase host, `/` still revalidating the signal count) and the public homepage waited with it; a browser load did not finish in 50 s. New `lib/with-timeout.ts` (`withTimeoutOrFallback`, 4 s per read, a BBR working value with no published source) returns the fallback (no latest signal, last good in-process count or none, no assessments) so the page renders without those blocks. Checked: `tsc --noEmit` exit 0; web `pnpm test` 898 passed, 0 failed (new `lib/with-timeout.test.ts`: 5 cases); `next build` exit 0. Not checked: the live homepage under a real database stall.
+
 ## 2026-11-15 — Country search in the map Locations panel already exists (TASK W4 Part 6, `this commit`)
 
 `apps/web`, read-only. Asked whether the map's Locations panel has a country search box: it already does, built on an earlier task. No code built. Full detail: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

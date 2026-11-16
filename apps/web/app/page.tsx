@@ -13,6 +13,7 @@ import { cachedHomepageSignalCount, loadHomepageSignalCount } from "./../lib/hom
 import { SubscribeForm } from "./../components/marketing/SubscribeForm";
 import { CookieSettingsButton } from "./../components/CookieSettingsButton";
 import { getPublishedAssessments, type PublicAssessment } from "./../lib/public-assessments";
+import { HOMEPAGE_DB_TIMEOUT_MS, withTimeoutOrFallback } from "./../lib/with-timeout";
 
 export const dynamic = "force-dynamic";
 
@@ -518,10 +519,12 @@ export default async function Home(props: {
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   const signedIn = !claimsError && Boolean(claimsData?.claims?.sub);
 
+  // Each read gives up after HOMEPAGE_DB_TIMEOUT_MS so a stalled database
+  // cannot hold the public homepage; the page then renders without that block.
   const [latestSignal, homepageStats, assessments] = await Promise.all([
-    getLatestSignal(),
-    getHomepageStats(),
-    getPublishedAssessments(),
+    withTimeoutOrFallback(getLatestSignal(), HOMEPAGE_DB_TIMEOUT_MS, null),
+    withTimeoutOrFallback(getHomepageStats(), HOMEPAGE_DB_TIMEOUT_MS, cachedHomepageSignalCount()),
+    withTimeoutOrFallback<PublicAssessment[]>(getPublishedAssessments(), HOMEPAGE_DB_TIMEOUT_MS, []),
   ]);
 
   return renderHomePage({

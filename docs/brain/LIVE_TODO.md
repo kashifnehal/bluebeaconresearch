@@ -3,6 +3,11 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Homepage renders when the database stalls (`apps/web`, 2026-11-16)
+
+- Why: on 2026-11-16 the public homepage hung while the database host was unreachable (three unbounded database reads in `app/page.tsx`).
+- Fix: `lib/with-timeout.ts` gives each read 4 s (working value, not researched) and falls back to no block. Verified: tsc 0, web tests 898 ✔ / 0 ✖, `next build` 0. Not verified: behaviour on the live site during a stall.
+
 Go-live item: plan prices are hidden (SHOW_PLAN_PRICES = false in apps/web/app/page.tsx). The founder will supply the real prices. Do not turn the switch on before then.
 
 ## ✅ Sanctions sync reports degraded on chunk failure; service-health prune retries once and moved off the 03:00 job (TASK BE-DB-IO3), `apps/backend` only, 2026-11-15, `4617879` / `84523d3` / `this commit`
