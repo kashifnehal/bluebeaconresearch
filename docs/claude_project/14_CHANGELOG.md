@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Repo-wide wording guard extended for the removed accuracy-claim phrases (TASK NQ-3 Part 3, `apps/web`, `this commit`)
+
+The repo-wide wording guard (`app/surface-wording.guard.test.ts`) now also fails if "how often our calls matched", "not flattering", "counts as a miss", "not enough history yet", or "Accuracy page" appears outside a test file. Two narrow exceptions added for legitimate uses: a corrections-log historical quote, and an unrelated chart empty-state that happens to say "not enough history yet". Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Help/FAQ copy no longer describes the removed accuracy scoring rule (TASK NQ-3 Part 2, `apps/web` + `apps/backend/src/lib/search-catalog.ts`, `this commit`)
 
 The Help FAQ's "not enough history yet" question (implying a per-asset history table that no longer exists) reworded to "When does BBR publish performance statistics?" — answer unchanged. The "How is the Accuracy page calculated?" item, which explained the removed 0.5%-move/"counts as a miss" scoring rule, removed entirely. `search-catalog.ts` mirrored both changes. Full technical record: `docs/brain/14_CHANGELOG.md`.

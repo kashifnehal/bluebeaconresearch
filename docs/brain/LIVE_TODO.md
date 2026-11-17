@@ -3,6 +3,12 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ Repo-wide wording guard extended for the Part 1-2 removed phrases, Part 3 (TASK NQ-3 Part 3), `apps/web` only, 2026-11-17, `this commit`
+
+- `app/surface-wording.guard.test.ts` (TASK NQ-2 Part 5) now also fails the chain if "how often our calls matched", "not flattering", "counts as a miss", "not enough history yet", or "Accuracy page" reappears outside a test file, across `app`/`components`/`lib` plus `apps/backend/src/lib/search-catalog.ts`.
+- Two new per-phrase exceptions found and allowed, same pattern as the existing `ALLOWED_HIT_RATE_FILES`: `lib/corrections-log.ts` keeps both "counts as a miss" and "Accuracy page" — it quotes the withdrawn 2026-11-08 caption on purpose, not a live claim. `components/alerts/AlertRuleTrendChart.tsx`'s `AlertRuleTrendEmptyState` keeps "Not enough history yet" — an unrelated empty state for a chart with too few data points, not the removed Accuracy-page per-asset-history claim.
+- Verified: `../backend/node_modules/.bin/tsx app/surface-wording.guard.test.ts` — 1/1 ✔.
+
 ## ✅ No page or help answer promises a performance figure the site no longer shows, Part 2 (TASK NQ-3 Part 2), `apps/web` + `apps/backend/src/lib/search-catalog.ts`, 2026-11-17, `this commit`
 
 - Why: `help-faq.ts`'s "not enough history yet" question still implied the Accuracy page shows per-asset history, and its "How is the Accuracy page calculated?" item explained a removed 0.5%/"counts as a miss" scoring rule; `search-catalog.ts` mirrored both.

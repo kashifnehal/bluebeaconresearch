@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK NQ-3 Part 2 — help-faq.ts/search-catalog.ts no longer describe the removed accuracy scoring rule or per-asset history)
+Last updated: 2026-11-17 (TASK NQ-3 Part 3 — repo-wide wording guard extended for the Part 1-2 removed phrases)
+
+> ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 3, `apps/web` only, `this commit`) — `app/surface-wording.guard.test.ts` now also fails on "how often our calls matched", "not flattering", "counts as a miss", "not enough history yet", or "Accuracy page" outside a test file. Two new narrow exceptions (same pattern as the existing `ALLOWED_HIT_RATE_FILES`): `lib/corrections-log.ts` (quotes a withdrawn caption on purpose) and `components/alerts/AlertRuleTrendChart.tsx`'s empty state (unrelated "not enough history yet" for a sparse chart). See `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 2, `apps/web` + `apps/backend/src/lib/search-catalog.ts`, `this commit`) — `help-faq.ts`'s `accuracy-history` question reworded to "When does BBR publish performance statistics?" (answer unchanged); its `accuracy-method` item ("How is the Accuracy page calculated?", the 0.5%/"counts as a miss" scoring explanation) removed entirely. `search-catalog.ts` mirrored both. `app/accuracy/page.tsx`'s `data-testid="accuracy-method"` is an unrelated DOM test id (the page's own Method-section heading), left untouched. Two route-path comments in backend code (`auth.middleware.ts`, `outcome-tracker.ts`) still say "/accuracy page" lowercase — not the visitor-facing label, left as-is; `lib/corrections-log.ts`'s historical quote kept on purpose. See `LIVE_TODO.md`.
 

@@ -1,8 +1,10 @@
-// Repo-wide guard (TASK NQ-2 Part 5): the public surface must not resurrect
-// the performance-claim wording TASK NQ-2 removed. Fails if any of PHRASES
-// reappears outside a test file. "hit rate" additionally allows the admin
-// dashboard (internal, not the public surface) and two pre-existing,
-// non-claim uses listed in ALLOWED_HIT_RATE_FILES below.
+// Repo-wide guard (TASK NQ-2 Part 5, extended TASK NQ-3 Part 3): the public
+// surface must not resurrect the performance-claim wording TASK NQ-2/NQ-3
+// removed. Fails if any of PHRASES reappears outside a test file. "hit rate"
+// additionally allows the admin dashboard (internal, not the public surface)
+// and two pre-existing, non-claim uses listed in ALLOWED_HIT_RATE_FILES
+// below; a few other phrases have their own narrow exceptions in
+// ALLOWED_FILES_BY_PHRASE.
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
@@ -20,6 +22,11 @@ const PHRASES = [
   "fabricated model",
   "as our sources publish them",
   "See the accuracy record",
+  "how often our calls matched",
+  "not flattering",
+  "counts as a miss",
+  "not enough history yet",
+  "Accuracy page",
 ];
 
 // Pre-existing, non-claim uses of "hit rate" that are not the thing this
@@ -30,6 +37,19 @@ const ALLOWED_HIT_RATE_FILES = new Set([
   "app/page.tsx", // "Uncertainty for this assessment — not a hit rate"
   "lib/corrections-log.ts", // quotes the wrong caption the 2026-11-08 correction fixed
 ]);
+
+// Per-phrase allowances found when TASK NQ-3 Part 3 widened PHRASES: each is
+// either the same corrections-log historical quote as above, or an unrelated
+// legitimate use that happens to share the wording. Listed here (and in the
+// task report) rather than silently excluded.
+const ALLOWED_FILES_BY_PHRASE: Record<string, Set<string>> = {
+  // quotes the withdrawn caption the 2026-11-08 correction fixed, same entry as ALLOWED_HIT_RATE_FILES above
+  "counts as a miss": new Set(["lib/corrections-log.ts"]),
+  // quotes the withdrawn caption on purpose, not a live claim
+  "Accuracy page": new Set(["lib/corrections-log.ts"]),
+  // AlertRuleTrendChart's empty state for a chart with too few data points — unrelated to the removed Accuracy-page history claim
+  "not enough history yet": new Set(["components/alerts/AlertRuleTrendChart.tsx"]),
+};
 
 function walk(root: string): string[] {
   const out: string[] = [];
@@ -79,6 +99,7 @@ runTest("no removed-wording phrase reappears outside test files, the admin dashb
         if (relPath.startsWith("app/(dashboard)/admin/")) continue;
         if (ALLOWED_HIT_RATE_FILES.has(relPath)) continue;
       }
+      if (ALLOWED_FILES_BY_PHRASE[phrase]?.has(relPath)) continue;
       violations.push(`${relPath}: "${phrase}"`);
     }
   }

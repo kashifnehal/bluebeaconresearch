@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK NQ-3 Part 2 — help-faq/search-catalog no longer describe the removed accuracy scoring rule — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK NQ-3 Part 3 — repo-wide wording guard extended for the removed accuracy-claim phrases — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 3, `apps/web` only, `this commit`) — the repo-wide wording guard now also catches "how often our calls matched"/"not flattering"/"counts as a miss"/"not enough history yet"/"Accuracy page" outside test files. Two narrow exceptions added for legitimate unrelated/historical uses. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 2, `apps/web` + `apps/backend/src/lib/search-catalog.ts`, `this commit`) — the Help FAQ's "not enough history yet" question reworded (answer unchanged) and its "How is the Accuracy page calculated?" item (the removed 0.5%-move scoring rule) removed entirely; mirrored in `search-catalog.ts`. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
