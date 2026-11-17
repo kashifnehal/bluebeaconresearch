@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ No page or help answer promises a performance figure the site no longer shows, Part 1 (TASK NQ-3 Part 1), `apps/web` only, 2026-11-17, `this commit`
+
+- Why: `/accuracy` (TASK NQ-2) was rebuilt to show no figures, but `how-it-works/page.tsx`'s claim list still said "We publish how often our calls matched the later price move, including when the result is weak." / "See the Accuracy page — including when the number is not flattering."
+- Fix: that claim/proof pair now reads "We publish a performance statistic only when the sample, the period, the thresholds and a plain baseline are stated and a pre-declared test shows a result above that baseline." / "The publication standard is written on the Method page." Position, markup, and styling unchanged.
+- `page.test.tsx` updated: asserts the two new strings present, the two old strings ("how often our calls matched", "not flattering") absent.
+- Verified: `../backend/node_modules/.bin/tsx app/how-it-works/page.test.tsx` — 3/3 ✔. Full checks run at the end of Part 4 below.
+- Parts 2-4 of this task continue the same cleanup (help-faq.ts/search-catalog.ts, a repo-wide wording guard, e2e checks). See `08_CURRENT_STATUS.md`, `14_CHANGELOG.md`.
+
 ## ✅ Database-outage hardening: safe error text, probe history, auto-restart watchdog, price outbox (TASK BE-DB-RES1, Parts 1-5), `apps/backend` only, 2026-11-17, `7f518b3`/`8a19fec`/`15712db`/`1fc4591`
 
 - Why: 2026-11-14 to 2026-11-16 the database was unreachable roughly 36 of 47 hours on the free Supabase plan. Nothing recovered it automatically, failure logs were unreadable (`[object Object]`/raw HTML error pages), and failed price inserts were silently lost.

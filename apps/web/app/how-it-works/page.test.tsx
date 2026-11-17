@@ -22,19 +22,21 @@ function runTest(name: string, fn: () => void | Promise<void>) {
 }
 
 async function main() {
-  await runTest("accuracy claim names the later price move and keeps the check text", async () => {
+  await runTest("publication-standard claim states the pre-declared-test bar and points to the Method page", async () => {
     const { html, root } = await renderElement(document, createElement(HowItWorksClaimList));
     try {
       const text = (document.body.textContent ?? "").replace(/\s+/g, " ");
       assert.equal(text.includes("We publish our track record."), false);
+      assert.equal(text.includes("how often our calls matched"), false);
+      assert.equal(text.includes("not flattering"), false);
       assert.equal(
         text.includes(
-          "We publish how often our calls matched the later price move, including when the result is weak.",
+          "We publish a performance statistic only when the sample, the period, the thresholds and a plain baseline are stated and a pre-declared test shows a result above that baseline.",
         ),
         true,
       );
       assert.equal(
-        text.includes("See the Accuracy page — including when the number is not flattering."),
+        text.includes("The publication standard is written on the Method page."),
         true,
       );
       assert.match(html, /How you can check it/);

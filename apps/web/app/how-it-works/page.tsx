@@ -96,8 +96,9 @@ export const CLAIM_ROWS: ClaimRow[] = [
     proof: "The reports count increments on every merged report, regardless of whether the outlet repeats.",
   },
   {
-    claim: "We publish how often our calls matched the later price move, including when the result is weak.",
-    proof: "See the Accuracy page — including when the number is not flattering.",
+    claim:
+      "We publish a performance statistic only when the sample, the period, the thresholds and a plain baseline are stated and a pre-declared test shows a result above that baseline.",
+    proof: "The publication standard is written on the Method page.",
   },
   {
     claim: "Claude classifies an event for market impact, including a possible up, down, or volatile move in a listed commodity or currency pair, and does not recommend a position, a size, or an entry or exit.",

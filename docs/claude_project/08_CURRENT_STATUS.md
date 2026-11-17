@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK BE-DB-RES1 — database-outage hardening — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK NQ-3 Part 1 — how-it-works claim no longer promises a performance figure the site no longer shows — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 1, `apps/web` only, `this commit`) — `how-it-works/page.tsx`'s claim/proof pair no longer promises a performance figure; the rebuilt (TASK NQ-2) `/accuracy` page shows none. New text states the publication standard and points to the Method page. Parts 2-4 continue the cleanup. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK BE-DB-RES1, `apps/backend` only, `7f518b3`/`8a19fec`/`15712db`/`1fc4591`) — database-outage hardening after the 2026-11-14/16 outage: thrown-value log/email text is now always short and readable (never `[object Object]` or raw HTML); every DB probe is now kept in a Redis history with a new admin summary route; an opt-in watchdog (off by default — no env var set anywhere) can request a Supabase project restart after 6 consecutive failures; a failed price-sync insert is now queued and replayed instead of dropped. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 

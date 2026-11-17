@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — How-it-works claim no longer promises a performance figure the site no longer shows (TASK NQ-3 Part 1, `apps/web`, `this commit`)
+
+`how-it-works/page.tsx`'s claim/proof pair still said BBR publishes how often calls matched later price moves and pointed to the Accuracy page "including when the number is not flattering" — but the TASK NQ-2 rebuild of `/accuracy` shows no figures at all. New text states the publication standard (sample/period/thresholds/baseline, pre-declared test) and points to the Method page instead. `page.test.tsx` updated. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Database-outage hardening: safe error text, probe history, auto-restart watchdog, price outbox (TASK BE-DB-RES1, `apps/backend`, `7f518b3`/`8a19fec`/`15712db`/`1fc4591`)
 
 After a 2026-11-14/16 outage left the database unreachable ~36 of 47 hours with unreadable failure text and no automatic recovery: thrown-value log/email text is now always a short readable line (never `[object Object]` or raw HTML); every database probe is kept in a Redis history with a new admin summary route (`GET /v1/admin/db-probe-history`); an opt-in watchdog can request a Supabase project restart after 6 consecutive failures, gated by a cooldown and a daily cap — off by default, no env var set anywhere yet; a failed price-sync insert is now queued and replayed on the next good run instead of dropped. Full technical record: `docs/brain/14_CHANGELOG.md`.
