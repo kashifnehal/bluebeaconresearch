@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — rss_drop_samples duplicate-key log spam fixed (TASK HEALTH-1 Part 5, `apps/backend`, `this commit`)
+
+480 duplicate-key error log lines in 14 hours (87% of all database errors in that window) were a diagnostic drop-sample store inserting first and only checking for a conflict after the fact — normal for any repeated headline. Rewritten to check first (one batched select) and only insert what's actually new, with no schema change. Full technical record and the read-only `raw_events` insert audit: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Homepage signal-count query now genuinely times out, not just the page render (TASK HEALTH-1 Part 4, `apps/web`, `this commit`)
 
 The homepage already stopped *waiting* on a stalled database (shipped 2026-11-16), but the underlying query itself kept running in the background with no cancellation — consistent with "Task timed out after 300 seconds" errors continuing to appear afterward. The one query behind the shared `total-signal-count` cache now actually cancels itself at 4 seconds via the Supabase client's own abort-signal support, with a clear log line distinguishing a timeout from any other failure. A real finding along the way: the browser-standard timeout API used here has an internal timer that doesn't keep a bare script process alive on its own, which the new regression test accounts for directly. Full technical record and the read-only audit of every other database call on the homepage's render path: `docs/brain/14_CHANGELOG.md`.

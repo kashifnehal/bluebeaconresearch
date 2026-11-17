@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import {
   recordDrops,
   purgeOldDropSamples,
@@ -68,22 +69,24 @@ async function main() {
     await recordDrops(supabaseThatThrows(), [sampleDrop]);
   });
 
-  await runTest("a mocked client is never called with .schema(...) and purge runs at most once per hour", async () => {
-    process.env.DROP_SAMPLE_STORE = "true";
-    __resetPurgeStateForTests();
-    let schemaCalls = 0;
-    let deletes = 0;
+  /** Mocked client: `select().or()` reports which (feed, title_hash) pairs in
+   *  `existingRows` already exist; records insert/update/delete calls. */
+  function mockClient(existingRows: Array<{ feed: string; title_hash: string; seen_count: number }>) {
+    const calls = { schema: 0, deletes: 0, selects: 0, inserts: 0, updates: 0 };
+    let lastInsertRows: any[] = [];
+    let insertError: { code?: string; message: string } | null = null;
+    let selectError: { message: string } | null = null;
     let cutoff = "";
     const sb: any = {
       schema() {
-        schemaCalls++;
+        calls.schema++;
         throw new Error("no schema()");
       },
       from(table: string) {
         assert.equal(table, "rss_drop_samples");
         return {
           delete() {
-            deletes++;
+            calls.deletes++;
             return {
               lt: async (_col: string, v: string) => {
                 cutoff = v;
@@ -91,22 +94,94 @@ async function main() {
               },
             };
           },
-          insert: async () => ({ error: null }),
+          select() {
+            calls.selects++;
+            return {
+              or: async (_filter: string) => {
+                if (selectError) return { data: null, error: selectError };
+                return { data: existingRows, error: null };
+              },
+            };
+          },
+          insert: async (rows: any[]) => {
+            calls.inserts++;
+            lastInsertRows = rows;
+            return { error: insertError };
+          },
+          update(_patch: any) {
+            calls.updates++;
+            return { eq: () => ({ eq: async () => ({ error: null }) }) };
+          },
         };
       },
     };
-    await recordDrops(sb, [sampleDrop]);
-    await recordDrops(sb, [sampleDrop]);
-    await purgeOldDropSamples(sb);
-    assert.equal(schemaCalls, 0);
-    assert.equal(deletes, 1, "purge must run once per hour per process");
-    const ageDays = (Date.now() - new Date(cutoff).getTime()) / 86_400_000;
+    return {
+      sb,
+      calls,
+      cutoff: () => cutoff,
+      insertedRows: () => lastInsertRows,
+      setInsertError: (e: { code?: string; message: string } | null) => (insertError = e),
+      setSelectError: (e: { message: string } | null) => (selectError = e),
+    };
+  }
+
+  await runTest("a mocked client is never called with .schema(...) and purge runs at most once per hour", async () => {
+    process.env.DROP_SAMPLE_STORE = "true";
+    __resetPurgeStateForTests();
+    const m = mockClient([]);
+    await recordDrops(m.sb, [sampleDrop]);
+    await recordDrops(m.sb, [sampleDrop]);
+    await purgeOldDropSamples(m.sb);
+    assert.equal(m.calls.schema, 0);
+    assert.equal(m.calls.deletes, 1, "purge must run once per hour per process");
+    const ageDays = (Date.now() - new Date(m.cutoff()).getTime()) / 86_400_000;
     assert.ok(Math.abs(ageDays - 14) < 0.01, `cutoff should be 14 days ago, got ${ageDays}`);
   });
 
   await runTest("purgeOldDropSamples never throws", async () => {
     __resetPurgeStateForTests();
     await purgeOldDropSamples(supabaseThatThrows());
+  });
+
+  await runTest("one batched select, and rows that already exist cause zero insert calls", async () => {
+    process.env.DROP_SAMPLE_STORE = "true";
+    __resetPurgeStateForTests();
+    const hash = createHash("sha1").update(sampleDrop.title.trim().toLowerCase()).digest("hex");
+    const m = mockClient([{ feed: sampleDrop.feed, title_hash: hash, seen_count: 3 }]);
+    await recordDrops(m.sb, [sampleDrop]);
+    assert.equal(m.calls.selects, 1, "exactly one batched select");
+    assert.equal(m.calls.updates, 1);
+    assert.equal(m.calls.inserts, 0, "an already-seen row must not be inserted");
+  });
+
+  await runTest("new rows cause exactly one batched insert call", async () => {
+    process.env.DROP_SAMPLE_STORE = "true";
+    __resetPurgeStateForTests();
+    const m = mockClient([]);
+    await recordDrops(m.sb, [sampleDrop, { ...sampleDrop, title: "A second, different dropped headline" }]);
+    assert.equal(m.calls.selects, 1);
+    assert.equal(m.calls.updates, 0);
+    assert.equal(m.calls.inserts, 1, "both new rows go in a single batched insert call");
+    assert.equal(m.insertedRows().length, 2);
+  });
+
+  await runTest("a select error does not throw and writes nothing", async () => {
+    process.env.DROP_SAMPLE_STORE = "true";
+    __resetPurgeStateForTests();
+    const m = mockClient([]);
+    m.setSelectError({ message: "relation \"rss_drop_samples\" does not exist" });
+    await recordDrops(m.sb, [sampleDrop]);
+    assert.equal(m.calls.inserts, 0);
+    assert.equal(m.calls.updates, 0);
+  });
+
+  await runTest("a 23505 on the batched insert does not throw (two workers raced)", async () => {
+    process.env.DROP_SAMPLE_STORE = "true";
+    __resetPurgeStateForTests();
+    const m = mockClient([]);
+    m.setInsertError({ code: "23505", message: "duplicate key value violates unique constraint" });
+    await recordDrops(m.sb, [sampleDrop]);
+    assert.equal(m.calls.inserts, 1);
   });
 
   await runTest("classifyDrop uses the same reason strings as the RSS block (exclude, noise, nokeyword)", () => {

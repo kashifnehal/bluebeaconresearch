@@ -142,6 +142,21 @@ function titleHash(title: string): string {
   return createHash("sha1").update(normalizeTitle(title)).digest("hex");
 }
 
+/** PostgREST `.or()` filter-string quoting: wrap in double quotes, doubling
+ *  any internal one, so a feed name containing a comma/paren/space can't
+ *  break the filter. `feed` comes from static collector config, not user
+ *  input, but this costs nothing and removes the need to trust that. */
+function pgFilterValue(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+type PendingDrop = {
+  feed: string;
+  hash: string;
+  occurrences: number;
+  row: Record<string, unknown>;
+};
+
 /**
  * Persists a sample of this cycle's relevance-filter drops into
  * public.rss_drop_samples, behind the DROP_SAMPLE_STORE env flag
@@ -149,6 +164,15 @@ function titleHash(title: string): string {
  * decision path). Never throws: ingestion must never fail because of this.
  * No-ops quietly if the table doesn't exist yet (migration not applied) or
  * the flag is off.
+ *
+ * One batched select resolves which (feed, title_hash) pairs already exist
+ * (87% of this table's Postgres log errors, 2026-11-16/17, were duplicate-key
+ * errors from the old insert-first-then-catch-23505 approach — every repeat
+ * headline wrote an error line into the database log). Rows that already
+ * exist get an UPDATE (never conflicts); rows that don't are inserted in one
+ * batched call. If that batched insert still hits 23505 — two workers raced
+ * on the same pair between our select and insert — it's swallowed quietly,
+ * same as before.
  */
 export async function recordDrops(
   supabase: ReturnType<typeof getSupabaseAdmin>,
@@ -161,45 +185,87 @@ export async function recordDrops(
 
   try {
     const nowIso = new Date().toISOString();
-    for (const drop of drops.slice(0, MAX_ROWS_PER_CYCLE)) {
+    const batch = drops.slice(0, MAX_ROWS_PER_CYCLE);
+
+    // Collapse same (feed, title_hash) pairs seen more than once in this
+    // cycle's own batch before ever touching the database, so a repeat
+    // headline within one cycle can't self-conflict on the batched insert.
+    const pending = new Map<string, PendingDrop>();
+    for (const drop of batch) {
       const hash = titleHash(drop.title);
-      const row = {
+      const key = `${drop.feed}\u0000${hash}`;
+      const already = pending.get(key);
+      if (already) {
+        already.occurrences += 1;
+        continue;
+      }
+      pending.set(key, {
         feed: drop.feed,
-        tier: drop.tier,
-        reason: drop.reason,
-        shadow_groups: drop.shadowGroups && drop.shadowGroups.length > 0 ? drop.shadowGroups : null,
-        midword_only: drop.midwordOnly ?? false,
-        title: drop.title,
-        summary_excerpt: drop.summary ? drop.summary.slice(0, SUMMARY_EXCERPT_MAX_CHARS) : null,
-        url: drop.url ?? null,
-        title_hash: hash,
-        last_seen_at: nowIso,
-      };
+        hash,
+        occurrences: 1,
+        row: {
+          feed: drop.feed,
+          tier: drop.tier,
+          reason: drop.reason,
+          shadow_groups: drop.shadowGroups && drop.shadowGroups.length > 0 ? drop.shadowGroups : null,
+          midword_only: drop.midwordOnly ?? false,
+          title: drop.title,
+          summary_excerpt: drop.summary ? drop.summary.slice(0, SUMMARY_EXCERPT_MAX_CHARS) : null,
+          url: drop.url ?? null,
+          title_hash: hash,
+          last_seen_at: nowIso,
+        },
+      });
+    }
 
-      const insert = await (supabase as any)
+    const orFilter = [...pending.values()]
+      .map((p) => `and(feed.eq.${pgFilterValue(p.feed)},title_hash.eq.${pgFilterValue(p.hash)})`)
+      .join(",");
+    const existingRes = await (supabase as any)
+      .from("rss_drop_samples")
+      .select("feed, title_hash, seen_count")
+      .or(orFilter);
+    if (existingRes.error) {
+      // Table missing (migration not applied) or any other error — log once and
+      // stop for this cycle; ingestion itself must never fail from this path.
+      console.warn("[DROP-SAMPLE-STORE] batched select failed, skipping this cycle:", existingRes.error.message);
+      return;
+    }
+    const existingSeenCounts = new Map<string, number>();
+    for (const row of existingRes.data ?? []) {
+      existingSeenCounts.set(`${row.feed}\u0000${row.title_hash}`, row.seen_count ?? 1);
+    }
+
+    const toInsert: Record<string, unknown>[] = [];
+    for (const [key, p] of pending) {
+      const existingSeenCount = existingSeenCounts.get(key);
+      if (existingSeenCount === undefined) {
+        toInsert.push({ ...p.row, first_seen_at: nowIso, seen_count: p.occurrences });
+        continue;
+      }
+      const update = await (supabase as any)
         .from("rss_drop_samples")
-        .insert({ ...row, first_seen_at: nowIso, seen_count: 1 });
-
-      if (insert.error?.code === "23505") {
-        // Already seen this (feed, title_hash) — bump seen_count/last_seen_at instead.
-        const existing = await (supabase as any)
-            .from("rss_drop_samples")
-          .select("seen_count")
-          .eq("feed", drop.feed)
-          .eq("title_hash", hash)
-          .maybeSingle();
-        const nextSeenCount = (existing.data?.seen_count ?? 1) + 1;
-        await (supabase as any)
-            .from("rss_drop_samples")
-          .update({ last_seen_at: nowIso, seen_count: nextSeenCount, reason: row.reason })
-          .eq("feed", drop.feed)
-          .eq("title_hash", hash);
-      } else if (insert.error) {
-        // Table missing (migration not applied) or any other error — log once and
-        // stop for this cycle; ingestion itself must never fail from this path.
-        console.warn("[DROP-SAMPLE-STORE] insert failed, skipping rest of cycle:", insert.error.message);
+        .update({
+          last_seen_at: nowIso,
+          seen_count: existingSeenCount + p.occurrences,
+          reason: p.row.reason,
+        })
+        .eq("feed", p.feed)
+        .eq("title_hash", p.hash);
+      if (update.error) {
+        console.warn("[DROP-SAMPLE-STORE] update failed, skipping rest of cycle:", update.error.message);
         return;
       }
+    }
+
+    if (toInsert.length > 0) {
+      const insertRes = await (supabase as any).from("rss_drop_samples").insert(toInsert);
+      if (insertRes.error && insertRes.error.code !== "23505") {
+        console.warn("[DROP-SAMPLE-STORE] insert failed, skipping rest of cycle:", insertRes.error.message);
+      }
+      // A 23505 here means another worker inserted one of these same (feed,
+      // title_hash) pairs between our select and this insert — swallow
+      // quietly, same as the old insert-first approach already did.
     }
   } catch (e) {
     console.warn("[DROP-SAMPLE-STORE] recordDrops failed:", e instanceof Error ? e.message : e);
