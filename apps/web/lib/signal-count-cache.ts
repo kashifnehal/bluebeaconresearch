@@ -13,18 +13,23 @@ export type SignalCountClient = {
 /**
  * Built from env vars only (no `cookies()`), so it can run inside an
  * `unstable_cache` scope — Next does not allow reading cookies/headers
- * inside a cached function. Prefers the service-role key (bypasses RLS) the
- * same way apps/web/lib/supabase-server.ts's getRouteSupabaseClients() does;
- * falls back to the anon key, which RLS reduces to a count of 0.
+ * inside a cached function. Service-role key only (SUPABASE_SERVICE_ROLE_KEY
+ * or SUPABASE_SECRET_KEY, same precedence as apps/web/lib/supabase-server.ts's
+ * getRouteSupabaseClients()) — no anon-key fallback. The anon key is always
+ * set in production (the client bundle needs it), so a fallback to it meant
+ * this never actually returned null when the server key was missing: it
+ * silently read with RLS applied instead, which returns a count of 0 that
+ * fetchTotalSignalCountOrThrow then has to special-case as "unusable" rather
+ * than this function ever reporting "not configured" (2026-11-17).
  */
 export function buildSignalCountClient(): SignalCountClient | null {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SECRET_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !key) return null;
-  return createServiceClient(supabaseUrl, key, { auth: { persistSession: false } });
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  if (!supabaseUrl || !serviceKey) {
+    console.error("[signal-count-cache] supabase not configured (missing URL or service-role key)");
+    return null;
+  }
+  return createServiceClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 }
 
 /**

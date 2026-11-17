@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Signal-count client no longer falls back to the anon key (TASK HEALTH-1 Part 3, `apps/web`, `this commit`)
+
+The homepage/how-it-works signal-count client fell back to the public anon key when the service-role key was missing — which, because the anon key is always set in production, meant that "not configured" state could never actually fire; it silently read an RLS-hidden count of 0 instead. Also explains the Vercel-error-title evidence: `NEXT_PUBLIC_*` env vars get inlined into the compiled bundle, so the fallback's resolved value could appear as a literal in a minified stack even though no key was ever hardcoded in source. Removed the fallback; a missing key now correctly hides the stat and logs once. New repo-wide guard test blocks any future hardcoded JWT literal. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — /vendor/maplibre/[file] route removed; its files now ship as static public/ assets (TASK HEALTH-1 Part 2, `apps/web`, `this commit`)
 
 The map worker/shared-chunk route 404'd in production ("Cannot find module") because Next 16's default Turbopack build never traces the dynamic `require.resolve()` it used into the deployed function. Replaced with a predev/prebuild script that copies the two files into `public/vendor/maplibre/` as plain static assets — no server function, no tracing, same URLs and same basemap/attribution. Full technical record and the proof that `outputFileTracingIncludes` doesn't fix this on Turbopack: `docs/brain/14_CHANGELOG.md`.

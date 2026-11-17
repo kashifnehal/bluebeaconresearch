@@ -94,26 +94,74 @@ async function main() {
     assert.equal(await fetchTotalSignalCountOrThrow(fakeClient(2996)), 2996);
   });
 
-  await runTest("buildSignalCountClient returns null when no Supabase env vars are set", () => {
-    const saved = {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      service: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      secret: process.env.SUPABASE_SECRET_KEY,
-      anon: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    };
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-    delete process.env.SUPABASE_SECRET_KEY;
-    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  function withEnv(
+    overrides: Record<string, string | undefined>,
+    fn: () => void,
+  ) {
+    const keys = ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
+    const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+    for (const k of keys) delete process.env[k];
+    for (const [k, v] of Object.entries(overrides)) if (v !== undefined) process.env[k] = v;
     try {
-      assert.equal(buildSignalCountClient(), null);
+      fn();
     } finally {
-      if (saved.url !== undefined) process.env.NEXT_PUBLIC_SUPABASE_URL = saved.url;
-      if (saved.service !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = saved.service;
-      if (saved.secret !== undefined) process.env.SUPABASE_SECRET_KEY = saved.secret;
-      if (saved.anon !== undefined) process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = saved.anon;
+      for (const k of keys) {
+        if (saved[k] !== undefined) process.env[k] = saved[k];
+        else delete process.env[k];
+      }
     }
+  }
+
+  await runTest("buildSignalCountClient returns null when no Supabase env vars are set", () => {
+    withEnv({}, () => {
+      assert.equal(buildSignalCountClient(), null);
+    });
   });
+
+  await runTest(
+    "buildSignalCountClient returns null when only the anon key is set — it must never fall back to it",
+    () => {
+      withEnv(
+        {
+          NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key-value",
+        },
+        () => {
+          assert.equal(buildSignalCountClient(), null);
+        },
+      );
+    },
+  );
+
+  await runTest(
+    "buildSignalCountClient returns a client when the URL and a service key are both set",
+    () => {
+      withEnv(
+        {
+          NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+          SUPABASE_SERVICE_ROLE_KEY: "service-role-key-value",
+        },
+        () => {
+          assert.ok(buildSignalCountClient());
+        },
+      );
+    },
+  );
+
+  await runTest(
+    "buildSignalCountClient also accepts SUPABASE_SECRET_KEY (Railway's legacy name)",
+    () => {
+      withEnv(
+        {
+          NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+          SUPABASE_SECRET_KEY: "secret-key-value",
+        },
+        () => {
+          assert.ok(buildSignalCountClient());
+        },
+      );
+    },
+  );
 }
 
 void main();
