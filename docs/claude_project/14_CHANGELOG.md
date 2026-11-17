@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Second /api/telegram/status call on a signed-in dashboard load fixed (TASK W7 Part 1, `apps/web`, `this commit`)
+
+A 2026-11-17 live browser load found `/api/telegram/status` called twice, 856 ms apart, on an otherwise-1x dashboard route — the duplicate the W6 Part 4 investigation below looked for but didn't reproduce. Root cause: a later auth event for the same already-signed-in user (e.g. a token refresh) hands `AuthProvider` a **new** `user` object for the same id; `NotificationConnectPrompt.tsx`'s eligibility effect depended on that object, so it re-ran and refetched. Fix: the effect now depends on `user?.id` instead. New rendered tests cover both the same-id (no refetch) and different-id (refetch) cases. Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 911 passed, 0 failed; `next build` exit 0. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Repo-wide wording guard extended for the removed accuracy-claim phrases (TASK NQ-3 Part 3, `apps/web`, `this commit`)
 
 The repo-wide wording guard (`app/surface-wording.guard.test.ts`) now also fails if "how often our calls matched", "not flattering", "counts as a miss", "not enough history yet", or "Accuracy page" appears outside a test file. Two narrow exceptions added for legitimate uses: a corrections-log historical quote, and an unrelated chart empty-state that happens to say "not enough history yet". Full technical record: `docs/brain/14_CHANGELOG.md`.

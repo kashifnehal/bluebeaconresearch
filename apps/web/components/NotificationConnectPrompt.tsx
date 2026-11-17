@@ -64,7 +64,12 @@ export function NotificationConnectPrompt() {
       cancelled = true;
       cancelIdle();
     };
-  }, [user]);
+    // AuthProvider's resolveSession() replaces `user` with a new object on
+    // every auth event for the same signed-in id (e.g. a token refresh) —
+    // depending on the object itself re-ran this effect, and its
+    // /api/telegram/status fetch, a second time on one page load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const visible =
     signalsViewedThisSession >= NOTIFICATION_PROMPT_AFTER_SIGNALS &&

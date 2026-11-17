@@ -1,6 +1,6 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK NQ-3 Part 3 — repo-wide wording guard extended for the removed accuracy-claim phrases — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK W7 Part 1 — second /api/telegram/status call on a signed-in dashboard load fixed — see the banner immediately below).**
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 3, `apps/web` only, `this commit`) — the repo-wide wording guard now also catches "how often our calls matched"/"not flattering"/"counts as a miss"/"not enough history yet"/"Accuracy page" outside test files. Two narrow exceptions added for legitimate unrelated/historical uses. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
@@ -12,7 +12,9 @@
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-4, `apps/backend` only, `this commit`) — new read-only `scripts/replay-classifier-prompt.ts` (`pnpm replay:classifier`) replays the current classifier return-spec text (flag off, twice, as a repeatability control) and the new return-spec text (flag on) against the same stored signals/raw-events rows from a fixed 2026-11-08..14 window, writing a side-by-side comparison to a gitignored local file — descriptive counts only, no pass/fail verdict, never reads the classifier-prompt-v2 flag, never writes to any production table. Built, not run against production this session (required credentials were not all present locally). See `docs/brain/08_CURRENT_STATUS.md`.
 
-> ⚠️ NEW 2026-11-17 (TASK W6 Part 4, `apps/web` only, `this commit`) — a reported ~4x/2x/2x/2x duplicate-API-call pattern on one `/dashboard` load did not reproduce in a rendered test that mounts the real layout components + dashboard page together with a counting fetch mock (measured: 1 call per route). No fix applied — none proven needed; the test stays as a regression guard. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 1, `apps/web` only, `this commit`) — supersedes the TASK W6 Part 4 banner below: a live-browser repro found the real mechanism (a later same-user auth event, e.g. a token refresh, handing `AuthProvider` a new `user` object for the same id) that the rendered-mount test below didn't simulate. Fixed by keying `NotificationConnectPrompt.tsx`'s eligibility effect on `user?.id` instead of the `user` object. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-11-17 (TASK W6 Part 4, `apps/web` only, `this commit`) — a reported ~4x/2x/2x/2x duplicate-API-call pattern on one `/dashboard` load did not reproduce in a rendered test that mounts the real layout components + dashboard page together with a counting fetch mock (measured: 1 call per route). No fix applied — none proven needed; the test stays as a regression guard. **Superseded above.** See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W6 Part 3, `apps/web` only, `this commit`) — `MarketImpactAssessment`'s method-note sentence (sample size/asset/checkpoint hours) now renders once per signal instead of once per affected asset, inside the first asset's own chart toggle. Same sentence text, no new wording. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
