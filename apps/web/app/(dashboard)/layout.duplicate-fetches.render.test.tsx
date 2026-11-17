@@ -164,10 +164,21 @@ async function renderDashboardRoute() {
 }
 
 async function main() {
-  await setupSignedInSupabase(document);
+  const { client: supabaseClient, user } = await setupSignedInSupabase(document);
+
+  // Captures the real onAuthStateChange callback (setupSignedInSupabase's own
+  // stub discards it) so the re-render step below can fire a second auth
+  // event for the SAME user id with a NEW `user` object — exactly what
+  // AuthProvider.resolveSession() does on a token refresh — the scenario
+  // TASK W7 Part 1 found caused a second /api/telegram/status call.
+  let authStateCallback: ((event: string, session: unknown) => void) | null = null;
+  supabaseClient.auth.onAuthStateChange = ((callback: (event: string, session: unknown) => void) => {
+    authStateCallback = callback;
+    return { data: { subscription: { unsubscribe() {} } } };
+  }) as typeof supabaseClient.auth.onAuthStateChange;
 
   await runTest("one signed-in /dashboard load makes at most one call per route (no duplicate reproduces)", async () => {
-    const { counts, root, client, restoreFetch } = await renderDashboardRoute();
+    const { calls, counts, root, client, restoreFetch } = await renderDashboardRoute();
     try {
       // Printed for the task report (Step 1) — not an assertion by itself.
       console.log("  per-route call counts:", JSON.stringify(counts));
@@ -180,6 +191,25 @@ async function main() {
       assert.ok((counts["/api/alerts/recent"] ?? 0) <= 1, `alerts/recent: ${counts["/api/alerts/recent"]}`);
       assert.ok((counts["/api/signals/source-stats"] ?? 0) <= 1, `signals/source-stats: ${counts["/api/signals/source-stats"]}`);
       assert.ok((counts["/api/signals"] ?? 0) <= 1, `signals: ${counts["/api/signals"]}`);
+
+      // TASK W7 Part 1 re-render step: replay a same-id auth event (a new
+      // `user` object, same id) and confirm it does not add a second
+      // /api/telegram/status call.
+      assert.ok(authStateCallback, "onAuthStateChange callback was not captured");
+      const newUserObject = { ...user };
+      await act(async () => {
+        authStateCallback!("TOKEN_REFRESHED", { user: newUserObject, access_token: "tok2", refresh_token: "rtok2" });
+      });
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 60));
+      });
+
+      const recounts = calls.reduce<Record<string, number>>((acc, r) => {
+        acc[r] = (acc[r] ?? 0) + 1;
+        return acc;
+      }, {});
+      console.log("  per-route call counts after same-id auth event:", JSON.stringify(recounts));
+      assert.ok((recounts["/api/telegram/status"] ?? 0) <= 1, `telegram/status after re-render: ${recounts["/api/telegram/status"]}`);
     } finally {
       restoreFetch();
       await act(async () => root.unmount());

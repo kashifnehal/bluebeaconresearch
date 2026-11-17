@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Second /api/telegram/status call on a signed-in dashboard load fixed (TASK W7 Part 1, `apps/web`, `this commit`)
+
+A 2026-11-17 live browser load found `/api/telegram/status` called twice, 856 ms apart, on an otherwise-1x dashboard route — the duplicate the W6 Part 4 investigation below looked for but didn't reproduce. Root cause: a later auth event for the same already-signed-in user (e.g. a token refresh) hands `AuthProvider` a **new** `user` object for the same id; `NotificationConnectPrompt.tsx`'s eligibility effect depended on that object, so it re-ran and refetched. Fix: the effect now depends on `user?.id` instead. New rendered tests cover both the same-id (no refetch) and different-id (refetch) cases. Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 911 passed, 0 failed; `next build` exit 0. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — How-it-works claim no longer promises a performance figure the site no longer shows (TASK NQ-3 Part 1, `apps/web`, `this commit`)
 
 `how-it-works/page.tsx`'s claim/proof pair still said BBR publishes how often calls matched later price moves and pointed to the Accuracy page "including when the number is not flattering" — but the TASK NQ-2 rebuild of `/accuracy` shows no figures at all. New text states the publication standard (sample/period/thresholds/baseline, pre-declared test) and points to the Method page instead. `page.test.tsx` updated. Full technical record: `docs/brain/14_CHANGELOG.md`.

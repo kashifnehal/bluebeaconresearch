@@ -1,12 +1,14 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK NQ-3 Part 1 — how-it-works claim no longer promises a performance figure the site no longer shows — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK W7 Part 1 — second /api/telegram/status call on a signed-in dashboard load fixed — see the banner immediately below).**
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 1, `apps/web` only, `this commit`) — `how-it-works/page.tsx`'s claim/proof pair no longer promises a performance figure; the rebuilt (TASK NQ-2) `/accuracy` page shows none. New text states the publication standard and points to the Method page. Parts 2-4 continue the cleanup. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK BE-DB-RES1, `apps/backend` only, `7f518b3`/`8a19fec`/`15712db`/`1fc4591`) — database-outage hardening after the 2026-11-14/16 outage: thrown-value log/email text is now always short and readable (never `[object Object]` or raw HTML); every DB probe is now kept in a Redis history with a new admin summary route; an opt-in watchdog (off by default — no env var set anywhere) can request a Supabase project restart after 6 consecutive failures; a failed price-sync insert is now queued and replayed instead of dropped. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-11-17 (TASK W6 Part 4, `apps/web` only, `this commit`) — a reported ~4x/2x/2x/2x duplicate-API-call pattern on one `/dashboard` load did not reproduce in a rendered test that mounts the real layout components + dashboard page together with a counting fetch mock (measured: 1 call per route). No fix applied — none proven needed; the test stays as a regression guard. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 1, `apps/web` only, `this commit`) — supersedes the TASK W6 Part 4 banner below: a live-browser repro found the real mechanism (a later same-user auth event, e.g. a token refresh, handing `AuthProvider` a new `user` object for the same id) that the rendered-mount test below didn't simulate. Fixed by keying `NotificationConnectPrompt.tsx`'s eligibility effect on `user?.id` instead of the `user` object. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-11-17 (TASK W6 Part 4, `apps/web` only, `this commit`) — a reported ~4x/2x/2x/2x duplicate-API-call pattern on one `/dashboard` load did not reproduce in a rendered test that mounts the real layout components + dashboard page together with a counting fetch mock (measured: 1 call per route). No fix applied — none proven needed; the test stays as a regression guard. **Superseded above.** See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W6 Part 3, `apps/web` only, `this commit`) — `MarketImpactAssessment`'s method-note sentence (sample size/asset/checkpoint hours) now renders once per signal instead of once per affected asset, inside the first asset's own chart toggle. Same sentence text, no new wording. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
