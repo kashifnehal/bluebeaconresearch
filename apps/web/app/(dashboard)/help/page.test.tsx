@@ -35,7 +35,7 @@ async function main() {
     await act(async () => root.unmount());
   });
 
-  await runTest("rendered help answer does not use the old 48-hour-only scoring sentence", async () => {
+  await runTest("rendered help text no longer asks when 'not enough history yet' shows, and names the publication standard instead", async () => {
     const { PathnameContext } = await import(
       "next/dist/shared/lib/hooks-client-context.shared-runtime.js"
     );
@@ -50,9 +50,12 @@ async function main() {
         ),
         false,
       );
+      assert.equal(html.includes("counts as a miss"), false);
+      assert.equal(html.includes("not enough history yet"), false);
+      assert.match(html, /When does BBR publish performance statistics\?/);
       assert.equal(
         html.includes(
-          "An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss.",
+          "BBR publishes a performance statistic only when it meets the publication standard described on the Method page.",
         ),
         true,
       );

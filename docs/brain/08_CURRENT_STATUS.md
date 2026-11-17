@@ -2,11 +2,15 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK W7 Part 3 — /map load-sequence report)
+Last updated: 2026-11-17 (TASK NQ-3 complete, Part 4 — e2e checks added, full chain verified, and the W7-flagged stale-test leftover fixed)
 
 > ⚠️ NEW 2026-11-17 (TASK W7 Part 3, `apps/web` only, report only/no code change, `this commit`) — `/map`'s "0 of 0" then late jump to "436 of 495" is two independent `GET /api/signals` requests, not one serial chain: `map/page.tsx`'s own 500-row `fetchFiltered` fetch fires on mount; `useSignalFeed`'s 20-row page-1 fetch only fires once auth resolves. The 500-row one is the slow one — within 2s of the client's 20s timeout. Full table: `LIVE_TODO.md`.
 
-> ⚠️ NEW 2026-11-17 (TASK W7 Part 2, `apps/web` only — config, `this commit`) — `apps/web/vercel.json` gains `"regions": ["hnd1"]` (Tokyo) to test proximity to the `ap-northeast-1` database against a measured 2.9-6.8 s event-page server time on the default `iad1` region. No per-route config, no other `vercel.json` in the repo. Not a kept decision — founder will measure live and keep or revert separately. Also flags (not fixed, out of scope): `app/(dashboard)/help/page.test.tsx` has a stale assertion left over from the same-day TASK NQ-3 Part 2, failing on `main` independent of this task — see `LIVE_TODO.md`.
+> ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 4, `apps/web` only, `this commit`) — `e2e/public-pages.spec.ts` gained checks that `/accuracy`/`/how-it-works` carry none of the 5 banned performance-claim phrases and `/accuracy` has no `%` character. Running the full chain surfaced one leftover Part 2 broke: `app/(dashboard)/help/page.test.tsx` still asserted the removed 0.5%-rule sentence — fixed here. This is the exact same leftover TASK W7 Part 2 below flagged (not fixed, out of its scope) independently the same day — fixed by this commit, not by W7. Full verification, re-run after rebasing onto W7/NQ-4/NQ-5: web `tsc` 0, test 912 ✔/0 ✖, `next build` 0, `test:e2e` 7/7 ✔ (Playwright installed); backend `tsc` 0, test 730 ✔/0 ✖. TASK NQ-3 (Parts 1-4) is complete. See `LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 1, `apps/web` only) — second `/api/telegram/status` call on a signed-in dashboard load fixed. See `LIVE_TODO.md` for the full writeup.
+
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 2, `apps/web` only — config, `this commit`) — `apps/web/vercel.json` gains `"regions": ["hnd1"]` (Tokyo) to test proximity to the `ap-northeast-1` database against a measured 2.9-6.8 s event-page server time on the default `iad1` region. No per-route config, no other `vercel.json` in the repo. Not a kept decision — founder will measure live and keep or revert separately. The stale `app/(dashboard)/help/page.test.tsx` assertion this part flagged (not fixed, out of its scope) is fixed by TASK NQ-3 Part 4 above. See `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 3, `apps/web` only, `this commit`) — `app/surface-wording.guard.test.ts` now also fails on "how often our calls matched", "not flattering", "counts as a miss", "not enough history yet", or "Accuracy page" outside a test file. Two new narrow exceptions (same pattern as the existing `ALLOWED_HIT_RATE_FILES`): `lib/corrections-log.ts` (quotes a withdrawn caption on purpose) and `components/alerts/AlertRuleTrendChart.tsx`'s empty state (unrelated "not enough history yet" for a sparse chart). See `LIVE_TODO.md`.
 

@@ -8,6 +8,16 @@ const PUBLIC_PAGES = ["/", "/accuracy", "/calendar", "/how-it-works"];
 const FILE_PATH_RE = /\/apps\/(?:web|backend)\/|[\w/-]+\.(?:tsx|ts|jsx|js|json):\d+/;
 const HTTP_CODE_RE = /\b(?:400|401|402|403|404|408|429|500|501|502|503|504)\b/;
 
+// TASK NQ-3 Part 4 — wording removed by NQ-2/NQ-3 must not resurface on the
+// two pages it was removed from, and /accuracy must show no "%" figure.
+const BANNED_WORDING_PHRASES = [
+  "how often our calls matched",
+  "not flattering",
+  "counts as a miss",
+  "not enough history yet",
+  "Accuracy page",
+];
+
 for (const path of PUBLIC_PAGES) {
   test(`${path} loads clean`, async ({ page }) => {
     const consoleErrors: string[] = [];
@@ -36,3 +46,20 @@ for (const path of PUBLIC_PAGES) {
     );
   });
 }
+
+for (const path of ["/accuracy", "/how-it-works"]) {
+  test(`${path} carries no removed performance-claim wording`, async ({ page }) => {
+    await page.goto(path, { waitUntil: "networkidle" });
+    const bodyText = await page.locator("body").innerText();
+    const lower = bodyText.toLowerCase();
+    for (const phrase of BANNED_WORDING_PHRASES) {
+      expect(lower.includes(phrase.toLowerCase()), `${path} rendered banned phrase "${phrase}"`).toBe(false);
+    }
+  });
+}
+
+test("/accuracy shows no percent figure", async ({ page }) => {
+  await page.goto("/accuracy", { waitUntil: "networkidle" });
+  const bodyText = await page.locator("body").innerText();
+  expect(bodyText.includes("%"), "/accuracy rendered a % character").toBe(false);
+});

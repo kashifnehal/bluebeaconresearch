@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — TASK NQ-3 complete: e2e checks added, leftover test fixed (TASK NQ-3 Part 4, `apps/web`, `this commit`)
+
+`e2e/public-pages.spec.ts` gained checks that `/accuracy`/`/how-it-works` carry none of the 5 banned performance-claim phrases and `/accuracy` shows no `%`. Running the full test chain (not just the targeted files run during earlier parts) found one leftover: a help-page test still asserted the exact scoring sentence Part 2 removed — fixed, and this is the same leftover TASK W7 Part 2 below independently flagged, out of its own scope. Full verification clean, re-run after rebasing onto W7/NQ-4/NQ-5: web `tsc`/test (912 ✔)/`next build`/`test:e2e` (7 ✔); backend `tsc`/test (730 ✔). TASK NQ-3 (Parts 1-4) is complete — no page or help answer promises a performance figure the site no longer shows. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — /map load-sequence report: two independent /api/signals calls, not one serial chain (TASK W7 Part 3, `apps/web`, report only, `this commit`)
 
 Report, no code change. `/map`'s "0 of 0" then a late jump to "436 of 495" is two separate `GET /api/signals` requests that don't chain to each other: the page's own 500-row fetch fires immediately on mount; a second, 20-row request only fires once auth resolves. The 500-row one dominates and is what's slow — close enough to the client's 20s timeout to risk failing outright, not just loading slowly, which lines up with Part 2's region-latency finding at a larger scale. Full table: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.

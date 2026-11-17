@@ -1,8 +1,12 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK W7 Part 3 — /map load-sequence report — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK NQ-3 complete, Part 4 — e2e checks added, full chain verified, and the W7-flagged stale-test leftover fixed — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 4, `apps/web` only, `this commit`) — e2e now checks `/accuracy`/`/how-it-works` for the banned performance-claim phrases and that `/accuracy` shows no `%`. A leftover test (`help/page.test.tsx`) that still asserted removed copy was found and fixed — the same leftover TASK W7 Part 2 below independently flagged, out of its own scope. Full web+backend verification clean (tsc/test/build/e2e). TASK NQ-3 is complete. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W7 Part 3, `apps/web` only, report only/no code change, `this commit`) — `/map`'s "0 of 0" then late jump is two independent `GET /api/signals` requests, not one serial chain — a 500-row fetch on mount and a 20-row page-1 fetch gated on auth. The 500-row one is the slow one. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
+
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 1, `apps/web` only) — second `/api/telegram/status` call on a signed-in dashboard load fixed. See `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W7 Part 2, `apps/web` only — config, `this commit`) — `apps/web/vercel.json` gains `"regions": ["hnd1"]` to test proximity to the database, against a measured 2.9-6.8 s event-page server time on the default region. Not a kept decision — founder measures and keeps or reverts. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
