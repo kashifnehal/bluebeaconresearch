@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — /vendor/maplibre/[file] route removed; its files now ship as static public/ assets (TASK HEALTH-1 Part 2, `apps/web`, `this commit`)
+
+The map worker/shared-chunk route 404'd in production ("Cannot find module") because Next 16's default Turbopack build never traces the dynamic `require.resolve()` it used into the deployed function. Replaced with a predev/prebuild script that copies the two files into `public/vendor/maplibre/` as plain static assets — no server function, no tracing, same URLs and same basemap/attribution. Full technical record and the proof that `outputFileTracingIncludes` doesn't fix this on Turbopack: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Event page HTTP 500 fixed: NewsAPI's own source object was rendered as a JSX child (TASK HEALTH-1 Part 1, `apps/web`, `this commit`)
 
 Production crash (4 Sentry events, React error #31 "Objects are not valid as a React child") traced to `7141b32` (2026-11-09): the event page's source list treated `raw_data.source` as always a plain string, but NewsAPI-sourced rows store it as their own `{id, url, name, country}` object, which then got rendered directly as the outlet name. Fixed by normalizing it to a string at the data layer (`sourceLabelFrom()` in `event-sources.ts`) instead of at each render site. Full technical record, crash line, and rendered-test list: `docs/brain/14_CHANGELOG.md`.
