@@ -70,6 +70,10 @@ function fakeRedis() {
       lists.set(key, list.slice(start, stop + 1));
       return "OK" as const;
     },
+    async lrange(key: string, start: number, stop: number) {
+      const list = lists.get(key) ?? [];
+      return list.slice(start, stop + 1);
+    },
   };
 }
 

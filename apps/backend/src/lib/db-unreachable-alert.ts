@@ -30,6 +30,7 @@ type DbHealthRedis = {
   get(key: string): Promise<string | null>;
   lpush(key: string, value: string): Promise<number>;
   ltrim(key: string, start: number, stop: number): Promise<"OK">;
+  lrange(key: string, start: number, stop: number): Promise<string[]>;
 };
 
 export type DbProbeSupabase = {
@@ -59,8 +60,36 @@ const RESTART_COOLDOWN_SECONDS = 3 * 60 * 60;
 const RESTART_DAY_TTL_SECONDS = 90_000;
 const RESTART_MAX_PER_DAY = 3;
 
+// Sliding-window watchdog. The consecutive-failure counter above resets on a
+// single good probe, so a flapping outage (mostly bad, occasionally good) never
+// reaches RESTART_AFTER_FAILURES in a row. windowSize=12 and badNeeded=8 are
+// engineering choices with no outside source (12 probes = 1 hour at the
+// 5-minute cron in workers.ts).
+const RESTART_WINDOW_SIZE = 12;
+const RESTART_WINDOW_BAD_NEEDED = 8;
+
 function restartDayKey(now: Date): string {
   return `db-health:restart:day:${now.toISOString().slice(0, 10)}`;
+}
+
+// The 4000 ms comes from the existing 4 s web read limit (commit 0327bc7) — an
+// engineering choice, not derived from an SLA or vendor doc.
+export function isProbeBad(entry: { ok: boolean; ms: number }): boolean {
+  return !entry.ok || entry.ms >= 4000;
+}
+
+// entries are newest first, matching how db-health:history is stored (LPUSH).
+// Only the newest windowSize entries are considered; true only when there are
+// at least windowSize entries available AND at least badNeeded of them are bad.
+export function shouldRestartFromHistory(
+  entries: Array<{ ok: boolean; ms: number }>,
+  windowSize = RESTART_WINDOW_SIZE,
+  badNeeded = RESTART_WINDOW_BAD_NEEDED,
+): boolean {
+  if (entries.length < windowSize) return false;
+  const window = entries.slice(0, windowSize);
+  const badCount = window.filter(isProbeBad).length;
+  return badCount >= badNeeded;
 }
 
 function adminRecipients(): string[] {
@@ -162,19 +191,19 @@ async function sendToAdmins(
 }
 
 /**
- * Only called once count >= RESTART_AFTER_FAILURES. Returns null (meaning: leave
- * the caller's own outcome alone) whenever the feature is off, there's no token,
- * the 3-hour cooldown is already claimed by an earlier attempt, the daily cap is
- * hit, or Redis itself fails — a Redis failure here must never trigger a restart.
+ * Shared gate/cooldown/request path for both restart triggers (consecutive-count
+ * and sliding-window). Returns null (meaning: leave the caller's own outcome
+ * alone) whenever the feature is off, there's no token, the 3-hour cooldown is
+ * already claimed by an earlier attempt (either trigger), the daily cap is hit,
+ * or Redis itself fails — a Redis failure here must never trigger a restart.
+ * `triggerLine` is the human-readable reason included in the admin email.
  */
-async function maybeRequestAutoRestart(
+async function runAutoRestartGate(
   redis: DbHealthRedis,
   email: EmailSender | undefined,
   now: Date,
-  failureCount: number,
+  triggerLine: string,
 ): Promise<DbUnreachableOutcome | null> {
-  if (failureCount < RESTART_AFTER_FAILURES) return null;
-
   const env = getEnv();
   if (env.SUPABASE_AUTO_RESTART !== "on") return null;
   const token = env.SUPABASE_ACCESS_TOKEN;
@@ -215,10 +244,9 @@ async function maybeRequestAutoRestart(
     await sendToAdmins(
       email,
       "BBR: database restart requested automatically",
-      `${utcNow} (UTC)\n\nThe database failed ${failureCount} consecutive checks. An automatic restart ` +
-        "was requested via the Supabase Management API.",
-      `<p>${utcNow} (UTC)</p><p>The database failed ${failureCount} consecutive checks. An automatic ` +
-        "restart was requested via the Supabase Management API.</p>",
+      `${utcNow} (UTC)\n\n${triggerLine} An automatic restart was requested via the Supabase Management API.`,
+      `<p>${utcNow} (UTC)</p><p>${triggerLine} An automatic restart was requested via the Supabase ` +
+        "Management API.</p>",
     );
     return "restart_requested";
   }
@@ -232,6 +260,31 @@ async function maybeRequestAutoRestart(
     `<p>${utcNow} (UTC)</p><p>The automatic restart request failed${statusLine}: ${reason}.</p>`,
   );
   return "restart_failed";
+}
+
+/** Consecutive-count trigger. Only attempts the shared gate once count >= RESTART_AFTER_FAILURES. */
+async function maybeRequestAutoRestart(
+  redis: DbHealthRedis,
+  email: EmailSender | undefined,
+  now: Date,
+  failureCount: number,
+): Promise<DbUnreachableOutcome | null> {
+  if (failureCount < RESTART_AFTER_FAILURES) return null;
+  return runAutoRestartGate(redis, email, now, `The database failed ${failureCount} consecutive checks.`);
+}
+
+/** Sliding-window trigger — see shouldRestartFromHistory. */
+async function maybeRequestAutoRestartFromWindow(
+  redis: DbHealthRedis,
+  email: EmailSender | undefined,
+  now: Date,
+): Promise<DbUnreachableOutcome | null> {
+  return runAutoRestartGate(
+    redis,
+    email,
+    now,
+    `The database failed ${RESTART_WINDOW_BAD_NEEDED} of the last ${RESTART_WINDOW_SIZE} checks (flapping).`,
+  );
 }
 
 async function recordFailure(
@@ -390,9 +443,37 @@ export async function checkDatabaseReachable(deps: DbUnreachableDeps = {}): Prom
       console.warn(`[db-unreachable-alert] Redis history push failed: ${err?.message ?? err}`);
     }
 
-    return probe.ok
+    // Sliding-window watchdog trigger — only relevant on a bad probe, and
+    // independent of the 6-in-a-row counter below (either trigger may fire;
+    // the shared cooldown in runAutoRestartGate prevents a double restart).
+    let windowRestartOutcome: DbUnreachableOutcome | null = null;
+    if (!probe.ok) {
+      try {
+        const raw = await redis.lrange(DB_PROBE_HISTORY_KEY, 0, RESTART_WINDOW_SIZE - 1);
+        const parsed: Array<{ ok: boolean; ms: number }> = [];
+        for (const item of raw) {
+          try {
+            const candidate = JSON.parse(item);
+            if (typeof candidate?.ok === "boolean" && typeof candidate?.ms === "number") {
+              parsed.push({ ok: candidate.ok, ms: candidate.ms });
+            }
+          } catch {
+            // skip unparseable history entries rather than let them crash the check
+          }
+        }
+        if (shouldRestartFromHistory(parsed)) {
+          windowRestartOutcome = await maybeRequestAutoRestartFromWindow(redis, deps.email, now);
+        }
+      } catch (err: any) {
+        console.warn(`[db-unreachable-alert] window-restart check failed: ${err?.message ?? err}`);
+      }
+    }
+
+    const baseOutcome = probe.ok
       ? await recordSuccess(redis, deps.email, now)
       : await recordFailure(redis, deps.email, now, probe.error);
+
+    return windowRestartOutcome ?? baseOutcome;
   } catch (err: any) {
     console.warn(`[db-unreachable-alert] unexpected failure: ${err?.message ?? err} — doing nothing.`);
     return "redis_error";
