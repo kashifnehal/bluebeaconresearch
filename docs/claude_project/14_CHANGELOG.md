@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — /map load-sequence report: two independent /api/signals calls, not one serial chain (TASK W7 Part 3, `apps/web`, report only, `this commit`)
+
+Report, no code change. `/map`'s "0 of 0" then a late jump to "436 of 495" is two separate `GET /api/signals` requests that don't chain to each other: the page's own 500-row fetch fires immediately on mount; a second, 20-row request only fires once auth resolves. The 500-row one dominates and is what's slow — close enough to the client's 20s timeout to risk failing outright, not just loading slowly, which lines up with Part 2's region-latency finding at a larger scale. Full table: `docs/brain/14_CHANGELOG.md`, `docs/brain/LIVE_TODO.md`.
+
 ## 2026-11-17 — apps/web function region set to hnd1 for measurement (TASK W7 Part 2, `apps/web`, `this commit`)
 
 Event-page server time ran 2.9-6.8 s per request (2026-11-17) with functions on Vercel's default `iad1` region while the database sits in `ap-northeast-1`. `apps/web/vercel.json` now also declares `"regions": ["hnd1"]` (Tokyo) — the only `vercel.json` in the repo, no per-route config added. Not a kept decision yet — the founder will measure before/after on the live site and keep or revert separately. Full technical record (including the route-by-route list of every backend-calling `apps/web` endpoint affected either way): `docs/brain/14_CHANGELOG.md`.

@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK W7 Part 2 — apps/web function region set to hnd1 for measurement)
+Last updated: 2026-11-17 (TASK W7 Part 3 — /map load-sequence report)
+
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 3, `apps/web` only, report only/no code change, `this commit`) — `/map`'s "0 of 0" then late jump to "436 of 495" is two independent `GET /api/signals` requests, not one serial chain: `map/page.tsx`'s own 500-row `fetchFiltered` fetch fires on mount; `useSignalFeed`'s 20-row page-1 fetch only fires once auth resolves. The 500-row one is the slow one — within 2s of the client's 20s timeout. Full table: `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W7 Part 2, `apps/web` only — config, `this commit`) — `apps/web/vercel.json` gains `"regions": ["hnd1"]` (Tokyo) to test proximity to the `ap-northeast-1` database against a measured 2.9-6.8 s event-page server time on the default `iad1` region. No per-route config, no other `vercel.json` in the repo. Not a kept decision — founder will measure live and keep or revert separately. Also flags (not fixed, out of scope): `app/(dashboard)/help/page.test.tsx` has a stale assertion left over from the same-day TASK NQ-3 Part 2, failing on `main` independent of this task — see `LIVE_TODO.md`.
 
