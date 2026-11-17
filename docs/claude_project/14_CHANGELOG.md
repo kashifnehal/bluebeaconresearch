@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — GDELT 429s now trigger a cooldown instead of repeating the same failure every 30 minutes (TASK HEALTH-1 Part 6, `apps/backend`, `this commit`)
+
+Nearly every 30-minute cycle was hitting the same shared-IP rate-limit block and failing the same way, tripping the collector-health alert. GDELT now backs off for a cooldown window (default 90 minutes, an engineering choice — the real GDELT limit is undocumented) after a final 429, and a `Retry-After` response header is honoured (capped at 2 minutes) for the one retry already in place. A cooldown skip deliberately counts as neither a success nor a failure for the health-alert counter, so it can't look like either a recovery or a worsening outage. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — rss_drop_samples duplicate-key log spam fixed (TASK HEALTH-1 Part 5, `apps/backend`, `this commit`)
 
 480 duplicate-key error log lines in 14 hours (87% of all database errors in that window) were a diagnostic drop-sample store inserting first and only checking for a conflict after the fact — normal for any repeated headline. Rewritten to check first (one batched select) and only insert what's actually new, with no schema change. Full technical record and the read-only `raw_events` insert audit: `docs/brain/14_CHANGELOG.md`.

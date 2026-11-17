@@ -83,6 +83,11 @@ const envSchema = z.object({
   // Probability (0..1) of recording a non-shadow-group relevance drop in rss_drop_samples. Default 0.1
   // (engineering choice to keep volume small; not a researched value).
   DROP_SAMPLE_BACKGROUND_RATE: rateEnv(0.1),
+  // Minutes to skip every GDELT cycle after a final (retries-exhausted) 429.
+  // The real GDELT rate limit is undocumented — this is an engineering choice
+  // to stop hammering a block that typically doesn't clear within one 30-min
+  // cron cycle, not a researched value.
+  GDELT_429_COOLDOWN_MINUTES: positiveIntEnv(90),
   // BBR working value. 20 gate calls x $0.0049 = about $0.10 a day, about 5% of the $2 cap. No published source.
   T2_PAIR_DAILY_MAX: nonNegIntEnv(20),
   // Optional. When unset, the monthly spend warning does nothing. A present value

@@ -25,6 +25,14 @@ export type CollectorResult = {
   // budget check (see gdelt/gnews/rss-collector.ts) skipped the cycle entirely.
   // `ok` stays true on that path (a closed budget is not a collector failure).
   budgetClosed?: boolean;
+  // TASK HEALTH-1 Part 6 (2026-11-17) — true when this collector skipped its
+  // whole cycle because it's inside a post-429 rate-limit cooldown (see
+  // gdelt-collector.ts's isGdeltCoolingDown()). Unlike budgetClosed, this is
+  // NEITHER a success nor a failure: nextCollectorHealth() below carries the
+  // prior consecutiveFailures/lastSuccessAt/alerted state forward unchanged
+  // rather than resetting or incrementing it, so a long cooldown can't look
+  // like a recovered collector, and can't trip the failure alert either.
+  cooldownSkip?: boolean;
 };
 
 // Collectors we track run-to-run health for. Order/keys must match what
@@ -183,6 +191,43 @@ function collectorSucceeded(result: CollectorResult | undefined): boolean {
   return result?.ok === true;
 }
 
+type PriorCollectorHealth = {
+  consecutiveFailures?: Record<string, number>;
+  lastSuccessAt?: Record<string, string>;
+  alerted?: Record<string, boolean>;
+};
+
+/**
+ * Pure per-collector health transition, extracted so it's testable without a
+ * real Redis read. A cooldownSkip result (TASK HEALTH-1 Part 6) carries the
+ * prior state forward completely unchanged — neither the success branch's
+ * reset to 0 nor the failure branch's increment — since skipping a cycle due
+ * to an active rate-limit cooldown proves nothing about the collector either
+ * way.
+ */
+export function nextCollectorHealth(
+  key: string,
+  result: CollectorResult | undefined,
+  prev: PriorCollectorHealth | null,
+  lastFetchedAt: string,
+): { consecutiveFailures: number; lastSuccessAt?: string; alerted: boolean } {
+  if (result?.cooldownSkip) {
+    return {
+      consecutiveFailures: prev?.consecutiveFailures?.[key] ?? 0,
+      lastSuccessAt: prev?.lastSuccessAt?.[key],
+      alerted: prev?.alerted?.[key] ?? false,
+    };
+  }
+  if (collectorSucceeded(result)) {
+    return { consecutiveFailures: 0, lastSuccessAt: lastFetchedAt, alerted: false };
+  }
+  return {
+    consecutiveFailures: (prev?.consecutiveFailures?.[key] ?? 0) + 1,
+    lastSuccessAt: prev?.lastSuccessAt?.[key],
+    alerted: prev?.alerted?.[key] ?? false,
+  };
+}
+
 /**
  * Persists this run's status AND updates the run-to-run per-collector health
  * counters (read-then-write against the same key). Returns the enriched status so
@@ -207,16 +252,10 @@ export async function recordPipelineRun(status: PipelineRunStatus): Promise<Pipe
   const alerted: Record<string, boolean> = {};
 
   for (const key of COLLECTOR_KEYS) {
-    if (collectorSucceeded(status.collectors[key])) {
-      consecutiveFailures[key] = 0;
-      lastSuccessAt[key] = status.lastFetchedAt;
-      alerted[key] = false; // a healthy run re-arms the alert
-    } else {
-      consecutiveFailures[key] = (prev?.consecutiveFailures?.[key] ?? 0) + 1;
-      const priorSuccess = prev?.lastSuccessAt?.[key];
-      if (priorSuccess) lastSuccessAt[key] = priorSuccess;
-      alerted[key] = prev?.alerted?.[key] ?? false;
-    }
+    const next = nextCollectorHealth(key, status.collectors[key], prev, status.lastFetchedAt);
+    consecutiveFailures[key] = next.consecutiveFailures;
+    if (next.lastSuccessAt) lastSuccessAt[key] = next.lastSuccessAt;
+    alerted[key] = next.alerted;
   }
 
   // W8-BUDGET-DEFER (ADR 035, D10) — one extra read per ingestion cycle (not per

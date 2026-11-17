@@ -54,6 +54,48 @@ const GDELT_API_URL =
 const GDELT_MAX_RETRIES = 1;
 const GDELT_BACKOFF_BASE_MS = 5_000;
 
+// The real GDELT 429 rate limit is undocumented — a gap, not a researched number.
+// After a final 429 (retries exhausted), skip every cycle for GDELT_429_COOLDOWN_MINUTES
+// instead of hitting the API again and failing the same way every 30 minutes.
+const GDELT_429_RETRY_AFTER_CAP_SECONDS = 120;
+
+/** Module-level cooldown state after a final 429. Exported as a mutable object
+ *  (rather than a plain module variable) so tests can pass in their own
+ *  isolated instance instead of mutating the shared one. */
+export type GdeltCooldownState = { cooldownUntilMs: number | null };
+const gdeltCooldown: GdeltCooldownState = { cooldownUntilMs: null };
+
+/** Test-only: resets the shared cooldown singleton `runGdeltCollectorOnce()` uses. */
+export function __resetGdeltCooldownForTests(): void {
+  gdeltCooldown.cooldownUntilMs = null;
+}
+
+export function isGdeltCoolingDown(now: number, state: GdeltCooldownState = gdeltCooldown): boolean {
+  return state.cooldownUntilMs !== null && now < state.cooldownUntilMs;
+}
+
+export function startGdeltCooldown(
+  now: number,
+  minutes: number,
+  state: GdeltCooldownState = gdeltCooldown,
+): void {
+  state.cooldownUntilMs = now + minutes * 60_000;
+}
+
+export function clearGdeltCooldown(state: GdeltCooldownState = gdeltCooldown): void {
+  state.cooldownUntilMs = null;
+}
+
+/** Retry-After (seconds, per HTTP spec) if present and valid, capped at
+ *  GDELT_429_RETRY_AFTER_CAP_SECONDS; otherwise the existing backoff. */
+export function gdelt429RetryDelayMs(retryAfterHeader: unknown, fallbackMs: number): number {
+  const seconds = typeof retryAfterHeader === "string" ? Number(retryAfterHeader) : NaN;
+  if (Number.isFinite(seconds) && seconds > 0) {
+    return Math.min(seconds, GDELT_429_RETRY_AFTER_CAP_SECONDS) * 1000;
+  }
+  return fallbackMs;
+}
+
 async function fetchGdeltWithBackoff() {
   let lastErr: any;
   for (let attempt = 0; attempt <= GDELT_MAX_RETRIES; attempt++) {
@@ -68,7 +110,8 @@ async function fetchGdeltWithBackoff() {
     } catch (e: any) {
       lastErr = e;
       if (e.response?.status !== 429 || attempt === GDELT_MAX_RETRIES) throw e;
-      const delayMs = GDELT_BACKOFF_BASE_MS * 2 ** attempt + Math.random() * 10_000;
+      const fallbackMs = GDELT_BACKOFF_BASE_MS * 2 ** attempt + Math.random() * 10_000;
+      const delayMs = gdelt429RetryDelayMs(e.response?.headers?.["retry-after"], fallbackMs);
       console.warn(
         `[GDELT] Rate limited (429), retry ${attempt + 1}/${GDELT_MAX_RETRIES} in ${Math.round(delayMs / 1000)}s...`,
       );
@@ -78,7 +121,7 @@ async function fetchGdeltWithBackoff() {
   throw lastErr;
 }
 
-export async function runGdeltCollectorOnce() {
+export async function runGdeltCollectorOnce(now: number = Date.now()) {
   // W8-BUDGET-DEFER (ADR 035, founder decision D10) — when the daily ingestion
   // budget is closed, fetch nothing and write nothing: a closed budget means
   // classifyEvent() would just defer every raw_event anyway (see claude.service.ts),
@@ -101,16 +144,39 @@ export async function runGdeltCollectorOnce() {
     };
   }
 
+  // TASK HEALTH-1 Part 6 (2026-11-17): a cooldown skip is neither a success nor
+  // a failure for the consecutive-failure counter (see pipeline-status.ts's
+  // cooldownSkip handling) — it must not reset nor add to it.
+  if (isGdeltCoolingDown(now)) {
+    console.log("[GDELT] cooldown skip");
+    return {
+      ok: true,
+      cooldownSkip: true,
+      fetched: 0,
+      inserted: 0,
+      duplicates: 0,
+      filtered: 0,
+      signals: 0,
+      prefiltered: 0,
+      materialityRejected: 0,
+      staleSkipped: 0,
+    };
+  }
+
   const supabase = getSupabaseAdmin();
 
   let res: any;
   const fetchStartedAt = Date.now();
   try {
     res = await fetchGdeltWithBackoff();
+    clearGdeltCooldown();
     await recordServiceHealth("gdelt", "ok", undefined, Date.now() - fetchStartedAt);
   } catch (e: any) {
     console.error("[GDELT] Fetch failed after retries:", e.message);
     const status = e?.response?.status;
+    if (status === 429) {
+      startGdeltCooldown(now, getEnv().GDELT_429_COOLDOWN_MINUTES);
+    }
     await recordServiceHealth(
       "gdelt",
       status === 429 ? "rate_limited" : "error",
