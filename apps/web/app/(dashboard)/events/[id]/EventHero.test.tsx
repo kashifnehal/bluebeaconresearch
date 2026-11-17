@@ -11,6 +11,7 @@ import { act } from "react";
 import { setupDom, renderElement } from "@/lib/test-render";
 import type { EventHeroProps } from "./EventHero";
 import { EventDetailRestSkeleton } from "./EventDetailRestSkeleton";
+import { buildEventSources, type RawEventRow } from "@/lib/event-sources";
 
 const document = setupDom();
 
@@ -150,6 +151,104 @@ async function main() {
       assert.equal(calls.length, 0);
     } finally {
       globalThis.fetch = original;
+      await act(async () => root.unmount());
+    }
+  });
+
+  // React error #31 regression: the event-page hero crashed with HTTP 500 for
+  // any signal whose linked raw_events came from NewsAPI, because
+  // buildEventSources once copied raw_data.source straight into sourceLabel —
+  // a plain string for RSS/GDELT, but NewsAPI's own { id, url, name, country }
+  // object. EventHero then rendered that object as the outlet name JSX child.
+  // These four cases cover a string source, an object source, no linked raw
+  // events at all, and a null source with no url/domain fallback either.
+  await runTest("a raw_data.source string renders as the outlet name", async () => {
+    const rows: RawEventRow[] = [
+      {
+        title: "Wire report",
+        event_date: "2026-11-01T08:00:00.000Z",
+        created_at: "2026-11-01T08:10:00.000Z",
+        source: "newsapi",
+        raw_data: { url: null, source: "Reuters", domain: null },
+      },
+    ];
+    const { html, root } = await renderElement(
+      document,
+      createElement(EventHero, fixture({ sources: buildEventSources(rows) })),
+    );
+    try {
+      assert.match(html, /Reuters/);
+      assert.doesNotMatch(html, /\[object Object\]/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest(
+    "a raw_data.source object ({ id, url, name, country }) renders its name, not the object",
+    async () => {
+      const rows: RawEventRow[] = [
+        {
+          title: "Iran: 3 oil tankers hit naval mines in Strait of Hormuz",
+          event_date: "2026-11-14T16:04:00.000Z",
+          created_at: "2026-11-14T16:10:00.000Z",
+          source: "newsapi",
+          raw_data: {
+            url: "https://www.manilatimes.net/2026/11/15/world/story",
+            source: {
+              id: "7c666ee953f873d3057b310220f510df",
+              url: "https://www.manilatimes.net",
+              name: "The Manila Times",
+              country: "ph",
+            },
+            domain: null,
+          },
+        },
+      ];
+      const { html, root } = await renderElement(
+        document,
+        createElement(EventHero, fixture({ sources: buildEventSources(rows) })),
+      );
+      try {
+        assert.match(html, /The Manila Times/);
+        assert.doesNotMatch(html, /\[object Object\]/);
+      } finally {
+        await act(async () => root.unmount());
+      }
+    },
+  );
+
+  await runTest("no linked raw events (empty list) renders without throwing", async () => {
+    const rows: RawEventRow[] = [];
+    const { html, root } = await renderElement(
+      document,
+      createElement(EventHero, fixture({ sources: buildEventSources(rows) })),
+    );
+    try {
+      assert.doesNotMatch(html, /data-testid="event-hero-source"/);
+    } finally {
+      await act(async () => root.unmount());
+    }
+  });
+
+  await runTest("a null raw_data.source with no url or domain falls back to the title", async () => {
+    const rows: RawEventRow[] = [
+      {
+        title: "Untitled wire report",
+        event_date: "2026-11-01T08:00:00.000Z",
+        created_at: "2026-11-01T08:10:00.000Z",
+        source: "gdelt",
+        raw_data: { url: null, source: null, domain: null },
+      },
+    ];
+    const { html, root } = await renderElement(
+      document,
+      createElement(EventHero, fixture({ sources: buildEventSources(rows) })),
+    );
+    try {
+      assert.match(html, /Untitled wire report/);
+      assert.doesNotMatch(html, /\[object Object\]/);
+    } finally {
       await act(async () => root.unmount());
     }
   });

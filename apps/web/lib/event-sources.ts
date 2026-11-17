@@ -54,6 +54,21 @@ export function kindForRawSource(source: string | null): FirstReportKind | null 
   return null;
 }
 
+// raw_data.source isn't a consistent shape across collectors: RSS/GDELT write
+// a plain string label, while NewsAPI/GNews write their own source object
+// ({ id, url, name, country }). Rendering that object directly as a JSX
+// child throws React error #31 (see the Sources/Hero outlet-name renders in
+// EventHero.tsx and EventDetailClient.tsx, which both trust this field to
+// already be a display string).
+export function sourceLabelFrom(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) return value;
+  if (value && typeof value === "object") {
+    const name = (value as { name?: unknown }).name;
+    if (typeof name === "string" && name.trim()) return name;
+  }
+  return null;
+}
+
 // GDELT's raw_data.seendate is "20260905T160000Z" (no separators), not ISO-8601.
 export function seendateToIso(seendate: unknown): string | null {
   if (typeof seendate !== "string" || seendate.length < 15) return null;
@@ -82,7 +97,7 @@ export function buildEventSources(rawEvents: RawEventRow[]): EventSource[] {
     .map((re: any) => ({
       title: re.title ?? "Untitled source",
       url: re.raw_data?.url ?? null,
-      sourceLabel: re.raw_data?.source ?? null,
+      sourceLabel: sourceLabelFrom(re.raw_data?.source),
       domain: re.raw_data?.domain ?? sourceHostname(re.raw_data?.url) ?? null,
       publishedAt: re.event_date ?? seendateToIso(re.raw_data?.seendate) ?? re.created_at ?? null,
     }))

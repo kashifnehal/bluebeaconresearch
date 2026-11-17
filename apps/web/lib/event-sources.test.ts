@@ -5,6 +5,7 @@ import {
   earliestRawStamp,
   kindForRawSource,
   seendateToIso,
+  sourceLabelFrom,
   validIso,
 } from "./event-sources";
 
@@ -74,6 +75,35 @@ runTest("buildEventSources sorts oldest-first and resolves domain/title/url fall
   assert.equal(sources[0].domain, "apnews.com");
   assert.equal(sources[1].title, "Later story");
   assert.equal(sources[1].domain, "reuters.com");
+});
+
+runTest("sourceLabelFrom returns a plain string as-is", () => {
+  assert.equal(sourceLabelFrom("Reuters"), "Reuters");
+  assert.equal(sourceLabelFrom(""), null);
+  assert.equal(sourceLabelFrom(null), null);
+  assert.equal(sourceLabelFrom(undefined), null);
+});
+
+runTest("sourceLabelFrom reads .name off NewsAPI's { id, url, name, country } source object", () => {
+  assert.equal(
+    sourceLabelFrom({ id: "x", url: "https://manilatimes.net", name: "The Manila Times", country: "ph" }),
+    "The Manila Times",
+  );
+  assert.equal(sourceLabelFrom({ id: "x", url: "https://y.com", country: "us" }), null);
+});
+
+runTest("buildEventSources resolves sourceLabel from a NewsAPI source object, not the object itself", () => {
+  const sources = buildEventSources([
+    {
+      title: "Tankers hit mines",
+      event_date: "2026-11-14T16:00:00Z",
+      raw_data: {
+        url: "https://www.manilatimes.net/story",
+        source: { id: "x", url: "https://www.manilatimes.net", name: "The Manila Times", country: "ph" },
+      },
+    },
+  ]);
+  assert.equal(sources[0].sourceLabel, "The Manila Times");
 });
 
 runTest("buildEventSources sorts entries with no resolvable date last", () => {

@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Event page HTTP 500 fixed: NewsAPI's own source object was rendered as a JSX child (TASK HEALTH-1 Part 1, `apps/web`, `this commit`)
+
+Production crash (4 Sentry events, React error #31 "Objects are not valid as a React child") traced to `7141b32` (2026-11-09): the event page's source list treated `raw_data.source` as always a plain string, but NewsAPI-sourced rows store it as their own `{id, url, name, country}` object, which then got rendered directly as the outlet name. Fixed by normalizing it to a string at the data layer (`sourceLabelFrom()` in `event-sources.ts`) instead of at each render site. Full technical record, crash line, and rendered-test list: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — TASK NQ-3 complete: e2e checks added, leftover test fixed (TASK NQ-3 Part 4, `apps/web`, `this commit`)
 
 `e2e/public-pages.spec.ts` gained checks that `/accuracy`/`/how-it-works` carry none of the 5 banned performance-claim phrases and `/accuracy` shows no `%`. Running the full test chain (not just the targeted files run during earlier parts) found one leftover: a help-page test still asserted the exact scoring sentence Part 2 removed — fixed, and this is the same leftover TASK W7 Part 2 below independently flagged, out of its own scope. Full verification clean, re-run after rebasing onto W7/NQ-4/NQ-5: web `tsc`/test (912 ✔)/`next build`/`test:e2e` (7 ✔); backend `tsc`/test (730 ✔). TASK NQ-3 (Parts 1-4) is complete — no page or help answer promises a performance figure the site no longer shows. Full technical record: `docs/brain/14_CHANGELOG.md`.
