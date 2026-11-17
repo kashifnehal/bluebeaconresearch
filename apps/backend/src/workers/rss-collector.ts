@@ -61,6 +61,34 @@ const AGE_WINDOW_MS: Record<FeedTier, number> = {
 // W8-INTAKE-GUARDS — clock-skew allowance, no source.
 const CLOCK_SKEW_ALLOWANCE_MS = 5 * 60 * 1000;
 
+// TASK HEALTH-1 Part 7 (2026-11-17): Railway/Sentry showed this line as an
+// error on almost every 30-min cycle for a feed with a skewed clock (e.g.
+// "Reserve Bank of India") — more than 15 lines in a ~3.5h window. It was
+// already console.warn, not console.error, but Node's console.warn also
+// writes to stderr (same stream as console.error), and Railway/Sentry both
+// classify by stream rather than by which console method was called — so a
+// warn-level call showed as "error" regardless. console.log (stdout) is the
+// actual fix for the severity; a module-level per-feed timestamp (instead of
+// the old per-cycle-only `futureClampLogged` flag) cuts the volume to at most
+// once per feed per hour, not once per ~30-min cycle. The clamping behavior
+// itself is unchanged.
+const FUTURE_CLAMP_LOG_INTERVAL_MS = 60 * 60 * 1000;
+const lastFutureClampLogAt = new Map<string, number>();
+
+/** Test-only: clears the once-per-hour dedupe state between test cases. */
+export function __resetFutureClampLogStateForTests(): void {
+  lastFutureClampLogAt.clear();
+}
+
+/** Logs the future-dated-item notice for `feedLabel` at most once per
+ *  FUTURE_CLAMP_LOG_INTERVAL_MS. `now` is injectable for tests. */
+export function logFutureDatedItemOnce(feedLabel: string, now: number = Date.now()): void {
+  const last = lastFutureClampLogAt.get(feedLabel);
+  if (last !== undefined && now - last < FUTURE_CLAMP_LOG_INTERVAL_MS) return;
+  lastFutureClampLogAt.set(feedLabel, now);
+  console.log(`[RSS] Feed "${feedLabel}" has a future-dated item, clamping to now`);
+}
+
 type RssFeed = { url: string; label: string; tier: FeedTier };
 
 /** Coverage line (#126) reads `CONFIGURED_RSS_FEED_COUNT` from packages/shared —
@@ -201,7 +229,6 @@ export async function runRssCollectorOnce() {
 
   for (const feed of RSS_FEEDS) {
     const feedStartedAt = Date.now();
-    let futureClampLogged = false;
     try {
       const parsed = await parser.parseURL(feed.url);
       feedsOk++;
@@ -221,14 +248,11 @@ export async function runRssCollectorOnce() {
 
         // A feed item dated more than 5 min in the future (bad feed clock, not a
         // real future event) gets clamped to now instead of silently sitting
-        // outside the 4h window below with a wrong event_date. Logged once per
-        // feed per cycle, not once per item, to avoid flooding the log when a
-        // whole feed is skewed.
+        // outside the 4h window below with a wrong event_date. Logged at most
+        // once per feed per hour (logFutureDatedItemOnce above), not once per
+        // item, to avoid flooding the log when a whole feed is skewed.
         if (new Date(pubDate).getTime() - Date.now() > CLOCK_SKEW_ALLOWANCE_MS) {
-          if (!futureClampLogged) {
-            console.warn(`[RSS] Feed "${feed.label}" has a future-dated item, clamping to now`);
-            futureClampLogged = true;
-          }
+          logFutureDatedItemOnce(feed.label);
           pubDate = new Date().toISOString();
         }
 

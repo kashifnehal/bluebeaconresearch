@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — RSS "future-dated item" line stopped showing as an error (TASK HEALTH-1 Part 7, `apps/backend`, `this commit`)
+
+A near-daily feed-clock-skew notice logged more than 15 times in one morning and showed as an error in both Railway and Sentry — it was already a warn-level call, but Node routes `console.warn` to the same stream as `console.error`, which is what both platforms actually key severity off. Switched the line to `console.log` and throttled it to once per feed per hour instead of once per ~30-minute cycle. No change to the clamping behavior itself, or to the separately-reported, unrelated HTTP 403 the same feed sometimes returns. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — GDELT 429s now trigger a cooldown instead of repeating the same failure every 30 minutes (TASK HEALTH-1 Part 6, `apps/backend`, `this commit`)
 
 Nearly every 30-minute cycle was hitting the same shared-IP rate-limit block and failing the same way, tripping the collector-health alert. GDELT now backs off for a cooldown window (default 90 minutes, an engineering choice — the real GDELT limit is undocumented) after a final 429, and a `Retry-After` response header is honoured (capped at 2 minutes) for the one retry already in place. A cooldown skip deliberately counts as neither a success nor a failure for the health-alert counter, so it can't look like either a recovery or a worsening outage. Full technical record: `docs/brain/14_CHANGELOG.md`.
