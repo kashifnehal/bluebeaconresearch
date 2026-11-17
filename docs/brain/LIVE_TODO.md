@@ -3,6 +3,20 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ⚪ Stale test asserts a removed FAQ sentence still renders on /help, `apps/web` only, found 2026-11-17 while running TASK W7 Part 1/2's full test chain, not fixed (out of scope for W7)
+
+- `app/(dashboard)/help/page.test.tsx`'s "rendered help answer does not use the old 48-hour-only scoring sentence" test asserts the string "An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss." is present in the rendered `/help` page. TASK NQ-3 Part 2 (above, same day) deliberately removed that exact sentence along with the whole `accuracy-method` FAQ item — this test predates that removal and was never updated, so it now fails on `main` itself (confirmed on `origin/main` HEAD independent of any W7 change: the string doesn't exist anywhere in `lib/help-faq.ts`). The `&&`-chained `pnpm --filter web test` script stops here, so every test listed after it in `package.json` (including both of TASK W7's own new test files, verified passing by running them directly) never executes as part of the full chain.
+- Not fixed under TASK W7 — the task named only `NotificationConnectPrompt.tsx`/`AuthProvider.tsx` (Part 1) and `vercel.json` (Part 2); this is a stale assertion left over from NQ-3 Part 2/3's own test-update pass, a different task. Whoever picks this up next: either delete the stale assertion (the sentence it guards against reappearing was already removed by other means) or update it to assert the FAQ item is simply absent.
+
+## ✅ apps/web function region set to hnd1 for measurement (TASK W7 Part 2), `apps/web` only (config), 2026-11-17, `this commit`
+
+- Why: live event-page server time ran 2.9-6.8 s per request (2026-11-17), functions on Vercel's default `iad1` region while the database sits in `ap-northeast-1`. Vercel Hobby plan allows exactly one function region.
+- Change: `apps/web/vercel.json` — the only `vercel.json` in the repo (`git ls-files | grep vercel.json`) — gains `"regions": ["hnd1"]` (Tokyo) alongside the existing `ignoreCommand`. No per-route config added, nothing else changed.
+- Every `apps/web` route/server-action calling the Railway backend (`process.env.API_URL`, exhaustive `git grep`), all affected either way by the region move: `app/api/prices/history-5y/route.ts` (GET), `app/api/search/assist/route.ts` (POST), `app/api/signals/[id]/chat/route.ts` (GET+POST), `app/api/signals/attribution/route.ts` (GET), `app/api/telegram/connect-code/route.ts` (POST), `app/admin/metrics/page.tsx` (server component fetch), `app/admin/service-status/actions.ts` (server action).
+- Not a kept decision — founder will measure the live site before/after and keep or revert in a later commit.
+- Verified: web `tsc --noEmit` exit 0; `pnpm --filter web test` exit 1 — the same single pre-existing, unrelated failure as TASK W7 Part 1 (`app/(dashboard)/help/page.test.tsx`, inherited from `main`, confirmed present on `main` before this task touched anything — see that entry); `next build` exit 0. Not browser/live-verified — a region change needs a real Vercel deployment.
+- No `06_COMPONENTS.md`/`05_API.md`/`04_DATABASE.md`/`18_AI_ENGINE.md`/`10_DECISIONS.md` entry — config-only, no route/table/prompt/component/standing-rule change.
+
 ## ✅ Repo-wide wording guard extended for the Part 1-2 removed phrases, Part 3 (TASK NQ-3 Part 3), `apps/web` only, 2026-11-17, `this commit`
 
 - `app/surface-wording.guard.test.ts` (TASK NQ-2 Part 5) now also fails the chain if "how often our calls matched", "not flattering", "counts as a miss", "not enough history yet", or "Accuracy page" reappears outside a test file, across `app`/`components`/`lib` plus `apps/backend/src/lib/search-catalog.ts`.

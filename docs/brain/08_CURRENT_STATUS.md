@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK W7 Part 1 — second /api/telegram/status call on a signed-in dashboard load fixed)
+Last updated: 2026-11-17 (TASK W7 Part 2 — apps/web function region set to hnd1 for measurement)
+
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 2, `apps/web` only — config, `this commit`) — `apps/web/vercel.json` gains `"regions": ["hnd1"]` (Tokyo) to test proximity to the `ap-northeast-1` database against a measured 2.9-6.8 s event-page server time on the default `iad1` region. No per-route config, no other `vercel.json` in the repo. Not a kept decision — founder will measure live and keep or revert separately. Also flags (not fixed, out of scope): `app/(dashboard)/help/page.test.tsx` has a stale assertion left over from the same-day TASK NQ-3 Part 2, failing on `main` independent of this task — see `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 3, `apps/web` only, `this commit`) — `app/surface-wording.guard.test.ts` now also fails on "how often our calls matched", "not flattering", "counts as a miss", "not enough history yet", or "Accuracy page" outside a test file. Two new narrow exceptions (same pattern as the existing `ALLOWED_HIT_RATE_FILES`): `lib/corrections-log.ts` (quotes a withdrawn caption on purpose) and `components/alerts/AlertRuleTrendChart.tsx`'s empty state (unrelated "not enough history yet" for a sparse chart). See `LIVE_TODO.md`.
 

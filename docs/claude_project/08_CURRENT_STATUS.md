@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK W7 Part 1 — second /api/telegram/status call on a signed-in dashboard load fixed — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK W7 Part 2 — apps/web function region set to hnd1 for measurement — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-17 (TASK W7 Part 2, `apps/web` only — config, `this commit`) — `apps/web/vercel.json` gains `"regions": ["hnd1"]` to test proximity to the database, against a measured 2.9-6.8 s event-page server time on the default region. Not a kept decision — founder measures and keeps or reverts. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 3, `apps/web` only, `this commit`) — the repo-wide wording guard now also catches "how often our calls matched"/"not flattering"/"counts as a miss"/"not enough history yet"/"Accuracy page" outside test files. Two narrow exceptions added for legitimate unrelated/historical uses. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 

@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — apps/web function region set to hnd1 for measurement (TASK W7 Part 2, `apps/web`, `this commit`)
+
+Event-page server time ran 2.9-6.8 s per request (2026-11-17) with functions on Vercel's default `iad1` region while the database sits in `ap-northeast-1`. `apps/web/vercel.json` now also declares `"regions": ["hnd1"]` (Tokyo) — the only `vercel.json` in the repo, no per-route config added. Not a kept decision yet — the founder will measure before/after on the live site and keep or revert separately. Full technical record (including the route-by-route list of every backend-calling `apps/web` endpoint affected either way): `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Second /api/telegram/status call on a signed-in dashboard load fixed (TASK W7 Part 1, `apps/web`, `this commit`)
 
 A 2026-11-17 live browser load found `/api/telegram/status` called twice, 856 ms apart, on an otherwise-1x dashboard route — the duplicate the W6 Part 4 investigation below looked for but didn't reproduce. Root cause: a later auth event for the same already-signed-in user (e.g. a token refresh) hands `AuthProvider` a **new** `user` object for the same id; `NotificationConnectPrompt.tsx`'s eligibility effect depended on that object, so it re-ran and refetched. Fix: the effect now depends on `user?.id` instead. New rendered tests cover both the same-id (no refetch) and different-id (refetch) cases. Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 911 passed, 0 failed; `next build` exit 0. Full technical record: `docs/brain/14_CHANGELOG.md`.
