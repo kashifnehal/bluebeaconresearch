@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK W6 Part 4 — dashboard duplicate-API-call report: not reproducible in a single rendered mount — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-17 (TASK BE-DB-RES1 — database-outage hardening — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-17 (TASK BE-DB-RES1, `apps/backend` only, `7f518b3`/`8a19fec`/`15712db`/`1fc4591`) — database-outage hardening after the 2026-11-14/16 outage: thrown-value log/email text is now always short and readable (never `[object Object]` or raw HTML); every DB probe is now kept in a Redis history with a new admin summary route; an opt-in watchdog (off by default — no env var set anywhere) can request a Supabase project restart after 6 consecutive failures; a failed price-sync insert is now queued and replayed instead of dropped. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK W6 Part 4, `apps/web` only, `this commit`) — a reported ~4x/2x/2x/2x duplicate-API-call pattern on one `/dashboard` load did not reproduce in a rendered test that mounts the real layout components + dashboard page together with a counting fetch mock (measured: 1 call per route). No fix applied — none proven needed; the test stays as a regression guard. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 

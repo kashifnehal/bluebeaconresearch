@@ -1,6 +1,8 @@
 # 09_BACKLOG.md — Complete Product Backlog
 
-> **📍 Doc status — live numbered-ticket queue as of 2026-11-09.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+> **📍 Doc status — live numbered-ticket queue as of 2026-11-17.** Per-commit evidence: `docs/brain/LIVE_TODO.md`. `claude/23_TODO.md` is not in this repo.
+
+> ⚠️ UPDATED 2026-11-17 — Database-outage hardening (safe error text, probe history, an opt-in auto-restart watchdog off by default, a price-sync Redis outbox) shipped on `apps/backend` (`7f518b3`/`8a19fec`/`15712db`/`1fc4591`). No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ UPDATED 2026-11-09 — The event page renders the signal row in the first HTML (`this commit`). Heavier sections stream after. No prior numbered backlog line. Full detail: `docs/brain/LIVE_TODO.md`.
 

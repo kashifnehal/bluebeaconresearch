@@ -7,6 +7,22 @@
 
 ---
 
+## A watchdog may auto-restart the Supabase project, off by default (2026-11-17)
+
+### Context
+
+From 2026-11-14 to 2026-11-16 the database was unreachable roughly 36 of 47 hours on the free Supabase plan, and nothing recovered it automatically — the existing "database not reachable" email only notifies, it never acts.
+
+### Decision
+
+After 6 consecutive failed probes, the backend may call the Supabase Management API's project-restart endpoint, guarded by an explicit opt-in env var, an access token, a 3-hour cooldown, and a cap of 3 attempts per UTC day. Admins get one email either way. Neither env var is set anywhere today — the feature is inert until a founder opts in. The access token is never logged, returned, or emailed.
+
+### Rationale
+
+6 checks, a 3-hour cooldown, and 3 restarts a day are engineering choices with no outside source, meant to keep an unattended restart rare and bounded. Shipping it strictly opt-in means zero production behavior change until a founder deliberately turns it on. Full detail: `docs/brain/10_DECISIONS.md`.
+
+---
+
 ## Public accuracy page shows each stored horizon (2026-11-07)
 
 ### Context

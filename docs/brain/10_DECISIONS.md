@@ -6,6 +6,22 @@ This document records the foundational architectural decisions, framework select
 
 ---
 
+## A watchdog may auto-restart the Supabase project, off by default (2026-11-17)
+
+### Context
+
+From 2026-11-14 to 2026-11-16 the database was unreachable roughly 36 of 47 hours on the free Supabase plan, and nothing recovered it automatically — the existing "database not reachable" email (ADR from 2026-11-03) only notifies, it never acts.
+
+### Decision
+
+After 6 consecutive failed probes (double the existing 3-check email threshold), `lib/db-unreachable-alert.ts` may call the Supabase Management API's project-restart endpoint, guarded by all of: the `SUPABASE_AUTO_RESTART` env var set to exactly `"on"`, a `SUPABASE_ACCESS_TOKEN` present, a 3-hour Redis cooldown between attempts, and a cap of 3 restart attempts per UTC day. Admins get one email either way (restart requested, or restart failed with the HTTP status/error). Neither env var is set anywhere today — **the feature is inert until a founder opts in.** The access token is never logged, returned, or emailed.
+
+### Rationale
+
+6 checks, a 3-hour cooldown, and 3 restarts a day are engineering choices with no outside source, chosen to make an unattended restart attempt rare and bounded rather than a possible restart-loop. Making this strictly opt-in (two separate env vars, both unset by default) means shipping the capability carries zero production behavior change until a founder deliberately turns it on.
+
+---
+
 ## Public accuracy page shows each stored horizon (2026-11-07)
 
 ### Context

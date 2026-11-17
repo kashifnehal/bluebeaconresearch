@@ -2,6 +2,8 @@
 
 > **📍 Doc status — current as of 2026-09-26** for `/docs`, `sort=relevance`, the `sort=severity` ordering fix, and BFF-reads-Supabase (not a Fastify proxy). `claude/23_TODO.md` is not in this repo.
 >
+> ⚠️ NEW 2026-11-17 — new admin-only `GET /v1/admin/db-probe-history`, Redis-only (no DB query), backing a future database-health chart: raw probe history plus a p50/p95/longest-failure-streak summary. Full detail: `docs/brain/05_API.md`.
+>
 > ⚠️ UPDATED 2026-11-09 — `GET /api/signals/:id` records `signal_row` and `stream_rest` on a 200 when `SERVER_TIMING` is `true`. The event page no longer fetches this route from the browser for its main payload. Full detail: `docs/brain/05_API.md`.
 
 > ⚠️ UPDATED 2026-11-09 — `GET /api/signals` search + relevance keeps `total` on the same default window as the rows and may include `olderMatches`. Full detail: `docs/brain/05_API.md`.

@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Database-outage hardening: safe error text, probe history, auto-restart watchdog, price outbox (TASK BE-DB-RES1, `apps/backend`, `7f518b3`/`8a19fec`/`15712db`/`1fc4591`)
+
+After a 2026-11-14/16 outage left the database unreachable ~36 of 47 hours with unreadable failure text and no automatic recovery: thrown-value log/email text is now always a short readable line (never `[object Object]` or raw HTML); every database probe is kept in a Redis history with a new admin summary route (`GET /v1/admin/db-probe-history`); an opt-in watchdog can request a Supabase project restart after 6 consecutive failures, gated by a cooldown and a daily cap — off by default, no env var set anywhere yet; a failed price-sync insert is now queued and replayed on the next good run instead of dropped. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Dashboard duplicate-API-call report: not reproducible in a single rendered mount (TASK W6 Part 4, `apps/web`, `this commit`)
 
 A browser report of duplicate calls to `/api/telegram/status`/`/api/signals`/`/api/alerts/recent`/`/api/signals/source-stats` on one `/dashboard` load (roughly 4x/2x/2x/2x) did not reproduce. New `app/(dashboard)/layout.duplicate-fetches.render.test.tsx` mounts the real Sidebar/TopBar/NotificationConnectPrompt/MobileTabBar/DashboardPage tree with a counting fetch mock: measured exactly 1 call per route. The components that could have doubled it (`TelegramConnect`, gated behind a closed-by-default modal; `AuthProvider`'s own guard against gotrue-js's redundant `INITIAL_SESSION` event) already prevent it structurally; the likely remaining explanation is `next dev`'s React Strict Mode/Fast Refresh behavior, dev-only. No fix applied since none was proven needed; the test stays as a regression guard. Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 909 passed, 0 failed; `next build` exit 0. Full technical record: `docs/brain/14_CHANGELOG.md`.
