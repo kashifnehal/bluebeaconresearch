@@ -47,7 +47,30 @@ function fakeWrap<T extends (...args: unknown[]) => Promise<unknown>>(
 function fakeClient(count: number | null, error: unknown = null): SignalCountClient {
   return {
     from: () => ({
-      select: async () => ({ count, error }),
+      select: () => ({
+        abortSignal: async () => ({ count, error }),
+      }),
+    }),
+  };
+}
+
+/** A client whose query never resolves on its own — only rejects once the
+ *  AbortSignal it was given actually fires, the same way the real
+ *  postgrest-js client behaves. Used to prove the timeout genuinely cancels
+ *  the request rather than just racing it. */
+function neverAnsweringClient(): SignalCountClient {
+  return {
+    from: () => ({
+      select: () => ({
+        abortSignal: (signal: AbortSignal) =>
+          new Promise((_, reject) => {
+            signal.addEventListener("abort", () => {
+              const err = new Error("This operation was aborted");
+              err.name = "AbortError";
+              reject(err);
+            });
+          }),
+      }),
     }),
   };
 }
@@ -92,6 +115,31 @@ async function main() {
 
   await runTest("fetchTotalSignalCountOrThrow returns a real positive count", async () => {
     assert.equal(await fetchTotalSignalCountOrThrow(fakeClient(2996)), 2996);
+  });
+
+  await runTest(
+    "fetchTotalSignalCountOrThrow genuinely cancels a hung request within the time limit, not just races it",
+    async () => {
+      // AbortSignal.timeout()'s internal timer is unref'd by Node's own
+      // design, so when it is the only thing left pending, Node can (and in
+      // this exact test file did, before this keep-alive) exit the process
+      // early with no error and no console output at all — a silent gap,
+      // not a failure. A real, ref'd timer keeps this test's event loop
+      // open long enough to actually observe the abort fire.
+      const keepAlive = setTimeout(() => {}, 500);
+      try {
+        const started = Date.now();
+        await assert.rejects(fetchTotalSignalCountOrThrow(neverAnsweringClient(), 20));
+        const elapsed = Date.now() - started;
+        assert.ok(elapsed < 1000, `expected the abort to fire quickly, took ${elapsed}ms`);
+      } finally {
+        clearTimeout(keepAlive);
+      }
+    },
+  );
+
+  await runTest("fetchTotalSignalCountOrThrow still returns a real count well under the time limit", async () => {
+    assert.equal(await fetchTotalSignalCountOrThrow(fakeClient(2996), 4000), 2996);
   });
 
   function withEnv(

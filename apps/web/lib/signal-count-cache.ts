@@ -1,12 +1,15 @@
 import { unstable_cache } from "next/cache";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { HOMEPAGE_DB_TIMEOUT_MS } from "./with-timeout";
 
 export type SignalCountClient = {
   from: (table: string) => {
     select: (
       columns: string,
       options: { count: "exact"; head: true },
-    ) => PromiseLike<{ count: number | null; error: unknown }>;
+    ) => {
+      abortSignal: (signal: AbortSignal) => PromiseLike<{ count: number | null; error: unknown }>;
+    };
   };
 };
 
@@ -37,9 +40,25 @@ export function buildSignalCountClient(): SignalCountClient | null {
  * neither Next's data cache nor a caller's own stale-value fallback ever
  * stores a 0/null as if it were a real reading. 0 here means RLS hid every
  * row (anon key, no session), not a genuinely empty signals table.
+ *
+ * `.abortSignal(AbortSignal.timeout(timeoutMs))` genuinely cancels the
+ * underlying request at the HTTP layer — unlike lib/with-timeout.ts's
+ * withTimeoutOrFallback() (already wrapping this call's caller at the
+ * page-render level), which only stops the page from *waiting* on a hung
+ * promise; the request itself kept running in the background, which is why
+ * Vercel still logged "Task timed out after 300 seconds" for this route
+ * well after that page-level wrap shipped (2026-11-16). This is the actual
+ * fix for that: the request itself now dies at `timeoutMs`, so nothing is
+ * left running when the function returns.
  */
-export async function fetchTotalSignalCountOrThrow(client: SignalCountClient): Promise<number> {
-  const { count, error } = await client.from("signals").select("id", { count: "exact", head: true });
+export async function fetchTotalSignalCountOrThrow(
+  client: SignalCountClient,
+  timeoutMs: number = HOMEPAGE_DB_TIMEOUT_MS,
+): Promise<number> {
+  const { count, error } = await client
+    .from("signals")
+    .select("id", { count: "exact", head: true })
+    .abortSignal(AbortSignal.timeout(timeoutMs));
   if (error) throw error;
   if (count == null || count === 0) throw new Error("unusable signal count (0 or null)");
   return count;
@@ -48,7 +67,18 @@ export async function fetchTotalSignalCountOrThrow(client: SignalCountClient): P
 async function fetchTotalSignalCountFromEnv(): Promise<number> {
   const client = buildSignalCountClient();
   if (!client) throw new Error("signal count: supabase not configured");
-  return fetchTotalSignalCountOrThrow(client);
+  try {
+    return await fetchTotalSignalCountOrThrow(client);
+  } catch (err) {
+    const timedOut = err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError");
+    const reason = timedOut
+      ? `timed out after ${HOMEPAGE_DB_TIMEOUT_MS}ms`
+      : err instanceof Error
+        ? err.message || err.name
+        : String(err);
+    console.error(`[signal-count-cache] total-signal-count query failed: ${reason}`);
+    throw err;
+  }
 }
 
 /**

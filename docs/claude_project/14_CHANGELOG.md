@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Homepage signal-count query now genuinely times out, not just the page render (TASK HEALTH-1 Part 4, `apps/web`, `this commit`)
+
+The homepage already stopped *waiting* on a stalled database (shipped 2026-11-16), but the underlying query itself kept running in the background with no cancellation — consistent with "Task timed out after 300 seconds" errors continuing to appear afterward. The one query behind the shared `total-signal-count` cache now actually cancels itself at 4 seconds via the Supabase client's own abort-signal support, with a clear log line distinguishing a timeout from any other failure. A real finding along the way: the browser-standard timeout API used here has an internal timer that doesn't keep a bare script process alive on its own, which the new regression test accounts for directly. Full technical record and the read-only audit of every other database call on the homepage's render path: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — Signal-count client no longer falls back to the anon key (TASK HEALTH-1 Part 3, `apps/web`, `this commit`)
 
 The homepage/how-it-works signal-count client fell back to the public anon key when the service-role key was missing — which, because the anon key is always set in production, meant that "not configured" state could never actually fire; it silently read an RLS-hidden count of 0 instead. Also explains the Vercel-error-title evidence: `NEXT_PUBLIC_*` env vars get inlined into the compiled bundle, so the fallback's resolved value could appear as a literal in a minified stack even though no key was ever hardcoded in source. Removed the fallback; a missing key now correctly hides the stat and logs once. New repo-wide guard test blocks any future hardcoded JWT literal. Full technical record: `docs/brain/14_CHANGELOG.md`.
