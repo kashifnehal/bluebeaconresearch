@@ -21,7 +21,7 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
   },
   {
     id: "accuracy-history",
-    question: "Why do some assets show “not enough history yet” on the Accuracy page?",
+    question: "When does BBR publish performance statistics?",
     answer:
       "BBR publishes a performance statistic only when it meets the publication standard described on the Method page.",
   },
@@ -42,12 +42,6 @@ export const HELP_FAQ_ITEMS: HelpFaqItem[] = [
     question: "Does Blue Beacon tell me to buy or sell?",
     answer:
       "No. Signals, briefs, alerts, and the per-signal research chat are informational only — not financial advice and not a recommendation to buy, sell, or size a position. The research chat is written to refuse personalized position questions.",
-  },
-  {
-    id: "accuracy-method",
-    question: "How is the Accuracy page calculated?",
-    answer:
-      "A daily worker records, for each signal and named asset, the closest market price at the event and at later checkpoints (1 hour, 4 hours, 24 hours, and 48 hours). An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss. Those outcome rows are stored permanently because live price history is only kept for about 90 days. The Accuracy page does not display these figures; it states the publication standard BBR requires before any of them is published.",
   },
   {
     id: "research-chat",

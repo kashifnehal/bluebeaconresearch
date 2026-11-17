@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-17 — Help/FAQ copy no longer describes the removed accuracy scoring rule (TASK NQ-3 Part 2, `apps/web` + `apps/backend/src/lib/search-catalog.ts`, `this commit`)
+
+The Help FAQ's "not enough history yet" question (implying a per-asset history table that no longer exists) reworded to "When does BBR publish performance statistics?" — answer unchanged. The "How is the Accuracy page calculated?" item, which explained the removed 0.5%-move/"counts as a miss" scoring rule, removed entirely. `search-catalog.ts` mirrored both changes. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — How-it-works claim no longer promises a performance figure the site no longer shows (TASK NQ-3 Part 1, `apps/web`, `this commit`)
 
 `how-it-works/page.tsx`'s claim/proof pair still said BBR publishes how often calls matched later price moves and pointed to the Accuracy page "including when the number is not flattering" — but the TASK NQ-2 rebuild of `/accuracy` shows no figures at all. New text states the publication standard (sample/period/thresholds/baseline, pre-declared test) and points to the Method page instead. `page.test.tsx` updated. Full technical record: `docs/brain/14_CHANGELOG.md`.

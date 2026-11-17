@@ -12,6 +12,15 @@ function runTest(name: string, fn: () => void) {
   }
 }
 
+runTest("accuracy-history question asks when BBR publishes, and points to the Method page", () => {
+  const item = HELP_FAQ_ITEMS.find((entry) => entry.id === "accuracy-history");
+  assert.equal(item?.question, "When does BBR publish performance statistics?");
+  assert.equal(
+    item?.answer,
+    "BBR publishes a performance statistic only when it meets the publication standard described on the Method page.",
+  );
+});
+
 runTest("feed cadence answer names report time and flag time only", () => {
   const item = HELP_FAQ_ITEMS.find((entry) => entry.id === "live");
   assert.equal(item?.question, "How current is the feed?");
@@ -21,8 +30,8 @@ runTest("feed cadence answer names report time and flag time only", () => {
   );
 });
 
-runTest("FAQ has 10 honest product questions", () => {
-  assert.equal(HELP_FAQ_ITEMS.length, 10);
+runTest("FAQ has 9 honest product questions", () => {
+  assert.equal(HELP_FAQ_ITEMS.length, 9);
   const ids = HELP_FAQ_ITEMS.map((i) => i.id);
   for (const id of [
     "confidence",
@@ -30,7 +39,6 @@ runTest("FAQ has 10 honest product questions", () => {
     "live",
     "materiality",
     "not-advice",
-    "accuracy-method",
     "research-chat",
     "calendar",
     "severity",
@@ -38,6 +46,7 @@ runTest("FAQ has 10 honest product questions", () => {
   ]) {
     assert.equal(ids.includes(id), true, `missing ${id}`);
   }
+  assert.equal(ids.includes("accuracy-method"), false);
 });
 
 runTest("confidence, severity, and human review describe pause-instead-of-guessing", () => {
@@ -88,29 +97,11 @@ runTest("materiality does not claim the keyword fallback only passes on a valida
   );
 });
 
-runTest("accuracy method does not use the old 48-hour-only scoring sentence, and no longer claims the page shows horizons", () => {
-  const answer = HELP_FAQ_ITEMS.find((item) => item.id === "accuracy-method")?.answer ?? "";
-  const oldSentence =
-    "An up/down call is scored correct if that 48-hour direction matches; moves under 0.5% are treated as flat.";
-  assert.equal(answer.includes(oldSentence), false);
-  assert.equal(
-    answer.includes(
-      "An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss.",
-    ),
-    true,
-  );
-  assert.equal(answer.startsWith("A daily worker records, for each signal and named asset"), true);
-  // TASK NQ-2: the Accuracy page no longer displays any horizon figures.
-  assert.equal(answer.includes("The Accuracy page shows all four horizons."), false);
-  assert.equal(
-    answer.includes("The Accuracy page does not display these figures"),
-    true,
-  );
-  const byAsset = HELP_FAQ_ITEMS.find((item) => item.id === "accuracy-history")?.answer ?? "";
-  assert.equal(
-    byAsset,
-    "BBR publishes a performance statistic only when it meets the publication standard described on the Method page.",
-  );
+runTest("no removed performance-claim wording survives in any FAQ answer", () => {
+  const blob = HELP_FAQ_ITEMS.map((i) => `${i.question} ${i.answer}`).join("\n");
+  assert.equal(blob.includes("counts as a miss"), false);
+  assert.equal(blob.includes("not enough history yet"), false);
+  assert.equal(/\bAccuracy page\b/.test(blob), false);
 });
 
 runTest("no FAQ answer claims buy/sell or human verification", () => {

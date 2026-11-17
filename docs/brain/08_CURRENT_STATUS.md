@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK NQ-3 Part 1 — how-it-works claim/proof pair no longer promises a performance figure the site no longer shows)
+Last updated: 2026-11-17 (TASK NQ-3 Part 2 — help-faq.ts/search-catalog.ts no longer describe the removed accuracy scoring rule or per-asset history)
+
+> ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 2, `apps/web` + `apps/backend/src/lib/search-catalog.ts`, `this commit`) — `help-faq.ts`'s `accuracy-history` question reworded to "When does BBR publish performance statistics?" (answer unchanged); its `accuracy-method` item ("How is the Accuracy page calculated?", the 0.5%/"counts as a miss" scoring explanation) removed entirely. `search-catalog.ts` mirrored both. `app/accuracy/page.tsx`'s `data-testid="accuracy-method"` is an unrelated DOM test id (the page's own Method-section heading), left untouched. Two route-path comments in backend code (`auth.middleware.ts`, `outcome-tracker.ts`) still say "/accuracy page" lowercase — not the visitor-facing label, left as-is; `lib/corrections-log.ts`'s historical quote kept on purpose. See `LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 1, `apps/web` only, `this commit`) — `how-it-works/page.tsx`'s claim/proof pair ("We publish how often our calls matched the later price move..." / "See the Accuracy page — including when the number is not flattering.") still promised a figure the rebuilt (TASK NQ-2) `/accuracy` page no longer shows. Replaced with "We publish a performance statistic only when the sample, the period, the thresholds and a plain baseline are stated and a pre-declared test shows a result above that baseline." / "The publication standard is written on the Method page." `page.test.tsx` updated to match. Parts 2-4 continue the cleanup across `help-faq.ts`/`search-catalog.ts`, a repo-wide wording guard, and e2e checks. See `LIVE_TODO.md`.
 

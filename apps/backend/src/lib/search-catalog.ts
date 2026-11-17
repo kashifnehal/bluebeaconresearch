@@ -27,7 +27,7 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
   },
   {
     contentKey: "faq:accuracy-history",
-    title: "Why do some assets show not enough history yet on the Accuracy page?",
+    title: "When does BBR publish performance statistics?",
     url: "/help#accuracy-history",
     content:
       "BBR publishes a performance statistic only when it meets the publication standard described on the Method page.",
@@ -55,14 +55,6 @@ export const SEARCH_FAQ_ENTRIES: SearchCatalogEntry[] = [
     url: "/help#not-advice",
     content:
       "No. Signals, briefs, alerts, and the per-signal research chat are informational only — not financial advice and not a recommendation to buy, sell, or size a position. The research chat is written to refuse personalized position questions.",
-    sourceKind: "faq",
-  },
-  {
-    contentKey: "faq:accuracy-method",
-    title: "How is the Accuracy page calculated?",
-    url: "/help#accuracy-method",
-    content:
-      "A daily worker records, for each signal and named asset, the closest market price at the event and at later checkpoints (1 hour, 4 hours, 24 hours, and 48 hours). An up/down call is scored correct at a checkpoint only when the price has moved at least 0.5% in the called direction by then; a smaller move is treated as flat and counts as a miss. Those outcome rows are stored permanently because live price history is only kept for about 90 days. The Accuracy page does not display these figures; it states the publication standard BBR requires before any of them is published.",
     sourceKind: "faq",
   },
   {

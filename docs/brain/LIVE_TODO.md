@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ No page or help answer promises a performance figure the site no longer shows, Part 2 (TASK NQ-3 Part 2), `apps/web` + `apps/backend/src/lib/search-catalog.ts`, 2026-11-17, `this commit`
+
+- Why: `help-faq.ts`'s "not enough history yet" question still implied the Accuracy page shows per-asset history, and its "How is the Accuracy page calculated?" item explained a removed 0.5%/"counts as a miss" scoring rule; `search-catalog.ts` mirrored both.
+- Fix (a): the `accuracy-history` item's question is now "When does BBR publish performance statistics?" (answer unchanged, id kept).
+- Fix (b): the `accuracy-method` item removed entirely from both `help-faq.ts` and `search-catalog.ts`. Grepped its id first — the only non-test hit left is `app/accuracy/page.tsx`'s `data-testid="accuracy-method"`, a DOM test id for the page's own "Method" section heading, unrelated to the FAQ item id; left untouched.
+- Fix (d): `git grep -n -i "accuracy page"` swept `apps/web`+`apps/backend/src` outside test files. Two hits left, both route-path references in backend comments (`auth.middleware.ts:47`, `outcome-tracker.ts:7`, e.g. "the public /accuracy page") — not the visitor-facing "Accuracy page" label, left as-is. `lib/corrections-log.ts`'s "Accuracy page, caption under the horizon table" explicitly kept (quotes a withdrawn caption on purpose).
+- Fix (e): `help-faq.test.ts` — new test for the reworded question; "FAQ has 10..." → "9 honest product questions" (id list drops `accuracy-method`); the old test asserting the removed 0.5%-rule sentence replaced with a short no-removed-wording check. `search-assist.test.ts` — `SEARCH_FAQ_ENTRIES.length` 10 → 9.
+- Verified: `../backend/node_modules/.bin/tsx lib/help-faq.test.ts` (web) — 8/8 ✔; `npx tsx src/lib/search-assist.test.ts` (backend) — 6/6 ✔. Full checks run at the end of Part 4.
+
 ## ✅ No page or help answer promises a performance figure the site no longer shows, Part 1 (TASK NQ-3 Part 1), `apps/web` only, 2026-11-17, `this commit`
 
 - Why: `/accuracy` (TASK NQ-2) was rebuilt to show no figures, but `how-it-works/page.tsx`'s claim list still said "We publish how often our calls matched the later price move, including when the result is weak." / "See the Accuracy page — including when the number is not flattering."
