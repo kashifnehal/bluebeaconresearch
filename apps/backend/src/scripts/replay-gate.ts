@@ -45,18 +45,18 @@ import { HAIKU_MODEL, MATERIALITY_GATE_INSTRUCTION } from "../services/claude.se
 // manual edit here on every new commodity.
 const COMMODITY_ASSET_PROMPT_OPTIONS = COMMODITY_REGISTRY.map((c) => `"${c.symbol}"`).join("|");
 
-type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
+export type SupabaseAdmin = ReturnType<typeof getSupabaseAdmin>;
 
 // Must match the temperature on classifyEvent()'s messages.create call.
 export const REPLAY_TEMPERATURE = 0.2;
 export const HARD_STOP_USD = 1.5;
 const RANGE_START = "2026-10-05T00:00:00.000Z";
 const RANGE_END = "2026-10-07T00:00:00.000Z"; // covers both 2026-10-05 and 2026-10-06 UTC
-const ROW_SELECT =
+export const ROW_SELECT =
   "id, source, title, summary, country, event_type, event_date, created_at, raw_data, materiality_checked_at";
 const OUTPUT_PATH = fileURLToPath(new URL("../../.tmp/replay-gate-output.json", import.meta.url));
 
-type RawEventRow = {
+export type RawEventRow = {
   id: string;
   source: string | null;
   title: string | null;
@@ -269,7 +269,7 @@ async function fetchCandidateRows(supabase: SupabaseAdmin): Promise<RawEventRow[
   return rows;
 }
 
-async function fetchRowsByIds(supabase: SupabaseAdmin, ids: string[]): Promise<RawEventRow[]> {
+export async function fetchRowsByIds(supabase: SupabaseAdmin, ids: string[]): Promise<RawEventRow[]> {
   const pageSize = 100;
   const rows: RawEventRow[] = [];
   for (let from = 0; from < ids.length; from += pageSize) {
@@ -314,7 +314,7 @@ async function filterUncoveredBySignal(
  * the task spec, a historical replay must not count signals that didn't
  * exist yet at the time this row was originally classified.
  */
-async function hasSimilarRecentSignalAsOf(
+export async function hasSimilarRecentSignalAsOf(
   supabase: SupabaseAdmin,
   params: { country: string | null; eventType: string | null; asOf: string },
 ): Promise<boolean> {

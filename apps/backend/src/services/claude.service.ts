@@ -368,6 +368,55 @@ export const COMMODITY_ASSET_ALIASES: Record<string, string> = Object.fromEntrie
   COMMODITY_REGISTRY.flatMap((c) => c.aliases.map((alias) => [alias, c.symbol])),
 );
 
+// Forex pairs (#87). Kept as its own allowlist rather than folded into
+// ALLOWED_COMMODITY_ASSETS — EURUSD/USDRUB used to live in that set (a
+// mislabeling: they're currency pairs, not commodities) and now write into
+// signals.currency_pair_impacts via sanitizeForexImpacts() instead. Exported
+// (2026-11-17) alongside ALLOWED_COMMODITY_ASSETS above so a read-only script
+// checking Claude's raw output against the same allowlist does not have to
+// duplicate it.
+export const ALLOWED_FOREX_PAIRS = new Set([
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "USDCHF",
+  "USDRUB",
+  "USDCNY",
+  // USDINR added W7-ASSET-LISTS (2026-10-05, founder decision D2a: USDINR
+  // yes, D2b no equities) — price-syncer.ts already syncs it (USDINR=X).
+  "USDINR",
+]);
+
+export const FOREX_PAIR_ALIASES: Record<string, string> = {
+  EURO: "EURUSD",
+  "EUR/USD": "EURUSD",
+  POUND: "GBPUSD",
+  "BRITISH POUND": "GBPUSD",
+  STERLING: "GBPUSD",
+  "POUND STERLING": "GBPUSD",
+  "GBP/USD": "GBPUSD",
+  YEN: "USDJPY",
+  "JAPANESE YEN": "USDJPY",
+  "USD/JPY": "USDJPY",
+  FRANC: "USDCHF",
+  "SWISS FRANC": "USDCHF",
+  "USD/CHF": "USDCHF",
+  RUBLE: "USDRUB",
+  ROUBLE: "USDRUB",
+  "RUSSIAN RUBLE": "USDRUB",
+  "USD/RUB": "USDRUB",
+  YUAN: "USDCNY",
+  RENMINBI: "USDCNY",
+  RMB: "USDCNY",
+  "CHINESE YUAN": "USDCNY",
+  "USD/CNY": "USDCNY",
+  // W7-ASSET-LISTS: aliases for USDINR per task spec.
+  "USD/INR": "USDINR",
+  RUPEE: "USDINR",
+  "INDIAN RUPEE": "USDINR",
+  INR: "USDINR",
+};
+
 // Derived from the registry instead of hand-listed in the prompt string below —
 // adding a commodity to COMMODITY_REGISTRY now flows into the prompt automatically.
 const COMMODITY_ASSET_PROMPT_OPTIONS = COMMODITY_REGISTRY.map((c) => `"${c.symbol}"`).join("|");
@@ -417,21 +466,9 @@ export function buildClassifyReturnSpec(v2: boolean): string {
 export class ClaudeService {
   private client: Anthropic | null = null;
 
-  // Forex pairs (#87). Kept as its own allowlist rather than folded into
-  // ALLOWED_COMMODITY_ASSETS — EURUSD/USDRUB used to live in that set (a
-  // mislabeling: they're currency pairs, not commodities) and now write into
-  // signals.currency_pair_impacts via sanitizeForexImpacts() instead.
-  private static readonly ALLOWED_FOREX_PAIRS = new Set([
-    "EURUSD",
-    "GBPUSD",
-    "USDJPY",
-    "USDCHF",
-    "USDRUB",
-    "USDCNY",
-    // USDINR added W7-ASSET-LISTS (2026-10-05, founder decision D2a: USDINR
-    // yes, D2b no equities) — price-syncer.ts already syncs it (USDINR=X).
-    "USDINR",
-  ]);
+  // Moved to the module-level ALLOWED_FOREX_PAIRS export above (2026-11-17) —
+  // same Set, now shared instead of re-declared here.
+  private static readonly ALLOWED_FOREX_PAIRS = ALLOWED_FOREX_PAIRS;
 
   // Claude (asked in plain English to classify "financial market impact") reliably
   // returns human-readable asset names ("Crude Oil", "Wheat", "Natural Gas", "Gold")
@@ -462,35 +499,9 @@ export class ClaudeService {
   // pair before the allowlist filter runs in sanitizeForexImpacts(). Anything with
   // no canonical pair in our allowlist still drops — same scope restriction the
   // allowlist already enforces, not a new gap.
-  private static readonly FOREX_PAIR_ALIASES: Record<string, string> = {
-    EURO: "EURUSD",
-    "EUR/USD": "EURUSD",
-    POUND: "GBPUSD",
-    "BRITISH POUND": "GBPUSD",
-    STERLING: "GBPUSD",
-    "POUND STERLING": "GBPUSD",
-    "GBP/USD": "GBPUSD",
-    YEN: "USDJPY",
-    "JAPANESE YEN": "USDJPY",
-    "USD/JPY": "USDJPY",
-    FRANC: "USDCHF",
-    "SWISS FRANC": "USDCHF",
-    "USD/CHF": "USDCHF",
-    RUBLE: "USDRUB",
-    ROUBLE: "USDRUB",
-    "RUSSIAN RUBLE": "USDRUB",
-    "USD/RUB": "USDRUB",
-    YUAN: "USDCNY",
-    RENMINBI: "USDCNY",
-    RMB: "USDCNY",
-    "CHINESE YUAN": "USDCNY",
-    "USD/CNY": "USDCNY",
-    // W7-ASSET-LISTS: aliases for USDINR per task spec.
-    "USD/INR": "USDINR",
-    RUPEE: "USDINR",
-    "INDIAN RUPEE": "USDINR",
-    INR: "USDINR",
-  };
+  // Moved to the module-level FOREX_PAIR_ALIASES export above (2026-11-17) —
+  // same map, now shared instead of re-declared here.
+  private static readonly FOREX_PAIR_ALIASES: Record<string, string> = FOREX_PAIR_ALIASES;
 
   private normalizeForexPair(asset: string): string | null {
     const upper = String(asset ?? "").trim().toUpperCase();
