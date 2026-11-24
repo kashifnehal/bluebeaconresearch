@@ -2,7 +2,9 @@
 
 > **📍 Doc status — live technical status as of 2026-09-23.** The external session TODO / `22_SESSION_HANDOFF.md` are not in this repo. Pair with `LIVE_TODO.md` and `14_CHANGELOG.md`.
 
-Last updated: 2026-11-17 (TASK NQ-3 complete, Part 4 — e2e checks added, full chain verified, and the W7-flagged stale-test leftover fixed)
+Last updated: 2026-11-24 (TASK NQW3-FILTER1 Part 3 — CLASSIFIER_DIRECTION_V3 flag added, off)
+
+> ⚠️ NEW 2026-11-24 (TASK NQW3-FILTER1 Part 3, `apps/backend` only, `this commit`) — new off-by-default flag `CLASSIFIER_DIRECTION_V3` (declared next to `CLASSIFIER_PROMPT_V2` in `env.ts`). When on: `buildClassifyReturnSpec(v2, v3)` asks for `impactChannel`/`channelBasis`/`geoType` once per event; new pure exported `shownDirection(direction, impactChannel, channelBasis)` in `claude.service.ts` decides whether a commodity impact's model direction is actually shown (sources cited in the code comment above it); new exported `buildDirectionV3InsertFields()` writes the 3 new `signals` columns (migration `20261124010000_signals_direction_channel_fields.sql`, written, **not applied**) at all three insert sites (`acled-collector.ts`, `signal-merge.ts`, `reconciliation.ts`). The model's own `direction` value is never changed. New `apps/backend/src/services/direction-v3.test.ts` (11 tests), appended to the test chain. Checked: backend `tsc` 0, full chain 778 ✔/0 ✖. Full writeup: `LIVE_TODO.md`, `14_CHANGELOG.md`, `18_AI_ENGINE.md` (claude_project).
 
 > ⚠️ NEW 2026-11-17 (TASK W7 Part 3, `apps/web` only, report only/no code change, `this commit`) — `/map`'s "0 of 0" then late jump to "436 of 495" is two independent `GET /api/signals` requests, not one serial chain: `map/page.tsx`'s own 500-row `fetchFiltered` fetch fires on mount; `useSignalFeed`'s 20-row page-1 fetch only fires once auth resolves. The 500-row one is the slow one — within 2s of the client's 20s timeout. Full table: `LIVE_TODO.md`.
 

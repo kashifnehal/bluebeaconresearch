@@ -263,6 +263,23 @@ export type EventCategory =
 // whether the claim is true (see sourceConfirmation prompt text below).
 export type SourceConfirmation = "official" | "reported" | "speculative";
 
+// 2026-11-24 (task NQW3-FILTER1 Part 3) — the five values the CLASSIFIER_DIRECTION_V3
+// prompt asks Claude to pick exactly one of, naming the MECHANISM a story could reach a
+// commodity through (not the direction itself). See buildClassifyReturnSpec's v3 block
+// below for the one-sentence meaning of each shown to Claude.
+export type ImpactChannel =
+  | "supply_transit_risk"
+  | "demand_macro"
+  | "opec_supply_news"
+  | "policy_other"
+  | "unclear";
+
+// Same task — whether the story itself is a THREAT, an ACT that already happened, or not
+// a geopolitical event at all. Separate from impactChannel (the market mechanism) and from
+// eventCategory (the #139/#141 gate's own category set) — this is coarser and only used by
+// shownDirection's channel-display decision, not by the materiality gate.
+export type GeoType = "threat" | "act" | "not_geopolitical";
+
 export type ClassificationResult = {
   severity: number;
   confidence: number;
@@ -270,6 +287,10 @@ export type ClassificationResult = {
     asset: string;
     direction: "up" | "down" | "volatile" | "neutral";
     confidence: number;
+    // Set only when CLASSIFIER_DIRECTION_V3 is "true" (see shownDirection() below).
+    // Absent (not merely null) when the flag is off, so the JSON written to
+    // signals.commodity_impacts gains no new key until the flag is turned on.
+    direction_shown?: "up" | "down" | "none";
   }>;
   currencyPairImpacts: Array<{
     asset: string;
@@ -357,6 +378,20 @@ export type ClassificationResult = {
   // heuristicClassify() has no real read of the article to ground this in and
   // leaves it unset.
   invalidationCondition?: string | null;
+
+  // 2026-11-24 (task NQW3-FILTER1 Part 3) — event-level channel fields, set only
+  // when CLASSIFIER_DIRECTION_V3 is "true" (both the real-Claude success path and
+  // the heuristic-fallback path set these when the flag is on; both leave them
+  // undefined — no key at all — when the flag is off). Mirrors
+  // signals.impact_channel/channel_basis/geo_type (migration
+  // 20261124010000_signals_direction_channel_fields.sql, not yet applied).
+  impactChannel?: ImpactChannel;
+  // The named producer, route, facility or volume the event affects, per Claude's
+  // own reading of the article. Empty string (never null) when the flag is on but
+  // the article names nothing concrete — "" is also what shownDirection() below
+  // treats as "no basis", so a missing basis always suppresses an up/down display.
+  channelBasis?: string;
+  geoType?: GeoType | null;
 };
 
 // Derived from the shared COMMODITY_REGISTRY instead of being hand-duplicated
@@ -427,7 +462,35 @@ const COMMODITY_ASSET_PROMPT_OPTIONS = COMMODITY_REGISTRY.map((c) => `"${c.symbo
 // v2=false must stay BYTE-IDENTICAL to the pre-flag string (see
 // claude.service.test.ts) — this is also what gate-shadow.ts receives via the
 // `returnSpec` param, so both call sites move together on the same flag.
-export function buildClassifyReturnSpec(v2: boolean): string {
+// 2026-11-24 (task NQW3-FILTER1 Part 3) — extra return-spec lines asked for once per
+// event when CLASSIFIER_DIRECTION_V3 is "true", appended after the existing v1/v2
+// fields regardless of the v2 severity/title/summary wording swap above (both text
+// paths get this block the same way). Published research on the channel split this
+// follows (cited again on shownDirection() below, where the mapping is actually
+// applied): European Central Bank Economic Bulletin 8/2023, box "Geopolitical risk
+// and oil prices"; Pinchetti, Banque de France Working Paper 1005, July 2025;
+// Känzig, American Economic Review 2021 (OPEC supply news). No source gives a
+// numeric threshold; this task sets none.
+function buildDirectionV3ReturnSpecLines(): string {
+  return (
+    `,\n  "impactChannel": one of exactly "supply_transit_risk"|"demand_macro"|"opec_supply_news"|"policy_other"|"unclear" — ` +
+    `the MECHANISM by which this event could reach a commodity, not the direction: "supply_transit_risk" means the story ` +
+    `threatens or disrupts a physical supply route, facility, or production volume (a strait, pipeline, refinery, field, ` +
+    `tanker, or export/import flow); "demand_macro" means the story mainly affects how much of the commodity the world ` +
+    `will want to buy (growth, recession, demand destruction); "opec_supply_news" means a named OPEC/OPEC+ production or ` +
+    `quota decision or statement; "policy_other" means a policy/sanctions/political event with a plausible market link ` +
+    `that is not one of the three above; "unclear" means the article does not name a supply, transport, demand, or OPEC ` +
+    `link — do NOT guess a channel, use "unclear" whenever the article does not support one of the other four,\n` +
+    `  "channelBasis": a short string (max 200 characters) naming the SPECIFIC producer, route, facility, or volume this ` +
+    `event affects, taken from the article's own text (e.g. "Strait of Hormuz tanker traffic", "Druzhba pipeline", ` +
+    `"Saudi Aramco Ghawar field output"). Empty string "" if the article names nothing concrete,\n` +
+    `  "geoType": one of exactly "threat"|"act"|"not_geopolitical" — "threat" if this reports a risk, warning, or ` +
+    `possible future action that has not happened yet; "act" if this reports something that has already happened; ` +
+    `"not_geopolitical" if the story is not a geopolitical event at all\n`
+  );
+}
+
+export function buildClassifyReturnSpec(v2: boolean, v3: boolean = false): string {
   const severityLine = v2
     ? `  "severity": integer between 1 and 10 — the size of the reported event itself (what happened, how large it is, how long it may last, how directly it touches the supply chain of an asset). It is NOT a measure of how certain the report is; certainty belongs in "confidence".,\n`
     : `  "severity": integer between 1 and 10,\n`;
@@ -458,9 +521,53 @@ export function buildClassifyReturnSpec(v2: boolean): string {
     `  "materialityPass": boolean — the outcome of the MATERIALITY GATE instruction above,\n` +
     `  "materialityReasoning": a short string (max ~200 chars) explaining the decision in plain language — which specific criterion passed or failed, not just "not important",\n` +
     `  "mediaImpactEntity": the matched entity_name string from BBR's watchlist above if this story's statement or commentary is attributable to one of those entities, or null if not applicable. Return the exact entity_name from the list (never an alias, never a name that is not on the list). This field describes a sourced historical reaction pattern; it is not a forecast and not a trading recommendation.,\n` +
-    `  "invalidationCondition": a single plain-language sentence naming the SPECIFIC fact this story reports that, if it turned out to be false, unconfirmed, or different, would undercut this event's market-impact assessment — grounded in a concrete claim the article itself makes (e.g. "if the reported drone strike on the refinery is not independently confirmed by a second source" or "if the ministry's denial of the ceasefire breach is verified"). Not a generic disclaimer ("if new information emerges") and not a probability or confidence score — name the actual fact at stake. Null only if the story makes no falsifiable factual claim to hang this on.\n` +
+    `  "invalidationCondition": a single plain-language sentence naming the SPECIFIC fact this story reports that, if it turned out to be false, unconfirmed, or different, would undercut this event's market-impact assessment — grounded in a concrete claim the article itself makes (e.g. "if the reported drone strike on the refinery is not independently confirmed by a second source" or "if the ministry's denial of the ceasefire breach is verified"). Not a generic disclaimer ("if new information emerges") and not a probability or confidence score — name the actual fact at stake. Null only if the story makes no falsifiable factual claim to hang this on.` +
+    (v3 ? buildDirectionV3ReturnSpecLines() : "\n") +
     `}`
   );
+}
+
+// 2026-11-24 (task NQW3-FILTER1 Part 3) — pure, exported, no I/O. Decides whether a
+// commodity_impacts entry's model-given `direction` is actually SHOWN to a reader, or
+// replaced by a plain channel label (see apps/web Part 6). This narrow mapping — only
+// show "up" on a supply/transit or OPEC-supply channel, only show "down" on a
+// demand/macro or OPEC-supply channel, and require a named channelBasis either way —
+// follows the channel split described in: European Central Bank Economic Bulletin
+// 8/2023, box "Geopolitical risk and oil prices"; Pinchetti, Banque de France Working
+// Paper 1005, July 2025; Känzig, American Economic Review 2021 (OPEC supply news). It
+// is a BBR design choice to be checked by replay (see replay-classifier-prompt.ts and
+// measure-direction.ts), not itself a published rule — none of the three sources above
+// states this exact mapping or any numeric threshold.
+export function shownDirection(
+  direction: "up" | "down" | "volatile" | "neutral",
+  impactChannel: ImpactChannel | null | undefined,
+  channelBasis: string | null | undefined,
+): "up" | "down" | "none" {
+  const hasBasis = Boolean(channelBasis && channelBasis.trim().length > 0);
+  if (direction === "up" && hasBasis && (impactChannel === "supply_transit_risk" || impactChannel === "opec_supply_news")) {
+    return "up";
+  }
+  if (direction === "down" && hasBasis && (impactChannel === "demand_macro" || impactChannel === "opec_supply_news")) {
+    return "down";
+  }
+  return "none";
+}
+
+// 2026-11-24 (task NQW3-FILTER1 Part 3.4) — shared by every `signals` insert call
+// site (acled-collector.ts, signal-merge.ts, reconciliation.ts) so the "flag off
+// writes no new columns" rule lives in one place instead of three. classification.
+// impactChannel is only ever set (by classifyEvent()/heuristicClassify() above) when
+// CLASSIFIER_DIRECTION_V3 is "true" — when it's undefined, this returns {} and the
+// spread adds no keys to the insert payload at all.
+export function buildDirectionV3InsertFields(
+  classification: ClassificationResult,
+): Record<string, unknown> {
+  if (classification.impactChannel === undefined) return {};
+  return {
+    impact_channel: classification.impactChannel,
+    channel_basis: classification.channelBasis ?? "",
+    geo_type: classification.geoType ?? null,
+  };
 }
 
 export class ClaudeService {
@@ -621,7 +728,8 @@ export class ClaudeService {
         // JSON return spec — also passed to gate-shadow.ts so the shadow call returns the same fields.
         // Both this live call and the gate-shadow call move together on CLASSIFIER_PROMPT_V2
         // (env.ts) since they both consume the same buildClassifyReturnSpec() output.
-        const returnSpec = buildClassifyReturnSpec(getEnv().CLASSIFIER_PROMPT_V2 === "true");
+        const direction3On = getEnv().CLASSIFIER_DIRECTION_V3 === "true";
+        const returnSpec = buildClassifyReturnSpec(getEnv().CLASSIFIER_PROMPT_V2 === "true", direction3On);
         const user =
           `Event: ${title}\n` +
           `Country: ${String(rawEvent.country ?? "")}\n` +
@@ -716,6 +824,31 @@ export class ClaudeService {
         parsed.invalidationCondition = this.sanitizeInvalidationCondition(
           parsed.invalidationCondition,
         );
+        // 2026-11-24 (task NQW3-FILTER1 Part 3) — only parses/writes these when the
+        // flag is on. Off, explicitly delete whatever JSON.parse may have put on
+        // these keys (Claude was never asked for them when the flag is off, so
+        // normally nothing, but a response is untrusted text and must never be
+        // allowed to leak these keys through on its own) — "flag off writes no
+        // new keys" must hold regardless of what the raw response happens to contain.
+        if (direction3On) {
+          parsed.impactChannel = this.sanitizeImpactChannel(
+            (parsed as unknown as { impactChannel?: unknown }).impactChannel,
+          );
+          parsed.channelBasis = this.sanitizeChannelBasis(
+            (parsed as unknown as { channelBasis?: unknown }).channelBasis,
+          );
+          parsed.geoType = this.sanitizeGeoType(
+            (parsed as unknown as { geoType?: unknown }).geoType,
+          );
+          parsed.commodityImpacts = parsed.commodityImpacts.map((impact) => ({
+            ...impact,
+            direction_shown: shownDirection(impact.direction, parsed.impactChannel, parsed.channelBasis),
+          }));
+        } else {
+          delete (parsed as { impactChannel?: unknown }).impactChannel;
+          delete (parsed as { channelBasis?: unknown }).channelBasis;
+          delete (parsed as { geoType?: unknown }).geoType;
+        }
         const usage = usageFromMessage(msg);
         await recordAnthropicUsage({
           bucket: "ingestion",
@@ -1215,10 +1348,20 @@ export class ClaudeService {
     if (rawEvent.country) matchedCategories++;
     const dynamicConfidence = Math.min(0.9, 0.55 + matchedCategories * 0.07);
 
+    // 2026-11-24 (task NQW3-FILTER1 Part 3.5) — heuristic fallback has no real read
+    // of the article, so it never has a basis for a real channel: impact_channel is
+    // always "unclear" and direction_shown always "none" when the flag is on (every
+    // heuristic commodityImpacts entry is direction "neutral" anyway — see the
+    // comment above the array above — so shownDirection() would return "none"
+    // regardless; this makes it explicit rather than relying on that incidentally).
+    const direction3On = getEnv().CLASSIFIER_DIRECTION_V3 === "true";
+
     return {
       severity,
       confidence: parseFloat(dynamicConfidence.toFixed(2)),
-      commodityImpacts: sanitizedCommodityImpacts,
+      commodityImpacts: direction3On
+        ? sanitizedCommodityImpacts.map((impact) => ({ ...impact, direction_shown: "none" as const }))
+        : sanitizedCommodityImpacts,
       currencyPairImpacts: sanitizedCurrencyPairImpacts,
       isBreaking,
       summary: title.slice(0, 120),
@@ -1238,6 +1381,7 @@ export class ClaudeService {
       materialityPass,
       materialityReasoning,
       mediaImpactEntity: watchlistMatch,
+      ...(direction3On ? { impactChannel: "unclear" as const, channelBasis: "", geoType: null } : {}),
     };
   }
 
@@ -1334,6 +1478,39 @@ export class ClaudeService {
     // Prompt asks for ~140 chars; capped generously higher rather than
     // truncating mid-sentence on a slightly-over response.
     return str.slice(0, 300);
+  }
+
+  // 2026-11-24 (task NQW3-FILTER1 Part 3) — same discipline as the other #139/#141
+  // sanitizers above: an invalid/missing value from Claude never throws and never
+  // reaches the DB unchecked. Per the task spec, invalid/missing becomes "unclear",
+  // never null — impactChannel always has a real value once the flag is on.
+  private static readonly IMPACT_CHANNELS: ReadonlySet<ImpactChannel> = new Set([
+    "supply_transit_risk",
+    "demand_macro",
+    "opec_supply_news",
+    "policy_other",
+    "unclear",
+  ]);
+
+  private sanitizeImpactChannel(value: unknown): ImpactChannel {
+    const str = String(value ?? "").trim() as ImpactChannel;
+    return ClaudeService.IMPACT_CHANNELS.has(str) ? str : "unclear";
+  }
+
+  private static readonly GEO_TYPES: ReadonlySet<GeoType> = new Set(["threat", "act", "not_geopolitical"]);
+
+  /** Invalid/missing becomes null (per task spec), unlike impactChannel's "unclear" default. */
+  private sanitizeGeoType(value: unknown): GeoType | null {
+    const str = String(value ?? "").trim() as GeoType;
+    return ClaudeService.GEO_TYPES.has(str) ? str : null;
+  }
+
+  /** Always a string (never null) — "" means no named basis, which shownDirection() treats as none. Capped at 200 chars per the task spec. */
+  private sanitizeChannelBasis(value: unknown): string {
+    if (value === null || value === undefined) return "";
+    const str = String(value).trim();
+    if (!str || /^(null|none|n\/a)$/i.test(str)) return "";
+    return str.slice(0, 200);
   }
 
   /** Null when Claude returns null/undefined/the literal string "null" or empty. */

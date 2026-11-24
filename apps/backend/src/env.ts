@@ -75,6 +75,11 @@ const envSchema = z.object({
   // severity/title/summary return-spec fields (claude.service.ts buildClassifyReturnSpec).
   // Off by default. Turned on only after a replay comparison has been read.
   CLASSIFIER_PROMPT_V2: z.string().optional(),
+  // 2026-11-24 (task NQW3-FILTER1 Part 3) — adds impactChannel/channelBasis/geoType
+  // to the classifier prompt/schema and the pure shownDirection() mapping used to
+  // decide whether a commodity_impacts entry's direction is actually shown. Off by
+  // default; writes no new keys/columns until turned on. See claude.service.ts.
+  CLASSIFIER_DIRECTION_V3: z.string().optional(),
   GATE_SHADOW_MAX_REJECTS_PER_DAY: z.string().optional(),
   GATE_SHADOW_MAX_PASSES_PER_DAY: z.string().optional(),
   // Probability (0..1) that a live-gate reject is sampled for the shadow trial. Default 0.25

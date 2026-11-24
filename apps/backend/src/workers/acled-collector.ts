@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from "../clients/supabase.js";
 import { AcledAccessDeniedError, AcledService } from "../services/acled.service.js";
-import { ClaudeService } from "../services/claude.service.js";
+import { ClaudeService, buildDirectionV3InsertFields } from "../services/claude.service.js";
 import { formatCountryName } from "./ai-classifier.js";
 import { decideRawEventClassification } from "./reconciliation.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
@@ -246,6 +246,7 @@ export async function runAcledCollectorOnce(
           materiality_reasoning: classification.materialityReasoning ?? null,
           media_impact_entity: classification.mediaImpactEntity ?? null,
           invalidation_condition: classification.invalidationCondition ?? null,
+          ...buildDirectionV3InsertFields(classification),
         })
         .select("id")
         .maybeSingle();

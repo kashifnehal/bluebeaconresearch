@@ -1,5 +1,6 @@
 import type { getSupabaseAdmin } from "../clients/supabase.js";
 import type { ClassificationResult } from "../services/claude.service.js";
+import { buildDirectionV3InsertFields } from "../services/claude.service.js";
 import { generateSignalAnalysis } from "./signal-generator.js";
 import { dispatchAlertsForSignal } from "./alert-dispatcher.js";
 import { buildEventCategoryPatch } from "../lib/event-category-patch.js";
@@ -278,6 +279,7 @@ export async function insertOrMergeSignal(params: InsertOrMergeParams): Promise<
         media_impact_entity: classification.mediaImpactEntity ?? null,
         invalidation_condition: classification.invalidationCondition ?? null,
         is_backfilled: isBackfilled,
+        ...buildDirectionV3InsertFields(classification),
       })
       .select("id")
       .maybeSingle();

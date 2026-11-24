@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — CLASSIFIER_DIRECTION_V3: oil direction label review, impact-channel flag added off by default (TASK NQW3-FILTER1 Part 3, `apps/backend`, `this commit`)
+
+A production audit found the per-article "up/down" direction label carried no usable information for oil in a window where WTI fell sharply while the model still called "up" most of the time. Published research says the real direction after a geopolitical event depends on the channel (a supply/transport threat vs. a demand hit vs. OPEC supply news), not a flat guess. Added a new off-by-default flag that, when turned on, asks the classifier for that channel and only shows an up/down call when the channel and direction agree and a concrete basis is named — otherwise shows a plain channel label instead of a direction. The flag is off; nothing changes for any user yet. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-17 — RSS "future-dated item" line stopped showing as an error (TASK HEALTH-1 Part 7, `apps/backend`, `this commit`)
 
 A near-daily feed-clock-skew notice logged more than 15 times in one morning and showed as an error in both Railway and Sentry — it was already a warn-level call, but Node routes `console.warn` to the same stream as `console.error`, which is what both platforms actually key severity off. Switched the line to `console.log` and throttled it to once per feed per hour instead of once per ~30-minute cycle. No change to the clamping behavior itself, or to the separately-reported, unrelated HTTP 403 the same feed sometimes returns. Full technical record: `docs/brain/14_CHANGELOG.md`.

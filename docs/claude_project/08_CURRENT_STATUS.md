@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-17 (TASK NQ-3 complete, Part 4 — e2e checks added, full chain verified, and the W7-flagged stale-test leftover fixed — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-24 (TASK NQW3-FILTER1 Part 3 — CLASSIFIER_DIRECTION_V3 flag added, off by default — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-24 (TASK NQW3-FILTER1 Part 3, `apps/backend` only, `this commit`) — new off-by-default flag asks the classifier to name the market-impact channel (supply/transport threat, demand hit, OPEC supply news, other policy, or unclear) alongside the existing up/down call, and only shows an up/down call when the channel and direction agree and a concrete basis is named. Flag is off; nothing changes for any user yet. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/claude_project/18_AI_ENGINE.md`.
 
 > ⚠️ NEW 2026-11-17 (TASK NQ-3 Part 4, `apps/web` only, `this commit`) — e2e now checks `/accuracy`/`/how-it-works` for the banned performance-claim phrases and that `/accuracy` shows no `%`. A leftover test (`help/page.test.tsx`) that still asserted removed copy was found and fixed — the same leftover TASK W7 Part 2 below independently flagged, out of its own scope. Full web+backend verification clean (tsc/test/build/e2e). TASK NQ-3 is complete. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 

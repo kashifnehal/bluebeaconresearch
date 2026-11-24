@@ -371,3 +371,16 @@ async function logAiCost(model: string, inputTokens: number, outputTokens: numbe
   await redis.expire(`ai_spend:${today}`, 86400 * 2) // 48hr TTL
 }
 ```
+
+---
+
+## 8. CLASSIFIER_DIRECTION_V3 — event-level impact channel (added 2026-11-24, off by default)
+
+A production audit (2026-11-22, on `evavcgfmemwryggdkjmx`) found the per-article `direction` field on `commodityImpacts` carried no usable information for oil in a window where WTI fell 19.6% while the model called "up" 76% of the time. Published research says the direction after a geopolitical shock depends on the channel (energy-supply/transport threat vs. demand hit vs. OPEC supply news), not a flat up/down guess — see the code comment above `shownDirection()` in `claude.service.ts` for the three citations (ECB Economic Bulletin 8/2023; Pinchetti, Banque de France WP 1005, 2025; Känzig, AER 2021).
+
+Behind `CLASSIFIER_DIRECTION_V3` (env flag, default off, declared next to `CLASSIFIER_PROMPT_V2` in `env.ts`):
+- `buildClassifyReturnSpec(v2, v3)` in `claude.service.ts` gains a third parameter. When `v3` is true, the JSON return spec asks once per event for `impactChannel` (`supply_transit_risk` / `demand_macro` / `opec_supply_news` / `policy_other` / `unclear`, with an explicit "do not guess — use unclear" instruction), `channelBasis` (the named producer/route/facility/volume, empty string if none), and `geoType` (`threat` / `act` / `not_geopolitical`). This applies identically on top of the existing v1/v2 severity/title/summary wording swap.
+- `shownDirection(direction, impactChannel, channelBasis)` is a pure, exported function: shows `'up'` only for `direction: "up"` + (`supply_transit_risk` or `opec_supply_news`) + a non-empty `channelBasis`; shows `'down'` only for `direction: "down"` + (`demand_macro` or `opec_supply_news`) + a non-empty `channelBasis`; otherwise `'none'`. This is a BBR design choice to be checked by replay, not itself a published rule.
+- When the flag is on, each `commodityImpacts` element gains a `direction_shown` key; the model's original `direction` is never changed. The heuristic (no-API-key) fallback path sets `impactChannel: "unclear"` and `direction_shown: "none"` on every impact when the flag is on (every heuristic impact's `direction` is already always `"neutral"`, so this is explicit rather than incidental).
+- `buildDirectionV3InsertFields()` (also exported from `claude.service.ts`) returns `{}` when `classification.impactChannel` is `undefined` (flag off) and the three DB columns otherwise — shared by the three `signals`-insert call sites (`acled-collector.ts`, `signal-merge.ts`'s `insertOrMergeSignal`, `reconciliation.ts`). Writes to `signals.impact_channel`/`channel_basis`/`geo_type` (migration `20261124010000_signals_direction_channel_fields.sql`, **not yet applied** — see `docs/brain/04_DATABASE.md`), so turning the flag on before that migration is applied would break every insert; it stays off until both are done deliberately.
+- Tests: `apps/backend/src/services/direction-v3.test.ts` — the `shownDirection` truth table, parser-with-bad-values, flag-off-writes-no-keys, flag-on-writes-them, and original-`direction`-never-changed cases.
