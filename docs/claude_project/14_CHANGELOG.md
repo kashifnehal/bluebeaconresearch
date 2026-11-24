@@ -12,6 +12,10 @@
 
 The backend's build step only compiled `.ts` files, so the calendar data file the Monday digest reads was never actually present in the deployed image — confirmed from two real Sentry errors, both on a Monday send. This was true from the day the feature shipped; not a regression. Fixed with a build-time copy step (same pattern already used elsewhere in this repo for copying static files into a build output), and a still-missing file now degrades to "no week-ahead section" instead of ever being able to throw. Full technical record: `docs/brain/14_CHANGELOG.md`.
 
+## 2026-11-24 — Release-coverage measurement tool (TASK NQW3-FILTER1 Part 9, `apps/backend`, `this commit`)
+
+Before building any monitor, measured whether scheduled releases (Fed, ECB, BoJ, RBI, US CPI, EIA weekly) actually turn into a signal and how fast. Found the stored calendar data has no entries at all for the Bank of England or the US Producer Price Index — so neither can be measured yet without someone adding real sourced dates for them first. New read-only report, not run against production this task. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — Credit lines added for official sources and GDELT on the event-detail Sources tab (TASK NQW3-FILTER1 Part 8, `apps/web`, `this commit`)
 
 The Federal Reserve, EIA, ECB, Bank of Japan, and GDELT each ask to be credited when their content or data is used. The event-detail page's Sources tab now shows a small line under any source from one of those publishers, naming it and the date, and a GDELT-sourced item shows a line crediting The GDELT Project with a link. No other wording changed. Full technical record: `docs/brain/14_CHANGELOG.md`.
