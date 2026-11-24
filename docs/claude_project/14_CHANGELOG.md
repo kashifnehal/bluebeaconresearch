@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — RSS exclude words no longer drop hard news on a summary-only match, behind a new off flag (TASK NQW3-FILTER1 Part 5, `apps/backend`, `this commit`)
+
+An audit found general sports/entertainment exclude words dropping real geopolitical news whenever the word happened to appear only in the article's summary (e.g. "sports" dropped a live blog on the Iran war because the summary mentioned sports coverage elsewhere). Title matches of these same words were always correct. Added a new off-by-default setting that, once turned on, stops a summary-only match from dropping the story — title matches still always drop. Flag is off; nothing changes until turned on. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — Two read-only measurement tools for the direction label (TASK NQW3-FILTER1 Part 4, `apps/backend`, `this commit`)
 
 Built, not run against production (needs a live Anthropic key / DB env this session doesn't have): the existing classifier replay report can now also show what the new channel fields would look like when the new flag is on, and a new script reads the database only to measure whether the up/down call (and, once it exists, the shown version of it) has actually tracked real price moves, including a statistical same-day test for the two oil benchmarks together. Full technical record: `docs/brain/14_CHANGELOG.md`.

@@ -48,6 +48,72 @@ export const EXCLUDE_KEYWORDS_AMBIGUOUS = ["trade deadline", "fashion", "war gam
 /** Combined list, kept for existing external imports (gdelt-collector.ts re-export). */
 export const EXCLUDE_KEYWORDS = [...EXCLUDE_KEYWORDS_HARD, ...EXCLUDE_KEYWORDS_AMBIGUOUS];
 
+/**
+ * TASK NQW3-FILTER1 Part 5 — general sports/entertainment/lifestyle exclude
+ * words, named by a 2026-11-22 filter audit: matching these in the SUMMARY
+ * text (not the title) was dropping real geopolitical/commodity news whose
+ * summary happened to mention an unrelated entertainment/sports word —
+ * confirmed live examples: "sports" dropped a live blog on the Iran war,
+ * "music" dropped a story on Tunisians in the Russia-Ukraine war. Title
+ * matches of these same words were clean (no false positives found). This is
+ * deliberately a NAMED subset of EXCLUDE_KEYWORDS_HARD/_AMBIGUOUS, not the
+ * whole list — words like "fifa"/"nfl"/"farmers market"/"dollar tree"/
+ * "military fitness" etc. are unaffected by EXCLUDE_TITLE_ONLY and keep
+ * their current hard-drop-on-either-field behavior.
+ */
+export const GENERAL_EXCLUDE_WORDS = [
+  "sports",
+  "music",
+  "concert",
+  "football",
+  "celebrity",
+  "net worth",
+  "movie",
+  "album",
+  "golf",
+  "olympics",
+  "lifestyle",
+  "military history",
+  "tug-of-war",
+  "trade deadline",
+  "recipe",
+];
+const GENERAL_EXCLUDE_WORDS_SET = new Set(GENERAL_EXCLUDE_WORDS);
+
+/**
+ * Scans `words` against `combinedText` (title+summary). A match counts as a
+ * real hit unless it is BOTH a general word (per GENERAL_EXCLUDE_WORDS) AND
+ * absent from `titleText` AND `titleOnlyGeneral` is true — in which case it is
+ * skipped and scanning continues, so a different, non-exempt word can still
+ * match. Returns the matched keyword, or null.
+ */
+function findWordHit(
+  words: string[],
+  combinedText: string,
+  titleText: string,
+  titleOnlyGeneral: boolean,
+): string | null {
+  for (const kw of words) {
+    const re = new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i");
+    if (!re.test(combinedText)) continue;
+    if (titleOnlyGeneral && GENERAL_EXCLUDE_WORDS_SET.has(kw) && !re.test(titleText)) {
+      // Summary-only match on a general word, with the flag on: not a hit here.
+      continue;
+    }
+    return kw;
+  }
+  return null;
+}
+
+export type ExcludeOptions = {
+  /**
+   * EXCLUDE_TITLE_ONLY (env.ts), default false/unset = current behavior
+   * (title+summary both drop). true = a GENERAL_EXCLUDE_WORDS match found
+   * only in the summary no longer drops the item on its own.
+   */
+  titleOnlyGeneral?: boolean;
+};
+
 /** Matches a historical-noise year (1970-2005) only as a standalone number, not as a
  * substring of a larger number (e.g. must not match "2000" inside "12000" or "1970"
  * inside "41970"), and not a dollar amount (e.g. "$2000" is a price, not a year). */
@@ -136,18 +202,17 @@ export function hasAnchor(text: string): boolean {
   return /\bgas\b/i.test(text);
 }
 
-export function shouldExclude(title: string, summary: string = ""): boolean {
+export function shouldExclude(title: string, summary: string = "", opts?: ExcludeOptions): boolean {
+  const titleOnlyGeneral = opts?.titleOnlyGeneral === true;
+  const titleText = title.toLowerCase();
   const text = (title + " " + summary).toLowerCase();
   // Word-boundary match, not plain substring — found live 2026-08-25 (Batch 2 / Prompt 5)
   // that bare `.includes()` here let short EXCLUDE_KEYWORDS entries like "nfl" silently
   // hard-exclude any headline containing "inflation", "conflict", or "influence" (all
   // contain "nfl" as a substring) — dropping some of the most important geopolitical/
   // macro headlines for this product with no trace, since filtered items are never logged.
-  if (EXCLUDE_KEYWORDS_HARD.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text))) return true;
-  if (
-    EXCLUDE_KEYWORDS_AMBIGUOUS.some((kw) => new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i").test(text)) &&
-    !hasAnchor(text)
-  ) {
+  if (findWordHit(EXCLUDE_KEYWORDS_HARD, text, titleText, titleOnlyGeneral)) return true;
+  if (!hasAnchor(text) && findWordHit(EXCLUDE_KEYWORDS_AMBIGUOUS, text, titleText, titleOnlyGeneral)) {
     return true;
   }
   // Historical-year headlines (e.g. "1973 oil crisis retrospective") are log-only,
@@ -162,26 +227,49 @@ export function shouldExclude(title: string, summary: string = ""): boolean {
 /** Diagnostic only: which exclude phrase actually matched shouldExclude(), and
  * whether it matched in the title alone or only once the (usually hidden)
  * summary text was included. Used by the [RSS-DROP] sample log so an
- * "exclude" drop is traceable instead of silent. */
+ * "exclude" drop is traceable instead of silent. Same `opts.titleOnlyGeneral`
+ * skip as shouldExclude(), so this never reports a phrase shouldExclude()
+ * itself didn't actually drop on. */
 export function findExcludeMatch(
   title: string,
   summary: string = "",
+  opts?: ExcludeOptions,
 ): { phrase: string; location: "title" | "summary" } | null {
+  const titleOnlyGeneral = opts?.titleOnlyGeneral === true;
   const titleText = title.toLowerCase();
   const combinedText = (title + " " + summary).toLowerCase();
   const anchored = hasAnchor(combinedText);
 
-  for (const kw of EXCLUDE_KEYWORDS_HARD) {
-    const re = new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i");
-    if (re.test(combinedText)) return { phrase: kw, location: re.test(titleText) ? "title" : "summary" };
+  const hardHit = findWordHit(EXCLUDE_KEYWORDS_HARD, combinedText, titleText, titleOnlyGeneral);
+  if (hardHit) {
+    const re = new RegExp(`\\b${escapeRegExp(hardHit)}\\b`, "i");
+    return { phrase: hardHit, location: re.test(titleText) ? "title" : "summary" };
   }
   if (!anchored) {
-    for (const kw of EXCLUDE_KEYWORDS_AMBIGUOUS) {
-      const re = new RegExp(`\\b${escapeRegExp(kw)}\\b`, "i");
-      if (re.test(combinedText)) return { phrase: kw, location: re.test(titleText) ? "title" : "summary" };
+    const ambiguousHit = findWordHit(EXCLUDE_KEYWORDS_AMBIGUOUS, combinedText, titleText, titleOnlyGeneral);
+    if (ambiguousHit) {
+      const re = new RegExp(`\\b${escapeRegExp(ambiguousHit)}\\b`, "i");
+      return { phrase: ambiguousHit, location: re.test(titleText) ? "title" : "summary" };
     }
   }
   return null;
+}
+
+/**
+ * TASK NQW3-FILTER1 Part 5 — the drop-record reason prefix rss-collector.ts
+ * uses: "exclude-summary-only" only for a GENERAL_EXCLUDE_WORDS phrase matched
+ * at location "summary" (so the shadow effect of EXCLUDE_TITLE_ONLY can be
+ * counted from drop samples regardless of the flag's own current setting);
+ * plain "exclude" for every other match (a title match, or a match on a word
+ * outside GENERAL_EXCLUDE_WORDS).
+ */
+export function excludeDropReasonPrefix(
+  match: { phrase: string; location: "title" | "summary" } | null,
+): "exclude" | "exclude-summary-only" {
+  if (match && match.location === "summary" && GENERAL_EXCLUDE_WORDS_SET.has(match.phrase)) {
+    return "exclude-summary-only";
+  }
+  return "exclude";
 }
 
 function matchesKeywords(text: string): boolean {
@@ -211,7 +299,14 @@ export function isRoutineMarketNoise(title: string): boolean {
   return INSIDER_TRADE_TITLE.test(title) || INSIDER_TRADE_SHARES.test(title) || ANALYST_RATING.test(title);
 }
 
-export type T2PairOptions = { t2PairAllowed?: boolean };
+export type T2PairOptions = {
+  t2PairAllowed?: boolean;
+  // TASK NQW3-FILTER1 Part 5 — mirrors EXCLUDE_TITLE_ONLY (env.ts). Threaded
+  // through isRelevantEvent()/dropReason() so the only caller that reads the
+  // flag (rss-collector.ts) controls it per-call; every other caller (gdelt-
+  // collector.ts, etc.) omits it and keeps today's always-drop behavior.
+  excludeTitleOnly?: boolean;
+};
 
 /** Default true. False only when the caller passes t2PairAllowed: false. */
 function t2PairAllowed(options?: T2PairOptions): boolean {
@@ -228,7 +323,7 @@ export function isRelevantEvent(
   feedTier: FeedTier = "world",
   options?: T2PairOptions,
 ): boolean {
-  if (shouldExclude(title, summary)) return false;
+  if (shouldExclude(title, summary, { titleOnlyGeneral: options?.excludeTitleOnly === true })) return false;
   if (isRoutineMarketNoise(title)) {
     console.log(`[RELEVANCE] routine-noise drop title="${title}"`);
     return false;
@@ -269,7 +364,7 @@ export function dropReason(
   feedTier: FeedTier = "world",
   options?: T2PairOptions,
 ): string | null {
-  const match = findExcludeMatch(title, summary);
+  const match = findExcludeMatch(title, summary, { titleOnlyGeneral: options?.excludeTitleOnly === true });
   if (match) return `exclude:${match.phrase}@${match.location}`;
 
   if (isRoutineMarketNoise(title)) {

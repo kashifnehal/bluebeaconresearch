@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "../clients/supabase.js";
 import { isAnthropicBudgetAvailable } from "../lib/anthropic-budget.js";
 import { resolveGeoCoords } from "../lib/geo-resolver.js";
 import { ClaudeService, shouldStopBatch } from "../services/claude.service.js";
+import { getEnv } from "../env.js";
 import { formatCountryName } from "./ai-classifier.js";
 import {
   isRelevantEvent,
@@ -12,6 +13,7 @@ import {
   findExcludeMatch,
   hasAnchor,
   isMidwordOnlyMatch,
+  excludeDropReasonPrefix,
   type FeedTier,
 } from "../lib/relevance-filter.js";
 import { consumeT2Slot, t2SlotsLeft } from "../lib/t2-daily-slots.js";
@@ -355,19 +357,27 @@ export async function runRssCollectorOnce() {
   // titles that had no anchor at all (hasAnchor() false AND no shadow-group match).
   const finShadowDiag = new Map<string, { kept: number; noAnchorTitles: string[] }>();
 
+  // TASK NQW3-FILTER1 Part 5 — default off (unset): behavior is byte-identical
+  // to before this task. "true": a GENERAL_EXCLUDE_WORDS match found only in
+  // the summary no longer drops the item here (it continues to the noise/
+  // keyword checks below); a title match still always drops either way.
+  const excludeTitleOnly = getEnv().EXCLUDE_TITLE_ONLY === "true";
+
   for (const item of items) {
     const allowed = t2SlotsLeft(new Date()) > 0;
-    if (!isRelevantEvent(item.title, item.summary, item.tier, { t2PairAllowed: allowed })) {
+    if (!isRelevantEvent(item.title, item.summary, item.tier, { t2PairAllowed: allowed, excludeTitleOnly })) {
       filtered++;
       feedDiag[item.label].filteredIrrelevant++;
       let reason: DropReason;
       let detail: string | undefined;
       let shadowGroups: string[] | undefined;
       let midwordOnly = false;
-      if (shouldExclude(item.title, item.summary)) {
+      let excludePrefix: "exclude" | "exclude-summary-only" = "exclude";
+      if (shouldExclude(item.title, item.summary, { titleOnlyGeneral: excludeTitleOnly })) {
         reason = "exclude-phrase";
-        const match = findExcludeMatch(item.title, item.summary);
+        const match = findExcludeMatch(item.title, item.summary, { titleOnlyGeneral: excludeTitleOnly });
         if (match) detail = `${match.phrase}@${match.location}`;
+        excludePrefix = excludeDropReasonPrefix(match);
       } else if (isRoutineMarketNoise(item.title)) {
         reason = "noise";
       } else {
@@ -386,7 +396,7 @@ export async function runRssCollectorOnce() {
       dropRecords.push({
         feed: item.label,
         tier: item.tier,
-        reason: detail ? `exclude:${detail}` : reason,
+        reason: detail ? `${excludePrefix}:${detail}` : reason,
         title: item.title,
         summary: item.summary,
         url: item.url,

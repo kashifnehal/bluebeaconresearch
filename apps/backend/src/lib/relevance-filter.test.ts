@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { shouldExclude, findExcludeMatch, isRelevantEvent, dropReason, type FeedTier } from "./relevance-filter.js";
+import {
+  shouldExclude,
+  findExcludeMatch,
+  isRelevantEvent,
+  dropReason,
+  GENERAL_EXCLUDE_WORDS,
+  excludeDropReasonPrefix,
+  type FeedTier,
+} from "./relevance-filter.js";
 
 // Existing fixtures below are the flag-off answers. Read the pair rule at call time
 // only after those assertions, then restore it.
@@ -332,5 +340,79 @@ runTest("finance and official tiers are identical with the pair rule on and off"
   } finally {
     if (saved === undefined) delete process.env.T2_PAIR_RULE;
     else process.env.T2_PAIR_RULE = saved;
+  }
+});
+
+// ── TASK NQW3-FILTER1 Part 5 — EXCLUDE_TITLE_ONLY ─────────────────────────
+// Confirmed-live examples from the 2026-11-22 filter audit: "sports" dropped a
+// live blog on the Iran war; "music" dropped a story on Tunisians in the
+// Russia-Ukraine war — both only because the word appeared in the SUMMARY.
+
+runTest("EXCLUDE_TITLE_ONLY: a general word in the TITLE still drops in both modes", () => {
+  const title = "Sports fans flee as missiles strike stadium";
+  assert.equal(shouldExclude(title, "No summary text here"), true);
+  assert.equal(shouldExclude(title, "No summary text here", { titleOnlyGeneral: true }), true);
+  assert.equal(isRelevantEvent(title, "No summary text here", "world"), false);
+  assert.equal(isRelevantEvent(title, "No summary text here", "world", { excludeTitleOnly: true }), false);
+});
+
+runTest("EXCLUDE_TITLE_ONLY off (default): a general word matched only in the summary still drops, with an exclude-summary-only-eligible match", () => {
+  const title = "Live blog: Iran war developments";
+  const summary = "Sports coverage will resume after the ad break.";
+  assert.equal(shouldExclude(title, summary), true);
+  const match = findExcludeMatch(title, summary);
+  assert.equal(match?.phrase, "sports");
+  assert.equal(match?.location, "summary");
+  assert.ok(GENERAL_EXCLUDE_WORDS.includes("sports"));
+});
+
+runTest("EXCLUDE_TITLE_ONLY on: the same summary-only general-word match no longer drops", () => {
+  const title = "Live blog: Iran war developments";
+  const summary = "Sports coverage will resume after the ad break.";
+  assert.equal(shouldExclude(title, summary, { titleOnlyGeneral: true }), false);
+  assert.equal(findExcludeMatch(title, summary, { titleOnlyGeneral: true }), null);
+  // isRelevantEvent must also keep it (geopolitical anchor via GEOPOLITICAL_KEYWORDS "iran"/"war").
+  assert.equal(isRelevantEvent(title, summary, "world", { excludeTitleOnly: true }), true);
+});
+
+runTest("EXCLUDE_TITLE_ONLY on: the 'music' example (Tunisians, Russia-Ukraine war) is no longer dropped", () => {
+  const title = "Tunisians caught up in Russia-Ukraine war";
+  const summary = "A music festival elsewhere in the country continues as planned.";
+  assert.equal(shouldExclude(title, summary, { titleOnlyGeneral: true }), false);
+  assert.equal(shouldExclude(title, summary), true, "flag off still drops, for comparison");
+});
+
+runTest("EXCLUDE_TITLE_ONLY on: a hard-list word NOT in GENERAL_EXCLUDE_WORDS still drops even summary-only", () => {
+  const title = "Central bank policy update";
+  const summary = "FIFA announces new tournament schedule.";
+  assert.equal(shouldExclude(title, summary, { titleOnlyGeneral: true }), true, "fifa is unaffected by the flag");
+  assert.ok(!GENERAL_EXCLUDE_WORDS.includes("fifa"));
+});
+
+runTest("EXCLUDE_TITLE_ONLY on: 'trade deadline' (ambiguous, general) only drops in the title, not summary-only, when unanchored", () => {
+  const title = "Local news roundup";
+  const summary = "The team's trade deadline approaches with no major moves expected.";
+  // No geopolitical/commodity anchor in either string -> would be ambiguous-excluded off.
+  assert.equal(shouldExclude(title, summary), true);
+  assert.equal(shouldExclude(title, summary, { titleOnlyGeneral: true }), false);
+});
+
+runTest("excludeDropReasonPrefix: 'exclude-summary-only' only for a GENERAL_EXCLUDE_WORDS phrase matched in the summary", () => {
+  assert.equal(excludeDropReasonPrefix({ phrase: "sports", location: "summary" }), "exclude-summary-only");
+  assert.equal(excludeDropReasonPrefix({ phrase: "sports", location: "title" }), "exclude");
+  assert.equal(excludeDropReasonPrefix({ phrase: "fifa", location: "summary" }), "exclude");
+  assert.equal(excludeDropReasonPrefix(null), "exclude");
+});
+
+runTest("EXCLUDE_TITLE_ONLY: dropReason()'s invariant (null iff isRelevantEvent) still holds with the flag on", () => {
+  const cases: Array<[string, string]> = [
+    ["Live blog: Iran war developments", "Sports coverage will resume after the ad break."],
+    ["Sports fans flee as missiles strike stadium", "No summary text here"],
+    ["Central bank policy update", "FIFA announces new tournament schedule."],
+  ];
+  for (const [title, summary] of cases) {
+    const kept = isRelevantEvent(title, summary, "world", { excludeTitleOnly: true });
+    const reason = dropReason(title, summary, "world", { excludeTitleOnly: true });
+    assert.equal(reason === null, kept, `title="${title}"`);
   }
 });

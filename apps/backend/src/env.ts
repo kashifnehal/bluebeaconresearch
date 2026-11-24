@@ -80,6 +80,11 @@ const envSchema = z.object({
   // decide whether a commodity_impacts entry's direction is actually shown. Off by
   // default; writes no new keys/columns until turned on. See claude.service.ts.
   CLASSIFIER_DIRECTION_V3: z.string().optional(),
+  // 2026-11-24 (task NQW3-FILTER1 Part 5) — general sports/entertainment exclude
+  // words (GENERAL_EXCLUDE_WORDS in relevance-filter.ts) stop dropping an RSS item
+  // on a SUMMARY-only match when this is "true"; a title match still always drops.
+  // Off by default — the current (always-drop) behavior is unchanged until set.
+  EXCLUDE_TITLE_ONLY: z.string().optional(),
   GATE_SHADOW_MAX_REJECTS_PER_DAY: z.string().optional(),
   GATE_SHADOW_MAX_PASSES_PER_DAY: z.string().optional(),
   // Probability (0..1) that a live-gate reject is sampled for the shadow trial. Default 0.25

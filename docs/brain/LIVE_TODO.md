@@ -9,7 +9,8 @@ Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs found
 - Part 2: migration file `20261124010000_signals_direction_channel_fields.sql` written, NOT applied (task instruction). Commit `42eb1e7`.
 - Part 3: `CLASSIFIER_DIRECTION_V3` flag added (off by default) — `impactChannel`/`channelBasis`/`geoType` prompt fields, pure `shownDirection()`, `buildDirectionV3InsertFields()` wired into all 3 `signals`-insert sites. New test file `direction-v3.test.ts` (11 tests). Backend `tsc` 0, full chain 778 ✔/0 ✖. See `14_CHANGELOG.md`/`18_AI_ENGINE.md` (claude_project).
 - Part 4: `replay:classifier`'s arm B optionally also requests impactChannel/channelBasis/geoType (new report section); new SELECT-only `pnpm measure:direction` script measures predicted-vs-actual up/down and a same-day binomial test for USOIL+UKOIL. 17+2 new tests. Neither script run against production (no live Anthropic key/DB env this session).
-- Parts 5-10 land in their own commits below as each completes; this line is updated to ✅ once the whole task's final report is delivered with every part's real SHA.
+- Part 5: `EXCLUDE_TITLE_ONLY` flag (off) — a GENERAL_EXCLUDE_WORDS (15-word) match found only in the summary no longer drops when on; title matches unaffected either way; `exclude-summary-only:` drop-reason prefix added for shadow counting when off. `rss-collector.ts` only. 15 new tests. Full chain 806 ✔/0 ✖.
+- Parts 6-10 land in their own commits below as each completes; this line is updated to ✅ once the whole task's final report is delivered with every part's real SHA.
 
 ## ✅ /map load-sequence report — why "0 of 0" for 8s then "436 of 495" at 18s (TASK W7 Part 3), `apps/web` only, report only/no code change, 2026-11-17, `this commit`
 
