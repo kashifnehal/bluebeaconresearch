@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — A confusing "[object Object]" error log now shows the real reason (TASK HEALTH-2 Part 2, `apps/web`, `this commit`)
+
+A homepage stats query's error log printed "[object Object]" instead of a readable reason, because the database client's error shape isn't a normal `Error`. The query itself and its existing timeout were already working as designed (confirmed: it really was a timeout, not a broken query) — only the log text was unreadable. No user-visible change; the fix is a small helper that turns any thrown value into a short, readable string for logging. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — Monday digest's "week ahead" section fixed: the calendar file never reached the deployed build (TASK HEALTH-2 Part 1, `apps/backend`, `this commit`)
 
 The backend's build step only compiled `.ts` files, so the calendar data file the Monday digest reads was never actually present in the deployed image — confirmed from two real Sentry errors, both on a Monday send. This was true from the day the feature shipped; not a regression. Fixed with a build-time copy step (same pattern already used elsewhere in this repo for copying static files into a build output), and a still-missing file now degrades to "no week-ahead section" instead of ever being able to throw. Full technical record: `docs/brain/14_CHANGELOG.md`.

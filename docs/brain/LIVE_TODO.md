@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ TASK HEALTH-2 Part 2 — signal-count-cache's "[object Object]" log line fixed, `apps/web`, 2026-11-24, `this commit`
+
+- Vercel runtime errors showed `[signal-count-cache] total-signal-count query failed: [object Object]` (8 events, 2026-11-18 to 2026-11-23, route `/`). The underlying thrown value is a plain `{message, details, hint, code}` object (postgrest-js), not an `Error`, so the old `String(err)` fallback always produced `"[object Object]"`. Real cause underneath: a genuine timeout — the existing 4000ms limit and fallback were already working correctly; only the log text was unreadable.
+- Added exported `describeThrownValue()` in `apps/web/lib/signal-count-cache.ts`; wired into the one catch block that had the bug. No query/limit/cache change.
+- Other 3 `console.error(..., err)` sites the same grep found pass the error as a separate arg (already fully inspected by Node, not the same bug) — left unchanged.
+- Tests: 8 new unit tests in `signal-count-cache.test.ts` (no render needed, no user-visible text changed).
+- Checked: web `tsc --noEmit` exit 0; `pnpm --filter web test` 941 ✔ / 0 ✖; `next build` exit 0.
+
 ## ✅ TASK HEALTH-2 Part 1 — Monday digest's week-ahead calendar section fixed, `apps/backend`, 2026-11-24, `this commit`
 
 - Sentry NODE-12 (2 events, both Mondays: 2026-11-09 06:00:01 UTC and 2026-11-23 06:00:02 UTC) traced to `apps/backend/tsconfig.json`'s `include: ["src/**/*.ts"]` never copying `src/data/economic-calendar.json` into `dist/data/`, where the compiled `week-ahead.js` reads it. Never worked in production since the feature shipped 2026-10-27 — not a regression.

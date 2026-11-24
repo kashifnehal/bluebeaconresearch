@@ -36,6 +36,50 @@ export function buildSignalCountClient(): SignalCountClient | null {
 }
 
 /**
+ * Turns any thrown value into a short, loggable string. The Supabase/
+ * postgrest-js client rejects with a plain object (`{ message, details,
+ * hint, code }`), not an `Error` instance, so a template-literal
+ * interpolation of the raw value (`${err}`) always printed "[object
+ * Object]" — this is what actually showed up in Vercel's runtime-error log
+ * for a timed-out query (2026-11-24), hiding the real "TimeoutError: The
+ * operation was aborted due to timeout" message underneath.
+ */
+export function describeThrownValue(err: unknown, timeoutMs: number = HOMEPAGE_DB_TIMEOUT_MS): string {
+  if (err == null) return "unknown error";
+
+  const cap = (s: string) => (s.length > 200 ? `${s.slice(0, 200)}...` : s);
+  const isTimeoutMessage = (message: string) => /aborted due to timeout/i.test(message);
+
+  if (err instanceof Error) {
+    if (err.name === "AbortError" || err.name === "TimeoutError" || isTimeoutMessage(err.message)) {
+      return `timed out after ${timeoutMs}ms`;
+    }
+    return err.message || err.name || "unknown error";
+  }
+
+  if (typeof err === "object") {
+    const obj = err as Record<string, unknown>;
+    const message = typeof obj.message === "string" ? obj.message : undefined;
+    const details = typeof obj.details === "string" ? obj.details : undefined;
+    if (message && isTimeoutMessage(message)) return `timed out after ${timeoutMs}ms`;
+    if (message) return message;
+    if (details) return details;
+    try {
+      return cap(JSON.stringify(obj));
+    } catch {
+      return "unknown error";
+    }
+  }
+
+  if (typeof err === "string") return cap(err);
+  try {
+    return cap(JSON.stringify(err));
+  } catch {
+    return "unknown error";
+  }
+}
+
+/**
  * Throws on a query error or an unusable count instead of returning null, so
  * neither Next's data cache nor a caller's own stale-value fallback ever
  * stores a 0/null as if it were a real reading. 0 here means RLS hid every
@@ -70,13 +114,7 @@ async function fetchTotalSignalCountFromEnv(): Promise<number> {
   try {
     return await fetchTotalSignalCountOrThrow(client);
   } catch (err) {
-    const timedOut = err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError");
-    const reason = timedOut
-      ? `timed out after ${HOMEPAGE_DB_TIMEOUT_MS}ms`
-      : err instanceof Error
-        ? err.message || err.name
-        : String(err);
-    console.error(`[signal-count-cache] total-signal-count query failed: ${reason}`);
+    console.error(`[signal-count-cache] total-signal-count query failed: ${describeThrownValue(err)}`);
     throw err;
   }
 }

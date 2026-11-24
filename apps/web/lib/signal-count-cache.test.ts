@@ -4,6 +4,7 @@ import type { unstable_cache } from "next/cache";
 import {
   buildSignalCountClient,
   createTotalSignalCountCache,
+  describeThrownValue,
   fetchTotalSignalCountOrThrow,
   type SignalCountClient,
 } from "./signal-count-cache";
@@ -210,6 +211,45 @@ async function main() {
       );
     },
   );
+  await runTest("describeThrownValue: the real evidence object (postgrest-shaped timeout) reads as a timeout", () => {
+    const evidence = { message: "TimeoutError: The operation was aborted due to timeout", details: "", hint: "", code: "" };
+    assert.equal(describeThrownValue(evidence, 4000), "timed out after 4000ms");
+  });
+
+  await runTest("describeThrownValue: an Error instance returns its message", () => {
+    assert.equal(describeThrownValue(new Error("boom")), "boom");
+  });
+
+  await runTest("describeThrownValue: a string is returned as-is", () => {
+    assert.equal(describeThrownValue("plain string reason"), "plain string reason");
+  });
+
+  await runTest("describeThrownValue: a plain object with only details (no message) returns the details string", () => {
+    assert.equal(describeThrownValue({ details: "no rows found" }), "no rows found");
+  });
+
+  await runTest("describeThrownValue: null and undefined both return 'unknown error'", () => {
+    assert.equal(describeThrownValue(null), "unknown error");
+    assert.equal(describeThrownValue(undefined), "unknown error");
+  });
+
+  await runTest("describeThrownValue: a circular object does not throw", () => {
+    const circular: Record<string, unknown> = { a: 1 };
+    circular.self = circular;
+    assert.doesNotThrow(() => describeThrownValue(circular));
+  });
+
+  await runTest("describeThrownValue: an unrelated object falls back to capped JSON.stringify", () => {
+    const result = describeThrownValue({ foo: "bar" });
+    assert.equal(result, JSON.stringify({ foo: "bar" }));
+  });
+
+  await runTest("describeThrownValue: a long string is capped at 200 characters", () => {
+    const longString = "x".repeat(500);
+    const result = describeThrownValue(longString);
+    assert.ok(result.length <= 203, "expected the 200-char cap plus the '...' suffix");
+    assert.ok(result.startsWith("xxx"));
+  });
 }
 
 void main();
