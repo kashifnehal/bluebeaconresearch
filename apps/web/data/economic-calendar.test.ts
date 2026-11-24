@@ -60,6 +60,8 @@ const newEiaDates = [
   "2026-12-02",
   "2026-12-09",
   "2026-12-16",
+  "2026-12-23",
+  "2026-12-30",
 ];
 
 runTest("the EIA weekly report extends through the next-60-day window with the expected dates", () => {
@@ -148,6 +150,29 @@ runTest("this file is byte-for-byte identical to the backend source of truth (ap
     backendData,
     "apps/web/data/economic-calendar.json has drifted from apps/backend/src/data/economic-calendar.json — run `pnpm --filter web run sync:calendar` (or just `pnpm --filter web dev`/`build`, which run it automatically)",
   );
+});
+
+// 2026-11-24: 12 rows added for FOMC/ECB/BOJ/BLS (through 2027-03-31) and EIA
+// (through 2026-12-30), read off each institution's own page.
+runTest("each new bank and BLS row lands on the weekday its institution uses, and its sourceUrl is https", () => {
+  const expectedWeekday: Record<string, string> = {
+    "fomc-2027-01-27": "Wed",
+    "fomc-2027-03-17": "Wed",
+    "ecb-2027-02-04": "Thu",
+    "ecb-2027-03-18": "Thu",
+    "boj-2027-01-22": "Fri",
+    "boj-2027-03-18": "Thu",
+    "us-nfp-2027-02-05": "Fri",
+    "us-nfp-2027-03-05": "Fri",
+    "us-cpi-2027-02-11": "Thu",
+    "us-cpi-2027-03-10": "Wed",
+  };
+  for (const [id, weekday] of Object.entries(expectedWeekday)) {
+    const e = events.find((ev) => ev.id === id);
+    assert.ok(e, `missing new row ${id}`);
+    assert.equal(utcWeekday(e!.date), weekday, `${id}: ${e!.date}`);
+    assert.match(e!.sourceUrl, /^https:\/\//, id);
+  }
 });
 
 runTest("forecast/previous/actual stay null — no fabricated placeholder numbers", () => {
