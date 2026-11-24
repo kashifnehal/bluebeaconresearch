@@ -41,6 +41,8 @@ import {
   buildClassifyReturnSpec,
   isAnthropicUsageLimitError,
   isAnthropicSpendLimitError,
+  shownDirection,
+  type ImpactChannel,
 } from "../services/claude.service.js";
 import { buildClassifierSnippet } from "../lib/classifier-snippet.js";
 import { getEnv } from "../env.js";
@@ -422,6 +424,118 @@ export function computeHardFailures(
   return out;
 }
 
+// ── CLASSIFIER_DIRECTION_V3 report (task NQW3-FILTER1 Part 4) ──────────────
+// Only ever computed from arm B's parsed answers (the only arm that asks for
+// impactChannel/channelBasis/geoType, and only when direction3On — see main()).
+// Descriptive only, same discipline as the rest of this script: no sanitizers
+// applied beyond falling back to "unclear" for an unrecognized impactChannel
+// (mirrors claude.service.ts's own sanitizeImpactChannel default), so a
+// malformed value is counted, not silently dropped.
+const IMPACT_CHANNELS: ReadonlySet<ImpactChannel> = new Set([
+  "supply_transit_risk",
+  "demand_macro",
+  "opec_supply_news",
+  "policy_other",
+  "unclear",
+]);
+
+function normalizeImpactChannelForReport(value: unknown): ImpactChannel {
+  const str = String(value ?? "").trim() as ImpactChannel;
+  return IMPACT_CHANNELS.has(str) ? str : "unclear";
+}
+
+export type DirectionV3ExampleRow = {
+  id: string;
+  title: string;
+  channelBasis: string;
+  directionShown: "up" | "down" | "none";
+};
+
+export type DirectionV3Report = {
+  totalRows: number;
+  channelCounts: Record<ImpactChannel, number>;
+  channelShares: Record<ImpactChannel, number>;
+  directionShownCounts: Record<"up" | "down" | "none", number>;
+  directionShownShares: Record<"up" | "down" | "none", number>;
+  directionShownByCategory: Record<string, Record<"up" | "down" | "none", number>>;
+  exampleRowsByChannel: Record<ImpactChannel, DirectionV3ExampleRow[]>;
+};
+
+export function computeDirectionV3Report(
+  rows: { id: string; storedTitle: string | null; b: ParsedAnswer }[],
+): DirectionV3Report {
+  const channelCounts: Record<ImpactChannel, number> = {
+    supply_transit_risk: 0,
+    demand_macro: 0,
+    opec_supply_news: 0,
+    policy_other: 0,
+    unclear: 0,
+  };
+  const directionShownCounts: Record<"up" | "down" | "none", number> = { up: 0, down: 0, none: 0 };
+  const directionShownByCategory: Record<string, Record<"up" | "down" | "none", number>> = {};
+  const exampleRowsByChannel: Record<ImpactChannel, DirectionV3ExampleRow[]> = {
+    supply_transit_risk: [],
+    demand_macro: [],
+    opec_supply_news: [],
+    policy_other: [],
+    unclear: [],
+  };
+
+  let totalRows = 0;
+  let totalDirectionShown = 0;
+  for (const row of rows) {
+    const parsed = row.b.parsed;
+    if (!parsed) continue;
+    totalRows += 1;
+    const impactChannel = normalizeImpactChannelForReport(parsed.impactChannel);
+    channelCounts[impactChannel] += 1;
+    const channelBasis = typeof parsed.channelBasis === "string" ? parsed.channelBasis : "";
+    const eventCategory = typeof parsed.eventCategory === "string" ? parsed.eventCategory : "(none)";
+    if (!directionShownByCategory[eventCategory]) {
+      directionShownByCategory[eventCategory] = { up: 0, down: 0, none: 0 };
+    }
+    const title = typeof parsed.title === "string" ? parsed.title : row.storedTitle ?? "(untitled)";
+    const impacts = Array.isArray(parsed.commodityImpacts) ? (parsed.commodityImpacts as AssetImpact[]) : [];
+    for (const impact of impacts) {
+      const direction = impact?.direction as "up" | "down" | "volatile" | "neutral" | undefined;
+      if (!direction) continue;
+      const directionShown = shownDirection(direction, impactChannel, channelBasis);
+      directionShownCounts[directionShown] += 1;
+      directionShownByCategory[eventCategory][directionShown] += 1;
+      totalDirectionShown += 1;
+      if (exampleRowsByChannel[impactChannel].length < 10) {
+        exampleRowsByChannel[impactChannel].push({ id: row.id, title, channelBasis, directionShown });
+      }
+    }
+  }
+
+  const channelShares: Record<ImpactChannel, number> = {
+    supply_transit_risk: 0,
+    demand_macro: 0,
+    opec_supply_news: 0,
+    policy_other: 0,
+    unclear: 0,
+  };
+  for (const key of Object.keys(channelCounts) as ImpactChannel[]) {
+    channelShares[key] = totalRows > 0 ? channelCounts[key] / totalRows : 0;
+  }
+  const directionShownShares: Record<"up" | "down" | "none", number> = {
+    up: totalDirectionShown > 0 ? directionShownCounts.up / totalDirectionShown : 0,
+    down: totalDirectionShown > 0 ? directionShownCounts.down / totalDirectionShown : 0,
+    none: totalDirectionShown > 0 ? directionShownCounts.none / totalDirectionShown : 0,
+  };
+
+  return {
+    totalRows,
+    channelCounts,
+    channelShares,
+    directionShownCounts,
+    directionShownShares,
+    directionShownByCategory,
+    exampleRowsByChannel,
+  };
+}
+
 // ── Report title / disclosure builder ────────────────────────────────────
 
 export function buildReportHeader(): string {
@@ -442,6 +556,11 @@ export function buildReportHeader(): string {
  */
 export function buildReplayPrompt(params: {
   v2: boolean;
+  // 2026-11-24 (task NQW3-FILTER1 Part 4) — when true, the user prompt also asks
+  // for impactChannel/channelBasis/geoType (CLASSIFIER_DIRECTION_V3). Passed in
+  // explicitly, same discipline as `v2` above — this script never reads the flag
+  // itself except in main(), which decides whether to pass true for arm B only.
+  v3?: boolean;
   title: string;
   summary: unknown;
   country: string;
@@ -450,7 +569,7 @@ export function buildReplayPrompt(params: {
   similarStoryLast48h: boolean;
   watchlistBlock: string;
 }): { system: string; user: string } {
-  const { v2, title, country, eventType, eventDate, similarStoryLast48h, watchlistBlock } = params;
+  const { v2, v3 = false, title, country, eventType, eventDate, similarStoryLast48h, watchlistBlock } = params;
   const snippet = buildClassifierSnippet(title, params.summary);
   const system =
     "You are a senior geopolitical risk analyst for Blue Beacon Research (BBR), a geopolitical " +
@@ -474,7 +593,7 @@ export function buildReplayPrompt(params: {
     `through their own statements (relevant to materialityPass criterion (b) and to sourceConfirmation):\n` +
     `${watchlistBlock}\n\n` +
     `MATERIALITY GATE: ${MATERIALITY_GATE_INSTRUCTION}\n\n` +
-    buildClassifyReturnSpec(v2);
+    buildClassifyReturnSpec(v2, v3);
   return { system, user };
 }
 
@@ -597,6 +716,10 @@ async function main() {
   const { dryRun, limit, seed, ids } = parseReplayClassifierArgs(process.argv.slice(2));
   const env = getEnv();
   const supabase = getSupabaseAdmin();
+  // 2026-11-24 (task NQW3-FILTER1 Part 4) — only arm B (the new-text arm) also
+  // asks for impactChannel/channelBasis/geoType when this is on; A1/A2 stay the
+  // byte-identical flag-off control either way.
+  const direction3On = env.CLASSIFIER_DIRECTION_V3 === "true";
 
   const claudeServicePath = fileURLToPath(new URL("../services/claude.service.ts", import.meta.url));
   const promptWindowLog = checkPromptWindowHistory("2026-11-08", claudeServicePath);
@@ -692,6 +815,7 @@ async function main() {
       });
       const b = buildReplayPrompt({
         v2: true,
+        v3: direction3On,
         title: item.rawEvent.title ?? "New geopolitical event",
         summary: item.rawEvent.summary,
         country: String(item.rawEvent.country ?? ""),
@@ -784,6 +908,7 @@ async function main() {
       }
       const prompt = buildReplayPrompt({
         v2,
+        v3: key === "b" && direction3On,
         title: item.rawEvent.title ?? "New geopolitical event",
         summary: item.rawEvent.summary,
         country: String(item.rawEvent.country ?? ""),
@@ -954,6 +1079,34 @@ async function main() {
     `- B changed the asset list while A1 and A2 agreed (${hardFailures.bChangedAssetsWhileA1A2Agreed.length}): ${JSON.stringify(hardFailures.bChangedAssetsWhileA1A2Agreed)}`,
     "",
   );
+
+  // 2026-11-24 (task NQW3-FILTER1 Part 4) — only when this run passed
+  // CLASSIFIER_DIRECTION_V3=on, so arm B's parsed answers actually carry
+  // impactChannel/channelBasis/geoType to report on.
+  if (direction3On) {
+    const d3 = computeDirectionV3Report(
+      rows.map((r) => ({ id: r.id, storedTitle: r.storedTitle, b: toAnswer(r.b) })),
+    );
+    reportLines.push(
+      `## 8. CLASSIFIER_DIRECTION_V3 (this run: flag on, arm B only)`,
+      `- Rows with a parsed B answer: ${d3.totalRows}`,
+      `- impact_channel counts: ${JSON.stringify(d3.channelCounts)}`,
+      `- impact_channel shares: ${JSON.stringify(d3.channelShares)}`,
+      `- direction_shown counts overall: ${JSON.stringify(d3.directionShownCounts)}`,
+      `- direction_shown shares overall: ${JSON.stringify(d3.directionShownShares)}`,
+      `- direction_shown by event_category: ${JSON.stringify(d3.directionShownByCategory)}`,
+      "",
+    );
+    for (const channel of Object.keys(d3.exampleRowsByChannel) as (keyof typeof d3.exampleRowsByChannel)[]) {
+      reportLines.push(`### Examples — impact_channel=${channel} (up to 10)`, "");
+      for (const ex of d3.exampleRowsByChannel[channel]) {
+        reportLines.push(
+          `- id=${ex.id} title="${ex.title}" channel_basis="${ex.channelBasis}" direction_shown=${ex.directionShown}`,
+        );
+      }
+      reportLines.push("");
+    }
+  }
 
   writeFileSync(OUTPUT_REPORT_PATH, reportLines.join("\n"));
   console.log(`[replay-classifier] wrote ${OUTPUT_REPORT_PATH}`);

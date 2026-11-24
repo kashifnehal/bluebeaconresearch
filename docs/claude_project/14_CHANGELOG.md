@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — Two read-only measurement tools for the direction label (TASK NQW3-FILTER1 Part 4, `apps/backend`, `this commit`)
+
+Built, not run against production (needs a live Anthropic key / DB env this session doesn't have): the existing classifier replay report can now also show what the new channel fields would look like when the new flag is on, and a new script reads the database only to measure whether the up/down call (and, once it exists, the shown version of it) has actually tracked real price moves, including a statistical same-day test for the two oil benchmarks together. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — CLASSIFIER_DIRECTION_V3: oil direction label review, impact-channel flag added off by default (TASK NQW3-FILTER1 Part 3, `apps/backend`, `this commit`)
 
 A production audit found the per-article "up/down" direction label carried no usable information for oil in a window where WTI fell sharply while the model still called "up" most of the time. Published research says the real direction after a geopolitical event depends on the channel (a supply/transport threat vs. a demand hit vs. OPEC supply news), not a flat guess. Added a new off-by-default flag that, when turned on, asks the classifier for that channel and only shows an up/down call when the channel and direction agree and a concrete basis is named — otherwise shows a plain channel label instead of a direction. The flag is off; nothing changes for any user yet. Full technical record: `docs/brain/14_CHANGELOG.md`.

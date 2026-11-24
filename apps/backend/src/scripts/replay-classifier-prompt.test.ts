@@ -21,6 +21,8 @@ import {
   buildReportHeader,
   parseReplayClassifierArgs,
   HARD_STOP_USD,
+  computeDirectionV3Report,
+  buildReplayPrompt,
 } from "./replay-classifier-prompt.js";
 
 let failed = false;
@@ -246,6 +248,104 @@ runTest("drift: classifyEvent()'s known prompt fragments are still present verba
   assert.equal(text.includes("You are a senior geopolitical risk analyst"), true);
   assert.equal(text.includes("Article excerpt (untrusted text"), true);
   assert.equal(text.includes("MATERIALITY GATE:"), true);
+});
+
+// ── task NQW3-FILTER1 Part 4 ────────────────────────────────────────────
+
+runTest("buildReplayPrompt: v3=true adds the impactChannel/channelBasis/geoType lines; v3 omitted does not", () => {
+  const params = {
+    v2: true,
+    title: "Tanker blocked",
+    summary: "Tanker blocked in Strait of Hormuz",
+    country: "Iran",
+    eventType: "news",
+    eventDate: "2026-11-24T00:00:00.000Z",
+    similarStoryLast48h: false,
+    watchlistBlock: "(none)",
+  };
+  const withV3 = buildReplayPrompt({ ...params, v3: true });
+  const withoutV3 = buildReplayPrompt(params);
+  assert.match(withV3.user, /"impactChannel"/);
+  assert.match(withV3.user, /"channelBasis"/);
+  assert.match(withV3.user, /"geoType"/);
+  assert.doesNotMatch(withoutV3.user, /"impactChannel"/);
+});
+
+runTest("computeDirectionV3Report: tallies impact_channel and direction_shown, overall and by event_category", () => {
+  const rows = [
+    {
+      id: "r1",
+      storedTitle: "Tanker blocked",
+      b: {
+        raw: "",
+        parseError: null,
+        parsed: {
+          impactChannel: "supply_transit_risk",
+          channelBasis: "Strait of Hormuz",
+          eventCategory: "supply_disruption_logistics",
+          title: "Tanker blocked in Hormuz",
+          commodityImpacts: [{ asset: "USOIL", direction: "up" }],
+        },
+      },
+    },
+    {
+      id: "r2",
+      storedTitle: "Demand slowdown",
+      b: {
+        raw: "",
+        parseError: null,
+        parsed: {
+          impactChannel: "demand_macro",
+          channelBasis: "",
+          eventCategory: "scheduled_economic_data",
+          title: "Demand slowdown story",
+          // No channelBasis -> direction_shown must be "none" even though
+          // demand_macro + "down" would otherwise qualify.
+          commodityImpacts: [{ asset: "USOIL", direction: "down" }],
+        },
+      },
+    },
+    {
+      id: "r3",
+      storedTitle: "Garbled",
+      b: { raw: "", parseError: "bad json", parsed: null },
+    },
+  ];
+  const report = computeDirectionV3Report(rows as any);
+  assert.equal(report.totalRows, 2, "row with no parsed answer is excluded");
+  assert.equal(report.channelCounts.supply_transit_risk, 1);
+  assert.equal(report.channelCounts.demand_macro, 1);
+  assert.equal(report.channelCounts.unclear, 0);
+  assert.equal(report.directionShownCounts.up, 1);
+  assert.equal(report.directionShownCounts.none, 1);
+  assert.equal(report.directionShownCounts.down, 0);
+  assert.equal(report.directionShownByCategory.supply_disruption_logistics.up, 1);
+  assert.equal(report.directionShownByCategory.scheduled_economic_data.none, 1);
+  assert.equal(report.exampleRowsByChannel.supply_transit_risk.length, 1);
+  assert.equal(report.exampleRowsByChannel.supply_transit_risk[0].directionShown, "up");
+});
+
+runTest("computeDirectionV3Report: an invalid impactChannel string falls back to 'unclear', never throws", () => {
+  const rows = [
+    {
+      id: "r1",
+      storedTitle: "Garbled channel",
+      b: {
+        raw: "",
+        parseError: null,
+        parsed: {
+          impactChannel: "not-a-real-channel",
+          channelBasis: null,
+          eventCategory: 42,
+          commodityImpacts: [{ asset: "USOIL", direction: "neutral" }],
+        },
+      },
+    },
+  ];
+  const report = computeDirectionV3Report(rows as any);
+  assert.equal(report.channelCounts.unclear, 1);
+  assert.equal(report.directionShownCounts.none, 1);
+  assert.equal(report.directionShownByCategory["(none)"].none, 1);
 });
 
 if (failed) process.exit(1);
