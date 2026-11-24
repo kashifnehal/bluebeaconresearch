@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — NYT Business dropped from the RSS feed list (TASK NQW3-FILTER1 Part 7, `apps/backend`, `this commit`)
+
+The New York Times' own terms forbid using its content to train or ground AI models without written permission, and this pipeline classifies every item with one. Removed the feed; no stored history is deleted. Feed count by tier is now world 6, official 8, finance 13 (27 total, was 28). Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — Commodity chips can show a channel label instead of an arrow, behind a new off flag (TASK NQW3-FILTER1 Part 6, `apps/web`, `this commit`)
 
 Web-side counterpart to the backend's new direction-channel flag. Once both backend and web flags are on and a signal carries the new channel data, a commodity chip that the model can't confidently call up or down shows a plain label (e.g. "Supply or shipping risk") instead of an arrow, everywhere a chip renders. Both flags are off; no change to anything visible today — and the backend data this depends on isn't being written to any signal yet either. Full technical record: `docs/brain/14_CHANGELOG.md`.

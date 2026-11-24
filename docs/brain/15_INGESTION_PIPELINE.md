@@ -69,7 +69,6 @@ Railway workers (startup + every 30 min)
 | **EIA Today in Energy**         | `official`| **Only hard-exclude, 24h window, no keyword gate** |
 | **BBC Business**                | `finance` | **Only hard-exclude** (sports/celebrity) |
 | **Guardian Business**           | `finance` | **Only hard-exclude**                    |
-| **NYT Business**                | `finance` | **Only hard-exclude**                    |
 | **MarketWatch**                 | `finance` | **Only hard-exclude**                    |
 | **WSJ Markets** (Dow Jones RSS) | `finance` | **Only hard-exclude**                    |
 | **Investing.com**               | `finance` | **Only hard-exclude**                    |
@@ -82,7 +81,9 @@ Railway workers (startup + every 30 min)
 | **FreightWaves**                | `finance` | **Only hard-exclude**                    |
 | **Journal of Commerce**         | `finance` | **Only hard-exclude** (308→200 redirect to `/rssfeed`, parser follows it) |
 
-> **Reuters note:** Official Reuters RSS (`feeds.reuters.com`, `reuters.com/world/rss`) returns 401/404 from server environments. Replaced with **MarketWatch + WSJ Markets + NYT Business** as finance-grade alternatives.
+> **Reuters note:** Official Reuters RSS (`feeds.reuters.com`, `reuters.com/world/rss`) returns 401/404 from server environments. Replaced with **MarketWatch + WSJ Markets** as finance-grade alternatives (originally also NYT Business — see the removal note below).
+
+> **NYT Business removed (2026-11-24, TASK NQW3-FILTER1 Part 7):** the New York Times Terms of Service (effective 2026-01-20) forbid using its content to develop or ground AI models, including retrieval-augmented generation, without written consent; this pipeline sends every item to automated language-model classification. The feed produced 15 signals between 2026-09-24 and 2026-11-23. Removed from `RSS_FEEDS` in `rss-collector.ts`; stored `raw_events`/`signals` rows from it are kept, not deleted. Feed count is now world 6, official 8, finance 13 (27 total, down from 28) — `packages/shared/src/constants/ingestion.ts`'s `CONFIGURED_RSS_FEED_COUNT` updated to match.
 
 > **UN News / USDA note (2026-09-26, re-confirmed 2026-09-28):** Both evaluated as candidate `world`-tier additions, neither added — confirmed dead by a real fetch against production's exact parser config, not assumed. **UN News** (`news.un.org/feed/subscribe/en/news/all/rss.xml`) unconditionally gzips its response (`content-encoding: gzip`, confirmed via raw magic bytes) even without client compression negotiation; `rss-parser`'s HTTP client doesn't decode it, so `parseURL()` throws `"Non-whitespace before first tag"` on every run — the same failure that got it removed 2026-08-28 (#63); needs a manual fetch + gunzip decode path to ever re-add. **USDA Latest News** (`usda.gov/rss/latest-releases.xml`) returns a hard `403` from Akamai (`server: AkamaiGHost`) regardless of User-Agent/Accept headers — bot-fingerprinting, not a header problem, so it won't be fixed by header changes alone. Re-confirmed 2026-09-28 via direct curl when a task instruction claimed (incorrectly) that this URL was "live-verified" that day — it was not added despite being requested. **EIA Press Releases** (`eia.gov/rss/press_rss.xml`) was added successfully 2026-09-26 — real `200`, 11 items fetched in the verification run. **Federal Reserve / ECB / Bank of England / USTR** (world) and **Rigzone / Mining.com / gCaptain / Splash247 / Hellenic Shipping News / FreightWaves / Journal of Commerce** (finance) were added 2026-09-28, each curl-verified as real RSS 2.0 XML before being added.
 

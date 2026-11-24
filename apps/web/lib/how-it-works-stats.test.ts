@@ -81,12 +81,13 @@ runTest("how-it-works sources caption names sources, and the ACLED/keyword-fallb
 });
 
 runTest("TOTAL_COLLECTOR_COUNT is RSS feeds plus the collectors that actually ingest", () => {
-  // 28 RSS feeds (packages/shared/src/constants/ingestion.ts) + 2 other collectors
-  // that ingest today (gdelt, gnews) = 30. ACLED is excluded while it ingests
+  // 27 RSS feeds (packages/shared/src/constants/ingestion.ts — NYT Business
+  // removed 2026-11-24, TASK NQW3-FILTER1 Part 7) + 2 other collectors that
+  // ingest today (gdelt, gnews) = 29. ACLED is excluded while it ingests
   // nothing (HTTP 403 on the data read); add it back when acled raw events exist.
   assert.equal(OTHER_COLLECTOR_COUNT, 2);
-  assert.equal(TOTAL_COLLECTOR_COUNT, 28 + OTHER_COLLECTOR_COUNT);
-  assert.equal(TOTAL_COLLECTOR_COUNT, 30);
+  assert.equal(TOTAL_COLLECTOR_COUNT, 27 + OTHER_COLLECTOR_COUNT);
+  assert.equal(TOTAL_COLLECTOR_COUNT, 29);
 });
 
 function fakeClient(responses: Array<{ count: number | null; error: unknown }>) {

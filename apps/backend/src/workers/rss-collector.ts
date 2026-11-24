@@ -143,7 +143,13 @@ const RSS_FEEDS: RssFeed[] = [
   // ── Finance / markets (lighter filter — only hard-exclude sports/celebrity) ──
   { url: "https://feeds.bbci.co.uk/news/business/rss.xml", label: "BBC Business", tier: "finance" },
   { url: "https://www.theguardian.com/business/rss", label: "Guardian Business", tier: "finance" },
-  { url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml", label: "NYT Business", tier: "finance" },
+  // NYT Business — removed 2026-11-24 (TASK NQW3-FILTER1 Part 7). The New York
+  // Times Terms of Service (effective 2026-01-20) forbid using its content to
+  // develop or ground AI models, including retrieval-augmented generation,
+  // without written consent; this pipeline sends every item to automated
+  // language-model classification. The feed produced 15 signals between
+  // 2026-09-24 and 2026-11-23. Stored raw_events/signals rows from this feed
+  // are NOT deleted — only the live feed entry is removed.
   { url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", label: "MarketWatch", tier: "finance" },
   { url: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml", label: "WSJ Markets", tier: "finance" },
   { url: "https://www.investing.com/rss/news.rss", label: "Investing.com", tier: "finance" },
