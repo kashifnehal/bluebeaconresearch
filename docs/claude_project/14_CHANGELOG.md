@@ -12,6 +12,14 @@
 
 A weekly internal report job was timing out every few weeks, always on a Sunday at the same hour — an audit found at least 7 other scheduled jobs that can also run in that same few-minute window on the small production database, a plausible but unproven cause. No index or schedule change made (out of scope this task). The report's three database reads now retry once, 5 minutes later, specifically for a statement-timeout error (never for other error types); if the timeout persists it skips the report for that week, exactly as any failure already does today. Full technical record, including the full cron-schedule audit table: `docs/brain/14_CHANGELOG.md`.
 
+## 2026-11-24 — CSV export added to the signal-drivers chart (TASK CAL-REFRESH-DRIVER-CSV Part 2, `apps/web`, `5fb6703`)
+
+The per-asset signal-drivers chart on `/watchlist/[symbol]` gained an "Export chart data (CSV)" button, matching what competitors already offer — counts only (date, category, signal count), including categories the chart folds into "Other" and series the viewer has hidden in the legend. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
+## 2026-11-24 — Economic calendar extended through 2027-03-31 for FOMC/ECB/BOJ/BLS, through 2026-12-30 for EIA (TASK CAL-REFRESH-DRIVER-CSV Part 1, `apps/backend` + `apps/web`, `4d393cf`)
+
+12 new rows read directly off each institution's own published schedule on 2026-11-24, extending the `/calendar` page and the webcal feed past their prior cutoff (EIA/USDA Dec 16 2026, FOMC/ECB/BOJ/BLS Jan 13 2027). USDA, NASS, IEA, OPEC, RBI, ONS, and ABS 2027 dates were not read this round and are not included; EIA has not published a 2027 date yet. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — A confusing "[object Object]" error log now shows the real reason (TASK HEALTH-2 Part 2, `apps/web`, `this commit`)
 
 A homepage stats query's error log printed "[object Object]" instead of a readable reason, because the database client's error shape isn't a normal `Error`. The query itself and its existing timeout were already working as designed (confirmed: it really was a timeout, not a broken query) — only the log text was unreadable. No user-visible change; the fix is a small helper that turns any thrown value into a short, readable string for logging. Full technical record: `docs/brain/14_CHANGELOG.md`.

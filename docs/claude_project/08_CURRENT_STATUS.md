@@ -1,6 +1,10 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-24 (TASK NQW3-FILTER1 Part 3 — CLASSIFIER_DIRECTION_V3 flag added, off by default — see the banner immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-24 (TASK CAL-REFRESH-DRIVER-CSV — calendar extended through 2027-03-31, driver-chart CSV export added — see the two banners immediately below).**
+
+> ⚠️ NEW 2026-11-24 (TASK CAL-REFRESH-DRIVER-CSV Part 2, `apps/web` only, `5fb6703`) — the watchlist symbol page's signal-drivers chart gained an "Export chart data (CSV)" button (date/category/count only, including hidden-legend series). See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/claude_project/06_COMPONENTS.md`.
+
+> ⚠️ NEW 2026-11-24 (TASK CAL-REFRESH-DRIVER-CSV Part 1, `apps/backend` + `apps/web`, `4d393cf`) — `economic-calendar.json` gains 12 rows read off each institution's own page: EIA through 2026-12-30, FOMC/ECB/BOJ/BLS through 2027-03-31. USDA/NASS/IEA/OPEC/RBI/ONS/ABS 2027 dates not read this round. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `09_BACKLOG.md`.
 
 > ⚠️ NEW 2026-11-24 (TASK NQW3-FILTER1 Part 3, `apps/backend` only, `this commit`) — new off-by-default flag asks the classifier to name the market-impact channel (supply/transport threat, demand hit, OPEC supply news, other policy, or unclear) alongside the existing up/down call, and only shows an up/down call when the channel and direction agree and a concrete basis is named. Flag is off; nothing changes for any user yet. See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/claude_project/18_AI_ENGINE.md`.
 
