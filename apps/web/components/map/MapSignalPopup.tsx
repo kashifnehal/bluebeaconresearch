@@ -96,6 +96,8 @@ export function MapSignalPopup({
                 direction={c.direction}
                 confidence={c.confidence}
                 size="sm"
+                directionShown={c.direction_shown}
+                impactChannel={signal.impactChannel}
               />
             ))}
           </div>

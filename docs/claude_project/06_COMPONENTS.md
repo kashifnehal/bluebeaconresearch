@@ -384,6 +384,8 @@ neutral:  bg-secondary      text-muted      "NGAS –"
 Both sizes show ticker + direction arrow only. Classifier `confidence` is not visible text (it is the model's self-reported tagging confidence, not a price-direction probability). `aria-label` still includes "model classification confidence {n}%".
 Shape: rounded-full pill. **#202 (2026-09-25):** optional `label` prop renders a small uppercase caption above the pill; unset everywhere except `MarketImpactAssessment`'s "Predicted" usage below.
 
+**TASK NQW3-FILTER1 Part 6 (2026-11-24):** two more optional props, `directionShown` and `impactChannel`. Behind `NEXT_PUBLIC_DIRECTION_V3` (off by default): when on and the impact carries a `directionShown`, shows the arrow only for up/down; for "none" shows a plain label ("Supply or shipping risk" / "Demand outlook" / "OPEC+ supply news" / "Policy" / "Direction unclear") instead of an arrow. Off, or the field missing (true today everywhere — nothing populates it yet), renders exactly as before. Full detail: `docs/brain/06_COMPONENTS.md` §3.3.
+
 ---
 
 ### MarketImpactAssessment (apps/web/components/signals/MarketImpactAssessment.tsx) — #143, #202

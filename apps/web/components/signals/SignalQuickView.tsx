@@ -289,6 +289,8 @@ export function SignalQuickView({
                           direction={c.direction}
                           confidence={c.confidence}
                           size="md"
+                          directionShown={c.direction_shown}
+                          impactChannel={signal.impactChannel}
                         />
                       ))}
                     </div>

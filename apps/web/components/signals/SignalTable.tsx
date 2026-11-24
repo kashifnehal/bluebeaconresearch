@@ -172,6 +172,8 @@ export function SignalTable({
                           asset={primaryImpact.asset}
                           direction={primaryImpact.direction}
                           confidence={primaryImpact.confidence}
+                          directionShown={primaryImpact.direction_shown}
+                          impactChannel={signal.impactChannel}
                         />
                       ) : (
                         <span style={{ color: "var(--text-muted)" }}>—</span>

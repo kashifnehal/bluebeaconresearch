@@ -14,6 +14,8 @@ import { SubscribeForm } from "./../components/marketing/SubscribeForm";
 import { CookieSettingsButton } from "./../components/CookieSettingsButton";
 import { getPublishedAssessments, type PublicAssessment } from "./../lib/public-assessments";
 import { HOMEPAGE_DB_TIMEOUT_MS, withTimeoutOrFallback } from "./../lib/with-timeout";
+import { isDirectionV3Enabled } from "./../lib/flags";
+import { impactChannelLabel } from "./../lib/signal-display";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +46,19 @@ type LandingSignalPreview = {
   is_breaking: boolean | null;
   created_at: string;
   event_date: string | null;
-  commodity_impacts: Array<{ asset: string; direction: string; confidence: number }> | null;
+  commodity_impacts: Array<{
+    asset: string;
+    direction: string;
+    confidence: number;
+    // TASK NQW3-FILTER1 Part 6 — present only once CLASSIFIER_DIRECTION_V3 has
+    // written it; undefined on every row today. See lib/flags.ts.
+    direction_shown?: "up" | "down" | "none";
+  }> | null;
+  // Event-level channel (signals.impact_channel) — not selected by this
+  // page's query (the backing column's migration isn't applied yet), so this
+  // stays undefined in practice; kept optional so the type is ready once a
+  // future task selects it.
+  impact_channel?: string | null;
 };
 
 // signals RLS is `signals_select_authenticated` only — the cookie/anon client
@@ -237,7 +251,11 @@ export function renderHomePage(input: {
                             {latestSignal.commodity_impacts?.map((impact, idx) => (
                               <div key={idx} className="bg-surface-container-lowest border border-outline-variant/20 px-3 py-2 md:px-4 md:py-3 rounded-lg group/pill hover:border-primary/40 transition-colors">
                                 <p className="font-mono text-[12px] md:text-[10px] text-white font-bold uppercase tracking-widest mb-1">{impact.asset}</p>
-                                <p className="font-label text-[12px] md:text-[8px] text-primary font-black uppercase tracking-widest">{impact.direction}</p>
+                                <p className="font-label text-[12px] md:text-[8px] text-primary font-black uppercase tracking-widest">
+                                  {isDirectionV3Enabled && impact.direction_shown === "none"
+                                    ? impactChannelLabel(latestSignal.impact_channel)
+                                    : impact.direction}
+                                </p>
                               </div>
                             ))}
                           </div>

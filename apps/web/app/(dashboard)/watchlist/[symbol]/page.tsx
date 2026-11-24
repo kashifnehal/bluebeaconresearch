@@ -1139,7 +1139,14 @@ export default function WatchlistSymbolPage() {
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <span className="text-sm font-bold text-on-surface leading-snug">{ev.title}</span>
                       {impact && (
-                        <CommodityChip asset={impact.asset} direction={impact.direction} confidence={impact.confidence} />
+                        <CommodityChip
+                          asset={impact.asset}
+                          direction={impact.direction}
+                          confidence={impact.confidence}
+                          // direction_shown only exists on commodity impacts, never forex pairs.
+                          directionShown={isForex ? undefined : (impact as (typeof ev.commodityImpacts)[number]).direction_shown}
+                          impactChannel={ev.impactChannel}
+                        />
                       )}
                     </div>
                     <p className="text-[12px] md:text-[11px] font-mono text-on-surface-variant uppercase tracking-widest mb-2">

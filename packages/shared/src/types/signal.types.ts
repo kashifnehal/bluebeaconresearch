@@ -50,10 +50,27 @@ export const EVENT_CATEGORY_VALUES = Object.keys(
   EVENT_CATEGORY_EXHAUSTIVENESS_CHECK,
 ) as EventCategory[];
 
+// TASK NQW3-FILTER1 Part 3/6 (2026-11-24) — set only when apps/backend's
+// CLASSIFIER_DIRECTION_V3 flag is on (see claude.service.ts's shownDirection());
+// absent (not null) on every row until then. Own copy here, not imported from
+// apps/backend (apps/backend must not import packages/shared at runtime) —
+// keep in sync by hand if backend's literal set ever changes.
+export type DirectionShown = "up" | "down" | "none";
+export type ImpactChannel =
+  | "supply_transit_risk"
+  | "demand_macro"
+  | "opec_supply_news"
+  | "policy_other"
+  | "unclear";
+
 export interface CommodityImpact {
   asset: string;
   direction: Direction;
   confidence: number;
+  // See DirectionShown above — present only once CLASSIFIER_DIRECTION_V3 has
+  // written it; the migration adding the backing signals columns hasn't been
+  // applied yet either (20261124010000_signals_direction_channel_fields.sql).
+  direction_shown?: DirectionShown;
 }
 
 export interface Signal {
@@ -100,6 +117,12 @@ export interface Signal {
   // detail page's Analysis tab only (a deliberate scope decision — keeps the
   // dense feed/card/drawer surfaces from growing another block of prose).
   invalidationCondition?: string | null;
+  // TASK NQW3-FILTER1 Part 6 (2026-11-24) — event-level channel, mirrors
+  // signals.impact_channel. Same availability caveat as CommodityImpact's
+  // direction_shown above: undefined until the backend flag is on AND the
+  // migration is applied AND whatever route builds this Signal selects the
+  // column (none currently do — safe to leave this optional field unset).
+  impactChannel?: ImpactChannel | null;
   createdAt: string; // when WE ingested it
   eventDate?: string; // when the article/event was PUBLISHED
   updatedAt?: string; // last updated time for this signal record

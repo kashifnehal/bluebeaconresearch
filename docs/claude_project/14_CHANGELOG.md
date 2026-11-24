@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — Commodity chips can show a channel label instead of an arrow, behind a new off flag (TASK NQW3-FILTER1 Part 6, `apps/web`, `this commit`)
+
+Web-side counterpart to the backend's new direction-channel flag. Once both backend and web flags are on and a signal carries the new channel data, a commodity chip that the model can't confidently call up or down shows a plain label (e.g. "Supply or shipping risk") instead of an arrow, everywhere a chip renders. Both flags are off; no change to anything visible today — and the backend data this depends on isn't being written to any signal yet either. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — RSS exclude words no longer drop hard news on a summary-only match, behind a new off flag (TASK NQW3-FILTER1 Part 5, `apps/backend`, `this commit`)
 
 An audit found general sports/entertainment exclude words dropping real geopolitical news whenever the word happened to appear only in the article's summary (e.g. "sports" dropped a live blog on the Iran war because the summary mentioned sports coverage elsewhere). Title matches of these same words were always correct. Added a new off-by-default setting that, once turned on, stops a summary-only match from dropping the story — title matches still always drop. Flag is off; nothing changes until turned on. Full technical record: `docs/brain/14_CHANGELOG.md`.

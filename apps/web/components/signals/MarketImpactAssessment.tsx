@@ -231,6 +231,8 @@ export function MarketImpactAssessment({
                         confidence={c.confidence}
                         size="md"
                         label="Predicted"
+                        directionShown={c.direction_shown}
+                        impactChannel={signal.impactChannel}
                       />
                       {ownOutcome ? (
                         <p

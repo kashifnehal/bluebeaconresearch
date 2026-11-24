@@ -25,3 +25,20 @@ export const isProjectReady = process.env.PROJECT_READY === "true" || process.en
  * disabled.
  */
 export const isDeviceLimitEnabled = process.env.DEVICE_LIMIT_ENABLED === "true";
+
+/**
+ * isDirectionV3Enabled (TASK NQW3-FILTER1 Part 6, 2026-11-24):
+ *   false (default) → every direction chip/arrow renders exactly as today,
+ *           regardless of whether a commodity_impacts entry carries a
+ *           direction_shown value (backend CLASSIFIER_DIRECTION_V3, off by
+ *           default itself — see apps/backend/src/services/claude.service.ts).
+ *   true  → a commodity_impacts entry that HAS a direction_shown value shows
+ *           an arrow only for 'up'/'down'; for 'none' it shows a plain
+ *           impact_channel label instead of an arrow. An entry with no
+ *           direction_shown (the common case even with this flag on, until
+ *           the backend flag is also on) still renders exactly as today.
+ *
+ * NEXT_PUBLIC_ because this is read from client components (CommodityChip
+ * and the few places that render a direction chip/arrow directly).
+ */
+export const isDirectionV3Enabled = process.env.NEXT_PUBLIC_DIRECTION_V3 === "true";

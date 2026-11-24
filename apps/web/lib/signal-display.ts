@@ -46,6 +46,31 @@ export function commodityChipAriaLabel(
   return `${asset} ${direction}, model classification confidence ${formatConfidencePercent(confidence)}`;
 }
 
+// TASK NQW3-FILTER1 Part 6 — the plain-language label shown in place of an
+// arrow when a commodity_impacts entry's direction_shown is "none". Mirrors
+// the five ImpactChannel values (packages/shared, itself mirroring apps/
+// backend's claude.service.ts) one to one — never guess a sixth label for an
+// unrecognized value, fall back to the same "Direction unclear" wording
+// "unclear" itself uses.
+export type { DirectionShown, ImpactChannel } from "@blue-beacon-research/shared";
+import type { ImpactChannel } from "@blue-beacon-research/shared";
+
+const IMPACT_CHANNEL_LABELS: Record<ImpactChannel, string> = {
+  supply_transit_risk: "Supply or shipping risk",
+  demand_macro: "Demand outlook",
+  opec_supply_news: "OPEC+ supply news",
+  policy_other: "Policy",
+  unclear: "Direction unclear",
+};
+
+/** Falls back to the "unclear" wording for any value outside the five known channels — never throws, never a blank label. */
+export function impactChannelLabel(impactChannel: string | null | undefined): string {
+  if (impactChannel && impactChannel in IMPACT_CHANNEL_LABELS) {
+    return IMPACT_CHANNEL_LABELS[impactChannel as ImpactChannel];
+  }
+  return IMPACT_CHANNEL_LABELS.unclear;
+}
+
 export function priceChangePercent(priceAtSignal: number, currentPrice: number): number {
   if (!Number.isFinite(priceAtSignal) || priceAtSignal === 0) return 0;
   return ((currentPrice - priceAtSignal) / priceAtSignal) * 100;

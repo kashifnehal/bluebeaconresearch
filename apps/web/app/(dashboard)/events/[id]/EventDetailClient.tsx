@@ -393,7 +393,13 @@ export function EventDetailClient({ data }: { data: EventDetailResponse }) {
                       className="flex items-center gap-3 p-3 rounded-lg bg-surface/20 border"
                       style={{ borderColor: "var(--border-subtle)" }}
                     >
-                      <CommodityChip asset={c.asset} direction={c.direction} confidence={c.confidence} />
+                      <CommodityChip
+                        asset={c.asset}
+                        direction={c.direction}
+                        confidence={c.confidence}
+                        directionShown={c.direction_shown}
+                        impactChannel={signal.impactChannel}
+                      />
                       <p className="text-xs text-text-secondary">
                         {c.asset} — {c.direction} — flagged from this{" "}
                         {eventTypeLabel(signal.eventType).toLowerCase()} signal in{" "}
@@ -431,7 +437,13 @@ export function EventDetailClient({ data }: { data: EventDetailResponse }) {
                     </div>
                     <div className="flex gap-2">
                       {h.commodityImpacts.slice(0, 2).map((c) => (
-                        <CommodityChip key={c.asset} asset={c.asset} direction={c.direction} confidence={c.confidence} />
+                        <CommodityChip
+                          key={c.asset}
+                          asset={c.asset}
+                          direction={c.direction}
+                          confidence={c.confidence}
+                          directionShown={c.direction_shown}
+                        />
                       ))}
                     </div>
                   </a>
