@@ -19,18 +19,29 @@ export type CalendarEvent = {
 type CalendarFile = { events: CalendarEvent[] };
 
 let cachedEvents: CalendarEvent[] | null = null;
+let warnedMissingCalendar = false;
 
 function loadCalendarEvents(): CalendarEvent[] {
   if (cachedEvents) return cachedEvents;
-  const raw = readFileSync(CALENDAR_PATH, "utf8");
-  const parsed = JSON.parse(raw) as CalendarFile;
-  cachedEvents = Array.isArray(parsed.events) ? parsed.events : [];
+  try {
+    const raw = readFileSync(CALENDAR_PATH, "utf8");
+    const parsed = JSON.parse(raw) as CalendarFile;
+    cachedEvents = Array.isArray(parsed.events) ? parsed.events : [];
+  } catch (err) {
+    if (!warnedMissingCalendar) {
+      warnedMissingCalendar = true;
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(`[week-ahead] could not read calendar file at ${CALENDAR_PATH}: ${message}`);
+    }
+    cachedEvents = [];
+  }
   return cachedEvents;
 }
 
 /** Test-only: forces the next call to re-read the calendar file from disk. */
 export function __resetWeekAheadCacheForTests(): void {
   cachedEvents = null;
+  warnedMissingCalendar = false;
 }
 
 // Same category -> asset mapping as apps/web/lib/calendar-filters.ts's

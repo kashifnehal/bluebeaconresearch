@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — Monday digest's "week ahead" section fixed: the calendar file never reached the deployed build (TASK HEALTH-2 Part 1, `apps/backend`, `this commit`)
+
+The backend's build step only compiled `.ts` files, so the calendar data file the Monday digest reads was never actually present in the deployed image — confirmed from two real Sentry errors, both on a Monday send. This was true from the day the feature shipped; not a regression. Fixed with a build-time copy step (same pattern already used elsewhere in this repo for copying static files into a build output), and a still-missing file now degrades to "no week-ahead section" instead of ever being able to throw. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — NYT Business dropped from the RSS feed list (TASK NQW3-FILTER1 Part 7, `apps/backend`, `this commit`)
 
 The New York Times' own terms forbid using its content to train or ground AI models without written permission, and this pipeline classifies every item with one. Removed the feed; no stored history is deleted. Feed count by tier is now world 6, official 8, finance 13 (27 total, was 28). Full technical record: `docs/brain/14_CHANGELOG.md`.

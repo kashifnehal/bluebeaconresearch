@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync, renameSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
@@ -123,6 +123,38 @@ runTest("weeklyRhythmLines returns the five fixed recurring lines", () => {
   assert.ok(lines.some((l) => /EIA Weekly Natural Gas Storage Report/.test(l)));
   assert.ok(lines.some((l) => /Commitments of Traders/.test(l)));
   assert.ok(lines.some((l) => /Baker Hughes/.test(l)));
+});
+
+runTest("loadCalendarEvents reads real events from the real on-disk calendar file (no mocked path)", () => {
+  __resetWeekAheadCacheForTests();
+  const result = weekAheadFor(["USOIL"], new Date("2026-11-02T06:00:00Z"));
+  assert.ok(result.length > 0, "expected at least one real event from the on-disk calendar file");
+});
+
+runTest("a missing calendar file returns an empty list, logs once, and a second call does not log again", () => {
+  const realPath = resolve(__dirname, "../data/economic-calendar.json");
+  const movedPath = `${realPath}.movedfortest`;
+  assert.ok(existsSync(realPath), "expected the real calendar file to exist before moving it");
+  renameSync(realPath, movedPath);
+  const originalWarn = console.warn;
+  const warnCalls: unknown[][] = [];
+  console.warn = (...args: unknown[]) => {
+    warnCalls.push(args);
+  };
+  try {
+    __resetWeekAheadCacheForTests();
+    const first = weekAheadFor(["USOIL"], new Date("2026-11-02T06:00:00Z"));
+    assert.deepEqual(first, [], "missing calendar file should yield an empty event list, not throw");
+    assert.equal(warnCalls.length, 1, "expected exactly one warn on the first failed read");
+
+    const second = weekAheadFor(["USOIL"], new Date("2026-11-02T06:00:00Z"));
+    assert.deepEqual(second, [], "cached empty result should still be returned");
+    assert.equal(warnCalls.length, 1, "a second call must not log again");
+  } finally {
+    console.warn = originalWarn;
+    renameSync(movedPath, realPath);
+    __resetWeekAheadCacheForTests();
+  }
 });
 
 if (failed) process.exit(1);

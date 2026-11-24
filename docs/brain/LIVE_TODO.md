@@ -3,6 +3,14 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ TASK HEALTH-2 Part 1 — Monday digest's week-ahead calendar section fixed, `apps/backend`, 2026-11-24, `this commit`
+
+- Sentry NODE-12 (2 events, both Mondays: 2026-11-09 06:00:01 UTC and 2026-11-23 06:00:02 UTC) traced to `apps/backend/tsconfig.json`'s `include: ["src/**/*.ts"]` never copying `src/data/economic-calendar.json` into `dist/data/`, where the compiled `week-ahead.js` reads it. Never worked in production since the feature shipped 2026-10-27 — not a regression.
+- Fix: new `scripts/copy-data-assets.mjs` + a `prebuild` hook in `package.json` (same pattern as `apps/web`'s existing `copy-maplibre-assets.mjs`/`sync-calendar-data.mjs`). `loadCalendarEvents()` also now warns once per process and returns `[]` instead of throwing if the file is ever still missing.
+- Both 2026-11-09 and 2026-11-23 Monday digests sent without their week-ahead section — nothing to redo, listed for the record.
+- Tests: `week-ahead.test.ts` +2 (real-file load, missing-file-warns-once); separate manual-run build-verification script `scripts/verify-build-copies-calendar.ts` (not in the `test` chain) confirmed a real `pnpm run build` now produces `dist/data/economic-calendar.json`.
+- Checked: backend `tsc --noEmit` exit 0; full chain 808 ✔ / 0 ✖.
+
 ## ⚪ TASK NQW3-FILTER1 in progress — oil direction-label filter review + exclude-word audit, `apps/backend`/`apps/web`, 2026-11-24, `this commit`
 
 - Part 1 (report-only, no code change): mapped the classifier prompt/schema (`claude.service.ts` `buildClassifyReturnSpec`/`classifyEvent`), confirmed `direction` itself has no runtime allowlist check (unlike asset/eventCategory/sourceConfirmation, which do), and traced `commodity_impacts` writes to `acled-collector.ts`, `signal-merge.ts`, `reconciliation.ts`, `ai-classifier.ts`. Checked 3 named production signal pairs against `signal-merge.ts`'s `findMergeCandidate` (live query, `evavcgfmemwryggdkjmx`) — found concrete, data-grounded reasons each failed to merge (region-string mismatch, country conflict, low summary-Jaccard from un-stemmed word forms). Checked the named BoE pair: only 1 of the claimed 2 raw_events rows actually matches by title (noted as a discrepancy, not corrected); that one row's `materiality_checked_at` is null and lines up exactly with a live `anthropic`/`classifyEvent` usage-limit error in `service_health_events` at the same timestamp — the row was deferred, never a materiality rejection, and the credit-balance pause (confirmed still open, regain date 2026-12-01) predates the 2026-11-18 incident timestamp quoted in the Part 10 task evidence by at least 13 days. Full writeup in the session's final report, not duplicated here per the "deep research stays out of this repo" rule.
