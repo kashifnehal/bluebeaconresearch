@@ -1,6 +1,8 @@
 # 08_CURRENT_STATUS.md — Repository Status & System Audit Matrix
 
-> **📍 Doc status — live status banners as of 2026-11-24 (TASK CAL-REFRESH-DRIVER-CSV — calendar extended through 2027-03-31, driver-chart CSV export added — see the two banners immediately below).**
+> **📍 Doc status — live status banners as of 2026-11-24 (TASK NQW3-FILTER1 complete, Parts 1-10 — see the banner immediately below).**
+
+> ⚠️ NEW 2026-11-24 (TASK NQW3-FILTER1 complete, Parts 1-10, `apps/backend` + `apps/web`) — reviewed why the model's up/down call carried no usable signal for oil and fixed two filter bugs. New off-by-default flags only (`CLASSIFIER_DIRECTION_V3`, `NEXT_PUBLIC_DIRECTION_V3`, `EXCLUDE_TITLE_ONLY`) — nothing changes for any user today. Removed the NYT Business RSS feed (their terms forbid AI use of their content). Added required credit lines for official sources and GDELT on the event page. Two new read-only measurement tools built, not run against production. The classifier's pause after an Anthropic usage-limit error now tests itself once an hour instead of only resuming passively. Full detail: `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`.
 
 > ⚠️ NEW 2026-11-24 (TASK CAL-REFRESH-DRIVER-CSV Part 2, `apps/web` only, `5fb6703`) — the watchlist symbol page's signal-drivers chart gained an "Export chart data (CSV)" button (date/category/count only, including hidden-legend series). See `docs/brain/08_CURRENT_STATUS.md`, `docs/brain/LIVE_TODO.md`, `docs/claude_project/06_COMPONENTS.md`.
 

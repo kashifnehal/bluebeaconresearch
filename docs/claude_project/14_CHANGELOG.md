@@ -28,6 +28,10 @@ A homepage stats query's error log printed "[object Object]" instead of a readab
 
 The backend's build step only compiled `.ts` files, so the calendar data file the Monday digest reads was never actually present in the deployed image — confirmed from two real Sentry errors, both on a Monday send. This was true from the day the feature shipped; not a regression. Fixed with a build-time copy step (same pattern already used elsewhere in this repo for copying static files into a build output), and a still-missing file now degrades to "no week-ahead section" instead of ever being able to throw. Full technical record: `docs/brain/14_CHANGELOG.md`.
 
+## 2026-11-24 — The classifier's pause after an Anthropic usage-limit error now tests itself (TASK NQW3-FILTER1 Part 10, `apps/backend`, `this commit`)
+
+Since the 2026-11-18 Anthropic usage-limit error, the pipeline has been pausing classification and relying on real traffic to accidentally retry it. Added a deliberate, cheap check — at most once an hour while paused — that actually tests whether access has come back, and closes the pause immediately once it has, without touching the daily spend cap or any alert. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — Release-coverage measurement tool (TASK NQW3-FILTER1 Part 9, `apps/backend`, `this commit`)
 
 Before building any monitor, measured whether scheduled releases (Fed, ECB, BoJ, RBI, US CPI, EIA weekly) actually turn into a signal and how fast. Found the stored calendar data has no entries at all for the Bank of England or the US Producer Price Index — so neither can be measured yet without someone adding real sourced dates for them first. New read-only report, not run against production this task. Full technical record: `docs/brain/14_CHANGELOG.md`.

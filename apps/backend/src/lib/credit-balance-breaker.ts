@@ -22,6 +22,20 @@ let pauseMs = 30 * 60 * 1000; // fallback when no "regain access" date is found 
 let recheckMs = 6 * 60 * 60 * 1000; // cap on a dated pause before one live call is let through again — arbitrary choice, not researched.
 let breakerOpenUntil: number | null = null;
 
+// TASK NQW3-FILTER1 Part 10 (2026-11-24) — the breaker's existing recheckMs
+// cap only lets a live call through again once recheckMs has fully elapsed,
+// AND only if a real event happens to be in flight at that moment (there is
+// no dedicated test call) — on a dated multi-week pause (this one regains
+// access 2026-12-01) that is a live attempt roughly every 6h, not a cheap
+// probe, and one that silently never happens at all on a quiet cycle. This
+// adds an explicit, cheap probe path: while paused, at most one
+// classifyEvent() call per PROBE_INTERVAL_MS is allowed through as a
+// deliberate probe (gated by canAttemptProbe()/recordProbeAttempt() below),
+// independent of the recheckMs/dated-pause window. 60 minutes is a working
+// choice for this task, not a researched value — no outside source sets it.
+let probeIntervalMs = 60 * 60 * 1000;
+let lastProbeAttemptAt: number | null = null;
+
 export function setCreditBalanceBreakerPauseMsForTests(ms: number): void {
   pauseMs = ms;
 }
@@ -30,10 +44,16 @@ export function setCreditBalanceBreakerRecheckMsForTests(ms: number): void {
   recheckMs = ms;
 }
 
+export function setCreditBalanceBreakerProbeIntervalMsForTests(ms: number): void {
+  probeIntervalMs = ms;
+}
+
 export function resetCreditBalanceBreakerForTests(): void {
   breakerOpenUntil = null;
   pauseMs = 30 * 60 * 1000;
   recheckMs = 6 * 60 * 60 * 1000;
+  probeIntervalMs = 60 * 60 * 1000;
+  lastProbeAttemptAt = null;
 }
 
 export function isCreditBalanceBreakerOpen(now: number = Date.now()): boolean {
@@ -78,6 +98,13 @@ export function openCreditBalanceBreaker(
   const resumeAt = parseRegainAccessTime(message, now);
   const windowMs = resumeAt !== null ? Math.min(resumeAt - now, recheckMs) : pauseMs;
   breakerOpenUntil = now + windowMs;
+  // TASK NQW3-FILTER1 Part 10 — every open (the first one, and a probe that
+  // just failed) counts as using up this moment's probe slot, so the NEXT
+  // probe is only allowed PROBE_INTERVAL_MS after this failure, not
+  // immediately on the very next call — otherwise a second event arriving
+  // seconds after the first failure would itself be let through as a
+  // "probe" instead of being deferred like every other call in between.
+  lastProbeAttemptAt = now;
   return !alreadyOpen;
 }
 
@@ -96,5 +123,28 @@ export function closeCreditBalanceBreakerIfExpired(now: number = Date.now()): bo
   if (breakerOpenUntil === null) return false;
   if (now < breakerOpenUntil) return false;
   breakerOpenUntil = null;
+  lastProbeAttemptAt = null;
   return true;
+}
+
+/**
+ * True only while the breaker is open AND at least PROBE_INTERVAL_MS has
+ * passed since the last probe attempt (or none has ever been made). Does
+ * NOT itself record the attempt — call recordProbeAttempt() before making
+ * the actual live call, so a slow or concurrent call can't let two probes
+ * through inside the same interval.
+ */
+export function canAttemptProbe(now: number = Date.now()): boolean {
+  if (!isCreditBalanceBreakerOpen(now)) return false;
+  return lastProbeAttemptAt === null || now - lastProbeAttemptAt >= probeIntervalMs;
+}
+
+export function recordProbeAttempt(now: number = Date.now()): void {
+  lastProbeAttemptAt = now;
+}
+
+/** Call only after a probe attempt's live call actually succeeded. Fully clears the breaker, including the probe timer, so the next real failure starts a fresh pause. */
+export function closeCreditBalanceBreakerAfterProbe(): void {
+  breakerOpenUntil = null;
+  lastProbeAttemptAt = null;
 }

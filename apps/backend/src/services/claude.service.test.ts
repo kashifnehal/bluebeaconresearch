@@ -20,6 +20,7 @@ import {
   resetCreditBalanceBreakerForTests,
   setCreditBalanceBreakerPauseMsForTests,
   setCreditBalanceBreakerRecheckMsForTests,
+  setCreditBalanceBreakerProbeIntervalMsForTests,
   openCreditBalanceBreaker,
 } from "../lib/credit-balance-breaker.js";
 
@@ -1976,6 +1977,179 @@ async function main() {
       assert.strictEqual(callCount, 2, "exactly one re-check call once the (shortened) re-check window elapses");
       assert.strictEqual(third.deferReason, "credit_balance_paused", "still failing, so the breaker reopens");
     } finally {
+      resetCreditBalanceBreakerForTests();
+    }
+  },
+  );
+
+  await runTest(
+  "TASK NQW3-FILTER1 Part 10: paused state makes no live call inside the 60-minute probe interval, even on a dated multi-week pause",
+  async () => {
+    resetCreditBalanceBreakerForTests();
+    setCreditBalanceBreakerProbeIntervalMsForTests(50);
+    setCreditBalanceBreakerRecheckMsForTests(10_000); // outlast the shortened probe interval
+    try {
+      let callCount = 0;
+      const probeService = new ClaudeService();
+      const farFuture = new Date(Date.now() + 17 * 24 * 60 * 60 * 1000);
+      const dated = `regain access on ${farFuture.toISOString().slice(0, 10)} at 00:00 UTC`;
+      (probeService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            const err: any = new Error(
+              `You have reached your specified API usage limits. You will ${dated}.`,
+            );
+            err.status = 400;
+            throw err;
+          },
+        },
+      };
+      const event = {
+        title: "War erupts as crude pipeline explosion halts oil exports",
+        summary: "Escalating conflict disrupts Red Sea crude shipments.",
+        event_type: "news",
+        country: "SA",
+        event_date: new Date().toISOString(),
+      };
+
+      const first = await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 1, "first call hits the live API and opens the breaker");
+      assert.strictEqual(first.deferReason, "credit_balance_paused");
+
+      const second = await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 1, "well inside the 50ms probe interval — no live call, not even a probe");
+      assert.strictEqual(second.deferReason, "credit_balance_paused");
+    } finally {
+      resetCreditBalanceBreakerForTests();
+    }
+  },
+  );
+
+  await runTest(
+  "TASK NQW3-FILTER1 Part 10: one probe after the interval elapses; a failing probe keeps the breaker open",
+  async () => {
+    resetCreditBalanceBreakerForTests();
+    setCreditBalanceBreakerProbeIntervalMsForTests(50);
+    setCreditBalanceBreakerRecheckMsForTests(10_000);
+    try {
+      let callCount = 0;
+      const probeService = new ClaudeService();
+      const farFuture = new Date(Date.now() + 17 * 24 * 60 * 60 * 1000);
+      const dated = `regain access on ${farFuture.toISOString().slice(0, 10)} at 00:00 UTC`;
+      (probeService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            const err: any = new Error(
+              `You have reached your specified API usage limits. You will ${dated}.`,
+            );
+            err.status = 400;
+            throw err;
+          },
+        },
+      };
+      const event = {
+        title: "War erupts as crude pipeline explosion halts oil exports",
+        summary: "Escalating conflict disrupts Red Sea crude shipments.",
+        event_type: "news",
+        country: "SA",
+        event_date: new Date().toISOString(),
+      };
+
+      await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 1, "first call opens the breaker");
+
+      await new Promise((resolve) => setTimeout(resolve, 70));
+
+      const probeResult = await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 2, "exactly one probe call once the interval has elapsed");
+      assert.strictEqual(probeResult.deferReason, "credit_balance_paused", "the probe itself failed, same error");
+
+      const right_after = await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 2, "the failed probe keeps the breaker open — no further live call right after");
+      assert.strictEqual(right_after.deferReason, "credit_balance_paused");
+    } finally {
+      resetCreditBalanceBreakerForTests();
+    }
+  },
+  );
+
+  await runTest(
+  "TASK NQW3-FILTER1 Part 10: a successful probe closes the breaker and the next call hits the live API normally",
+  async () => {
+    resetCreditBalanceBreakerForTests();
+    setCreditBalanceBreakerProbeIntervalMsForTests(50);
+    setCreditBalanceBreakerRecheckMsForTests(10_000);
+    const consoleLogs: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => {
+      consoleLogs.push(args.map(String).join(" "));
+    };
+    try {
+      let callCount = 0;
+      let shouldFail = true;
+      const probeService = new ClaudeService();
+      const farFuture = new Date(Date.now() + 17 * 24 * 60 * 60 * 1000);
+      const dated = `regain access on ${farFuture.toISOString().slice(0, 10)} at 00:00 UTC`;
+      (probeService as unknown as { client: unknown }).client = {
+        messages: {
+          create: async () => {
+            callCount += 1;
+            if (shouldFail) {
+              const err: any = new Error(
+                `You have reached your specified API usage limits. You will ${dated}.`,
+              );
+              err.status = 400;
+              throw err;
+            }
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify({
+                    severity: 3,
+                    confidence: 0.5,
+                    commodityImpacts: [],
+                    currencyPairImpacts: [],
+                    isBreaking: false,
+                    summary: "Resumed after probe",
+                    region: "global",
+                    materialityPass: false,
+                    materialityReasoning: "no mechanism",
+                  }),
+                },
+              ],
+              usage: { input_tokens: 5, output_tokens: 5 },
+            };
+          },
+        },
+      };
+      const event = {
+        title: "War erupts as crude pipeline explosion halts oil exports",
+        summary: "Escalating conflict disrupts Red Sea crude shipments.",
+        event_type: "news",
+        country: "SA",
+        event_date: new Date().toISOString(),
+      };
+
+      await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 1, "first call opens the breaker");
+
+      await new Promise((resolve) => setTimeout(resolve, 70));
+      shouldFail = false; // the probe itself succeeds
+      const probeResult = await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 2, "the probe call reaches the live API");
+      assert.strictEqual(probeResult.deferred, undefined, "a successful probe returns a real classification, not deferred");
+      assert.ok(
+        consoleLogs.some((l) => l.includes("credit breaker closed after probe")),
+        "expected the exact required log line",
+      );
+
+      const afterClose = await probeService.classifyEvent(event);
+      assert.strictEqual(callCount, 3, "breaker is fully closed — the next call hits the live API normally, not gated as a probe");
+    } finally {
+      console.log = originalLog;
       resetCreditBalanceBreakerForTests();
     }
   },

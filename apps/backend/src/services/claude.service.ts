@@ -24,6 +24,10 @@ import {
   getCreditBalanceBreakerResumeAt,
   isCreditBalanceBreakerOpen,
   openCreditBalanceBreaker,
+  canAttemptProbe,
+  recordProbeAttempt,
+  closeCreditBalanceBreakerAfterProbe,
+  parseRegainAccessTime,
 } from "../lib/credit-balance-breaker.js";
 import {
   formatWatchlistPromptBlock,
@@ -659,6 +663,13 @@ export class ClaudeService {
     // still within its pause window, instead of hitting the API again on every
     // event. Exactly one health event is logged for the resume (not one per
     // skipped call below).
+    // TASK NQW3-FILTER1 Part 10 (2026-11-24) — while paused, one real event
+    // per PROBE_INTERVAL_MS (credit-balance-breaker.ts) is deliberately let
+    // through as a probe instead of deferred, so the breaker can close itself
+    // on a genuine success rather than only ever retrying passively once the
+    // whole dated pause window elapses. `isProbeAttempt` carries that
+    // decision down to the success/failure branches below.
+    let isProbeAttempt = false;
     if (client) {
       if (closeCreditBalanceBreakerIfExpired()) {
         await recordServiceHealth(
@@ -668,10 +679,18 @@ export class ClaudeService {
           Date.now() - callStartedAt,
         );
       } else if (isCreditBalanceBreakerOpen()) {
-        console.log(
-          `[classify-fallback] reason=credit_balance_paused rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
-        );
-        return this.deferredClassification("credit_balance_paused");
+        if (canAttemptProbe()) {
+          isProbeAttempt = true;
+          recordProbeAttempt();
+          console.log(
+            `[classify-fallback] reason=credit_balance_paused rawEvent=${rawEvent.id ?? "unknown"} probe=true`,
+          );
+        } else {
+          console.log(
+            `[classify-fallback] reason=credit_balance_paused rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
+          );
+          return this.deferredClassification("credit_balance_paused");
+        }
       }
     }
 
@@ -869,6 +888,20 @@ export class ClaudeService {
           usageLimitAlertedLocally = false;
         }
 
+        // TASK NQW3-FILTER1 Part 10 — a probe that reaches this success path
+        // closes the breaker immediately, rather than waiting out the rest
+        // of the dated pause window.
+        if (isProbeAttempt) {
+          closeCreditBalanceBreakerAfterProbe();
+          console.log("credit breaker closed after probe");
+          await recordServiceHealth(
+            "anthropic",
+            "ok",
+            "classifyEvent: credit breaker closed after probe",
+            Date.now() - callStartedAt,
+          );
+        }
+
         // Gate-shadow experiment (w16b) — fire-and-forget, never awaited, and
         // the LIVE verdict above has already been fully recorded. See
         // gate-shadow.ts for what this does and why it can never affect
@@ -981,6 +1014,19 @@ export class ClaudeService {
         // breaker opens, so only one extra health event is logged for the pause
         // start, not one per failed call while the breaker stays open.
         if (isAnthropicUsageLimitError(err?.message)) {
+          // TASK NQW3-FILTER1 Part 10 — a failed probe keeps the breaker open:
+          // openCreditBalanceBreaker() below always re-sets breakerOpenUntil
+          // (whether this is the first open or a probe re-confirming the
+          // condition still holds), so no separate "stay open" call is needed.
+          // Logged here, once per failed call that names this date, regardless
+          // of whether this was the very first open (which also gets its own
+          // "breaker opened" health event below) or a later probe failure.
+          const regainAccessAt = parseRegainAccessTime(err?.message, callStartedAt);
+          if (regainAccessAt !== null) {
+            console.log(
+              `[credit-balance-breaker] regain access at ${new Date(regainAccessAt).toISOString()}`,
+            );
+          }
           if (openCreditBalanceBreaker(err?.message)) {
             const resumeAt = getCreditBalanceBreakerResumeAt();
             const resumeAtText = resumeAt !== null ? new Date(resumeAt).toISOString() : "unknown";
@@ -992,7 +1038,7 @@ export class ClaudeService {
             );
           }
           console.log(
-            `[classify-fallback] reason=credit_balance_paused rawEvent=${rawEvent.id ?? "unknown"} deferred=true`,
+            `[classify-fallback] reason=credit_balance_paused rawEvent=${rawEvent.id ?? "unknown"} deferred=true${isProbeAttempt ? " probe_failed=true" : ""}`,
           );
           return this.deferredClassification("credit_balance_paused");
         }
