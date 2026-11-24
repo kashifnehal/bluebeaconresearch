@@ -10,7 +10,32 @@ This document records historic development milestones, schema evolutions, featur
 
 ## Milestone Evolution & Historical Log
 
-## 2026-11-24 — signal-count-cache's "[object Object]" log line now prints a real reason (TASK HEALTH-2 Part 2, `apps/web`, `this commit`)
+## 2026-11-24 — gate-drift's Sunday statement-timeout now retries once; cron list confirms heavy overlap at 06:00 UTC Sunday (TASK HEALTH-2 Part 3, `apps/backend`, `this commit`)
+
+Sentry issue NODE-T: "canceling statement due to statement timeout" (Postgres 57014), 4 events, all Sundays at 06:00 UTC (2026-10-25, 2026-11-15, 2026-11-22), stack `workers.js:358 runGateDriftOnce -> lib/gate-drift.js buildGateWeeklyReport -> weekNumbers -> checkedIn:67` (the `raw_events.materiality_checked_at` range read). `EXPLAIN ANALYZE` of the same filter on 2026-11-24 measured only 288ms (Seq Scan, 33,544 rows scanned, 385 returned, 3,760 buffers) — far from a timeout on its own, so the real cause is still not proven. Read-only cron audit (`git grep -n "cron.schedule" apps/backend/src`, full table below) found 7 other jobs that can also start in the 05:55-06:10 UTC Sunday window the gate-drift job runs in, on the same small Free-plan database — the task's candidate theory (unproven, not changed this task: no index added, no schedule moved). Reviewed `gate-drift.ts`'s 3 reads (`checkedIn`, `signalsIn`, `rejectionRows`): each already selects exactly the columns the code uses (`id, title` / `raw_event_ids, event_category` / `detail, raw_event_id` with a `detail`-only fallback) — no column reduction was needed or made. Added: a statement-timeout-only retry (Postgres code `57014`, or a message containing "statement timeout") wrapping each of the 3 reads — one retry, 5 minutes later (working choice, stated as an engineering choice in the code comment, not researched), via an injectable `sleep` function so tests never actually wait; any other error type is not retried; a persisted timeout after the retry logs one `console.warn` and lets the existing throw/catch in `workers.ts`'s cron handler skip the report exactly as it does for any other gate-drift failure today — no change to that catch. New exported `withStatementTimeoutRetry()`/`isStatementTimeoutError()`/`STATEMENT_TIMEOUT_RETRY_DELAY_MS` in `gate-drift.ts`. 4 new tests in `gate-drift.test.ts` (retried-once-then-succeeds; two timeouts give up without throwing — the retry helper itself never throws, only the caller's existing `if (error) throw` does, unchanged; a non-timeout error isn't retried; the delay goes through the injected sleep, proven by real elapsed time under 1s). Checked: `cd apps/backend && npx tsc --noEmit` exit 0; full backend chain 826 passed, 0 failed.
+
+Cron schedule audit (apps/backend/src/workers.ts), marking anything that can start between 05:55 and 06:10 UTC on a Sunday:
+
+| Job | Schedule (default) | In the 05:55-06:10 UTC Sunday window? |
+|---|---|---|
+| price-sync | `*/15 * * * *` | **Yes** (06:00) |
+| ingestion-cycle + acled-collector | `*/30 * * * *` | **Yes** (06:00) |
+| reconciliation + category-guard | `*/30 * * * *` | **Yes** (06:00) |
+| digest-sender | `DIGEST_CRON`, default `0 6 * * *` | **Yes** (06:00, every day incl. Sunday) |
+| retention-jobs | `0 3 * * 0` | No (Sun 03:00) |
+| service_health_events retention | `17 3 * * 0` | No (Sun 03:17) |
+| **gate-drift** (this job) | `0 6 * * 0` | **Yes** (06:00 Sunday — itself) |
+| outcome-tracker | `0 5 * * *` | No (05:00) |
+| monthly-spend-warning | `10 * * * *` | **Yes** (06:10, edge of window) |
+| ops-alert (collection-stalled/budget/category-guard) | `OPS_ALERT_CRON`, default `*/15 * * * *` | **Yes** (06:00) |
+| signal-silence check | `SIGNAL_SILENCE_CRON`, default `10 */6 * * *` | **Yes** (06:10, edge of window) |
+| db-health-check | `DB_HEALTH_CRON`, default `*/5 * * * *` | **Yes** (runs every 5 min, always in window) |
+| cot-collector | `COT_CRON`, default `30 6 * * *` | No (06:30) |
+| eia-weekly | `EIA_CRON`, default `*/30 14-21 * * 3,4,5` | No (Wed/Thu/Fri only) |
+| sanctions-sync | `0 4 * * *` | No (04:00) |
+| heartbeat (+ reactive Redis-quota check) | `*/5 * * * *` | **Yes** (runs every 5 min, always in window) |
+
+
 
 Vercel runtime errors (7 days to 2026-11-24, route `/`, 8 events 2026-11-18 to 2026-11-23, deployment `74d8a5a`): `[signal-count-cache] total-signal-count query failed: [object Object]`. Cause: postgrest-js rejects with a plain `{ message, details, hint, code }` object, not an `Error` instance, so `lib/signal-count-cache.ts`'s existing `err instanceof Error ? ... : String(err)` branch always fell to `String(err)` → `"[object Object]"` for this shape — the underlying value was actually `{ message: "TimeoutError: The operation was aborted due to timeout", details: "", hint: "", code: "" }`, i.e. the existing 4000ms timeout (added in an earlier task) was working correctly and the page's fallback was already in effect; only the log line was unreadable. `EXPLAIN ANALYZE` of `select count(*) from signals` on 2026-11-24 confirmed the query itself is fast when the database is healthy (1.7ms, 4,616 rows) — not touched, no change to the query/limit/cache. Added a new exported `describeThrownValue(err, timeoutMs?)` in the same file: an `Error` returns its message; an object or `Error` whose name is `AbortError`/`TimeoutError` or whose message contains "aborted due to timeout" returns `"timed out after <HOMEPAGE_DB_TIMEOUT_MS>ms"`; a plain object with `message` or `details` returns that string; anything else (including a circular object, via a try/catch around `JSON.stringify`) returns `JSON.stringify` capped at 200 characters; `null`/`undefined` returns `"unknown error"`. Wired into the one catch block that had the bug. The other three `console.error(..., err)` call sites the same `git grep -n "query failed" apps/web/lib` turned up (`lib/homepage-stats.ts:36`, `lib/how-it-works-stats.ts:61/74/128/179`) all pass the error as a separate `console.error` argument rather than a string interpolation, so Node's multi-arg `console.error` already `util.inspect`s the full object instead of stringifying it to `"[object Object]"` — left unchanged, not the same bug, out of this part's scope. 8 new unit tests in `signal-count-cache.test.ts` (no render needed — no user-visible text changed), appended to the existing chain entry (file was already registered). Checked: `pnpm --filter web exec tsc --noEmit` exit 0; `pnpm --filter web test` 941 passed/0 failed; `pnpm --filter web exec next build` exit 0.
 

@@ -3,6 +3,15 @@
 Status icons: 🔴 blocking · 🟡 ready · ⚪ not started · 🤔 needs founder decision · ✅ done, verified.
 [founder-led] = founder's own action, no engineering needed.
 
+## ✅ TASK HEALTH-2 Part 3 — Sunday gate-drift report retries once on a statement timeout, `apps/backend`, 2026-11-24, `this commit`
+
+- Sentry NODE-T: 4 statement-timeout events, all Sundays 06:00 UTC. A live `EXPLAIN ANALYZE` of the same query measured only 288ms, so the cause is still unproven — cron audit found 7 other jobs (price-sync, ingestion, reconciliation, digest-sender, monthly-spend-warning, ops-alert, signal-silence, db-health, heartbeat) that can also fire in the same 05:55-06:10 UTC Sunday window on the same small database. Full table in `14_CHANGELOG.md`.
+- Reviewed `gate-drift.ts`'s 3 reads — each already selects only the columns the code uses; no reduction needed.
+- Added a statement-timeout-only (Postgres 57014) retry, once, 5 minutes later (injectable sleep for tests), around each of the 3 reads. Any other error is unretried. A persisted timeout logs one warn and lets the existing cron-handler catch skip the report, same as today.
+- No index added, no schedule changed, per the task's explicit constraint.
+- Tests: 4 new in `gate-drift.test.ts` (retry-then-succeed, two-timeouts-give-up-without-throwing, non-timeout-not-retried, injected-sleep-not-real-timer).
+- Checked: backend `tsc --noEmit` exit 0; full chain 826 ✔ / 0 ✖.
+
 ## ✅ TASK HEALTH-2 Part 2 — signal-count-cache's "[object Object]" log line fixed, `apps/web`, 2026-11-24, `this commit`
 
 - Vercel runtime errors showed `[signal-count-cache] total-signal-count query failed: [object Object]` (8 events, 2026-11-18 to 2026-11-23, route `/`). The underlying thrown value is a plain `{message, details, hint, code}` object (postgrest-js), not an `Error`, so the old `String(err)` fallback always produced `"[object Object]"`. Real cause underneath: a genuine timeout — the existing 4000ms limit and fallback were already working correctly; only the log text was unreadable.

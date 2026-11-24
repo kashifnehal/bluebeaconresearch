@@ -8,6 +8,10 @@
 
 ---
 
+## 2026-11-24 — Sunday's gate-drift report now retries once on a database timeout (TASK HEALTH-2 Part 3, `apps/backend`, `this commit`)
+
+A weekly internal report job was timing out every few weeks, always on a Sunday at the same hour — an audit found at least 7 other scheduled jobs that can also run in that same few-minute window on the small production database, a plausible but unproven cause. No index or schedule change made (out of scope this task). The report's three database reads now retry once, 5 minutes later, specifically for a statement-timeout error (never for other error types); if the timeout persists it skips the report for that week, exactly as any failure already does today. Full technical record, including the full cron-schedule audit table: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — A confusing "[object Object]" error log now shows the real reason (TASK HEALTH-2 Part 2, `apps/web`, `this commit`)
 
 A homepage stats query's error log printed "[object Object]" instead of a readable reason, because the database client's error shape isn't a normal `Error`. The query itself and its existing timeout were already working as designed (confirmed: it really was a timeout, not a broken query) — only the log text was unreadable. No user-visible change; the fix is a small helper that turns any thrown value into a short, readable string for logging. Full technical record: `docs/brain/14_CHANGELOG.md`.

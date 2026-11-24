@@ -5,7 +5,12 @@ process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY || "test-supabase-role-key";
 process.env.NODE_ENV = "test";
 
-import { GATE_PASS_RATE_DEFINITION, runGateDriftOnce } from "./gate-drift.js";
+import {
+  GATE_PASS_RATE_DEFINITION,
+  runGateDriftOnce,
+  withStatementTimeoutRetry,
+  STATEMENT_TIMEOUT_RETRY_DELAY_MS,
+} from "./gate-drift.js";
 
 function runTest(name: string, fn: () => void | Promise<void>) {
   try {
@@ -304,6 +309,89 @@ async function main() {
     assert.equal(report.current.passByCategory.shipping_disruption, 101);
     assert.equal(report.current.passByCategory.null, 100);
     assert.deepEqual([...supabase.signalRanges].sort((a, b) => a - b), [0, 0, 200]);
+  });
+
+  await runTest("withStatementTimeoutRetry: a 57014 error is retried once and a success on the retry is returned", async () => {
+    let calls = 0;
+    const sleepCalls: number[] = [];
+    const result = await withStatementTimeoutRetry(
+      "test read",
+      () => {
+        calls += 1;
+        if (calls === 1) {
+          return Promise.resolve({ data: null, error: { code: "57014", message: "canceling statement due to statement timeout" } });
+        }
+        return Promise.resolve({ data: ["row"], error: null });
+      },
+      async (ms) => {
+        sleepCalls.push(ms);
+      },
+    );
+    assert.equal(calls, 2);
+    assert.deepEqual(result, { data: ["row"], error: null });
+    assert.deepEqual(sleepCalls, [STATEMENT_TIMEOUT_RETRY_DELAY_MS]);
+  });
+
+  await runTest("withStatementTimeoutRetry: two 57014 errors give up without throwing", async () => {
+    let calls = 0;
+    const sleepCalls: number[] = [];
+    const timeoutError = { code: "57014", message: "canceling statement due to statement timeout" };
+    const result = await withStatementTimeoutRetry(
+      "test read",
+      () => {
+        calls += 1;
+        return Promise.resolve({ data: null, error: timeoutError });
+      },
+      async (ms) => {
+        sleepCalls.push(ms);
+      },
+    );
+    assert.equal(calls, 2, "should try exactly twice (one retry), never a third time");
+    assert.deepEqual(result, { data: null, error: timeoutError });
+    assert.deepEqual(sleepCalls, [STATEMENT_TIMEOUT_RETRY_DELAY_MS], "retried exactly once, not repeatedly");
+  });
+
+  await runTest("withStatementTimeoutRetry: a different error is not retried", async () => {
+    let calls = 0;
+    const sleepCalls: number[] = [];
+    const otherError = { code: "42501", message: "permission denied for table raw_events" };
+    const result = await withStatementTimeoutRetry(
+      "test read",
+      () => {
+        calls += 1;
+        return Promise.resolve({ data: null, error: otherError });
+      },
+      async (ms) => {
+        sleepCalls.push(ms);
+      },
+    );
+    assert.equal(calls, 1, "a non-timeout error must not trigger a retry");
+    assert.deepEqual(result, { data: null, error: otherError });
+    assert.deepEqual(sleepCalls, []);
+  });
+
+  await runTest("withStatementTimeoutRetry: the retry delay uses the injected sleep, not a real timer", async () => {
+    let calls = 0;
+    let sleepArg: number | undefined;
+    const start = Date.now();
+    await withStatementTimeoutRetry(
+      "test read",
+      () => {
+        calls += 1;
+        if (calls === 1) {
+          return Promise.resolve({ data: null, error: { code: "57014", message: "statement timeout" } });
+        }
+        return Promise.resolve({ data: [], error: null });
+      },
+      async (ms) => {
+        sleepArg = ms;
+        // Deliberately does not actually wait — proves the real 5-minute
+        // delay is injected, not hardcoded with a real setTimeout.
+      },
+    );
+    const elapsedMs = Date.now() - start;
+    assert.equal(sleepArg, STATEMENT_TIMEOUT_RETRY_DELAY_MS);
+    assert.ok(elapsedMs < 1000, "the test must not actually wait 5 minutes");
   });
 }
 

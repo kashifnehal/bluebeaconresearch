@@ -23,6 +23,36 @@ const SAMPLE_SIZE = 20;
 const TITLE_MAX = 120;
 const PAGE = 200;
 
+// Working choice, not a researched value: retry a statement-timeout (Postgres
+// 57014) exactly once, 5 minutes later, in case it was transient contention
+// from another job running at the same time on the small Free-plan database.
+// Any other error is not retried.
+export const STATEMENT_TIMEOUT_RETRY_DELAY_MS = 5 * 60 * 1000;
+
+export type Sleep = (ms: number) => Promise<void>;
+const defaultSleep: Sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function isStatementTimeoutError(error: { code?: string; message?: string } | null | undefined): boolean {
+  if (!error) return false;
+  if (error.code === "57014") return true;
+  return typeof error.message === "string" && error.message.toLowerCase().includes("statement timeout");
+}
+
+export async function withStatementTimeoutRetry<T>(
+  label: string,
+  run: () => PromiseLike<{ data: T | null; error: { code?: string; message?: string } | null }>,
+  sleep: Sleep,
+): Promise<{ data: T | null; error: { code?: string; message?: string } | null }> {
+  const first = await run();
+  if (!first.error || !isStatementTimeoutError(first.error)) return first;
+  await sleep(STATEMENT_TIMEOUT_RETRY_DELAY_MS);
+  const second = await run();
+  if (second.error && isStatementTimeoutError(second.error)) {
+    console.warn(`[gate-drift] ${label}: statement timeout persisted after one retry — skipping this week's report`);
+  }
+  return second;
+}
+
 export const GATE_PASS_RATE_DEFINITION =
   "Passed is the number of signals created in the window that were made from at least one raw event. Rejected is the number of raw events with materiality_checked_at in the window that match a materiality_gate rejected health row. A prefilter skip stamps that column and writes no health row, so it is not counted. Judged is passed plus rejected. Pass rate is passed divided by judged, or null when judged is 0.";
 
@@ -99,26 +129,46 @@ function hasRawEvents(ids: string[] | null | undefined): boolean {
   return Array.isArray(ids) && ids.length > 0;
 }
 
-async function checkedIn(supabase: GateDriftSupabase, start: Date, end: Date): Promise<JudgedRow[]> {
-  const { data, error } = await supabase
-    .from("raw_events")
-    .select("id, title")
-    .gte("materiality_checked_at", start.toISOString())
-    .lt("materiality_checked_at", end.toISOString());
+async function checkedIn(
+  supabase: GateDriftSupabase,
+  start: Date,
+  end: Date,
+  sleep: Sleep,
+): Promise<JudgedRow[]> {
+  const { data, error } = await withStatementTimeoutRetry(
+    "raw_events read",
+    () =>
+      supabase
+        .from("raw_events")
+        .select("id, title")
+        .gte("materiality_checked_at", start.toISOString())
+        .lt("materiality_checked_at", end.toISOString()),
+    sleep,
+  );
   if (error) throw new Error(error.message ?? "raw_events read failed");
   return (data ?? []) as JudgedRow[];
 }
 
-async function signalsIn(supabase: GateDriftSupabase, start: Date, end: Date): Promise<SignalRow[]> {
+async function signalsIn(
+  supabase: GateDriftSupabase,
+  start: Date,
+  end: Date,
+  sleep: Sleep,
+): Promise<SignalRow[]> {
   const out: SignalRow[] = [];
   for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabase
-      .from("signals")
-      .select("raw_event_ids, event_category")
-      .gte("created_at", start.toISOString())
-      .lt("created_at", end.toISOString())
-      .order("created_at", { ascending: true })
-      .range(from, from + PAGE - 1);
+    const { data, error } = await withStatementTimeoutRetry(
+      "signals read",
+      () =>
+        supabase
+          .from("signals")
+          .select("raw_event_ids, event_category")
+          .gte("created_at", start.toISOString())
+          .lt("created_at", end.toISOString())
+          .order("created_at", { ascending: true })
+          .range(from, from + PAGE - 1),
+      sleep,
+    );
     if (error) throw new Error(error.message ?? "signals read failed");
     const rows = (data ?? []) as SignalRow[];
     out.push(...rows);
@@ -131,6 +181,7 @@ async function rejectionRows(
   supabase: GateDriftSupabase,
   start: Date,
   end: Date,
+  sleep: Sleep,
 ): Promise<ReasonRow[]> {
   const run = (columns: string) =>
     supabase
@@ -141,12 +192,12 @@ async function rejectionRows(
       .gte("created_at", start.toISOString())
       .lt("created_at", end.toISOString());
 
-  const first = await run("detail, raw_event_id");
+  const first = await withStatementTimeoutRetry("materiality_gate health read", () => run("detail, raw_event_id"), sleep);
   if (!first.error) return (first.data ?? []) as ReasonRow[];
   if (!missingRawEventIdColumn(first.error)) {
     throw new Error(first.error.message ?? "materiality_gate health read failed");
   }
-  const second = await run("detail");
+  const second = await withStatementTimeoutRetry("materiality_gate health read (fallback columns)", () => run("detail"), sleep);
   if (second.error) throw new Error(second.error.message ?? "materiality_gate health read failed");
   return (second.data ?? []) as ReasonRow[];
 }
@@ -200,11 +251,12 @@ async function weekNumbers(
   supabase: GateDriftSupabase,
   start: Date,
   end: Date,
+  sleep: Sleep,
 ): Promise<GateWeekNumbers & { rejectedRows: JudgedRow[]; reasons: ReasonRow[] }> {
   const [checked, signals, reasons] = await Promise.all([
-    checkedIn(supabase, start, end),
-    signalsIn(supabase, start, end),
-    rejectionRows(supabase, start, end),
+    checkedIn(supabase, start, end, sleep),
+    signalsIn(supabase, start, end, sleep),
+    rejectionRows(supabase, start, end, sleep),
   ]);
   const rejectedRows = matchRejections(checked, reasons);
   return { ...summarize(signals, rejectedRows), reasons };
@@ -213,13 +265,14 @@ async function weekNumbers(
 export async function buildGateWeeklyReport(
   supabase: GateDriftSupabase,
   weekEnd: Date,
+  sleep: Sleep = defaultSleep,
 ): Promise<GateWeeklyReport> {
   const currentStart = new Date(weekEnd.getTime() - WEEK_MS);
   const previousStart = new Date(weekEnd.getTime() - 2 * WEEK_MS);
 
   const [current, previous] = await Promise.all([
-    weekNumbers(supabase, currentStart, weekEnd),
-    weekNumbers(supabase, previousStart, currentStart),
+    weekNumbers(supabase, currentStart, weekEnd, sleep),
+    weekNumbers(supabase, previousStart, currentStart, sleep),
   ]);
 
   const rejectedSample = sampleItems(current.rejectedRows, SAMPLE_SIZE).map((row) => {
@@ -262,8 +315,9 @@ export async function buildGateWeeklyReport(
 export async function runGateDriftOnce(
   supabase: GateDriftSupabase,
   weekEnd = new Date(),
+  sleep: Sleep = defaultSleep,
 ): Promise<GateWeeklyReport> {
-  const report = await buildGateWeeklyReport(supabase, weekEnd);
+  const report = await buildGateWeeklyReport(supabase, weekEnd, sleep);
   await recordServiceHealth("gate-drift", "ok", JSON.stringify(report), undefined, {
     supabase: supabase as RecordServiceHealthOptions["supabase"],
   });
