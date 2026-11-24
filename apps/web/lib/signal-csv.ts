@@ -16,7 +16,7 @@ const CSV_COLUMNS = [
 // prefix it with a quote to force it to stay literal text.
 const FORMULA_TRIGGER_CHARS = /^[=+\-@\t\r]/;
 
-function csvField(value: string, isText: boolean): string {
+export function csvField(value: string, isText: boolean): string {
   const safe =
     isText && FORMULA_TRIGGER_CHARS.test(value) ? `'${value}` : value;
   return `"${safe.replace(/"/g, '""')}"`;

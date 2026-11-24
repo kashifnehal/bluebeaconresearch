@@ -21,6 +21,8 @@ import {
   UNCATEGORIZED_KEY,
   OTHER_KEY,
 } from "@/lib/driver-breakdown";
+import { driverBreakdownToCsv } from "@/lib/driver-breakdown-csv";
+import { downloadCsv } from "@/lib/signal-csv";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type BucketKey = EventCategory | typeof UNCATEGORIZED_KEY | typeof OTHER_KEY;
@@ -230,6 +232,19 @@ export function DriverBreakdownChart({
               );
             })}
           </div>
+          <button
+            type="button"
+            data-testid="driver-breakdown-export"
+            title="All loaded rows for this range, including hidden series"
+            onClick={() => {
+              const csv = driverBreakdownToCsv(rows, label, rangeId);
+              const today = new Date().toISOString().slice(0, 10);
+              downloadCsv(`bbr-drivers-${symbol.toLowerCase()}-${rangeId}-${today}.csv`, csv);
+            }}
+            className="mb-4 px-3 py-1 rounded-sm font-label text-[11px] md:text-[11px] font-bold tracking-widest uppercase border border-outline-variant/40 text-on-surface hover:bg-surface-container/60 cursor-pointer"
+          >
+            Export chart data (CSV)
+          </button>
           <div className="h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
