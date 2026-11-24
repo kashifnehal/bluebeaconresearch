@@ -23,6 +23,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { RECORD_BUTTON_TOOLTIP } from "@/lib/feature-hints";
+import {
+  officialSourceCreditLine,
+  isGdeltSource,
+  GDELT_CREDIT_TEXT,
+  GDELT_PROJECT_URL,
+} from "@/lib/event-sources";
 import { FOREX_PAIRS } from "@blue-beacon-research/shared";
 import type { EventDetailResponse } from "@/app/api/signals/[id]/route";
 import { RELATED_EVENTS_PAGE_SIZE } from "@/lib/related-events";
@@ -492,26 +498,64 @@ export function EventDetailClient({ data }: { data: EventDetailResponse }) {
                 {sources.map((s, i) => {
                   const rowClassName =
                     "p-4 rounded-lg bg-surface/20 border border-border flex justify-between items-center group transition-all";
+                  // TASK NQW3-FILTER1 Part 8 (2026-11-24) — required credit
+                  // lines for official sources (Fed/EIA/ECB/BoJ) and GDELT.
+                  // Existing small-text styles only (text-muted), no other
+                  // wording change to this row.
+                  const creditLine = officialSourceCreditLine(s);
+                  const gdelt = isGdeltSource(s);
+                  // A GDELT row's own citation link (below) must never nest inside
+                  // another <a> (invalid HTML, and React warns) — so a GDELT row
+                  // never wraps its whole row in a link; if it also has a source
+                  // url, that url moves onto the title text instead.
+                  const wrapRowInLink = Boolean(s.url) && !gdelt;
                   const content = (
                     <>
                       <div className="flex flex-col">
                         <span className="text-[12px] md:text-[11px] font-black uppercase tracking-widest text-text-primary">
-                          {s.title}
+                          {gdelt && s.url ? (
+                            <a
+                              href={s.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-accent transition-colors"
+                            >
+                              {s.title}
+                            </a>
+                          ) : (
+                            s.title
+                          )}
                         </span>
                         <span className="text-[12px] md:text-[11px] font-mono text-muted uppercase">
                           {s.domain ?? s.sourceLabel ?? "Unknown source"}
                           {s.publishedAt ? ` · ${safeFormatDistanceToNow(s.publishedAt, { addSuffix: true })}` : ""}
                         </span>
+                        {creditLine ? (
+                          <span className="text-[11px] font-mono text-muted normal-case mt-1">{creditLine}</span>
+                        ) : null}
+                        {gdelt ? (
+                          <span className="text-[11px] font-mono text-muted normal-case mt-1">
+                            {GDELT_CREDIT_TEXT}:{" "}
+                            <a
+                              href={GDELT_PROJECT_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline hover:text-accent"
+                            >
+                              {GDELT_PROJECT_URL}
+                            </a>
+                          </span>
+                        ) : null}
                       </div>
-                      {s.url ? (
+                      {wrapRowInLink ? (
                         <ExternalLink className="text-muted group-hover:text-accent transition-colors" size={16} />
                       ) : null}
                     </>
                   );
-                  return s.url ? (
+                  return wrapRowInLink ? (
                     <a
                       key={i}
-                      href={s.url}
+                      href={s.url!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`${rowClassName} hover:bg-surface/40 cursor-pointer`}

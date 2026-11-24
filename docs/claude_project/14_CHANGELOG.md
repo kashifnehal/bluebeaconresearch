@@ -12,6 +12,10 @@
 
 The backend's build step only compiled `.ts` files, so the calendar data file the Monday digest reads was never actually present in the deployed image — confirmed from two real Sentry errors, both on a Monday send. This was true from the day the feature shipped; not a regression. Fixed with a build-time copy step (same pattern already used elsewhere in this repo for copying static files into a build output), and a still-missing file now degrades to "no week-ahead section" instead of ever being able to throw. Full technical record: `docs/brain/14_CHANGELOG.md`.
 
+## 2026-11-24 — Credit lines added for official sources and GDELT on the event-detail Sources tab (TASK NQW3-FILTER1 Part 8, `apps/web`, `this commit`)
+
+The Federal Reserve, EIA, ECB, Bank of Japan, and GDELT each ask to be credited when their content or data is used. The event-detail page's Sources tab now shows a small line under any source from one of those publishers, naming it and the date, and a GDELT-sourced item shows a line crediting The GDELT Project with a link. No other wording changed. Full technical record: `docs/brain/14_CHANGELOG.md`.
+
 ## 2026-11-24 — NYT Business dropped from the RSS feed list (TASK NQW3-FILTER1 Part 7, `apps/backend`, `this commit`)
 
 The New York Times' own terms forbid using its content to train or ground AI models without written permission, and this pipeline classifies every item with one. Removed the feed; no stored history is deleted. Feed count by tier is now world 6, official 8, finance 13 (27 total, was 28). Full technical record: `docs/brain/14_CHANGELOG.md`.

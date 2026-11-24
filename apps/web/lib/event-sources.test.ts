@@ -7,6 +7,11 @@ import {
   seendateToIso,
   sourceLabelFrom,
   validIso,
+  officialSourceCreditLine,
+  isGdeltSource,
+  formatPublishDate,
+  GDELT_CREDIT_TEXT,
+  GDELT_PROJECT_URL,
 } from "./event-sources";
 
 function runTest(name: string, fn: () => void) {
@@ -133,4 +138,67 @@ runTest("computeFirstReportInfo prefers the earliest raw row's stamp and kind", 
   assert.equal(info.firstReportAt, "2026-11-01T00:00:00Z");
   assert.equal(info.firstReportKind, "publisher");
   assert.equal(info.firstFetchedAt, "2026-11-01T01:00:00Z");
+});
+
+// ── TASK NQW3-FILTER1 Part 8 — official source + GDELT credit lines ──────
+
+runTest("officialSourceCreditLine: an EIA source shows the line with the date", () => {
+  const line = officialSourceCreditLine({
+    sourceLabel: "EIA Today in Energy",
+    publishedAt: "2026-11-20T12:00:00Z",
+  });
+  assert.equal(line, "Source: U.S. Energy Information Administration (Nov 20, 2026). Summary written by BBR.");
+});
+
+runTest("officialSourceCreditLine: all six required publishers resolve to their full names", () => {
+  const cases: Array<[string, string]> = [
+    ["Federal Reserve", "Board of Governors of the Federal Reserve System"],
+    ["EIA Press Releases", "U.S. Energy Information Administration"],
+    ["EIA Today in Energy", "U.S. Energy Information Administration"],
+    ["ECB", "European Central Bank"],
+    ["Bank of Japan", "Bank of Japan"],
+    ["Bank of England", "Bank of England"],
+  ];
+  for (const [label, fullName] of cases) {
+    const line = officialSourceCreditLine({ sourceLabel: label, publishedAt: "2026-11-20T00:00:00Z" });
+    assert.match(line ?? "", new RegExp(fullName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), label);
+    assert.match(line ?? "", /Summary written by BBR\.$/, label);
+  }
+});
+
+runTest("officialSourceCreditLine: a non-official source shows no line", () => {
+  assert.equal(officialSourceCreditLine({ sourceLabel: "BBC World", publishedAt: "2026-11-20T00:00:00Z" }), null);
+  assert.equal(officialSourceCreditLine({ sourceLabel: null, publishedAt: "2026-11-20T00:00:00Z" }), null);
+});
+
+runTest("officialSourceCreditLine: no publishedAt omits the parenthetical date instead of printing an empty one", () => {
+  const line = officialSourceCreditLine({ sourceLabel: "ECB", publishedAt: null });
+  assert.equal(line, "Source: European Central Bank. Summary written by BBR.");
+});
+
+runTest("isGdeltSource: true only for collectorSource 'gdelt'", () => {
+  assert.equal(isGdeltSource({ collectorSource: "gdelt" }), true);
+  assert.equal(isGdeltSource({ collectorSource: "rss" }), false);
+  assert.equal(isGdeltSource({ collectorSource: null }), false);
+  assert.equal(isGdeltSource({ collectorSource: undefined }), false);
+});
+
+runTest("formatPublishDate: formats a UTC date in en-US short-month form, null for anything unparseable", () => {
+  assert.equal(formatPublishDate("2026-01-05T00:00:00Z"), "Jan 5, 2026");
+  assert.equal(formatPublishDate(null), null);
+  assert.equal(formatPublishDate("not-a-date"), null);
+});
+
+runTest("GDELT_CREDIT_TEXT and GDELT_PROJECT_URL are the exact required citation and link", () => {
+  assert.equal(GDELT_CREDIT_TEXT, "Event data: The GDELT Project");
+  assert.equal(GDELT_PROJECT_URL, "https://www.gdeltproject.org");
+});
+
+runTest("buildEventSources carries the raw collector `source` field through as collectorSource", () => {
+  const sources = buildEventSources([
+    { title: "A", event_date: "2026-11-01T00:00:00Z", source: "gdelt", raw_data: { url: "https://x.example/a" } },
+    { title: "B", event_date: "2026-11-02T00:00:00Z", source: "rss", raw_data: { url: "https://x.example/b" } },
+  ]);
+  assert.equal(sources[0].collectorSource, "gdelt");
+  assert.equal(sources[1].collectorSource, "rss");
 });

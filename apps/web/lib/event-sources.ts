@@ -14,6 +14,12 @@ export type EventSource = {
   sourceLabel: string | null;
   domain: string | null;
   publishedAt: string | null;
+  // TASK NQW3-FILTER1 Part 8 (2026-11-24) — the raw collector name
+  // (raw_events.source: "rss" | "gdelt" | "newsapi" | "acled"), carried
+  // through only to detect a GDELT-origin row for the required credit line
+  // below. Not rendered anywhere on its own. Optional so every existing
+  // hand-built EventSource fixture (tests) stays valid without edits.
+  collectorSource?: string | null;
 };
 
 export type RawEventStampRow = {
@@ -100,6 +106,7 @@ export function buildEventSources(rawEvents: RawEventRow[]): EventSource[] {
       sourceLabel: sourceLabelFrom(re.raw_data?.source),
       domain: re.raw_data?.domain ?? sourceHostname(re.raw_data?.url) ?? null,
       publishedAt: re.event_date ?? seendateToIso(re.raw_data?.seendate) ?? re.created_at ?? null,
+      collectorSource: typeof re.source === "string" ? re.source : null,
     }))
     .sort((a: EventSource, b: EventSource) => {
       const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : Infinity;
@@ -124,4 +131,53 @@ export function computeFirstReportInfo(
     firstReportKind: earliestReport ? kindForRawSource(earliestReport.source) : null,
     firstFetchedAt: earliestRawStamp(rawRows, "created_at")?.at ?? null,
   };
+}
+
+// ── TASK NQW3-FILTER1 Part 8 (2026-11-24) — required credit lines ─────────
+// Publisher pages read 2026-11-24: the Federal Reserve asks to cite the
+// Board; EIA asks for "Source: U.S. Energy Information Administration" with
+// a date; the ECB asks to cite the ECB as source and to state changes; the
+// Bank of Japan asks for explicit credit; GDELT asks for a citation with a
+// link. This maps each RSS feed label this pipeline actually stores
+// (rss-collector.ts's RSS_FEEDS, stored verbatim into raw_data.source) onto
+// the publisher's own full name — Bank of England is not in the task's
+// required-credit list (not asked for by the BoE's own pages) and is
+// deliberately absent here.
+const OFFICIAL_SOURCE_FULL_NAMES: Record<string, string> = {
+  "Federal Reserve": "Board of Governors of the Federal Reserve System",
+  "EIA Press Releases": "U.S. Energy Information Administration",
+  "EIA Today in Energy": "U.S. Energy Information Administration",
+  ECB: "European Central Bank",
+  "Bank of Japan": "Bank of Japan",
+  "Bank of England": "Bank of England",
+};
+
+/** en-US "Mon D, YYYY" in UTC — matches the convention already used elsewhere (e.g. calendar-values.ts). */
+export function formatPublishDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+}
+
+/**
+ * Null unless this source's label is one of the six required-credit
+ * publishers. Null `publishedAt` omits the parenthetical date rather than
+ * printing an empty one.
+ */
+export function officialSourceCreditLine(source: Pick<EventSource, "sourceLabel" | "publishedAt">): string | null {
+  const label = source.sourceLabel;
+  if (!label || !(label in OFFICIAL_SOURCE_FULL_NAMES)) return null;
+  const fullName = OFFICIAL_SOURCE_FULL_NAMES[label];
+  const date = formatPublishDate(source.publishedAt);
+  return date
+    ? `Source: ${fullName} (${date}). Summary written by BBR.`
+    : `Source: ${fullName}. Summary written by BBR.`;
+}
+
+export const GDELT_CREDIT_TEXT = "Event data: The GDELT Project";
+export const GDELT_PROJECT_URL = "https://www.gdeltproject.org";
+
+export function isGdeltSource(source: Pick<EventSource, "collectorSource">): boolean {
+  return source.collectorSource === "gdelt";
 }

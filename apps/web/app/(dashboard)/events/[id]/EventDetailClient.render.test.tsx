@@ -280,6 +280,71 @@ async function main() {
       queryClient.clear();
     }
   });
+
+  // ── TASK NQW3-FILTER1 Part 8 — required credit lines ────────────────────
+
+  await runTest("an EIA source shows the required credit line with the date", async () => {
+    const { root, queryClient } = await renderSourcesTab([
+      {
+        title: "Weekly petroleum status report",
+        url: "https://www.eia.gov/petroleum/weekly/",
+        sourceLabel: "EIA Today in Energy",
+        domain: "eia.gov",
+        publishedAt: "2026-11-20T12:00:00.000Z",
+        collectorSource: "rss",
+      },
+    ] as unknown as EventDetailResponse["sources"]);
+    try {
+      assert.match(
+        document.body.textContent ?? "",
+        /Source: U\.S\. Energy Information Administration \(Nov 20, 2026\)\. Summary written by BBR\./,
+      );
+    } finally {
+      await act(async () => root.unmount());
+      queryClient.clear();
+    }
+  });
+
+  await runTest("a non-official source shows no credit line", async () => {
+    const { root, queryClient } = await renderSourcesTab([
+      {
+        title: "Regional outlet covers the story",
+        url: "https://example.com/story",
+        sourceLabel: "Example Wire",
+        domain: "example.com",
+        publishedAt: "2026-11-20T12:00:00.000Z",
+        collectorSource: "rss",
+      },
+    ] as unknown as EventDetailResponse["sources"]);
+    try {
+      assert.equal((document.body.textContent ?? "").includes("Summary written by BBR"), false);
+      assert.equal((document.body.textContent ?? "").includes("The GDELT Project"), false);
+    } finally {
+      await act(async () => root.unmount());
+      queryClient.clear();
+    }
+  });
+
+  await runTest("a GDELT-sourced item shows the GDELT citation with a link to the GDELT Project", async () => {
+    const { root, queryClient } = await renderSourcesTab([
+      {
+        title: "Wire coverage picked up via GDELT",
+        url: "https://news.example.com/wire-story",
+        sourceLabel: null,
+        domain: "news.example.com",
+        publishedAt: "2026-11-20T12:00:00.000Z",
+        collectorSource: "gdelt",
+      },
+    ] as unknown as EventDetailResponse["sources"]);
+    try {
+      assert.match(document.body.textContent ?? "", /Event data: The GDELT Project/);
+      const gdeltLink = document.querySelector('a[href="https://www.gdeltproject.org"]');
+      assert.ok(gdeltLink, "expected a link to https://www.gdeltproject.org");
+    } finally {
+      await act(async () => root.unmount());
+      queryClient.clear();
+    }
+  });
 }
 
 main().then(() => {
